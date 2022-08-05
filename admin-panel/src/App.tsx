@@ -27,6 +27,7 @@ function App() {
 
     const [fee, setFee] = useState<string>("");
     const [owner, setOwner] = useState<string>("");
+    const [balance, setBalance] = useState<string>("");
     const [inputString, setInputString] = useState<string>("");
 
     const walletConnected = /^0x[0-9a-fA-F]+$/.test(wallet);
@@ -68,13 +69,15 @@ function App() {
         : null;
 
     const updateValues = async (web3: Web3) => {
-        const [fee, owner] = await Promise.all([
+        const [fee, owner, balance] = await Promise.all([
             getFee(CONTRACT_ADDRESS, web3),
             getOwner(CONTRACT_ADDRESS, web3),
+            web3.eth.getBalance(CONTRACT_ADDRESS)
         ]);
 
         setFee(fee);
         setOwner(owner);
+        setBalance(balance);
     };
 
     const autoUpdateValues = async () =>
@@ -166,6 +169,7 @@ function App() {
                         ownerAddress={owner}
                         userAddress={walletDescriptor}
                         fee={fee}
+                        contractBalance={balance}
                         isOwnerLabel={isOwnerLabel}
                         chainCorrectLabel={chainCorrectLabel}
                     />
