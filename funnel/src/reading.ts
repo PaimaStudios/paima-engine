@@ -32,7 +32,7 @@ async function processBlock(
             submittedData: (
                 await Promise.all(
                     events.map(function (e) {
-                        return processDataUnit({
+                        return processDataUnit(web3, {
                             userAddress: e.returnValues.userAddress,
                             inputData: hexToUtf8(e.returnValues.data),
                         });
