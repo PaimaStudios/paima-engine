@@ -6,7 +6,7 @@ import {
 
 import type { ChainData, ChainDataExtension } from "paima-utils";
 
-import { internalReadDataMulti } from "./reading";
+import { internalReadDataMulti } from "./reading.js";
 
 const DEFAULT_BLOCK_COUNT = 100;
 

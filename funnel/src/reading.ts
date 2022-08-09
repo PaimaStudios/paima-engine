@@ -5,7 +5,7 @@ const { hexToUtf8 } = pkg;
 
 import type { ChainData } from "paima-utils";
 
-import { processDataUnit } from "./batch-processing";
+import { processDataUnit } from "./batch-processing.js";
 
 interface PromiseFulfilledResult<T> {
     status: "fulfilled";
