@@ -35,6 +35,4 @@ userAddress/userSignature/gameInput/millisecondTimestamp~
 
 Effectively `~` is used as a separator at the batched tx level, and users submit 4 element tuples of `(userAddress, userSignature, gameInput, millisecondTimestamp)` which are encoded as being separated with a `/`. An initial capital `B~` is used to demarcate this is a batched game input transaction.
 
-The millisecond timestamp can technically be any arbitrary but random string which is used to generate unique nonces by Paima Funnel to prevent replay attacks. As such, rather than using pseudo-randomly generated strings, we just use a timestamp which is a forever incrementing value of fixed size that never has collisions and is easy to implement.
-
 Thus batching is quite simple overall, and the only extra overhead for game implementors is the fact that game input should never use `~` or `/` or else it will break batched game input parsing.
