@@ -22,3 +22,15 @@ UPDATE block_heights
 SET
 done = true
 WHERE block_height = :block_height!;
+
+/* @name deleteScheduled */
+DELETE FROM scheduled_data
+WHERE id = :id!;
+
+/* @name findNonce */
+SELECT * FROM nonces
+WHERE nonce = :nonce;
+
+/* @name insertNonce */
+INSERT INTO nonces(nonce, block_height)
+VALUES (:nonce!, :block_height!);

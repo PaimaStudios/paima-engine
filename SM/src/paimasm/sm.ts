@@ -1,6 +1,14 @@
 import pg from "pg";
-import { getLatestBlockHeight, getScheduledDataByBlockHeight, saveLastBlockHeight, blockHeightDone } from "../sql/queries.queries.js";
-import { GameStateMachineInitializer } from "paima-utils";
+import {
+  getLatestBlockHeight,
+  getRandomness,
+  getScheduledDataByBlockHeight,
+  saveLastBlockHeight,
+  blockHeightDone,
+  deleteScheduled,
+  findNonce,
+  insertNonce
+} from "../sql/queries.queries.js";import { GameStateMachineInitializer } from "paima-utils";
 import Prando from "prando";
 import { randomnessRouter } from "./randomness.js";
 
@@ -35,7 +43,8 @@ const SM: GameStateMachineInitializer = {
         for (let data of scheduledData) {
           const inputData = {
             userAddress: "0x0",
-            inputData: data.input_data
+            inputData: data.input_data,
+            inputNonce: ""
           }
           const sqlQueries = await gameStateTransition(inputData, latestChainData.blockNumber, randomnessGenerator, DBConn);
           for (let [query, params] of sqlQueries) {
@@ -45,9 +54,21 @@ const SM: GameStateMachineInitializer = {
               console.log(error, "database error")
             }
           }
+          // await deleteScheduled.run({id: data.id}, DBConn);
+          // TODO: somehow make atomic from for up to here?
         }
         // process actual user input
         for (let inputData of latestChainData.submittedData) {
+          if (inputData.inputNonce === "") {
+            console.log("Skipping inputData with invalid nonce:", inputData);
+            continue;
+          }
+          const nonceData = await findNonce.run({nonce: inputData.inputNonce}, DBConn);
+          if (nonceData.length > 0) {
+            console.log("Skipping inputData with invalid nonce:", inputData);
+            continue;
+          }
+          await insertNonce.run({nonce: inputData.inputNonce, block_height: latestChainData.blockNumber}, DBConn);
           const sqlQueries = await gameStateTransition(inputData, latestChainData.blockNumber, randomnessGenerator, DBConn);
           for (let [query, params] of sqlQueries) {
             try {
