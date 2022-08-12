@@ -1,8 +1,8 @@
 import pg from "pg";
-import { getLatestBlockHeight, getRandomness, getScheduledDataByBlockHeight, saveLastBlockHeight, blockHeightDone } from "../sql/queries.queries.js";
+import { getLatestBlockHeight, getScheduledDataByBlockHeight, saveLastBlockHeight, blockHeightDone } from "../sql/queries.queries.js";
 import { GameStateMachineInitializer } from "paima-utils";
 import Prando from "prando";
-import Crypto from "crypto";
+import { randomnessRouter } from "./randomness.js";
 
 
 
@@ -25,8 +25,8 @@ const SM: GameStateMachineInitializer = {
       process: async (latestChainData) => {
         const gameStateTransition = gameStateTransitionRouter(latestChainData.blockNumber);
         // Save blockHeight and randomness seed (which uses the blockHash)
-        const hashes = await getRandomness.run(undefined, DBConn);
-        const seed = hashTogether([latestChainData.blockHash, ...hashes.map(h => h.seed)]);
+        const getSeed = randomnessRouter(randomnessProtocolEnum);
+        const seed = await getSeed(latestChainData, DBConn);
         await saveLastBlockHeight.run({ block_height: latestChainData.blockNumber, seed: seed }, DBConn);
         // generate randomness
         const randomnessGenerator = new Prando(seed);
@@ -63,8 +63,5 @@ const SM: GameStateMachineInitializer = {
   },
 };
 
-function hashTogether(hashes: string[]): string {
-  return Crypto.createHash('sha256').update(hashes.join()).digest('base64');
-}
 
 export default SM;
