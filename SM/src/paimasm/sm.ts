@@ -69,7 +69,6 @@ const SM: GameStateMachineInitializer = {
             console.log("Skipping inputData with invalid nonce:", inputData);
             continue;
           }
-          await insertNonce.run({nonce: inputData.inputNonce, block_height: latestChainData.blockNumber}, DBConn);
           const sqlQueries = await gameStateTransition(inputData, latestChainData.blockNumber, randomnessGenerator, DBConn);
           for (let [query, params] of sqlQueries) {
             try {
@@ -78,6 +77,7 @@ const SM: GameStateMachineInitializer = {
               console.log(error, "database error")
             }
           }
+          await insertNonce.run({nonce: inputData.inputNonce, block_height: latestChainData.blockNumber}, DBConn);
         }
         await blockHeightDone.run({ block_height: latestChainData.blockNumber }, DBConn);
       },
