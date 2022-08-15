@@ -55,7 +55,7 @@ const SM: GameStateMachineInitializer = {
               console.log(error, "database error")
             }
           }
-          // await deleteScheduled.run({id: data.id}, DBConn);
+          await deleteScheduled.run({id: data.id}, DBConn);
           // TODO: somehow make atomic from for up to here?
         }
         // process actual user input
