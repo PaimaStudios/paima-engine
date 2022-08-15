@@ -8,7 +8,8 @@ import {
   deleteScheduled,
   findNonce,
   insertNonce
-} from "../sql/queries.queries.js";import { GameStateMachineInitializer } from "paima-utils";
+} from "../sql/queries.queries.js";
+import { GameStateMachineInitializer } from "paima-utils";
 import Prando from "prando";
 import { randomnessRouter } from "./randomness.js";
 
