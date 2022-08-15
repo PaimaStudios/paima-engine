@@ -143,3 +143,85 @@ const blockHeightDoneIR: any = {"name":"blockHeightDone","params":[{"name":"bloc
 export const blockHeightDone = new PreparedQuery<IBlockHeightDoneParams,IBlockHeightDoneResult>(blockHeightDoneIR);
 
 
+/** 'DeleteScheduled' parameters type */
+export interface IDeleteScheduledParams {
+  id: number;
+}
+
+/** 'DeleteScheduled' return type */
+export type IDeleteScheduledResult = void;
+
+/** 'DeleteScheduled' query type */
+export interface IDeleteScheduledQuery {
+  params: IDeleteScheduledParams;
+  result: IDeleteScheduledResult;
+}
+
+const deleteScheduledIR: any = {"name":"deleteScheduled","params":[{"name":"id","required":true,"transform":{"type":"scalar"},"codeRefs":{"used":[{"a":602,"b":604,"line":28,"col":12}]}}],"usedParamSet":{"id":true},"statement":{"body":"DELETE FROM scheduled_data\nWHERE id = :id!","loc":{"a":563,"b":604,"line":27,"col":0}}};
+
+/**
+ * Query generated from SQL:
+ * ```
+ * DELETE FROM scheduled_data
+ * WHERE id = :id!
+ * ```
+ */
+export const deleteScheduled = new PreparedQuery<IDeleteScheduledParams,IDeleteScheduledResult>(deleteScheduledIR);
+
+
+/** 'FindNonce' parameters type */
+export interface IFindNonceParams {
+  nonce: string | null | void;
+}
+
+/** 'FindNonce' return type */
+export interface IFindNonceResult {
+  block_height: number;
+  nonce: string;
+}
+
+/** 'FindNonce' query type */
+export interface IFindNonceQuery {
+  params: IFindNonceParams;
+  result: IFindNonceResult;
+}
+
+const findNonceIR: any = {"name":"findNonce","params":[{"name":"nonce","required":false,"transform":{"type":"scalar"},"codeRefs":{"used":[{"a":666,"b":670,"line":32,"col":15}]}}],"usedParamSet":{"nonce":true},"statement":{"body":"SELECT * FROM nonces\nWHERE nonce = :nonce","loc":{"a":630,"b":670,"line":31,"col":0}}};
+
+/**
+ * Query generated from SQL:
+ * ```
+ * SELECT * FROM nonces
+ * WHERE nonce = :nonce
+ * ```
+ */
+export const findNonce = new PreparedQuery<IFindNonceParams,IFindNonceResult>(findNonceIR);
+
+
+/** 'InsertNonce' parameters type */
+export interface IInsertNonceParams {
+  block_height: number;
+  nonce: string;
+}
+
+/** 'InsertNonce' return type */
+export type IInsertNonceResult = void;
+
+/** 'InsertNonce' query type */
+export interface IInsertNonceQuery {
+  params: IInsertNonceParams;
+  result: IInsertNonceResult;
+}
+
+const insertNonceIR: any = {"name":"insertNonce","params":[{"name":"nonce","required":true,"transform":{"type":"scalar"},"codeRefs":{"used":[{"a":747,"b":752,"line":36,"col":9}]}},{"name":"block_height","required":true,"transform":{"type":"scalar"},"codeRefs":{"used":[{"a":756,"b":768,"line":36,"col":18}]}}],"usedParamSet":{"nonce":true,"block_height":true},"statement":{"body":"INSERT INTO nonces(nonce, block_height)\nVALUES (:nonce!, :block_height!)","loc":{"a":698,"b":769,"line":35,"col":0}}};
+
+/**
+ * Query generated from SQL:
+ * ```
+ * INSERT INTO nonces(nonce, block_height)
+ * VALUES (:nonce!, :block_height!)
+ * ```
+ */
+export const insertNonce = new PreparedQuery<IInsertNonceParams,IInsertNonceResult>(insertNonceIR);
+
+

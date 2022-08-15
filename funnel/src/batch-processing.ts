@@ -5,6 +5,23 @@ interface ValidatedSubmittedChainData extends SubmittedChainData {
     validated: boolean;
 }
 
+function unpackValidatedData(
+    validatedData: ValidatedSubmittedChainData
+): SubmittedChainData {
+    const o = (validatedData as any);
+    delete o.validated;
+    return o as SubmittedChainData;
+}
+
+function createNonce(web3: Web3, nonceInput: string): string {
+    let nonce = web3.utils.sha3(nonceInput);
+    if (nonce === null) {
+        console.log("[funnel] WARNING: failure generating nonce from", nonceInput);
+        nonce = "";
+    }
+    return nonce;
+}
+
 async function validateSubunit(
     web3: Web3,
     userAddress: string,
@@ -25,6 +42,7 @@ async function processBatchedSubunit(
     const INVALID_INPUT: ValidatedSubmittedChainData = {
         inputData: "",
         userAddress: "",
+        inputNonce: "",
         validated: false,
     };
 
@@ -35,42 +53,43 @@ async function processBatchedSubunit(
         return INVALID_INPUT;
     }
 
-    const [userAddress, userSignature, inputData, inputNonce] = elems;
+    const [userAddress, userSignature, inputData, millisecondTimestamp] = elems;
     const validated = await validateSubunit(
         web3,
         userAddress,
         userSignature,
         inputData,
-        inputNonce
+        millisecondTimestamp
     );
 
     console.log("Result:", validated);
+    const hashInput = millisecondTimestamp + userAddress + inputData;
+    const inputNonce = createNonce(web3, hashInput);
 
     return {
         inputData,
         userAddress,
+        inputNonce,
         validated,
-    };
-}
-
-function unpackValidatedData(
-    validated: ValidatedSubmittedChainData
-): SubmittedChainData {
-    return {
-        inputData: validated.inputData,
-        userAddress: validated.userAddress,
     };
 }
 
 export async function processDataUnit(
     web3: Web3,
-    unit: SubmittedChainData
+    unit: SubmittedChainData,
+    blockHeight: number
 ): Promise<SubmittedChainData[]> {
     const OUTER_DIVIDER = "~";
     console.log("[funnel::processDataUnit] unit:", unit);
 
     if (!unit.inputData.includes(OUTER_DIVIDER)) {
-        return [unit];
+        // Directly submitted input, prepare nonce and return:
+        const hashInput = blockHeight.toString(10) + unit.userAddress + unit.inputData;
+        const inputNonce = createNonce(web3, hashInput);
+        return [{
+            ...unit,
+            inputNonce
+        }];
     }
 
     const hasClosingTilde =

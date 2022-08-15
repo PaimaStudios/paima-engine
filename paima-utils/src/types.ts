@@ -15,9 +15,11 @@ export type SQLUpdate = [PreparedQuery<any, any>, any];
 
 type ChainDataExtension = any;
 type EncodedGameDataString = string;
+type NonceString = string;
 export interface SubmittedChainData {
   userAddress: ETHAddress,
-  inputData: EncodedGameDataString
+  inputData: EncodedGameDataString,
+  inputNonce: NonceString
 }
 export interface ChainData {
   timestamp: number | string;

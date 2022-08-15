@@ -2,7 +2,7 @@ import pg from "pg";
 import Crypto from "crypto";
 
 
-import { getRandomness } from "../sql/queries.queries";
+import { getRandomness } from "../sql/queries.queries.js";
 
 export function randomnessRouter(n: number){
   if (n) return getSeed1
