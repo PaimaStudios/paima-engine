@@ -9,6 +9,15 @@ import { exec } from "child_process";
 import { server, startServer } from "./server.js"
 const SNAPSHOT_INTERVAL = 10;
 
+import process from "process";
+let run = true;
+process.on("SIGINT", () => {
+  console.log("Caught SIGINT. Waiting for engine to finish processing current block");
+  run = false;
+});
+process.on('exit', (code) => {
+  console.log(`Exiting with code: ${code}`);
+});
 
 const paimaEngine: PaimaRuntimeInitializer = {
   initialize(chainFunnel, gameStateMachine, gameBackendVersion) {
@@ -61,9 +70,7 @@ async function snapshots() {
   }
 }
 async function runIterativeFunnel(gameStateMachine: GameStateMachine, chainFunnel: ChainFunnel, pollingRate: number) {
-  while (true) {
-    const snapshotTrigger = await snapshots();
-    console.log(snapshotTrigger, "trigger")
+  while (run) {
     const latestReadBlockHeight = await gameStateMachine.latestBlockHeight();
     console.log(latestReadBlockHeight, "latest read blockheight")
     // take DB snapshot first
@@ -86,6 +93,7 @@ async function runIterativeFunnel(gameStateMachine: GameStateMachine, chainFunne
           await fs.appendFile("./logs.log", s3)
         }
       }
+      if (!run) process.exit(0)
   }
 }
 function delay(ms: number) {
