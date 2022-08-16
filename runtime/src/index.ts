@@ -7,7 +7,7 @@ import type {
 import * as fs from "fs/promises";
 import { exec } from "child_process";
 import { server, startServer } from "./server.js"
-const SNAPSHOT_INTERVAL = 151200;
+const SNAPSHOT_INTERVAL = 10;
 
 
 const paimaEngine: PaimaRuntimeInitializer = {
@@ -52,7 +52,7 @@ async function snapshots() {
     const ss = await Promise.all(stats);
     ss.sort((a, b) => a.stats.mtime.getTime() - b.stats.mtime.getTime())
     if (ss.length > 2) await fs.rm(dir + "/" + ss[0].name);
-    const maxnum = ss[ss.length -1].name.match(/\d/);
+    const maxnum = ss[ss.length -1].name.match(/\d+/);
     const max = maxnum?.[0] || "0"
     return parseInt(max) + SNAPSHOT_INTERVAL
   } catch {
@@ -63,6 +63,7 @@ async function snapshots() {
 async function runIterativeFunnel(gameStateMachine: GameStateMachine, chainFunnel: ChainFunnel, pollingRate: number) {
   while (true) {
     const snapshotTrigger = await snapshots();
+    console.log(snapshotTrigger, "trigger")
     const latestReadBlockHeight = await gameStateMachine.latestBlockHeight();
     console.log(latestReadBlockHeight, "latest read blockheight")
     // take DB snapshot first
