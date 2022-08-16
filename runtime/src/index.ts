@@ -7,6 +7,15 @@ import type {
 import * as fs from "fs/promises";
 import { server, startServer } from "./server.js"
 
+import process from "process";
+let run = true;
+process.on("SIGINT", () => {
+  console.log("Caught SIGINT. Waiting for engine to finish processing current block");
+  run = false;
+});
+process.on('exit', (code) => {
+  console.log(`Exiting with code: ${code}`);
+});
 
 const paimaEngine: PaimaRuntimeInitializer = {
   initialize(chainFunnel, gameStateMachine, gameBackendVersion) {
@@ -37,7 +46,7 @@ const paimaEngine: PaimaRuntimeInitializer = {
   }
 }
 async function runIterativeFunnel(gameStateMachine: GameStateMachine, chainFunnel: ChainFunnel, pollingRate: number) {
-  while (true) {
+  while (run) {
     const latestReadBlockHeight = await gameStateMachine.latestBlockHeight();
     console.log(latestReadBlockHeight, "latest read blockheight")
     const latestChainData = await chainFunnel.readData(latestReadBlockHeight + 1) as ChainData[];
@@ -58,6 +67,7 @@ async function runIterativeFunnel(gameStateMachine: GameStateMachine, chainFunne
           await fs.appendFile("./logs.log", s3)
         }
       }
+      if (!run) process.exit(0)
   }
 }
 function delay(ms: number) {
