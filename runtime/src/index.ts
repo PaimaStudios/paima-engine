@@ -40,25 +40,39 @@ async function runIterativeFunnel(gameStateMachine: GameStateMachine, chainFunne
   while (true) {
     const latestReadBlockHeight = await gameStateMachine.latestBlockHeight();
     console.log(latestReadBlockHeight, "latest read blockheight")
+    // read data from funnel
     const latestChainData = await chainFunnel.readData(latestReadBlockHeight + 1) as ChainData[];
+    // retry later if no data came in
     if (!latestChainData || !latestChainData?.length) await delay(pollingRate * 1000);
     else
       for (let block of latestChainData) {
-        const s1 = `${Date.now()} - ${block.blockNumber} block read, containing ${block.submittedData.length} pieces of input\n`
-        await fs.appendFile("./logs.log", s1)
+        await logBlock(block);
         if (block.submittedData.length) console.log(block, "block of chain data being processed")
         try {
           await gameStateMachine.process(block);
-          const s2 = `${Date.now()} - ${block.blockNumber} OK\n`
-          await fs.appendFile("./logs.log", s2)
-          // await delay(pollingRate * 1000);
+          await logSuccess(block)
         }
         catch (error) {
-          const s3 = `***ERROR***\n${error}\n***\n`;
-          await fs.appendFile("./logs.log", s3)
+          await logError(error)
         }
       }
   }
+}
+
+async function logBlock(block: ChainData) {
+  const s1 = `${Date.now()} - ${block.blockNumber} block read, containing ${block.submittedData.length} pieces of input\n`
+  console.log(s1)
+  await fs.appendFile("./logs.log", s1)
+}
+async function logSuccess(block: ChainData) {
+  const s2 = `${Date.now()} - ${block.blockNumber} OK\n`
+  console.log(s2)
+  await fs.appendFile("./logs.log", s2)
+}
+async function logError(error: any) {
+  const s3 = `***ERROR***\n${error}\n***\n`;
+  console.log(s3)
+  await fs.appendFile("./logs.log", s3)
 }
 function delay(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms))
