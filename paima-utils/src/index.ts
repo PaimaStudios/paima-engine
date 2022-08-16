@@ -17,6 +17,7 @@ import type {
     PaimaRuntimeInitializer,
     PaimaRuntime
 } from "./types";
+import {logBlock, logSuccess, logError, doLog} from "./logging.js";
 
 export interface ChainDataExtension {}
 
@@ -112,5 +113,9 @@ export {
     GameStateMachineInitializer,
     GameStateMachine,
     PaimaRuntimeInitializer,
-    PaimaRuntime
+    PaimaRuntime,
+    logBlock,
+    logSuccess,
+    logError,
+    doLog
 }
