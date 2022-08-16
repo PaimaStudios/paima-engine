@@ -29,13 +29,12 @@ const paimaEngine: PaimaRuntimeInitializer = {
         this.chainDataExtensions = [...this.chainDataExtensions, ...chainDataExtensions]
       },
       async run() {
-        const nextSnapshot = await snapshots();
         this.addGET("/backend_version", async (req, res) => {
           res.status(200).json(gameBackendVersion);
         });
         // pass endpoints to web server and run
         (async () => startServer())();
-        runIterativeFunnel(gameStateMachine, chainFunnel, this.pollingRate, nextSnapshot);
+        runIterativeFunnel(gameStateMachine, chainFunnel, this.pollingRate);
       }
     }
   }
@@ -61,8 +60,9 @@ async function snapshots() {
     return SNAPSHOT_INTERVAL
   }
 }
-async function runIterativeFunnel(gameStateMachine: GameStateMachine, chainFunnel: ChainFunnel, pollingRate: number, snapshotTrigger: number) {
+async function runIterativeFunnel(gameStateMachine: GameStateMachine, chainFunnel: ChainFunnel, pollingRate: number) {
   while (true) {
+    const snapshotTrigger = await snapshots();
     const latestReadBlockHeight = await gameStateMachine.latestBlockHeight();
     console.log(latestReadBlockHeight, "latest read blockheight")
     // take DB snapshot first
