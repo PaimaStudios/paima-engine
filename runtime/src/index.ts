@@ -74,6 +74,7 @@ async function runIterativeFunnel(gameStateMachine: GameStateMachine, chainFunne
     const latestReadBlockHeight = await gameStateMachine.latestBlockHeight();
     console.log(latestReadBlockHeight, "latest read blockheight")
     // take DB snapshot first
+    const snapshotTrigger = await snapshots();
     if (latestReadBlockHeight === snapshotTrigger) await saveSnapshot(latestReadBlockHeight);
     const latestChainData = await chainFunnel.readData(latestReadBlockHeight + 1) as ChainData[];
     // retry later if no data came in
