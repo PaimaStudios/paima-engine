@@ -25,6 +25,12 @@ async function processBlock(
                 toBlock: blockNumber,
             }),
         ]);
+        console.log(
+            "[funnel::processBlock] events",
+            events,
+            "at block height",
+            block.number
+        );
         return {
             timestamp: block.timestamp,
             blockHash: block.hash,
@@ -32,12 +38,17 @@ async function processBlock(
             submittedData: (
                 await Promise.all(
                     events.map(function (e) {
+                        const decodedData =
+                            e.returnValues.data &&
+                            e.returnValues.data.length > 0
+                                ? hexToUtf8(e.returnValues.data)
+                                : "";
                         return processDataUnit(
                             web3,
                             {
                                 userAddress: e.returnValues.userAddress,
-                                inputData: hexToUtf8(e.returnValues.data),
-                                inputNonce: ""
+                                inputData: decodedData,
+                                inputNonce: "",
                             },
                             block.number
                         );
@@ -45,7 +56,9 @@ async function processBlock(
                 )
             ).flat(),
         };
-    } catch {
+    } catch (err) {
+        console.log("[funnel::processBlock] caught", err);
+        //console.log("[funnel::processBlock] something went wrong while processing");
         return {
             timestamp: 0,
             blockHash: "",
