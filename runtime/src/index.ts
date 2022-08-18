@@ -9,6 +9,15 @@ import { exec } from "child_process";
 import { server, startServer } from "./server.js"
 const SNAPSHOT_INTERVAL = 10;
 
+import process from "process";
+let run = true;
+process.on("SIGINT", () => {
+  console.log("Caught SIGINT. Waiting for engine to finish processing current block");
+  run = false;
+});
+process.on('exit', (code) => {
+  console.log(`Exiting with code: ${code}`);
+});
 
 const paimaEngine: PaimaRuntimeInitializer = {
   initialize(chainFunnel, gameStateMachine, gameBackendVersion) {
@@ -29,6 +38,7 @@ const paimaEngine: PaimaRuntimeInitializer = {
         this.chainDataExtensions = [...this.chainDataExtensions, ...chainDataExtensions]
       },
       async run() {
+        await lockEngine()
         this.addGET("/backend_version", async (req, res) => {
           res.status(200).json(gameBackendVersion);
         });
@@ -39,7 +49,15 @@ const paimaEngine: PaimaRuntimeInitializer = {
     }
   }
 }
-
+async function lockEngine(){
+  try {
+    const f = await fs.readFile("./engine-lock");
+    await logError("engine-lock exists")
+    process.exit(0)
+  } catch(e){
+    await fs.writeFile("./engine-lock", "");
+  }
+}
 async function snapshots() {
   const dir = "snapshots"
   try {
@@ -61,32 +79,48 @@ async function snapshots() {
   }
 }
 async function runIterativeFunnel(gameStateMachine: GameStateMachine, chainFunnel: ChainFunnel, pollingRate: number) {
-  while (true) {
-    const snapshotTrigger = await snapshots();
-    console.log(snapshotTrigger, "trigger")
+  while (run) {
     const latestReadBlockHeight = await gameStateMachine.latestBlockHeight();
     console.log(latestReadBlockHeight, "latest read blockheight")
     // take DB snapshot first
+    const snapshotTrigger = await snapshots();
     if (latestReadBlockHeight === snapshotTrigger) await saveSnapshot(latestReadBlockHeight);
     const latestChainData = await chainFunnel.readData(latestReadBlockHeight + 1) as ChainData[];
+    // retry later if no data came in
     if (!latestChainData || !latestChainData?.length) await delay(pollingRate * 1000);
     else
       for (let block of latestChainData) {
-        const s1 = `${Date.now()} - ${block.blockNumber} block read, containing ${block.submittedData.length} pieces of input\n`
-        await fs.appendFile("./logs.log", s1)
+        await logBlock(block);
         if (block.submittedData.length) console.log(block, "block of chain data being processed")
         try {
           await gameStateMachine.process(block);
-          const s2 = `${Date.now()} - ${block.blockNumber} OK\n`
-          await fs.appendFile("./logs.log", s2)
-          // await delay(pollingRate * 1000);
+          await logSuccess(block)
         }
         catch (error) {
-          const s3 = `***ERROR***\n${error}\n***\n`;
-          await fs.appendFile("./logs.log", s3)
+          await logError(error)
         }
       }
+      if (!run){
+        await fs.rm("./engine-lock")
+        process.exit(0)
+      } 
   }
+}
+
+async function logBlock(block: ChainData) {
+  const s1 = `${Date.now()} - ${block.blockNumber} block read, containing ${block.submittedData.length} pieces of input\n`
+  console.log(s1)
+  await fs.appendFile("./logs.log", s1)
+}
+async function logSuccess(block: ChainData) {
+  const s2 = `${Date.now()} - ${block.blockNumber} OK\n`
+  console.log(s2)
+  await fs.appendFile("./logs.log", s2)
+}
+async function logError(error: any) {
+  const s3 = `***ERROR***\n${error}\n***\n`;
+  console.log(s3)
+  await fs.appendFile("./logs.log", s3)
 }
 function delay(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms))

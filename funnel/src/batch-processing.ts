@@ -8,7 +8,7 @@ interface ValidatedSubmittedChainData extends SubmittedChainData {
 function unpackValidatedData(
     validatedData: ValidatedSubmittedChainData
 ): SubmittedChainData {
-    const o = (validatedData as any);
+    const o = validatedData as any;
     delete o.validated;
     return o as SubmittedChainData;
 }
@@ -16,7 +16,10 @@ function unpackValidatedData(
 function createNonce(web3: Web3, nonceInput: string): string {
     let nonce = web3.utils.sha3(nonceInput);
     if (nonce === null) {
-        console.log("[funnel] WARNING: failure generating nonce from", nonceInput);
+        console.log(
+            "[funnel] WARNING: failure generating nonce from",
+            nonceInput
+        );
         nonce = "";
     }
     return nonce;
@@ -84,12 +87,15 @@ export async function processDataUnit(
 
     if (!unit.inputData.includes(OUTER_DIVIDER)) {
         // Directly submitted input, prepare nonce and return:
-        const hashInput = blockHeight.toString(10) + unit.userAddress + unit.inputData;
+        const hashInput =
+            blockHeight.toString(10) + unit.userAddress + unit.inputData;
         const inputNonce = createNonce(web3, hashInput);
-        return [{
-            ...unit,
-            inputNonce
-        }];
+        return [
+            {
+                ...unit,
+                inputNonce,
+            },
+        ];
     }
 
     const hasClosingTilde =
