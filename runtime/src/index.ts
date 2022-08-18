@@ -38,6 +38,7 @@ const paimaEngine: PaimaRuntimeInitializer = {
         this.chainDataExtensions = [...this.chainDataExtensions, ...chainDataExtensions]
       },
       async run() {
+        await lockEngine()
         this.addGET("/backend_version", async (req, res) => {
           res.status(200).json(gameBackendVersion);
         });
@@ -48,7 +49,15 @@ const paimaEngine: PaimaRuntimeInitializer = {
     }
   }
 }
-
+async function lockEngine(){
+  try {
+    const f = await fs.readFile("./engine-lock");
+    await logError("engine-lock exists")
+    process.exit(0)
+  } catch(e){
+    await fs.writeFile("./engine-lock", "");
+  }
+}
 async function snapshots() {
   const dir = "snapshots"
   try {
@@ -74,6 +83,7 @@ async function runIterativeFunnel(gameStateMachine: GameStateMachine, chainFunne
     const latestReadBlockHeight = await gameStateMachine.latestBlockHeight();
     console.log(latestReadBlockHeight, "latest read blockheight")
     // take DB snapshot first
+    const snapshotTrigger = await snapshots();
     if (latestReadBlockHeight === snapshotTrigger) await saveSnapshot(latestReadBlockHeight);
     const latestChainData = await chainFunnel.readData(latestReadBlockHeight + 1) as ChainData[];
     // retry later if no data came in
@@ -90,7 +100,10 @@ async function runIterativeFunnel(gameStateMachine: GameStateMachine, chainFunne
           await logError(error)
         }
       }
-      if (!run) process.exit(0)
+      if (!run){
+        await fs.rm("./engine-lock")
+        process.exit(0)
+      } 
   }
 }
 
