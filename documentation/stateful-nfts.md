@@ -1,4 +1,4 @@
-# Stateful NFTs Implementation
+# Stateful NFTs v2.0 Implementation
 
 1. Paima Utils has a constant hardcoded list of `allowedStatefulNFTContracts` (will initially just be Paima NFTs, and likely won't expand past 2 ever)
 2. When stats/perpetual player state is going to be updated (ex. after a match closes to update win count), we take the player address and check their set NFT in the nfts table.

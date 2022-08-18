@@ -25,6 +25,7 @@ type ERC721Extension = {
 type ChainDataExtension = ERC20Extension | ERC721Extension;
 
 // A type which represents an update in a user's balance in an ERC20 contract
+// A transfer thus would result in two ERC20Update events, one with each person's new balance
 type ERC20Update = {
   userAddress: string;
   amount: number;
@@ -56,7 +57,19 @@ This separation between the extension and the extension datum at the type level 
 
 ## Using ChainDataExtensions
 
-...
+When an implementor is instantiating Paima Funnel, they will be able to specify (a potentially empty) list of `ChainDataExtension`s.
+
+```
+
+nftExtension =
+
+extensions = []
+
+const chainFunnel = PaimaFunnel.initialize(nodeUrl, storageAddress, extensions);
+
+```
+
+## Updating ChainData
 
 As such, `ChainData` will now have a new field which holds all of the extension datums:
 
@@ -69,3 +82,7 @@ export interface ChainData {
   extensionDatums: ChainDataExtensionDatum[];
 }
 ```
+
+---
+
+Make sure that when an extension is used, the runtime must start polling from a block height that was before any of the contracts were deployed. Thus all events that take place (ie. all NFT mints/transfer events) are accounted for and are saved in the DB so the state machine has proper access to a valid copy of the current state of the contract.
