@@ -14,7 +14,11 @@ export async function logError(error: any) {
   await doLog(s3)
 }
 
-export async function doLog(s: string){
+export async function doLog(s: string) {
   console.log(s)
-  await fs.appendFile("./logs.log", s)
+  try {
+    await fs.appendFile("./logs.log", s)
+  } catch {
+    console.log(s)
+  }
 }
