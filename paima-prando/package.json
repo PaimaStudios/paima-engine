@@ -1,0 +1,15 @@
+{
+  "name": "paima-prando",
+  "version": "1.0.0",
+  "description": "fork of Prando for generating randomness for paima engine",
+  "main": "lib/index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "typescript": "^4.7.4"
+  }
+}
