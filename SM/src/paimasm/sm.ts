@@ -9,7 +9,7 @@ import {
   findNonce,
   insertNonce
 } from "../sql/queries.queries.js";
-import { GameStateMachineInitializer } from "paima-utils";
+import { GameStateMachineInitializer, doLog } from "paima-utils";
 import Prando from "prando";
 import { randomnessRouter } from "./randomness.js";
 
@@ -38,6 +38,8 @@ const SM: GameStateMachineInitializer = {
         const seed = await getSeed(latestChainData, DBConn);
         await saveLastBlockHeight.run({ block_height: latestChainData.blockNumber, seed: seed }, DBConn);
         // generate randomness
+        const logString = `using seed ${seed}`;
+        doLog(logString);
         const randomnessGenerator = new Prando(seed);
         // fetch data scheduled for present block height and execute if exists
         const scheduledData = await getScheduledDataByBlockHeight.run({ block_height: latestChainData.blockNumber }, DBConn);
