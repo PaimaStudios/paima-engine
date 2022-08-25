@@ -18,6 +18,7 @@ Of note, `Paima Engine` refers to all of the following components:
 - `Paima Tx` (The library which aids in building transactions)
 - `Paima Utils` (The Library which holds auxillary functions between the other modules)
 - `Paima Engine Runtime` (Runtime which connects all the other portions of the engine together)
+- `Paima Prando` (Custom fork of a deterministic pseudo-RNG generator library)
 
 ## How It Works
 

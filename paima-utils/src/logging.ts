@@ -1,5 +1,5 @@
 import type { ChainData } from "./types";
-import * as fs from "fs/promises";
+import * as fsa from "./fs_access/fsa"
 
 export async function logBlock(block: ChainData) {
   const s1 = `${Date.now()} - ${block.blockNumber} block read, containing ${block.submittedData.length} pieces of input\n`
@@ -17,8 +17,6 @@ export async function logError(error: any) {
 export async function doLog(s: string) {
   console.log(s)
   try {
-    await fs.appendFile("./logs.log", s)
-  } catch {
-    console.log(s)
-  }
+    await fsa.appendToFile(s)
+  } catch { }
 }
