@@ -1,5 +1,5 @@
 import type { ChainData } from "./types";
-import * as fsa from "./fs_access/fsa"
+import * as fsa from "./fs_access/fsa.js"
 
 export async function logBlock(block: ChainData) {
   const s1 = `${Date.now()} - ${block.blockNumber} block read, containing ${block.submittedData.length} pieces of input\n`
