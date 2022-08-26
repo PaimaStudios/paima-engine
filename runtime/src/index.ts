@@ -97,12 +97,12 @@ async function snapshots(blockheight: number) {
 async function runIterativeFunnel(gameStateMachine: GameStateMachine, chainFunnel: ChainFunnel, pollingRate: number) {
   while (run) {
     const latestReadBlockHeight = await gameStateMachine.latestBlockHeight();
-    // take DB snapshot first
+    // Take DB snapshot
     const snapshotTrigger = await snapshots(latestReadBlockHeight);
-    console.log(snapshotTrigger, "snapshot trigger")
     if (latestReadBlockHeight === snapshotTrigger) await saveSnapshot(latestReadBlockHeight);
+
+    // Read latest chain data from funnel
     const latestChainData = await chainFunnel.readData(latestReadBlockHeight + 1) as ChainData[];
-    // retry later if no data came in
     if (!latestChainData || !latestChainData?.length) await delay(pollingRate * 1000);
     else
       for (let block of latestChainData) {

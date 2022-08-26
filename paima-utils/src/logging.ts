@@ -2,15 +2,15 @@ import type { ChainData } from "./types";
 import * as fsa from "./fs_access/fsa.js"
 
 export async function logBlock(block: ChainData) {
-  const s = `${Date.now()} - ${block.blockNumber} block read, containing ${block.submittedData.length} pieces of input\n`
+  const s = `Block #${block.blockNumber} received from Paima Funnel. Contains ${block.submittedData.length} pieces of input.`
   await doLog(s)
 }
 export async function logSuccess(block: ChainData) {
-  const s = `${Date.now()} - ${block.blockNumber} OK\n`
+  const s = `Block #${block.blockNumber} finished processing by Paima SM.`
   await doLog(s)
 }
 export async function logError(error: any) {
-  const s = `***ERROR***\n${error}\n***\n`;
+  const s = `***ERROR***\n${error}\n***`;
   await doLog(s)
 }
 
