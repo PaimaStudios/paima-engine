@@ -69,11 +69,11 @@ async function lockEngine() {
   }
 }
 
-async function snapshots() {
+async function snapshots(blockheight: number) {
   const dir = "snapshots"
   try {
     const files = await fs.readdir(dir);
-    if (files.length === 0) return SNAPSHOT_INTERVAL
+    if (files.length === 0) return blockheight + SNAPSHOT_INTERVAL
     const stats = files.map(async (f) => {
       const s = await fs.stat(dir + "/" + f);
       return { name: f, stats: s }
@@ -94,7 +94,8 @@ async function runIterativeFunnel(gameStateMachine: GameStateMachine, chainFunne
   while (run) {
     const latestReadBlockHeight = await gameStateMachine.latestBlockHeight();
     // take DB snapshot first
-    const snapshotTrigger = await snapshots();
+    const snapshotTrigger = await snapshots(latestReadBlockHeight);
+    console.log(snapshotTrigger, "snapshot trigger")
     if (latestReadBlockHeight === snapshotTrigger) await saveSnapshot(latestReadBlockHeight);
     const latestChainData = await chainFunnel.readData(latestReadBlockHeight + 1) as ChainData[];
     // retry later if no data came in
