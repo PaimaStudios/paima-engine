@@ -25,7 +25,7 @@ async function processBlock(
                 toBlock: blockNumber,
             }),
         ]);
-        doLog(`[funnel::processBlock] ${events} at block height ${block.number}`)
+        doLog(`[funnel::processBlock] at block height ${block.number}`)
         return {
             timestamp: block.timestamp,
             blockHash: block.hash,

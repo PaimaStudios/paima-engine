@@ -39,8 +39,6 @@ const SM: GameStateMachineInitializer = {
         const seed = await getSeed(latestChainData, DBConn);
         await saveLastBlockHeight.run({ block_height: latestChainData.blockNumber, seed: seed }, DBConn);
         // Generate Prando object
-        const logString = `using seed ${seed}`;
-        doLog(logString);
         const randomnessGenerator = new Prando(seed);
 
         // Fetch and execute scheduled input data

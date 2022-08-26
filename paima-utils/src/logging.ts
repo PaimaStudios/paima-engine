@@ -2,16 +2,16 @@ import type { ChainData } from "./types";
 import * as fsa from "./fs_access/fsa.js"
 
 export async function logBlock(block: ChainData) {
-  const s1 = `${Date.now()} - ${block.blockNumber} block read, containing ${block.submittedData.length} pieces of input\n`
-  await doLog(s1)
+  const s = `${Date.now()} - ${block.blockNumber} block read, containing ${block.submittedData.length} pieces of input\n`
+  await doLog(s)
 }
 export async function logSuccess(block: ChainData) {
-  const s2 = `${Date.now()} - ${block.blockNumber} OK\n`
-  await doLog(s2)
+  const s = `${Date.now()} - ${block.blockNumber} OK\n`
+  await doLog(s)
 }
 export async function logError(error: any) {
-  const s3 = `***ERROR***\n${error}\n***\n`;
-  await doLog(s3)
+  const s = `***ERROR***\n${error}\n***\n`;
+  await doLog(s)
 }
 
 export async function doLog(s: string) {
