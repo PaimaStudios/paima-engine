@@ -73,7 +73,11 @@ async function snapshots(blockheight: number) {
   const dir = "snapshots"
   try {
     const files = await fs.readdir(dir);
-    if (files.length === 0) return blockheight + SNAPSHOT_INTERVAL
+    if (files.length === 0) {
+      const filename = `paima-snapshot-dummy-${blockheight}.tar`
+      fs.writeFile(`./snapshots/${filename}`, "")
+      return blockheight + SNAPSHOT_INTERVAL
+    }
     const stats = files.map(async (f) => {
       const s = await fs.stat(dir + "/" + f);
       return { name: f, stats: s }
