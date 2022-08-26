@@ -4,7 +4,7 @@ import type {
   PaimaRuntimeInitializer,
   ChainData,
 } from "paima-utils";
-import { doLog } from "paima-utils";
+import { doLog, logBlock, logSuccess, logError } from "paima-utils";
 import * as fs from "fs/promises";
 import { exec } from "child_process";
 import { server, startServer } from "./server.js"
@@ -95,7 +95,7 @@ async function runIterativeFunnel(gameStateMachine: GameStateMachine, chainFunne
     else
       for (let block of latestChainData) {
         await logBlock(block);
-        if (block.submittedData.length) console.log(block, "block of chain data being processed")
+        if (block.submittedData.length) console.log(block, "chain data being processed")
         try {
           await gameStateMachine.process(block);
           await logSuccess(block)

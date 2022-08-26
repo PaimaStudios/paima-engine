@@ -3,7 +3,7 @@ import type { Contract } from "web3-eth-contract";
 import pkg from "web3-utils";
 const { hexToUtf8 } = pkg;
 
-import type { ChainData } from "paima-utils";
+import { ChainData, doLog } from "paima-utils";
 
 import { processDataUnit } from "./batch-processing.js";
 
@@ -25,12 +25,7 @@ async function processBlock(
                 toBlock: blockNumber,
             }),
         ]);
-        console.log(
-            "[funnel::processBlock] events",
-            events,
-            "at block height",
-            block.number
-        );
+        doLog(`[funnel::processBlock] ${events} at block height ${block.number}`)
         return {
             timestamp: block.timestamp,
             blockHash: block.hash,
@@ -40,7 +35,7 @@ async function processBlock(
                     events.map(function (e) {
                         const decodedData =
                             e.returnValues.data &&
-                            e.returnValues.data.length > 0
+                                e.returnValues.data.length > 0
                                 ? hexToUtf8(e.returnValues.data)
                                 : "";
                         return processDataUnit(
@@ -57,7 +52,7 @@ async function processBlock(
             ).flat(),
         };
     } catch (err) {
-        console.log("[funnel::processBlock] caught", err);
+        doLog(`[funnel::processBlock] caught ${err}`)
         return {
             timestamp: 0,
             blockHash: "",

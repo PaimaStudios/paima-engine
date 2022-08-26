@@ -26,9 +26,7 @@ const roundExecutor: RoundExecutorInitializer = {
       currentTick: 1,
       currentState: userStates,
       tick() {
-        console.log(this.currentTick, "processing tick number")
         const event = processTick(matchEnvironment, this.currentState, userInputs, this.currentTick, randomnessGenerator);
-        console.log(event, `output of tick for tick ${this.currentTick}`)
         this.currentTick++
         return event
       },

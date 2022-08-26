@@ -1,5 +1,5 @@
 import Web3 from "web3";
-import { SubmittedChainData } from "paima-utils";
+import { doLog, SubmittedChainData } from "paima-utils";
 
 interface ValidatedSubmittedChainData extends SubmittedChainData {
     validated: boolean;
@@ -16,10 +16,7 @@ function unpackValidatedData(
 function createNonce(web3: Web3, nonceInput: string): string {
     let nonce = web3.utils.sha3(nonceInput);
     if (nonce === null) {
-        console.log(
-            "[funnel] WARNING: failure generating nonce from",
-            nonceInput
-        );
+        doLog(`[funnel] WARNING: failure generating nonce from: ${nonceInput}`);
         nonce = "";
     }
     return nonce;
@@ -49,7 +46,6 @@ async function processBatchedSubunit(
         validated: false,
     };
 
-    console.log("Processing subunit:", input);
 
     const elems = input.split(INNER_DIVIDER);
     if (elems.length !== 4) {
@@ -65,7 +61,6 @@ async function processBatchedSubunit(
         millisecondTimestamp
     );
 
-    console.log("Result:", validated);
     const hashInput = millisecondTimestamp + userAddress + inputData;
     const inputNonce = createNonce(web3, hashInput);
 
@@ -83,7 +78,6 @@ export async function processDataUnit(
     blockHeight: number
 ): Promise<SubmittedChainData[]> {
     const OUTER_DIVIDER = "~";
-    console.log("[funnel::processDataUnit] unit:", unit);
 
     if (!unit.inputData.includes(OUTER_DIVIDER)) {
         // Directly submitted input, prepare nonce and return:
@@ -105,17 +99,12 @@ export async function processDataUnit(
 
     const prefix = elems[0];
 
-    console.log("[funnel::processDataUnit] elems:", elems);
 
     if (prefix === "B") {
         const validatedSubUnits = await Promise.all(
             elems
                 .slice(1, afterLastIndex)
                 .map(elem => processBatchedSubunit(web3, elem))
-        );
-        console.log(
-            "[funnel::processDataUnit] validated subunits:",
-            validatedSubUnits
         );
         return validatedSubUnits
             .filter(item => item.validated)
