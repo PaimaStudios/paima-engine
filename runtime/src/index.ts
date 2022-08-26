@@ -2,22 +2,26 @@ import type {
   ChainFunnel,
   GameStateMachine,
   PaimaRuntimeInitializer,
-  ChainData
+  ChainData,
 } from "paima-utils";
+import { doLog } from "paima-utils";
 import * as fs from "fs/promises";
 import { exec } from "child_process";
 import { server, startServer } from "./server.js"
-const SNAPSHOT_INTERVAL = 10;
-
 import process from "process";
+
+const SNAPSHOT_INTERVAL = 10;
 let run = true;
+
 process.on("SIGINT", () => {
-  console.log("Caught SIGINT. Waiting for engine to finish processing current block");
+  doLog("Caught SIGINT. Waiting for engine to finish processing current block");
   run = false;
 });
 process.on('exit', (code) => {
-  console.log(`Exiting with code: ${code}`);
+  doLog(`Exiting with code: ${code}`);
 });
+
+
 
 const paimaEngine: PaimaRuntimeInitializer = {
   initialize(chainFunnel, gameStateMachine, gameBackendVersion) {
@@ -49,12 +53,12 @@ const paimaEngine: PaimaRuntimeInitializer = {
     }
   }
 }
-async function lockEngine(){
+async function lockEngine() {
   try {
     const f = await fs.readFile("./engine-lock");
     await logError("engine-lock exists")
     process.exit(0)
-  } catch(e){
+  } catch (e) {
     await fs.writeFile("./engine-lock", "");
   }
 }
@@ -65,12 +69,12 @@ async function snapshots() {
     if (files.length === 0) return SNAPSHOT_INTERVAL
     const stats = files.map(async (f) => {
       const s = await fs.stat(dir + "/" + f);
-      return {name: f, stats: s}
+      return { name: f, stats: s }
     })
     const ss = await Promise.all(stats);
     ss.sort((a, b) => a.stats.mtime.getTime() - b.stats.mtime.getTime())
     if (ss.length > 2) await fs.rm(dir + "/" + ss[0].name);
-    const maxnum = ss[ss.length -1].name.match(/\d+/);
+    const maxnum = ss[ss.length - 1].name.match(/\d+/);
     const max = maxnum?.[0] || "0"
     return parseInt(max) + SNAPSHOT_INTERVAL
   } catch {
@@ -100,28 +104,14 @@ async function runIterativeFunnel(gameStateMachine: GameStateMachine, chainFunne
           await logError(error)
         }
       }
-      if (!run){
-        await fs.rm("./engine-lock")
-        process.exit(0)
-      } 
+    if (!run) {
+      await fs.rm("./engine-lock")
+      process.exit(0)
+    }
   }
 }
 
-async function logBlock(block: ChainData) {
-  const s1 = `${Date.now()} - ${block.blockNumber} block read, containing ${block.submittedData.length} pieces of input\n`
-  console.log(s1)
-  await fs.appendFile("./logs.log", s1)
-}
-async function logSuccess(block: ChainData) {
-  const s2 = `${Date.now()} - ${block.blockNumber} OK\n`
-  console.log(s2)
-  await fs.appendFile("./logs.log", s2)
-}
-async function logError(error: any) {
-  const s3 = `***ERROR***\n${error}\n***\n`;
-  console.log(s3)
-  await fs.appendFile("./logs.log", s3)
-}
+
 function delay(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
