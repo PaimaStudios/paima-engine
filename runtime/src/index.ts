@@ -4,13 +4,13 @@ import type {
   PaimaRuntimeInitializer,
   ChainData,
 } from "paima-utils";
-import { doLog } from "paima-utils";
+import { doLog, logBlock, logSuccess, logError } from "paima-utils";
 import * as fs from "fs/promises";
 import { exec } from "child_process";
 import { server, startServer } from "./server.js"
 import process from "process";
 
-const SNAPSHOT_INTERVAL = 10;
+const SNAPSHOT_INTERVAL = 151200;
 let run = true;
 
 process.on("SIGINT", () => {
@@ -20,7 +20,6 @@ process.on("SIGINT", () => {
 process.on('exit', (code) => {
   doLog(`Exiting with code: ${code}`);
 });
-
 
 
 const paimaEngine: PaimaRuntimeInitializer = {
@@ -53,6 +52,7 @@ const paimaEngine: PaimaRuntimeInitializer = {
     }
   }
 }
+
 async function lockEngine() {
   try {
     const f = await fs.readFile("./engine-lock");
@@ -62,6 +62,7 @@ async function lockEngine() {
     await fs.writeFile("./engine-lock", "");
   }
 }
+
 async function snapshots() {
   const dir = "snapshots"
   try {
@@ -82,6 +83,7 @@ async function snapshots() {
     return SNAPSHOT_INTERVAL
   }
 }
+
 async function runIterativeFunnel(gameStateMachine: GameStateMachine, chainFunnel: ChainFunnel, pollingRate: number) {
   while (run) {
     const latestReadBlockHeight = await gameStateMachine.latestBlockHeight();
@@ -95,7 +97,7 @@ async function runIterativeFunnel(gameStateMachine: GameStateMachine, chainFunne
     else
       for (let block of latestChainData) {
         await logBlock(block);
-        if (block.submittedData.length) console.log(block, "block of chain data being processed")
+        if (block.submittedData.length) console.log(block, "chain data being processed")
         try {
           await gameStateMachine.process(block);
           await logSuccess(block)
@@ -111,7 +113,6 @@ async function runIterativeFunnel(gameStateMachine: GameStateMachine, chainFunne
   }
 }
 
-
 function delay(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
@@ -120,6 +121,7 @@ async function saveSnapshot(blockHeight: number) {
   const username = process.env.DB_USER;
   const database = process.env.DB_NAME;
   const fileName = `paima-snapshot-${blockHeight}.tar`;
+  doLog(`Attempting to save snapshot: ${fileName}`)
   exec(`pg_dump -U ${username} -d ${database} -f ./snapshots/${fileName} -F t`,)
 }
 

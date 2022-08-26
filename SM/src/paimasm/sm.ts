@@ -14,7 +14,6 @@ import Prando from "prando";
 import { randomnessRouter } from "./randomness.js";
 
 
-
 const SM: GameStateMachineInitializer = {
   initialize: (
     databaseInfo,
@@ -31,17 +30,20 @@ const SM: GameStateMachineInitializer = {
         const blockHeight = b?.block_height || startBlockheight || 0;
         return blockHeight;
       },
+      // Core function which triggers state transitions
       process: async (latestChainData) => {
+        // Acquire correct STF based on router (based on block height)
         const gameStateTransition = gameStateTransitionRouter(latestChainData.blockNumber);
         // Save blockHeight and randomness seed (which uses the blockHash)
         const getSeed = randomnessRouter(randomnessProtocolEnum);
         const seed = await getSeed(latestChainData, DBConn);
         await saveLastBlockHeight.run({ block_height: latestChainData.blockNumber, seed: seed }, DBConn);
-        // generate randomness
+        // Generate Prando object
         const logString = `using seed ${seed}`;
         doLog(logString);
         const randomnessGenerator = new Prando(seed);
-        // fetch data scheduled for present block height and execute if exists
+
+        // Fetch and execute scheduled input data
         const scheduledData = await getScheduledDataByBlockHeight.run({ block_height: latestChainData.blockNumber }, DBConn);
         for (let data of scheduledData) {
           const inputData = {
@@ -49,37 +51,41 @@ const SM: GameStateMachineInitializer = {
             inputData: data.input_data,
             inputNonce: ""
           }
+          // Trigger STF
           const sqlQueries = await gameStateTransition(inputData, latestChainData.blockNumber, randomnessGenerator, DBConn);
           for (let [query, params] of sqlQueries) {
             try {
               await query.run(params, DBConn);
             } catch (error) {
-              console.log(error, "database error")
+              doLog(`Database error: ${error}`)
             }
           }
-          await deleteScheduled.run({id: data.id}, DBConn);
-          // TODO: somehow make atomic from for up to here?
+          await deleteScheduled.run({ id: data.id }, DBConn);
         }
-        // process actual user input
+
+        // Execute user submitted input data
         for (let inputData of latestChainData.submittedData) {
+          // Check nonce is valid
           if (inputData.inputNonce === "") {
-            console.log("Skipping inputData with invalid nonce:", inputData);
+            doLog(`Skipping inputData with invalid empty nonce: ${inputData}`);
             continue;
           }
-          const nonceData = await findNonce.run({nonce: inputData.inputNonce}, DBConn);
+          const nonceData = await findNonce.run({ nonce: inputData.inputNonce }, DBConn);
           if (nonceData.length > 0) {
-            console.log("Skipping inputData with invalid nonce:", inputData);
+            doLog(`Skipping inputData with duplicate nonce: ${inputData}`);
             continue;
           }
+
+          // Trigger STF
           const sqlQueries = await gameStateTransition(inputData, latestChainData.blockNumber, randomnessGenerator, DBConn);
           for (let [query, params] of sqlQueries) {
             try {
               await query.run(params, DBConn);
             } catch (error) {
-              console.log(error, "database error")
+              doLog(`Database error: ${error}`)
             }
           }
-          await insertNonce.run({nonce: inputData.inputNonce, block_height: latestChainData.blockNumber}, DBConn);
+          await insertNonce.run({ nonce: inputData.inputNonce, block_height: latestChainData.blockNumber }, DBConn);
         }
         await blockHeightDone.run({ block_height: latestChainData.blockNumber }, DBConn);
       },
