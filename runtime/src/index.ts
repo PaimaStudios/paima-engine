@@ -17,6 +17,12 @@ process.on("SIGINT", () => {
   doLog("Caught SIGINT. Waiting for engine to finish processing current block");
   run = false;
 });
+
+process.on("SIGTERM", () => {
+  doLog("Caught SIGTERM. Waiting for engine to finish processing current block");
+  run = false;
+});
+
 process.on('exit', (code) => {
   doLog(`Exiting with code: ${code}`);
 });
