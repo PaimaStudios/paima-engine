@@ -22,7 +22,6 @@ process.on('exit', (code) => {
 });
 
 
-
 const paimaEngine: PaimaRuntimeInitializer = {
   initialize(chainFunnel, gameStateMachine, gameBackendVersion) {
     // initialize snapshot folder
@@ -53,6 +52,7 @@ const paimaEngine: PaimaRuntimeInitializer = {
     }
   }
 }
+
 async function lockEngine() {
   try {
     const f = await fs.readFile("./engine-lock");
@@ -62,6 +62,7 @@ async function lockEngine() {
     await fs.writeFile("./engine-lock", "");
   }
 }
+
 async function snapshots() {
   const dir = "snapshots"
   try {
@@ -82,6 +83,7 @@ async function snapshots() {
     return SNAPSHOT_INTERVAL
   }
 }
+
 async function runIterativeFunnel(gameStateMachine: GameStateMachine, chainFunnel: ChainFunnel, pollingRate: number) {
   while (run) {
     const latestReadBlockHeight = await gameStateMachine.latestBlockHeight();
@@ -111,7 +113,6 @@ async function runIterativeFunnel(gameStateMachine: GameStateMachine, chainFunne
   }
 }
 
-
 function delay(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
@@ -120,6 +121,7 @@ async function saveSnapshot(blockHeight: number) {
   const username = process.env.DB_USER;
   const database = process.env.DB_NAME;
   const fileName = `paima-snapshot-${blockHeight}.tar`;
+  doLog(`Attempting to save snapshot: ${fileName}`)
   exec(`pg_dump -U ${username} -d ${database} -f ./snapshots/${fileName} -F t`,)
 }
 
