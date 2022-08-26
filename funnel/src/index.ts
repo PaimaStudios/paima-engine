@@ -46,7 +46,7 @@ const paimaFunnel = {
                         });
                 } catch (err) {
                     console.log(err);
-                    const errMsg = `Exception occured while reading blocks`;
+                    const errMsg = `Exception occurred while reading blocks`;
                     console.error(errMsg);
                     return [];
                 }

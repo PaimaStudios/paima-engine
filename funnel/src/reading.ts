@@ -58,7 +58,6 @@ async function processBlock(
         };
     } catch (err) {
         console.log("[funnel::processBlock] caught", err);
-        //console.log("[funnel::processBlock] something went wrong while processing");
         return {
             timestamp: 0,
             blockHash: "",

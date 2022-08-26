@@ -6,7 +6,6 @@ export interface ChainFunnel {
   nodeUrl: string,
   storageAddress: string,
   extensions: ChainDataExtension[],
-  // readData: (blockHeight: number) => Promise<ChainData | undefined> // if using internalReadDataSingle
   readData: (blockHeight: number) => Promise<ChainData[] | undefined> // if using internalReadData
 }
 export type ETHAddress = string;
