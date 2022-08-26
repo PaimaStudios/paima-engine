@@ -53,12 +53,7 @@ async function processBlock(
         };
     } catch (err) {
         doLog(`[funnel::processBlock] caught ${err}`)
-        return {
-            timestamp: 0,
-            blockHash: "",
-            blockNumber: 0,
-            submittedData: [],
-        };
+        throw err;
     }
 }
 
