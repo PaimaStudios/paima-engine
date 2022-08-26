@@ -22,11 +22,12 @@ const SM: GameStateMachineInitializer = {
     startBlockheight
   ) => {
     const DBConn = new pg.Pool(databaseInfo);
-    // const ensureReadOnly = `SET SESSION CHARACTERISTICS AS TRANSACTION READ ONLY;`
-    // const readonlyset = readonlyDBConn.query(ensureReadOnly);
+    const readonlyDBConn = new pg.Pool(databaseInfo)
+    const ensureReadOnly = `SET SESSION CHARACTERISTICS AS TRANSACTION READ ONLY;`
+    const readonlyset = readonlyDBConn.query(ensureReadOnly);
     return {
       latestBlockHeight: async () => {
-        const [b] = await getLatestBlockHeight.run(undefined, DBConn);
+        const [b] = await getLatestBlockHeight.run(undefined, readonlyDBConn);
         const blockHeight = b?.block_height || startBlockheight || 0;
         return blockHeight;
       },
@@ -36,7 +37,7 @@ const SM: GameStateMachineInitializer = {
         const gameStateTransition = gameStateTransitionRouter(latestChainData.blockNumber);
         // Save blockHeight and randomness seed (which uses the blockHash)
         const getSeed = randomnessRouter(randomnessProtocolEnum);
-        const seed = await getSeed(latestChainData, DBConn);
+        const seed = await getSeed(latestChainData, readonlyDBConn);
         await saveLastBlockHeight.run({ block_height: latestChainData.blockNumber, seed: seed }, DBConn);
         // Generate Prando object
         const logString = `using seed ${seed}`;
@@ -44,7 +45,7 @@ const SM: GameStateMachineInitializer = {
         const randomnessGenerator = new Prando(seed);
 
         // Fetch and execute scheduled input data
-        const scheduledData = await getScheduledDataByBlockHeight.run({ block_height: latestChainData.blockNumber }, DBConn);
+        const scheduledData = await getScheduledDataByBlockHeight.run({ block_height: latestChainData.blockNumber }, readonlyDBConn);
         for (let data of scheduledData) {
           const inputData = {
             userAddress: "0x0",
@@ -52,7 +53,7 @@ const SM: GameStateMachineInitializer = {
             inputNonce: ""
           }
           // Trigger STF
-          const sqlQueries = await gameStateTransition(inputData, latestChainData.blockNumber, randomnessGenerator, DBConn);
+          const sqlQueries = await gameStateTransition(inputData, latestChainData.blockNumber, randomnessGenerator, readonlyDBConn);
           for (let [query, params] of sqlQueries) {
             try {
               await query.run(params, DBConn);
@@ -70,14 +71,14 @@ const SM: GameStateMachineInitializer = {
             doLog(`Skipping inputData with invalid empty nonce: ${inputData}`);
             continue;
           }
-          const nonceData = await findNonce.run({ nonce: inputData.inputNonce }, DBConn);
+          const nonceData = await findNonce.run({ nonce: inputData.inputNonce }, readonlyDBConn);
           if (nonceData.length > 0) {
             doLog(`Skipping inputData with duplicate nonce: ${inputData}`);
             continue;
           }
 
           // Trigger STF
-          const sqlQueries = await gameStateTransition(inputData, latestChainData.blockNumber, randomnessGenerator, DBConn);
+          const sqlQueries = await gameStateTransition(inputData, latestChainData.blockNumber, randomnessGenerator, readonlyDBConn);
           for (let [query, params] of sqlQueries) {
             try {
               await query.run(params, DBConn);
