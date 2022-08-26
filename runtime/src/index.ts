@@ -10,7 +10,7 @@ import { exec } from "child_process";
 import { server, startServer } from "./server.js"
 import process from "process";
 
-const SNAPSHOT_INTERVAL = 10;
+const SNAPSHOT_INTERVAL = 151200;
 let run = true;
 
 process.on("SIGINT", () => {
