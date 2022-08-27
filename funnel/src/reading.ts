@@ -25,7 +25,6 @@ async function processBlock(
                 toBlock: blockNumber,
             }),
         ]);
-        doLog(`[funnel::processBlock] at block height ${block.number}`)
         return {
             timestamp: block.timestamp,
             blockHash: block.hash,
@@ -66,7 +65,8 @@ export async function internalReadDataMulti(
     let blockPromises: Promise<ChainData>[] = [];
     for (let i = fromBlock; i <= toBlock; i++) {
         const block = processBlock(i, web3, storage);
-        blockPromises.push(block);
+        const timeoutBlock = timeout(block, 3000)
+        blockPromises.push(timeoutBlock);
     }
     return Promise.allSettled(blockPromises).then(resList => {
         let firstRejected = resList.findIndex(
@@ -88,3 +88,7 @@ export async function internalReadDataSingle(
 ): Promise<ChainData> {
     return processBlock(fromBlock, web3, storage);
 }
+
+// Timeout function for promises
+export const timeout = (prom: Promise<any>, time: number) =>
+    Promise.race([prom, new Promise((_r, rej) => setTimeout(rej, time))]);

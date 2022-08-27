@@ -86,19 +86,33 @@ async function snapshots(blockheight: number) {
 }
 
 async function runIterativeFunnel(gameStateMachine: GameStateMachine, chainFunnel: ChainFunnel, pollingRate: number) {
-  while (run) {
+  while (true) {
+    closeCheck(run);
     const latestReadBlockHeight = await gameStateMachine.latestBlockHeight();
     // Take DB snapshot
     const snapshotTrigger = await snapshots(latestReadBlockHeight);
     if (latestReadBlockHeight === snapshotTrigger) await saveSnapshot(latestReadBlockHeight);
 
     // Read latest chain data from funnel
-    const latestChainData = await chainFunnel.readData(latestReadBlockHeight + 1) as ChainData[];
-    if (!latestChainData || !latestChainData?.length) await delay(pollingRate * 1000);
+    const latestChainDataList = await chainFunnel.readData(latestReadBlockHeight + 1) as ChainData[];
+    doLog(`Received chain data from Paima Funnel. Total count: ${latestChainDataList.length}`);
+
+    // Checking if should safely close after fetching all chain data
+    // which may take some time
+    closeCheck(run);
+
+    // If chain data list
+    if (!latestChainDataList || !latestChainDataList?.length) {
+      console.log(`No chain data was returned, waiting ${pollingRate}s.`)
+      await delay(pollingRate * 1000);
+    }
     else
-      for (let block of latestChainData) {
+      for (let block of latestChainDataList) {
+        // Checking if should safely close in between processing blocks
+        closeCheck(run);
         await logBlock(block);
-        if (block.submittedData.length) console.log(block)
+
+        // Pass to PaimaSM
         try {
           await gameStateMachine.process(block);
           await logSuccess(block)
@@ -107,9 +121,14 @@ async function runIterativeFunnel(gameStateMachine: GameStateMachine, chainFunne
           await logError(error)
         }
       }
-    if (!run) {
-      process.exit(0)
-    }
+  }
+}
+
+// Function for closing the process if closing is requested.
+// To be used at moments where no data would be lost.
+function closeCheck(run: boolean) {
+  if (!run) {
+    process.exit(0)
   }
 }
 
@@ -126,3 +145,5 @@ async function saveSnapshot(blockHeight: number) {
 }
 
 export default paimaEngine
+
+

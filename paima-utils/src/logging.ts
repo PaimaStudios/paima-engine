@@ -4,6 +4,7 @@ import * as fsa from "./fs_access/fsa.js"
 export async function logBlock(block: ChainData) {
   const s = `Block #${block.blockNumber} received from Paima Funnel. Contains ${block.submittedData.length} pieces of input.`
   await doLog(s)
+  if (block.submittedData.length) console.log(block)
 }
 export async function logSuccess(block: ChainData) {
   const s = `Block #${block.blockNumber} finished processing by Paima SM.`
