@@ -47,7 +47,6 @@ const paimaEngine: PaimaRuntimeInitializer = {
         this.chainDataExtensions = [...this.chainDataExtensions, ...chainDataExtensions]
       },
       async run() {
-        await lockEngine()
         this.addGET("/backend_version", async (req, res) => {
           res.status(200).json(gameBackendVersion);
         });
@@ -94,12 +93,28 @@ async function runIterativeFunnel(gameStateMachine: GameStateMachine, chainFunne
     if (latestReadBlockHeight === snapshotTrigger) await saveSnapshot(latestReadBlockHeight);
 
     // Read latest chain data from funnel
-    const latestChainData = await chainFunnel.readData(latestReadBlockHeight + 1) as ChainData[];
-    if (!latestChainData || !latestChainData?.length) await delay(pollingRate * 1000);
+    const latestChainDataList = await chainFunnel.readData(latestReadBlockHeight + 1) as ChainData[];
+    doLog(`Received chain data from Paima Funnel. Total count: ${latestChainDataList.length}`);
+
+    // Checking if should safely close
+    if (!run) {
+      process.exit(0)
+    }
+
+    // If chain data list
+    if (!latestChainDataList || !latestChainDataList?.length) {
+      console.log(`No chain data was returned, waiting ${pollingRate}s.`)
+      await delay(pollingRate * 1000);
+    }
     else
-      for (let block of latestChainData) {
+      for (let block of latestChainDataList) {
+        // Checking if should safely close
+        if (!run) {
+          process.exit(0)
+        }
         await logBlock(block);
-        if (block.submittedData.length) console.log(block)
+
+        // Pass to PaimaSM
         try {
           await gameStateMachine.process(block);
           await logSuccess(block)
@@ -108,9 +123,6 @@ async function runIterativeFunnel(gameStateMachine: GameStateMachine, chainFunne
           await logError(error)
         }
       }
-    if (!run) {
-      process.exit(0)
-    }
   }
 }
 
@@ -127,3 +139,5 @@ async function saveSnapshot(blockHeight: number) {
 }
 
 export default paimaEngine
+
+
