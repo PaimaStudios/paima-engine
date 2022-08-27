@@ -86,7 +86,8 @@ async function snapshots(blockheight: number) {
 }
 
 async function runIterativeFunnel(gameStateMachine: GameStateMachine, chainFunnel: ChainFunnel, pollingRate: number) {
-  while (run) {
+  while (true) {
+    closeCheck(run);
     const latestReadBlockHeight = await gameStateMachine.latestBlockHeight();
     // Take DB snapshot
     const snapshotTrigger = await snapshots(latestReadBlockHeight);
@@ -96,10 +97,9 @@ async function runIterativeFunnel(gameStateMachine: GameStateMachine, chainFunne
     const latestChainDataList = await chainFunnel.readData(latestReadBlockHeight + 1) as ChainData[];
     doLog(`Received chain data from Paima Funnel. Total count: ${latestChainDataList.length}`);
 
-    // Checking if should safely close
-    if (!run) {
-      process.exit(0)
-    }
+    // Checking if should safely close after fetching all chain data
+    // which may take some time
+    closeCheck(run);
 
     // If chain data list
     if (!latestChainDataList || !latestChainDataList?.length) {
@@ -108,10 +108,8 @@ async function runIterativeFunnel(gameStateMachine: GameStateMachine, chainFunne
     }
     else
       for (let block of latestChainDataList) {
-        // Checking if should safely close
-        if (!run) {
-          process.exit(0)
-        }
+        // Checking if should safely close in between processing blocks
+        closeCheck(run);
         await logBlock(block);
 
         // Pass to PaimaSM
@@ -123,6 +121,14 @@ async function runIterativeFunnel(gameStateMachine: GameStateMachine, chainFunne
           await logError(error)
         }
       }
+  }
+}
+
+// Function for closing the process if closing is requested.
+// To be used at moments where no data would be lost.
+function closeCheck(run: boolean) {
+  if (!run) {
+    process.exit(0)
   }
 }
 
