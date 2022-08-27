@@ -59,15 +59,7 @@ const paimaEngine: PaimaRuntimeInitializer = {
   }
 }
 
-async function lockEngine() {
-  try {
-    const f = await fs.readFile("./engine-lock");
-    await logError("engine-lock exists")
-    process.exit(0)
-  } catch (e) {
-    await fs.writeFile("./engine-lock", "");
-  }
-}
+
 
 async function snapshots(blockheight: number) {
   const dir = "snapshots"
@@ -117,7 +109,6 @@ async function runIterativeFunnel(gameStateMachine: GameStateMachine, chainFunne
         }
       }
     if (!run) {
-      await fs.rm("./engine-lock")
       process.exit(0)
     }
   }
