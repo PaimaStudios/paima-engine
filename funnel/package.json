@@ -23,8 +23,9 @@
     "typescript": "^4.7.4"
   },
   "dependencies": {
+    "@emurgo/cardano-serialization-lib-nodejs": "^11.0.5",
+    "paima-utils": "file:../paima-utils",
     "prettier": "^2.7.1",
-    "web3": "^1.7.4",
-    "paima-utils": "file:../paima-utils"
+    "web3": "^1.7.4"
   }
 }

@@ -1,5 +1,6 @@
 import Web3 from "web3";
 import { doLog, SubmittedChainData } from "paima-utils";
+import * as Cardano from "@emurgo/cardano-serialization-lib-nodejs";
 
 interface ValidatedSubmittedChainData extends SubmittedChainData {
     validated: boolean;
@@ -32,6 +33,14 @@ async function validateSubunit(
     const msg: string = inputData + inputNonce;
     const recoveredAddr = web3.eth.accounts.recover(msg, userSignature);
     return recoveredAddr.toLowerCase() === userAddress.toLowerCase();
+}
+
+
+export async function verifySignatureCardano(address: string, message: string, signature: string) {
+    const pk = Cardano.PublicKey.from_bech32(address);
+    const msgArr = Uint8Array.from(Array(message.length).map((v, i) => message.charCodeAt(i)));
+    const result = pk.verify(msgArr, Cardano.Ed25519Signature.from_hex(signature));
+    console.log("Result: ", result);
 }
 
 async function processBatchedSubunit(
