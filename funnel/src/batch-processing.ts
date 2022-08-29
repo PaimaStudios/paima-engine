@@ -46,7 +46,6 @@ async function processBatchedSubunit(
         validated: false,
     };
 
-
     const elems = input.split(INNER_DIVIDER);
     if (elems.length !== 4) {
         return INVALID_INPUT;
@@ -98,7 +97,6 @@ export async function processDataUnit(
     const afterLastIndex = elems.length - (hasClosingTilde ? 1 : 0);
 
     const prefix = elems[0];
-
 
     if (prefix === "B") {
         const validatedSubUnits = await Promise.all(
