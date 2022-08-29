@@ -34,7 +34,7 @@ async function processBlock(
                     events.map(function (e) {
                         const decodedData =
                             e.returnValues.data &&
-                                e.returnValues.data.length > 0
+                            e.returnValues.data.length > 0
                                 ? hexToUtf8(e.returnValues.data)
                                 : "";
                         return processDataUnit(
@@ -51,7 +51,7 @@ async function processBlock(
             ).flat(),
         };
     } catch (err) {
-        doLog(`[funnel::processBlock] caught ${err}`)
+        doLog(`[funnel::processBlock] caught ${err}`);
         throw err;
     }
 }
@@ -62,10 +62,13 @@ export async function internalReadDataMulti(
     fromBlock: number,
     toBlock: number
 ): Promise<ChainData[]> {
+    if (toBlock < fromBlock) {
+        return [];
+    }
     let blockPromises: Promise<ChainData>[] = [];
     for (let i = fromBlock; i <= toBlock; i++) {
         const block = processBlock(i, web3, storage);
-        const timeoutBlock = timeout(block, 3000)
+        const timeoutBlock = timeout(block, 3000);
         blockPromises.push(timeoutBlock);
     }
     return Promise.allSettled(blockPromises).then(resList => {

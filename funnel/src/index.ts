@@ -28,28 +28,40 @@ const paimaFunnel = {
             ): Promise<ChainData[]> {
                 let blocks: ChainData[] = [];
                 try {
-                    const latestBlock = await timeout(web3.eth.getBlockNumber(), 3000);
-                    const toBlock = Math.min(
+                    const latestBlock = await timeout(
+                        web3.eth.getBlockNumber(),
+                        3000
+                    );
+                    let fromBlock = blockHeight;
+                    let toBlock = Math.min(
                         latestBlock,
-                        blockHeight + blockCount - 1
+                        fromBlock + blockCount - 1
                     );
 
-                    doLog(`[Paima Funnel] reading blocks from #${blockHeight} to #${toBlock}`)
-                    await internalReadDataMulti(
-                        web3,
-                        storage,
-                        blockHeight,
-                        toBlock
-                    )
-                        .then(
-                            res => (blocks = res)
+                    if (toBlock >= fromBlock) {
+                        doLog(
+                            `[Paima Funnel] reading blocks from #${fromBlock} to #${toBlock}`
+                        );
+                        await internalReadDataMulti(
+                            web3,
+                            storage,
+                            fromBlock,
+                            toBlock
                         )
-                        .catch(err => {
-                            console.log(err);
-                            const errMsg = `Block reading failed`;
-                            console.error(errMsg);
-                        });
-
+                            .then(res => (blocks = res))
+                            .catch(err => {
+                                console.log(err);
+                                const errMsg = `Block reading failed`;
+                                console.error(errMsg);
+                            });
+                    } else {
+                        if (blockCount > 0) {
+                            doLog(
+                                `[PaimaFunnel] skipping reading, no new blocks ready`
+                            );
+                        }
+                        blocks = [];
+                    }
                 } catch (err) {
                     console.log(err);
                     const errMsg = `Exception occurred while reading blocks`;
@@ -63,4 +75,3 @@ const paimaFunnel = {
 };
 
 export default paimaFunnel;
-
