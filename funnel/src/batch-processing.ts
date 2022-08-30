@@ -1,5 +1,7 @@
 import Web3 from "web3";
 import { doLog, SubmittedChainData } from "paima-utils";
+import * as Cardano from "@emurgo/cardano-serialization-lib-nodejs";
+import * as MessageSign from "@emurgo/cardano-message-signing-nodejs";
 
 interface ValidatedSubmittedChainData extends SubmittedChainData {
     validated: boolean;
@@ -27,11 +29,71 @@ async function validateSubunit(
     userAddress: string,
     userSignature: string,
     inputData: string,
-    inputNonce: string
+    millisecondTimestamp: string
 ): Promise<boolean> {
-    const msg: string = inputData + inputNonce;
-    const recoveredAddr = web3.eth.accounts.recover(msg, userSignature);
-    return recoveredAddr.toLowerCase() === userAddress.toLowerCase();
+    const message: string = inputData + millisecondTimestamp;
+    if (userSignature.slice(0, 2) === "0x") {
+        // Ethereum address:
+        return verifySignatureEthereum(
+            web3,
+            message,
+            userAddress,
+            userSignature
+        );
+    } else {
+        // Cardano address:
+        return verifySignatureCardano(userAddress, message, userSignature);
+    }
+}
+
+function verifySignatureEthereum(
+    web3: Web3,
+    message: string,
+    userAddress: string,
+    userSignature: string
+): boolean {
+    try {
+        const recoveredAddr = web3.eth.accounts.recover(message, userSignature);
+        return recoveredAddr.toLowerCase() === userAddress.toLowerCase();
+    } catch (err) {
+        doLog(`[funnel] error verifying ethereum signature: ${err}`);
+        return false;
+    }
+}
+
+async function verifySignatureCardano(
+    userAddress: string,
+    message: string,
+    signedMessage: string
+): Promise<boolean> {
+    try {
+        const msg = MessageSign.COSESign1.from_bytes(
+            Buffer.from(signedMessage, "hex")
+        );
+        const headermap = msg.headers().protected().deserialized_headers();
+
+        const pk = Cardano.PublicKey.from_bytes(
+            headermap.key_id() ?? new Uint8Array(0)
+        );
+        const data = msg.signed_data().to_bytes();
+        const sig = Cardano.Ed25519Signature.from_bytes(msg.signature());
+
+        const addrHex = Cardano.Address.from_bytes(
+            headermap
+                .header(MessageSign.Label.new_text("address"))
+                ?.as_bytes() ?? new Uint8Array(0)
+        ).to_hex();
+        const payload = new TextDecoder("utf-8").decode(msg.payload());
+
+        const result =
+            pk.verify(data, sig) &&
+            addrHex === userAddress &&
+            payload === message;
+        return result;
+    } catch (err) {
+        doLog(`[funnel] error verifying cardano signature: ${err}`);
+        return false;
+    }
 }
 
 async function processBatchedSubunit(
@@ -76,39 +138,44 @@ export async function processDataUnit(
     unit: SubmittedChainData,
     blockHeight: number
 ): Promise<SubmittedChainData[]> {
-    const OUTER_DIVIDER = "~";
+    try {
+        const OUTER_DIVIDER = "~";
 
-    if (!unit.inputData.includes(OUTER_DIVIDER)) {
-        // Directly submitted input, prepare nonce and return:
-        const hashInput =
-            blockHeight.toString(10) + unit.userAddress + unit.inputData;
-        const inputNonce = createNonce(web3, hashInput);
-        return [
-            {
-                ...unit,
-                inputNonce,
-            },
-        ];
-    }
+        if (!unit.inputData.includes(OUTER_DIVIDER)) {
+            // Directly submitted input, prepare nonce and return:
+            const hashInput =
+                blockHeight.toString(10) + unit.userAddress + unit.inputData;
+            const inputNonce = createNonce(web3, hashInput);
+            return [
+                {
+                    ...unit,
+                    inputNonce,
+                },
+            ];
+        }
 
-    const hasClosingTilde =
-        unit.inputData[unit.inputData.length - 1] === OUTER_DIVIDER;
-    const elems = unit.inputData.split(OUTER_DIVIDER);
-    const afterLastIndex = elems.length - (hasClosingTilde ? 1 : 0);
+        const hasClosingTilde =
+            unit.inputData[unit.inputData.length - 1] === OUTER_DIVIDER;
+        const elems = unit.inputData.split(OUTER_DIVIDER);
+        const afterLastIndex = elems.length - (hasClosingTilde ? 1 : 0);
 
-    const prefix = elems[0];
+        const prefix = elems[0];
 
-    if (prefix === "B") {
-        const validatedSubUnits = await Promise.all(
-            elems
-                .slice(1, afterLastIndex)
-                .map(elem => processBatchedSubunit(web3, elem))
-        );
-        return validatedSubUnits
-            .filter(item => item.validated)
-            .map(unpackValidatedData);
-    } else {
-        // Encountered unknown type of ~-separated input
+        if (prefix === "B") {
+            const validatedSubUnits = await Promise.all(
+                elems
+                    .slice(1, afterLastIndex)
+                    .map(elem => processBatchedSubunit(web3, elem))
+            );
+            return validatedSubUnits
+                .filter(item => item.validated)
+                .map(unpackValidatedData);
+        } else {
+            // Encountered unknown type of ~-separated input
+            return [];
+        }
+    } catch (err) {
+        doLog(`[funnel::processDataUnit] error: ${err}`);
         return [];
     }
 }
