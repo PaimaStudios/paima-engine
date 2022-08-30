@@ -62,7 +62,7 @@ function verifySignatureEthereum(
 }
 
 
-export async function verifySignatureCardano(
+async function verifySignatureCardano(
     userAddress: string,
     message: string,
     signedMessage: string
