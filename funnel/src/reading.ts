@@ -34,7 +34,7 @@ async function processBlock(
                     events.map(function (e) {
                         const decodedData =
                             e.returnValues.data &&
-                            e.returnValues.data.length > 0
+                                e.returnValues.data.length > 0
                                 ? hexToUtf8(e.returnValues.data)
                                 : "";
                         return processDataUnit(
@@ -68,7 +68,7 @@ export async function internalReadDataMulti(
     let blockPromises: Promise<ChainData>[] = [];
     for (let i = fromBlock; i <= toBlock; i++) {
         const block = processBlock(i, web3, storage);
-        const timeoutBlock = timeout(block, 3000);
+        const timeoutBlock = timeout(block, 5000);
         blockPromises.push(timeoutBlock);
     }
     return Promise.allSettled(blockPromises).then(resList => {
