@@ -61,7 +61,6 @@ function verifySignatureEthereum(
     }
 }
 
-
 async function verifySignatureCardano(
     userAddress: string,
     message: string,
