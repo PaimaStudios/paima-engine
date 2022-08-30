@@ -23,6 +23,7 @@
     "typescript": "^4.7.4"
   },
   "dependencies": {
+    "@emurgo/cardano-message-signing-nodejs": "^1.0.1",
     "@emurgo/cardano-serialization-lib-nodejs": "^11.0.5",
     "paima-utils": "file:../paima-utils",
     "prettier": "^2.7.1",
