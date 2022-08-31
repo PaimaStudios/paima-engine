@@ -1,6 +1,6 @@
 import Web3 from "web3";
 import { doLog, SubmittedChainData } from "paima-utils";
-import * as Cardano from "@emurgo/cardano-serialization-lib-nodejs";
+import * as Cardano from "@dcspark/cardano-multiplatform-lib-nodejs";
 import * as MessageSign from "@emurgo/cardano-message-signing-nodejs";
 
 interface ValidatedSubmittedChainData extends SubmittedChainData {
@@ -78,11 +78,13 @@ async function verifySignatureCardano(
         const data = msg.signed_data().to_bytes();
         const sig = Cardano.Ed25519Signature.from_bytes(msg.signature());
 
-        const addrHex = Cardano.Address.from_bytes(
-            headermap
-                .header(MessageSign.Label.new_text("address"))
-                ?.as_bytes() ?? new Uint8Array(0)
-        ).to_hex();
+        const addrHex = Buffer.from(
+            Cardano.Address.from_bytes(
+                headermap
+                    .header(MessageSign.Label.new_text("address"))
+                    ?.as_bytes() ?? new Uint8Array(0)
+            ).to_bytes()
+        ).toString("hex");
         const payload = new TextDecoder("utf-8").decode(msg.payload());
 
         const result =

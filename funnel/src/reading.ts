@@ -34,7 +34,7 @@ async function processBlock(
                     events.map(function (e) {
                         const decodedData =
                             e.returnValues.data &&
-                                e.returnValues.data.length > 0
+                            e.returnValues.data.length > 0
                                 ? hexToUtf8(e.returnValues.data)
                                 : "";
                         return processDataUnit(
