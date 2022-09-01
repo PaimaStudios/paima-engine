@@ -49,6 +49,9 @@ const matchExecutorInitializer: MatchExecutorInitializer = {
           if (states.length === 0) return null // This shouldn't happen but good to check nonetheless
           const stateObj = stateMutator(states);
           const seed = seeds.find(s => s.round === this.currentRound);
+          if (!seed) {
+            return null;
+          }
           const randomnessGenerator = new Prando((seed as Seed).seed);
           const inputs = (userInputs).filter((ui: any) => ui.round == this.currentRound)
           const executor = roundExecutor.initialize(matchEnvironment, stateObj, inputs, randomnessGenerator, processTick)
