@@ -93,5 +93,5 @@ export async function internalReadDataSingle(
 }
 
 // Timeout function for promises
-export const timeout = (prom: Promise<any>, time: number) =>
-    Promise.race([prom, new Promise((_r, rej) => setTimeout(rej, time))]);
+export const timeout = <T>(prom: Promise<T>, time: number) =>
+    Promise.race([prom, new Promise<T>((_r, rej) => setTimeout(rej, time))]);
