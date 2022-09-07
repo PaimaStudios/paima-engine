@@ -45,19 +45,19 @@ const matchExecutorInitializer: MatchExecutorInitializer = {
         if (this.currentRound > maxRound) return null // null if reached end of the match
         if (!this.roundExecutor) { // Set round executor if null
           this.currentRound++
-          const states = (roundStates as any).filter((rs: any) => rs.round == this.currentRound)
+          const states = roundStates.filter((rs: any) => rs.round == this.currentRound)
           if (states.length === 0) return null // This shouldn't happen but good to check nonetheless
           const stateObj = stateMutator(states);
           const seed = seeds.find(s => s.round === this.currentRound);
           if (!seed) {
             return null;
           }
-          const randomnessGenerator = new Prando((seed as Seed).seed);
+          const randomnessGenerator = new Prando(seed.seed);
           const inputs = (userInputs).filter((ui: any) => ui.round == this.currentRound)
           const executor = roundExecutor.initialize(matchEnvironment, stateObj, inputs, randomnessGenerator, processTick)
           this.roundExecutor = executor;
         }
-        const event = (this.roundExecutor as any).tick()
+        const event = this.roundExecutor.tick()
 
         // If no event, it means that the previous round executor finished, so we recurse this function to increment the round and try again
         if (!event) {

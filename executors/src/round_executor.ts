@@ -31,7 +31,7 @@ const roundExecutor: RoundExecutorInitializer = {
         return event
       },
       endState() {
-        for (let move of userInputs) this.tick()
+        for (const _ of userInputs) this.tick()
         return this.currentState
       },
     };
