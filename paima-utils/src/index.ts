@@ -39,7 +39,7 @@ export function buildErrorCodeTranslator(obj: any): ErrorMessageFxn {
     }
 }
 
-export async function getWeb3(nodeUrl: string): Promise<Web3> {
+export async function initWeb3(nodeUrl: string): Promise<Web3> {
     const web3 = new Web3(nodeUrl);
     try {
         await web3.eth.getNodeInfo();

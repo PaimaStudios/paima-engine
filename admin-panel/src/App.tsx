@@ -5,7 +5,7 @@ import useInterval from "./hooks/useInterval";
 import ControlPanel from "./ControlPanel";
 import InfoPanel from "./InfoPanel";
 
-import { getFee, getOwner, getWeb3 } from "paima-utils";
+import { getFee, getOwner, initWeb3 } from "paima-utils";
 import Web3 from "web3";
 import {
     CHAIN_URI,
@@ -86,7 +86,7 @@ function App() {
     useEffect(() => {
         const init = async () => {
             try {
-                const web3 = await getWeb3(CHAIN_URI);
+                const web3 = await initWeb3(CHAIN_URI);
                 setWeb3(web3);
                 await updateValues(web3);
             } catch (e) {
