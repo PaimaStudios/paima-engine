@@ -18,17 +18,24 @@ const InfoPanel = (props: Props) => {
             <p>Contract address: {props.contractAddress}</p>
             <p>Owner address: {props.ownerAddress}</p>
             <p>Connected wallet: {props.userAddress}</p>
-            <p>Fee: {props.fee} (= {scaledFee} at {DECIMALS} decimals)</p>
-            <p>Contract balance: {props.contractBalance} (= {scaledBalance} at {DECIMALS} decimals)</p>
+            <p>
+                Fee: {props.fee} (= {scaledFee} at {DECIMALS} decimals)
+            </p>
+            <p>
+                Contract balance: {props.contractBalance} (= {scaledBalance} at{" "}
+                {DECIMALS} decimals)
+            </p>
             {props.isOwnerLabel}
             {props.chainCorrectLabel}
         </div>
     );
 };
 
-
-
-function decimalScaling(unscaledString: string, decimals: number, show: number = 3) {
+function decimalScaling(
+    unscaledString: string,
+    decimals: number,
+    show: number = 3
+) {
     if (decimals <= 0) {
         return unscaledString + "0".repeat(-decimals);
     }

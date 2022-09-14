@@ -72,7 +72,7 @@ function App() {
         const [fee, owner, balance] = await Promise.all([
             getFee(CONTRACT_ADDRESS, web3),
             getOwner(CONTRACT_ADDRESS, web3),
-            web3.eth.getBalance(CONTRACT_ADDRESS)
+            web3.eth.getBalance(CONTRACT_ADDRESS),
         ]);
 
         setFee(fee);
