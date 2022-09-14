@@ -18,6 +18,7 @@ import type {
     PaimaRuntime
 } from "./types";
 import {logBlock, logSuccess, logError, doLog} from "./logging.js";
+export type { Web3 };
 
 export interface ChainDataExtension {}
 
