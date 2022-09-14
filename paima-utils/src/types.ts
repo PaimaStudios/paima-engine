@@ -2,6 +2,9 @@ import { Pool, PoolConfig } from "pg";
 import { RequestHandler } from "express";
 import { PreparedQuery } from "@pgtyped/query";
 
+export type ErrorCode = number;
+export type ErrorMessageFxn = (errorCode: ErrorCode) => string;
+
 export interface ChainFunnel {
   nodeUrl: string,
   storageAddress: string,

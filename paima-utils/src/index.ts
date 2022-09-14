@@ -5,6 +5,8 @@ import pkg from 'web3-utils';
 const { isAddress } = pkg;
 import storageBuild from "./artifacts/Storage.js";
 import type {
+    ErrorCode,
+    ErrorMessageFxn,
     ChainFunnel,
     ETHAddress,
     SQLUpdate,
@@ -26,6 +28,16 @@ export type TransactionTemplate = {
     data: string;
     to: string;
 };
+
+export function buildErrorCodeTranslator(obj: any): ErrorMessageFxn {
+    return function(errorCode: ErrorCode): string {
+        if (!obj.hasOwnProperty(errorCode)) {
+            return "Unknown error code: " + errorCode;
+        } else {
+            return obj[errorCode];
+        }
+    }
+}
 
 export async function getWeb3(nodeUrl: string): Promise<Web3> {
     const web3 = new Web3(nodeUrl);
@@ -107,6 +119,8 @@ export {
     ChainFunnel,
     ETHAddress,
     SQLUpdate,
+    ErrorCode,
+    ErrorMessageFxn,
     SubmittedChainData,
     ChainData,
     GameStateTransitionFunctionRouter,
