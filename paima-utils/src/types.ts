@@ -5,6 +5,13 @@ import { Pool, PoolConfig } from "pg";
 export type ErrorCode = number;
 export type ErrorMessageFxn = (errorCode: ErrorCode) => string;
 
+export interface ChainDataExtension {}
+
+export type TransactionTemplate = {
+    data: string;
+    to: string;
+};
+
 export interface ChainFunnel {
     nodeUrl: string;
     storageAddress: string;
@@ -15,7 +22,6 @@ export type ETHAddress = string;
 
 export type SQLUpdate = [PreparedQuery<any, any>, any];
 
-type ChainDataExtension = any;
 type EncodedGameDataString = string;
 type NonceString = string;
 export interface SubmittedChainData {

@@ -18,6 +18,8 @@ import type {
     PaimaRuntimeInitializer,
     SQLUpdate,
     SubmittedChainData,
+    ChainDataExtension,
+    TransactionTemplate
 } from "./types";
 const { isAddress } = pkg;
 export type { Web3 };
@@ -35,17 +37,12 @@ export {
     GameStateMachine,
     PaimaRuntimeInitializer,
     PaimaRuntime,
+    ChainDataExtension,
+    TransactionTemplate,
     logBlock,
     logSuccess,
     logError,
     doLog,
-};
-
-export interface ChainDataExtension {}
-
-export type TransactionTemplate = {
-    data: string;
-    to: string;
 };
 
 export function buildErrorCodeTranslator(obj: any): ErrorMessageFxn {
