@@ -81,7 +81,7 @@ export function validateStorageAddress(address: string) {
     }
 }
 
-export async function getFee(address: string, web3: Web3): Promise<string> {
+export async function retrieveFee(address: string, web3: Web3): Promise<string> {
     const contract = getStorageContract(address, web3);
     return contract.methods.fee().call();
 }

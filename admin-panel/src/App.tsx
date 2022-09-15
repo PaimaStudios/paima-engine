@@ -5,7 +5,7 @@ import useInterval from "./hooks/useInterval";
 import ControlPanel from "./ControlPanel";
 import InfoPanel from "./InfoPanel";
 
-import { getFee, getOwner, initWeb3 } from "paima-utils";
+import { retrieveFee, getOwner, initWeb3 } from "paima-utils";
 import Web3 from "web3";
 import {
     CHAIN_URI,
@@ -70,7 +70,7 @@ function App() {
 
     const updateValues = async (web3: Web3) => {
         const [fee, owner, balance] = await Promise.all([
-            getFee(CONTRACT_ADDRESS, web3),
+            retrieveFee(CONTRACT_ADDRESS, web3),
             getOwner(CONTRACT_ADDRESS, web3),
             web3.eth.getBalance(CONTRACT_ADDRESS),
         ]);
