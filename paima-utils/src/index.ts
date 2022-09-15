@@ -9,6 +9,7 @@ import type {
     ChainFunnel,
     ErrorCode,
     ErrorMessageFxn,
+    ErrorMessageMapping,
     ETHAddress,
     GameStateMachine,
     GameStateMachineInitializer,
@@ -29,6 +30,7 @@ export {
     SQLUpdate,
     ErrorCode,
     ErrorMessageFxn,
+    ErrorMessageMapping,
     SubmittedChainData,
     ChainData,
     GameStateTransitionFunctionRouter,
@@ -45,7 +47,7 @@ export {
     doLog,
 };
 
-export function buildErrorCodeTranslator(obj: any): ErrorMessageFxn {
+export function buildErrorCodeTranslator(obj: ErrorMessageMapping): ErrorMessageFxn {
     return function (errorCode: ErrorCode): string {
         if (!obj.hasOwnProperty(errorCode)) {
             return "Unknown error code: " + errorCode;
