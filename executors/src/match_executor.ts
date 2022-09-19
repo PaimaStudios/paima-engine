@@ -3,7 +3,7 @@ import Prando from "prando";
 
 interface Seed {
   seed: string;
-  blockHeight: number;
+  block_height: number;
   round: number;
 }
 interface MatchExecutorInitializer {
