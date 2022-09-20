@@ -84,7 +84,6 @@ async function snapshots(blockheight: number) {
     return SNAPSHOT_INTERVAL
   }
 }
-
 async function runIterativeFunnel(gameStateMachine: GameStateMachine, chainFunnel: ChainFunnel, pollingRate: number) {
   while (true) {
     closeCheck(run);
@@ -96,7 +95,6 @@ async function runIterativeFunnel(gameStateMachine: GameStateMachine, chainFunne
     // Read latest chain data from funnel
     const latestChainDataList = await chainFunnel.readData(latestReadBlockHeight + 1) as ChainData[];
     doLog(`Received chain data from Paima Funnel. Total count: ${latestChainDataList.length}`);
-
     // Checking if should safely close after fetching all chain data
     // which may take some time
     closeCheck(run);
@@ -106,12 +104,11 @@ async function runIterativeFunnel(gameStateMachine: GameStateMachine, chainFunne
       console.log(`No chain data was returned, waiting ${pollingRate}s.`)
       await delay(pollingRate * 1000);
     }
-    else
+    else{
       for (let block of latestChainDataList) {
         // Checking if should safely close in between processing blocks
         closeCheck(run);
-        await logBlock(block);
-
+        // await logBlock(block);
         // Pass to PaimaSM
         try {
           await gameStateMachine.process(block);
@@ -121,6 +118,7 @@ async function runIterativeFunnel(gameStateMachine: GameStateMachine, chainFunne
           await logError(error)
         }
       }
+    }
   }
 }
 
@@ -138,10 +136,11 @@ function delay(ms: number) {
 
 async function saveSnapshot(blockHeight: number) {
   const username = process.env.DB_USER;
+  const password = process.env.DB_PW;
   const database = process.env.DB_NAME;
   const fileName = `paima-snapshot-${blockHeight}.tar`;
   doLog(`Attempting to save snapshot: ${fileName}`)
-  exec(`pg_dump -U ${username} -d ${database} -f ./snapshots/${fileName} -F t`,)
+  exec(`pg_dump --dbname=postgresql://${username}:${password}@postgres:5432/${database} -f ./snapshots/${fileName} -F t`,)
 }
 
 export default paimaEngine
