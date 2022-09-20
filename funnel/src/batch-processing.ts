@@ -32,7 +32,7 @@ async function validateSubunit(
     millisecondTimestamp: string
 ): Promise<boolean> {
     const message: string = inputData + millisecondTimestamp;
-    if (userSignature.slice(0, 2) === "0x") {
+    if (userAddress.slice(0, 2) === "0x") {
         // Ethereum address:
         return verifySignatureEthereum(
             web3,
