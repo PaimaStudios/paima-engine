@@ -129,10 +129,12 @@ export async function retryPromise<T>(
     }
 
     if (typeof result === "undefined") {
-        if (typeof (failure === "undefined")) {
+        if (typeof failure === "undefined") {
             throw new Error(
                 "Unknown retry error: no retries left, undefined result"
             );
+        } else if (typeof failure === "string") {
+            throw new Error(failure);
         } else {
             throw failure;
         }
