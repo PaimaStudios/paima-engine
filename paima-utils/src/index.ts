@@ -1,13 +1,36 @@
 import Web3 from "web3";
 import type { Contract } from "web3-eth-contract";
 import type { AbiItem } from "web3-utils";
-import pkg from 'web3-utils';
-const { isAddress } = pkg;
+import pkg from "web3-utils";
 import storageBuild from "./artifacts/Storage.js";
+import { doLog, logBlock, logError, logSuccess } from "./logging.js";
 import type {
+    ChainData,
+    ChainFunnel,
+    ErrorCode,
+    ErrorMessageFxn,
+    ErrorMessageMapping,
+    ETHAddress,
+    GameStateMachine,
+    GameStateMachineInitializer,
+    GameStateTransitionFunction,
+    GameStateTransitionFunctionRouter,
+    PaimaRuntime,
+    PaimaRuntimeInitializer,
+    SQLUpdate,
+    SubmittedChainData,
+    ChainDataExtension,
+    TransactionTemplate
+} from "./types";
+const { isAddress } = pkg;
+export type { Web3 };
+export {
     ChainFunnel,
     ETHAddress,
     SQLUpdate,
+    ErrorCode,
+    ErrorMessageFxn,
+    ErrorMessageMapping,
     SubmittedChainData,
     ChainData,
     GameStateTransitionFunctionRouter,
@@ -15,18 +38,26 @@ import type {
     GameStateMachineInitializer,
     GameStateMachine,
     PaimaRuntimeInitializer,
-    PaimaRuntime
-} from "./types";
-import {logBlock, logSuccess, logError, doLog} from "./logging.js";
-
-export interface ChainDataExtension {}
-
-export type TransactionTemplate = {
-    data: string;
-    to: string;
+    PaimaRuntime,
+    ChainDataExtension,
+    TransactionTemplate,
+    logBlock,
+    logSuccess,
+    logError,
+    doLog,
 };
 
-export async function getWeb3(nodeUrl: string): Promise<Web3> {
+export function buildErrorCodeTranslator(obj: ErrorMessageMapping): ErrorMessageFxn {
+    return function (errorCode: ErrorCode): string {
+        if (!obj.hasOwnProperty(errorCode)) {
+            return "Unknown error code: " + errorCode;
+        } else {
+            return obj[errorCode];
+        }
+    };
+}
+
+export async function initWeb3(nodeUrl: string): Promise<Web3> {
     const web3 = new Web3(nodeUrl);
     try {
         await web3.eth.getNodeInfo();
@@ -49,21 +80,26 @@ export function validateStorageAddress(address: string) {
     }
 }
 
-export async function getFee(address: string, web3: Web3): Promise<string> {
+export async function retrieveFee(address: string, web3: Web3): Promise<string> {
     const contract = getStorageContract(address, web3);
     return contract.methods.fee().call();
 }
 
-export const wait = async (ms: number) => new Promise<void>((resolve) => {
-    setTimeout(() => resolve(), ms);
-});
+export const wait = async (ms: number) =>
+    new Promise<void>(resolve => {
+        setTimeout(() => resolve(), ms);
+    });
 
 export async function getOwner(address: string, web3: Web3): Promise<string> {
     const contract = getStorageContract(address, web3);
     return contract.methods.owner().call();
 }
 
-export async function retryPromise<T>(getPromise: () => Promise<T>, waitPeriodMs: number, tries: number): Promise<T> {
+export async function retryPromise<T>(
+    getPromise: () => Promise<T>,
+    waitPeriodMs: number,
+    tries: number
+): Promise<T> {
     let done = false;
     let result;
     let failure;
@@ -74,13 +110,14 @@ export async function retryPromise<T>(getPromise: () => Promise<T>, waitPeriodMs
 
     while (tries > 0) {
         await getPromise()
-        .then((res) => {
-            result = res;
-            done = true;
-        }).catch((err) => {
-            failure = err;
-            done = false;
-        });
+            .then(res => {
+                result = res;
+                done = true;
+            })
+            .catch(err => {
+                failure = err;
+                done = false;
+            });
 
         tries--;
 
@@ -91,31 +128,17 @@ export async function retryPromise<T>(getPromise: () => Promise<T>, waitPeriodMs
         await wait(waitPeriodMs);
     }
 
-    if (typeof(result) === "undefined") {
-        if (typeof(failure === "undefined")) {
-            throw new Error("Unknown retry error: no retries left, undefined result");
+    if (typeof result === "undefined") {
+        if (typeof failure === "undefined") {
+            throw new Error(
+                "Unknown retry error: no retries left, undefined result"
+            );
+        } else if (typeof failure === "string") {
+            throw new Error(failure);
         } else {
             throw failure;
         }
     } else {
         return result;
     }
-}
-
-export {
-    ChainFunnel,
-    ETHAddress,
-    SQLUpdate,
-    SubmittedChainData,
-    ChainData,
-    GameStateTransitionFunctionRouter,
-    GameStateTransitionFunction,
-    GameStateMachineInitializer,
-    GameStateMachine,
-    PaimaRuntimeInitializer,
-    PaimaRuntime,
-    logBlock,
-    logSuccess,
-    logError,
-    doLog
 }

@@ -1,5 +1,5 @@
 import {
-    getWeb3,
+    initWeb3,
     getStorageContract,
     validateStorageAddress,
     doLog,
@@ -14,7 +14,7 @@ const DEFAULT_BLOCK_COUNT = 100;
 const paimaFunnel = {
     async initialize(nodeUrl: string, storageAddress: string) {
         validateStorageAddress(storageAddress);
-        const web3 = await getWeb3(nodeUrl);
+        const web3 = await initWeb3(nodeUrl);
         const storage = getStorageContract(storageAddress, web3);
         return {
             nodeUrl,
