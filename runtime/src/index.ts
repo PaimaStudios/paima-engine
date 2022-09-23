@@ -10,7 +10,7 @@ import { exec } from "child_process";
 import { server, startServer } from "./server.js"
 import process from "process";
 
-const SNAPSHOT_INTERVAL = 151200;
+const SNAPSHOT_INTERVAL = 43200;
 let run = true;
 
 process.on("SIGINT", () => {
@@ -138,9 +138,10 @@ async function saveSnapshot(blockHeight: number) {
   const username = process.env.DB_USER;
   const password = process.env.DB_PW;
   const database = process.env.DB_NAME;
+  const host = process.env.DB_HOST;
   const fileName = `paima-snapshot-${blockHeight}.tar`;
   doLog(`Attempting to save snapshot: ${fileName}`)
-  exec(`pg_dump --dbname=postgresql://${username}:${password}@postgres:5432/${database} -f ./snapshots/${fileName} -F t`,)
+  exec(`pg_dump --dbname=postgresql://${username}:${password}@${host}:5432/${database} -f ./snapshots/${fileName} -F t`,)
 }
 
 export default paimaEngine
