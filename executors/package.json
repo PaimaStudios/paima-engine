@@ -4,13 +4,22 @@
   "description": "",
   "main": "lib/index.js",
   "type": "module",
+  "types": "lib/index.d.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "prettier --write '**/*.ts'"
+  },
+  "prettier": {
+      "tabWidth": 4,
+      "arrowParens": "avoid"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "typescript": "^4.7.4"
+    "typescript": "^4.7.4",
+    "prettier": "^2.6.2",
+    "prettier-plugin-organize-imports": "^2.3.4"
   },
   "dependencies": {
     "prando": "file:../paima-prando"
