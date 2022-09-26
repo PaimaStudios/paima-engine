@@ -4,9 +4,7 @@ import type { Pool, PoolConfig } from "pg";
 
 export type ErrorCode = number;
 export type ErrorMessageFxn = (errorCode: ErrorCode) => string;
-export type ErrorMessageMapping = {
-    [key: number]: string;
-};
+export type ErrorMessageMapping = Record<ErrorCode, string>;
 
 export interface ChainDataExtension {}
 

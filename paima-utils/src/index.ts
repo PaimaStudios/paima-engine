@@ -6,6 +6,7 @@ import storageBuild from "./artifacts/Storage.js";
 import { doLog, logBlock, logError, logSuccess } from "./logging.js";
 import type {
     ChainData,
+    ChainDataExtension,
     ChainFunnel,
     ErrorCode,
     ErrorMessageFxn,
@@ -19,7 +20,6 @@ import type {
     PaimaRuntimeInitializer,
     SQLUpdate,
     SubmittedChainData,
-    ChainDataExtension,
     TransactionTemplate,
 } from "./types";
 const { isAddress } = pkg;
