@@ -1,3 +1,3 @@
 import PaimaSM from "./paimasm/sm.js";
 
-export default PaimaSM
+export default PaimaSM;
