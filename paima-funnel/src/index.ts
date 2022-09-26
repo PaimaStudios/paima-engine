@@ -1,8 +1,8 @@
 import {
-    initWeb3,
-    getStorageContract,
-    validateStorageAddress,
     doLog,
+    getStorageContract,
+    initWeb3,
+    validateStorageAddress
 } from "@paima/utils";
 
 import type { ChainData, ChainDataExtension } from "@paima/utils";

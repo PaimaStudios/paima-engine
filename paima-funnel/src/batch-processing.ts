@@ -1,7 +1,8 @@
 import Web3 from "web3";
-import { doLog, SubmittedChainData } from "@paima/utils";
 import * as Cardano from "@dcspark/cardano-multiplatform-lib-nodejs";
 import * as MessageSign from "@emurgo/cardano-message-signing-nodejs";
+
+import { doLog, SubmittedChainData } from "@paima/utils";
 
 interface ValidatedSubmittedChainData extends SubmittedChainData {
     validated: boolean;
