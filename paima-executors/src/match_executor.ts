@@ -1,13 +1,15 @@
 import roundExecutor from "./round_executor.js";
 import Prando from "@paima/prando";
+import type { RoundNumbered, Seed } from "./types.js";
 
-interface Seed {
-    seed: string;
-    block_height: number;
-    round: number;
-}
 interface MatchExecutorInitializer {
-    initialize: <MatchType, UserStateType, MoveType, TickEvent, RoundState>(
+    initialize: <
+        MatchType,
+        UserStateType,
+        MoveType extends RoundNumbered,
+        TickEvent,
+        RoundState extends RoundNumbered
+    >(
         matchEnvironment: MatchType,
         maxRound: number,
         roundState: RoundState[],

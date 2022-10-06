@@ -1,17 +1,30 @@
 import type Prando from "@paima/prando";
+import type { RoundNumbered } from "./types.js";
+
 interface RoundExecutorInitializer {
-  initialize: <MatchType, RoundStateType, MoveType, TickEvent>(
-    matchEnvironment: MatchType,
-    roundState: RoundStateType,
-    userInputs: MoveType[],
-    randomnessGenerator: Prando,
-    processTick: (matchEnvironment: MatchType, userState: RoundStateType, moves: MoveType[], currentTick: number, randomnessGenerator: Prando) => TickEvent
-  ) => {
-    currentTick: number;
-    currentState: RoundStateType;
-    tick: () => TickEvent;
-    endState: () => RoundStateType
-  }
+    initialize: <
+        MatchType,
+        RoundStateType,
+        MoveType extends RoundNumbered,
+        TickEvent
+    >(
+        matchEnvironment: MatchType,
+        userStates: RoundStateType,
+        userInputs: MoveType[],
+        randomnessGenerator: Prando,
+        processTick: (
+            matchEnvironment: MatchType,
+            userState: RoundStateType,
+            moves: MoveType[],
+            currentTick: number,
+            randomnessGenerator: Prando
+        ) => TickEvent
+    ) => {
+        currentTick: number;
+        currentState: RoundStateType;
+        tick: () => TickEvent;
+        endState: () => RoundStateType;
+    };
 }
 
 const roundExecutor: RoundExecutorInitializer = {
