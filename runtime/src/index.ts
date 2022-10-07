@@ -6,11 +6,9 @@ import type {
 } from "paima-utils";
 import { doLog, logBlock, logSuccess, logError } from "paima-utils";
 import * as fs from "fs/promises";
-import { exec } from "child_process";
 import { server, startServer } from "./server.js"
 import process from "process";
-
-const SNAPSHOT_INTERVAL = 43200;
+import { snapshotIfTime } from "./snapshots.js";
 let run = true;
 
 process.on("SIGINT", () => {
@@ -75,42 +73,15 @@ async function getFinalBlockHeight(): Promise<number | null> {
   return finalBlockHeight;
 }
 
-async function snapshots(blockheight: number) {
-  const dir = "snapshots"
-  try {
-    const files = await fs.readdir(dir);
-    if (files.length === 0) {
-      const filename = `paima-snapshot-dummy-${blockheight}.tar`
-      fs.writeFile(`./snapshots/${filename}`, "")
-      return blockheight + SNAPSHOT_INTERVAL
-    }
-    const stats = files.map(async (f) => {
-      const s = await fs.stat(dir + "/" + f);
-      return { name: f, stats: s }
-    })
-    const ss = await Promise.all(stats);
-    ss.sort((a, b) => a.stats.mtime.getTime() - b.stats.mtime.getTime())
-    if (ss.length > 2) await fs.rm(dir + "/" + ss[0].name);
-    const maxnum = ss[ss.length - 1].name.match(/\d+/);
-    const max = maxnum?.[0] || "0"
-    return parseInt(max) + SNAPSHOT_INTERVAL
-  } catch {
-    await fs.mkdir(dir);
-    return SNAPSHOT_INTERVAL
-  }
+function stopBlockReached(latestReadBlockHeight: number, finalBlockHeight: number | null): boolean {
+  const result = finalBlockHeight !== null && latestReadBlockHeight >= finalBlockHeight;
+  run = !result;
+  return result;
 }
 
 async function runIterativeFunnel(gameStateMachine: GameStateMachine, chainFunnel: ChainFunnel, pollingRate: number, finalBlockHeight: number | null) {
   while (run) {
     const latestReadBlockHeight = await gameStateMachine.latestBlockHeight();
-    // Take DB snapshot
-    const snapshotTrigger = await snapshots(latestReadBlockHeight);
-    if (latestReadBlockHeight >= snapshotTrigger) await saveSnapshot(latestReadBlockHeight);
-    // Stop if final block height was reached:
-    if (finalBlockHeight !== null && latestReadBlockHeight >= finalBlockHeight) {
-      run = false;
-      return;
-    }
 
     // Read latest chain data from funnel
     const latestChainDataList = await chainFunnel.readData(latestReadBlockHeight + 1) as ChainData[];
@@ -133,10 +104,18 @@ async function runIterativeFunnel(gameStateMachine: GameStateMachine, chainFunne
           process.exit(0)
         }
         // await logBlock(block);
-        // Pass to PaimaSM
         try {
           await gameStateMachine.process(block);
-          await logSuccess(block)
+          await logSuccess(block);
+          if (!run) {
+            process.exit(0)
+          }
+
+          const latestReadBlockHeight = await gameStateMachine.latestBlockHeight();
+          await snapshotIfTime(latestReadBlockHeight);
+          if (stopBlockReached(latestReadBlockHeight, finalBlockHeight)) {
+            process.exit(0)
+          }
         }
         catch (error) {
           await logError(error)
@@ -151,16 +130,4 @@ function delay(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
 
-async function saveSnapshot(blockHeight: number) {
-  const username = process.env.DB_USER;
-  const password = process.env.DB_PW;
-  const database = process.env.DB_NAME;
-  const host = process.env.DB_HOST;
-  const fileName = `paima-snapshot-${blockHeight}.sql`;
-  doLog(`Attempting to save snapshot: ${fileName}`)
-  exec(`pg_dump --dbname=postgresql://${username}:${password}@${host}:5432/${database} -f ./snapshots/${fileName}`,)
-}
-
 export default paimaEngine
-
-
