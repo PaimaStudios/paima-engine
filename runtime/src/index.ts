@@ -47,17 +47,8 @@ const paimaEngine: PaimaRuntimeInitializer = {
         this.chainDataExtensions = [...this.chainDataExtensions, ...chainDataExtensions]
       },
       async run() {
-        let finalBlockHeight: number | null = null;
-        try {
-          finalBlockHeight = await fs.readFile("./stopBlockHeight.conf", "utf8").then((data) => {
-            if (!/^\d+\s*$/.test(data)) {
-              throw new Error();
-            }
-            return parseInt(data, 10);
-          });
-        } catch (err) {
-          // file doesn't exist or is invalid, finalBlockHeight remains null
-        }
+        const finalBlockHeight = await getFinalBlockHeight();
+        doLog(`Final block height set to ${finalBlockHeight}`);
         this.addGET("/backend_version", async (req, res) => {
           res.status(200).json(gameBackendVersion);
         });
@@ -69,7 +60,20 @@ const paimaEngine: PaimaRuntimeInitializer = {
   }
 }
 
-
+async function getFinalBlockHeight(): Promise<number | null> {
+  let finalBlockHeight: number | null = null;
+  try {
+    finalBlockHeight = await fs.readFile("./stopBlockHeight.conf", "utf8").then((data) => {
+      if (!/^\d+\s*$/.test(data)) {
+        throw new Error();
+      }
+      return parseInt(data, 10);
+    });
+  } catch (err) {
+    // file doesn't exist or is invalid, finalBlockHeight remains null
+  }
+  return finalBlockHeight;
+}
 
 async function snapshots(blockheight: number) {
   const dir = "snapshots"
