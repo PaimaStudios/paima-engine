@@ -47,12 +47,23 @@ const paimaEngine: PaimaRuntimeInitializer = {
         this.chainDataExtensions = [...this.chainDataExtensions, ...chainDataExtensions]
       },
       async run() {
+        let finalBlockHeight: number | null = null;
+        try {
+          finalBlockHeight = await fs.readFile("./stopBlockHeight.conf", "utf8").then((data) => {
+            if (!/^\d+\s*$/.test(data)) {
+              throw new Error();
+            }
+            return parseInt(data, 10);
+          });
+        } catch (err) {
+          // file doesn't exist or is invalid, finalBlockHeight remains null
+        }
         this.addGET("/backend_version", async (req, res) => {
           res.status(200).json(gameBackendVersion);
         });
         // pass endpoints to web server and run
         (async () => startServer())();
-        runIterativeFunnel(gameStateMachine, chainFunnel, this.pollingRate);
+        runIterativeFunnel(gameStateMachine, chainFunnel, this.pollingRate, finalBlockHeight);
       }
     }
   }
@@ -84,13 +95,18 @@ async function snapshots(blockheight: number) {
     return SNAPSHOT_INTERVAL
   }
 }
-async function runIterativeFunnel(gameStateMachine: GameStateMachine, chainFunnel: ChainFunnel, pollingRate: number) {
+async function runIterativeFunnel(gameStateMachine: GameStateMachine, chainFunnel: ChainFunnel, pollingRate: number, finalBlockHeight: number | null) {
   while (true) {
     closeCheck(run);
     const latestReadBlockHeight = await gameStateMachine.latestBlockHeight();
     // Take DB snapshot
     const snapshotTrigger = await snapshots(latestReadBlockHeight);
     if (latestReadBlockHeight === snapshotTrigger) await saveSnapshot(latestReadBlockHeight);
+    // Stop if final block height was reached:
+    if (finalBlockHeight !== null && latestReadBlockHeight >= finalBlockHeight) {
+      run = false;
+      return;
+    }
 
     // Read latest chain data from funnel
     const latestChainDataList = await chainFunnel.readData(latestReadBlockHeight + 1) as ChainData[];
