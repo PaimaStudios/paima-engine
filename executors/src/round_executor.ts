@@ -2,7 +2,7 @@ import type Prando from "prando";
 interface RoundExecutorInitializer {
   initialize: <MatchType, RoundStateType, MoveType, TickEvent>(
     matchEnvironment: MatchType,
-    userStates: RoundStateType,
+    roundState: RoundStateType,
     userInputs: MoveType[],
     randomnessGenerator: Prando,
     processTick: (matchEnvironment: MatchType, userState: RoundStateType, moves: MoveType[], currentTick: number, randomnessGenerator: Prando) => TickEvent
@@ -17,26 +17,25 @@ interface RoundExecutorInitializer {
 const roundExecutor: RoundExecutorInitializer = {
   initialize: (
     matchEnvironment,
-    userStates,
+    roundState,
     userInputs,
     randomnessGenerator,
     processTick
   ) => {
     return {
       currentTick: 1,
-      currentState: userStates,
+      currentState: roundState,
       tick() {
         const event = processTick(matchEnvironment, this.currentState, userInputs, this.currentTick, randomnessGenerator);
         this.currentTick++
         return event
       },
       endState() {
-        for (const _ of userInputs) this.tick()
-        return this.currentState
+        while (true) {
+          const tick = () => this.tick()
+          if (!tick) return this.currentState
+        }
       },
     };
   },
 };
-
-
-export default roundExecutor
