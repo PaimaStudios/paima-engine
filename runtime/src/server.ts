@@ -4,7 +4,7 @@ import express from "express";
 
 const server: Express = express();
 const bodyParser = express.json();
-const port = 3333; // default port to listen
+const port = process.env.CATAPULT_WEBSERVER_PORT || 3333; // default port to listen
 
 server.use(cors());
 server.use(bodyParser);
