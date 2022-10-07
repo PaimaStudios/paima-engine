@@ -98,9 +98,10 @@ async function loopIfStopBlockReached(
     finalBlockHeight: number | null
 ) {
     if (finalBlockHeight !== null && latestReadBlockHeight >= finalBlockHeight) {
-      while (true) {
+      while (run) {
         await delay(2000);
       }
+      process.exit(0);
     }
 }
 
