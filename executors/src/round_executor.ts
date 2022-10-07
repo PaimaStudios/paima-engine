@@ -39,3 +39,5 @@ const roundExecutor: RoundExecutorInitializer = {
     };
   },
 };
+
+export default roundExecutor
