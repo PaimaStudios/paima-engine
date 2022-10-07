@@ -76,24 +76,32 @@ async function getFinalBlockHeight(): Promise<number | null> {
             .readFile("./stopBlockHeight.conf", "utf8")
             .then(data => {
                 if (!/^\d+\s*$/.test(data)) {
+                    doLog(`Improperly formatted stopBlockHeight.conf: +${data}+`);
                     throw new Error();
                 }
                 return parseInt(data, 10);
             });
     } catch (err) {
         // file doesn't exist or is invalid, finalBlockHeight remains null
+        doLog("Something went wrong while reading stopBlockHeight.conf.");
+        if (typeof err === "object" && err !== null && err.hasOwnProperty("message")) {
+          const e = err as { message: string };
+          doLog(`Error message: ${e.message}`);
+        }
+        await logError(err);
     }
     return finalBlockHeight;
 }
 
-function stopBlockReached(
+async function loopIfStopBlockReached(
     latestReadBlockHeight: number,
     finalBlockHeight: number | null
-): boolean {
-    const result =
-        finalBlockHeight !== null && latestReadBlockHeight >= finalBlockHeight;
-    run = !result;
-    return result;
+) {
+    if (finalBlockHeight !== null && latestReadBlockHeight >= finalBlockHeight) {
+      while (true) {
+        await delay(2000);
+      }
+    }
 }
 
 async function runIterativeFunnel(
@@ -119,39 +127,34 @@ async function runIterativeFunnel(
             process.exit(0);
         }
 
-        // If chain data list
         if (!latestChainDataList || !latestChainDataList?.length) {
             console.log(`No chain data was returned, waiting ${pollingRate}s.`);
             await delay(pollingRate * 1000);
-        } else {
-            for (let block of latestChainDataList) {
-                // Checking if should safely close in between processing blocks
+            continue;
+        }
+
+        for (let block of latestChainDataList) {
+            // Checking if should safely close in between processing blocks
+            if (!run) {
+                process.exit(0);
+            }
+            // await logBlock(block);
+            try {
+                await gameStateMachine.process(block);
+                await logSuccess(block);
                 if (!run) {
                     process.exit(0);
                 }
-                // await logBlock(block);
-                try {
-                    await gameStateMachine.process(block);
-                    await logSuccess(block);
-                    if (!run) {
-                        process.exit(0);
-                    }
-
-                    const latestReadBlockHeight =
-                        await gameStateMachine.latestBlockHeight();
-                    await snapshotIfTime(latestReadBlockHeight);
-                    if (
-                        stopBlockReached(
-                            latestReadBlockHeight,
-                            finalBlockHeight
-                        )
-                    ) {
-                        process.exit(0);
-                    }
-                } catch (error) {
-                    await logError(error);
-                }
+            } catch (error) {
+                await logError(error);
             }
+
+            const latestReadBlockHeight = await gameStateMachine.latestBlockHeight();
+            await snapshotIfTime(latestReadBlockHeight);
+            await loopIfStopBlockReached(
+                latestReadBlockHeight,
+                finalBlockHeight
+            );    
         }
     }
     process.exit(0);
