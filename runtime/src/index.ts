@@ -114,6 +114,11 @@ async function runIterativeFunnel(
     while (run) {
         const latestReadBlockHeight =
             await gameStateMachine.latestBlockHeight();
+        await snapshotIfTime(latestReadBlockHeight);
+        await loopIfStopBlockReached(
+            latestReadBlockHeight,
+            finalBlockHeight
+        );
 
         // Read latest chain data from funnel
         const latestChainDataList = (await chainFunnel.readData(
