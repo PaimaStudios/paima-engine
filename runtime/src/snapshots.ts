@@ -1,33 +1,42 @@
 import * as fs from "fs/promises";
 
 import { exec } from "child_process";
-import { doLog } from "paima-utils";
+import { doLog, logError } from "paima-utils";
 
-const SNAPSHOT_INTERVAL = 43200;
+const SNAPSHOT_INTERVAL = 21600;
+const MAX_SNAPSHOT_COUNT = 3;
+const SNAPSHOT_DIR = "./snapshots";
 
-async function snapshots(blockheight: number) {
-    const dir = "snapshots";
+let snapshotTrigger: number = 0;
+let snapshotNames: string[] = [];
+
+const snapshotPath = (fileName: string): string =>
+    `${SNAPSHOT_DIR}/${fileName}`;
+
+async function getLatestSnapshotBlockheight(): Promise<number> {
     try {
-        const files = await fs.readdir(dir);
-        if (files.length === 0) {
-            const filename = `paima-snapshot-dummy-${blockheight}.tar`;
-            fs.writeFile(`./snapshots/${filename}`, "");
-            return blockheight + SNAPSHOT_INTERVAL;
-        }
-        const stats = files.map(async f => {
-            const s = await fs.stat(dir + "/" + f);
-            return { name: f, stats: s };
-        });
-        const ss = await Promise.all(stats);
-        ss.sort((a, b) => a.stats.mtime.getTime() - b.stats.mtime.getTime());
-        if (ss.length > 2) await fs.rm(dir + "/" + ss[0].name);
-        const maxnum = ss[ss.length - 1].name.match(/\d+/);
+        const newest = await getNewestFilename(SNAPSHOT_DIR);
+        const maxnum = newest.match(/\d+/);
         const max = maxnum?.[0] || "0";
-        return parseInt(max) + SNAPSHOT_INTERVAL;
+        return parseInt(max);
     } catch {
-        await fs.mkdir(dir);
-        return SNAPSHOT_INTERVAL;
+        await fs.mkdir(SNAPSHOT_DIR);
+        return 0;
     }
+}
+
+async function getNewestFilename(dir: string): Promise<string> {
+    const files = await fs.readdir(dir);
+    if (files.length === 0) {
+        return "";
+    }
+    const statPromises = files.map(async fileName => {
+        const s = await fs.stat(dir + "/" + fileName);
+        return { name: fileName, stats: s };
+    });
+    const stats = await Promise.all(statPromises);
+    stats.sort((a, b) => a.stats.mtime.getTime() - b.stats.mtime.getTime());
+    return stats[stats.length - 1].name;
 }
 
 async function saveSnapshot(blockHeight: number) {
@@ -38,12 +47,46 @@ async function saveSnapshot(blockHeight: number) {
     const fileName = `paima-snapshot-${blockHeight}.sql`;
     doLog(`Attempting to save snapshot: ${fileName}`);
     exec(
-        `pg_dump --dbname=postgresql://${username}:${password}@${host}:5432/${database} -f ./snapshots/${fileName}`
+        `pg_dump --dbname=postgresql://${username}:${password}@${host}:5432/${database} -f ${snapshotPath(
+            fileName
+        )}`
     );
+    snapshotNames.push(fileName);
+}
+
+async function cleanSnapshots() {
+    while (snapshotNames.length > MAX_SNAPSHOT_COUNT) {
+        const snapshotToDelete = snapshotNames.shift();
+        if (typeof snapshotToDelete === "undefined") {
+            continue;
+        }
+        fs.rm(`${snapshotPath(snapshotToDelete)}`);
+    }
 }
 
 export async function snapshotIfTime(latestReadBlockHeight: number) {
-    const snapshotTrigger = await snapshots(latestReadBlockHeight);
-    if (latestReadBlockHeight >= snapshotTrigger)
+    if (latestReadBlockHeight >= snapshotTrigger) {
+        snapshotTrigger = latestReadBlockHeight + SNAPSHOT_INTERVAL;
         await saveSnapshot(latestReadBlockHeight);
+        await cleanSnapshots();
+        doLog(
+            `[paima-runtime::snapshots] Set snapshotTrigger to ${snapshotTrigger}`
+        );
+    }
+}
+
+export async function initSnapshots() {
+    try {
+        const latestSnapshot = await getLatestSnapshotBlockheight();
+        snapshotTrigger = latestSnapshot + SNAPSHOT_INTERVAL;
+    } catch (err) {
+        doLog(
+            `[paima-runtime::snapshots] Error while retrieving latest snapshot blockheight:`
+        );
+        logError(err);
+        snapshotTrigger = 0;
+    }
+    doLog(
+        `[paima-runtime::snapshots] Initialized snapshotTrigger as ${snapshotTrigger}`
+    );
 }

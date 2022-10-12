@@ -8,7 +8,7 @@ import type {
 import { doLog, logError, logSuccess } from "paima-utils";
 import process from "process";
 import { server, startServer } from "./server.js";
-import { snapshotIfTime } from "./snapshots.js";
+import { initSnapshots, snapshotIfTime } from "./snapshots.js";
 let run = true;
 
 process.on("SIGINT", () => {
@@ -51,32 +51,39 @@ const paimaEngine: PaimaRuntimeInitializer = {
                 ];
             },
             async run() {
-                const finalBlockHeight = await getFinalBlockHeight();
-                doLog(`Final block height set to ${finalBlockHeight}`);
                 this.addGET("/backend_version", async (req, res) => {
                     res.status(200).json(gameBackendVersion);
                 });
+
+                const stopBlockHeight = await getStopBlockHeight();
+                doLog(`Final block height set to ${stopBlockHeight}`);
+
+                await initSnapshots();
+
                 // pass endpoints to web server and run
                 (async () => startServer())();
+
                 runIterativeFunnel(
                     gameStateMachine,
                     chainFunnel,
                     this.pollingRate,
-                    finalBlockHeight
+                    stopBlockHeight
                 );
             },
         };
     },
 };
 
-async function getFinalBlockHeight(): Promise<number | null> {
-    let finalBlockHeight: number | null = null;
+async function getStopBlockHeight(): Promise<number | null> {
+    let stopBlockHeight: number | null = null;
     try {
-        finalBlockHeight = await fs
+        stopBlockHeight = await fs
             .readFile("./stopBlockHeight.conf", "utf8")
             .then(data => {
                 if (!/^\d+\s*$/.test(data)) {
-                    doLog(`Improperly formatted stopBlockHeight.conf: +${data}+`);
+                    doLog(
+                        `Improperly formatted stopBlockHeight.conf: +${data}+`
+                    );
                     throw new Error();
                 }
                 return parseInt(data, 10);
@@ -84,24 +91,28 @@ async function getFinalBlockHeight(): Promise<number | null> {
     } catch (err) {
         // file doesn't exist or is invalid, finalBlockHeight remains null
         doLog("Something went wrong while reading stopBlockHeight.conf.");
-        if (typeof err === "object" && err !== null && err.hasOwnProperty("message")) {
-          const e = err as { message: string };
-          doLog(`Error message: ${e.message}`);
+        if (
+            typeof err === "object" &&
+            err !== null &&
+            err.hasOwnProperty("message")
+        ) {
+            const e = err as { message: string };
+            doLog(`Error message: ${e.message}`);
         }
         await logError(err);
     }
-    return finalBlockHeight;
+    return stopBlockHeight;
 }
 
 async function loopIfStopBlockReached(
     latestReadBlockHeight: number,
-    finalBlockHeight: number | null
+    stopBlockHeight: number | null
 ) {
-    if (finalBlockHeight !== null && latestReadBlockHeight >= finalBlockHeight) {
-      while (run) {
-        await delay(2000);
-      }
-      process.exit(0);
+    if (stopBlockHeight !== null && latestReadBlockHeight >= stopBlockHeight) {
+        while (run) {
+            await delay(2000);
+        }
+        process.exit(0);
     }
 }
 
@@ -109,16 +120,13 @@ async function runIterativeFunnel(
     gameStateMachine: GameStateMachine,
     chainFunnel: ChainFunnel,
     pollingRate: number,
-    finalBlockHeight: number | null
+    stopBlockHeight: number | null
 ) {
     while (run) {
         const latestReadBlockHeight =
             await gameStateMachine.latestBlockHeight();
         await snapshotIfTime(latestReadBlockHeight);
-        await loopIfStopBlockReached(
-            latestReadBlockHeight,
-            finalBlockHeight
-        );
+        await loopIfStopBlockReached(latestReadBlockHeight, stopBlockHeight);
 
         // Read latest chain data from funnel
         const latestChainDataList = (await chainFunnel.readData(
@@ -155,12 +163,13 @@ async function runIterativeFunnel(
                 await logError(error);
             }
 
-            const latestReadBlockHeight = await gameStateMachine.latestBlockHeight();
+            const latestReadBlockHeight =
+                await gameStateMachine.latestBlockHeight();
             await snapshotIfTime(latestReadBlockHeight);
             await loopIfStopBlockReached(
                 latestReadBlockHeight,
-                finalBlockHeight
-            );    
+                stopBlockHeight
+            );
         }
     }
     process.exit(0);
