@@ -4,6 +4,7 @@ import { exec } from "child_process";
 import { doLog, logError } from "paima-utils";
 
 const SNAPSHOT_INTERVAL = 21600;
+const RETRY_SNAPSHOT_INTERVAL = 3600;
 const MAX_SNAPSHOT_COUNT = 3;
 const SNAPSHOT_DIR = "./snapshots";
 
@@ -60,14 +61,29 @@ async function cleanSnapshots() {
         if (typeof snapshotToDelete === "undefined") {
             continue;
         }
-        fs.rm(`${snapshotPath(snapshotToDelete)}`);
+        try {
+            fs.rm(`${snapshotPath(snapshotToDelete)}`);
+        } catch (err) {
+            doLog(
+                `[paima-rungime::snapshots] error while removing ${snapshotToDelete}:`
+            );
+            logError(err);
+        }
     }
 }
 
 export async function snapshotIfTime(latestReadBlockHeight: number) {
     if (latestReadBlockHeight >= snapshotTrigger) {
-        snapshotTrigger = latestReadBlockHeight + SNAPSHOT_INTERVAL;
-        await saveSnapshot(latestReadBlockHeight);
+        try {
+            snapshotTrigger = latestReadBlockHeight + SNAPSHOT_INTERVAL;
+            await saveSnapshot(latestReadBlockHeight);
+        } catch (err) {
+            doLog(
+                `[paima-runtime::snapshots] error while saving snapshot at height ${latestReadBlockHeight}:`
+            );
+            logError(err);
+            snapshotTrigger = latestReadBlockHeight + RETRY_SNAPSHOT_INTERVAL;
+        }
         await cleanSnapshots();
         doLog(
             `[paima-runtime::snapshots] Set snapshotTrigger to ${snapshotTrigger}`
