@@ -58,6 +58,8 @@ const paimaEngine: PaimaRuntimeInitializer = {
                 const stopBlockHeight = await getStopBlockHeight();
                 doLog(`Final block height set to ${stopBlockHeight}`);
 
+                console.log(`DB_PORT: ${process.env.DB_PORT}`);
+
                 await initSnapshots();
 
                 // pass endpoints to web server and run
