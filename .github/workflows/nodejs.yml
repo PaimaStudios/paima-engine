@@ -1,0 +1,104 @@
+name: NodeJS Continuous Health Check
+
+on:
+  push:
+    branches: [ master ]
+    paths-ignore:
+      - "documentation/**"
+      - "README.md"
+      - "errors.log"
+  pull_request:
+    branches: [ master ]
+    paths-ignore:
+      - "documentation/**"
+      - "README.md"
+      - "errors.log"
+
+# defaults:
+#   run:
+#     working-directory: ./
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+
+    outputs:
+      packages: ${{ steps.filter.outputs.changes }}
+    steps:
+      - name: Check out repository
+        if: ${{ github.event_name != 'pull_request' }}
+        uses: actions/checkout@v3
+
+      # - uses: dorny/paths-filter@v2
+      #   id: filter
+      #   with:
+      #     filters: |
+      #       "paima-prando":
+      #         - "paima-prando/**"
+      #         - ".github/workflows/nodejs.yml"
+      #       "paima-utils":
+      #         - "paima-utils/**"
+      #         - ".github/workflows/nodejs.yml"
+      #       "paima-tx":
+      #         - "paima-tx/**"
+      #         - ".github/workflows/nodejs.yml"
+      #       "executors":
+      #         - "executors/**"
+      #         - ".github/workflows/nodejs.yml"
+      #       "funnel":
+      #         - "funnel/**"
+      #         - ".github/workflows/nodejs.yml"
+      #       "SM":
+      #         - "SM/**"
+      #         - ".github/workflows/nodejs.yml"
+      #       "runtime":
+      #         - "runtime/**"
+      #         - ".github/workflows/nodejs.yml"
+      #       "admin-panel":
+      #         - "admin-panel/**"
+      #         - ".github/workflows/nodejs.yml"
+
+  node_ci:
+    needs: changes
+    runs-on: ${{ matrix.os }}
+    env:
+      NODE_CACHE: "npm"
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        node: [16, 18]
+        # dir: ${{ fromJSON(needs.changes.outputs.packages) }}
+
+    steps:
+      -
+        name: Check out repository
+        if: ${{ github.event_name == 'push' || github.event_name == 'pull_request' }}
+        uses: actions/checkout@v3
+      -
+        name: Setup node env
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node }}
+          check-latest: false
+          registry-url: https://registry.npmjs.org
+          # cache: ${{ env.NODE_CACHE }}
+          # cache-dependency-path: ${{ matrix.dir }}/package-lock.json
+
+      -
+        name: Work on each folder in manual priority
+        shell: bash -e -l {0}
+        run: |
+          pkgs='["paima-prando","paima-utils","paima-tx","executors","funnel","SM","runtime","admin-panel"]'
+          for package in $(echo $pkgs | jq -c '.[]' | jq -r);
+          do
+            echo $package
+            cd $package
+            npm ci --prefer-offline --no-audit
+            npm run --if-present lint
+            npm run --if-present build
+            cd ../
+          done
