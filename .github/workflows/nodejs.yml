@@ -14,54 +14,50 @@ on:
       - "README.md"
       - "errors.log"
 
-# defaults:
-#   run:
-#     working-directory: ./
-
 jobs:
-  changes:
-    runs-on: ubuntu-latest
-    permissions:
-      pull-requests: write
+  # changes:
+  #   runs-on: ubuntu-latest
+  #   permissions:
+  #     pull-requests: write
 
-    outputs:
-      packages: ${{ steps.filter.outputs.changes }}
-    steps:
-      - name: Check out repository
-        if: ${{ github.event_name != 'pull_request' }}
-        uses: actions/checkout@v3
+  #   outputs:
+  #     packages: ${{ steps.filter.outputs.changes }}
+  #   steps:
+  #     - name: Check out repository
+  #       if: ${{ github.event_name != 'pull_request' }}
+  #       uses: actions/checkout@v3
 
-      # - uses: dorny/paths-filter@v2
-      #   id: filter
-      #   with:
-      #     filters: |
-      #       "paima-prando":
-      #         - "paima-prando/**"
-      #         - ".github/workflows/nodejs.yml"
-      #       "paima-utils":
-      #         - "paima-utils/**"
-      #         - ".github/workflows/nodejs.yml"
-      #       "paima-tx":
-      #         - "paima-tx/**"
-      #         - ".github/workflows/nodejs.yml"
-      #       "executors":
-      #         - "executors/**"
-      #         - ".github/workflows/nodejs.yml"
-      #       "funnel":
-      #         - "funnel/**"
-      #         - ".github/workflows/nodejs.yml"
-      #       "SM":
-      #         - "SM/**"
-      #         - ".github/workflows/nodejs.yml"
-      #       "runtime":
-      #         - "runtime/**"
-      #         - ".github/workflows/nodejs.yml"
-      #       "admin-panel":
-      #         - "admin-panel/**"
-      #         - ".github/workflows/nodejs.yml"
+  #     - uses: dorny/paths-filter@v2
+  #       id: filter
+  #       with:
+  #         filters: |
+  #           "paima-prando":
+  #             - "paima-prando/**"
+  #             - ".github/workflows/nodejs.yml"
+  #           "paima-utils":
+  #             - "paima-utils/**"
+  #             - ".github/workflows/nodejs.yml"
+  #           "paima-tx":
+  #             - "paima-tx/**"
+  #             - ".github/workflows/nodejs.yml"
+  #           "executors":
+  #             - "executors/**"
+  #             - ".github/workflows/nodejs.yml"
+  #           "funnel":
+  #             - "funnel/**"
+  #             - ".github/workflows/nodejs.yml"
+  #           "SM":
+  #             - "SM/**"
+  #             - ".github/workflows/nodejs.yml"
+  #           "runtime":
+  #             - "runtime/**"
+  #             - ".github/workflows/nodejs.yml"
+  #           "admin-panel":
+  #             - "admin-panel/**"
+  #             - ".github/workflows/nodejs.yml"
 
   node_ci:
-    needs: changes
+    # needs: changes
     runs-on: ${{ matrix.os }}
     env:
       NODE_CACHE: "npm"
