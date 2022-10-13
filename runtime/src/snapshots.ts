@@ -45,10 +45,11 @@ async function saveSnapshot(blockHeight: number) {
     const password = process.env.DB_PW;
     const database = process.env.DB_NAME;
     const host = process.env.DB_HOST;
+    const port = process.env.DB_PORT || "5432"
     const fileName = `paima-snapshot-${blockHeight}.sql`;
     doLog(`Attempting to save snapshot: ${fileName}`);
     exec(
-        `pg_dump --dbname=postgresql://${username}:${password}@${host}:5432/${database} -f ${snapshotPath(
+        `pg_dump --dbname=postgresql://${username}:${password}@${host}:${port}/${database} -f ${snapshotPath(
             fileName
         )}`
     );
