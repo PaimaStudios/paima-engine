@@ -31,10 +31,8 @@ const roundExecutor: RoundExecutorInitializer = {
         return event
       },
       endState() {
-        while (true) {
-          const tick = () => this.tick()
-          if (!tick) return this.currentState
-        }
+        while (this.tick() !== null);
+        return this.currentState
       },
     };
   },
