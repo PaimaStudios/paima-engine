@@ -96,5 +96,6 @@ jobs:
             npm ci --prefer-offline --no-audit
             npm run --if-present lint
             npm run --if-present build
+            npx tsc
             cd ../
           done
