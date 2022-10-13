@@ -58,7 +58,7 @@ const paimaEngine: PaimaRuntimeInitializer = {
                 const stopBlockHeight = await getStopBlockHeight();
                 doLog(`Final block height set to ${stopBlockHeight}`);
 
-                console.log(`DB_PORT: ${process.env.DB_PORT}`);
+                doLog(`DB_PORT: ${process.env.DB_PORT}`);
 
                 await initSnapshots();
 
@@ -111,6 +111,7 @@ async function loopIfStopBlockReached(
     stopBlockHeight: number | null
 ) {
     if (stopBlockHeight !== null && latestReadBlockHeight >= stopBlockHeight) {
+        doLog(`Reached stop block height, stopping the funnel...`);
         while (run) {
             await delay(2000);
         }
