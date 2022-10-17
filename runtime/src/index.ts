@@ -119,6 +119,12 @@ async function loopIfStopBlockReached(
     }
 }
 
+function exitIfStopped(run: boolean) {
+    if (!run) {
+        process.exit(0);
+    }
+}
+
 async function runIterativeFunnel(
     gameStateMachine: GameStateMachine,
     chainFunnel: ChainFunnel,
@@ -130,6 +136,7 @@ async function runIterativeFunnel(
             await gameStateMachine.latestBlockHeight();
         await snapshotIfTime(latestReadBlockHeight);
         await loopIfStopBlockReached(latestReadBlockHeight, stopBlockHeight);
+        exitIfStopped(run);
 
         // Read latest chain data from funnel
         const latestChainDataList = (await chainFunnel.readData(
@@ -140,9 +147,7 @@ async function runIterativeFunnel(
         );
         // Checking if should safely close after fetching all chain data
         // which may take some time
-        if (!run) {
-            process.exit(0);
-        }
+        exitIfStopped(run);
 
         if (!latestChainDataList || !latestChainDataList?.length) {
             console.log(`No chain data was returned, waiting ${pollingRate}s.`);
@@ -152,16 +157,12 @@ async function runIterativeFunnel(
 
         for (let block of latestChainDataList) {
             // Checking if should safely close in between processing blocks
-            if (!run) {
-                process.exit(0);
-            }
-            // await logBlock(block);
+            exitIfStopped(run);
+            
             try {
                 await gameStateMachine.process(block);
                 await logSuccess(block);
-                if (!run) {
-                    process.exit(0);
-                }
+                exitIfStopped(run);
             } catch (error) {
                 await logError(error);
             }
@@ -169,6 +170,7 @@ async function runIterativeFunnel(
             const latestReadBlockHeight =
                 await gameStateMachine.latestBlockHeight();
             await snapshotIfTime(latestReadBlockHeight);
+            exitIfStopped(run);
             await loopIfStopBlockReached(
                 latestReadBlockHeight,
                 stopBlockHeight
