@@ -20,7 +20,9 @@ async function getLatestSnapshotBlockheight(): Promise<number> {
         const maxnum = newest.match(/\d+/);
         const max = maxnum?.[0] || "0";
         return parseInt(max);
-    } catch {
+    } catch (err) {
+        doLog(`[paima-runtime::snapshots] error while checking for latest snapshot`);
+        logError(err);
         await fs.mkdir(SNAPSHOT_DIR);
         return 0;
     }
@@ -63,10 +65,11 @@ async function cleanSnapshots() {
             continue;
         }
         try {
-            fs.rm(`${snapshotPath(snapshotToDelete)}`);
+            doLog(`[paima-runtime::snapshots] removing snapshot ${snapshotToDelete}...`);
+            await fs.rm(`${snapshotPath(snapshotToDelete)}`);
         } catch (err) {
             doLog(
-                `[paima-rungime::snapshots] error while removing ${snapshotToDelete}:`
+                `[paima-runtime::snapshots] error while removing ${snapshotToDelete}:`
             );
             logError(err);
         }
