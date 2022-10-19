@@ -158,7 +158,7 @@ async function runIterativeFunnel(
         for (let block of latestChainDataList) {
             // Checking if should safely close in between processing blocks
             exitIfStopped(run);
-            
+
             try {
                 await gameStateMachine.process(block);
                 await logSuccess(block);
