@@ -1,6 +1,6 @@
 import * as fs from "fs/promises";
 
-import { exec } from "child_process";
+import { exec, ExecException } from "child_process";
 import { doLog, logError } from "paima-utils";
 
 const SNAPSHOT_INTERVAL = 21600;
@@ -21,7 +21,9 @@ async function getLatestSnapshotBlockheight(): Promise<number> {
         const max = maxnum?.[0] || "0";
         return parseInt(max);
     } catch (err) {
-        doLog(`[paima-runtime::snapshots] error while checking for latest snapshot`);
+        doLog(
+            `[paima-runtime::snapshots] error while checking for latest snapshot`
+        );
         logError(err);
         await fs.mkdir(SNAPSHOT_DIR);
         return 0;
@@ -47,13 +49,21 @@ async function saveSnapshot(blockHeight: number) {
     const password = process.env.DB_PW;
     const database = process.env.DB_NAME;
     const host = process.env.DB_HOST;
-    const port = process.env.DB_PORT || "5432"
+    const port = process.env.DB_PORT || "5432";
     const fileName = `paima-snapshot-${blockHeight}.sql`;
     doLog(`Attempting to save snapshot: ${fileName}`);
     exec(
         `pg_dump --dbname=postgresql://${username}:${password}@${host}:${port}/${database} -f ${snapshotPath(
             fileName
-        )}`
+        )}`,
+        (error: ExecException | null, stdout: string, stderr: string) => {
+            if (error) {
+                doLog(`[paima-runtime::snapshots] Error saving snapshot:`);
+                logError(error);
+            }
+            doLog(`[paima-runtime::snapshots] pg_dump stdout: ${stdout}`);
+            doLog(`[paima-runtime::snapshots] pg_dump stderr: ${stderr}`);
+        }
     );
     snapshotNames.push(fileName);
 }
@@ -65,7 +75,9 @@ async function cleanSnapshots() {
             continue;
         }
         try {
-            doLog(`[paima-runtime::snapshots] removing snapshot ${snapshotToDelete}...`);
+            doLog(
+                `[paima-runtime::snapshots] removing snapshot ${snapshotToDelete}...`
+            );
             await fs.rm(`${snapshotPath(snapshotToDelete)}`);
         } catch (err) {
             doLog(
