@@ -1,5 +1,5 @@
 {
-  "name": "paima-tx",
+  "name": "@paima/transactions",
   "version": "1.0.0",
   "description": "Library for posting data to the storage contract",
   "main": "build/index.js",
@@ -7,23 +7,8 @@
   "files": [
       "/build"
   ],
-  "scripts": {
-    "build": "tsc",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "lint": "prettier --write '**/*.ts'"
-  },
-  "prettier": {
-      "tabWidth": 4,
-      "arrowParens": "avoid"
-  },
-  "devDependencies": {
-      "@types/node": "^17.0.25",
-      "prettier": "^2.6.2",
-      "prettier-plugin-organize-imports": "^2.3.4",
-      "typescript": "^4.6.3"
-  },
   "dependencies": {
       "web3": "^1.7.3",
-      "paima-utils": "file:../paima-utils"
+      "@paima/utils": "1.0.0"
   }
 }

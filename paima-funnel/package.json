@@ -1,0 +1,17 @@
+{
+  "name": "paima-funnel",
+  "version": "1.0.0",
+  "description": "Blockchain Data fetching library for Paima Engine",
+  "type": "module",
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
+  "files": [
+    "/build"
+  ],
+  "dependencies": {
+    "@dcspark/cardano-multiplatform-lib-nodejs": "^3.0.0-beta.0",
+    "@emurgo/cardano-message-signing-nodejs": "^1.0.1",
+    "@paima/utils": "1.0.0",
+    "web3": "^1.7.4"
+  }
+}

@@ -1,6 +1,6 @@
 import { PreparedQuery } from "@pgtyped/query";
-import { RequestHandler } from "express";
-import { Pool, PoolConfig } from "pg";
+import type { RequestHandler } from "express";
+import type { Pool, PoolConfig } from "pg";
 
 export type ErrorCode = number;
 export type ErrorMessageFxn = (errorCode: ErrorCode) => string;

@@ -1,13 +1,18 @@
 {
-  "name": "@paima/prando",
+  "name": "paima-executors",
   "version": "1.0.0",
-  "description": "Fork of Prando for generating randomness for Paima Engine",
+  "description": "",
   "main": "build/index.js",
-  "files": ["/build"],
+  "files": [
+    "/build"
+  ],
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "@paima/prando": "1.0.0"
+  }
 }
