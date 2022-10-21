@@ -1,5 +1,6 @@
+build/
 node_modules
-build
-lib
-.DS_Store
-config.json
+src/*.js
+src/*.d.ts
+*.tsbuildinfo
+cache/

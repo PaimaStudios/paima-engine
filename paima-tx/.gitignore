@@ -1,5 +1,7 @@
 # deps
-/node_modules
-
-# build
 build/
+node_modules
+src/*.js
+src/*.d.ts
+*.tsbuildinfo
+cache/
