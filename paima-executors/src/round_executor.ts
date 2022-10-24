@@ -28,27 +28,33 @@ interface RoundExecutorInitializer {
 }
 
 const roundExecutor: RoundExecutorInitializer = {
-  initialize: (
-    matchEnvironment,
-    roundState,
-    userInputs,
-    randomnessGenerator,
-    processTick
-  ) => {
-    return {
-      currentTick: 1,
-      currentState: roundState,
-      tick() {
-        const event = processTick(matchEnvironment, this.currentState, userInputs, this.currentTick, randomnessGenerator);
-        this.currentTick++
-        return event
-      },
-      endState() {
-        while (this.tick() !== null);
-        return this.currentState
-      },
-    };
-  },
+    initialize: (
+        matchEnvironment,
+        roundState,
+        userInputs,
+        randomnessGenerator,
+        processTick
+    ) => {
+        return {
+            currentTick: 1,
+            currentState: roundState,
+            tick() {
+                const event = processTick(
+                    matchEnvironment,
+                    this.currentState,
+                    userInputs,
+                    this.currentTick,
+                    randomnessGenerator
+                );
+                this.currentTick++;
+                return event;
+            },
+            endState() {
+                while (this.tick() !== null);
+                return this.currentState;
+            },
+        };
+    },
 };
 
-export default roundExecutor
+export default roundExecutor;
