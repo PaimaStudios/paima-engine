@@ -88,14 +88,6 @@ jobs:
         name: Work on each folder in manual priority
         shell: bash -e -l {0}
         run: |
-          pkgs='["paima-prando","paima-utils","paima-tx","executors","funnel","SM","runtime","admin-panel"]'
-          for package in $(echo $pkgs | jq -c '.[]' | jq -r);
-          do
-            echo $package
-            cd $package
-            npm ci --prefer-offline --no-audit
-            npm run --if-present lint
-            npm run --if-present build
-            npx tsc
-            cd ../
-          done
+          npm ci --prefer-offline --no-audit
+          npm run --if-present lint
+          npm run --if-present build
