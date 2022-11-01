@@ -20,7 +20,7 @@ import type {
     SQLUpdate,
     SubmittedChainData,
     ChainDataExtension,
-    TransactionTemplate
+    TransactionTemplate,
 } from "./types";
 const { isAddress } = pkg;
 export type { Web3 };
@@ -47,7 +47,9 @@ export {
     doLog,
 };
 
-export function buildErrorCodeTranslator(obj: ErrorMessageMapping): ErrorMessageFxn {
+export function buildErrorCodeTranslator(
+    obj: ErrorMessageMapping
+): ErrorMessageFxn {
     return function (errorCode: ErrorCode): string {
         if (!obj.hasOwnProperty(errorCode)) {
             return "Unknown error code: " + errorCode;
@@ -80,7 +82,10 @@ export function validateStorageAddress(address: string) {
     }
 }
 
-export async function retrieveFee(address: string, web3: Web3): Promise<string> {
+export async function retrieveFee(
+    address: string,
+    web3: Web3
+): Promise<string> {
     const contract = getStorageContract(address, web3);
     return contract.methods.fee().call();
 }

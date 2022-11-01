@@ -5,7 +5,7 @@ import type { Pool, PoolConfig } from "pg";
 export type ErrorCode = number;
 export type ErrorMessageFxn = (errorCode: ErrorCode) => string;
 export type ErrorMessageMapping = {
-    [key: number]: string
+    [key: number]: string;
 };
 
 export interface ChainDataExtension {}

@@ -12,13 +12,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@pgtyped/cli": "^0.13.0",
-    "@pgtyped/query": "^0.13.0",
-    "pg": "^8.7.3",
     "@paima/prando": "1.0.0",
     "@paima/utils": "1.0.0"
-  },
-  "devDependencies": {
-    "@types/pg": "^8.6.5"
   }
 }
