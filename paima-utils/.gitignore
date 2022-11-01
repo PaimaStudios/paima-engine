@@ -1,6 +1,6 @@
 build/
 node_modules
-src/*.js
-src/*.d.ts
+src/**/*.js
+src/**/*.d.ts
 *.tsbuildinfo
 cache/
