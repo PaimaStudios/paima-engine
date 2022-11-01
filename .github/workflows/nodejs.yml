@@ -85,7 +85,7 @@ jobs:
           # cache-dependency-path: ${{ matrix.dir }}/package-lock.json
 
       -
-        name: Work on each folder in manual priority
+        name: Build workspace
         shell: bash -e -l {0}
         run: |
           npm ci --prefer-offline --no-audit
