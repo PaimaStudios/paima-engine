@@ -25,9 +25,10 @@ enum ConciseEncodingVersion {
     V1
 }
 
-// Initialize builder with a specific concise encoding version.
-// Defaults to V1.
-let builder = conciseBuilder.initialize(version?: ConciseEncodingVersion);
+// Initialize builder with a specific concise encoding version. Defaults to V1.
+// Takes an option input string if building off of a previously created concise input string.
+// Both compressed and uncompressed input strings are supported (in V1).
+let builder = conciseBuilder.initialize(input?: string, version?: ConciseEncodingVersion);
 
 // Sets the input prefix (one or more characters at the start of the input string which tags what it is).
 // Calling setPrefix() multiple times replaces the old prefix each time it is called (aka. only latest remains).
@@ -47,7 +48,7 @@ const encodedInput = builder.build();
 In addition to this core interface, the concise builder will include the following methods:
 
 ```ts
-initialize(version?: ConciseEncodingVersion);
+initialize(input?: string, version?: ConciseEncodingVersion);
 
 setPrefix(prefix: string);
 
