@@ -140,8 +140,8 @@ async function saveSnapshot(blockHeight: number) {
   const username = process.env.DB_USER;
   const database = process.env.DB_NAME;
   const fileName = `paima-snapshot-${blockHeight}.tar`;
-  doLog(`Attempting to save snapshot: ${fileName}`)
-  exec(`pg_dump -U ${username} -d ${database} -f ./snapshots/${fileName} -F t`,)
+  doLog(`Not attempting to save snapshot: ${fileName}`);
+  //exec(`pg_dump -U ${username} -d ${database} -f ./snapshots/${fileName} -F t`,);
 }
 
 export default paimaEngine
