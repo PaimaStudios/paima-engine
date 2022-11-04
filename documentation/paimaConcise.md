@@ -18,8 +18,6 @@ let builder = conciseBuilder.initialize("j|*33kasmo2|...");
 
 Once the builder is initialized the developer can build the input out method-by-method. We'll use a pseudocode example to create a concisely encoded catapult join lobby input.
 
-Of note, the output of the builder will be a compressed hex-encoded string that is ready to be posted on-chain.
-
 ```ts
 enum ConciseEncodingVersion {
     V1
@@ -27,7 +25,7 @@ enum ConciseEncodingVersion {
 
 // Initialize builder with a specific concise encoding version. Defaults to V1.
 // Takes an option input string if building off of a previously created concise input string.
-// Both compressed and uncompressed input strings are supported (in V1).
+// V1 == Uncompresed `*` `|` notation, V2 == compressed
 let builder = conciseBuilder.initialize(input?: string, version?: ConciseEncodingVersion);
 
 // Sets the input prefix (one or more characters at the start of the input string which tags what it is).
@@ -41,7 +39,7 @@ builder.addValue("92aomg23ka", true);
 // This will be the second value added to the encoded input, this time with no state identifier (lacking the bool).
 builder.addValue("Piranha");
 
-// The result will be "j|*92aomg23ka|Piranha", but compressed and encoded in hex.
+// The result will be "j|*92aomg23ka|Piranha"
 const encodedInput = builder.build();
 ```
 
@@ -91,12 +89,10 @@ interface CValue {
 }
 
 // Initialize consumer with a string of a specific concise encoding version (defaults to V1).
-// Of note, initialize will work with both compressed (in hex) and uncompressed concisely encoded strings
-// of the correct version.
 initialize(input: string, version?: ConciseEncodingVersion);
 
 // The original input string which was provided to the consumer.
-// Optionally allows the caller to ask for the initial input to be decompressed.
+// Optionally allows the caller to ask for the initial input to be decompressed (if in V1, decompress does nothing).
 // Default to `false`.
 initialInput(decompress?: bool) -> string;
 
