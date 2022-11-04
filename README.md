@@ -19,6 +19,7 @@ Of note, `Paima Engine` refers to all of the following components:
 - `Paima Utils` (The Library which holds auxillary functions between the other modules)
 - `Paima Engine Runtime` (Runtime which connects all the other portions of the engine together)
 - `Paima Prando` (Custom fork of a deterministic pseudo-RNG generator library)
+- `Paima Concise` (The library which enables building and parsing concise encoding)
 
 ## How It Works
 
