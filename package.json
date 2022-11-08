@@ -1,0 +1,38 @@
+{
+  "name": "@paima/test",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "lint": "eslint",
+    "build": "npx tsc --build"
+  },
+  "workspaces": [
+    "./paima-utils",
+    "./paima-prando",
+    "./paima-tx",
+    "./paima-executors",
+    "./paima-funnel",
+    "./paima-sm",
+    "./paima-runtime"
+  ],
+  "devDependencies": {
+    "@types/eslint": "^8.4.6",
+    "@types/eslint-plugin-prettier": "^3.1.0",
+    "@types/pg": "^8.6.5",
+    "@types/prettier": "^2.7.1",
+    "@typescript-eslint/eslint-plugin": "^5.40.1",
+    "@typescript-eslint/parser": "^5.40.1",
+    "eslint": "^8.25.0",
+    "eslint-config-airbnb-typescript": "^17.0.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "prettier": "^2.7.1",
+    "typescript": "^4.8.4"
+  },
+  "dependencies": {
+    "@pgtyped/cli": "^1.0.2",
+    "@pgtyped/query": "^1.0.1",
+    "pg": "^8.8.0"
+  }
+}

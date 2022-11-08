@@ -1,5 +1,5 @@
-import { getStorageContract, validateStorageAddress } from "paima-utils";
-import type { TransactionTemplate } from "paima-utils";
+import { getStorageContract, validateStorageAddress } from "@paima/utils";
+import type { TransactionTemplate } from "@paima/utils";
 
 export function getTxTemplate(
     storageAddress: string,
