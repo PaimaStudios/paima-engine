@@ -1,6 +1,8 @@
-import { doLog, GameStateMachineInitializer } from "paima-utils";
 import pg from "pg";
-import Prando from "prando";
+
+import { GameStateMachineInitializer, doLog } from "@paima/utils";
+import Prando from "@paima/prando";
+
 import {
   blockHeightDone,
   deleteScheduled,
@@ -9,9 +11,7 @@ import {
   getLatestBlockHeight,
   getScheduledDataByBlockHeight,
   saveLastBlockHeight,
-} from "../sql/queries.queries.js";
-import { GameStateMachineInitializer, doLog } from "@paima/utils";
-import Prando from "@paima/prando";
+} from "./sql/queries.queries.js";
 import { randomnessRouter } from "./randomness.js";
 
 const SM: GameStateMachineInitializer = {
