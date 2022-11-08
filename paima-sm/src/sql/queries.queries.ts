@@ -1,5 +1,5 @@
 /** Types generated for queries found in "src/sql/queries.sql" */
-import { PreparedQuery } from '@pgtyped/query';
+import { PreparedQuery } from "@pgtyped/query";
 
 /** 'GetLatestBlockHeight' parameters type */
 export type IGetLatestBlockHeightParams = void;
@@ -22,13 +22,15 @@ const getLatestBlockHeightIR: any = {"usedParamSet":{},"params":[],"statement":"
 /**
  * Query generated from SQL:
  * ```
- * SELECT * FROM block_heights 
+ * SELECT * FROM block_heights
  * ORDER BY block_height DESC
  * LIMIT 1
  * ```
  */
-export const getLatestBlockHeight = new PreparedQuery<IGetLatestBlockHeightParams,IGetLatestBlockHeightResult>(getLatestBlockHeightIR);
-
+export const getLatestBlockHeight = new PreparedQuery<
+  IGetLatestBlockHeightParams,
+  IGetLatestBlockHeightResult
+>(getLatestBlockHeightIR);
 
 /** 'GetRandomness' parameters type */
 export type IGetRandomnessParams = void;
@@ -54,8 +56,10 @@ const getRandomnessIR: any = {"usedParamSet":{},"params":[],"statement":"SELECT 
  * LIMIT 25
  * ```
  */
-export const getRandomness = new PreparedQuery<IGetRandomnessParams,IGetRandomnessResult>(getRandomnessIR);
-
+export const getRandomness = new PreparedQuery<
+  IGetRandomnessParams,
+  IGetRandomnessResult
+>(getRandomnessIR);
 
 /** 'GetScheduledDataByBlockHeight' parameters type */
 export interface IGetScheduledDataByBlockHeightParams {
@@ -85,8 +89,10 @@ const getScheduledDataByBlockHeightIR: any = {"usedParamSet":{"block_height":tru
  * ORDER BY id ASC
  * ```
  */
-export const getScheduledDataByBlockHeight = new PreparedQuery<IGetScheduledDataByBlockHeightParams,IGetScheduledDataByBlockHeightResult>(getScheduledDataByBlockHeightIR);
-
+export const getScheduledDataByBlockHeight = new PreparedQuery<
+  IGetScheduledDataByBlockHeightParams,
+  IGetScheduledDataByBlockHeightResult
+>(getScheduledDataByBlockHeightIR);
 
 /** 'SaveLastBlockHeight' parameters type */
 export interface ISaveLastBlockHeightParams {
@@ -112,8 +118,10 @@ const saveLastBlockHeightIR: any = {"usedParamSet":{"block_height":true,"seed":t
  * VALUES (:block_height!, :seed!)
  * ```
  */
-export const saveLastBlockHeight = new PreparedQuery<ISaveLastBlockHeightParams,ISaveLastBlockHeightResult>(saveLastBlockHeightIR);
-
+export const saveLastBlockHeight = new PreparedQuery<
+  ISaveLastBlockHeightParams,
+  ISaveLastBlockHeightResult
+>(saveLastBlockHeightIR);
 
 /** 'BlockHeightDone' parameters type */
 export interface IBlockHeightDoneParams {
@@ -140,8 +148,10 @@ const blockHeightDoneIR: any = {"usedParamSet":{"block_height":true},"params":[{
  * WHERE block_height = :block_height!
  * ```
  */
-export const blockHeightDone = new PreparedQuery<IBlockHeightDoneParams,IBlockHeightDoneResult>(blockHeightDoneIR);
-
+export const blockHeightDone = new PreparedQuery<
+  IBlockHeightDoneParams,
+  IBlockHeightDoneResult
+>(blockHeightDoneIR);
 
 /** 'DeleteScheduled' parameters type */
 export interface IDeleteScheduledParams {
@@ -166,8 +176,10 @@ const deleteScheduledIR: any = {"usedParamSet":{"id":true},"params":[{"name":"id
  * WHERE id = :id!
  * ```
  */
-export const deleteScheduled = new PreparedQuery<IDeleteScheduledParams,IDeleteScheduledResult>(deleteScheduledIR);
-
+export const deleteScheduled = new PreparedQuery<
+  IDeleteScheduledParams,
+  IDeleteScheduledResult
+>(deleteScheduledIR);
 
 /** 'FindNonce' parameters type */
 export interface IFindNonceParams {
@@ -195,8 +207,9 @@ const findNonceIR: any = {"usedParamSet":{"nonce":true},"params":[{"name":"nonce
  * WHERE nonce = :nonce
  * ```
  */
-export const findNonce = new PreparedQuery<IFindNonceParams,IFindNonceResult>(findNonceIR);
-
+export const findNonce = new PreparedQuery<IFindNonceParams, IFindNonceResult>(
+  findNonceIR
+);
 
 /** 'InsertNonce' parameters type */
 export interface IInsertNonceParams {
@@ -222,6 +235,7 @@ const insertNonceIR: any = {"usedParamSet":{"nonce":true,"block_height":true},"p
  * VALUES (:nonce!, :block_height!)
  * ```
  */
-export const insertNonce = new PreparedQuery<IInsertNonceParams,IInsertNonceResult>(insertNonceIR);
-
-
+export const insertNonce = new PreparedQuery<
+  IInsertNonceParams,
+  IInsertNonceResult
+>(insertNonceIR);

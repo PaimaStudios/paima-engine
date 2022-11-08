@@ -1,8 +1,8 @@
 import {
-    initWeb3,
-    getStorageContract,
-    validateStorageAddress,
     doLog,
+    getStorageContract,
+    initWeb3,
+    validateStorageAddress
 } from "@paima/utils";
 
 import type { ChainData, ChainDataExtension } from "@paima/utils";
@@ -50,9 +50,9 @@ const paimaFunnel = {
                         )
                             .then(res => (blocks = res))
                             .catch(err => {
-                                console.log(err);
-                                const errMsg = `Block reading failed`;
-                                console.error(errMsg);
+                                doLog(
+                                    `[paima-funnel::readData] Block reading failed: ${err}`
+                                );
                             });
                     } else {
                         if (blockCount > 0) {
@@ -63,9 +63,9 @@ const paimaFunnel = {
                         blocks = [];
                     }
                 } catch (err) {
-                    console.log(err);
-                    const errMsg = `Exception occurred while reading blocks`;
-                    console.error(errMsg);
+                    doLog(
+                        `[paima-funnel::readData] Exception occured while reading blocks: ${err}`
+                    );
                     return [];
                 }
                 return blocks;
