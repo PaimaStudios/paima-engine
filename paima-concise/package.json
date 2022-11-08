@@ -1,0 +1,31 @@
+{
+  "name": "paima-concise",
+  "version": "1.0.0",
+  "description": "Util library for concise encoding of game inputs",
+  "main": "lib/index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc -p .",
+    "prettier": "prettier --config .prettierrc --ignore-path .prettierignore --check .",
+    "prettier:fix": "prettier --write --config .prettierrc --ignore-path .prettierignore --check .",
+    "lint": "eslint --ext ts,tsx,js,jsx --ignore-path .eslintignore .",
+    "lint:fix": "eslint --ext ts,tsx,js,jsx --fix --ignore-path .eslintignore ."
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^5.40.0",
+    "@typescript-eslint/parser": "^5.40.0",
+    "eslint": "^8.25.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "eslint-plugin-simple-import-sort": "^8.0.0",
+    "prettier": "2.7.1",
+    "typescript": "^4.8.4"
+  },
+  "dependencies": {
+    "web3": "^1.7.4"
+  }
+}
