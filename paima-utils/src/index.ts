@@ -47,6 +47,8 @@ export {
     doLog,
 };
 
+export const DEFAULT_GAS_PRICE = "61000000000";
+
 export function buildErrorCodeTranslator(
     obj: ErrorMessageMapping
 ): ErrorMessageFxn {
