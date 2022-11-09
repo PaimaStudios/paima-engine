@@ -11,6 +11,7 @@ export interface ChainDataExtension {}
 export type TransactionTemplate = {
     data: string;
     to: string;
+    gasPrice: string;
 };
 
 export interface ChainFunnel {

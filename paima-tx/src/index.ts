@@ -1,4 +1,6 @@
-import { getStorageContract, validateStorageAddress } from "@paima/utils";
+import { numberToHex } from "web3-utils";
+
+import { DEFAULT_GAS_PRICE, getStorageContract, validateStorageAddress } from "@paima/utils";
 import type { TransactionTemplate } from "@paima/utils";
 
 export function getTxTemplate(
@@ -14,5 +16,9 @@ export function getTxTemplate(
     } else {
         txData = storage.methods[methodName](data).encodeABI();
     }
-    return { data: txData, to: storageAddress };
+    return {
+        data: txData,
+        to: storageAddress,
+        gasPrice: numberToHex(DEFAULT_GAS_PRICE)
+    };
 }
