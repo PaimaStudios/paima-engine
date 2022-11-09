@@ -13,7 +13,6 @@ const build = (concisePrefix: string, conciseValues: ConciseValue[]): UTF8String
   const conciseValueInput = conciseValues.map(toString).join(separator);
   const conciseInput = `${concisePrefix}${separator}${conciseValueInput}`;
 
-  console.log(conciseInput);
   return conciseInput;
 };
 
