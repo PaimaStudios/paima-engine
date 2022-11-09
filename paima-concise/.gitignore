@@ -1,3 +1,6 @@
+build/
 node_modules
-lib
-.DS_store
+src/**/*.js
+src/**/*.d.ts
+*.tsbuildinfo
+cache/

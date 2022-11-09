@@ -4,6 +4,9 @@
       "path": "./paima-utils"
     },
     {
+      "path": "./paima-concise"
+    },
+    {
       "path": "./paima-prando"
     },
     {
