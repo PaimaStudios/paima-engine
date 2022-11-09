@@ -1,5 +1,5 @@
 import { PreparedQuery } from "@pgtyped/query";
-import type { RequestHandler } from "express";
+import type { Express, RequestHandler } from "express";
 import type { Pool, PoolConfig } from "pg";
 
 export type ErrorCode = number;
@@ -71,6 +71,7 @@ export interface PaimaRuntimeInitializer {
         gameBackendVersion: VersionString
     ) => PaimaRuntime;
 }
+export type TsoaFunction = (s: Express) => void;
 export interface PaimaRuntime {
     pollingRate: number;
     setPollingRate: (n: number) => void;
@@ -78,5 +79,6 @@ export interface PaimaRuntime {
     addExtensions: (e: ChainDataExtension[]) => void;
     addGET: (route: string, callback: RequestHandler) => void;
     addPOST: (route: string, callback: RequestHandler) => void;
+    addEndpoints: (t: TsoaFunction) => void;
     run: () => Promise<void>;
 }

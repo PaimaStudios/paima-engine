@@ -10,6 +10,7 @@ import process from "process";
 import { server, startServer } from "./server.js";
 import { initSnapshots, snapshotIfTime } from "./snapshots.js";
 let run = true;
+import { Express } from "express";
 
 process.on("SIGINT", () => {
     doLog(
@@ -28,13 +29,15 @@ process.on("SIGTERM", () => {
 process.on("exit", code => {
     doLog(`Exiting with code: ${code}`);
 });
-
 const paimaEngine: PaimaRuntimeInitializer = {
     initialize(chainFunnel, gameStateMachine, gameBackendVersion) {
         // initialize snapshot folder
         return {
             pollingRate: 4,
             chainDataExtensions: [],
+            addEndpoints(tsoaFunction) {
+                tsoaFunction(server)
+            },
             addGET(route, callback) {
                 server.get(route, callback);
             },
