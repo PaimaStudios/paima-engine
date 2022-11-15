@@ -3,8 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "lint": "eslint",
-    "build": "npx tsc --build tsconfig.build.json"
+    "lint": "eslint && npm run prettier",
+    "build": "npx tsc --build tsconfig.build.json",
+    "prettier": "prettier --write '**/*.{ts,tsx}'"
   },
   "workspaces": [
     "./paima-utils",

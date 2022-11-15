@@ -36,7 +36,7 @@ const paimaEngine: PaimaRuntimeInitializer = {
             pollingRate: 4,
             chainDataExtensions: [],
             addEndpoints(tsoaFunction) {
-                tsoaFunction(server)
+                tsoaFunction(server);
             },
             addGET(route, callback) {
                 server.get(route, callback);

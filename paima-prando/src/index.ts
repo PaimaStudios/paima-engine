@@ -12,12 +12,9 @@ class Prando {
     this._value = NaN;
     this._seed = seed;
     this.iteration = 0;
-    if (typeof seed === "string") this.seed = this.hashCode(seed);
-    else if (typeof seed === "number") this.seed = this.getSafeSeed(seed);
-    else
-      this.seed = this.getSafeSeed(
-        this.MIN + Math.floor((this.MAX - this.MIN) * Math.random())
-      );
+    if (typeof seed === 'string') this.seed = this.hashCode(seed);
+    else if (typeof seed === 'number') this.seed = this.getSafeSeed(seed);
+    else this.seed = this.getSafeSeed(this.MIN + Math.floor((this.MAX - this.MIN) * Math.random()));
     this.reset();
   }
   next(min = 0, pseudoMax = 1): number {
@@ -30,17 +27,15 @@ class Prando {
   }
   nextString(
     length = 16,
-    chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+    chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
   ): string {
-    var str = "";
+    var str = '';
     while (str.length < length) {
       str += this.nextChar(chars);
     }
     return str;
   }
-  nextChar(
-    chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
-  ): string {
+  nextChar(chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'): string {
     return chars.substr(this.nextInt(0, chars.length - 1), 1);
   }
   nextArrayItem<T>(array: T[]): T {
@@ -71,13 +66,7 @@ class Prando {
     value ^= value << 5;
     return value;
   }
-  map(
-    val: number,
-    minFrom: number,
-    maxFrom: number,
-    minTo: number,
-    maxTo: number
-  ) {
+  map(val: number, minFrom: number, maxFrom: number, minTo: number, maxTo: number) {
     return ((val - minFrom) / (maxFrom - minFrom)) * (maxTo - minTo) + minTo;
   }
   hashCode(str: string): number {
