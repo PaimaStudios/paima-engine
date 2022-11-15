@@ -11,14 +11,18 @@ Thus we will be creating a flow between Paima Storage and PaimaSM which allows t
 Each `ChainDataExtension` will have a corresponding `ChainDataExtensionDatum` type which will hold the data for a given instantiation of an extension. In other words, a `ChainDataExtension` specifies what new data we will be funneling from on-chain, and `ChainDataExtensionDatum` is the actual new data from the chain in the given block.
 
 ```ts
-// A type which represents an extension that will read from an ERC20 contract
+// A type which represents an extension that will read from an ERC20 contract.
+// `tableName` is included to allow the developer to choose how the table is named inside of the game state DB.
 type ERC20Extension = {
   contractAddress: string;
+  tableName: string;
 };
 
 // A type which represents an extension that will read from an ERC721 contract
+// `tableName` is included to allow the developer to choose how the table is named inside of the game state DB.
 type ERC721Extension = {
   contractAddress: string;
+  tableName: string;
 };
 
 // The overarching extension datatype
@@ -39,13 +43,13 @@ type ERC721Update = {
 
 // The datum of an `ERC20Extension`
 type ERC20ExtensionDatum = {
-  contractAddress: string;
+  tableName: string;
   updates: ERC20Update[];
 };
 
 // The datum of an `ERC721Extension`
 type ERC721ExtensionDatum = {
-  contractAddress: string;
+  tableName: string;
   updates: ERC721Update[];
 };
 
