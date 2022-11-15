@@ -13,10 +13,6 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "prettier --write '**/*.ts'"
   },
-  "prettier": {
-      "tabWidth": 4,
-      "arrowParens": "avoid"
-  },
   "author": "",
   "license": "ISC",
   "devDependencies": {
