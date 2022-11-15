@@ -66,9 +66,9 @@ forge test -vvv
 
 To deploy the contract, you will need the following:
 
-* Prerequisites installed (in particular, `truffle` and `@truffle/hdwallet-provider`),
-* The address and private key of an account on the target network with sufficient funds for deploying the contract (the _deployment account_),
-* The address of an account on the target network to be marked as the owner of the contract, capable of withdrawing funds (the _owner account_, can be the same as the deployment account).
+- Prerequisites installed (in particular, `truffle` and `@truffle/hdwallet-provider`),
+- The address and private key of an account on the target network with sufficient funds for deploying the contract (the _deployment account_),
+- The address of an account on the target network to be marked as the owner of the contract, capable of withdrawing funds (the _owner account_, can be the same as the deployment account).
 
 When the prerequisites are ready, deploy with the following steps (on the Milkomeda testnet):
 

@@ -1,14 +1,13 @@
 {
-    "compilerOptions": {
-        "module": "ESNext",
-        "moduleResolution": "node",                       /* Specify how TypeScript looks up a file from a given module specifier. */
-        "target": "ESNext",
-        "declaration": true,
-        "outDir": "./build",
-        "resolveJsonModule": true,
-        "esModuleInterop": true
-    },
-    "include": [
-        "src/**/*"
-    ]
+  "compilerOptions": {
+    "module": "ESNext",
+    /* Specify how TypeScript looks up a file from a given module specifier. */
+    "moduleResolution": "node",
+    "target": "ESNext",
+    "declaration": true,
+    "outDir": "./build",
+    "resolveJsonModule": true,
+    "esModuleInterop": true
+  },
+  "include": ["src/**/*"]
 }

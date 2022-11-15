@@ -5,7 +5,9 @@
   "main": "build/index.js",
   "types": "build/index.d.ts",
   "type": "module",
-  "files": ["/build"],
+  "files": [
+    "/build"
+  ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

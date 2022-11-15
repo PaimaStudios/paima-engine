@@ -27,10 +27,10 @@ The runtime should also support the following extended interface which allows cu
 
 ```ts
 // Add a GET endpoint to the baked-in webserver
-engine.addGET("/open_lobbies", getOpenLobbies);
+engine.addGET('/open_lobbies', getOpenLobbies);
 
 // Add a POST endpoint to the baked-in webserver
-engine.addPOST("/test_post_endpoint", postEndpointLogic);
+engine.addPOST('/test_post_endpoint', postEndpointLogic);
 
 // Sets the polling rate of reading data from the blockchain via the `ChainFunnel` to every 5 seconds
 engine.setPollingRate(5);

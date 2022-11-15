@@ -17,14 +17,10 @@ We will use the classic semantic versioning of `MAJOR.MINOR.PATCH` format. In ou
 When a consumer is initializing the Paima Engine Runtime, they will now have to provide a third input value, a versioning string.
 
 ```ts
-let gameBackendVersion = "1.0.0";
+let gameBackendVersion = '1.0.0';
 
 // Intialize the runtime
-let engine = paimaEngine.initialize(
-  chainFunnel,
-  gameStateMachine,
-  gameBackendVersion
-);
+let engine = paimaEngine.initialize(chainFunnel, gameStateMachine, gameBackendVersion);
 ```
 
 This `gameBackendVersion` string should likely be defined in the `[game]-utils` library to make it easily accessible, and passed into the runtime initialization function. The runtime will provide the string to the webserver, and will now expose a new endpoint called `.backendVersion()`, which simply returns this version string.

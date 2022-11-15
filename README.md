@@ -34,6 +34,7 @@ Once the dependencies have been installed, run `tsc --build` or `npm run build` 
 ## How to use in Paima games
 
 Games which use Paima Engine must import the whole workspace. The easiest way is to run a file import. The game workspace `package.json` should have something like:
+
 ```json
 {
   "dependencies": {
@@ -43,8 +44,9 @@ Games which use Paima Engine must import the whole workspace. The easiest way is
 ```
 
 Then the whole engine will be available to all packages in the game workspace. To import individual packages, e.g. `paima-utils` you can import them as:
+
 ```js
-  import { something } from "paima-engine/paima-utils";
+import { something } from 'paima-engine/paima-utils';
 ```
 
 Then run the backend with the following flag:

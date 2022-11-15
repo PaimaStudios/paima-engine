@@ -13,7 +13,7 @@ We will have a TS object called the concise builder which allows the developer t
 ```ts
 let builder = conciseBuilder.initialize();
 //or
-let builder = conciseBuilder.initialize("j|*33kasmo2|...");
+let builder = conciseBuilder.initialize('j|*33kasmo2|...');
 ```
 
 Once the builder is initialized the developer can build the input out method-by-method. We'll use a pseudocode example to create a concisely encoded catapult join lobby input.

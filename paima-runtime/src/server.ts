@@ -1,6 +1,6 @@
-import cors from "cors";
-import type { Express } from "express";
-import express from "express";
+import cors from 'cors';
+import type { Express } from 'express';
+import express from 'express';
 
 const server: Express = express();
 const bodyParser = express.json();
@@ -10,8 +10,8 @@ server.use(cors());
 server.use(bodyParser);
 
 function startServer() {
-    server.listen(port, () => {
-        console.log(`server started at http://localhost:${port}`);
-    });
+  server.listen(port, () => {
+    console.log(`server started at http://localhost:${port}`);
+  });
 }
 export { server, startServer };

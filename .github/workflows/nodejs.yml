@@ -2,17 +2,17 @@ name: NodeJS Continuous Health Check
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
     paths-ignore:
-      - "documentation/**"
-      - "README.md"
-      - "errors.log"
+      - 'documentation/**'
+      - 'README.md'
+      - 'errors.log'
   pull_request:
-    branches: [ master ]
+    branches: [master]
     paths-ignore:
-      - "documentation/**"
-      - "README.md"
-      - "errors.log"
+      - 'documentation/**'
+      - 'README.md'
+      - 'errors.log'
 
 jobs:
   # changes:
@@ -60,7 +60,7 @@ jobs:
     # needs: changes
     runs-on: ${{ matrix.os }}
     env:
-      NODE_CACHE: "npm"
+      NODE_CACHE: 'npm'
 
     strategy:
       fail-fast: false
@@ -70,12 +70,10 @@ jobs:
         # dir: ${{ fromJSON(needs.changes.outputs.packages) }}
 
     steps:
-      -
-        name: Check out repository
+      - name: Check out repository
         if: ${{ github.event_name == 'push' || github.event_name == 'pull_request' }}
         uses: actions/checkout@v3
-      -
-        name: Setup node env
+      - name: Setup node env
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node }}
@@ -83,8 +81,7 @@ jobs:
           registry-url: https://registry.npmjs.org
           # cache: ${{ env.NODE_CACHE }}
           # cache-dependency-path: ${{ matrix.dir }}/package-lock.json
-      -
-        name: Build workspace
+      - name: Build workspace
         shell: bash -e -l {0}
         run: |
           npm ci --prefer-offline --no-audit

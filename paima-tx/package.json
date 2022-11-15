@@ -5,10 +5,10 @@
   "main": "build/index.js",
   "types": "build/index.d.ts",
   "files": [
-      "/build"
+    "/build"
   ],
   "dependencies": {
-      "web3": "^1.7.3",
-      "@paima/utils": "1.0.0"
+    "web3": "^1.7.3",
+    "@paima/utils": "1.0.0"
   }
 }

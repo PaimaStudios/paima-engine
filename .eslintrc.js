@@ -167,5 +167,5 @@ module.exports = {
     ecmaFeatures: {
       legacyDecorators: true,
     },
-  }
+  },
 };
