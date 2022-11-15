@@ -56,7 +56,7 @@ export interface GameStateMachineInitializer {
         databaseInfo: PoolConfig,
         randomnessProtocolEnum: any,
         gameStateTransitionRouter: GameStateTransitionFunctionRouter,
-        startBlockheight: number
+        startBlockHeight: number
     ) => GameStateMachine;
 }
 export interface GameStateMachine {

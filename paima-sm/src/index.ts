@@ -1,7 +1,7 @@
-import pg from "pg";
+import pg from 'pg';
 
-import { GameStateMachineInitializer, doLog } from "@paima/utils";
-import Prando from "@paima/prando";
+import { GameStateMachineInitializer, doLog } from '@paima/utils';
+import Prando from '@paima/prando';
 
 import {
   blockHeightDone,
@@ -11,15 +11,15 @@ import {
   getLatestBlockHeight,
   getScheduledDataByBlockHeight,
   saveLastBlockHeight,
-} from "./sql/queries.queries.js";
-import { randomnessRouter } from "./randomness.js";
+} from './sql/queries.queries.js';
+import { randomnessRouter } from './randomness.js';
 
 const SM: GameStateMachineInitializer = {
   initialize: (
     databaseInfo,
     randomnessProtocolEnum,
     gameStateTransitionRouter,
-    startBlockheight
+    startBlockHeight
   ) => {
     const DBConn = new pg.Pool(databaseInfo);
     const readonlyDBConn = new pg.Pool(databaseInfo);
@@ -28,15 +28,13 @@ const SM: GameStateMachineInitializer = {
     return {
       latestBlockHeight: async () => {
         const [b] = await getLatestBlockHeight.run(undefined, readonlyDBConn);
-        const blockHeight = b?.block_height || startBlockheight || 0;
+        const blockHeight = b?.block_height ?? startBlockHeight ?? 0;
         return blockHeight;
       },
       // Core function which triggers state transitions
-      process: async (latestChainData) => {
+      process: async latestChainData => {
         // Acquire correct STF based on router (based on block height)
-        const gameStateTransition = gameStateTransitionRouter(
-          latestChainData.blockNumber
-        );
+        const gameStateTransition = gameStateTransitionRouter(latestChainData.blockNumber);
         // Save blockHeight and randomness seed (which uses the blockHash)
         const getSeed = randomnessRouter(randomnessProtocolEnum);
         const seed = await getSeed(latestChainData, readonlyDBConn);
@@ -54,9 +52,9 @@ const SM: GameStateMachineInitializer = {
         );
         for (let data of scheduledData) {
           const inputData = {
-            userAddress: "0x0",
+            userAddress: '0x0',
             inputData: data.input_data,
-            inputNonce: "",
+            inputNonce: '',
           };
           // Trigger STF
           const sqlQueries = await gameStateTransition(
@@ -78,14 +76,11 @@ const SM: GameStateMachineInitializer = {
         // Execute user submitted input data
         for (let inputData of latestChainData.submittedData) {
           // Check nonce is valid
-          if (inputData.inputNonce === "") {
+          if (inputData.inputNonce === '') {
             doLog(`Skipping inputData with invalid empty nonce: ${inputData}`);
             continue;
           }
-          const nonceData = await findNonce.run(
-            { nonce: inputData.inputNonce },
-            readonlyDBConn
-          );
+          const nonceData = await findNonce.run({ nonce: inputData.inputNonce }, readonlyDBConn);
           if (nonceData.length > 0) {
             doLog(`Skipping inputData with duplicate nonce: ${inputData}`);
             continue;
@@ -113,10 +108,7 @@ const SM: GameStateMachineInitializer = {
             DBConn
           );
         }
-        await blockHeightDone.run(
-          { block_height: latestChainData.blockNumber },
-          DBConn
-        );
+        await blockHeightDone.run({ block_height: latestChainData.blockNumber }, DBConn);
       },
     };
   },
