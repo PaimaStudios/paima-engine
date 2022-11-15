@@ -3,11 +3,8 @@ module.exports = {
     'airbnb-typescript',
     'plugin:@typescript-eslint/recommended',
     'plugin:@typescript-eslint/recommended-requiring-type-checking',
-    'plugin:jest/recommended',
     'plugin:import/typescript',
-    'plugin:compat/recommended',
     'plugin:react-hooks/recommended',
-    'plugin:storybook/recommended',
     'prettier',
   ],
   rules: {
@@ -58,7 +55,6 @@ module.exports = {
     'import/no-named-as-default-member': 'off',
     'import/prefer-default-export': 'off',
     'import/order': 'off',
-    'jest/no-conditional-expect': 'off',
     'lines-between-class-members': 'off',
     'no-else-return': 'off',
     'no-lonely-if': 'off',
@@ -148,24 +144,22 @@ module.exports = {
     'no-unused-expressions': 0,
     'no-lone-blocks': 0,
     'max-classes-per-file': 0,
-    'no-restricted-properties': [
-      2,
-      {
-        object: 'TrezorConnect',
-        message: 'Use TrezorWrapper instead to minimize Trezor iframe lifespan',
-      },
-    ],
   },
   plugins: ['@typescript-eslint', 'import', 'promise', 'react', 'prettier'],
   root: true,
   parser: '@typescript-eslint/parser',
+  ignorePatterns: [
+    '.eslintrc.js',
+    // won't work as it's ignored by the workspace-level tsconfig.json
+    'admin-panel'
+  ],
   parserOptions: {
-    project: './tsconfig.typecheck.json',
+    project: './tsconfig.json',
     ecmaVersion: 'es2019',
     sourceType: 'module',
     tsconfigRootDir: __dirname,
     ecmaFeatures: {
       legacyDecorators: true,
     },
-  }
+  },
 };
