@@ -4,7 +4,9 @@
   "private": true,
   "scripts": {
     "lint": "npm run prettier && eslint '**/*.{ts,tsx}' --ignore-path .gitignore",
+    "cilint": "npm run cprettier && eslint '**/*.{ts,tsx}' --ignore-path .gitignore",
     "build": "npx tsc --build tsconfig.build.json",
+    "cprettier": "prettier --check '**/*.{ts,tsx}'",
     "prettier": "prettier --write '**/*.{ts,tsx}'"
   },
   "workspaces": [

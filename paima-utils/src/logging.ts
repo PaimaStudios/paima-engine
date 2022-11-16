@@ -1,23 +1,21 @@
 import * as fsa from './fs_access/fsa.js';
 import type { ChainData } from './types';
 
-export async function logBlock(block: ChainData): Promise<void> {
+export function logBlock(block: ChainData): void {
   const s = `Block #${block.blockNumber} received from Paima Funnel. Contains ${block.submittedData.length} pieces of input.`;
-  await doLog(s);
+  doLog(s);
   if (block.submittedData.length) console.log(block);
 }
-export async function logSuccess(block: ChainData): Promise<void> {
+export function logSuccess(block: ChainData): void {
   const s = `Block #${block.blockNumber} finished processing by Paima SM.`;
-  await doLog(s);
+  doLog(s);
 }
-export async function logError(error: unknown): Promise<void> {
+export function logError(error: unknown): void {
   const s = `***ERROR***\n${error}\n***`;
-  await doLog(s);
+  doLog(s);
 }
 
-export async function doLog(s: string): Promise<void> {
+export function doLog(s: string): void {
   console.log(s);
-  try {
-    await fsa.appendToFile(s);
-  } catch {}
+  fsa.appendToFile(s);
 }

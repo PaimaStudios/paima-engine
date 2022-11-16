@@ -1,3 +1,5 @@
+import type Web3 from 'web3';
+import type { Contract } from 'web3-eth-contract';
 import type { PreparedQuery } from '@pgtyped/query';
 import type { Express, RequestHandler } from 'express';
 import type { Pool, PoolConfig } from 'pg';
@@ -18,6 +20,8 @@ export interface ChainFunnel {
   nodeUrl: string;
   storageAddress: string;
   extensions: ChainDataExtension[];
+  web3: Web3;
+  storage: Contract;
   readData: (blockHeight: number) => Promise<ChainData[] | undefined>; // if using internalReadData
 }
 export type ETHAddress = string;
@@ -54,7 +58,7 @@ export type GameStateTransitionFunction = (
 export interface GameStateMachineInitializer {
   initialize: (
     databaseInfo: PoolConfig,
-    randomnessProtocolEnum: any,
+    randomnessProtocolEnum: number,
     gameStateTransitionRouter: GameStateTransitionFunctionRouter,
     startBlockHeight: number
   ) => GameStateMachine;

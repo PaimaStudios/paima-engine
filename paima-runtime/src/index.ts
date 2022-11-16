@@ -58,9 +58,9 @@ const paimaEngine: PaimaRuntimeInitializer = {
         await initSnapshots();
 
         // pass endpoints to web server and run
-        (async () => startServer())();
+        startServer();
 
-        runIterativeFunnel(gameStateMachine, chainFunnel, this.pollingRate, stopBlockHeight);
+        await runIterativeFunnel(gameStateMachine, chainFunnel, this.pollingRate, stopBlockHeight);
       },
     };
   },
@@ -83,7 +83,7 @@ async function getStopBlockHeight(): Promise<number | null> {
       const e = err as { message: string };
       doLog(`Error message: ${e.message}`);
     }
-    await logError(err);
+    logError(err);
   }
   return stopBlockHeight;
 }
@@ -129,7 +129,7 @@ async function runIterativeFunnel(
     exitIfStopped(run);
 
     if (!latestChainDataList || !latestChainDataList?.length) {
-      console.log(`No chain data was returned, waiting ${pollingRate}s.`);
+      doLog(`No chain data was returned, waiting ${pollingRate}s.`);
       await delay(pollingRate * 1000);
       continue;
     }
@@ -140,10 +140,10 @@ async function runIterativeFunnel(
 
       try {
         await gameStateMachine.process(block);
-        await logSuccess(block);
+        logSuccess(block);
         exitIfStopped(run);
       } catch (error) {
-        await logError(error);
+        logError(error);
       }
 
       const latestReadBlockHeight = await gameStateMachine.latestBlockHeight();
