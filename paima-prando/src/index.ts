@@ -12,9 +12,12 @@ class Prando {
     this._value = NaN;
     this._seed = seed;
     this.iteration = 0;
+    if (!seed) throw Error(`Prando initialized without a valid seed (${seed})`);
     if (typeof seed === 'string') this.seed = this.hashCode(seed);
-    else if (typeof seed === 'number') this.seed = this.getSafeSeed(seed);
-    else this.seed = this.getSafeSeed(this.MIN + Math.floor((this.MAX - this.MIN) * Math.random()));
+    else if (typeof seed === 'number') this.seed = seed;
+    else {
+      throw Error(`Prando initialized without a valid seed (${seed})`);
+    }
     this.reset();
   }
 
