@@ -43,6 +43,7 @@ module.exports = {
       },
     ],
     '@typescript-eslint/return-await': ['error', 'always'],
+    '@typescript-eslint/explicit-function-return-type': "error",
     'func-names': 'off',
     'new-cap': 'off',
     'arrow-parens': ['off'],
@@ -56,6 +57,7 @@ module.exports = {
     'import/prefer-default-export': 'off',
     'import/order': 'off',
     'lines-between-class-members': 'off',
+    '@typescript-eslint/lines-between-class-members': 'off',
     'no-else-return': 'off',
     'no-lonely-if': 'off',
     'no-multiple-empty-lines': 'off',
@@ -130,11 +132,9 @@ module.exports = {
     'padded-blocks': 0,
     'arrow-body-style': 0,
     'key-spacing': 1,
-    'no-empty-function': 1,
-    'max-len': 1,
+    'no-empty-function': 0, // replaced by @typescript-eslint/no-empty-function
     'no-useless-escape': 1,
     'prefer-const': 'off', // causes issues with let statements followed by block or try-catch
-    'object-curly-spacing': 1,
     'spaced-comment': 1,
     quotes: ['error', 'single', { avoidEscape: true, allowTemplateLiterals: true }],
     'import/imports-first': 1,
@@ -151,7 +151,9 @@ module.exports = {
   ignorePatterns: [
     '.eslintrc.js',
     // won't work as it's ignored by the workspace-level tsconfig.json
-    'admin-panel'
+    'admin-panel',
+    '*.d.ts',
+    '*.queries.ts'
   ],
   parserOptions: {
     project: './tsconfig.json',

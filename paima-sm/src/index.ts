@@ -1,6 +1,7 @@
 import pg from 'pg';
 
-import { GameStateMachineInitializer, doLog } from '@paima/utils';
+import { doLog } from '@paima/utils';
+import type { ChainData, GameStateMachineInitializer } from '@paima/utils';
 import Prando from '@paima/prando';
 
 import {
@@ -24,15 +25,15 @@ const SM: GameStateMachineInitializer = {
     const DBConn = new pg.Pool(databaseInfo);
     const readonlyDBConn = new pg.Pool(databaseInfo);
     const ensureReadOnly = `SET SESSION CHARACTERISTICS AS TRANSACTION READ ONLY;`;
-    const readonlyset = readonlyDBConn.query(ensureReadOnly);
+    const readonlyset = readonlyDBConn.query(ensureReadOnly); // note: this query modifies the DB state
     return {
-      latestBlockHeight: async () => {
+      latestBlockHeight: async (): Promise<number> => {
         const [b] = await getLatestBlockHeight.run(undefined, readonlyDBConn);
         const blockHeight = b?.block_height ?? startBlockHeight ?? 0;
         return blockHeight;
       },
       // Core function which triggers state transitions
-      process: async latestChainData => {
+      process: async (latestChainData: ChainData): Promise<void> => {
         // Acquire correct STF based on router (based on block height)
         const gameStateTransition = gameStateTransitionRouter(latestChainData.blockNumber);
         // Save blockHeight and randomness seed (which uses the blockHash)
