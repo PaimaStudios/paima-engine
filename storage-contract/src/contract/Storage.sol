@@ -19,62 +19,6 @@ contract Storage {
     emit PaimaGameInteraction(msg.sender, data, msg.value);
   }
 
-  function createLobby(bytes memory data) public payable {
-    paimaSubmitGameInput(data);
-  }
-
-  function joinLobby(bytes memory data) public payable {
-    paimaSubmitGameInput(data);
-  }
-
-  function submitMoves(bytes memory data) public payable {
-    paimaSubmitGameInput(data);
-  }
-
-  function setNft(bytes memory data) public payable {
-    paimaSubmitGameInput(data);
-  }
-
-  function submitAuxiliaryGameInput1(bytes memory data) public payable {
-    paimaSubmitGameInput(data);
-  }
-
-  function submitAuxiliaryGameInput2(bytes memory data) public payable {
-    paimaSubmitGameInput(data);
-  }
-
-  function submitAuxiliaryGameInput3(bytes memory data) public payable {
-    paimaSubmitGameInput(data);
-  }
-
-  function submitAuxiliaryGameInput4(bytes memory data) public payable {
-    paimaSubmitGameInput(data);
-  }
-
-  function submitAuxiliaryGameInput5(bytes memory data) public payable {
-    paimaSubmitGameInput(data);
-  }
-
-  function submitAuxiliaryGameInput6(bytes memory data) public payable {
-    paimaSubmitGameInput(data);
-  }
-
-  function submitAuxiliaryGameInput7(bytes memory data) public payable {
-    paimaSubmitGameInput(data);
-  }
-
-  function submitAuxiliaryGameInput8(bytes memory data) public payable {
-    paimaSubmitGameInput(data);
-  }
-
-  function submitAuxiliaryGameInput9(bytes memory data) public payable {
-    paimaSubmitGameInput(data);
-  }
-
-  function submitAuxiliaryGameInput10(bytes memory data) public payable {
-    paimaSubmitGameInput(data);
-  }
-
   function withdrawFunds() public {
     require(msg.sender == owner, 'Only owner can withdraw funds');
     address payable to = payable(owner);
