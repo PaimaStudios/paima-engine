@@ -8,7 +8,7 @@ import "../lib/ctest.sol";
 import "../src/contract/Storage.sol";
 
 contract StorageTest is CTest {
-    event PaimaGameInteraction(address indexed userAddress, bytes data);
+    event PaimaGameInteraction(address indexed userAddress, bytes data, uint256 value);
 
     CheatCodes cheats = CheatCodes(HEVM_ADDRESS);
     Storage strg;
@@ -49,8 +49,8 @@ contract StorageTest is CTest {
     function testStore() public {
         cheats.prank(account2);
         bytes memory data = "0x123456";
-        cheats.expectEmit(true, true, false, true);
-        emit PaimaGameInteraction(account2, data);
+        cheats.expectEmit(true, true, true, true);
+        emit PaimaGameInteraction(account2, data, FEE);
         strg.paimaSubmitGameInput{value: FEE}(data);
         assertEq(address(strg).balance, FEE);
     }
@@ -59,61 +59,61 @@ contract StorageTest is CTest {
         cheats.startPrank(account2);
         bytes memory data = "0x123456";
 
-        cheats.expectEmit(true, true, false, true);
-        emit PaimaGameInteraction(account2, data);
+        cheats.expectEmit(true, true, true, true);
+        emit PaimaGameInteraction(account2, data, FEE);
         strg.createLobby{value: FEE}(data);
 
-        cheats.expectEmit(true, true, false, true);
-        emit PaimaGameInteraction(account2, data);
+        cheats.expectEmit(true, true, true, true);
+        emit PaimaGameInteraction(account2, data, FEE);
         strg.joinLobby{value: FEE}(data);
 
-        cheats.expectEmit(true, true, false, true);
-        emit PaimaGameInteraction(account2, data);
+        cheats.expectEmit(true, true, true, true);
+        emit PaimaGameInteraction(account2, data, FEE);
         strg.submitMoves{value: FEE}(data);
 
-        cheats.expectEmit(true, true, false, true);
-        emit PaimaGameInteraction(account2, data);
+        cheats.expectEmit(true, true, true, true);
+        emit PaimaGameInteraction(account2, data, FEE);
         strg.setNft{value: FEE}(data);
 
-        cheats.expectEmit(true, true, false, true);
-        emit PaimaGameInteraction(account2, data);
-        strg.submitAuxillaryGameInput1{value: FEE}(data);
+        cheats.expectEmit(true, true, true, true);
+        emit PaimaGameInteraction(account2, data, FEE);
+        strg.submitAuxiliaryGameInput1{value: FEE}(data);
 
-        cheats.expectEmit(true, true, false, true);
-        emit PaimaGameInteraction(account2, data);
-        strg.submitAuxillaryGameInput2{value: FEE}(data);
+        cheats.expectEmit(true, true, true, true);
+        emit PaimaGameInteraction(account2, data, FEE);
+        strg.submitAuxiliaryGameInput2{value: FEE}(data);
 
-        cheats.expectEmit(true, true, false, true);
-        emit PaimaGameInteraction(account2, data);
-        strg.submitAuxillaryGameInput3{value: FEE}(data);
+        cheats.expectEmit(true, true, true, true);
+        emit PaimaGameInteraction(account2, data, FEE);
+        strg.submitAuxiliaryGameInput3{value: FEE}(data);
 
-        cheats.expectEmit(true, true, false, true);
-        emit PaimaGameInteraction(account2, data);
-        strg.submitAuxillaryGameInput4{value: FEE}(data);
+        cheats.expectEmit(true, true, true, true);
+        emit PaimaGameInteraction(account2, data, FEE);
+        strg.submitAuxiliaryGameInput4{value: FEE}(data);
 
-        cheats.expectEmit(true, true, false, true);
-        emit PaimaGameInteraction(account2, data);
-        strg.submitAuxillaryGameInput5{value: FEE}(data);
+        cheats.expectEmit(true, true, true, true);
+        emit PaimaGameInteraction(account2, data, FEE);
+        strg.submitAuxiliaryGameInput5{value: FEE}(data);
 
-        cheats.expectEmit(true, true, false, true);
-        emit PaimaGameInteraction(account2, data);
-        strg.submitAuxillaryGameInput6{value: FEE}(data);
+        cheats.expectEmit(true, true, true, true);
+        emit PaimaGameInteraction(account2, data, FEE);
+        strg.submitAuxiliaryGameInput6{value: FEE}(data);
 
-        cheats.expectEmit(true, true, false, true);
-        emit PaimaGameInteraction(account2, data);
-        strg.submitAuxillaryGameInput7{value: FEE}(data);
+        cheats.expectEmit(true, true, true, true);
+        emit PaimaGameInteraction(account2, data, FEE);
+        strg.submitAuxiliaryGameInput7{value: FEE}(data);
 
-        cheats.expectEmit(true, true, false, true);
-        emit PaimaGameInteraction(account2, data);
-        strg.submitAuxillaryGameInput8{value: FEE}(data);
+        cheats.expectEmit(true, true, true, true);
+        emit PaimaGameInteraction(account2, data, FEE);
+        strg.submitAuxiliaryGameInput8{value: FEE}(data);
 
-        cheats.expectEmit(true, true, false, true);
-        emit PaimaGameInteraction(account2, data);
-        strg.submitAuxillaryGameInput9{value: FEE}(data);
+        cheats.expectEmit(true, true, true, true);
+        emit PaimaGameInteraction(account2, data, FEE);
+        strg.submitAuxiliaryGameInput9{value: FEE}(data);
 
-        cheats.expectEmit(true, true, false, true);
-        emit PaimaGameInteraction(account2, data);
-        strg.submitAuxillaryGameInput10{value: FEE}(data);
+        cheats.expectEmit(true, true, true, true);
+        emit PaimaGameInteraction(account2, data, FEE);
+        strg.submitAuxiliaryGameInput10{value: FEE}(data);
 
         cheats.stopPrank();
         assertEq(address(strg).balance, 14 * FEE);
@@ -136,34 +136,34 @@ contract StorageTest is CTest {
         strg.setNft{value: FEE - 1}(data);
 
         cheats.expectRevert("Sufficient funds required to submit game input");
-        strg.submitAuxillaryGameInput1{value: FEE - 1}(data);
+        strg.submitAuxiliaryGameInput1{value: FEE - 1}(data);
 
         cheats.expectRevert("Sufficient funds required to submit game input");
-        strg.submitAuxillaryGameInput2{value: FEE - 1}(data);
+        strg.submitAuxiliaryGameInput2{value: FEE - 1}(data);
 
         cheats.expectRevert("Sufficient funds required to submit game input");
-        strg.submitAuxillaryGameInput3{value: FEE - 1}(data);
+        strg.submitAuxiliaryGameInput3{value: FEE - 1}(data);
 
         cheats.expectRevert("Sufficient funds required to submit game input");
-        strg.submitAuxillaryGameInput4{value: FEE - 1}(data);
+        strg.submitAuxiliaryGameInput4{value: FEE - 1}(data);
 
         cheats.expectRevert("Sufficient funds required to submit game input");
-        strg.submitAuxillaryGameInput5{value: FEE - 1}(data);
+        strg.submitAuxiliaryGameInput5{value: FEE - 1}(data);
 
         cheats.expectRevert("Sufficient funds required to submit game input");
-        strg.submitAuxillaryGameInput6{value: FEE - 1}(data);
+        strg.submitAuxiliaryGameInput6{value: FEE - 1}(data);
 
         cheats.expectRevert("Sufficient funds required to submit game input");
-        strg.submitAuxillaryGameInput7{value: FEE - 1}(data);
+        strg.submitAuxiliaryGameInput7{value: FEE - 1}(data);
 
         cheats.expectRevert("Sufficient funds required to submit game input");
-        strg.submitAuxillaryGameInput8{value: FEE - 1}(data);
+        strg.submitAuxiliaryGameInput8{value: FEE - 1}(data);
 
         cheats.expectRevert("Sufficient funds required to submit game input");
-        strg.submitAuxillaryGameInput9{value: FEE - 1}(data);
+        strg.submitAuxiliaryGameInput9{value: FEE - 1}(data);
 
         cheats.expectRevert("Sufficient funds required to submit game input");
-        strg.submitAuxillaryGameInput10{value: FEE - 1}(data);
+        strg.submitAuxiliaryGameInput10{value: FEE - 1}(data);
 
         cheats.stopPrank();
     }
@@ -221,8 +221,8 @@ contract StorageTest is CTest {
         strg.paimaSubmitGameInput{value: newFee - 1}(data);
 
         cheats.prank(account2);
-        cheats.expectEmit(true, true, false, true);
-        emit PaimaGameInteraction(account2, data);
+        cheats.expectEmit(true, true, true, true);
+        emit PaimaGameInteraction(account2, data, newFee);
         strg.paimaSubmitGameInput{value: newFee}(data);
         assertEq(address(strg).balance, newFee);
     }
