@@ -32,6 +32,7 @@ export type ConciseBuilder = {
 
 export type ConciseConsumerInitializer = {
   initialize: (input: InputString, version?: EncodingVersion) => ConciseConsumer;
+  tryInitialize: (input: InputString) => ConciseConsumer;
 };
 export type ConciseConsumer = {
   conciseInput: string;

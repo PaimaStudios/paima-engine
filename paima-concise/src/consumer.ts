@@ -53,4 +53,14 @@ const initialize = (input: string, version = EncodingVersion.V1): ConciseConsume
   };
 };
 
-export const consumer: ConciseConsumerInitializer = { initialize };
+/*
+ * Selects encoding version based on the format of the input string
+ */
+const tryInitialize = (input: string): ConciseConsumer => {
+  if (input.match(/^[a-z]+\|/)) {
+    return initialize(input, EncodingVersion.V1);
+  }
+  return initialize(input);
+};
+
+export const consumer: ConciseConsumerInitializer = { initialize, tryInitialize };

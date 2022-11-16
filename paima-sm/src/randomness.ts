@@ -2,7 +2,7 @@ import Prando from '@paima/prando';
 import type { ChainData } from '@paima/utils';
 import Crypto from 'crypto';
 import type pg from 'pg';
-
+import { consumer } from '@paima/concise';
 import { getBlockSeeds } from './sql/queries.queries.js';
 
 export function randomnessRouter(n: number): typeof getSeed1 {
@@ -10,14 +10,14 @@ export function randomnessRouter(n: number): typeof getSeed1 {
   else throw Error('wrong randomness protocol set');
 }
 
+function parseInput(encodedInput: string): string[] {
+  const conciseConsumer = consumer.tryInitialize(encodedInput);
+  return conciseConsumer.conciseValues.map(cValue => cValue.value);
+}
+
 function chooseData(chainData: ChainData, seed: string): string[] {
   const submittedData = chainData.submittedData
-    .map(data => [
-      //TODO: use consumer to decode the inputData
-      data.inputData,
-      data.inputNonce,
-      data.userAddress,
-    ])
+    .map(data => [...parseInput(data.inputData), data.inputNonce, data.userAddress])
     .flat();
   const relevantData = [
     chainData.timestamp.toString(),
@@ -28,7 +28,7 @@ function chooseData(chainData: ChainData, seed: string): string[] {
   const prando = new Prando(seed);
   const randomSelection = (): boolean => {
     const randomValue = Math.round(prando.next());
-    return randomValue === 1 ? true : false;
+    return randomValue === 1;
   };
 
   return relevantData.filter(randomSelection);
@@ -45,6 +45,6 @@ async function getSeed1(latestChainData: ChainData, DBConn: pg.Pool): Promise<st
   return seed;
 }
 
-function hashTogether(hashes: string[]): string {
-  return Crypto.createHash('sha256').update(hashes.join()).digest('base64');
+function hashTogether(data: string[]): string {
+  return Crypto.createHash('sha256').update(data.join()).digest('base64');
 }
