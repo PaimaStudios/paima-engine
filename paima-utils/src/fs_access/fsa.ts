@@ -1,7 +1,5 @@
-import * as fs from 'fs/promises';
+import * as fs from 'fs';
 
-export async function appendToFile(s: string): Promise<void> {
-  try {
-    await fs.appendFile('./logs.log', s);
-  } catch {}
+export function appendToFile(s: string): void {
+  fs.appendFileSync('./logs.log', s);
 }
