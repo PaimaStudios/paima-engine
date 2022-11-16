@@ -58,7 +58,7 @@ export type GameStateTransitionFunction = (
 export interface GameStateMachineInitializer {
   initialize: (
     databaseInfo: PoolConfig,
-    randomnessProtocolEnum: any,
+    randomnessProtocolEnum: number,
     gameStateTransitionRouter: GameStateTransitionFunctionRouter,
     startBlockHeight: number
   ) => GameStateMachine;
