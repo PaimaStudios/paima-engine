@@ -34,10 +34,8 @@ async function processBlock(
       submittedData: (
         await Promise.all(
           events.map(function (e) {
-            const decodedData =
-              e.returnValues.data && e.returnValues.data.length > 0
-                ? hexToUtf8(e.returnValues.data)
-                : '';
+            const data: string = e.returnValues.data;
+            const decodedData = data && data.length > 0 ? hexToUtf8(data) : '';
             return processDataUnit(
               web3,
               {

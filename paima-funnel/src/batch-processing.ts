@@ -10,6 +10,7 @@ interface ValidatedSubmittedChainData extends SubmittedChainData {
 }
 
 function unpackValidatedData(validatedData: ValidatedSubmittedChainData): SubmittedChainData {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const o = validatedData as any;
   delete o.validated;
   return o as SubmittedChainData;
