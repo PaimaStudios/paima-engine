@@ -8,7 +8,7 @@ export type ErrorCode = number;
 export type ErrorMessageFxn = (errorCode: ErrorCode) => string;
 export type ErrorMessageMapping = Record<ErrorCode, string>;
 
-export interface ChainDataExtension { }
+export interface ChainDataExtension {}
 
 export type TransactionTemplate = {
   data: string;
