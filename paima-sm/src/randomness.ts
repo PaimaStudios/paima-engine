@@ -3,7 +3,7 @@ import type { ChainData } from '@paima/utils';
 import Crypto from 'crypto';
 import type pg from 'pg';
 
-import { getRandomness } from './sql/queries.queries.js';
+import { getBlockSeeds } from './sql/queries.queries.js';
 
 export function randomnessRouter(n: number): typeof getSeed1 {
   if (n) return getSeed1;
@@ -38,10 +38,10 @@ function chooseData(chainData: ChainData, seed: string): string[] {
  * Basic randomness generation protocol which hashes together previous seeds and randomly selected chain data
  */
 async function getSeed1(latestChainData: ChainData, DBConn: pg.Pool): Promise<string> {
-  const seeds = (await getRandomness.run(undefined, DBConn)).map(result => result.seed);
-  const interimSeed = hashTogether([latestChainData.blockHash, ...seeds]);
+  const blockSeeds = (await getBlockSeeds.run(undefined, DBConn)).map(result => result.seed);
+  const interimSeed = hashTogether([latestChainData.blockHash, ...blockSeeds]);
   const selectedChainData = chooseData(latestChainData, interimSeed);
-  const seed = hashTogether([...selectedChainData, ...seeds]);
+  const seed = hashTogether([...selectedChainData, ...blockSeeds]);
   return seed;
 }
 
