@@ -1,6 +1,7 @@
 node_modules
 **/src/**/*.js
 **/dist
+**/build
 **/lib
 **/src/**/*.d.ts
 **/*.tsbuildinfo

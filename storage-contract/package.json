@@ -12,10 +12,6 @@
         "lint": "prettier --write '**/*.sol'",
         "test": "forge test"
     },
-    "prettier": {
-        "tabWidth": 4,
-        "arrowParens": "avoid"
-    },
     "devDependencies": {
         "@truffle/hdwallet-provider": "^2.0.8",
         "@types/chai": "^4.3.1",

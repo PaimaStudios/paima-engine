@@ -1,15 +1,16 @@
+import type { ChainData } from '@paima/utils';
 import Crypto from 'crypto';
-import pg from 'pg';
+import type pg from 'pg';
 
 import { getRandomness } from './sql/queries.queries.js';
 
-export function randomnessRouter(n: number) {
+export function randomnessRouter(n: number): typeof getSeed1 {
   if (n) return getSeed1;
   else throw Error('wrong randomness protocol set');
 }
 
 // Basic randomness generation protocol which hashes together previous seeds + latest block hash
-async function getSeed1(latestChainData: any, DBConn: pg.Pool): Promise<string> {
+async function getSeed1(latestChainData: ChainData, DBConn: pg.Pool): Promise<string> {
   const hashes = await getRandomness.run(undefined, DBConn);
   const seed = hashTogether([latestChainData.blockHash, ...hashes.map(h => h.seed)]);
   return seed;

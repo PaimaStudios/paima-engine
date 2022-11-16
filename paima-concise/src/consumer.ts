@@ -1,11 +1,7 @@
 import web3 from 'web3-utils';
 
-import {
-  ConciseConsumer,
-  ConciseConsumerInitializer,
-  ConciseValue,
-  EncodingVersion,
-} from './types';
+import type { ConciseConsumer, ConciseConsumerInitializer, ConciseValue } from './types';
+import { EncodingVersion } from './types';
 import { isHexString } from './utils';
 import { separator } from './v1/consts';
 import { toConciseValue } from './v1/utils';
@@ -30,28 +26,28 @@ const initialize = (input: string, version = EncodingVersion.V1): ConciseConsume
     conciseInput,
     concisePrefix,
     conciseValues,
-    initialInput(decompress = false) {
+    initialInput(_decompress = false): string {
       return this.conciseInput;
     },
-    nextValue() {
+    nextValue(): ConciseValue | '' {
       const [nextValue] = conciseValues.splice(0, 1);
       return nextValue ?? '';
     },
-    popValue() {
+    popValue(): ConciseValue | '' {
       const nextValue = conciseValues.pop();
       return nextValue ?? '';
     },
-    prefix() {
+    prefix(): string {
       return this.concisePrefix;
     },
-    readValue(position: number) {
+    readValue(position: number): ConciseValue | '' {
       const index = position - 1;
       return this.conciseValues[index] ?? '';
     },
-    stateIdentifiers() {
+    stateIdentifiers(): ConciseValue[] {
       return this.conciseValues.filter(value => value.isStateIdentifier);
     },
-    valueCount() {
+    valueCount(): number {
       return this.conciseValues.length;
     },
   };

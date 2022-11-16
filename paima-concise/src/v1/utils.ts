@@ -1,4 +1,4 @@
-import { ConciseValue } from '../types';
+import type { ConciseValue } from '../types';
 import { stateIdentifier } from './consts';
 
 export const toConciseValue = (val: string): ConciseValue => {

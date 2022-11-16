@@ -1,4 +1,4 @@
-import { ConciseValue, UTF8String } from '../types';
+import type { ConciseValue, UTF8String } from '../types';
 import { separator, stateIdentifier } from './consts';
 
 const toString = (val: ConciseValue): string => {
