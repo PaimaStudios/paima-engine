@@ -3,11 +3,13 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "lint": "npm run prettier && eslint '**/*.{ts,tsx}' --ignore-path .gitignore",
-    "cilint": "npm run cprettier && eslint '**/*.{ts,tsx}' --ignore-path .gitignore",
+    "lint": "npm run prettier && npm run eslint",
+    "cilint": "npm run cprettier && npm run eslint",
     "build": "npx tsc --build tsconfig.build.json",
     "cprettier": "prettier --check '**/*.{ts,tsx}'",
-    "prettier": "prettier --write '**/*.{ts,tsx}'"
+    "eslint": "eslint '**/*.{ts,tsx}' --ignore-path .gitignore",
+    "prettier": "prettier --write '**/*.{ts,tsx}'",
+    "prepare": "husky install"
   },
   "workspaces": [
     "./paima-utils",
@@ -34,6 +36,7 @@
     "eslint-plugin-promise": "^6.1.1",
     "eslint-plugin-react": "^7.31.10",
     "eslint-plugin-react-hooks": "^4.6.0",
+    "husky": "^8.0.2",
     "prettier": "^2.7.1",
     "typescript": "^4.8.4"
   },
