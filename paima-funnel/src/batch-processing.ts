@@ -18,7 +18,7 @@ function unpackValidatedData(validatedData: ValidatedSubmittedChainData): Submit
 
 function createNonce(web3: Web3, nonceInput: string): string {
   let nonce = web3.utils.sha3(nonceInput);
-  if (nonce === null) {
+  if (!nonce) {
     doLog(`[funnel] WARNING: failure generating nonce from: ${nonceInput}`);
     nonce = '';
   }

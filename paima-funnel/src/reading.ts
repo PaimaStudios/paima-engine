@@ -1,8 +1,9 @@
 import type Web3 from 'web3';
-import type { Contract } from 'web3-eth-contract';
+import type { BlockTransactionString } from 'web3-eth';
+import type { Contract, EventData } from 'web3-eth-contract';
 import pkg from 'web3-utils';
 
-import type { ChainData } from '@paima/utils';
+import type { ChainData, SubmittedChainData } from '@paima/utils';
 import { doLog } from '@paima/utils';
 
 import { processDataUnit } from './batch-processing.js';
@@ -12,6 +13,29 @@ const { hexToUtf8 } = pkg;
 interface PromiseFulfilledResult<T> {
   status: 'fulfilled';
   value: T;
+}
+
+async function getSubmittedData(
+  web3: Web3,
+  block: BlockTransactionString,
+  events: EventData[]
+): Promise<SubmittedChainData[]> {
+  const eventMapper = (e: EventData): Promise<SubmittedChainData[]> => {
+    const data: string = e.returnValues.data;
+    const decodedData = data && data.length > 0 ? hexToUtf8(data) : '';
+    return processDataUnit(
+      web3,
+      {
+        userAddress: e.returnValues.userAddress,
+        inputData: decodedData,
+        inputNonce: '',
+      },
+      block.number
+    );
+  };
+
+  const unflattenedList = await Promise.all(events.map(eventMapper));
+  return unflattenedList.flat();
 }
 
 async function processBlock(
@@ -27,27 +51,12 @@ async function processBlock(
         toBlock: blockNumber,
       }),
     ]);
+
     return {
       timestamp: block.timestamp,
       blockHash: block.hash,
       blockNumber: block.number,
-      submittedData: (
-        await Promise.all(
-          events.map(function (e) {
-            const data: string = e.returnValues.data;
-            const decodedData = data && data.length > 0 ? hexToUtf8(data) : '';
-            return processDataUnit(
-              web3,
-              {
-                userAddress: e.returnValues.userAddress,
-                inputData: decodedData,
-                inputNonce: '',
-              },
-              block.number
-            );
-          })
-        )
-      ).flat(),
+      submittedData: await getSubmittedData(web3, block, events),
     };
   } catch (err) {
     doLog(`[funnel::processBlock] caught ${err}`);
