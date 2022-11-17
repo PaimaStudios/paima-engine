@@ -1,5 +1,5 @@
 import Prando from '@paima/prando';
-import type { ChainData } from '@paima/utils';
+import type { ChainData, SubmittedChainData } from '@paima/utils';
 import Crypto from 'crypto';
 import type pg from 'pg';
 import { consumer } from '@paima/concise';
@@ -15,20 +15,29 @@ function parseInput(encodedInput: string): string[] {
   return conciseConsumer.conciseValues.map(cValue => cValue.value);
 }
 
-function chooseData(chainData: ChainData, seed: string): string[] {
+function chooseData(submittedData: SubmittedChainData[], seed: string): string[] {
   const prando = new Prando(seed);
   const randomSelection = (): boolean => {
     const randomValue = Math.round(prando.next());
     return randomValue === 1;
   };
 
-  let chosenData = [];
-  for (let dataChunk of chainData.submittedData) {
+  const chosenData = [];
+  for (const dataChunk of submittedData) {
     if (randomSelection()) chosenData.push(dataChunk.inputNonce);
     if (randomSelection()) chosenData.push(dataChunk.userAddress);
-    for (let data of parseInput(dataChunk.inputData)) {
+    for (const data of parseInput(dataChunk.inputData)) {
       if (randomSelection()) chosenData.push(data);
     }
+  }
+
+  // Add random attribute of one of the submittedData in case nothing was picked
+  if (chosenData.length === 0) {
+    const randomIndex = Math.floor(prando.next() * submittedData.length);
+    const dataChunk = submittedData[randomIndex];
+    const forcedOptions = [dataChunk.inputNonce, dataChunk.userAddress, dataChunk.inputData];
+    const forcedValue = forcedOptions[Math.floor(prando.next() * forcedOptions.length)];
+    chosenData.push(forcedValue);
   }
 
   return chosenData;
@@ -40,7 +49,7 @@ function chooseData(chainData: ChainData, seed: string): string[] {
 async function getSeed1(latestChainData: ChainData, DBConn: pg.Pool): Promise<string> {
   const blockSeeds = (await getBlockSeeds.run(undefined, DBConn)).map(result => result.seed);
   const interimSeed = hashTogether([latestChainData.blockHash, ...blockSeeds]);
-  const selectedChainData = chooseData(latestChainData, interimSeed);
+  const selectedChainData = chooseData(latestChainData.submittedData, interimSeed);
   const seed = hashTogether([...selectedChainData, latestChainData.blockHash, ...blockSeeds]);
   return seed;
 }
