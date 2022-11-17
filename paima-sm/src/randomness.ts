@@ -32,7 +32,7 @@ function chooseData(submittedData: SubmittedChainData[], seed: string): string[]
   }
 
   // Add random attribute of one of the submittedData in case nothing was picked
-  if (chosenData.length === 0) {
+  if (submittedData.length > 0 && chosenData.length === 0) {
     const randomIndex = Math.floor(prando.next() * submittedData.length);
     const dataChunk = submittedData[randomIndex];
     const forcedOptions = [dataChunk.inputNonce, dataChunk.userAddress, dataChunk.inputData];
