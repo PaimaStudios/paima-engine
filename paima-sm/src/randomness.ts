@@ -41,7 +41,7 @@ async function getSeed1(latestChainData: ChainData, DBConn: pg.Pool): Promise<st
   const blockSeeds = (await getBlockSeeds.run(undefined, DBConn)).map(result => result.seed);
   const interimSeed = hashTogether([latestChainData.blockHash, ...blockSeeds]);
   const selectedChainData = chooseData(latestChainData, interimSeed);
-  const seed = hashTogether([...selectedChainData, ...blockSeeds]);
+  const seed = hashTogether([...selectedChainData, latestChainData.blockHash, ...blockSeeds]);
   return seed;
 }
 
