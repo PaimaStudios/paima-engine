@@ -16,22 +16,22 @@ function parseInput(encodedInput: string): string[] {
 }
 
 function chooseData(chainData: ChainData, seed: string): string[] {
-  const submittedData = chainData.submittedData
-    .map(data => [...parseInput(data.inputData), data.inputNonce, data.userAddress])
-    .flat();
-  const relevantData = [
-    chainData.timestamp.toString(),
-    chainData.blockNumber.toString(),
-    chainData.blockHash,
-    ...submittedData,
-  ];
   const prando = new Prando(seed);
   const randomSelection = (): boolean => {
     const randomValue = Math.round(prando.next());
     return randomValue === 1;
   };
 
-  return relevantData.filter(randomSelection);
+  let chosenData = [];
+  for (let dataChunk of chainData.submittedData) {
+    if (randomSelection()) chosenData.push(dataChunk.inputNonce);
+    if (randomSelection()) chosenData.push(dataChunk.userAddress);
+    for (let data of parseInput(dataChunk.inputData)) {
+      if (randomSelection()) chosenData.push(data);
+    }
+  }
+
+  return chosenData;
 }
 
 /*
