@@ -1,12 +1,13 @@
 import type Web3 from 'web3';
 import type { BlockTransactionString } from 'web3-eth';
-import type { Contract, EventData } from 'web3-eth-contract';
+import type { StorageContract } from '@paima/utils';
 import pkg from 'web3-utils';
 
 import type { ChainData, SubmittedChainData } from '@paima/utils';
 import { doLog } from '@paima/utils';
 
 import { processDataUnit } from './batch-processing.js';
+import type { PaimaGameInteraction } from '@paima/utils/src/contract-types/Storage';
 
 const { hexToUtf8 } = pkg;
 
@@ -18,10 +19,10 @@ interface PromiseFulfilledResult<T> {
 async function getSubmittedData(
   web3: Web3,
   block: BlockTransactionString,
-  events: EventData[]
+  events: PaimaGameInteraction[]
 ): Promise<SubmittedChainData[]> {
-  const eventMapper = (e: EventData): Promise<SubmittedChainData[]> => {
-    const data: string = e.returnValues.data;
+  const eventMapper = (e: PaimaGameInteraction): Promise<SubmittedChainData[]> => {
+    const data = e.returnValues.data;
     const decodedData = data && data.length > 0 ? hexToUtf8(data) : '';
     return processDataUnit(
       web3,
@@ -41,15 +42,17 @@ async function getSubmittedData(
 async function processBlock(
   blockNumber: number,
   web3: Web3,
-  storage: Contract
+  storage: StorageContract
 ): Promise<ChainData> {
   try {
     const [block, events] = await Promise.all([
       web3.eth.getBlock(blockNumber),
+      // TOOD: typechain is missing the proper type generation for getPastEvents
+      // https://github.com/dethcrypto/TypeChain/issues/767
       storage.getPastEvents('PaimaGameInteraction', {
         fromBlock: blockNumber,
         toBlock: blockNumber,
-      }),
+      }) as unknown as Promise<PaimaGameInteraction[]>,
     ]);
 
     return {
@@ -66,7 +69,7 @@ async function processBlock(
 
 export async function internalReadDataMulti(
   web3: Web3,
-  storage: Contract,
+  storage: StorageContract,
   fromBlock: number,
   toBlock: number
 ): Promise<ChainData[]> {
@@ -92,7 +95,7 @@ export async function internalReadDataMulti(
 
 export async function internalReadDataSingle(
   web3: Web3,
-  storage: Contract,
+  storage: StorageContract,
   fromBlock: number
 ): Promise<ChainData> {
   return await processBlock(fromBlock, web3, storage);

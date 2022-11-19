@@ -1,8 +1,8 @@
 import Web3 from 'web3';
-import type { Contract } from 'web3-eth-contract';
 import type { AbiItem } from 'web3-utils';
 import pkg from 'web3-utils';
-import storageBuild from './artifacts/Storage.js';
+import storageBuild from './artifacts/Storage.json';
+import type { Storage as StorageContract } from './contract-types/Storage';
 import { doLog, logBlock, logError, logSuccess } from './logging.js';
 import type {
   ChainData,
@@ -24,6 +24,7 @@ import type {
 } from './types';
 const { isAddress } = pkg;
 export type { Web3 };
+export type { StorageContract };
 export {
   ChainFunnel,
   ETHAddress,
@@ -69,11 +70,14 @@ export async function initWeb3(nodeUrl: string): Promise<Web3> {
   return web3;
 }
 
-export function getStorageContract(address?: string, web3?: Web3): Contract {
+export function getStorageContract(address?: string, web3?: Web3): StorageContract {
   if (web3 === undefined) {
     web3 = new Web3();
   }
-  return new web3.eth.Contract(storageBuild.abi as AbiItem[], address);
+  return new web3.eth.Contract(
+    storageBuild.abi as AbiItem[],
+    address
+  ) as unknown as StorageContract;
 }
 
 export function validateStorageAddress(address: string): void {
@@ -84,7 +88,7 @@ export function validateStorageAddress(address: string): void {
 
 export async function retrieveFee(address: string, web3: Web3): Promise<string> {
   const contract = getStorageContract(address, web3);
-  return contract.methods.fee().call();
+  return await contract.methods.fee().call();
 }
 
 export const wait = async (ms: number): Promise<void> =>
@@ -94,7 +98,7 @@ export const wait = async (ms: number): Promise<void> =>
 
 export async function getOwner(address: string, web3: Web3): Promise<string> {
   const contract = getStorageContract(address, web3);
-  return contract.methods.owner().call();
+  return await contract.methods.owner().call();
 }
 
 export async function retryPromise<T>(
