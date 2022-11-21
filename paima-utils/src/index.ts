@@ -1,7 +1,7 @@
 import Web3 from 'web3';
 import type { AbiItem } from 'web3-utils';
 import pkg from 'web3-utils';
-import storageBuild from './artifacts/Storage.json';
+import storageBuild from './artifacts/Storage.json' assert { type: 'json' };
 import type { Storage as StorageContract } from './contract-types/Storage';
 import { doLog, logBlock, logError, logSuccess } from './logging.js';
 import type {
