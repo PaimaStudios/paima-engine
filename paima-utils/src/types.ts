@@ -1,8 +1,8 @@
 import type Web3 from 'web3';
-import type { Contract } from 'web3-eth-contract';
 import type { PreparedQuery } from '@pgtyped/query';
 import type { Express, RequestHandler } from 'express';
 import type { Pool, PoolConfig } from 'pg';
+import type { Storage as StorageContract } from './contract-types/index';
 
 export type ErrorCode = number;
 export type ErrorMessageFxn = (errorCode: ErrorCode) => string;
@@ -21,7 +21,7 @@ export interface ChainFunnel {
   storageAddress: string;
   extensions: ChainDataExtension[];
   web3: Web3;
-  storage: Contract;
+  storage: StorageContract;
   readData: (blockHeight: number) => Promise<ChainData[] | undefined>; // if using internalReadData
 }
 export type ETHAddress = string;
