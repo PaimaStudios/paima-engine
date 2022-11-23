@@ -3,7 +3,7 @@ import type { AbiItem } from 'web3-utils';
 import pkg from 'web3-utils';
 import storageBuild from './artifacts/Storage.js';
 import type { Storage as StorageContract } from './contract-types/Storage';
-import { doLog, logBlock, logError, logSuccess } from './logging.js';
+import { doLog, logError } from './logging.js';
 import type {
   ChainData,
   ChainDataExtension,
@@ -42,8 +42,6 @@ export {
   PaimaRuntime,
   ChainDataExtension,
   TransactionTemplate,
-  logBlock,
-  logSuccess,
   logError,
   doLog,
 };

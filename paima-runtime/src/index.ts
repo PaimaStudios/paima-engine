@@ -5,7 +5,7 @@ import type {
   GameStateMachine,
   PaimaRuntimeInitializer,
 } from '@paima/utils';
-import { doLog, logError, logSuccess } from '@paima/utils';
+import { doLog, logError } from '@paima/utils';
 import process from 'process';
 import { server, startServer } from './server.js';
 import { initSnapshots, snapshotIfTime } from './snapshots.js';
@@ -78,12 +78,7 @@ async function getStopBlockHeight(): Promise<number | null> {
     });
   } catch (err) {
     // file doesn't exist or is invalid, finalBlockHeight remains null
-    doLog('Something went wrong while reading stopBlockHeight.conf.');
-    if (typeof err === 'object' && err !== null && err.hasOwnProperty('message')) {
-      const e = err as { message: string };
-      doLog(`Error message: ${e.message}`);
-    }
-    logError(err);
+    doLog('Unable to read stopBlockHeight.conf.');
   }
   return stopBlockHeight;
 }
@@ -123,13 +118,12 @@ async function runIterativeFunnel(
     const latestChainDataList = (await chainFunnel.readData(
       latestReadBlockHeight + 1
     )) as ChainData[];
-    doLog(`Received chain data from Paima Funnel. Total count: ${latestChainDataList.length}`);
+    doLog(`r${latestChainDataList.length}`);
     // Checking if should safely close after fetching all chain data
     // which may take some time
     exitIfStopped(run);
 
     if (!latestChainDataList || !latestChainDataList?.length) {
-      doLog(`No chain data was returned, waiting ${pollingRate}s.`);
       await delay(pollingRate * 1000);
       continue;
     }
@@ -140,7 +134,7 @@ async function runIterativeFunnel(
 
       try {
         await gameStateMachine.process(block);
-        logSuccess(block);
+        doLog(`p${block.blockNumber}`);
         exitIfStopped(run);
       } catch (error) {
         logError(error);
