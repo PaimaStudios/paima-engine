@@ -94,7 +94,11 @@ export async function snapshotIfTime(latestReadBlockHeight: number): Promise<voi
       logError(err);
       snapshotTrigger = latestReadBlockHeight + RETRY_SNAPSHOT_INTERVAL;
     }
-    await cleanSnapshots();
+    try {
+      await cleanSnapshots();
+    } catch (err) {
+      doLog(`[paima-runtime::snapshots] error while attempting to clean snapshots`);
+    }
     doLog(`[paima-runtime::snapshots] Set snapshotTrigger to ${snapshotTrigger}`);
   }
 }
