@@ -87,13 +87,15 @@ async function verifySignatureCardano(
 
 async function processBatchedSubunit(
   web3: Web3,
-  input: string
+  input: string,
+  suppliedValue: string
 ): Promise<ValidatedSubmittedChainData> {
   const INNER_DIVIDER = '/';
   const INVALID_INPUT: ValidatedSubmittedChainData = {
     inputData: '',
     userAddress: '',
     inputNonce: '',
+    suppliedValue: '0',
     validated: false,
   };
 
@@ -118,6 +120,7 @@ async function processBatchedSubunit(
     inputData,
     userAddress,
     inputNonce,
+    suppliedValue,
     validated,
   };
 }
@@ -147,10 +150,15 @@ export async function processDataUnit(
     const afterLastIndex = elems.length - (hasClosingTilde ? 1 : 0);
 
     const prefix = elems[0];
+    const subunitCount = elems.length - 1;
+    const subunitValue = web3.utils
+      .toBN(unit.suppliedValue)
+      .div(web3.utils.toBN(subunitCount))
+      .toString(10);
 
     if (prefix === 'B') {
       const validatedSubUnits = await Promise.all(
-        elems.slice(1, afterLastIndex).map(elem => processBatchedSubunit(web3, elem))
+        elems.slice(1, afterLastIndex).map(elem => processBatchedSubunit(web3, elem, subunitValue))
       );
       return validatedSubUnits.filter(item => item.validated).map(unpackValidatedData);
     } else {

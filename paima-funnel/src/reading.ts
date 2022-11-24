@@ -30,6 +30,7 @@ async function getSubmittedData(
         userAddress: e.returnValues.userAddress,
         inputData: decodedData,
         inputNonce: '',
+        suppliedValue: e.returnValues.value,
       },
       block.number
     );

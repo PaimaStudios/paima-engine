@@ -34,6 +34,7 @@ export interface SubmittedChainData {
   userAddress: ETHAddress;
   inputData: EncodedGameDataString;
   inputNonce: NonceString;
+  suppliedValue: string;
 }
 export interface ChainData {
   timestamp: number | string;

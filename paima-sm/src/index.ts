@@ -56,6 +56,7 @@ const SM: GameStateMachineInitializer = {
             userAddress: '0x0',
             inputData: data.input_data,
             inputNonce: '',
+            suppliedValue: '0',
           };
           // Trigger STF
           const sqlQueries = await gameStateTransition(
