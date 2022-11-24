@@ -118,7 +118,6 @@ async function runIterativeFunnel(
     const latestChainDataList = (await chainFunnel.readData(
       latestReadBlockHeight + 1
     )) as ChainData[];
-    doLog(`r${latestChainDataList.length}`);
     // Checking if should safely close after fetching all chain data
     // which may take some time
     exitIfStopped(run);
@@ -134,7 +133,6 @@ async function runIterativeFunnel(
 
       try {
         await gameStateMachine.process(block);
-        doLog(`p${block.blockNumber}`);
         exitIfStopped(run);
       } catch (error) {
         logError(error);
