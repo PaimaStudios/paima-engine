@@ -29,16 +29,17 @@ const paimaFunnel = {
           let toBlock = Math.min(latestBlock, fromBlock + blockCount - 1);
 
           if (toBlock >= fromBlock) {
-            doLog(`[Paima Funnel] reading blocks from #${fromBlock} to #${toBlock}`);
+            if (toBlock === fromBlock) {
+              doLog(`q${toBlock}`);
+            } else {
+              doLog(`q${fromBlock}-${toBlock}`);
+            }
             await internalReadDataMulti(web3, storage, fromBlock, toBlock)
               .then(res => (blocks = res))
               .catch(err => {
                 doLog(`[paima-funnel::readData] Block reading failed: ${err}`);
               });
           } else {
-            if (blockCount > 0) {
-              doLog(`[PaimaFunnel] skipping reading, no new blocks ready`);
-            }
             blocks = [];
           }
         } catch (err) {
