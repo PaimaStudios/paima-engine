@@ -1,4 +1,3 @@
-import * as fs from 'fs/promises';
 import type {
   ChainData,
   ChainFunnel,
@@ -45,12 +44,11 @@ const paimaEngine: PaimaRuntimeInitializer = {
       addExtensions(chainDataExtensions): void {
         this.chainDataExtensions = [...this.chainDataExtensions, ...chainDataExtensions];
       },
-      async run(): Promise<void> {
+      async run(stopBlockHeight: number | null): Promise<void> {
         this.addGET('/backend_version', (req, res): void => {
           res.status(200).json(gameBackendVersion);
         });
 
-        const stopBlockHeight = await getStopBlockHeight();
         doLog(`Final block height set to ${stopBlockHeight}`);
 
         doLog(`DB_PORT: ${process.env.DB_PORT}`);
@@ -70,23 +68,6 @@ const paimaEngine: PaimaRuntimeInitializer = {
     };
   },
 };
-
-async function getStopBlockHeight(): Promise<number | null> {
-  let stopBlockHeight: number | null = null;
-  try {
-    stopBlockHeight = await fs.readFile('./stopBlockHeight.conf', 'utf8').then(data => {
-      if (!/^\d+\s*$/.test(data)) {
-        doLog(`Improperly formatted stopBlockHeight.conf: +${data}+`);
-        throw new Error();
-      }
-      return parseInt(data, 10);
-    });
-  } catch (err) {
-    // file doesn't exist or is invalid, finalBlockHeight remains null
-    doLog('Unable to read stopBlockHeight.conf.');
-  }
-  return stopBlockHeight;
-}
 
 async function loopIfStopBlockReached(
   latestReadBlockHeight: number,

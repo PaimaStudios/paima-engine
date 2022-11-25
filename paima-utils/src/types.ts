@@ -85,5 +85,5 @@ export interface PaimaRuntime {
   addGET: (route: string, callback: RequestHandler) => void;
   addPOST: (route: string, callback: RequestHandler) => void;
   addEndpoints: (t: TsoaFunction) => void;
-  run: () => Promise<void>;
+  run: (stopBlockHeight: number | null) => Promise<void>;
 }
