@@ -13,9 +13,9 @@ export interface ContractData {
   owner: string;
 }
 
-export const CHAIN_URI = 'https://rpc-devnet-cardano-evm.c1.milkomeda.com';
-export const CONTRACT_ADDRESS = '0x852Ec3e5C0900C94206bCB4c09D9967238eBE122';
-const CHAIN_ID = 200101;
+export const CHAIN_URI = 'https://rpc-mainnet-cardano-evm.c1.milkomeda.com';
+export const CONTRACT_ADDRESS = '0x72c55951bcB039707B0a099e349a12F59577f7cd';
+const CHAIN_ID = 2001;
 
 const CONFIRMATION_WAIT_PERIOD = 4000;
 
