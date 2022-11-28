@@ -44,12 +44,10 @@ const paimaEngine: PaimaRuntimeInitializer = {
       addExtensions(chainDataExtensions): void {
         this.chainDataExtensions = [...this.chainDataExtensions, ...chainDataExtensions];
       },
-      async run(stopBlockHeight: number | null): Promise<void> {
+      async run(stopBlockHeight: number | null, serverOnlyMode = false): Promise<void> {
         this.addGET('/backend_version', (req, res): void => {
           res.status(200).json(gameBackendVersion);
         });
-
-        doLog(`Final block height set to ${stopBlockHeight}`);
 
         doLog(`DB_PORT: ${process.env.DB_PORT}`);
 
@@ -58,12 +56,17 @@ const paimaEngine: PaimaRuntimeInitializer = {
         // pass endpoints to web server and run
         startServer();
 
-        await securedIterativeFunnel(
-          gameStateMachine,
-          chainFunnel,
-          this.pollingRate,
-          stopBlockHeight
-        );
+        if (serverOnlyMode) {
+          doLog(`Running in webserver-only mode.`);
+        } else {
+          doLog(`Final block height set to ${stopBlockHeight}`);
+          await securedIterativeFunnel(
+            gameStateMachine,
+            chainFunnel,
+            this.pollingRate,
+            stopBlockHeight
+          );
+        }
       },
     };
   },
