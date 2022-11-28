@@ -9,11 +9,11 @@ Both Paima-tx and the Paima Contract are currently implemented to be usable on t
 Currently the library is in development, unpublished, and to be
 imported and used locally.
 
-The exported function `getStoreDataTxTemplate` can be used as follows to help build store data transaction structures to be sent using Metamask:
+The exported function `getTxTemplate` can be used as follows to help build store data transaction structures to be sent using Metamask:
 
 ```ts
 import { utf8ToHex, numberToHex } from "web3-utils";
-import { getStoreDataTxTemplate } from "paima-tx";
+import { getTxTemplate } from "paima-tx";
 
 ...
 
@@ -22,8 +22,9 @@ const storageContractAddress = "0x76b...882";
 const data = utf8ToHex("Hello!");
 const value = 123456;
 
-const txTemplate = getStoreDataTxTemplate(
+const txTemplate = getTxTemplate(
   storageContractAddress,
+  'paimaSubmitGameInput',
   data
 );
 
