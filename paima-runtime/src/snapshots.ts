@@ -70,7 +70,7 @@ async function cleanSnapshots(): Promise<void> {
   while (snapshotNames.length > MAX_SNAPSHOT_COUNT) {
     const snapshotToDelete = snapshotNames.shift();
     if (typeof snapshotToDelete === 'undefined') {
-      continue;
+      continue; // should never happen
     }
     try {
       doLog(`[paima-runtime::snapshots] removing snapshot ${snapshotToDelete}...`);

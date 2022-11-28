@@ -151,7 +151,7 @@ async function runIterativeFunnel(
     }
 
     try {
-      for (let block of latestChainDataList) {
+      for (const block of latestChainDataList) {
         // Checking if should safely close in between processing blocks
         exitIfStopped(run);
 
