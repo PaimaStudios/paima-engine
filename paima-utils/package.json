@@ -15,7 +15,8 @@
     ],
     "scripts": {
         "prepare": "npm run generate-types",
-        "build": "npm run generate-types && tsc",
+        "prebuild": "npm run generate-types",
+        "build": "tsc",
         "generate-types": "npx typechain --target=web3-v1 'src/artifacts/*.json' --out-dir src/contract-types",
         "test": "echo \"Error: no test specified\" && exit 1",
         "lint": "prettier --write '**/*.ts'"
