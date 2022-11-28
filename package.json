@@ -5,7 +5,7 @@
   "scripts": {
     "lint": "npm run prettier && npm run eslint",
     "cilint": "npm run cprettier && npm run eslint",
-    "build": "npx tsc --build tsconfig.build.json",
+    "build": "npm run prepare --workspaces --if-present && npx tsc --build tsconfig.build.json",
     "cprettier": "prettier --check '**/*.{ts,tsx}'",
     "eslint": "eslint '**/*.{ts,tsx}' --ignore-path .gitignore",
     "prettier": "prettier --write '**/*.{ts,tsx}'",
