@@ -56,7 +56,9 @@ const paimaEngine: PaimaRuntimeInitializer = {
         // pass endpoints to web server and run
         startServer();
 
-        if (!serverOnlyMode) {
+        if (serverOnlyMode) {
+          doLog(`Running in webserver-only mode.`);
+        } else {
           doLog(`Final block height set to ${stopBlockHeight}`);
           await securedIterativeFunnel(
             gameStateMachine,
