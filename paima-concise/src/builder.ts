@@ -1,4 +1,5 @@
 import web3 from 'web3-utils';
+
 import {
   ConciseBuilder,
   ConciseBuilderInitializer,
@@ -10,7 +11,6 @@ import { isHexString } from './utils.js';
 import buildv1 from './v1/builder.js';
 import { separator } from './v1/consts.js';
 import { toConciseValue } from './v1/utils.js';
-
 
 const initialize = (input?: InputString, version = EncodingVersion.V1): ConciseBuilder => {
   let initialConciseInput = '';

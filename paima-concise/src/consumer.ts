@@ -9,7 +9,6 @@ import { isHexString } from './utils.js';
 import { separator } from './v1/consts.js';
 import { toConciseValue } from './v1/utils.js';
 
-
 const initialize = (input: string, version = EncodingVersion.V1): ConciseConsumer => {
   let conciseValues: ConciseValue[] = [];
   let concisePrefix = '';
