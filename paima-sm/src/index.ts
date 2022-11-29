@@ -1,6 +1,7 @@
 import pg from 'pg';
 
 import { doLog } from '@paima/utils';
+import type { SubmittedChainData } from '@paima/utils';
 import type { ChainData, GameStateMachineInitializer } from '@paima/utils';
 import Prando from '@paima/prando';
 
@@ -51,8 +52,8 @@ const SM: GameStateMachineInitializer = {
           { block_height: latestChainData.blockNumber },
           readonlyDBConn
         );
-        for (let data of scheduledData) {
-          const inputData = {
+        for (const data of scheduledData) {
+          const inputData: SubmittedChainData = {
             userAddress: '0x0',
             inputData: data.input_data,
             inputNonce: '',
@@ -61,11 +62,11 @@ const SM: GameStateMachineInitializer = {
           // Trigger STF
           const sqlQueries = await gameStateTransition(
             inputData,
-            latestChainData.blockNumber,
+            data.block_height,
             randomnessGenerator,
             readonlyDBConn
           );
-          for (let [query, params] of sqlQueries) {
+          for (const [query, params] of sqlQueries) {
             try {
               await query.run(params, DBConn);
             } catch (error) {
@@ -76,7 +77,7 @@ const SM: GameStateMachineInitializer = {
         }
 
         // Execute user submitted input data
-        for (let inputData of latestChainData.submittedData) {
+        for (const inputData of latestChainData.submittedData) {
           // Check nonce is valid
           if (inputData.inputNonce === '') {
             doLog(`Skipping inputData with invalid empty nonce: ${inputData}`);
@@ -95,7 +96,7 @@ const SM: GameStateMachineInitializer = {
             randomnessGenerator,
             readonlyDBConn
           );
-          for (let [query, params] of sqlQueries) {
+          for (const [query, params] of sqlQueries) {
             try {
               await query.run(params, DBConn);
             } catch (error) {

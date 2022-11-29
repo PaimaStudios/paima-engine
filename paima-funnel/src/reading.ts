@@ -11,11 +11,6 @@ import type { PaimaGameInteraction } from '@paima/utils/src/contract-types/Stora
 
 const { hexToUtf8 } = pkg;
 
-interface PromiseFulfilledResult<T> {
-  status: 'fulfilled';
-  value: T;
-}
-
 async function getSubmittedData(
   web3: Web3,
   block: BlockTransactionString,
@@ -77,7 +72,7 @@ export async function internalReadDataMulti(
   if (toBlock < fromBlock) {
     return [];
   }
-  let blockPromises: Promise<ChainData>[] = [];
+  const blockPromises: Promise<ChainData>[] = [];
   for (let i = fromBlock; i <= toBlock; i++) {
     const block = processBlock(i, web3, storage);
     const timeoutBlock = timeout(block, 5000);
@@ -88,9 +83,13 @@ export async function internalReadDataMulti(
     if (firstRejected < 0) {
       firstRejected = resList.length;
     }
-    return resList
-      .slice(0, firstRejected)
-      .map(elem => (elem as PromiseFulfilledResult<ChainData>).value);
+    return (
+      resList
+        .slice(0, firstRejected)
+        // note: we cast the promise to be a successfully fulfilled promise
+        // we know this is safe because the above-line sliced up until the first rejection
+        .map(elem => (elem as PromiseFulfilledResult<ChainData>).value)
+    );
   });
 }
 

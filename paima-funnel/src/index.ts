@@ -25,8 +25,8 @@ const paimaFunnel = {
         let blocks: ChainData[] = [];
         try {
           const latestBlock = await timeout(web3.eth.getBlockNumber(), 3000);
-          let fromBlock = blockHeight;
-          let toBlock = Math.min(latestBlock, fromBlock + blockCount - 1);
+          const fromBlock = blockHeight;
+          const toBlock = Math.min(latestBlock, fromBlock + blockCount - 1);
 
           if (toBlock >= fromBlock) {
             if (toBlock === fromBlock) {
