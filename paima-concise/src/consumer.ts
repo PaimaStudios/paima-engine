@@ -1,9 +1,5 @@
 import web3 from 'web3-utils';
-import type {
-  ConciseConsumer,
-  ConciseConsumerInitializer,
-  ConciseValue,
-} from './types.js';
+import type { ConciseConsumer, ConciseConsumerInitializer, ConciseValue } from './types.js';
 import { EncodingVersion } from './types.js';
 import { isHexString } from './utils.js';
 import { separator } from './v1/consts.js';
