@@ -1,5 +1,4 @@
 import web3 from 'web3-utils';
-
 import {
   ConciseConsumer,
   ConciseConsumerInitializer,
@@ -49,7 +48,7 @@ const initialize = (input: string, version = EncodingVersion.V1): ConciseConsume
       return this.conciseValues[index] ?? '';
     },
     stateIdentifiers() {
-      return this.conciseValues.filter((value) => value.isStateIdentifier);
+      return this.conciseValues.filter(value => value.isStateIdentifier);
     },
     valueCount() {
       return this.conciseValues.length;
