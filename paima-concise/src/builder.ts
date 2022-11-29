@@ -1,12 +1,12 @@
 import web3 from 'web3-utils';
 
-import {
+import type {
   ConciseBuilder,
   ConciseBuilderInitializer,
   ConciseValue,
-  EncodingVersion,
   InputString,
 } from './types.js';
+import { EncodingVersion } from './types.js';
 import { isHexString } from './utils.js';
 import buildv1 from './v1/builder.js';
 import { separator } from './v1/consts.js';

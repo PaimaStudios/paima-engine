@@ -1,4 +1,4 @@
-import { ConciseValue, UTF8String } from '../types.js';
+import type { ConciseValue, UTF8String } from '../types.js';
 import { separator, stateIdentifier } from './consts.js';
 
 const toString = (val: ConciseValue): string => {

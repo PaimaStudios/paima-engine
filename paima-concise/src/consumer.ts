@@ -1,10 +1,10 @@
 import web3 from 'web3-utils';
-import {
+import type {
   ConciseConsumer,
   ConciseConsumerInitializer,
   ConciseValue,
-  EncodingVersion,
 } from './types.js';
+import { EncodingVersion } from './types.js';
 import { isHexString } from './utils.js';
 import { separator } from './v1/consts.js';
 import { toConciseValue } from './v1/utils.js';
@@ -47,7 +47,7 @@ const initialize = (input: string, version = EncodingVersion.V1): ConciseConsume
       const index = position - 1;
       return this.conciseValues[index] ?? '';
     },
-    stateIdentifiers() {
+    stateIdentifiers(): ConciseValue[] {
       return this.conciseValues.filter(value => value.isStateIdentifier);
     },
     valueCount(): number {
