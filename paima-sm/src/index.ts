@@ -1,6 +1,6 @@
 import pg from 'pg';
 
-import { doLog } from '@paima/utils';
+import { doLog, SCHEDULED_DATA_ADDRESS } from '@paima/utils';
 import type { SubmittedChainData } from '@paima/utils';
 import type { ChainData, GameStateMachineInitializer } from '@paima/utils';
 import Prando from '@paima/prando';
@@ -54,7 +54,7 @@ const SM: GameStateMachineInitializer = {
         );
         for (const data of scheduledData) {
           const inputData: SubmittedChainData = {
-            userAddress: '0x0',
+            userAddress: SCHEDULED_DATA_ADDRESS,
             inputData: data.input_data,
             inputNonce: '',
             suppliedValue: '0',
