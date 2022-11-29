@@ -6,11 +6,11 @@ import {
   ConciseValue,
   EncodingVersion,
   InputString,
-} from './types';
-import { isHexString } from './utils';
-import buildv1 from './v1/builder';
-import { separator } from './v1/consts';
-import { toConciseValue } from './v1/utils';
+} from './types.js';
+import { isHexString } from './utils.js';
+import buildv1 from './v1/builder.js';
+import { separator } from './v1/consts.js';
+import { toConciseValue } from './v1/utils.js';
 
 const initialize = (input?: InputString, version = EncodingVersion.V1): ConciseBuilder => {
   let initialConciseInput = '';

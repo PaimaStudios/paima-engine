@@ -1,5 +1,5 @@
-import { ConciseValue } from '../types';
-import { stateIdentifier } from './consts';
+import { ConciseValue } from '../types.js';
+import { stateIdentifier } from './consts.js';
 
 export const toConciseValue = (val: string): ConciseValue => {
   if (val.startsWith(stateIdentifier)) {

@@ -1,5 +1,5 @@
-import { ConciseValue, UTF8String } from '../types';
-import { separator, stateIdentifier } from './consts';
+import { ConciseValue, UTF8String } from '../types.js';
+import { separator, stateIdentifier } from './consts.js';
 
 const toString = (val: ConciseValue): string => {
   return val.isStateIdentifier ? `${stateIdentifier}${val.value}` : val.value;
