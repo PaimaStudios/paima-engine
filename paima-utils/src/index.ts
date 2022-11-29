@@ -48,6 +48,8 @@ export {
 
 export const DEFAULT_GAS_PRICE = '61000000000' as const;
 
+export const SCHEDULED_DATA_ADDRESS = '0x0';
+
 export function buildErrorCodeTranslator(obj: ErrorMessageMapping): ErrorMessageFxn {
   return function (errorCode: ErrorCode): string {
     if (!obj.hasOwnProperty(errorCode)) {
