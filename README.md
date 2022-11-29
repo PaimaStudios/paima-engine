@@ -11,7 +11,7 @@ Paima Engine works based off of parallel GA state machine technology. It is curr
 
 Of note, `Paima Engine` refers to all of the following components:
 
-- `Paima Storage Contract` (The smart contract)
+- `Paima Storage Contract` (The smart contract for storing game inputs)
 - `Paima Funnel` (The library which enables reading from Paima Contract)
 - `Paima SM` (The framework which enables building the game logic state machine)
 - `Paima Executor` (The library which enables building `RoundExecutor`s and `MatchExecutor`s)

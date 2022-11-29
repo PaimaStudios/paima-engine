@@ -1,5 +1,4 @@
 import web3 from 'web3-utils';
-
 import {
   ConciseConsumer,
   ConciseConsumerInitializer,
@@ -9,6 +8,7 @@ import {
 import { isHexString } from './utils.js';
 import { separator } from './v1/consts.js';
 import { toConciseValue } from './v1/utils.js';
+
 
 const initialize = (input: string, version = EncodingVersion.V1): ConciseConsumer => {
   let conciseValues: ConciseValue[] = [];
@@ -30,31 +30,41 @@ const initialize = (input: string, version = EncodingVersion.V1): ConciseConsume
     conciseInput,
     concisePrefix,
     conciseValues,
-    initialInput(decompress = false) {
+    initialInput(_decompress = false): string {
       return this.conciseInput;
     },
-    nextValue() {
+    nextValue(): ConciseValue | '' {
       const [nextValue] = conciseValues.splice(0, 1);
       return nextValue ?? '';
     },
-    popValue() {
+    popValue(): ConciseValue | '' {
       const nextValue = conciseValues.pop();
       return nextValue ?? '';
     },
-    prefix() {
+    prefix(): string {
       return this.concisePrefix;
     },
-    readValue(position: number) {
+    readValue(position: number): ConciseValue | '' {
       const index = position - 1;
       return this.conciseValues[index] ?? '';
     },
-    stateIdentifiers() {
-      return this.conciseValues.filter((value) => value.isStateIdentifier);
+    stateIdentifiers(): ConciseValue[] {
+      return this.conciseValues.filter(value => value.isStateIdentifier);
     },
-    valueCount() {
+    valueCount(): number {
       return this.conciseValues.length;
     },
   };
 };
 
-export const consumer: ConciseConsumerInitializer = { initialize };
+/*
+ * Selects encoding version based on the format of the input string
+ */
+const tryInitialize = (input: string): ConciseConsumer => {
+  if (input.match(/^[a-z]+\|/)) {
+    return initialize(input, EncodingVersion.V1);
+  }
+  return initialize(input);
+};
+
+export const consumer: ConciseConsumerInitializer = { initialize, tryInitialize };

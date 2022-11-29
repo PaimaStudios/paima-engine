@@ -27,10 +27,10 @@ The runtime should also support the following extended interface which allows cu
 
 ```ts
 // Add a GET endpoint to the baked-in webserver
-engine.addGET("/open_lobbies", getOpenLobbies);
+engine.addGET('/open_lobbies', getOpenLobbies);
 
 // Add a POST endpoint to the baked-in webserver
-engine.addPOST("/test_post_endpoint", postEndpointLogic);
+engine.addPOST('/test_post_endpoint', postEndpointLogic);
 
 // Sets the polling rate of reading data from the blockchain via the `ChainFunnel` to every 5 seconds
 engine.setPollingRate(5);
@@ -47,3 +47,5 @@ When `.run()` is called on the Paima Engine Runtime the following tasks take pla
 - Starting the Webserver with all of the supplied GET and POST endpoints applied
 
 If any of the above fail for any reason, then the runtime safely exits (closes the webserver if started, and anything else actively running on a different thread) and returns an error.
+
+Runtime can also be started in a webserver only mode through provided `serverOnlyMode` attribute. This mode doesn't run the `Paima Funnel` & `SM`, only makes our `backend` endpoints accessible.

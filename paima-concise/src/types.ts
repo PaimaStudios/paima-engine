@@ -24,7 +24,7 @@ export type ConciseBuilder = {
   build: () => UTF8String;
 
   initialInput: () => UTF8String;
-  //Positions start at 1
+  // Positions start at 1
   insertValue: (position: number, value: ConciseValue) => void;
   addValues: (values: ConciseValue[]) => void;
   valueCount: () => number;
@@ -32,6 +32,7 @@ export type ConciseBuilder = {
 
 export type ConciseConsumerInitializer = {
   initialize: (input: InputString, version?: EncodingVersion) => ConciseConsumer;
+  tryInitialize: (input: InputString) => ConciseConsumer;
 };
 export type ConciseConsumer = {
   conciseInput: string;
@@ -44,7 +45,7 @@ export type ConciseConsumer = {
 
   popValue: () => ConciseValue | '';
   initialInput: (decompress?: boolean) => UTF8String;
-  //Positions start at 1
+  // Positions start at 1
   readValue: (position: number) => ConciseValue | '';
   valueCount: () => number;
 };
