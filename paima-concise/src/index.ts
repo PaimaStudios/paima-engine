@@ -1,2 +1,2 @@
-export { builder } from './builder';
-export { consumer } from './consumer';
+export { builder } from './builder.js';
+export { consumer } from './consumer.js';

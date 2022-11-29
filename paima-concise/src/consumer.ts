@@ -1,10 +1,9 @@
 import web3 from 'web3-utils';
-
-import type { ConciseConsumer, ConciseConsumerInitializer, ConciseValue } from './types';
-import { EncodingVersion } from './types';
-import { isHexString } from './utils';
-import { separator } from './v1/consts';
-import { toConciseValue } from './v1/utils';
+import type { ConciseConsumer, ConciseConsumerInitializer, ConciseValue } from './types.js';
+import { EncodingVersion } from './types.js';
+import { isHexString } from './utils.js';
+import { separator } from './v1/consts.js';
+import { toConciseValue } from './v1/utils.js';
 
 const initialize = (input: string, version = EncodingVersion.V1): ConciseConsumer => {
   let conciseValues: ConciseValue[] = [];
