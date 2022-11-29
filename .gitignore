@@ -1,4 +1,5 @@
 node_modules
-**/src/**/*.js
-**/src/**/*.d.ts
+**/dist
+**/build
+**/lib
 **/*.tsbuildinfo

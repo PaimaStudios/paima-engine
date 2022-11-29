@@ -1,151 +1,132 @@
-import Web3 from "web3";
-import type { Contract } from "web3-eth-contract";
-import type { AbiItem } from "web3-utils";
-import pkg from "web3-utils";
-import storageBuild from "./artifacts/Storage.js";
-import { doLog, logBlock, logError, logSuccess } from "./logging.js";
+import Web3 from 'web3';
+import type { AbiItem } from 'web3-utils';
+import pkg from 'web3-utils';
+import storageBuild from './artifacts/Storage.js';
+import type { Storage as StorageContract } from './contract-types/Storage';
+import { doLog, logError } from './logging.js';
 import type {
-    ChainData,
-    ChainDataExtension,
-    ChainFunnel,
-    ErrorCode,
-    ErrorMessageFxn,
-    ErrorMessageMapping,
-    ETHAddress,
-    GameStateMachine,
-    GameStateMachineInitializer,
-    GameStateTransitionFunction,
-    GameStateTransitionFunctionRouter,
-    PaimaRuntime,
-    PaimaRuntimeInitializer,
-    SQLUpdate,
-    SubmittedChainData,
-    TransactionTemplate,
-} from "./types";
+  ChainData,
+  ChainDataExtension,
+  ChainFunnel,
+  ErrorCode,
+  ErrorMessageFxn,
+  ErrorMessageMapping,
+  ETHAddress,
+  GameStateMachine,
+  GameStateMachineInitializer,
+  GameStateTransitionFunction,
+  GameStateTransitionFunctionRouter,
+  PaimaRuntime,
+  PaimaRuntimeInitializer,
+  SQLUpdate,
+  SubmittedChainData,
+  TransactionTemplate,
+} from './types';
 const { isAddress } = pkg;
 export type { Web3 };
+export type { StorageContract };
 export {
-    ChainFunnel,
-    ETHAddress,
-    SQLUpdate,
-    ErrorCode,
-    ErrorMessageFxn,
-    ErrorMessageMapping,
-    SubmittedChainData,
-    ChainData,
-    GameStateTransitionFunctionRouter,
-    GameStateTransitionFunction,
-    GameStateMachineInitializer,
-    GameStateMachine,
-    PaimaRuntimeInitializer,
-    PaimaRuntime,
-    ChainDataExtension,
-    TransactionTemplate,
-    logBlock,
-    logSuccess,
-    logError,
-    doLog,
+  ChainFunnel,
+  ETHAddress,
+  SQLUpdate,
+  ErrorCode,
+  ErrorMessageFxn,
+  ErrorMessageMapping,
+  SubmittedChainData,
+  ChainData,
+  GameStateTransitionFunctionRouter,
+  GameStateTransitionFunction,
+  GameStateMachineInitializer,
+  GameStateMachine,
+  PaimaRuntimeInitializer,
+  PaimaRuntime,
+  ChainDataExtension,
+  TransactionTemplate,
+  logError,
+  doLog,
 };
 
-export const DEFAULT_GAS_PRICE = "61000000000";
+export const DEFAULT_GAS_PRICE = '61000000000' as const;
 
-export function buildErrorCodeTranslator(
-    obj: ErrorMessageMapping
-): ErrorMessageFxn {
-    return function (errorCode: ErrorCode): string {
-        if (!obj.hasOwnProperty(errorCode)) {
-            return "Unknown error code: " + errorCode;
-        } else {
-            return obj[errorCode];
-        }
-    };
+export function buildErrorCodeTranslator(obj: ErrorMessageMapping): ErrorMessageFxn {
+  return function (errorCode: ErrorCode): string {
+    if (!obj.hasOwnProperty(errorCode)) {
+      return 'Unknown error code: ' + errorCode;
+    } else {
+      return obj[errorCode];
+    }
+  };
 }
 
 export async function initWeb3(nodeUrl: string): Promise<Web3> {
-    const web3 = new Web3(nodeUrl);
-    try {
-        await web3.eth.getNodeInfo();
-    } catch (e) {
-        throw new Error(`Error connecting to node at ${nodeUrl}:\n${e}`);
-    }
-    return web3;
+  const web3 = new Web3(nodeUrl);
+  try {
+    await web3.eth.getNodeInfo();
+  } catch (e) {
+    throw new Error(`Error connecting to node at ${nodeUrl}:\n${e}`);
+  }
+  return web3;
 }
 
-export function getStorageContract(address?: string, web3?: Web3): Contract {
-    if (web3 === undefined) {
-        web3 = new Web3();
-    }
-    return new web3.eth.Contract(storageBuild.abi as AbiItem[], address);
+export function getStorageContract(address?: string, web3?: Web3): StorageContract {
+  if (web3 === undefined) {
+    web3 = new Web3();
+  }
+  return new web3.eth.Contract(
+    storageBuild.abi as AbiItem[],
+    address
+  ) as unknown as StorageContract;
 }
 
-export function validateStorageAddress(address: string) {
-    if (!isAddress(address)) {
-        throw new Error("Invalid storage address supplied");
-    }
+export function validateStorageAddress(address: string): void {
+  if (!isAddress(address)) {
+    throw new Error('Invalid storage address supplied');
+  }
 }
 
-export async function retrieveFee(
-    address: string,
-    web3: Web3
-): Promise<string> {
-    const contract = getStorageContract(address, web3);
-    return contract.methods.fee().call();
+export async function retrieveFee(address: string, web3: Web3): Promise<string> {
+  const contract = getStorageContract(address, web3);
+  return await contract.methods.fee().call();
 }
 
-export const wait = async (ms: number) =>
-    new Promise<void>(resolve => {
-        setTimeout(() => resolve(), ms);
-    });
+export const wait = async (ms: number): Promise<void> =>
+  await new Promise<void>(resolve => {
+    setTimeout(() => resolve(), ms);
+  });
 
 export async function getOwner(address: string, web3: Web3): Promise<string> {
-    const contract = getStorageContract(address, web3);
-    return contract.methods.owner().call();
+  const contract = getStorageContract(address, web3);
+  return await contract.methods.owner().call();
 }
 
 export async function retryPromise<T>(
-    getPromise: () => Promise<T>,
-    waitPeriodMs: number,
-    tries: number
+  getPromise: () => Promise<T>,
+  waitPeriodMs: number,
+  tries: number
 ): Promise<T> {
-    let done = false;
-    let result;
-    let failure;
+  let failure: unknown;
 
-    if (tries <= 0) {
-        throw new Error("Too few tries reserved for operation");
+  if (tries <= 0) {
+    throw new Error('Too few tries reserved for operation');
+  }
+
+  while (tries > 0) {
+    try {
+      return await getPromise();
+    } catch (e) {
+      failure = e;
     }
 
-    while (tries > 0) {
-        await getPromise()
-            .then(res => {
-                result = res;
-                done = true;
-            })
-            .catch(err => {
-                failure = err;
-                done = false;
-            });
+    tries--;
 
-        tries--;
+    await wait(waitPeriodMs);
+  }
 
-        if (done) {
-            break;
-        }
-
-        await wait(waitPeriodMs);
-    }
-
-    if (typeof result === "undefined") {
-        if (typeof failure === "undefined") {
-            throw new Error(
-                "Unknown retry error: no retries left, undefined result"
-            );
-        } else if (typeof failure === "string") {
-            throw new Error(failure);
-        } else {
-            throw failure;
-        }
-    } else {
-        return result;
-    }
+  if (typeof failure === 'undefined') {
+    throw new Error('Unknown retry error: no retries left, undefined result');
+  } else if (typeof failure === 'string') {
+    throw new Error(failure);
+  } else {
+    throw failure;
+  }
 }

@@ -9,10 +9,6 @@
     "preview": "vite preview",
     "lint": "prettier --write '**/*.{ts,tsx}'"
   },
-  "prettier": {
-      "tabWidth": 4,
-      "arrowParens": "avoid"
-  },
   "dependencies": {
     "@esbuild-plugins/node-globals-polyfill": "^0.1.1",
     "@esbuild-plugins/node-modules-polyfill": "^0.1.4",
@@ -22,7 +18,7 @@
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
     "rollup-plugin-node-polyfills": "^0.2.1",
-    "web3": "^1.7.3"
+    "web3": "^1.8.1"
   },
   "devDependencies": {
     "@types/react": "^18.0.0",

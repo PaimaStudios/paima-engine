@@ -1,190 +1,190 @@
-import * as fs from "fs/promises";
 import type {
-    ChainData,
-    ChainFunnel,
-    GameStateMachine,
-    PaimaRuntimeInitializer,
-} from "@paima/utils";
-import { doLog, logError, logSuccess } from "@paima/utils";
-import process from "process";
-import { server, startServer } from "./server.js";
-import { initSnapshots, snapshotIfTime } from "./snapshots.js";
+  ChainData,
+  ChainFunnel,
+  GameStateMachine,
+  PaimaRuntimeInitializer,
+} from '@paima/utils';
+import { doLog, logError } from '@paima/utils';
+import process from 'process';
+import { server, startServer } from './server.js';
+import { initSnapshots, snapshotIfTime } from './snapshots.js';
 let run = true;
-import { Express } from "express";
 
-process.on("SIGINT", () => {
-    doLog(
-        "Caught SIGINT. Waiting for engine to finish processing current block"
-    );
-    run = false;
+process.on('SIGINT', () => {
+  doLog('Caught SIGINT. Waiting for engine to finish processing current block');
+  run = false;
 });
 
-process.on("SIGTERM", () => {
-    doLog(
-        "Caught SIGTERM. Waiting for engine to finish processing current block"
-    );
-    run = false;
+process.on('SIGTERM', () => {
+  doLog('Caught SIGTERM. Waiting for engine to finish processing current block');
+  run = false;
 });
 
-process.on("exit", code => {
-    doLog(`Exiting with code: ${code}`);
+process.on('exit', code => {
+  doLog(`Exiting with code: ${code}`);
 });
 const paimaEngine: PaimaRuntimeInitializer = {
-    initialize(chainFunnel, gameStateMachine, gameBackendVersion) {
-        // initialize snapshot folder
-        return {
-            pollingRate: 4,
-            chainDataExtensions: [],
-            addEndpoints(tsoaFunction) {
-                tsoaFunction(server)
-            },
-            addGET(route, callback) {
-                server.get(route, callback);
-            },
-            addPOST(route, callback) {
-                server.post(route, callback);
-            },
-            setPollingRate(seconds: number) {
-                this.pollingRate = seconds;
-            },
-            addExtensions(chainDataExtensions) {
-                this.chainDataExtensions = [
-                    ...this.chainDataExtensions,
-                    ...chainDataExtensions,
-                ];
-            },
-            async run() {
-                this.addGET("/backend_version", async (req, res) => {
-                    res.status(200).json(gameBackendVersion);
-                });
+  initialize(chainFunnel, gameStateMachine, gameBackendVersion) {
+    // initialize snapshot folder
+    return {
+      pollingRate: 4,
+      chainDataExtensions: [],
+      addEndpoints(tsoaFunction): void {
+        tsoaFunction(server);
+      },
+      addGET(route, callback): void {
+        server.get(route, callback);
+      },
+      addPOST(route, callback): void {
+        server.post(route, callback);
+      },
+      setPollingRate(seconds: number): void {
+        this.pollingRate = seconds;
+      },
+      addExtensions(chainDataExtensions): void {
+        this.chainDataExtensions = [...this.chainDataExtensions, ...chainDataExtensions];
+      },
+      async run(stopBlockHeight: number | null, serverOnlyMode = false): Promise<void> {
+        this.addGET('/backend_version', (req, res): void => {
+          res.status(200).json(gameBackendVersion);
+        });
 
-                const stopBlockHeight = await getStopBlockHeight();
-                doLog(`Final block height set to ${stopBlockHeight}`);
+        doLog(`DB_PORT: ${process.env.DB_PORT}`);
 
-                doLog(`DB_PORT: ${process.env.DB_PORT}`);
+        await initSnapshots();
 
-                await initSnapshots();
+        // pass endpoints to web server and run
+        startServer();
 
-                // pass endpoints to web server and run
-                (async () => startServer())();
-
-                runIterativeFunnel(
-                    gameStateMachine,
-                    chainFunnel,
-                    this.pollingRate,
-                    stopBlockHeight
-                );
-            },
-        };
-    },
+        if (serverOnlyMode) {
+          doLog(`Running in webserver-only mode.`);
+        } else {
+          doLog(`Final block height set to ${stopBlockHeight}`);
+          await securedIterativeFunnel(
+            gameStateMachine,
+            chainFunnel,
+            this.pollingRate,
+            stopBlockHeight
+          );
+        }
+      },
+    };
+  },
 };
 
-async function getStopBlockHeight(): Promise<number | null> {
-    let stopBlockHeight: number | null = null;
-    try {
-        stopBlockHeight = await fs
-            .readFile("./stopBlockHeight.conf", "utf8")
-            .then(data => {
-                if (!/^\d+\s*$/.test(data)) {
-                    doLog(
-                        `Improperly formatted stopBlockHeight.conf: +${data}+`
-                    );
-                    throw new Error();
-                }
-                return parseInt(data, 10);
-            });
-    } catch (err) {
-        // file doesn't exist or is invalid, finalBlockHeight remains null
-        doLog("Something went wrong while reading stopBlockHeight.conf.");
-        if (
-            typeof err === "object" &&
-            err !== null &&
-            err.hasOwnProperty("message")
-        ) {
-            const e = err as { message: string };
-            doLog(`Error message: ${e.message}`);
-        }
-        await logError(err);
-    }
-    return stopBlockHeight;
-}
-
 async function loopIfStopBlockReached(
-    latestReadBlockHeight: number,
-    stopBlockHeight: number | null
-) {
-    if (stopBlockHeight !== null && latestReadBlockHeight >= stopBlockHeight) {
-        doLog(`Reached stop block height, stopping the funnel...`);
-        while (run) {
-            await delay(2000);
-        }
-        process.exit(0);
+  latestReadBlockHeight: number,
+  stopBlockHeight: number | null
+): Promise<void> {
+  if (stopBlockHeight !== null && latestReadBlockHeight >= stopBlockHeight) {
+    doLog(`Reached stop block height, stopping the funnel...`);
+    while (run) {
+      await delay(2000);
     }
+    process.exit(0);
+  }
 }
 
-function exitIfStopped(run: boolean) {
-    if (!run) {
-        process.exit(0);
+function exitIfStopped(run: boolean): void {
+  if (!run) {
+    process.exit(0);
+  }
+}
+
+async function securedIterativeFunnel(
+  gameStateMachine: GameStateMachine,
+  chainFunnel: ChainFunnel,
+  pollingRate: number,
+  stopBlockHeight: number | null
+): Promise<void> {
+  let i = 1;
+  while (run) {
+    try {
+      doLog(`Run ${i} of iterative funnel:`);
+      await runIterativeFunnel(gameStateMachine, chainFunnel, pollingRate, stopBlockHeight);
+    } catch (err) {
+      doLog('runIterativeFunnel failure!');
+      logError(err);
+      doLog('Running again...');
+      i++;
     }
+  }
 }
 
 async function runIterativeFunnel(
-    gameStateMachine: GameStateMachine,
-    chainFunnel: ChainFunnel,
-    pollingRate: number,
-    stopBlockHeight: number | null
-) {
-    while (run) {
-        const latestReadBlockHeight =
-            await gameStateMachine.latestBlockHeight();
-        await snapshotIfTime(latestReadBlockHeight);
-        await loopIfStopBlockReached(latestReadBlockHeight, stopBlockHeight);
-        exitIfStopped(run);
+  gameStateMachine: GameStateMachine,
+  chainFunnel: ChainFunnel,
+  pollingRate: number,
+  stopBlockHeight: number | null
+): Promise<void> {
+  while (run) {
+    let latestReadBlockHeight: number;
 
-        // Read latest chain data from funnel
-        const latestChainDataList = (await chainFunnel.readData(
-            latestReadBlockHeight + 1
-        )) as ChainData[];
-        doLog(
-            `Received chain data from Paima Funnel. Total count: ${latestChainDataList.length}`
-        );
-        // Checking if should safely close after fetching all chain data
-        // which may take some time
-        exitIfStopped(run);
-
-        if (!latestChainDataList || !latestChainDataList?.length) {
-            console.log(`No chain data was returned, waiting ${pollingRate}s.`);
-            await delay(pollingRate * 1000);
-            continue;
-        }
-
-        for (let block of latestChainDataList) {
-            // Checking if should safely close in between processing blocks
-            exitIfStopped(run);
-
-            try {
-                await gameStateMachine.process(block);
-                await logSuccess(block);
-                exitIfStopped(run);
-            } catch (error) {
-                await logError(error);
-            }
-
-            const latestReadBlockHeight =
-                await gameStateMachine.latestBlockHeight();
-            await snapshotIfTime(latestReadBlockHeight);
-            exitIfStopped(run);
-            await loopIfStopBlockReached(
-                latestReadBlockHeight,
-                stopBlockHeight
-            );
-        }
+    try {
+      latestReadBlockHeight = await gameStateMachine.latestBlockHeight();
+      await snapshotIfTime(latestReadBlockHeight);
+      await loopIfStopBlockReached(latestReadBlockHeight, stopBlockHeight);
+      exitIfStopped(run);
+    } catch (err) {
+      doLog('[runIterativeFunnel] error in pre-read phase:');
+      logError(err);
+      continue;
     }
-    process.exit(0);
+
+    let latestChainDataList: ChainData[];
+
+    try {
+      // Read latest chain data from funnel
+      latestChainDataList = (await chainFunnel.readData(latestReadBlockHeight + 1)) as ChainData[];
+      // Checking if should safely close after fetching all chain data
+      // which may take some time
+      exitIfStopped(run);
+
+      if (!latestChainDataList || !latestChainDataList?.length) {
+        await delay(pollingRate * 1000);
+        continue;
+      }
+    } catch (err) {
+      doLog('[runIterativeFunnel] error in read phase:');
+      logError(err);
+      continue;
+    }
+
+    try {
+      for (let block of latestChainDataList) {
+        // Checking if should safely close in between processing blocks
+        exitIfStopped(run);
+
+        try {
+          await gameStateMachine.process(block);
+          exitIfStopped(run);
+        } catch (err) {
+          doLog(`[runIterativeFunnel] error while processing block ${block.blockNumber}:`);
+          logError(err);
+        }
+
+        try {
+          const latestReadBlockHeight = await gameStateMachine.latestBlockHeight();
+          await snapshotIfTime(latestReadBlockHeight);
+          exitIfStopped(run);
+          await loopIfStopBlockReached(latestReadBlockHeight, stopBlockHeight);
+        } catch (err) {
+          doLog(`[runIterativeFunnel] error after processing block ${block.blockNumber}:`);
+          logError(err);
+          continue;
+        }
+      }
+    } catch (err) {
+      doLog('[runIterativeFunnel] error in process phase:');
+      logError(err);
+      continue;
+    }
+  }
+  process.exit(0);
 }
 
-function delay(ms: number) {
-    return new Promise(resolve => setTimeout(resolve, ms));
+function delay(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 export default paimaEngine;

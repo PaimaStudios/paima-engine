@@ -88,5 +88,5 @@ jobs:
         shell: bash -e -l {0}
         run: |
           npm ci --prefer-offline --no-audit
-          npm run --if-present lint
           npm run --if-present build
+          npm run --if-present cilint

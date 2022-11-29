@@ -3,7 +3,7 @@ SELECT * FROM block_heights
 ORDER BY block_height DESC
 LIMIT 1;
 
-/* @name getRandomness */
+/* @name getBlockSeeds */
 SELECT seed FROM block_heights
 ORDER BY block_height DESC
 LIMIT 25;

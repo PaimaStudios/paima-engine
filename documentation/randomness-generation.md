@@ -6,7 +6,7 @@ In our case, we are building Paima Engine to produce games as globally accesible
 
 Thus as we move forward having a good source of randomness becomes more and more important.
 
-Of note, whenever a new block is generated there are two pieces of information provided to Paima Engine which are have a degree of uncertainty/randomness to them which make them harder to predict:
+Of note, whenever a new block is generated there are two pieces of information provided to Paima Engine which have a degree of uncertainty/randomness to them which make them harder to predict:
 
 - The block hash
 - The list of submitted data (user game input) which was posted by users to the on-chain smart contract
