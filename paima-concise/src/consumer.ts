@@ -28,27 +28,30 @@ const initialize = (input: string, version = EncodingVersion.V1): ConciseConsume
     initialInput(_decompress = false): string {
       return this.conciseInput;
     },
-    nextValue(): ConciseValue | '' {
+    nextValue(): ConciseValue | null {
       const [nextValue] = conciseValues.splice(0, 1);
-      return nextValue ?? '';
+      return nextValue ?? null;
     },
-    popValue(): ConciseValue | '' {
+    remainingValues(): ConciseValue[] {
+      return this.conciseValues
+    },
+    popValue(): ConciseValue | null {
       const nextValue = conciseValues.pop();
-      return nextValue ?? '';
+      return nextValue ?? null;
     },
     prefix(): string {
       return this.concisePrefix;
     },
-    readValue(position: number): ConciseValue | '' {
+    readValue(position: number): ConciseValue | null {
       const index = position - 1;
-      return this.conciseValues[index] ?? '';
+      return this.conciseValues[index] ?? null;
     },
     stateIdentifiers(): ConciseValue[] {
       return this.conciseValues.filter(value => value.isStateIdentifier);
     },
     valueCount(): number {
       return this.conciseValues.length;
-    },
+    }
   };
 };
 

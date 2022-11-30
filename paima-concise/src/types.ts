@@ -38,14 +38,13 @@ export type ConciseConsumer = {
   conciseInput: string;
   concisePrefix: string;
   conciseValues: ConciseValue[];
-
   prefix: () => string;
   stateIdentifiers: () => ConciseValue[];
-  nextValue: () => ConciseValue | '';
-
-  popValue: () => ConciseValue | '';
+  nextValue: () => ConciseValue | null;
+  remainingValues: () => ConciseValue[];
+  popValue: () => ConciseValue | null;
   initialInput: (decompress?: boolean) => UTF8String;
   // Positions start at 1
-  readValue: (position: number) => ConciseValue | '';
+  readValue: (position: number) => ConciseValue | null;
   valueCount: () => number;
 };
