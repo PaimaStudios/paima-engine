@@ -33,7 +33,7 @@ const initialize = (input: string, version = EncodingVersion.V1): ConciseConsume
       return nextValue ?? null;
     },
     remainingValues(): ConciseValue[] {
-      return this.conciseValues
+      return this.conciseValues;
     },
     popValue(): ConciseValue | null {
       const nextValue = conciseValues.pop();
@@ -51,7 +51,7 @@ const initialize = (input: string, version = EncodingVersion.V1): ConciseConsume
     },
     valueCount(): number {
       return this.conciseValues.length;
-    }
+    },
   };
 };
 
