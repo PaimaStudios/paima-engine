@@ -111,17 +111,39 @@ async function securedIterativeFunnel(
   }
 }
 
+async function ensureDbUp(sm: GameStateMachine, waitPeriod: number): Promise<number> {
+  let wasDown = false;
+  while (run) {
+    try {
+      const latestReadBlockHeight = await sm.latestBlockHeight();
+      if (wasDown) {
+        doLog('[runIterativeFunnel] DB connection back up!');
+      }
+      return latestReadBlockHeight;
+    } catch (err) {
+      if (!wasDown) {
+        doLog('[runIterativeFunnel] DB connection down, waiting for it to go back up...');
+      }
+      wasDown = true;
+    }
+    await delay(waitPeriod);
+  }
+  exitIfStopped(run);
+  return -1;
+}
+
 async function runIterativeFunnel(
   gameStateMachine: GameStateMachine,
   chainFunnel: ChainFunnel,
   pollingRate: number,
   stopBlockHeight: number | null
 ): Promise<void> {
+  const pollingPeriod = pollingRate * 1000;
   while (run) {
     let latestReadBlockHeight: number;
 
     try {
-      latestReadBlockHeight = await gameStateMachine.latestBlockHeight();
+      latestReadBlockHeight = await ensureDbUp(gameStateMachine, pollingPeriod);
       await snapshotIfTime(latestReadBlockHeight);
       await loopIfStopBlockReached(latestReadBlockHeight, stopBlockHeight);
       exitIfStopped(run);
@@ -141,7 +163,7 @@ async function runIterativeFunnel(
       exitIfStopped(run);
 
       if (!latestChainDataList || !latestChainDataList?.length) {
-        await delay(pollingRate * 1000);
+        await delay(pollingPeriod);
         continue;
       }
     } catch (err) {
@@ -154,6 +176,16 @@ async function runIterativeFunnel(
       for (const block of latestChainDataList) {
         // Checking if should safely close in between processing blocks
         exitIfStopped(run);
+        try {
+          const latestReadBlockHeight = await ensureDbUp(gameStateMachine, pollingPeriod);
+          if (block.blockNumber !== latestReadBlockHeight + 1) {
+            break;
+          }
+        } catch (err) {
+          doLog(`[runIterativeFunnel] error before processing block ${block.blockNumber}:`);
+          logError(err);
+          break;
+        }
 
         try {
           await gameStateMachine.process(block);
@@ -161,6 +193,7 @@ async function runIterativeFunnel(
         } catch (err) {
           doLog(`[runIterativeFunnel] error while processing block ${block.blockNumber}:`);
           logError(err);
+          break;
         }
 
         try {
@@ -171,7 +204,7 @@ async function runIterativeFunnel(
         } catch (err) {
           doLog(`[runIterativeFunnel] error after processing block ${block.blockNumber}:`);
           logError(err);
-          continue;
+          break;
         }
       }
     } catch (err) {
