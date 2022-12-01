@@ -27,6 +27,25 @@ const SM: GameStateMachineInitializer = {
     const readonlyDBConn = new pg.Pool(databaseInfo);
     const ensureReadOnly = `SET SESSION CHARACTERISTICS AS TRANSACTION READ ONLY;`;
     const readonlyset = readonlyDBConn.query(ensureReadOnly); // note: this query modifies the DB state
+
+    DBConn.on('error', err => console.log(err, 'postgres pool error'));
+
+    DBConn.on('connect', (_client: pg.PoolClient) => {
+      // On each new client initiated, need to register for error(this is a serious bug on pg, the client throw errors although it should not)
+      _client.on('error', (err: Error) => {
+        console.log(err);
+      });
+    });
+
+    readonlyDBConn.on('error', err => console.log(err, 'postgres pool error'));
+
+    readonlyDBConn.on('connect', (_client: pg.PoolClient) => {
+      // On each new client initiated, need to register for error(this is a serious bug on pg, the client throw errors although it should not)
+      _client.on('error', (err: Error) => {
+        console.log(err);
+      });
+    });
+
     return {
       latestBlockHeight: async (): Promise<number> => {
         const [b] = await getLatestBlockHeight.run(undefined, readonlyDBConn);
