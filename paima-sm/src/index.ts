@@ -52,6 +52,9 @@ const SM: GameStateMachineInitializer = {
         const blockHeight = b?.block_height ?? startBlockHeight ?? 0;
         return blockHeight;
       },
+      getReadonlyDbConn: (): pg.Pool => {
+        return readonlyDBConn;
+      },
       // Core function which triggers state transitions
       process: async (latestChainData: ChainData): Promise<void> => {
         // Acquire correct STF based on router (based on block height)
