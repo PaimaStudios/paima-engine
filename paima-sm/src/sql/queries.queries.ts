@@ -74,13 +74,18 @@ export interface ISaveLastBlockHeightQuery {
   result: ISaveLastBlockHeightResult;
 }
 
-const saveLastBlockHeightIR: any = {"usedParamSet":{"block_height":true,"seed":true},"params":[{"name":"block_height","required":true,"transform":{"type":"scalar"},"locs":[{"a":60,"b":73}]},{"name":"seed","required":true,"transform":{"type":"scalar"},"locs":[{"a":76,"b":81}]}],"statement":"INSERT INTO block_heights(block_height, seed, done)\nVALUES (:block_height!, :seed!, FALSE)"};
+const saveLastBlockHeightIR: any = {"usedParamSet":{"block_height":true,"seed":true},"params":[{"name":"block_height","required":true,"transform":{"type":"scalar"},"locs":[{"a":60,"b":73}]},{"name":"seed","required":true,"transform":{"type":"scalar"},"locs":[{"a":76,"b":81}]}],"statement":"INSERT INTO block_heights(block_height, seed, done)\nVALUES (:block_height!, :seed!, FALSE)\nON CONFLICT (block_height)\nDO UPDATE SET\nblock_height = EXCLUDED.block_height,\nseed = EXCLUDED.seed,\ndone = EXCLUDED.done"};
 
 /**
  * Query generated from SQL:
  * ```
  * INSERT INTO block_heights(block_height, seed, done)
  * VALUES (:block_height!, :seed!, FALSE)
+ * ON CONFLICT (block_height)
+ * DO UPDATE SET
+ * block_height = EXCLUDED.block_height,
+ * seed = EXCLUDED.seed,
+ * done = EXCLUDED.done
  * ```
  */
 export const saveLastBlockHeight = new PreparedQuery<ISaveLastBlockHeightParams,ISaveLastBlockHeightResult>(saveLastBlockHeightIR);
