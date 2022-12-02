@@ -1,4 +1,5 @@
 import pg from 'pg';
+import tx from 'pg-tx';
 
 import { doLog, logError, SCHEDULED_DATA_ADDRESS } from '@paima/utils';
 import type { SubmittedChainData } from '@paima/utils';
@@ -88,14 +89,16 @@ const SM: GameStateMachineInitializer = {
             randomnessGenerator,
             readonlyDBConn
           );
-          for (const [query, params] of sqlQueries) {
-            try {
-              await query.run(params, DBConn);
-            } catch (error) {
-              doLog(`Database error: ${error}`);
-            }
+          try {
+            await tx(DBConn, async db => {
+              for (const [query, params] of sqlQueries) {
+                await query.run(params, db);
+              }
+              await deleteScheduled.run({ id: data.id }, db);
+            });
+          } catch (err) {
+            doLog(`Database error: ${err}`);
           }
-          await deleteScheduled.run({ id: data.id }, DBConn);
         }
 
         // Execute user submitted input data
@@ -118,20 +121,22 @@ const SM: GameStateMachineInitializer = {
             randomnessGenerator,
             readonlyDBConn
           );
-          for (const [query, params] of sqlQueries) {
-            try {
-              await query.run(params, DBConn);
-            } catch (error) {
-              doLog(`Database error: ${error}`);
-            }
+          try {
+            await tx(DBConn, async db => {
+              for (const [query, params] of sqlQueries) {
+                await query.run(params, db);
+              }
+              await insertNonce.run(
+                {
+                  nonce: inputData.inputNonce,
+                  block_height: latestChainData.blockNumber,
+                },
+                db
+              );
+            });
+          } catch (err) {
+            doLog(`Database error: ${err}`);
           }
-          await insertNonce.run(
-            {
-              nonce: inputData.inputNonce,
-              block_height: latestChainData.blockNumber,
-            },
-            DBConn
-          );
         }
         await blockHeightDone.run({ block_height: latestChainData.blockNumber }, DBConn);
       },
