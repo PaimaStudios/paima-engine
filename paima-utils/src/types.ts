@@ -66,6 +66,7 @@ export interface GameStateMachineInitializer {
 }
 export interface GameStateMachine {
   latestBlockHeight: () => Promise<number>;
+  getReadonlyDbConn: () => Pool;
   process: (chainData: ChainData) => Promise<void>;
 }
 export type VersionString = `${number}.${number}.${number}`;
