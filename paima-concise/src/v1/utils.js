@@ -1,7 +1,0 @@
-import { stateIdentifier } from './consts';
-export const toConciseValue = (val) => {
-    if (val.startsWith(stateIdentifier)) {
-        return { value: val.replace(stateIdentifier, ''), isStateIdentifier: true };
-    }
-    return { value: val, isStateIdentifier: false };
-};
