@@ -111,7 +111,7 @@ async function securedIterativeFunnel(
   }
 }
 
-async function ensureDbUp(sm: GameStateMachine, waitPeriod: number): Promise<number> {
+async function requireLatestBlockHeight(sm: GameStateMachine, waitPeriod: number): Promise<number> {
   let wasDown = false;
   while (run) {
     try {
@@ -143,7 +143,7 @@ async function runIterativeFunnel(
     let latestReadBlockHeight: number;
 
     try {
-      latestReadBlockHeight = await ensureDbUp(gameStateMachine, pollingPeriod);
+      latestReadBlockHeight = await requireLatestBlockHeight(gameStateMachine, pollingPeriod);
       await snapshotIfTime(latestReadBlockHeight);
       await loopIfStopBlockReached(latestReadBlockHeight, stopBlockHeight);
       exitIfStopped(run);
@@ -177,7 +177,10 @@ async function runIterativeFunnel(
         // Checking if should safely close in between processing blocks
         exitIfStopped(run);
         try {
-          const latestReadBlockHeight = await ensureDbUp(gameStateMachine, pollingPeriod);
+          const latestReadBlockHeight = await requireLatestBlockHeight(
+            gameStateMachine,
+            pollingPeriod
+          );
           if (block.blockNumber !== latestReadBlockHeight + 1) {
             break;
           }
