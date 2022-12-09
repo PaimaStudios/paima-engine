@@ -5,6 +5,7 @@ import type { ChainFunnel, ChainData, ChainDataExtension } from '@paima/utils';
 import { internalReadDataMulti, timeout } from './reading.js';
 
 const DEFAULT_BLOCK_COUNT = 100;
+const GET_BLOCK_NUMBER_TIMEOUT = 5000;
 
 // TODO: paimaFunnel here does not correspond to any type definition
 const paimaFunnel = {
@@ -23,8 +24,18 @@ const paimaFunnel = {
         blockCount: number = DEFAULT_BLOCK_COUNT
       ): Promise<ChainData[]> {
         let blocks: ChainData[] = [];
+        let latestBlock: number = 0;
+
         try {
-          const latestBlock = await timeout(web3.eth.getBlockNumber(), 3000);
+          latestBlock = await timeout(web3.eth.getBlockNumber(), GET_BLOCK_NUMBER_TIMEOUT);
+        } catch (err) {
+          doLog(
+            `[paima-funnel::readData] Exception (presumably timeout) occured while getting latest block number: ${err}`
+          );
+          return [];
+        }
+
+        try {
           const fromBlock = blockHeight;
           const toBlock = Math.min(latestBlock, fromBlock + blockCount - 1);
 
