@@ -17,7 +17,6 @@
   "dependencies": {
     "@paima/prando": "1.0.0",
     "@paima/concise": "1.0.0",
-    "@paima/utils": "1.0.0",
-    "pg-tx": "^1.0.1"
+    "@paima/utils": "1.0.0"
   }
 }

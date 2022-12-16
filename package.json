@@ -44,6 +44,7 @@
   "dependencies": {
     "@pgtyped/cli": "^1.0.2",
     "@pgtyped/query": "^1.0.1",
-    "pg": "^8.8.0"
+    "pg": "^8.8.0",
+    "pg-tx": "^1.0.1"
   }
 }
