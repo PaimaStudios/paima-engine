@@ -90,7 +90,7 @@ const SM: GameStateMachineInitializer = {
             readonlyDBConn
           );
           try {
-            await tx(DBConn, async db => {
+            await tx<void>(DBConn, async db => {
               for (const [query, params] of sqlQueries) {
                 await query.run(params, db);
               }
@@ -122,7 +122,7 @@ const SM: GameStateMachineInitializer = {
             readonlyDBConn
           );
           try {
-            await tx(DBConn, async db => {
+            await tx<void>(DBConn, async db => {
               for (const [query, params] of sqlQueries) {
                 await query.run(params, db);
               }
