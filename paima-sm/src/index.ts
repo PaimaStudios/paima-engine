@@ -1,7 +1,6 @@
 import pg from 'pg';
-import tx from 'pg-tx';
 
-import { doLog, logError, SCHEDULED_DATA_ADDRESS } from '@paima/utils';
+import { tx, doLog, logError, SCHEDULED_DATA_ADDRESS } from '@paima/utils';
 import type { SubmittedChainData } from '@paima/utils';
 import type { ChainData, GameStateMachineInitializer } from '@paima/utils';
 import Prando from '@paima/prando';
