@@ -22,7 +22,9 @@ import type {
   SubmittedChainData,
   TransactionTemplate,
 } from './types';
+import { tx } from './pg-tx';
 const { isAddress } = pkg;
+
 export type { Web3 };
 export type { StorageContract };
 export {
@@ -44,6 +46,7 @@ export {
   TransactionTemplate,
   logError,
   doLog,
+  tx,
 };
 
 export const DEFAULT_GAS_PRICE = '61000000000' as const;
