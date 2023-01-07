@@ -16,6 +16,12 @@ const QUEUE_NAME = 'default-queue';
 const myQueue = new Queue(QUEUE_NAME, { ...redisConfiguration });
 // NicoList: ^^^^
 
+type RoundExecutor<RoundStateType, TickEvent> = {
+  currentTick: number;
+  currentState: RoundStateType;
+  tick: (this: RoundExecutor<RoundStateType, TickEvent>) => Promise<TickEvent>;
+  endState: (this: RoundExecutor<RoundStateType, TickEvent>) => Promise<RoundStateType>;
+};
 interface RoundExecutorInitializer {
   initialize: <MatchType, RoundStateType, MoveType extends RoundNumbered, TickEvent>(
     matchEnvironment: MatchType,
@@ -29,12 +35,7 @@ interface RoundExecutorInitializer {
       currentTick: number,
       randomnessGenerator: Prando
     ) => TickEvent
-  ) => Promise<{
-    currentTick: number;
-    currentState: RoundStateType;
-    tick: () => Promise<TickEvent | null>;
-    endState: () => Promise<RoundStateType>;
-  }>;
+  ) => Promise<RoundExecutor<RoundStateType, TickEvent>>;
 }
 
 const roundExecutor: RoundExecutorInitializer = {
@@ -53,7 +54,7 @@ const roundExecutor: RoundExecutorInitializer = {
         // eslint-disable-next-line no-console
         console.log('Nico>>> roundExecutor');
         console.log('Match Environment', matchEnvironment);
-        console.log('User State', (await this).currentState);
+        console.log('User State', this.currentState);
 
         // NicoList: which processTick is this?
         // Maybe we need to pass game name as well
@@ -61,9 +62,9 @@ const roundExecutor: RoundExecutorInitializer = {
 
         const job = await myQueue.add(QUEUE_NAME, {
           matchState: matchEnvironment,
-          userStates: (await this).currentState,
+          userStates: this.currentState,
           moves: userInputs,
-          currentTick: (await this).currentTick,
+          currentTick: this.currentTick,
           randomnessGeneratorData: randomnessGenerator.serializeToJSON(),
         });
 
@@ -74,12 +75,12 @@ const roundExecutor: RoundExecutorInitializer = {
         //   this.currentTick,
         //   randomnessGenerator
         // );
-        (await this).currentTick++;
+        this.currentTick++;
         return job.returnvalue;
       },
-      async endState(): Promise<ReturnType<any>> {
-        while ((await (await this).tick()) !== null);
-        return (await this).currentState;
+      async endState(): ReturnType<typeof this.endState> {
+        while ((await this.tick()) !== null);
+        return this.currentState;
       },
     };
   },
