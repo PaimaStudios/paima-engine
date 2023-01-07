@@ -16,6 +16,12 @@ const QUEUE_NAME = 'default-queue';
 const myQueue = new Queue(QUEUE_NAME, { ...redisConfiguration });
 // NicoList: ^^^^
 
+type RoundExecutor<RoundStateType, TickEvent> = {
+  currentTick: number;
+  currentState: RoundStateType;
+  tick: (this: RoundExecutor<RoundStateType, TickEvent>) => Promise<TickEvent>;
+  endState: (this: RoundExecutor<RoundStateType, TickEvent>) => Promise<RoundStateType>;
+};
 interface RoundExecutorInitializer {
   initialize: <MatchType, RoundStateType, MoveType extends RoundNumbered, TickEvent>(
     matchEnvironment: MatchType,
@@ -29,12 +35,7 @@ interface RoundExecutorInitializer {
       currentTick: number,
       randomnessGenerator: Prando
     ) => TickEvent
-  ) => Promise<{
-    currentTick: number;
-    currentState: RoundStateType;
-    tick: () => Promise<TickEvent>;
-    endState: () => Promise<RoundStateType>;
-  }>;
+  ) => Promise<RoundExecutor<RoundStateType, TickEvent>>;
 }
 
 const roundExecutor: RoundExecutorInitializer = {
@@ -75,7 +76,7 @@ const roundExecutor: RoundExecutorInitializer = {
         this.currentTick++;
         return job.returnvalue;
       },
-      async endState(): Promise<ReturnType<typeof this.endState>> {
+      async endState(): ReturnType<typeof this.endState> {
         while ((await this.tick()) !== null);
         return this.currentState;
       },
