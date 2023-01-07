@@ -32,7 +32,7 @@ interface RoundExecutorInitializer {
   ) => Promise<{
     currentTick: number;
     currentState: RoundStateType;
-    tick: () => Promise<TickEvent>;
+    tick: () => Promise<TickEvent | null>;
     endState: () => Promise<RoundStateType>;
   }>;
 }
@@ -48,20 +48,22 @@ const roundExecutor: RoundExecutorInitializer = {
     return {
       currentTick: 1,
       currentState: roundState,
-      async tick(): ReturnType<typeof this.tick> {
+      async tick(): Promise<any> {
         // NicoList: here I send stuff to bullmq
         // eslint-disable-next-line no-console
-        console.log('Nico>>> hey hey!');
+        console.log('Nico>>> roundExecutor');
+        console.log('Match Environment', matchEnvironment);
+        console.log('User State', (await this).currentState);
 
         // NicoList: which processTick is this?
         // Maybe we need to pass game name as well
         // depending on method name, we can call the right processTick
 
         const job = await myQueue.add(QUEUE_NAME, {
-          matchEnvironment,
-          userState: this.currentState,
+          matchState: matchEnvironment,
+          userStates: (await this).currentState,
           moves: userInputs,
-          currentTick: this.currentTick,
+          currentTick: (await this).currentTick,
           randomnessGeneratorData: randomnessGenerator.serializeToJSON(),
         });
 
@@ -72,12 +74,12 @@ const roundExecutor: RoundExecutorInitializer = {
         //   this.currentTick,
         //   randomnessGenerator
         // );
-        this.currentTick++;
+        (await this).currentTick++;
         return job.returnvalue;
       },
-      async endState(): Promise<ReturnType<typeof this.endState>> {
-        while ((await this.tick()) !== null);
-        return this.currentState;
+      async endState(): Promise<ReturnType<any>> {
+        while ((await (await this).tick()) !== null);
+        return (await this).currentState;
       },
     };
   },

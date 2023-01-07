@@ -22,8 +22,8 @@ interface MatchExecutorInitializer {
       m: MoveType[],
       c: number,
       randomnessGenerator: Prando
-    ) => Promise<TickEvent>
-  ) => {
+    ) => Promise<TickEvent | null>
+  ) => Promise<{
     currentRound: number;
     roundExecutor: null | {
       currentTick: number;
@@ -32,11 +32,11 @@ interface MatchExecutorInitializer {
       endState: () => Promise<UserStateType>;
     };
     tick: () => Promise<TickEvent | null>;
-  };
+  }>;
 }
 
 const matchExecutorInitializer: MatchExecutorInitializer = {
-  initialize: (
+  initialize: async (
     matchEnvironment,
     maxRound,
     roundStates,
@@ -48,21 +48,21 @@ const matchExecutorInitializer: MatchExecutorInitializer = {
     return {
       currentRound: 0,
       roundExecutor: null,
-      async tick(): Promise<ReturnType<typeof this.tick> | null> {
-        console.log(this.currentRound, 'currentRound');
-        if (this.currentRound > maxRound) return null; // null if reached end of the match
-        if (!this.roundExecutor) {
+      async tick(): Promise<any> {
+        console.log((await this).currentRound, 'currentRound');
+        if ((await this).currentRound > maxRound) return null; // null if reached end of the match
+        if (!(await this).roundExecutor) {
           // Set round executor if null
-          this.currentRound++;
-          const states = roundStates.filter(rs => rs.round == this.currentRound);
+          (await this).currentRound++;
+          const states = roundStates.filter(async rs => rs.round == (await this).currentRound);
           if (states.length === 0) return null; // This shouldn't happen but good to check nonetheless
           const stateObj = stateMutator(states);
-          const seed = seeds.find(s => s.round === this.currentRound);
+          const seed = seeds.find(async s => s.round === (await this).currentRound);
           if (!seed) {
             return null;
           }
           const randomnessGenerator = new Prando(seed.seed);
-          const inputs = userInputs.filter(ui => ui.round == this.currentRound);
+          const inputs = userInputs.filter(async ui => ui.round == (await this).currentRound);
           const executor = roundExecutor.initialize(
             matchEnvironment,
             stateObj,
@@ -70,14 +70,14 @@ const matchExecutorInitializer: MatchExecutorInitializer = {
             randomnessGenerator,
             processTick
           );
-          this.roundExecutor = executor;
+          (this as any).roundExecutor = executor;
         }
-        const event = await this.roundExecutor.tick();
+        const event = await (this as any).roundExecutor.tick();
 
         // If no event, it means that the previous round executor finished, so we recurse this function to increment the round and try again
         if (!event) {
-          this.roundExecutor = null;
-          return await this.tick();
+          (await this).roundExecutor = null;
+          return await (await this).tick();
         } else return event;
       },
     };
