@@ -1,5 +1,20 @@
 import type Prando from '@paima/prando';
 import type { RoundNumbered } from './types.js';
+import { Queue } from 'bullmq';
+
+// NicoList: move somewhere else
+// NicoList: read stuff from env as well
+const redisConfiguration = {
+  connection: {
+    host: process.env.HOST || 'localhost',
+    port: parseInt(process.env.PORT || '6379'),
+    username: process.env.USERNAME || 'default',
+    password: process.env.PASSWORD || 'redispw',
+  },
+};
+const QUEUE_NAME = 'default-queue';
+const myQueue = new Queue(QUEUE_NAME, { ...redisConfiguration });
+// NicoList: ^^^^
 
 interface RoundExecutorInitializer {
   initialize: <MatchType, RoundStateType, MoveType extends RoundNumbered, TickEvent>(
@@ -14,32 +29,54 @@ interface RoundExecutorInitializer {
       currentTick: number,
       randomnessGenerator: Prando
     ) => TickEvent
-  ) => {
+  ) => Promise<{
     currentTick: number;
     currentState: RoundStateType;
-    tick: () => TickEvent;
-    endState: () => RoundStateType;
-  };
+    tick: () => Promise<TickEvent>;
+    endState: () => Promise<RoundStateType>;
+  }>;
 }
 
 const roundExecutor: RoundExecutorInitializer = {
-  initialize: (matchEnvironment, roundState, userInputs, randomnessGenerator, processTick) => {
+  initialize: async (
+    matchEnvironment,
+    roundState,
+    userInputs,
+    randomnessGenerator,
+    processTick
+  ) => {
     return {
       currentTick: 1,
       currentState: roundState,
-      tick(): ReturnType<typeof this.tick> {
-        const event = processTick(
+      async tick(): ReturnType<typeof this.tick> {
+        // NicoList: here I send stuff to bullmq
+        // eslint-disable-next-line no-console
+        console.log('Nico>>> hey hey!');
+
+        // NicoList: which processTick is this?
+        // Maybe we need to pass game name as well
+        // depending on method name, we can call the right processTick
+
+        const job = await myQueue.add(QUEUE_NAME, {
           matchEnvironment,
-          this.currentState,
-          userInputs,
-          this.currentTick,
-          randomnessGenerator
-        );
+          userState: this.currentState,
+          moves: userInputs,
+          currentTick: this.currentTick,
+          randomnessGeneratorData: randomnessGenerator.serializeToJSON(),
+        });
+
+        // const event = processTick(
+        //   matchEnvironment,
+        //   this.currentState,
+        //   userInputs,
+        //   this.currentTick,
+        //   randomnessGenerator
+        // );
         this.currentTick++;
-        return event;
+        return job.returnvalue;
       },
-      endState(): ReturnType<typeof this.endState> {
-        while (this.tick() !== null);
+      async endState(): Promise<ReturnType<typeof this.endState>> {
+        while ((await this.tick()) !== null);
         return this.currentState;
       },
     };

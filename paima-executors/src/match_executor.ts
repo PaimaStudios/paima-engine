@@ -12,7 +12,7 @@ interface MatchExecutorInitializer {
   >(
     matchEnvironment: MatchType,
     maxRound: number,
-    roundState: RoundState[],
+    roundStates: RoundState[],
     seeds: Seed[],
     userInputs: MoveType[],
     stateMutator: (r: RoundState[]) => UserStateType,
@@ -22,16 +22,16 @@ interface MatchExecutorInitializer {
       m: MoveType[],
       c: number,
       randomnessGenerator: Prando
-    ) => TickEvent
+    ) => Promise<TickEvent>
   ) => {
     currentRound: number;
     roundExecutor: null | {
       currentTick: number;
       currentState: UserStateType;
-      tick: () => TickEvent;
-      endState: () => UserStateType;
+      tick: () => Promise<TickEvent | null>;
+      endState: () => Promise<UserStateType>;
     };
-    tick: () => TickEvent | null;
+    tick: () => Promise<TickEvent | null>;
   };
 }
 
@@ -48,7 +48,7 @@ const matchExecutorInitializer: MatchExecutorInitializer = {
     return {
       currentRound: 0,
       roundExecutor: null,
-      tick(): ReturnType<typeof this.tick> {
+      async tick(): Promise<ReturnType<typeof this.tick> | null> {
         console.log(this.currentRound, 'currentRound');
         if (this.currentRound > maxRound) return null; // null if reached end of the match
         if (!this.roundExecutor) {
@@ -72,12 +72,12 @@ const matchExecutorInitializer: MatchExecutorInitializer = {
           );
           this.roundExecutor = executor;
         }
-        const event = this.roundExecutor.tick();
+        const event = await this.roundExecutor.tick();
 
         // If no event, it means that the previous round executor finished, so we recurse this function to increment the round and try again
         if (!event) {
           this.roundExecutor = null;
-          return this.tick();
+          return await this.tick();
         } else return event;
       },
     };

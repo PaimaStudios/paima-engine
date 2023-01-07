@@ -24,6 +24,10 @@ process.on('exit', code => {
   doLog(`Exiting with code: ${code}`);
 });
 const paimaEngine: PaimaRuntimeInitializer = {
+  // NicoList: Update to this
+  // engine = paimaEngine.initialize(ParallelEnum, chainFunnel, gameStateMachine);
+  // engine = paimaEngine.initialize(SequentialEnum, chainFunnel, gameStateMachine);
+  // NicoList: Maybe add an assert that if you pick ParallelEnum we actually have the devops stuff running
   initialize(chainFunnel, gameStateMachine, gameBackendVersion) {
     // initialize snapshot folder
     return {
@@ -191,6 +195,9 @@ async function runIterativeFunnel(
         }
 
         try {
+          // NicoList: this is where the magic happens
+          // Read if can continue moving forward (enough workers)
+          // if so move on, if not wait for the process to finish
           await gameStateMachine.process(block);
           exitIfStopped(run);
         } catch (err) {

@@ -1,4 +1,10 @@
-type Seed = string | number;
+export type Seed = string | number;
+
+export type PrandoInput = {
+  seed: Seed;
+  value: number | undefined;
+  iteration: number;
+};
 
 class Prando {
   _seed: Seed;
@@ -8,17 +14,29 @@ class Prando {
   MIN = -2147483648; // Int32 min
   MAX = 2147483647; // Int32 max
 
-  constructor(seed: Seed) {
-    this._value = NaN;
+  constructor(seed: Seed, value: number | undefined = undefined, iteration: number = 0) {
+    this._value = value !== undefined ? value : NaN;
     this._seed = seed;
-    this.iteration = 0;
+    this.iteration = iteration;
     if (!seed) throw Error(`Prando initialized without a valid seed (${seed})`);
     if (typeof seed === 'string') this.seed = this.hashCode(seed);
     else if (typeof seed === 'number') this.seed = seed;
     else {
       throw Error(`Prando initialized without a valid seed (${seed})`);
     }
-    this.reset();
+    if (value == null && iteration == 0) this.reset();
+  }
+
+  /**
+   * Returns this Prando instance in a JSON format which can be used to re-create this instance as a Class.
+   * @returns {Prando} A new Prando instance.
+   */
+  serializeToJSON(): PrandoInput {
+    return {
+      seed: this._seed,
+      value: this._value,
+      iteration: this.iteration,
+    };
   }
 
   next(min = 0, pseudoMax = 1): number {

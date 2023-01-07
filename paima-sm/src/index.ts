@@ -26,6 +26,7 @@ const SM: GameStateMachineInitializer = {
     const DBConn = new pg.Pool(databaseInfo);
     const readonlyDBConn = new pg.Pool(databaseInfo);
     const ensureReadOnly = `SET SESSION CHARACTERISTICS AS TRANSACTION READ ONLY;`;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const readonlyset = readonlyDBConn.query(ensureReadOnly); // note: this query modifies the DB state
 
     DBConn.on('error', err => logError(err));
