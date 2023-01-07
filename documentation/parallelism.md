@@ -3,13 +3,13 @@
 Going forward, the Paima Engine Runtime will have two modes: sequential and parallel. When instantiating the runtime, the user will select which mode they wish to use for their game.
 
 ```ts
-engine = paimaEngine.initialize(ParallelEnum, chainFunnel, gameStateMachine);
+engine = paimaEngine.initialize(ParallelEnum, chainFunnel, gameStateMachine, gameBackendVersion);
 ```
 
 or
 
 ```ts
-engine = paimaEngine.initialize(SequentialEnum, chainFunnel, gameStateMachine);
+engine = paimaEngine.initialize(SequentialEnum, chainFunnel, gameStateMachine, gameBackendVersion);
 ```
 
 ## Parallelism Mode
