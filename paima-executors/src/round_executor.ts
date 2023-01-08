@@ -46,7 +46,7 @@ const roundExecutor: RoundExecutorInitializer = {
       currentTick: 1,
       currentState: roundState,
       async tick(): ReturnType<typeof this.tick> {
-        let event;
+        let event: Awaited<ReturnType<typeof this.tick>>;
         if (executionMode === 'Parallel') {
           if (_parallelization == null) {
             _parallelization = new Parallelization();
@@ -67,7 +67,7 @@ const roundExecutor: RoundExecutorInitializer = {
           const job = await _parallelization.addJob(stateIdentifier, params);
           event = job.returnvalue;
         } else if (executionMode === 'Sequential') {
-          event = processTick(
+          event = await processTick(
             matchEnvironment,
             this.currentState,
             userInputs,

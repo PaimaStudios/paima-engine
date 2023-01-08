@@ -54,9 +54,7 @@ const matchExecutorInitializer: MatchExecutorInitializer = {
     return {
       currentRound: 0,
       roundExecutor: null,
-      // NicoList: Fix this type with inspiration from round_executor
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      async tick(): Promise<any> {
+      async tick(): ReturnType<typeof this.tick> {
         // eslint-disable-next-line no-console
         console.log(this.currentRound, 'currentRound');
         if (this.currentRound > maxRound) return null; // null if reached end of the match
