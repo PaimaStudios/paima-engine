@@ -51,6 +51,7 @@ export type GameStateTransitionFunctionRouter = (
   blockHeight: number
 ) => GameStateTransitionFunction;
 export type GameStateTransitionFunction = (
+  executionMode: ExecutionModeEnum,
   inputData: SubmittedChainData,
   blockHeight: number,
   randomnessGenerator: any,
@@ -67,11 +68,13 @@ export interface GameStateMachineInitializer {
 export interface GameStateMachine {
   latestBlockHeight: () => Promise<number>;
   getReadonlyDbConn: () => Pool;
-  process: (chainData: ChainData) => Promise<void>;
+  process: (chainData: ChainData, executionMode: ExecutionModeEnum) => Promise<void>;
 }
 export type VersionString = `${number}.${number}.${number}`;
+export type ExecutionModeEnum = 'Parallel' | 'Sequential';
 export interface PaimaRuntimeInitializer {
   initialize: (
+    executionMode: ExecutionModeEnum,
     chainFunnel: ChainFunnel,
     gameStateMachine: GameStateMachine,
     gameBackendVersion: VersionString

@@ -15,6 +15,7 @@ import {
   saveLastBlockHeight,
 } from './sql/queries.queries.js';
 import { randomnessRouter } from './randomness.js';
+import type { ExecutionModeEnum } from '@paima/utils/src/types.js';
 
 const SM: GameStateMachineInitializer = {
   initialize: (
@@ -57,7 +58,10 @@ const SM: GameStateMachineInitializer = {
         return readonlyDBConn;
       },
       // Core function which triggers state transitions
-      process: async (latestChainData: ChainData): Promise<void> => {
+      process: async (
+        latestChainData: ChainData,
+        executionMode: ExecutionModeEnum
+      ): Promise<void> => {
         // Acquire correct STF based on router (based on block height)
         const gameStateTransition = gameStateTransitionRouter(latestChainData.blockNumber);
         // Save blockHeight and randomness seed (which uses the blockHash)
@@ -84,6 +88,7 @@ const SM: GameStateMachineInitializer = {
           };
           // Trigger STF
           const sqlQueries = await gameStateTransition(
+            executionMode,
             inputData,
             data.block_height,
             randomnessGenerator,
@@ -114,6 +119,7 @@ const SM: GameStateMachineInitializer = {
 
           // Trigger STF
           const sqlQueries = await gameStateTransition(
+            executionMode,
             inputData,
             latestChainData.blockNumber,
             randomnessGenerator,

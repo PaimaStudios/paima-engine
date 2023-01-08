@@ -2,9 +2,11 @@ import type {
   ChainData,
   ChainFunnel,
   GameStateMachine,
+  PaimaRuntime,
   PaimaRuntimeInitializer,
 } from '@paima/utils';
 import { doLog, logError } from '@paima/utils';
+import type { ExecutionModeEnum, VersionString } from '@paima/utils/src/types.js';
 import process from 'process';
 import { server, startServer } from './server.js';
 import { initSnapshots, snapshotIfTime } from './snapshots.js';
@@ -24,11 +26,16 @@ process.on('exit', code => {
   doLog(`Exiting with code: ${code}`);
 });
 const paimaEngine: PaimaRuntimeInitializer = {
-  // NicoList: Update to this
-  // engine = paimaEngine.initialize(ParallelEnum, chainFunnel, gameStateMachine);
-  // engine = paimaEngine.initialize(SequentialEnum, chainFunnel, gameStateMachine);
-  // NicoList: Maybe add an assert that if you pick ParallelEnum we actually have the devops stuff running
-  initialize(chainFunnel, gameStateMachine, gameBackendVersion) {
+  initialize(
+    executionMode: ExecutionModeEnum,
+    chainFunnel: ChainFunnel,
+    gameStateMachine: GameStateMachine,
+    gameBackendVersion: VersionString
+  ): PaimaRuntime {
+    if (executionMode === 'Parallel') {
+      // NicoList: Maybe add an assert that if you pick ParallelEnum we actually have the devops stuff running
+    }
+
     // initialize snapshot folder
     return {
       pollingRate: 4,
@@ -65,6 +72,7 @@ const paimaEngine: PaimaRuntimeInitializer = {
         } else {
           doLog(`Final block height set to ${stopBlockHeight}`);
           await securedIterativeFunnel(
+            executionMode,
             gameStateMachine,
             chainFunnel,
             this.pollingRate,
@@ -96,6 +104,7 @@ function exitIfStopped(run: boolean): void {
 }
 
 async function securedIterativeFunnel(
+  executionMode: ExecutionModeEnum,
   gameStateMachine: GameStateMachine,
   chainFunnel: ChainFunnel,
   pollingRate: number,
@@ -105,7 +114,13 @@ async function securedIterativeFunnel(
   while (run) {
     try {
       doLog(`Run ${i} of iterative funnel:`);
-      await runIterativeFunnel(gameStateMachine, chainFunnel, pollingRate, stopBlockHeight);
+      await runIterativeFunnel(
+        executionMode,
+        gameStateMachine,
+        chainFunnel,
+        pollingRate,
+        stopBlockHeight
+      );
     } catch (err) {
       doLog('runIterativeFunnel failure!');
       logError(err);
@@ -137,6 +152,7 @@ async function requireLatestBlockHeight(sm: GameStateMachine, waitPeriod: number
 }
 
 async function runIterativeFunnel(
+  executionMode: ExecutionModeEnum,
   gameStateMachine: GameStateMachine,
   chainFunnel: ChainFunnel,
   pollingRate: number,
@@ -198,7 +214,7 @@ async function runIterativeFunnel(
           // NicoList: this is where the magic happens
           // Read if can continue moving forward (enough workers)
           // if so move on, if not wait for the process to finish
-          await gameStateMachine.process(block);
+          await gameStateMachine.process(block, executionMode);
           exitIfStopped(run);
         } catch (err) {
           doLog(`[runIterativeFunnel] error while processing block ${block.blockNumber}:`);

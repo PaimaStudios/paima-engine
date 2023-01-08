@@ -1,6 +1,14 @@
 import roundExecutor from './round_executor.js';
 import Prando from '@paima/prando';
 import type { RoundNumbered, Seed } from './types.js';
+import type { ExecutionModeEnum } from '@paima/utils/src/types.js';
+
+type MatchExecutor<RoundStateType, TickEvent> = {
+  currentTick: number;
+  currentState: RoundStateType;
+  tick: (this: MatchExecutor<RoundStateType, TickEvent>) => Promise<TickEvent>;
+  endState: (this: MatchExecutor<RoundStateType, TickEvent>) => Promise<RoundStateType>;
+};
 
 interface MatchExecutorInitializer {
   initialize: <
@@ -16,11 +24,12 @@ interface MatchExecutorInitializer {
     seeds: Seed[],
     userInputs: MoveType[],
     stateMutator: (r: RoundState[]) => UserStateType,
+    executionMode: ExecutionModeEnum,
     processTick: (
-      mt: MatchType,
-      s: UserStateType,
-      m: MoveType[],
-      c: number,
+      matchState: MatchType,
+      userStates: UserStateType,
+      moves: MoveType[],
+      currentTick: number,
       randomnessGenerator: Prando
     ) => Promise<TickEvent | null>
   ) => Promise<{
@@ -43,11 +52,13 @@ const matchExecutorInitializer: MatchExecutorInitializer = {
     seeds,
     userInputs,
     stateMutator,
+    executionMode,
     processTick
   ) => {
     return {
       currentRound: 0,
       roundExecutor: null,
+      // NicoList: Fix this type with inspiration from round_executor
       async tick(): Promise<any> {
         console.log((await this).currentRound, 'currentRound');
         if ((await this).currentRound > maxRound) return null; // null if reached end of the match
@@ -68,6 +79,7 @@ const matchExecutorInitializer: MatchExecutorInitializer = {
             stateObj,
             inputs,
             randomnessGenerator,
+            executionMode,
             processTick
           );
           (this as any).roundExecutor = executor;
