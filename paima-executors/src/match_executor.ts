@@ -3,12 +3,27 @@ import Prando from '@paima/prando';
 import type { RoundNumbered, Seed } from './types.js';
 import type { ExecutionModeEnum } from '@paima/utils/src/types.js';
 
+// NicoList: Fix this type with inspiration from round_executor
 type MatchExecutor<RoundStateType, TickEvent> = {
-  currentTick: number;
-  currentState: RoundStateType;
-  tick: (this: MatchExecutor<RoundStateType, TickEvent>) => Promise<TickEvent>;
-  endState: (this: MatchExecutor<RoundStateType, TickEvent>) => Promise<RoundStateType>;
+  currentRound: number;
+  roundExecutor: RoundStateType | null; // TODO: Not sure about this one. Ask Seba
+  tick: (this: MatchExecutor<RoundStateType, TickEvent>) => Promise<TickEvent | null>;
 };
+
+// Type 'Promise<RoundExecutor<UserStateType, Promise<TickEvent | null>>>' is not assignable to type 'RoundState'.
+//   'RoundState' could be instantiated with an arbitrary type which could be unrelated to 'Promise<RoundExecutor<UserStateType, Promise<TickEvent | null>>>'
+
+// TODO: RoundExecutor Previous Type. Delete after confirmation on the above
+// {
+//   currentRound: number;
+//   roundExecutor: null | {
+//     currentTick: number;
+//     currentState: UserStateType;
+//     tick: () => Promise<TickEvent | null>;
+//     endState: () => Promise<UserStateType>;
+//   };
+//   tick: () => Promise<TickEvent | null>;
+// }
 
 interface MatchExecutorInitializer {
   initialize: <
@@ -32,16 +47,7 @@ interface MatchExecutorInitializer {
       currentTick: number,
       randomnessGenerator: Prando
     ) => Promise<TickEvent | null>
-  ) => Promise<{
-    currentRound: number;
-    roundExecutor: null | {
-      currentTick: number;
-      currentState: UserStateType;
-      tick: () => Promise<TickEvent | null>;
-      endState: () => Promise<UserStateType>;
-    };
-    tick: () => Promise<TickEvent | null>;
-  }>;
+  ) => Promise<MatchExecutor<RoundState, TickEvent>>;
 }
 
 const matchExecutorInitializer: MatchExecutorInitializer = {
@@ -59,21 +65,23 @@ const matchExecutorInitializer: MatchExecutorInitializer = {
       currentRound: 0,
       roundExecutor: null,
       // NicoList: Fix this type with inspiration from round_executor
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       async tick(): Promise<any> {
-        console.log((await this).currentRound, 'currentRound');
-        if ((await this).currentRound > maxRound) return null; // null if reached end of the match
-        if (!(await this).roundExecutor) {
+        // eslint-disable-next-line no-console
+        console.log(this.currentRound, 'currentRound');
+        if (this.currentRound > maxRound) return null; // null if reached end of the match
+        if (!this.roundExecutor) {
           // Set round executor if null
-          (await this).currentRound++;
-          const states = roundStates.filter(async rs => rs.round == (await this).currentRound);
+          this.currentRound++;
+          const states = roundStates.filter(async rs => rs.round == this.currentRound);
           if (states.length === 0) return null; // This shouldn't happen but good to check nonetheless
           const stateObj = stateMutator(states);
-          const seed = seeds.find(async s => s.round === (await this).currentRound);
+          const seed = seeds.find(async s => s.round === this.currentRound);
           if (!seed) {
             return null;
           }
           const randomnessGenerator = new Prando(seed.seed);
-          const inputs = userInputs.filter(async ui => ui.round == (await this).currentRound);
+          const inputs = userInputs.filter(async ui => ui.round == this.currentRound);
           const executor = roundExecutor.initialize(
             matchEnvironment,
             stateObj,
@@ -82,14 +90,14 @@ const matchExecutorInitializer: MatchExecutorInitializer = {
             executionMode,
             processTick
           );
-          (this as any).roundExecutor = executor;
+          this.roundExecutor = executor;
         }
-        const event = await (this as any).roundExecutor.tick();
+        const event = await this.roundExecutor.tick();
 
         // If no event, it means that the previous round executor finished, so we recurse this function to increment the round and try again
         if (!event) {
-          (await this).roundExecutor = null;
-          return await (await this).tick();
+          this.roundExecutor = null;
+          return await this.tick();
         } else return event;
       },
     };

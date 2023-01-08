@@ -1,21 +1,7 @@
 import type Prando from '@paima/prando';
 import type { RoundNumbered } from './types.js';
-import { Queue } from 'bullmq';
 import type { ExecutionModeEnum } from '@paima/utils/src/types.js';
-
-// NicoList: move somewhere else
-// NicoList: read stuff from env as well
-const redisConfiguration = {
-  connection: {
-    host: process.env.HOST || 'localhost',
-    port: parseInt(process.env.PORT || '6379'),
-    username: process.env.USERNAME || 'default',
-    password: process.env.PASSWORD || 'redispw',
-  },
-};
-const QUEUE_NAME = 'default-queue';
-const myQueue = new Queue(QUEUE_NAME, { ...redisConfiguration });
-// NicoList: ^^^^
+import Parallelization from './paralellization.js';
 
 type RoundExecutor<RoundStateType, TickEvent> = {
   currentTick: number;
@@ -23,6 +9,7 @@ type RoundExecutor<RoundStateType, TickEvent> = {
   tick: (this: RoundExecutor<RoundStateType, TickEvent>) => Promise<TickEvent>;
   endState: (this: RoundExecutor<RoundStateType, TickEvent>) => Promise<RoundStateType>;
 };
+
 interface RoundExecutorInitializer {
   initialize: <MatchType, RoundStateType, MoveType extends RoundNumbered, TickEvent>(
     matchEnvironment: MatchType,
@@ -40,6 +27,8 @@ interface RoundExecutorInitializer {
   ) => Promise<RoundExecutor<RoundStateType, TickEvent>>;
 }
 
+let _parallelization: Parallelization | null;
+
 const roundExecutor: RoundExecutorInitializer = {
   initialize: async (
     matchEnvironment,
@@ -52,26 +41,29 @@ const roundExecutor: RoundExecutorInitializer = {
     return {
       currentTick: 1,
       currentState: roundState,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       async tick(): Promise<any> {
         let event;
         if (executionMode === 'Parallel') {
-          // NicoLits: delete these comments when ready
-          // eslint-disable-next-line no-console
-          console.log('Nico>>> roundExecutor');
-          console.log('Match Environment', matchEnvironment);
-          console.log('User State', this.currentState);
+          if (_parallelization == null) {
+            _parallelization = new Parallelization();
+          }
 
-          // NicoList: which processTick is this?
-          // Maybe we need to pass game name as well
-          // depending on method name, we can call the right processTick
-          const job = await myQueue.add(QUEUE_NAME, {
-            gameName: 'JungleWars',
+          // NicoList: need to add identifier and also
+          // the gameName
+          const params = {
+            gameName: 'JungleWars', // this should come from the backend
             matchState: matchEnvironment,
             userStates: this.currentState,
             moves: userInputs,
             currentTick: this.currentTick,
             randomnessGeneratorData: randomnessGenerator.serializeToJSON(),
-          });
+          };
+
+          // NicoLits: delete this comment when ready
+          // eslint-disable-next-line no-console
+          console.log('Nico>>> roundExecutor: ', params);
+          const job = await _parallelization.addJob('*identifier', params);
           event = job.returnvalue;
         } else if (executionMode === 'Sequential') {
           event = processTick(
