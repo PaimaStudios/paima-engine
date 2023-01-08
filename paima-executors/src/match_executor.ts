@@ -11,21 +11,6 @@ type MatchExecutor<RoundStateType, TickEvent> = {
   tick: (this: MatchExecutor<RoundStateType, TickEvent>) => Promise<TickEvent | null>;
 };
 
-// Type 'Promise<RoundExecutor<UserStateType, Promise<TickEvent | null>>>' is not assignable to type 'RoundState'.
-//   'RoundState' could be instantiated with an arbitrary type which could be unrelated to 'Promise<RoundExecutor<UserStateType, Promise<TickEvent | null>>>'
-
-// TODO: RoundExecutor Previous Type. Delete after confirmation on the above
-// {
-//   currentRound: number;
-//   roundExecutor: null | {
-//     currentTick: number;
-//     currentState: UserStateType;
-//     tick: () => Promise<TickEvent | null>;
-//     endState: () => Promise<UserStateType>;
-//   };
-//   tick: () => Promise<TickEvent | null>;
-// }
-
 interface MatchExecutorInitializer {
   initialize: <
     MatchType,
