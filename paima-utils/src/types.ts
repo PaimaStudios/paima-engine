@@ -72,6 +72,7 @@ export interface GameStateMachine {
 }
 export type VersionString = `${number}.${number}.${number}`;
 export type ExecutionModeEnum = 'Parallel' | 'Sequential';
+export type GameNameEnum = 'JungleWars' | 'TowerDefense';
 export interface PaimaRuntimeInitializer {
   initialize: (
     executionMode: ExecutionModeEnum,
