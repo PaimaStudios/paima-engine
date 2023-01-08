@@ -1,4 +1,5 @@
 import roundExecutor from './round_executor.js';
+import type { RoundExecutor } from './round_executor.js';
 import Prando from '@paima/prando';
 import type { RoundNumbered, Seed } from './types.js';
 import type { ExecutionModeEnum, GameNameEnum } from '@paima/utils/src/types.js';
@@ -6,7 +7,7 @@ import type { ExecutionModeEnum, GameNameEnum } from '@paima/utils/src/types.js'
 // NicoList: Fix this type with inspiration from round_executor
 type MatchExecutor<RoundStateType, TickEvent> = {
   currentRound: number;
-  roundExecutor: RoundStateType | null; // TODO: Not sure about this one. Ask Seba
+  roundExecutor: RoundExecutor<RoundStateType, TickEvent> | null;
   tick: (this: MatchExecutor<RoundStateType, TickEvent>) => Promise<TickEvent | null>;
 };
 
@@ -49,7 +50,7 @@ interface MatchExecutorInitializer {
       currentTick: number,
       randomnessGenerator: Prando
     ) => Promise<TickEvent | null>
-  ) => Promise<MatchExecutor<RoundState, TickEvent>>;
+  ) => Promise<MatchExecutor<UserStateType, TickEvent>>;
 }
 
 const matchExecutorInitializer: MatchExecutorInitializer = {
@@ -86,7 +87,7 @@ const matchExecutorInitializer: MatchExecutorInitializer = {
           }
           const randomnessGenerator = new Prando(seed.seed);
           const inputs = userInputs.filter(async ui => ui.round == this.currentRound);
-          const executor = roundExecutor.initialize(
+          const executor = await roundExecutor.initialize(
             matchEnvironment,
             stateObj,
             inputs,

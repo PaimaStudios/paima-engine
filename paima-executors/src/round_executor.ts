@@ -3,10 +3,10 @@ import type { RoundNumbered } from './types.js';
 import type { ExecutionModeEnum, GameNameEnum } from '@paima/utils/src/types.js';
 import Parallelization from './paralellization.js';
 
-type RoundExecutor<RoundStateType, TickEvent> = {
+export type RoundExecutor<RoundStateType, TickEvent> = {
   currentTick: number;
   currentState: RoundStateType;
-  tick: (this: RoundExecutor<RoundStateType, TickEvent>) => Promise<TickEvent>;
+  tick: (this: RoundExecutor<RoundStateType, TickEvent>) => Promise<null | TickEvent>;
   endState: (this: RoundExecutor<RoundStateType, TickEvent>) => Promise<RoundStateType>;
 };
 
@@ -25,7 +25,7 @@ interface RoundExecutorInitializer {
       moves: MoveType[],
       currentTick: number,
       randomnessGenerator: Prando
-    ) => TickEvent
+    ) => Promise<TickEvent | null>
   ) => Promise<RoundExecutor<RoundStateType, TickEvent>>;
 }
 
@@ -45,8 +45,7 @@ const roundExecutor: RoundExecutorInitializer = {
     return {
       currentTick: 1,
       currentState: roundState,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      async tick(): Promise<any> {
+      async tick(): ReturnType<typeof this.tick> {
         let event;
         if (executionMode === 'Parallel') {
           if (_parallelization == null) {
