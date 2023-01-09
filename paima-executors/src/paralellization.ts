@@ -25,8 +25,8 @@ class Parallelization {
   private redisConfiguration: QueueOptions;
   private defaultJobOptions: QueueOptions;
 
-  private myQueue: Queue;
   private flowProducer: FlowProducer;
+  private jobMap: Map<string, Job<any, any, string>> = new Map();
 
   constructor({
     queueName = process.env.QUEUE_NAME || 'default-queue',
@@ -36,10 +36,6 @@ class Parallelization {
     this.queueName = queueName;
     this.redisConfiguration = redisConfiguration;
     this.defaultJobOptions = jobOptions;
-    this.myQueue = new Queue(this.queueName, {
-      ...this.redisConfiguration,
-      ...this.defaultJobOptions,
-    });
     this.flowProducer = new FlowProducer({
       ...this.redisConfiguration,
       ...this.defaultJobOptions,
@@ -50,41 +46,23 @@ class Parallelization {
     return this.queueName;
   };
 
-  public findJob = async (identifier: string): Promise<Job<any, any, string> | null> => {
-    // e.g., *83aomafiooao
-    // find all jobs that start with the identifier and add the job as a child of the last child
-    const jobs = await this.myQueue.getJobs(['waiting', 'active', 'delayed']); // 'completed', 'failed',
-    const jobsWithId = jobs.filter(job => {
-      if (job.id == null) return false;
-      return job.id.startsWith(identifier);
-    });
-
-    // NicoList: Is this correct? maybe I actually may get multiple jobs.
-    // If that's the case I need to change the logic here and get the parent of the parent and so on.
-    if (jobsWithId.length > 1) {
-      throw new Error(
-        `Found multiple job trees: ${jobsWithId.length} for identifier ${identifier}`
-      );
-    }
-
-    return jobsWithId.length === 0 ? null : jobsWithId[0];
-  };
-
-  // not the best but still pretty good
-  // we can just check on a job id depending on the identifier and move to the next one only when it is done
-  // * this idea is Plan B and it is not implemented yet *
-
   // TODO: add type to data -- not so straightforward.
-  public addJob = async (identifier: string, data: any): Promise<Job<any, any, string>> => {
-    const job = await this.findJob(identifier);
+  public addJob = async (identifier: string, data: any): Promise<any> => {
+    // Job<any, any, string>
+    // const job = await this.findJob(identifier);
+    const job = this.jobMap.get(identifier);
     if (job == null) {
+      console.log("Job doesn't exist, creating a new one");
       const chain = await this.flowProducer.add({
         name: identifier,
         data: data,
         queueName: this.queueName,
       });
-      return chain.job;
+      // add chain.job to jobMap with identifier as key
+      this.jobMap.set(identifier, chain.job);
+      return chain.job.returnvalue;
     }
+    console.log('Job found: ', job.id, ' adding its child');
     // add the job as the parent of the last parent
     const chain = await this.flowProducer.add({
       name: identifier,
@@ -92,7 +70,7 @@ class Parallelization {
       data: data,
       children: [job],
     });
-    return chain.job;
+    return chain.job.returnvalue;
   };
 }
 
