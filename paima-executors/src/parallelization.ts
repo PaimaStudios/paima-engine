@@ -1,4 +1,4 @@
-import { FlowProducer, Queue } from 'bullmq';
+import { FlowProducer } from 'bullmq';
 import type { Job, QueueOptions } from 'bullmq'; // JobNode,
 
 const defaultRedisConfiguration = {

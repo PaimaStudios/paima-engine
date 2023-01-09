@@ -1,7 +1,7 @@
 import type Prando from '@paima/prando';
 import type { RoundNumbered } from './types.js';
 import type { ExecutionModeEnum, GameNameEnum } from '@paima/utils/src/types.js';
-import Parallelization from './paralellization.js';
+import Parallelization from './parallelization.js';
 
 export type RoundExecutor<RoundStateType, TickEvent> = {
   currentTick: number;
@@ -64,8 +64,7 @@ const roundExecutor: RoundExecutorInitializer = {
           // NicoLits: delete this comment when ready
           // eslint-disable-next-line no-console
           console.log('Nico>>> roundExecutor: ', { stateIdentifier, ...params });
-          const job = await _parallelization.addJob(stateIdentifier, params);
-          event = job.returnvalue;
+          event = await _parallelization.addJob(stateIdentifier, params);
         } else if (executionMode === 'Sequential') {
           event = await processTick(
             matchEnvironment,
