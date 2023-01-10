@@ -79,6 +79,10 @@ const SM: GameStateMachineInitializer = {
           { block_height: latestChainData.blockNumber },
           readonlyDBConn
         );
+
+        let gameSTPromises = [];
+        console.log('scheduledData: ', scheduledData.length);
+
         for (const data of scheduledData) {
           const inputData: SubmittedChainData = {
             userAddress: SCHEDULED_DATA_ADDRESS,
@@ -86,60 +90,143 @@ const SM: GameStateMachineInitializer = {
             inputNonce: '',
             suppliedValue: '0',
           };
-          // Trigger STF
-          const sqlQueries = await gameStateTransition(
+          // // Trigger STF
+          // const sqlQueries = await gameStateTransition(
+          //   executionMode,
+          //   inputData,
+          //   data.block_height,
+          //   randomnessGenerator,
+          //   readonlyDBConn
+          // );
+          // for (const [query, params] of sqlQueries) {
+          //   try {
+          //     await query.run(params, DBConn);
+          //   } catch (error) {
+          //     doLog(`Database error: ${error}`);
+          //   }
+          // }
+          // await deleteScheduled.run({ id: data.id }, DBConn);
+
+          // Trigger STF Async
+          const promise = gameStateTransition(
             executionMode,
             inputData,
             data.block_height,
             randomnessGenerator,
             readonlyDBConn
-          );
-          for (const [query, params] of sqlQueries) {
-            try {
-              await query.run(params, DBConn);
-            } catch (error) {
-              doLog(`Database error: ${error}`);
-            }
-          }
-          await deleteScheduled.run({ id: data.id }, DBConn);
+          )
+            .then(async sqlQueries => {
+              for (const [query, params] of sqlQueries) {
+                try {
+                  await query.run(params, DBConn);
+                } catch (error) {
+                  doLog(`Database error: ${error}`);
+                }
+              }
+              return true;
+            })
+            .then(async _ => {
+              await deleteScheduled.run({ id: data.id }, DBConn);
+              return;
+            });
+          gameSTPromises.push(promise);
         }
 
+        // print the number of promises but not the promises themselves
+        // use three lines and console.log to avoid prettier formatting
+        // print a logo to make it easier to find in the logs
+        if (gameSTPromises.length > 1) {
+          console.log('🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀');
+          console.log('gameSTPromises: ');
+          console.log(gameSTPromises.length);
+        }
+        await Promise.all(gameSTPromises);
+
         // Execute user submitted input data
+        gameSTPromises = [];
         for (const inputData of latestChainData.submittedData) {
           // Check nonce is valid
           if (inputData.inputNonce === '') {
             doLog(`Skipping inputData with invalid empty nonce: ${inputData}`);
             continue;
           }
-          const nonceData = await findNonce.run({ nonce: inputData.inputNonce }, readonlyDBConn);
-          if (nonceData.length > 0) {
-            doLog(`Skipping inputData with duplicate nonce: ${inputData}`);
-            continue;
-          }
+          // const nonceData = await findNonce.run({ nonce: inputData.inputNonce }, readonlyDBConn);
+          // if (nonceData.length > 0) {
+          //   doLog(`Skipping inputData with duplicate nonce: ${inputData}`);
+          //   continue;
+          // }
+          //
+          // // Trigger STF
+          // const sqlQueries = await gameStateTransition(
+          //   executionMode,
+          //   inputData,
+          //   latestChainData.blockNumber,
+          //   randomnessGenerator,
+          //   readonlyDBConn
+          // );
+          // for (const [query, params] of sqlQueries) {
+          //   try {
+          //     await query.run(params, DBConn);
+          //   } catch (error) {
+          //     doLog(`Database error: ${error}`);
+          //   }
+          // }
+          // await insertNonce.run(
+          //   {
+          //     nonce: inputData.inputNonce,
+          //     block_height: latestChainData.blockNumber,
+          //   },
+          //   DBConn
+          // );
+          // Async
+          const nonceData = findNonce.run({ nonce: inputData.inputNonce }, readonlyDBConn);
 
-          // Trigger STF
-          const sqlQueries = await gameStateTransition(
-            executionMode,
-            inputData,
-            latestChainData.blockNumber,
-            randomnessGenerator,
-            readonlyDBConn
-          );
-          for (const [query, params] of sqlQueries) {
-            try {
-              await query.run(params, DBConn);
-            } catch (error) {
-              doLog(`Database error: ${error}`);
-            }
-          }
-          await insertNonce.run(
-            {
-              nonce: inputData.inputNonce,
-              block_height: latestChainData.blockNumber,
-            },
-            DBConn
-          );
+          const promise = nonceData
+            .then(nonceData => {
+              if (nonceData.length > 0) {
+                throw new Error('Duplicate nonce');
+              }
+              return gameStateTransition(
+                executionMode,
+                inputData,
+                latestChainData.blockNumber,
+                randomnessGenerator,
+                readonlyDBConn
+              );
+            })
+            .then(async sqlQueries => {
+              for (const [query, params] of sqlQueries) {
+                try {
+                  await query.run(params, DBConn);
+                } catch (error) {
+                  doLog(`Database error: ${error}`);
+                }
+              }
+              return true;
+            })
+            .then(async _ => {
+              await insertNonce.run(
+                {
+                  nonce: inputData.inputNonce,
+                  block_height: latestChainData.blockNumber,
+                },
+                DBConn
+              );
+              return true;
+            })
+            .catch(error => {
+              if (error.message !== 'Duplicate nonce') {
+                doLog(`Skipping inputData with duplicate nonce: ${inputData}`);
+              }
+            });
+          gameSTPromises.push(promise);
         }
+        if (gameSTPromises.length > 1) {
+          console.log('🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀');
+          console.log('gameSTPromises: ');
+          console.log(gameSTPromises.length);
+        }
+        await Promise.all(gameSTPromises);
         await blockHeightDone.run({ block_height: latestChainData.blockNumber }, DBConn);
       },
     };

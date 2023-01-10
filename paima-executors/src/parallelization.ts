@@ -1,4 +1,4 @@
-import { FlowProducer } from 'bullmq';
+import { FlowProducer, QueueEvents } from 'bullmq';
 import type { Job, QueueOptions } from 'bullmq'; // JobNode,
 
 const defaultRedisConfiguration = {
@@ -24,6 +24,7 @@ class Parallelization {
   private queueName: string;
   private redisConfiguration: QueueOptions;
   private defaultJobOptions: QueueOptions;
+  private queueEvents: QueueEvents;
 
   private flowProducer: FlowProducer;
   private jobMap: Map<string, Job<any, any, string>> = new Map();
@@ -36,6 +37,7 @@ class Parallelization {
     this.queueName = queueName;
     this.redisConfiguration = redisConfiguration;
     this.defaultJobOptions = jobOptions;
+    this.queueEvents = new QueueEvents(this.queueName, this.redisConfiguration);
     this.flowProducer = new FlowProducer({
       ...this.redisConfiguration,
       ...this.defaultJobOptions,
@@ -46,31 +48,70 @@ class Parallelization {
     return this.queueName;
   };
 
+  private returnValuePromise = (id: string): Promise<any> => {
+    return new Promise((resolve, reject) => {
+      const completedListener = (args: {
+        jobId: string;
+        returnvalue: string;
+        prev?: string | undefined;
+      }): void => {
+        if (args.jobId === id) {
+          console.log('# completed listeners: ', this.queueEvents.listenerCount('completed'));
+          this.queueEvents.removeListener('completed', completedListener);
+          this.queueEvents.removeListener('failed', failedListener);
+          console.log(
+            '(after) # completed listeners: ',
+            this.queueEvents.listenerCount('completed')
+          );
+          resolve(args.returnvalue);
+        }
+      };
+      const failedListener = (args: {
+        jobId: string;
+        failedReason: string;
+        prev?: string | undefined;
+      }): void => {
+        if (args.jobId === id) {
+          reject(`Job with ${id} failed`);
+          console.log('# failed listeners: ', this.queueEvents.listenerCount('failed'));
+          this.queueEvents.removeListener('completed', completedListener);
+          this.queueEvents.removeListener('failed', failedListener);
+          console.log('(after) # failed listeners: ', this.queueEvents.listenerCount('failed'));
+        }
+      };
+      this.queueEvents.on('completed', completedListener);
+      this.queueEvents.on('failed', failedListener);
+
+      console.log('(adding) # failed listeners: ', this.queueEvents.listenerCount('failed'));
+      console.log('(adding) # completed listeners: ', this.queueEvents.listenerCount('completed'));
+    });
+  };
+
   // TODO: add type to data -- not so straightforward.
   public addJob = async (identifier: string, data: any): Promise<any> => {
-    // Job<any, any, string>
-    // const job = await this.findJob(identifier);
+    await this.queueEvents.waitUntilReady();
     const job = this.jobMap.get(identifier);
+    let chain;
     if (job == null) {
-      console.log("Job doesn't exist, creating a new one");
-      const chain = await this.flowProducer.add({
+      chain = await this.flowProducer.add({
         name: identifier,
         data: data,
         queueName: this.queueName,
       });
-      // add chain.job to jobMap with identifier as key
+      console.log("Job doesn't exist, creating a new one with id: ", chain.job.id);
       this.jobMap.set(identifier, chain.job);
-      return chain.job.returnvalue;
+    } else {
+      // add the job as the parent of the last parent
+      chain = await this.flowProducer.add({
+        name: identifier,
+        queueName: this.queueName,
+        data: data,
+        children: [job],
+      });
+      console.log('Job found: ', job.id, ' adding its child with id: ', chain.job.id);
     }
-    console.log('Job found: ', job.id, ' adding its child');
-    // add the job as the parent of the last parent
-    const chain = await this.flowProducer.add({
-      name: identifier,
-      queueName: this.queueName,
-      data: data,
-      children: [job],
-    });
-    return chain.job.returnvalue;
+    if (chain.job.id == null) throw new Error('Job id is null. Not expected.');
+    return await this.returnValuePromise(chain.job.id);
   };
 }
 

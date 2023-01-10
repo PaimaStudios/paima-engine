@@ -65,6 +65,7 @@ const roundExecutor: RoundExecutorInitializer = {
           // eslint-disable-next-line no-console
           console.log('Nico>>> roundExecutor: ', { stateIdentifier, ...params });
           event = await _parallelization.addJob(stateIdentifier, params);
+          console.log('Nico>>> roundExecutor job response: ', event);
         } else if (executionMode === 'Sequential') {
           event = await processTick(
             matchEnvironment,
