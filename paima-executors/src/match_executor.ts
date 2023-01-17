@@ -2,8 +2,8 @@ import roundExecutor from './round_executor.js';
 import Prando from '@paima/prando';
 import type { RoundNumbered, Seed } from './types.js';
 
-export interface NewRoundEvent{
-  eventType: "newRound";
+export interface NewRoundEvent {
+  eventType: 'newRound';
   nextRound: number;
 }
 interface MatchExecutorInitializer {
@@ -40,20 +40,13 @@ interface MatchExecutorInitializer {
 }
 
 const matchExecutorInitializer: MatchExecutorInitializer = {
-  initialize: (
-    matchEnvironment,
-    totalRounds,
-    initialState,
-    seeds,
-    userInputs,
-    processTick
-  ) => {
+  initialize: (matchEnvironment, totalRounds, initialState, seeds, userInputs, processTick) => {
     return {
       currentRound: 0,
       currentState: initialState,
       totalRounds: totalRounds,
       roundExecutor: null,
-      __nextRound(): void{
+      __nextRound(): void {
         if (this.currentRound >= totalRounds) {
           this.roundExecutor = null;
           return;
@@ -85,9 +78,9 @@ const matchExecutorInitializer: MatchExecutorInitializer = {
         } else {
           this.__nextRound();
           return {
-            eventType: "newRound",
-            nextRound: this.currentRound + 1
-          }
+            eventType: 'newRound',
+            nextRound: this.currentRound + 1,
+          };
         }
       },
     };
