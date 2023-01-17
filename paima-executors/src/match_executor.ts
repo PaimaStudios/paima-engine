@@ -2,20 +2,22 @@ import roundExecutor from './round_executor.js';
 import Prando from '@paima/prando';
 import type { RoundNumbered, Seed } from './types.js';
 
+export interface NewRoundEvent{
+  eventType: "newRound";
+  nextRound: number;
+}
 interface MatchExecutorInitializer {
   initialize: <
     MatchType,
-    UserStateType,
+    UserStateType, // more like RoundState, come back to this
     MoveType extends RoundNumbered,
-    TickEvent,
-    RoundState extends RoundNumbered
+    TickEvent
   >(
     matchEnvironment: MatchType,
     maxRound: number,
-    roundState: RoundState[],
+    roundState: UserStateType,
     seeds: Seed[],
     userInputs: MoveType[],
-    stateMutator: (r: RoundState[]) => UserStateType,
     processTick: (
       mt: MatchType,
       s: UserStateType,
@@ -25,60 +27,68 @@ interface MatchExecutorInitializer {
     ) => TickEvent
   ) => {
     currentRound: number;
+    currentState: UserStateType;
     roundExecutor: null | {
       currentTick: number;
       currentState: UserStateType;
       tick: () => TickEvent;
       endState: () => UserStateType;
     };
-    tick: () => TickEvent | null;
+    __nextRound: () => void;
+    tick: () => TickEvent | NewRoundEvent | null;
   };
 }
 
 const matchExecutorInitializer: MatchExecutorInitializer = {
   initialize: (
     matchEnvironment,
-    maxRound,
-    roundStates,
+    totalRounds,
+    initialState,
     seeds,
     userInputs,
-    stateMutator,
     processTick
   ) => {
     return {
       currentRound: 0,
+      currentState: initialState,
+      totalRounds: totalRounds,
       roundExecutor: null,
+      __nextRound(): void{
+        if (this.currentRound >= totalRounds) {
+          this.roundExecutor = null;
+          return;
+        }
+        this.currentRound++;
+        const seed = seeds.find(s => s.round === this.currentRound);
+        if (!seed) {
+          this.roundExecutor = null;
+          return;
+        }
+        const randomnessGenerator = new Prando(seed.seed);
+        const inputs = userInputs.filter(ui => ui.round == this.currentRound);
+        const executor = roundExecutor.initialize(
+          matchEnvironment,
+          this.currentState,
+          inputs,
+          randomnessGenerator,
+          processTick
+        );
+        this.roundExecutor = executor;
+      },
       tick(): ReturnType<typeof this.tick> {
-        console.log(this.currentRound, 'currentRound');
-        if (this.currentRound > maxRound) return null; // null if reached end of the match
         if (!this.roundExecutor) {
-          // Set round executor if null
-          this.currentRound++;
-          const states = roundStates.filter(rs => rs.round == this.currentRound);
-          if (states.length === 0) return null; // This shouldn't happen but good to check nonetheless
-          const stateObj = stateMutator(states);
-          const seed = seeds.find(s => s.round === this.currentRound);
-          if (!seed) {
-            return null;
-          }
-          const randomnessGenerator = new Prando(seed.seed);
-          const inputs = userInputs.filter(ui => ui.round == this.currentRound);
-          const executor = roundExecutor.initialize(
-            matchEnvironment,
-            stateObj,
-            inputs,
-            randomnessGenerator,
-            processTick
-          );
-          this.roundExecutor = executor;
+          return null;
         }
         const event = this.roundExecutor.tick();
-
-        // If no event, it means that the previous round executor finished, so we recurse this function to increment the round and try again
-        if (!event) {
-          this.roundExecutor = null;
-          return this.tick();
-        } else return event;
+        if (event) {
+          return event;
+        } else {
+          this.__nextRound();
+          return {
+            eventType: "newRound",
+            nextRound: this.currentRound + 1
+          }
+        }
       },
     };
   },
