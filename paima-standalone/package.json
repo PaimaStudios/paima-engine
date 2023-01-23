@@ -1,0 +1,23 @@
+{
+  "name": "@paima/standalone",
+  "author": "",
+  "license": "ISC",
+  "version": "1.0.0",
+  "description": "Standalone usage of paima-engine meant as an executable wrapper around the engine",
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
+  "type": "module",
+  "files": [
+    "/build"
+  ],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "DOTENV_CONFIG_PATH=.env.development node --require dotenv/config --experimental-specifier-resolution=node build/index.js",
+    "compile": "echo \"PKG not setup yet TODO:\""
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.3",
+    "dotenv": "^16.0.3",
+    "esbuild": "^0.17.4"
+  }
+}

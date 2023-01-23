@@ -20,7 +20,8 @@
     "./paima-executors",
     "./paima-funnel",
     "./paima-sm",
-    "./paima-runtime"
+    "./paima-runtime",
+    "./paima-standalone"
   ],
   "devDependencies": {
     "@types/eslint": "^8.4.10",

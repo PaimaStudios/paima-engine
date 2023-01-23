@@ -1,0 +1,7 @@
+# secret configs
+.env
+.env.development
+.env.production
+
+# DB
+snapshots

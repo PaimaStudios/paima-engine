@@ -8,6 +8,7 @@
     { "path": "./paima-executors" },
     { "path": "./paima-funnel" },
     { "path": "./paima-sm" },
-    { "path": "./paima-runtime" }
+    { "path": "./paima-runtime" },
+    { "path": "./paima-standalone" }
   ]
 }

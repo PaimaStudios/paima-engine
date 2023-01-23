@@ -1,5 +1,5 @@
 {
-  "name": "paima-funnel",
+  "name": "@paima/funnel",
   "version": "1.0.0",
   "description": "Blockchain Data fetching library for Paima Engine",
   "type": "module",
