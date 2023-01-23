@@ -8,7 +8,7 @@
     "prebuild": "npm run prebuild --workspaces --if-present",
     "build": "npx tsc --build tsconfig.build.json",
     "cprettier": "prettier --check '**/*.{ts,tsx}'",
-    "eslint": "eslint '**/*.{ts,tsx}' --ignore-path .gitignore",
+    "eslint": "eslint '**/*.{ts,tsx}' --ignore-path .eslintignore",
     "prettier": "prettier --write '**/*.{ts,tsx}'",
     "prepare": "husky install && npm run prepare --workspaces --if-present"
   },
