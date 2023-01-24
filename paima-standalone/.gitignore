@@ -5,3 +5,8 @@
 
 # DB
 snapshots
+
+# re-compiled backend into a single cjs file (PKG doesn't support ESM)
+packaged/backendPacked.js
+# output folder for pkg (based on package.json outDir + name)
+packaged/@paima

@@ -1,11 +1,15 @@
+import { config } from 'dotenv';
+
 import paimaFunnel from '@paima/funnel';
 import paimaRuntime from '@paima/runtime';
 import { doLog } from '@paima/utils';
-import stateMachine from './sm.js';
+import { gameSM } from './sm.js';
 // import { setPool } from '@catapult/db';
 
+config({ path: `${process.cwd()}/.env.${process.env.NODE_ENV || 'development'}`, debug: true });
+
 const POLLING_RATE = 1;
-// TODO: env files support in compiled executable
+// TODO: improve env files support in compiled executable
 const STORAGE_ADDRESS = process.env.STORAGE_ADDRESS || '';
 const CHAIN_URI = process.env.CHAIN_URI || '';
 const STOP_BLOCKHEIGHT = parseInt(process.env.STOP_BLOCKHEIGHT || '0');
@@ -15,6 +19,7 @@ const gameBackendVersion = '1.1.1';
 async function main(): Promise<void> {
   doLog(STORAGE_ADDRESS);
   const chainFunnel = await paimaFunnel.initialize(CHAIN_URI, STORAGE_ADDRESS);
+  const stateMachine = gameSM();
   // TODO: custom user setPool code
   // setPool(stateMachine.getReadonlyDbConn());
   const engine = paimaRuntime.initialize(chainFunnel, stateMachine, gameBackendVersion);
