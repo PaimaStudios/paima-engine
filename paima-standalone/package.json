@@ -17,7 +17,8 @@
       "packaged/*.wasm"
     ],
     "targets": [
-      "linux"
+      "node18-linux",
+      "node16-linux"
     ],
     "outputPath": "packaged"
   },
