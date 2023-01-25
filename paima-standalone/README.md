@@ -6,6 +6,17 @@ Wrapper around paima-engine that serves as an entry point for others to create b
 
 Currently the library is in development, unpublished, and to be used and tested locally.
 
+## Building the executable
+
+1. In the root folder run `npm run install` if you freshly cloned the repo or made any changes
+2. run `npm run build:binary` in the root folder
+
+The `build:binary` command does the following:
+
+- builds paima-engine workspaces
+- repackages the whole backend into a single `.js` file in CommonJS, because `pkg` doesn't currently support ESM (`packaged/backendPacked`)
+- prepares executables in `packaged/@paima` folder based on `package.json`/`pkg` config (you can modify it to add more targets for example)
+
 ## Current limitations
 
 Paima Funnel contains two dependencies that `pkg` isn't able to pack automatically. In order for that to work, change of how these `.wasm` files are imported in the libraries themselves would be needed. That's why we have a `packaged` folder and we are telling `pkg` explicitly that these 2 files taken from the libraries should be included.
