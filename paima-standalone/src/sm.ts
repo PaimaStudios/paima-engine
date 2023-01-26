@@ -1,7 +1,7 @@
-import type { GameStateMachine, GameStateTransitionFunction } from '@paima/utils';
-import { doLog } from '@paima/utils';
+import type { GameStateMachine } from '@paima/utils';
 import PaimaSM from '@paima/sm';
 import type { PoolConfig } from 'pg';
+import { importRouter } from './transpile';
 
 // TODO: improve env handling (access from one central place)
 const getPoolConfig = (): PoolConfig => ({
@@ -13,17 +13,8 @@ const getPoolConfig = (): PoolConfig => ({
 });
 const START_BLOCKHEIGHT = 0;
 
-// TODO: temporary transition function & router. should be loaded at runtime from user provided code
-const transitionFuction: GameStateTransitionFunction = async () => {
-  doLog('TODO: implement transitionFuction');
-  return [];
-};
-const gameStateTransitionRouter = (blockHeight: number): GameStateTransitionFunction => {
-  if (blockHeight >= 0) return transitionFuction;
-  else return transitionFuction;
-};
-
 export const gameSM = (): GameStateMachine => {
   const creds: PoolConfig = getPoolConfig();
+  const gameStateTransitionRouter = importRouter();
   return PaimaSM.initialize(creds, 4, gameStateTransitionRouter, START_BLOCKHEIGHT);
 };

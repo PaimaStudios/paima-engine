@@ -3,3 +3,7 @@ node_modules
 **/build
 **/lib
 **/*.tsbuildinfo
+
+# binary compilation intermediate step
+**/backendPacked.js
+**/packaged/@paima/*
