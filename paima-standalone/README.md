@@ -1,6 +1,6 @@
-# Paima-standalone
+# Paima Standalone
 
-Wrapper around paima-engine that serves as an entry point for others to create brand new paima games. Its output is an executable that can read custom configs and execute custom javascript code.
+Wrapper around `Paima Engine Core` that serves as an entry point for others to create brand new paima games. Its output is an executable that can read custom configs and execute custom javascript code.
 
 ## Usage
 
@@ -8,14 +8,22 @@ Currently the library is in development, unpublished, and to be used and tested 
 
 ## Building the executable
 
-1. In the root folder run `npm run install` if you freshly cloned the repo or made any changes
+1. In the root folder run `npm run install` if you freshly cloned the repo
 2. run `npm run build:binary` in the root folder
 
 The `build:binary` command does the following:
 
-- builds paima-engine workspaces
-- repackages the whole backend into a single `.js` file in CommonJS, because `pkg` doesn't currently support ESM (`packaged/backendPacked`)
+- builds `paima-engine` workspaces
+- repackages the whole backend into a single `.js` file in CommonJS, because `pkg` doesn't currently support ESM (`packaged/backendPacked.js`)
 - prepares executables in `packaged/@paima` folder based on `package.json`/`pkg` config (you can modify it to add more targets for example)
+
+## Using the executable
+
+Simply run the standalone appropriate to the system you're currently using.
+
+- config `.env.${NODE_ENV}` with a `.env.development` fallback is used from the folder with the executable
+
+<!-- TODO: mention possible flags (to create templates) expected file structure and pieces of code needed to be implemented. -->
 
 ## Current limitations
 
