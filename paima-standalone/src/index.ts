@@ -17,6 +17,7 @@ const STOP_BLOCKHEIGHT = process.env.STOP_BLOCKHEIGHT
   : null;
 const SERVER_ONLY_MODE = process.env.SERVER_ONLY_MODE == 'true';
 const gameBackendVersion = '1.1.1';
+export const START_BLOCKHEIGHT = parseInt(process.env.START_BLOCKHEIGHT || '0');
 
 async function main(): Promise<void> {
   doLog(STORAGE_ADDRESS);

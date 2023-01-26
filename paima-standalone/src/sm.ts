@@ -2,6 +2,7 @@ import type { GameStateMachine } from '@paima/utils';
 import PaimaSM from '@paima/sm';
 import type { PoolConfig } from 'pg';
 import { importRouter } from './transpile';
+import { START_BLOCKHEIGHT } from '.';
 
 // TODO: improve env handling (access from one central place)
 const getPoolConfig = (): PoolConfig => ({
@@ -11,7 +12,6 @@ const getPoolConfig = (): PoolConfig => ({
   database: process.env.DB_NAME || '',
   port: parseInt(process.env.DB_PORT || '5432', 10),
 });
-const START_BLOCKHEIGHT = 0;
 
 export const gameSM = (): GameStateMachine => {
   const creds: PoolConfig = getPoolConfig();
