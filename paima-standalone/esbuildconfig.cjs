@@ -6,6 +6,6 @@ void esbuild.build({
   entryPoints: ['build/index.js'],
   bundle: true,
   format: 'cjs',
-  outfile: 'packaged/backendPacked.js',
+  outfile: 'packaged/engineCorePacked.js',
   external: ['pg-native'],
 });

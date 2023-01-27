@@ -14,7 +14,7 @@ Currently the library is in development, unpublished, and to be used and tested 
 The `build:binary` command does the following:
 
 - builds `paima-engine` workspaces
-- repackages the whole backend into a single `.js` file in CommonJS, because `pkg` doesn't currently support ESM (`packaged/backendPacked.js`)
+- repackages the whole `Paima Engine Core` into a single `.js` file in CommonJS, because `pkg` doesn't currently support ESM (`packaged/engineCorePacked.js`)
 - prepares executables in `packaged/@paima` folder based on `package.json`/`pkg` config (you can modify it to add more targets for example)
 
 ## Using the executable
