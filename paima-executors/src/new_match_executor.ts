@@ -22,7 +22,7 @@ interface MatchExecutorInitializer {
       matchEnvironment: MatchType,
       roundState: RoundState,
       moves: MoveType[],
-      c: number,
+      currentTick: number,
       randomnessGenerator: Prando
     ) => TickEvent
   ) => {
@@ -69,6 +69,10 @@ const matchExecutorInitializer: MatchExecutorInitializer = {
         this.roundExecutor = executor;
       },
       tick(): ReturnType<typeof this.tick> {
+        if (this.currentRound === 0){
+          this.__nextRound()
+          return this.tick()
+        }
         if (!this.roundExecutor) {
           return null;
         }
