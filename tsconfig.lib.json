@@ -1,0 +1,10 @@
+{
+  "files": [],
+  "references": [
+    { "path": "./paima-utils" },
+    { "path": "./paima-concise" },
+    { "path": "./paima-prando" },
+    { "path": "./paima-tx" },
+    { "path": "./paima-executors" }
+  ]
+}
