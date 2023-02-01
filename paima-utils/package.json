@@ -14,7 +14,6 @@
     "/build"
   ],
   "scripts": {
-    "prepare": "npm run generate-types",
     "prebuild": "npm run generate-types",
     "build": "tsc",
     "generate-types": "npx typechain --target=web3-v1 'src/artifacts/*.json' --out-dir src/contract-types",
