@@ -11,7 +11,7 @@ export function randomnessRouter(n: number): typeof getSeed1 {
 }
 
 function parseInput(encodedInput: string): string[] {
-  const conciseConsumer = consumer.tryInitialize(encodedInput);
+  const conciseConsumer = consumer.initialize(encodedInput);
   return conciseConsumer.conciseValues.map(cValue => cValue.value);
 }
 
