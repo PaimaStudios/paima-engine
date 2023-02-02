@@ -1,4 +1,5 @@
 export enum EncodingVersion {
+  EMPTY,
   V1,
 }
 
@@ -31,8 +32,8 @@ export type ConciseBuilder = {
 };
 
 export type ConciseConsumerInitializer = {
+  initializeSpecific: (input: InputString, version: EncodingVersion) => ConciseConsumer;
   initialize: (input: InputString, version?: EncodingVersion) => ConciseConsumer;
-  tryInitialize: (input: InputString) => ConciseConsumer;
 };
 export type ConciseConsumer = {
   conciseInput: string;

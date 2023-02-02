@@ -5,43 +5,7 @@ import { isHexString } from './utils.js';
 import { separator } from './v1/consts.js';
 import { toConciseValue } from './v1/utils.js';
 
-const preParse = (input: string, version: EncodingVersion): ConciseConsumerInternals => {
-  let conciseValues: ConciseValue[] = [];
-  let concisePrefix = '';
-  let conciseInput = '';
-
-  if (version === EncodingVersion.V1) {
-    conciseInput = isHexString(input) ? web3.hexToUtf8(input) : input;
-    
-    if (!conciseInput.includes(separator)) {
-      return getEmptyInternals();
-    }
-
-    const [inputPrefix, ...stringValues] = conciseInput.split(separator);
-    concisePrefix = inputPrefix;
-    conciseValues = stringValues.map(toConciseValue);
-
-    if (stringValues.length === 0) {
-      concisePrefix = '';
-    }
-  }
-
-  return {
-    conciseValues,
-    concisePrefix,
-    conciseInput
-  };
-}
-
-const getEmptyInternals = (): ConciseConsumerInternals => {
-  return {
-    conciseValues: [],
-    concisePrefix: '',
-    conciseInput: ''
-  };
-}
-
-const initialize = (input: string, version: EncodingVersion): ConciseConsumer => {
+const initializeSpecific = (input: string, version: EncodingVersion): ConciseConsumer => {
   const {
     conciseValues,
     concisePrefix,
@@ -82,14 +46,50 @@ const initialize = (input: string, version: EncodingVersion): ConciseConsumer =>
   };
 };
 
+const preParse = (input: string, version: EncodingVersion): ConciseConsumerInternals => {
+  let conciseValues: ConciseValue[] = [];
+  let concisePrefix = '';
+  let conciseInput = '';
+
+  if (version === EncodingVersion.EMPTY) {
+    return getEmptyInternals();
+  } else if (version === EncodingVersion.V1) {
+    conciseInput = isHexString(input) ? web3.hexToUtf8(input) : input;
+    
+    if (!conciseInput.includes(separator)) {
+      return getEmptyInternals();
+    }
+
+    const [inputPrefix, ...stringValues] = conciseInput.split(separator);
+    concisePrefix = inputPrefix;
+    conciseValues = stringValues.map(toConciseValue);
+  }
+
+  return {
+    conciseValues,
+    concisePrefix,
+    conciseInput
+  };
+}
+
+const getEmptyInternals = (): ConciseConsumerInternals => {
+  return {
+    conciseValues: [],
+    concisePrefix: '',
+    conciseInput: ''
+  };
+}
+
 /*
  * Selects encoding version based on the format of the input string
  */
-const tryInitialize = (input: string): ConciseConsumer => {
-  if (input.match(/^[a-z]+\|/)) {
-    return initialize(input, EncodingVersion.V1);
+const initialize = (input: string, version?: EncodingVersion): ConciseConsumer => {
+  if (version) {
+    return initializeSpecific(input, version);
+  } else if (input.match(/^[a-z]+\|/)) {
+    return initializeSpecific(input, EncodingVersion.V1);
   }
-  return initialize(input, EncodingVersion.V1);
+  return initializeSpecific(input, EncodingVersion.EMPTY);
 };
 
-export const consumer: ConciseConsumerInitializer = { initialize, tryInitialize };
+export const consumer: ConciseConsumerInitializer = { initialize, initializeSpecific };
