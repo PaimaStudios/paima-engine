@@ -1,16 +1,17 @@
 import web3 from 'web3-utils';
-import type { ConciseConsumer, ConciseConsumerInitializer, ConciseConsumerInternals, ConciseValue } from './types.js';
+import type {
+  ConciseConsumer,
+  ConciseConsumerInitializer,
+  ConciseConsumerInternals,
+  ConciseValue,
+} from './types.js';
 import { EncodingVersion } from './types.js';
 import { isHexString } from './utils.js';
 import { separator } from './v1/consts.js';
 import { toConciseValue } from './v1/utils.js';
 
 const initializeSpecific = (input: string, version: EncodingVersion): ConciseConsumer => {
-  const {
-    conciseValues,
-    concisePrefix,
-    conciseInput
-  } = preParse(input, version);
+  const { conciseValues, concisePrefix, conciseInput } = preParse(input, version);
 
   return {
     conciseInput,
@@ -55,7 +56,7 @@ const preParse = (input: string, version: EncodingVersion): ConciseConsumerInter
     return getEmptyInternals();
   } else if (version === EncodingVersion.V1) {
     conciseInput = isHexString(input) ? web3.hexToUtf8(input) : input;
-    
+
     if (!conciseInput.includes(separator)) {
       return getEmptyInternals();
     }
@@ -68,17 +69,17 @@ const preParse = (input: string, version: EncodingVersion): ConciseConsumerInter
   return {
     conciseValues,
     concisePrefix,
-    conciseInput
+    conciseInput,
   };
-}
+};
 
 const getEmptyInternals = (): ConciseConsumerInternals => {
   return {
     conciseValues: [],
     concisePrefix: '',
-    conciseInput: ''
+    conciseInput: '',
   };
-}
+};
 
 /*
  * Selects encoding version based on the format of the input string
