@@ -13,9 +13,6 @@ const initialize = (input: string, version = EncodingVersion.V1): ConciseConsume
   if (version === EncodingVersion.V1) {
     conciseInput = isHexString(input) ? web3.hexToUtf8(input) : input;
 
-    if (!conciseInput.includes(separator)) {
-      throw new Error(`Malformed input ${input}`);
-    }
     const [inputPrefix, ...stringValues] = conciseInput.split(separator);
     concisePrefix = inputPrefix;
     conciseValues = stringValues.map(toConciseValue);
