@@ -16,6 +16,10 @@ const initialize = (input: string, version = EncodingVersion.V1): ConciseConsume
     const [inputPrefix, ...stringValues] = conciseInput.split(separator);
     concisePrefix = inputPrefix;
     conciseValues = stringValues.map(toConciseValue);
+
+    if (stringValues.length === 0) {
+      concisePrefix = '';
+    }
   }
 
   return {
