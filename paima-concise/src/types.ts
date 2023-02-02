@@ -48,3 +48,9 @@ export type ConciseConsumer = {
   readValue: (position: number) => ConciseValue | null;
   valueCount: () => number;
 };
+
+export type ConciseConsumerInternals = {
+  conciseInput: string;
+  concisePrefix: string;
+  conciseValues: ConciseValue[];
+};
