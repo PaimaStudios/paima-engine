@@ -9,19 +9,22 @@
 
 Paima Engine works based off of parallel GA state machine technology. It is currently designed to work with EVM-based blockchains, however there is nothing inherently preventing us from targeting other chains as well.
 
-Of note, `Paima Engine Core` refers to all of the following components:
+Of note, `Paima Engine Core` refers to all of the following modules:
 
 - `Paima Storage Contract` (The smart contract for storing game inputs)
 - `Paima Funnel` (The library which enables reading from Paima Contract)
 - `Paima SM` (The framework which enables building the game logic state machine)
+- `Paima Engine Runtime` (Runtime which connects all the other portions of the engine together)
+
+While `Paima Engine SDK` refers to these modules:
+
 - `Paima Executors` (The library which enables building `RoundExecutor`s and `MatchExecutor`s)
 - `Paima Tx` (The library which aids in building transactions)
 - `Paima Utils` (The Library which holds auxillary functions between the other modules)
-- `Paima Engine Runtime` (Runtime which connects all the other portions of the engine together)
 - `Paima Prando` (Custom fork of a deterministic pseudo-RNG generator library)
 - `Paima Concise` (The library which enables building and parsing concise encoding)
 
-Then we also have a `Paima Engine Standalone` which is a module that utilizes `Paima Engine Core` to provide easy to use and secure way of creating new games by the public. This is achieved by creating an executable that has two responsibilities:
+Then we also have a `Paima Engine Standalone` which is a module that utilizes `Paima Engine Core` to provide easy to use and secure way of creating new games by the public. This is achieved by creating an executable with the bundled core that has two responsibilities:
 
 - **generate new game template** - prepare needed files and empty functions to implement custom game logic with minimal effort
 - **run paima engine** - start up the whole backend with no setup needed utilizing user's config and executing user's code added into the generated templates
