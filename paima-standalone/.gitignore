@@ -10,3 +10,4 @@ snapshots
 packaged/engineCorePacked.js
 # output folder for pkg (based on package.json outDir + name)
 packaged/@paima
+packaged/sdk
