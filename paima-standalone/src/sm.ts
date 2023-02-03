@@ -1,20 +1,9 @@
 import type { GameStateMachine } from '@paima/utils';
 import PaimaSM from '@paima/sm';
-import type { PoolConfig } from 'pg';
 import { importRouter } from './transpile';
-import { START_BLOCKHEIGHT } from '.';
-
-// TODO: improve env handling (access from one central place)
-const getPoolConfig = (): PoolConfig => ({
-  host: process.env.DB_HOST || '',
-  user: process.env.DB_USER || '',
-  password: process.env.DB_PW || '',
-  database: process.env.DB_NAME || '',
-  port: parseInt(process.env.DB_PORT || '5432', 10),
-});
+import { poolConfig, START_BLOCKHEIGHT } from './utils';
 
 export const gameSM = (): GameStateMachine => {
-  const creds: PoolConfig = getPoolConfig();
   const gameStateTransitionRouter = importRouter();
-  return PaimaSM.initialize(creds, 4, gameStateTransitionRouter, START_BLOCKHEIGHT);
+  return PaimaSM.initialize(poolConfig, 4, gameStateTransitionRouter, START_BLOCKHEIGHT);
 };

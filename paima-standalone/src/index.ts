@@ -1,23 +1,17 @@
-import { config } from 'dotenv';
-
 import paimaFunnel from '@paima/funnel';
 import paimaRuntime from '@paima/runtime';
 import { doLog } from '@paima/utils';
 import { gameSM } from './sm.js';
+import {
+  CHAIN_URI,
+  gameBackendVersion,
+  SERVER_ONLY_MODE,
+  STOP_BLOCKHEIGHT,
+  STORAGE_ADDRESS,
+} from './utils';
 // import { setPool } from '@catapult/db';
 
-config({ path: `${process.cwd()}/.env.${process.env.NODE_ENV || 'development'}`, debug: true });
-
 const POLLING_RATE = 1;
-// TODO: improve env files support in compiled executable
-const STORAGE_ADDRESS = process.env.STORAGE_ADDRESS || '';
-const CHAIN_URI = process.env.CHAIN_URI || '';
-const STOP_BLOCKHEIGHT = process.env.STOP_BLOCKHEIGHT
-  ? parseInt(process.env.STOP_BLOCKHEIGHT)
-  : null;
-const SERVER_ONLY_MODE = process.env.SERVER_ONLY_MODE == 'true';
-const gameBackendVersion = '1.1.1';
-export const START_BLOCKHEIGHT = parseInt(process.env.START_BLOCKHEIGHT || '0');
 
 async function main(): Promise<void> {
   doLog(STORAGE_ADDRESS);
