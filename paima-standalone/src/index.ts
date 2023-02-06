@@ -10,7 +10,6 @@ import {
   STORAGE_ADDRESS,
 } from './utils';
 import { importTsoaFunction } from './utils/import.js';
-// import { setPool } from '@catapult/db';
 
 const POLLING_RATE = 1;
 
@@ -18,8 +17,6 @@ async function main(): Promise<void> {
   doLog(STORAGE_ADDRESS);
   const chainFunnel = await paimaFunnel.initialize(CHAIN_URI, STORAGE_ADDRESS);
   const stateMachine = gameSM();
-  // TODO: custom user setPool code
-  // setPool(stateMachine.getReadonlyDbConn());
   const engine = paimaRuntime.initialize(chainFunnel, stateMachine, gameBackendVersion);
   engine.setPollingRate(POLLING_RATE);
   const registerEndpoints = importTsoaFunction();

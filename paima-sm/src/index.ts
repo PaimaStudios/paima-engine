@@ -1,6 +1,6 @@
-import pg from 'pg';
+import type pg from 'pg';
 
-import { tx, doLog, logError, SCHEDULED_DATA_ADDRESS } from '@paima/utils';
+import { tx, doLog, SCHEDULED_DATA_ADDRESS, getConnection } from '@paima/utils';
 import type { SubmittedChainData } from '@paima/utils';
 import type { ChainData, GameStateMachineInitializer } from '@paima/utils';
 import Prando from '@paima/prando';
@@ -23,28 +23,8 @@ const SM: GameStateMachineInitializer = {
     gameStateTransitionRouter,
     startBlockHeight
   ) => {
-    const DBConn = new pg.Pool(databaseInfo);
-    const readonlyDBConn = new pg.Pool(databaseInfo);
-    const ensureReadOnly = `SET SESSION CHARACTERISTICS AS TRANSACTION READ ONLY;`;
-    const readonlyset = readonlyDBConn.query(ensureReadOnly); // note: this query modifies the DB state
-
-    DBConn.on('error', err => logError(err));
-
-    DBConn.on('connect', (_client: pg.PoolClient) => {
-      // On each new client initiated, need to register for error(this is a serious bug on pg, the client throw errors although it should not)
-      _client.on('error', (err: Error) => {
-        logError(err);
-      });
-    });
-
-    readonlyDBConn.on('error', err => logError(err));
-
-    readonlyDBConn.on('connect', (_client: pg.PoolClient) => {
-      // On each new client initiated, need to register for error(this is a serious bug on pg, the client throw errors although it should not)
-      _client.on('error', (err: Error) => {
-        logError(err);
-      });
-    });
+    const DBConn: pg.Pool = getConnection(databaseInfo);
+    const readonlyDBConn: pg.Pool = getConnection(databaseInfo, true);
 
     return {
       latestBlockHeight: async (): Promise<number> => {
