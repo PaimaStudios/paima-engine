@@ -9,6 +9,7 @@ import {
   STOP_BLOCKHEIGHT,
   STORAGE_ADDRESS,
 } from './utils';
+import { importTsoaFunction } from './utils/import.js';
 // import { setPool } from '@catapult/db';
 
 const POLLING_RATE = 1;
@@ -21,8 +22,8 @@ async function main(): Promise<void> {
   // setPool(stateMachine.getReadonlyDbConn());
   const engine = paimaRuntime.initialize(chainFunnel, stateMachine, gameBackendVersion);
   engine.setPollingRate(POLLING_RATE);
-  // TODO: custom user tsoa
-  // engine.addEndpoints(registerEndpoints);
+  const registerEndpoints = importTsoaFunction();
+  engine.addEndpoints(registerEndpoints);
   void engine.run(STOP_BLOCKHEIGHT, SERVER_ONLY_MODE);
 }
 

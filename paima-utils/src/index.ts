@@ -11,6 +11,7 @@ import type {
   ErrorCode,
   ErrorMessageFxn,
   ErrorMessageMapping,
+  TsoaFunction,
   ETHAddress,
   GameStateMachine,
   GameStateMachineInitializer,
@@ -29,6 +30,7 @@ export type { Web3 };
 export type { StorageContract };
 export {
   ChainFunnel,
+  TsoaFunction,
   ETHAddress,
   SQLUpdate,
   ErrorCode,
