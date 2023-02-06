@@ -1,4 +1,4 @@
-SDK_PATH="./paima-standalone/packaged/sdk"
+SDK_PATH="./paima-standalone/packaged/paima-sdk"
 
 # Prepare stage
 rm -rf $SDK_PATH
@@ -42,6 +42,5 @@ cp $module/README.md $SDK_PATH/$module/README.md
 cp $module/package.json $SDK_PATH/$module/package.json
 
 # Prepare SDK root folder files
-cp -a node_modules/. $SDK_PATH/node_modules/
 cp package.json $SDK_PATH/package.json
 cp package-lock.json $SDK_PATH/package-lock.json
