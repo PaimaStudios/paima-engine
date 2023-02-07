@@ -14,7 +14,8 @@
   "pkg": {
     "scripts": [],
     "assets": [
-      "packaged/*.wasm"
+      "packaged/*.wasm",
+      "packaged/paima-sdk/**/*"
     ],
     "targets": [
       "node18-linux",
