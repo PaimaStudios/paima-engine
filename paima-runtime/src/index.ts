@@ -161,7 +161,7 @@ async function runIterativeFunnel(
 
     try {
       // Read latest chain data from funnel
-      latestChainDataList = (await chainFunnel.readData(latestReadBlockHeight + 1)) as ChainData[];
+      latestChainDataList = await chainFunnel.readData(latestReadBlockHeight + 1);
       // Checking if should safely close after fetching all chain data
       // which may take some time
       exitIfStopped(run);
