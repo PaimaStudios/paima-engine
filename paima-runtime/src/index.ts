@@ -8,14 +8,16 @@ import { doLog, logError } from '@paima/utils';
 import process from 'process';
 import { server, startServer } from './server.js';
 import { initSnapshots, snapshotIfTime } from './snapshots.js';
-let run = true;
+let run = false;
 
 process.on('SIGINT', () => {
+  if (!run) process.exit(0);
   doLog('Caught SIGINT. Waiting for engine to finish processing current block');
   run = false;
 });
 
 process.on('SIGTERM', () => {
+  if (!run) process.exit(0);
   doLog('Caught SIGTERM. Waiting for engine to finish processing current block');
   run = false;
 });
@@ -23,6 +25,7 @@ process.on('SIGTERM', () => {
 process.on('exit', code => {
   doLog(`Exiting with code: ${code}`);
 });
+
 const paimaEngine: PaimaRuntimeInitializer = {
   initialize(chainFunnel, gameStateMachine, gameBackendVersion) {
     // initialize snapshot folder
@@ -98,6 +101,7 @@ async function securedIterativeFunnel(
   stopBlockHeight: number | null
 ): Promise<void> {
   let i = 1;
+  run = true;
   while (run) {
     try {
       doLog(`Run ${i} of iterative funnel:`);
