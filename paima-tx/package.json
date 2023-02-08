@@ -8,7 +8,7 @@
       "/build"
   ],
   "dependencies": {
-      "web3": "^1.8.1",
+      "web3": "1.8.1",
       "@paima/utils": "1.0.0"
   }
 }

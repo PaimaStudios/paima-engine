@@ -25,6 +25,6 @@
     "@dcspark/cardano-multiplatform-lib-nodejs": "^3.0.0-beta.0",
     "@emurgo/cardano-message-signing-nodejs": "^1.0.1",
     "paima-utils": "file:../paima-utils",
-    "web3": "^1.8.1"
+    "web3": "1.8.1"
   }
 }
