@@ -22,7 +22,7 @@ export interface ChainFunnel {
   extensions: ChainDataExtension[];
   web3: Web3;
   storage: StorageContract;
-  readData: (blockHeight: number) => Promise<ChainData[] | undefined>; // if using internalReadData
+  readData: (blockHeight: number) => Promise<ChainData[]>; // if using internalReadData
 }
 export type ETHAddress = string;
 
