@@ -9,7 +9,7 @@ export default async function (
   signedMessage: string
 ): Promise<boolean> {
   try {
-    const [signature, key, remainder] = signedMessage.split('+');
+    const [signature, key, ...remainder] = signedMessage.split('+');
     if (!signature || !key || remainder.length > 0) {
       return false;
     }
