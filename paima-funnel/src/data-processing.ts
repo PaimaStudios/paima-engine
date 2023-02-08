@@ -7,13 +7,9 @@ import { doLog } from '@paima/utils';
 import type { SubmittedChainData } from '@paima/utils';
 import type { PaimaGameInteraction } from '@paima/utils/src/contract-types/Storage';
 
+import type { ValidatedSubmittedChainData } from './utils.js';
 import { OUTER_DIVIDER, INNER_DIVIDER, AddressType } from './constants.js';
-import {
-  createNonce,
-  determineAddressType,
-  unpackValidatedData,
-  ValidatedSubmittedChainData,
-} from './utils.js';
+import { createNonce, determineAddressType, unpackValidatedData } from './utils.js';
 import verifySignatureEthereum from './verification-ethereum.js';
 import verifySignatureCardano from './verification-cardano.js';
 
