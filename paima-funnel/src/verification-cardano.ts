@@ -1,5 +1,5 @@
 import * as Cardano from '@dcspark/cardano-multiplatform-lib-nodejs';
-import * as MessageSign from '@emurgo/cardano-message-signing-nodejs';
+import verifyCardanoDataSignature from '@cardano-foundation/cardano-verify-datasignature';
 
 import { doLog } from '@paima/utils';
 
@@ -9,22 +9,12 @@ export default async function (
   signedMessage: string
 ): Promise<boolean> {
   try {
-    const msg = MessageSign.COSESign1.from_bytes(Buffer.from(signedMessage, 'hex'));
-    const headermap = msg.headers().protected().deserialized_headers();
-
-    const pk = Cardano.PublicKey.from_bytes(headermap.key_id() ?? new Uint8Array(0));
-    const data = msg.signed_data().to_bytes();
-    const sig = Cardano.Ed25519Signature.from_bytes(msg.signature());
-
-    const addrHex = Buffer.from(
-      Cardano.Address.from_bytes(
-        headermap.header(MessageSign.Label.new_text('address'))?.as_bytes() ?? new Uint8Array(0)
-      ).to_bytes()
-    ).toString('hex');
-    const payload = new TextDecoder('utf-8').decode(msg.payload());
-
-    const result = pk.verify(data, sig) && addrHex === userAddress && payload === message;
-    return result;
+    const [signature, key, remainder] = signedMessage.split('+');
+    if (!signature || !key || remainder.length > 0) {
+      return false;
+    }
+    const address = Cardano.Address.from_bytes(Buffer.from(userAddress, 'hex')).to_bech32();
+    return verifyCardanoDataSignature(signature, key, message, address);
   } catch (err) {
     doLog(`[funnel] error verifying cardano signature: ${err}`);
     return false;
