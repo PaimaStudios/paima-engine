@@ -1,10 +1,26 @@
 # Paima Standalone
 
-Wrapper around `Paima Engine Core` that serves as an entry point for others to create brand new paima games. Its output is an executable that can read custom configs and execute custom javascript code.
+Wrapper around `Paima Engine Core` that serves as an entry point for others to create brand new paima games. You can think of it as taking all of the code from one of our game repositories that imports the `Paima Engine Core` modules and hiding it in an executable. This output can then read custom configs and execute the rest of the code needed to implement a game.
 
 ## Usage
 
 Currently the library is in development, unpublished, and to be used and tested locally.
+
+This guide assumes you're already familiar with the whole paima tech stack. It summarizes the steps needed to package `paima-engine` and distribute it safely to the public. It also explains the different steps we had to take for now and their limitations.
+
+## Development
+
+To try out `paima-engine` as a standalone following steps are needed.
+
+- `npm run prepare:sdk` separates public helper modules from the rest of paima-engine and prepares them in the `packaged/paima-sdk` folder.
+- `npm run build:binary` repackages the whole `paima-engine` code accessed from `paima-standalone` into a single JS file and bundles it together with the `paima-sdk`, `templates` and `*.wasm` files into an executable.
+- Choose one of the executables and move it to the folder of your choice. Also, create a `.env.${process.env.NODE_ENV || development}` file with the configuration.
+- During the first run it will prompt you to select one of the templates you want to use for your game. This can be also passed as an argument to the executable eg. `./standalone-node18 generic`. Then it will prepare the `paima-sdk` and `game` folders for you.
+- In the game folder you need to run `npm run initialize` to install dependencies.
+- `npm run pack` is then used to build you code for the executable.
+- Ensure you have a running database that the executable can connect to.
+
+Running the executable now starts up the `funnel` and created `api` server for the frontend.
 
 ## Building the executable
 
