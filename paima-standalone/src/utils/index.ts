@@ -1,10 +1,9 @@
 import { config } from 'dotenv';
 import type { PoolConfig } from 'pg';
 
-// TODO: remove debug option
-config({ path: `${process.cwd()}/.env.${process.env.NODE_ENV || 'development'}`, debug: true });
+config({ path: `${process.cwd()}/.env.${process.env.NODE_ENV || 'development'}` });
 
-// TODO: incorporate other env variables from catapult (when needed)
+// TODO: proper gameBackendVersion & its utilization
 export const gameBackendVersion = '1.1.1';
 
 export const CHAIN_URI = process.env.CHAIN_URI || '';

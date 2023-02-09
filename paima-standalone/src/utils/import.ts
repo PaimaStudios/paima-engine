@@ -11,7 +11,6 @@ function importFile<T>(file: string): T {
 const ROUTER_FILENAME = 'backend.cjs';
 /**
  * Reads repackaged user's code placed next to the executable in `backend.cjs` file
- * @returns GameStateTransitionFunctionRouter
  */
 export const importGameStateTransitionRouter = (): GameStateTransitionFunctionRouter =>
   importFile<GameStateTransitionFunctionRouter>(ROUTER_FILENAME);
@@ -19,6 +18,5 @@ export const importGameStateTransitionRouter = (): GameStateTransitionFunctionRo
 const API_FILENAME = 'registerEndpoints.cjs';
 /**
  * Reads repackaged user's code placed next to the executable in `registerEndpoints.cjs` file
- * @returns GameStateTransitionFunctionRouter
  */
 export const importTsoaFunction = (): TsoaFunction => importFile<TsoaFunction>(API_FILENAME);

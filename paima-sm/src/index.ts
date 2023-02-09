@@ -1,4 +1,4 @@
-import type pg from 'pg';
+import type { Pool } from 'pg';
 
 import { tx, doLog, SCHEDULED_DATA_ADDRESS, getConnection } from '@paima/utils';
 import type { SubmittedChainData } from '@paima/utils';
@@ -23,8 +23,8 @@ const SM: GameStateMachineInitializer = {
     gameStateTransitionRouter,
     startBlockHeight
   ) => {
-    const DBConn: pg.Pool = getConnection(databaseInfo);
-    const readonlyDBConn: pg.Pool = getConnection(databaseInfo, true);
+    const DBConn: Pool = getConnection(databaseInfo);
+    const readonlyDBConn: Pool = getConnection(databaseInfo, true);
 
     return {
       latestBlockHeight: async (): Promise<number> => {
@@ -32,7 +32,7 @@ const SM: GameStateMachineInitializer = {
         const blockHeight = b?.block_height ?? startBlockHeight ?? 0;
         return blockHeight;
       },
-      getReadonlyDbConn: (): pg.Pool => {
+      getReadonlyDbConn: (): Pool => {
         return readonlyDBConn;
       },
       // Core function which triggers state transitions
