@@ -1,3 +1,4 @@
+import type { ContractAddress, EthAddress, URI } from '@game/utils';
 import {
   BACKEND_URI,
   BATCHER_URI,
@@ -8,13 +9,10 @@ import {
   CHAIN_ID,
   CHAIN_NAME,
   CHAIN_URI,
-  ContractAddress,
   DEFAULT_FEE,
-  EthAddress,
   INDEXER_URI,
   STATEFUL_URI,
   STORAGE_ADDRESS,
-  URI,
 } from '@game/utils';
 import type { ETHAddress, Web3 } from 'paima-sdk/paima-utils';
 import { initWeb3 } from 'paima-sdk/paima-utils';

@@ -1,6 +1,6 @@
 import { retrieveFee, retryPromise, wait } from 'paima-sdk/paima-utils';
 import { getStorageAddress, getWeb3, setFee } from '../state';
-import { Result } from '../types';
+import type { Result } from '../types';
 import { buildDirectTx } from './data-processing';
 import { sendWalletTransaction } from './wallet-metamask';
 

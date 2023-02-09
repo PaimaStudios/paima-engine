@@ -3,7 +3,7 @@
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { Controller, ValidationService, FieldErrors, ValidateError, TsoaRoute, HttpStatusCodeLiteral, TsoaResponse, fetchMiddlewares } from '@tsoa/runtime';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-import { latestProcessedBlockheightController } from './../controllers/latestProcessedBlockheight';
+import { LatestProcessedBlockheightController } from './../controllers/latestProcessedBlockheight';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { UserStateController } from './../controllers/userState';
 import type { RequestHandler } from 'express';
@@ -20,6 +20,15 @@ const models: TsoaRoute.Models = {
         "additionalProperties": false,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "IGetUserResult": {
+        "dataType": "refObject",
+        "properties": {
+            "experience": {"dataType":"double","required":true},
+            "wallet": {"dataType":"string","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 };
 const validationService = new ValidationService(models);
 
@@ -31,10 +40,10 @@ export function RegisterRoutes(app: express.Router) {
     //      Please look into the "controllerPathGlobs" config option described in the readme: https://github.com/lukeautry/tsoa
     // ###########################################################################################################
         app.get('/latest_processed_blockheight',
-            ...(fetchMiddlewares<RequestHandler>(latestProcessedBlockheightController)),
-            ...(fetchMiddlewares<RequestHandler>(latestProcessedBlockheightController.prototype.get)),
+            ...(fetchMiddlewares<RequestHandler>(LatestProcessedBlockheightController)),
+            ...(fetchMiddlewares<RequestHandler>(LatestProcessedBlockheightController.prototype.get)),
 
-            function latestProcessedBlockheightController_get(request: any, response: any, next: any) {
+            function LatestProcessedBlockheightController_get(request: any, response: any, next: any) {
             const args = {
             };
 
@@ -44,7 +53,7 @@ export function RegisterRoutes(app: express.Router) {
             try {
                 validatedArgs = getValidatedArgs(args, request, response);
 
-                const controller = new latestProcessedBlockheightController();
+                const controller = new LatestProcessedBlockheightController();
 
 
               const promise = controller.get.apply(controller, validatedArgs as any);

@@ -18,7 +18,7 @@ export const START_BLOCKHEIGHT = parseInt(process.env.START_BLOCKHEIGHT || '0', 
 
 export const BACKEND_URI = process.env.BACKEND_URI || '';
 export const INDEXER_URI = process.env.INDEXER_URI || '';
-//export const BATCHER_URI = "http://jw-backend.paimastudios.com:3334";
+// export const BATCHER_URI = "http://jw-backend.paimastudios.com:3334";
 export const BATCHER_URI = process.env.BATCHER_URI || '';
 export const STATEFUL_URI = process.env.STATEFUL_URI || '';
 export const SERVER_ONLY_MODE = process.env.SERVER_ONLY_MODE === 'true';

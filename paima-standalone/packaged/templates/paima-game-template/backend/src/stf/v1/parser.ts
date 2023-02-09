@@ -1,8 +1,9 @@
 import P from 'parsimmon';
-import { consumer, ConciseValue } from 'paima-sdk/paima-concise';
+import type { ConciseValue } from 'paima-sdk/paima-concise';
+import { consumer } from 'paima-sdk/paima-concise';
 
-import { InvalidInput } from '@game/utils';
-import { GainExperienceInput, InputTypes } from '../../types';
+import type { InvalidInput } from '@game/utils';
+import type { GainExperienceInput, InputTypes } from '../../types';
 
 /**
  * Helper function to transform list of string values into an object based on provided parsers.

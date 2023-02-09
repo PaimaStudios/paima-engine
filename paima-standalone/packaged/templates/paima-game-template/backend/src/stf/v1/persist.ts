@@ -1,5 +1,6 @@
-import { SQLUpdate } from 'paima-sdk/paima-utils';
-import { IGetUserResult, IUpsertUserParams, upsertUser } from '@game/db';
+import type { SQLUpdate } from 'paima-sdk/paima-utils';
+import type { IGetUserResult, IUpsertUserParams } from '@game/db';
+import { upsertUser } from '@game/db';
 import { calculateProgress } from '@game/game-logic';
 
 // this file deals with receiving blockchain data input and outputting SQL updates (imported from pgTyped output of our SQL files)

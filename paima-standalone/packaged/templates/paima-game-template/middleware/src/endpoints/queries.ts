@@ -1,5 +1,5 @@
 import { backendQueryUser } from '../helpers/query-constructors';
-import { Result, UserState } from '../types';
+import type { Result, UserState } from '../types';
 
 async function getUserState(wallet: string): Promise<Result<UserState>> {
   const query = backendQueryUser(wallet);

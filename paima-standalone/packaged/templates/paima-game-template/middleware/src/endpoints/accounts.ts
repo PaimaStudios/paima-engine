@@ -1,7 +1,7 @@
 import { updateFee } from '../helpers/posting';
 import { rawWalletLogin } from '../helpers/wallet-metamask';
 import { setEthAddress } from '../state';
-import { Result, Wallet } from '../types';
+import type { Result, Wallet } from '../types';
 
 // Barebones login example (metamask happy path only with no checks or error handling)
 async function userWalletLogin(): Promise<Result<Wallet>> {

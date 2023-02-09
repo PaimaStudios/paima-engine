@@ -6,7 +6,7 @@ interface Response {
 }
 
 @Route('latest_processed_blockheight')
-export class latestProcessedBlockheightController extends Controller {
+export class LatestProcessedBlockheightController extends Controller {
   @Get()
   public async get(): Promise<Response> {
     const pool = requirePool();

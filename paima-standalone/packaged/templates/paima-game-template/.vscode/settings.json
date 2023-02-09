@@ -1,6 +1,5 @@
 {
-  //formatting is done by prettier ran by eslint
-  "editor.formatOnSave": false,
+  "editor.formatOnSave": true,
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": true
   },

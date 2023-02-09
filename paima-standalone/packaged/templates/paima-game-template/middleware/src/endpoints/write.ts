@@ -1,4 +1,4 @@
-import { ActionResult } from '../types';
+import type { ActionResult } from '../types';
 import { builder } from 'paima-sdk/paima-concise';
 import { getEthAddress } from '../state';
 import { postConciselyEncodedData } from '../helpers/posting';

@@ -1,5 +1,5 @@
-import type { Express } from 'express';
-import express, { Request, Response, NextFunction } from 'express';
+import type { Express, Request, Response, NextFunction } from 'express';
+import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
 import { RegisterRoutes } from './tsoa/routes';
@@ -42,5 +42,5 @@ server.use(function errorHandler(
   next();
 });
 
-//TODO: hot reloading?
+// TODO: hot reloading?
 startServer();

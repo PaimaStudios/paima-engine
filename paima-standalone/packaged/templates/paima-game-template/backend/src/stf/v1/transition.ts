@@ -1,8 +1,9 @@
 import parse, { isInvalid } from './parser.js';
-import Prando from 'paima-sdk/paima-prando';
-import { SQLUpdate, SubmittedChainData } from 'paima-sdk/paima-utils';
+import type Prando from 'paima-sdk/paima-prando';
+import type { SQLUpdate, SubmittedChainData } from 'paima-sdk/paima-utils';
 import { persistUserUpdate } from './persist.js';
-import { getUser, IGetUserResult, Pool } from '@game/db';
+import type { IGetUserResult, Pool } from '@game/db';
+import { getUser } from '@game/db';
 
 export default async function (
   inputData: SubmittedChainData,

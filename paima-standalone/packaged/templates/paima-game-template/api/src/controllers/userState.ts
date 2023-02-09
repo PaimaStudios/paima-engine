@@ -1,5 +1,6 @@
 import { Controller, Get, Query, Route } from 'tsoa';
-import { getUser, IGetUserResult, requirePool } from '@game/db';
+import type { IGetUserResult } from '@game/db';
+import { getUser, requirePool } from '@game/db';
 
 @Route('user_state')
 export class UserStateController extends Controller {
