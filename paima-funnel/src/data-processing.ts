@@ -1,7 +1,6 @@
 import type Web3 from 'web3';
 import type { BlockTransactionString } from 'web3-eth';
-import pkg from 'web3-utils';
-const { hexToUtf8 } = pkg;
+import web3UtilsPkg from 'web3-utils';
 
 import { doLog } from '@paima/utils';
 import type { SubmittedChainData } from '@paima/utils';
@@ -12,6 +11,8 @@ import { OUTER_DIVIDER, INNER_DIVIDER, AddressType } from './constants.js';
 import { createNonce, determineAddressType, unpackValidatedData } from './utils.js';
 import verifySignatureEthereum from './verification-ethereum.js';
 import verifySignatureCardano from './verification-cardano.js';
+
+const { hexToUtf8 } = web3UtilsPkg;
 
 export async function extractSubmittedData(
   web3: Web3,
