@@ -1,4 +1,3 @@
-import * as Cardano from '@dcspark/cardano-multiplatform-lib-nodejs';
 import verifyCardanoDataSignature from '@cardano-foundation/cardano-verify-datasignature';
 
 import { doLog } from '@paima/utils';
