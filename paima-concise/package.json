@@ -18,8 +18,5 @@
     "build": "tsc"
   },
   "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "web3": "1.8.1"
-  }
+  "license": "ISC"
 }

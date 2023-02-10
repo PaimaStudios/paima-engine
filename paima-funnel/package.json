@@ -22,7 +22,6 @@
   },
   "dependencies": {
     "@cardano-foundation/cardano-verify-datasignature": "^1.0.11",
-    "paima-utils": "file:../paima-utils",
-    "web3": "1.8.1"
+    "@paima/utils": "1.0.0"
   }
 }
