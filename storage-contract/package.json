@@ -23,7 +23,6 @@
     "prettier-plugin-organize-imports": "^2.3.4",
     "prettier-plugin-solidity": "^1.0.0-beta.19",
     "truffle": "^5.5.20",
-    "ts-node": "^10.7.0",
-    "web3": "1.8.1"
+    "ts-node": "^10.7.0"
   }
 }
