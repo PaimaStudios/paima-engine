@@ -1,13 +1,13 @@
 import type { PoolClient, PoolConfig } from 'pg';
-import { Pool } from 'pg';
+import pg from 'pg';
 import { logError } from './logging';
 
-let readonlyDBConn: Pool | null;
+let readonlyDBConn: pg.Pool | null;
 
-export const getConnection = (creds: PoolConfig, readonly = false): Pool => {
+export const getConnection = (creds: PoolConfig, readonly = false): pg.Pool => {
   if (readonly && readonlyDBConn) return readonlyDBConn;
 
-  const pool = new Pool(creds);
+  const pool = new pg.Pool(creds);
   pool.on('error', err => logError(err));
   pool.on('connect', (_client: PoolClient) => {
     // On each new client initiated, need to register for error(this is a serious bug on pg, the client throw errors although it should not)
