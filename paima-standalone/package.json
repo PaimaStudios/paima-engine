@@ -27,7 +27,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "node ./esbuildconfig.cjs",
-    "build:binary": "npm run build && npx pkg packaged/engineCorePacked.js --options experimental-specifier-resolution=node --config package.json"
+    "build:binary": "npm run build && npx pkg packaged/engineCorePacked.js --options \"experimental-specifier-resolution=node,no-warnings\" --config package.json"
   },
   "devDependencies": {
     "cross-env": "^7.0.3",
