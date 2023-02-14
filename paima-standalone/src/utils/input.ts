@@ -30,7 +30,7 @@ export const pickGameTemplate = async (): Promise<TemplateTypes> => {
   if (isTemplateType(templateArg)) return templateArg;
 
   const chosenTemplate = await userPrompt(
-    `Please pick one of: \x1b[32m${Object.keys(templateMap)}\x1b[0m, to use as a template.`
+    `Please pick one of: \x1b[32m${Object.keys(templateMap)}\x1b[0m, to use as a template: `
   );
   if (isTemplateType(chosenTemplate)) return chosenTemplate;
 
