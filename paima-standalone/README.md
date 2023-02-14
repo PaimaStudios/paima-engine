@@ -10,10 +10,13 @@ This guide assumes you're already familiar with the whole paima tech stack. It s
 
 ## Creating the executable
 
-To try out `paima-engine` as a standalone following steps are needed.
+To build the `paima-engine` standalone, the following steps are required (in the root folder):
 
+- `npm i`
 - `npm run prepare:sdk` separates public helper modules from the rest of paima-engine and prepares them in the `packaged/paima-sdk` folder.
 - `npm run build:binary` repackages the whole `paima-engine` code accessed from `paima-standalone` into a single JS file and bundles it together with the `paima-sdk`, `templates` and `*.wasm` files into an executable.
+
+The executable will be available in the `/paima-standalone/packaged/@paima` folder.
 
 Individual commands described in more detail below.
 
@@ -40,11 +43,11 @@ This command does following 3 steps:
 
 ## Using the executable
 
-- Choose one of the executables compiled in [previous section](#creating-the-executable) and move it to a folder of your choice. Also, create a `.env.${process.env.NODE_ENV || development}` file with the configuration.
+- Create a `.env.${process.env.NODE_ENV || development}` file (`.env.example` base config can be found in most templates `game` folder) with a filled out configuration to connect to your DB/a blockchain node.
 - During the first run it will prompt you to select one of the templates you want to use for your game. This can be also passed as an argument to the executable eg. `./standalone-node18 generic`. Then it will prepare the `paima-sdk` and `game` folders for you.
 - In the game folder you need to run `npm run initialize` to install dependencies.
-- `npm run pack` is then used to build you code for the executable.
-- Ensure you have a running database that the executable can connect to.
+- `npm run pack` is then used to build your code to be used with the executable.
+- Ensure you have a running database that the executable can connect to (which is specified in the config file)
 
 Running the executable now starts up the `funnel` and created `api` server for the frontend.
 
