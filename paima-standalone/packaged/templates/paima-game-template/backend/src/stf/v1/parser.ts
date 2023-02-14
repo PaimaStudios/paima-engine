@@ -23,7 +23,6 @@ const parseValues = (parsers: [string, P.Parser<any>][], values: ConciseValue[])
 };
 
 const base62 = P.alt(P.letter, P.digit);
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const wallet = base62.many().tie();
 
 const xpValue = P.digits.map(Number).chain(n => {
@@ -38,7 +37,10 @@ const prefixParser = P.alt(...prefixParsers);
 // Input parsers:
 const gainedExperience = (values: ConciseValue[]) => {
   type GainExperienceParsers = [keyof GainExperienceInput, P.Parser<any>][];
-  const parsers: GainExperienceParsers = [['experience', xpValue]];
+  const parsers: GainExperienceParsers = [
+    ['address', wallet],
+    ['experience', xpValue],
+  ];
   return {
     input: 'gainedExperience',
     ...parseValues(parsers, values),

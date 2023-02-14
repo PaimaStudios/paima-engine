@@ -8,6 +8,7 @@ async function gainExperience(count: number): Promise<ActionResult> {
 
   const conciseBuilder = builder.initialize();
   conciseBuilder.setPrefix('xp');
+  conciseBuilder.addValue({ value: userWalletAddress, isStateIdentifier: true });
   conciseBuilder.addValue({ value: count.toString() });
 
   const result = await postConciselyEncodedData(userWalletAddress, conciseBuilder.build());

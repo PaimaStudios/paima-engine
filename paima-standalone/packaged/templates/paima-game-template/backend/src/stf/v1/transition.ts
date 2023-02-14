@@ -12,7 +12,6 @@ export default async function (
   dbConn: Pool
 ): Promise<SQLUpdate[]> {
   console.log(inputData, 'parsing input data');
-  const user = inputData.userAddress.toLowerCase();
   console.log(`Processing input string: ${inputData.inputData}`);
   const expanded = parse(inputData.inputData);
   if (isInvalid(expanded)) {
@@ -23,10 +22,10 @@ export default async function (
 
   switch (expanded.input) {
     case 'gainedExperience':
-      const [userState] = await getUser.run({ wallet: user }, dbConn);
-      const blankUserState: IGetUserResult = { experience: 0, wallet: user };
+      const [userState] = await getUser.run({ wallet: expanded.address }, dbConn);
+      const blankUserState: IGetUserResult = { experience: 0, wallet: expanded.address };
       const userUpdateQuery = persistUserUpdate(
-        user,
+        expanded.address,
         expanded.experience,
         userState ?? blankUserState
       );
