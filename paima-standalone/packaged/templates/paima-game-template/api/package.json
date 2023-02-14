@@ -6,7 +6,6 @@
   "types": "build/index.d.ts",
   "type": "module",
   "scripts": {
-    "dev": "npx tsc && DOTENV_CONFIG_PATH=../.env.development node --require dotenv/config --experimental-specifier-resolution=node build/testServer.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "compile": "npx tsoa routes"
   },
