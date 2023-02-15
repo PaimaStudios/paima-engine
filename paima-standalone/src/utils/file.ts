@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { doLog } from '@paima/utils';
-import { templateMap, TemplateTypes } from './input';
+import { templateMap, type TemplateTypes } from './input';
 
 
 const copy = (src: string, dest: string): void => {

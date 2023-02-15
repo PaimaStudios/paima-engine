@@ -17,7 +17,7 @@ import {
 // Templates type & map
 export type TemplateTypes = 'generic' | 'turn';
 export const templateMap: Record<TemplateTypes, string> = {
-  generic: 'paima-game-template',
+  generic: 'generic-game-template',
   turn: 'turn-game-template',
 };
 
