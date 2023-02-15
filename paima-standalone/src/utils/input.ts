@@ -37,19 +37,18 @@ export const userPrompt = (query: string): Promise<string> => {
 };
 
 // Top level CLI argument parser/router
+// Potentially switch to https://github.com/75lb/command-line-args or otherwise
 export const argumentRouter = async (): Promise<void> => {
   const base_arg = process.argv[2];
 
   if (base_arg == 'init') {
     await initCommand();
-  }
-  else if (base_arg == 'run') {
+  } else if (base_arg == 'run') {
     await runPaimaEngine();
-  }
-  else {
+  } else {
     await helpCommand();
   }
-}
+};
 
 // Init command logic
 export const initCommand = async (): Promise<void> => {
@@ -57,19 +56,17 @@ export const initCommand = async (): Promise<void> => {
 
   if (init_arg == 'sdk') {
     prepareSDK();
-  }
-  else if (init_arg == 'template') {
+  } else if (init_arg == 'template') {
     const chosenTemplate = await pickGameTemplate();
     prepareTemplate(chosenTemplate);
     prepareSDK();
-  }
-  else {
+  } else {
     doLog(`Usage: paima-engine init ARG`);
     doLog(`Valid Arguments:`);
     doLog(`   sdk       Initializes the SDK by itself.`);
     doLog(`   template  Initializes a new project via a template.`);
   }
-}
+};
 
 // Run command logic
 export const runPaimaEngine = async (): Promise<void> => {
@@ -86,12 +83,13 @@ export const runPaimaEngine = async (): Promise<void> => {
     engine.addEndpoints(registerEndpoints);
 
     void engine.run(STOP_BLOCKHEIGHT, SERVER_ONLY_MODE);
+  } else {
+    doLog(`Packed game code not found.`);
+    doLog(
+      `Please ensure that you have built/packed your game code and it is available in the same directory as this executable.`
+    );
   }
-  else {
-    doLog(`Packed game code not found.`)
-    doLog(`Please ensure that you have built/packed your game code and it is available in the same directory as this executable.`)
-  }
-}
+};
 
 // Help command printing
 export const helpCommand = async (): Promise<void> => {
@@ -100,8 +98,7 @@ export const helpCommand = async (): Promise<void> => {
   doLog(`   init    Enables initializing projects and SDK.`);
   doLog(`   run     Start your game node.`);
   doLog(`   help    Offers list of commands currently available.`);
-
-}
+};
 
 // Check the template type
 function isTemplateType(arg: string): arg is TemplateTypes {
@@ -116,7 +113,7 @@ const pickGameTemplate = async (): Promise<TemplateTypes> => {
   doLog(`Please select one of the following templates:`);
 
   Object.keys(templateMap).forEach(templateName => {
-    doLog(`  - ${templateName}`)
+    doLog(`  - ${templateName}`);
   });
 
   const chosenTemplate = await userPrompt(``);

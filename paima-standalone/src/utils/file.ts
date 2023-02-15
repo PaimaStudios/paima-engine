@@ -3,7 +3,6 @@ import path from 'path';
 import { doLog } from '@paima/utils';
 import { templateMap, type TemplateTypes } from './input';
 
-
 const copy = (src: string, dest: string): void => {
   const list = fs.readdirSync(src);
   list.forEach(item => {
@@ -43,8 +42,7 @@ export const prepareSDK = (): void => {
     const packagedSDKPath = `${__dirname}/paima-sdk`;
     copyDirSync(packagedSDKPath, SDK_FOLDER_PATH);
     doLog('✅ SDK Initialized.');
-  }
-  else {
+  } else {
     doLog(`Existing SDK Found: ${SDK_FOLDER_PATH}.`);
     doLog(`Skipping Initialization.`);
   }
@@ -63,11 +61,9 @@ export const prepareTemplate = (templateKey: TemplateTypes): void => {
   doLog(`✅ Game template initialized: ${TEMPLATE_FOLDER_PATH}`);
 };
 
-
 // Checks that the user packed their game code and it is available for Paima Engine to use to run
 export const checkForPackedGameCode = (): boolean => {
   const GAME_CODE_PATH = `${process.cwd()}/backend.cjs`;
   const ENDPOINTS_PATH = `${process.cwd()}/registerEndpoints.cjs`;
   return fs.existsSync(ENDPOINTS_PATH) && fs.existsSync(GAME_CODE_PATH);
-}
-
+};
