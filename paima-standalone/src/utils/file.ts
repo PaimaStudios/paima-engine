@@ -66,8 +66,8 @@ export const prepareTemplate = (templateKey: TemplateTypes): void => {
 
 // Checks that the user packed their game code and it is available for Paima Engine to use to run
 export const checkForPackedGameCode = (): boolean => {
-  const GAME_CODE_PATH = `${process.cwd()}/backend.cjs}`;
-  const ENDPOINTS_PATH = `${process.cwd()}/registerEndpoints.cjs}`;
+  const GAME_CODE_PATH = `${process.cwd()}/backend.cjs`;
+  const ENDPOINTS_PATH = `${process.cwd()}/registerEndpoints.cjs`;
   return fs.existsSync(ENDPOINTS_PATH) && fs.existsSync(GAME_CODE_PATH);
 }
 
