@@ -1,9 +1,9 @@
 {
-  "name": "@paima/standalone",
+  "name": "@standalone/paima-engine",
   "author": "",
   "license": "ISC",
   "version": "1.0.0",
-  "description": "Standalone usage of paima-engine meant as an executable wrapper around the engine",
+  "description": "Paima Engine standalone, aka executable binary wrapper aroudn the engine",
   "main": "build/index.js",
   "types": "build/index.d.ts",
   "type": "module",
@@ -19,8 +19,9 @@
       "packaged/templates/**/*"
     ],
     "targets": [
-      "node18-linux",
-      "node16-linux"
+      "node16-linux",
+      "node16-macos-x64",
+      "node16-win-x64"
     ],
     "outputPath": "packaged"
   },

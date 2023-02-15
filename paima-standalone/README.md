@@ -10,7 +10,7 @@ To build the `paima-engine` standalone, the following steps are required (in the
 - `npm run prepare:sdk` separates public helper modules from the rest of paima-engine and prepares them in the `packaged/paima-sdk` folder.
 - `npm run build:binary` repackages the whole `paima-engine` code accessed from `paima-standalone` into a single JS file and bundles it together with the `paima-sdk`, `templates` and `*.wasm` files into an executable.
 
-The executable will be available in the `/paima-standalone/packaged/@paima` folder.
+An executable will be generated for each desktop OS (linux, mac, windows) and will be available in the `/paima-standalone/packaged/@standalone` folder.
 
 Individual commands described in more detail below.
 
@@ -33,7 +33,7 @@ This command does following 3 steps:
 
 - builds `paima-engine` workspaces
 - repackages the whole `Paima Engine Core` into a single `.js` file in CommonJS, because `pkg` doesn't currently support ESM (`packaged/engineCorePacked.js`)
-- prepares executables in `packaged/@paima` folder based on `package.json`/`pkg` config (you can modify it to add more targets for example)
+- prepares executables in `packaged/@standalone` folder based on `package.json`/`pkg` config (you can modify it to add more targets for example)
 
 ## Paima Engine Core vs Standalone
 
