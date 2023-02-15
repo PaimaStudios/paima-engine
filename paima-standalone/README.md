@@ -1,14 +1,8 @@
-# Paima Standalone
+# Paima Engine Standalone
 
-Wrapper around `Paima Engine Core` that serves as an entry point for others to create brand new paima games. You can think of it as taking all of the code that imports the `Paima Engine Core` modules directly and hiding it in an executable. This output can then read custom configs and execute the rest of the code needed to implement a game.
+A compiled executable that wraps `Paima Engine Core` which serves as an entry point for others to create brand new games using Paima Engine. Developers specify a configuration + write all of the backend/state machine code of their game, which then goes through a bundling process and is used directly by Paima Engine Standalone to thus run a "game node".
 
-## Usage
-
-Currently the library is in development, unpublished, and to be used and tested locally.
-
-This guide assumes you're already familiar with the whole paima tech stack. It summarizes the steps needed to package `paima-engine` and distribute it safely to the public. It also explains the different steps we had to take for now and their limitations.
-
-## Creating the executable
+## Building The Executable
 
 To build the `paima-engine` standalone, the following steps are required (in the root folder):
 
@@ -41,35 +35,9 @@ This command does following 3 steps:
 - repackages the whole `Paima Engine Core` into a single `.js` file in CommonJS, because `pkg` doesn't currently support ESM (`packaged/engineCorePacked.js`)
 - prepares executables in `packaged/@paima` folder based on `package.json`/`pkg` config (you can modify it to add more targets for example)
 
-## Using the executable
+## Paima Engine Core vs Standalone
 
-- Create a `.env.${process.env.NODE_ENV || development}` file (`.env.example` base config can be found in most templates `game` folder) with a filled out configuration to connect to your DB/a blockchain node.
-- During the first run it will prompt you to select one of the templates you want to use for your game. This can be also passed as an argument to the executable eg. `./standalone-node18 generic`. Then it will prepare the `paima-sdk` and `game` folders for you.
-- In the game folder you need to run `npm run initialize` to install dependencies.
-- `npm run pack` is then used to build your code to be used with the executable.
-- Ensure you have a running database that the executable can connect to (which is specified in the config file)
-
-Running the executable now starts up the `funnel` and created `api` server for the frontend.
-
-Individual commands described in more detail below.
-
-### npm run initialize
-
-Scope: `game-template` root folder created by the executable
-
-We're using this custom command to ensure the installation of `paima-sdk` dependencies before installing the dependencies of the _game-template_ (due to [npm preinstall issue](https://github.com/npm/cli/issues/2660))
-
-### npm run pack
-
-Scope: `game-template` root folder created by the executable
-
-Command used during the development process. Once a testable feature is prepared, this command will bundle needed files into 2 javascript files expected by the executable.
-
-Files are copied to the parent folder (where the executable should be).
-
-## `paima-engine` vs `paima-standalone`
-
-Using the standalone for a new game development is quite similar to our current approach. Public paima modules are now a part of `paima-sdk` and user has no access to the `paima-engine`, hence the imports must be updated. The other differences are described in this section.
+Using the standalone for developing a new game is quite similar to our current approach. Public paima modules are now a part of `paima-sdk` and user has no access to the `paima-engine` (core), hence the imports must be updated. The other differences are described in this section.
 
 ### Docker
 
@@ -108,7 +76,11 @@ Other than moving the initial `.sql` setup from docker to the DB module directly
 
 No visible changes done for this module. Usage (+repackaging step) remains the same to connect FE of the game with the BE.
 
-### Other omissions
+## How To Use Paima Engine Standalone
+
+Refer to [the guide](documentation/how-to-use-paima-engine.md).
+
+## Other omissions
 
 Paima standalone game templates intentionally left out the following modules from our internal setup:
 
