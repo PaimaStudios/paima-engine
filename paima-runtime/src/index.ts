@@ -23,7 +23,7 @@ process.on('SIGTERM', () => {
 });
 
 process.on('exit', code => {
-  doLog(`Exiting with code: ${code}`);
+  // doLog(`Exiting with code: ${code}`);
 });
 
 const paimaEngine: PaimaRuntimeInitializer = {

@@ -1,5 +1,8 @@
 import fs from 'fs';
 import path from 'path';
+import { doLog } from '@paima/utils';
+import { templateMap, TemplateTypes } from './input';
+
 
 const copy = (src: string, dest: string): void => {
   const list = fs.readdirSync(src);
@@ -31,3 +34,40 @@ export const copyDirSync = (src: string, dest: string): void => {
   }
   copy(src, dest);
 };
+
+// Initializes the SDK in the same folder as the executable
+export const prepareSDK = (): void => {
+  const SDK_FOLDER_PATH = `${process.cwd()}/paima-sdk`;
+
+  if (!fs.existsSync(SDK_FOLDER_PATH)) {
+    const packagedSDKPath = `${__dirname}/paima-sdk`;
+    copyDirSync(packagedSDKPath, SDK_FOLDER_PATH);
+    doLog('✅ SDK Initialized.');
+  }
+  else {
+    doLog(`Existing SDK Found: ${SDK_FOLDER_PATH}.`);
+    doLog(`Skipping Initialization.`);
+  }
+};
+
+// Initializes a project template
+export const prepareTemplate = (templateKey: TemplateTypes): void => {
+  const TEMPLATE_FOLDER_PATH = `${process.cwd()}/${templateMap[templateKey]}`;
+  if (fs.existsSync(TEMPLATE_FOLDER_PATH)) {
+    doLog(`Game template ${TEMPLATE_FOLDER_PATH} already exists.`);
+    return;
+  }
+
+  const packagedTemplatePath = `${__dirname}/templates/${templateMap[templateKey]}`;
+  copyDirSync(packagedTemplatePath, TEMPLATE_FOLDER_PATH);
+  doLog(`✅ Game template initialized: ${TEMPLATE_FOLDER_PATH}`);
+};
+
+
+// Checks that the user packed their game code and it is available for Paima Engine to use to run
+export const checkForPackedGameCode = (): boolean => {
+  const GAME_CODE_PATH = `${process.cwd()}/backend.cjs}`;
+  const ENDPOINTS_PATH = `${process.cwd()}/registerEndpoints.cjs}`;
+  return fs.existsSync(ENDPOINTS_PATH) && fs.existsSync(GAME_CODE_PATH);
+}
+

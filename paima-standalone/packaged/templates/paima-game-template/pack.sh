@@ -6,4 +6,7 @@ BUNDLE_WORKSPACE=backend node ./esbuildconfig.cjs
 
 cp -a ./packaged/. ..
 
-echo "✅ User code prepared in standalone parent folder."
+
+
+echo "✅ Game code bundled and prepared in the parent folder."
+echo "To start your game node, simply use: ./paima-engine run"

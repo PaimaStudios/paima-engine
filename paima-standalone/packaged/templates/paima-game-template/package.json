@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "initialize": "git init ../paima-sdk && npm --prefix ../paima-sdk install && npm ci",
+    "initialize": "git init ../paima-sdk && npm --prefix ../paima-sdk install && npm ci && cp .env.example ../.env.development",
     "pack": "sh pack.sh",
     "build": "npx tsc --build tsconfig.build.json",
     "lint": "eslint --ext ts,tsx --ignore-path .gitignore .",
