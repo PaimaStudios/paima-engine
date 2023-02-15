@@ -6,13 +6,13 @@ A compiled executable that wraps `Paima Engine Core` which serves as an entry po
 
 To build the `paima-engine` standalone, the following steps are required (in the root folder):
 
-- `npm i`
-- `npm run prepare:sdk` separates public helper modules from the rest of paima-engine and prepares them in the `packaged/paima-sdk` folder.
-- `npm run build:binary` repackages the whole `paima-engine` code accessed from `paima-standalone` into a single JS file and bundles it together with the `paima-sdk`, `templates` and `*.wasm` files into an executable.
+1. `npm i`
+2. `npm run prepare:sdk` separates public helper modules (sdk) from the rest of paima-engine.
+3. `npm run build:binary` repackages the whole of paima engine core into a single JS file and bundles it together with paima-sdk, templates, and \*.wasm files into an executable.
 
 An executable will be generated for each desktop OS (linux, mac, windows) and will be available in the `/paima-standalone/packaged/@standalone` folder.
 
-Individual commands described in more detail below.
+Individual commands are described in more detail below.
 
 ### npm run prepare:sdk
 
@@ -23,7 +23,7 @@ This command is intended to be used only if you:
 - pulled a fresh repository (don't forget to run `npm i` as well)
 - made changes to `paima-egine` public modules (_paima-concise_, _paima-executors_, _paima-prando_, _paima-tx_ or _paima-utils_)
 
-It does a clean rebuild of the whole `paima-engine`, not just above mentioned modules.
+It does a clean rebuild of the whole `paima-engine`, not just the above mentioned modules.
 
 ### npm run build:binary
 
@@ -41,18 +41,18 @@ Using the standalone for developing a new game is quite similar to our current a
 
 ### Docker
 
-The standalone currently doesn't have any docker setup. It expects a running database and the server is created by the executable with no other dependencies.
+The standalone currently doesn't have any docker setup. It expects a running database and the server is instantiated by the executable with no other dependencies.
 
 Connection to the database is done through the env config file.
 
-Since the database is no longer created by docker, you need to initialize it explicitly. For that we currently have `db/migrations/init` folder containing `init.sql` and `down.sql` for the initial setup and teardown.
+Since the database is no longer created by docker, you need to initialize it explicitly. For that we currently have `db/migrations/init` folder in each template containing `init.sql` and `down.sql` for the initial setup and teardown.
 
 ### Backend - index.ts
 
-This file was the main connection point between a new game and `paima-engine`. In order to eliminate this connection all of the logic was moved over to `paima-standalone`. That now takes care of:
+This file used to be the main connection point between game code and `paima-engine` itself. In order to eliminate this connection all of the logic was moved over to `paima-standalone`. That now takes care of:
 
 - initializing the `paima-funnel`
-- initializing the `paima-sm`: the logic (previously as default export from `sm.js`) is now hidden in the standalone and only the router is replaced with recompiled `backend.cjs` code (backend module)
+- initializing the `paima-sm`: the logic (previously as default export from `sm.js`) is now hidden in the standalone and only the router is replaced with recompiled `backend.cjs` code (user specified game/backend code)
 - initializing&running the `paima-runtime`: `registerEndpoints` function from the `api` module is now replaced with recompiled `registerEndpoints.cjs` code (api module)
 - setting the DB pool was removed from this file. Now done internally in paima-engine (can be accessed with `getConnection` from `paima-sdk/utils`)
 
@@ -76,10 +76,6 @@ Other than moving the initial `.sql` setup from docker to the DB module directly
 
 No visible changes done for this module. Usage (+repackaging step) remains the same to connect FE of the game with the BE.
 
-## How To Use Paima Engine Standalone
-
-Refer to [the guide](documentation/how-to-use-paima-engine.md).
-
 ## Other omissions
 
 Paima standalone game templates intentionally left out the following modules from our internal setup:
@@ -102,3 +98,7 @@ Updating of these two libraries must be done with this in mind.
 ```
 LinkError: WebAssembly.Instance(): Import #4 module="__wbindgen_placeholder__" function="__wbg_getRandomValues_fb6b088efb6bead2" error: function import requires a callable
 ```
+
+## How To Use Paima Engine Standalone
+
+Refer to [how to guide](documentation/how-to-use-paima-engine.md).

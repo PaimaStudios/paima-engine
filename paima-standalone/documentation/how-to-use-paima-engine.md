@@ -1,29 +1,93 @@
 # How To Use Paima Engine
 
-To build a game using Paima Engine (standalone) one must first initialize a basic project which provides all of the essentials to get started. Of note, the Paima Engine executable ships with a baked in `paima-sdk` that is fully compatible with the current version, thus providing a batteries-included experience.
+To write a game node using Paima Engine one must first initialize a basic project which provides all of the essentials to get started. Of note, the Paima Engine executable ships with a baked in `paima-sdk` providing a batteries-included experience.
 
-## Setting Up An Initial Project
+## Initializing Your Project
 
-- Create a `.env.${process.env.NODE_ENV || development}` file (`.env.example` base config can be found in most templates `game` folder) with a filled out configuration to connect to your DB/a blockchain node.
-- During the first run it will prompt you to select one of the templates you want to use for your game. This can be also passed as an argument to the executable eg. `./standalone-node18 generic`. Then it will prepare the `paima-sdk` and `game` folders for you.
-- In the game folder you need to run `npm run initialize` to install dependencies.
-- `npm run pack` is then used to build your code to be used with the executable.
-- Ensure you have a running database that the executable can connect to (which is specified in the config file)
+When starting a new project with Paima Engine, the developer can choose to either go completely barebones (by only initializing `paima-sdk`) or use an included template to bootstrap with all of the essentials. Initializing the SDK by itself may also be useful in cases where the developer is upgrading their project to use a new version of Paima Engine which has introduced new incompatibilities in the SDK.
 
-Running the executable now starts up the `funnel` and created `api` server for the frontend.
+You can see the available options by using:
 
-Individual commands described in more detail below.
+```
+./paima-engine init
+```
 
-### npm run initialize
+To initialize a game using a basic game template use the following command and select the `generic` template:
 
-Scope: `game-template` root folder created by the executable
+```
+./paima-engine init template
+```
 
-We're using this custom command to ensure the installation of `paima-sdk` dependencies before installing the dependencies of the _game-template_ (due to [npm preinstall issue](https://github.com/npm/cli/issues/2660))
+Once the command has finished, you will notice two new folders have been created, `paima-sdk` and `generic-game-template` (name varies based on template selected). The SDK is directly used by the game template, and so all code you write will be in the `generic-game-template` folder.
 
-### npm run pack
+Lastly to finish the initialization process off, simply go into the `generic-game-template` folder and run `npm run initialize`. This will install all of the packages and set the project up to be ready for you to start coding.
 
-Scope: `game-template` root folder created by the executable
+Of note, feel free to rename the `generic-game-template` folder to the name of your game (or whatever you prefer), but make sure to not change the folder name of `paima-sdk`.
 
-Command used during the development process. Once a testable feature is prepared, this command will bundle needed files into 2 javascript files expected by the executable.
+## Packing Your Game Code
 
-Files are copied to the parent folder (where the executable should be).
+The specifics of writing your game code is outside of the scope of this current getting started guide, thus we will move on to packing your game code to be run with Paima Engine.
+
+As the `generic-game-template` folder has already been initialized in the previous section, we can move forward with packing the game code (you can pack the generic game template without writing any new code initially to test). Simply use the following command in the folder:
+
+```
+npm run pack
+```
+
+This will generate two files (`backend.cjs` and `registerEndpoints.cjs`) in the parent folder (where the executable is). The former holds the vast majority of the "backend" code (all of your code related to your game) and the latter holds code related to setting up the webserver endpoints of your game node.
+
+Both of these files need to remain in the same folder as the Paima Engine executable.
+
+## Setting Up Your DB
+
+Of note, Paima Engine requires for you to deploy a Postgres database which will be used to store all state of your game. The setup process is typical of any Postgres database, however each game template also includes a `init.sql` file in the `/db/migrations/init` folder which you should use to initialize the database.
+
+Later you can edit this `init.sql` with your own custom tables as well when writing your game code.
+
+## Deploying Your Game Smart Contract
+
+...
+
+(include a second markdown file guide and link here)
+
+## Setting Up Your Game Node Config
+
+You may have noticed that during the initialization process a `.env.development` file was created in the root folder. The Paima Engine executable will read this file (or specifically `.env.${process.env.NODE_ENV || development})` when attempting to start running your game node.
+
+Thus you must fill out this env file with all of the pre-requisites to proceed forward.
+
+Specifically with the included barebones config you must specify:
+
+- `CHAIN_URI` (A URL to the RPC of an EVM chain node)
+- `STORAGE_ADDRESS` (The address of your deployed smart contract for your game)
+- `START_BLOCKHEIGHT` (The block height that your smart contact was deployed on, so Paima Engine knows from what block height to start syncing)
+- Postgres DB Credentials
+
+## Running Your Game Node
+
+Now that your game code is packed, contract and DB deployed, and your config is ready, we can now start your game node via the Paima Engine executable.
+
+Simply go into the root folder and run the following command:
+
+```
+./paima-engine run
+```
+
+If you forgot to pack your code, your config is not properly setup, or anything else as such, you will get an error.
+
+Otherwise if everything was setup correctly then you will have officially started your game node for the very first time! You will see the progress of the game node syncing in the CLI as such:
+
+```bash
+q125-q225
+q225-q325
+q325-q425
+...
+```
+
+These logs denote the block height numbers that the game node is syncing from the game smart contract on the blockchain. Other logs will also pop up when game inputs are read from the contract, which are all also stored in a `logs.log` file as well for easy parsing/backing up.
+
+
+
+- Docker setup
+- smart contract command
+- documentation command
