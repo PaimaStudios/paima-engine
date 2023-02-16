@@ -1,6 +1,12 @@
 import { doLog } from '@paima/utils';
 import { createInterface } from 'readline';
-import { prepareSDK, prepareTemplate, checkForPackedGameCode, prepareContract, prepareDocumentation } from './file.js';
+import {
+  prepareSDK,
+  prepareTemplate,
+  checkForPackedGameCode,
+  prepareContract,
+  prepareDocumentation,
+} from './file.js';
 import paimaFunnel from '@paima/funnel';
 import paimaRuntime from '@paima/runtime';
 import type { ChainFunnel } from '@paima/utils';
@@ -77,7 +83,7 @@ export const runPaimaEngine = async (): Promise<void> => {
   const POLLING_RATE = 1;
 
   if (checkForPackedGameCode()) {
-    doLog(`Starting Game Node...`)
+    doLog(`Starting Game Node...`);
     doLog(`Targeting Smart Contact: ${STORAGE_ADDRESS}`);
     const chainFunnel: ChainFunnel = await paimaFunnel.initialize(CHAIN_URI, STORAGE_ADDRESS);
     const stateMachine = gameSM();

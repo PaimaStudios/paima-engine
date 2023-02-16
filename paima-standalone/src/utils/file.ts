@@ -35,7 +35,12 @@ export const copyDirSync = (src: string, dest: string): void => {
 };
 
 // Copies a folder from internal to the user's filesystem
-export const prepareFolder = (internalPath: string, externalPath: string, successMessage: string, failureMessage: string): void => {
+export const prepareFolder = (
+  internalPath: string,
+  externalPath: string,
+  successMessage: string,
+  failureMessage: string
+): void => {
   if (!fs.existsSync(externalPath)) {
     copyDirSync(internalPath, externalPath);
     doLog(successMessage);
