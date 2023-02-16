@@ -34,44 +34,44 @@ export const copyDirSync = (src: string, dest: string): void => {
   copy(src, dest);
 };
 
+// Copies a folder from internal to the user's filesystem
+export const prepareFolder = (internalPath: string, externalPath: string, successMessage: string, failureMessage: string): void => {
+  if (!fs.existsSync(externalPath)) {
+    copyDirSync(internalPath, externalPath);
+    doLog(successMessage);
+  } else {
+    doLog(failureMessage);
+  }
+};
+
 // Initializes the SDK in the same folder as the executable
 export const prepareSDK = (): void => {
   const SDK_FOLDER_PATH = `${process.cwd()}/paima-sdk`;
+  const packagedSDKPath = `${__dirname}/paima-sdk`;
+  const success = '✅ SDK Initialized.';
+  const failure = `Existing SDK Found: ${SDK_FOLDER_PATH}.`;
 
-  if (!fs.existsSync(SDK_FOLDER_PATH)) {
-    const packagedSDKPath = `${__dirname}/paima-sdk`;
-    copyDirSync(packagedSDKPath, SDK_FOLDER_PATH);
-    doLog('✅ SDK Initialized.');
-  } else {
-    doLog(`Existing SDK Found: ${SDK_FOLDER_PATH}.`);
-    doLog(`Skipping Initialization.`);
-  }
+  prepareFolder(packagedSDKPath, SDK_FOLDER_PATH, success, failure);
 };
 
 // Initializes a project template
 export const prepareTemplate = (templateKey: TemplateTypes): void => {
   const TEMPLATE_FOLDER_PATH = `${process.cwd()}/${templateMap[templateKey]}`;
-  if (fs.existsSync(TEMPLATE_FOLDER_PATH)) {
-    doLog(`Game template ${TEMPLATE_FOLDER_PATH} already exists.`);
-    return;
-  }
-
   const packagedTemplatePath = `${__dirname}/templates/${templateMap[templateKey]}`;
-  copyDirSync(packagedTemplatePath, TEMPLATE_FOLDER_PATH);
-  doLog(`✅ Game template initialized: ${TEMPLATE_FOLDER_PATH}`);
+  const success = `✅ Game template initialized: ${TEMPLATE_FOLDER_PATH}`;
+  const failure = `Game template ${TEMPLATE_FOLDER_PATH} already exists.`;
+
+  prepareFolder(packagedTemplatePath, TEMPLATE_FOLDER_PATH, success, failure);
 };
 
 // Copies the smart contract project into the same folder as the executable
 export const prepareContract = (): void => {
   const FOLDER_PATH = `${process.cwd()}/smart-contract`;
+  const packagedPath = `${__dirname}/smart-contract`;
+  const success = `✅ Smart Contract Has Been Copied To ${FOLDER_PATH}.`;
+  const failure = `Existing Smart Contract Folder Found: ${FOLDER_PATH}.`;
 
-  if (!fs.existsSync(FOLDER_PATH)) {
-    const packagedPath = `${__dirname}/smart-contract`;
-    copyDirSync(packagedPath, FOLDER_PATH);
-    doLog(`✅ Smart Contract Has Been Copied To ${FOLDER_PATH}.`);
-  } else {
-    doLog(`Existing Smart Contract Folder Found: ${FOLDER_PATH}.`);
-  }
+  prepareFolder(packagedPath, FOLDER_PATH, success, failure);
 };
 
 // Checks that the user packed their game code and it is available for Paima Engine to use to run
