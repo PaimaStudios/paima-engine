@@ -3,7 +3,7 @@
   "author": "",
   "license": "ISC",
   "version": "1.0.0",
-  "description": "Paima Engine standalone, aka executable binary wrapper aroudn the engine",
+  "description": "Paima Engine standalone, aka executable binary wrapper around the engine core.",
   "main": "build/index.js",
   "types": "build/index.d.ts",
   "type": "module",
@@ -16,7 +16,8 @@
     "assets": [
       "packaged/*.wasm",
       "packaged/paima-sdk/**/*",
-      "packaged/templates/**/*"
+      "packaged/templates/**/*",
+      "packaged/smart-contract/**/*"
     ],
     "targets": [
       "node16-linux",

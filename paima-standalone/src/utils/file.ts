@@ -61,6 +61,19 @@ export const prepareTemplate = (templateKey: TemplateTypes): void => {
   doLog(`✅ Game template initialized: ${TEMPLATE_FOLDER_PATH}`);
 };
 
+// Copies the smart contract project into the same folder as the executable
+export const prepareContract = (): void => {
+  const FOLDER_PATH = `${process.cwd()}/smart-contract`;
+
+  if (!fs.existsSync(FOLDER_PATH)) {
+    const packagedPath = `${__dirname}/smart-contract`;
+    copyDirSync(packagedPath, FOLDER_PATH);
+    doLog(`✅ Smart Contract Has Been Copied To ${FOLDER_PATH}.`);
+  } else {
+    doLog(`Existing Smart Contract Folder Found: ${FOLDER_PATH}.`);
+  }
+};
+
 // Checks that the user packed their game code and it is available for Paima Engine to use to run
 export const checkForPackedGameCode = (): boolean => {
   const GAME_CODE_PATH = `${process.cwd()}/backend.cjs`;

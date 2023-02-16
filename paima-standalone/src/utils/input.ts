@@ -1,6 +1,6 @@
 import { doLog } from '@paima/utils';
 import { createInterface } from 'readline';
-import { prepareSDK, prepareTemplate, checkForPackedGameCode } from './file.js';
+import { prepareSDK, prepareTemplate, checkForPackedGameCode, prepareContract } from './file.js';
 import paimaFunnel from '@paima/funnel';
 import paimaRuntime from '@paima/runtime';
 import type { ChainFunnel } from '@paima/utils';
@@ -45,6 +45,8 @@ export const argumentRouter = async (): Promise<void> => {
     await initCommand();
   } else if (base_arg == 'run') {
     await runPaimaEngine();
+  } else if (base_arg == 'contract') {
+    await contractCommand();
   } else {
     await helpCommand();
   }
@@ -91,13 +93,19 @@ export const runPaimaEngine = async (): Promise<void> => {
   }
 };
 
+// Contract command logic
+export const contractCommand = async (): Promise<void> => {
+  prepareContract();
+};
+
 // Help command printing
 export const helpCommand = async (): Promise<void> => {
   doLog(`Usage: paima-engine [COMMAND] ARG`);
   doLog(`Commands:`);
-  doLog(`   init    Enables initializing projects and SDK.`);
-  doLog(`   run     Start your game node.`);
-  doLog(`   help    Offers list of commands currently available.`);
+  doLog(`   init      Enables initializing projects and SDK.`);
+  doLog(`   run       Start your game node.`);
+  doLog(`   contract  Copies the Paima L2 Contract to your local filesystem.`);
+  doLog(`   help      Offers list of commands currently available.`);
 };
 
 // Check the template type

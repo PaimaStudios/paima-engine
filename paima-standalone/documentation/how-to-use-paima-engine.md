@@ -91,3 +91,8 @@ These logs denote the block height numbers that the game node is syncing from th
 - Docker setup
 - smart contract command
 - documentation command
+
+
+- Generic template
+- Turn Based template (tic-tac-toe)
+- Simultaneous Play Template (rock paper scissors)

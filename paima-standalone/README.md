@@ -7,25 +7,25 @@ A compiled executable that wraps `Paima Engine Core` which serves as an entry po
 To build the `paima-engine` standalone, the following steps are required (in the root folder):
 
 1. `npm i`
-2. `npm run prepare:sdk` separates public helper modules (sdk) from the rest of paima-engine.
-3. `npm run build:binary` repackages the whole of paima engine core into a single JS file and bundles it together with paima-sdk, templates, and \*.wasm files into an executable.
+2. `npm run prepare:standalone` prepares public helper modules (sdk/docs/etc.) for inclusion in the standalone.
+3. `npm run build:standalone` repackages the whole of paima engine core into a single JS file and bundles it together with paima-sdk, templates, and \*.wasm files into an executable.
 
 An executable will be generated for each desktop OS (linux, mac, windows) and will be available in the `/paima-standalone/packaged/@standalone` folder.
 
 Individual commands are described in more detail below.
 
-### npm run prepare:sdk
+### npm run prepare:standalone
 
 Scope: `paima-engine` root folder
 
 This command is intended to be used only if you:
 
 - pulled a fresh repository (don't forget to run `npm i` as well)
-- made changes to `paima-egine` public modules (_paima-concise_, _paima-executors_, _paima-prando_, _paima-tx_ or _paima-utils_)
+- made changes to `paima-engine` public modules (_paima-concise_, _paima-executors_, _paima-prando_, _paima-tx_, _storage_contract_, or _paima-utils_)
 
-It does a clean rebuild of the whole `paima-engine`, not just the above mentioned modules.
+It does a clean rebuild of the whole `paima-engine`, not just the above mentioned modules, and prepares all of the needed public helper modules to be included inside of the standalone executable.
 
-### npm run build:binary
+### npm run build:standalone
 
 Scope: `paima-engine` root folder
 

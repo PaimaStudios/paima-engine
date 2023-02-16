@@ -1,4 +1,5 @@
 SDK_PATH="./paima-standalone/packaged/paima-sdk"
+CONTRACT_PATH="./paima-standalone/packaged/smart-contract"
 
 # Prepare stage
 rm -rf $SDK_PATH
@@ -44,3 +45,8 @@ cp $module/package.json $SDK_PATH/$module/package.json
 # Prepare SDK root folder files
 cp package.json $SDK_PATH/package.json
 cp package-lock.json $SDK_PATH/package-lock.json
+
+
+# Prepare smart contract project to be packed
+echo $CONTRACT_PATH
+cp -a storage-contract $CONTRACT_PATH
