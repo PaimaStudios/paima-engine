@@ -46,11 +46,26 @@ This will generate two files (`backend.cjs` and `registerEndpoints.cjs`) in the 
 
 Both of these files need to remain in the same folder as the Paima Engine executable.
 
-## Setting Up Your DB
+## Setting Up Your Game Node DB
 
-Of note, Paima Engine requires for you to deploy a Postgres database which will be used to store all state of your game.
+Paima Engine requires you to deploy a Postgres database which will be used to store all state of your game node.
 
-Reference the [Deploying A Database](./deploying-a-database.md) documentation to learn how to quickly deploy a postgres DB via docker.
+For those already experienced with setting up a Postgres DB, feel free to skip over the majority of this section. One important note however is that each game template also includes a `init.sql` file in the `/db/migrations/init` folder which you should use to initialize the database.
+
+### Using Docker To Setup A Postgres DB
+
+For those who prefer an automated solution, simply proceed with the following steps to have a local Postgres database ready-to-use with your game node:
+
+1. Install docker/docker compose on your computer (https://docs.docker.com/compose/install/)
+2. Go into the root folder of your game code (ie. `generic-game-template`) in your terminal.
+3. Run `npm run database:up`
+4. Docker compose will automatically download and setup Postgres for you, while also using the `init.sql` from your game code to initialize the DB.
+5. Your DB will be up and running, and can be closed via `Ctrl + c` like any CLI application.
+6. Any time you want to bring the DB back online, simply re-run `npm run database:up`.
+
+### Updating Your init.sql
+
+One side note, as you begin writing your game logic (or when building a template) you likely will end up changing the DB schema from the base template you started off with. When you do this, make sure to update the `init.sql` file to properly initialize your DB schema so that future game nodes either you or others deploy for your game will be able to properly work with your game logic.
 
 ## Deploying Your Game's L2 Smart Contract
 
@@ -64,10 +79,10 @@ You may have noticed that during the initialization process a `.env.development`
 
 Thus you must fill out this env file with all of the pre-requisites to proceed forward.
 
-Specifically with the included barebones config you must specify:
+Specifically with the included barebones config, you must specify:
 
 - `CHAIN_URI` (A URL to the RPC of an EVM chain node)
-- `STORAGE_ADDRESS` (The address of your deployed smart contract for your game)
+- `STORAGE_ADDRESS` (The address of your deployed Paima L2 Smart Contract for your game)
 - `START_BLOCKHEIGHT` (The block height that your smart contact was deployed on, so Paima Engine knows from what block height to start syncing)
 - Postgres DB Credentials
 
@@ -83,7 +98,7 @@ Simply go into the root folder and run the following command:
 
 If you forgot to pack your code, your config is not properly setup, or anything else as such, you will get an error.
 
-Otherwise if everything was setup correctly then you will have officially started your game node for the very first time! You will see the progress of the game node syncing in the CLI as such:
+Otherwise if everything was setup correctly then you will have officially started your game node for the very first time! You will see some initial boot logs, and after a few seconds see the progress of your game node syncing from the blockchain as such:
 
 ```bash
 q125-q225
@@ -92,7 +107,24 @@ q325-q425
 ...
 ```
 
-These logs denote the block height numbers that the game node is syncing from the game smart contract on the blockchain. Other logs will also pop up when game inputs are read from the contract, which are all also stored in a `logs.log` file as well for easy parsing/backing up.
+These logs denote the block height numbers that the game node is syncing from the game smart contract on the blockchain. Other logs will also pop up, such as when game inputs are read from the contract. Of note, logs are also saved in the `logs.log` file for easy parsing/backing up.
+
+## Deploying Your Game Node
+
+If you wish to deploy your game on a server/move into a production environment, the following files are all that is needed for Paima Engine to run your game node:
+
+- `backend.cjs` (packed game code file #1)
+- `registerEndpoints.cjs` (packed game code file #2)
+- `.env.*` (Your game node config)
+- `paima-engine` (The Paima Engine executable)
+
+In other words, you do not require your unpacked game code or `paima-sdk`, allowing you to easily run your game node wherever you deem best.
+
+## Snapshots
+
+Lastly, if you have `pg_dump` installed on the machine running your game node (typically included in the postgres package of your OS), then Paima Engine will automatically take snapshots every day of your game node DB and store them in a `snapshots` folder. The last 3 days of snapshots are maintained, and everything older is automatically deleted.
+
+If `pg_dump` is not available, then when you start your game node an error will be printed in the terminal denoting of such, however the game node will still function perfectly fine nonetheless (and will simply skip taking snapshots).
 
 <!-- - Generic template -->
 <!-- - Turn Based template (tic-tac-toe) -->

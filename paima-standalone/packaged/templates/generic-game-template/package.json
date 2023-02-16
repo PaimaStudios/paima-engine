@@ -11,7 +11,8 @@
     "prettier": "prettier --config .prettierrc --ignore-path .prettierignore --check .",
     "prettier:fix": "prettier --write --config .prettierrc --ignore-path .prettierignore --check .",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest",
-    "test:watch": "npm test -- --watch"
+    "test:watch": "npm test -- --watch",
+    "database:up": "cd db/docker && docker compose up"
   },
   "workspaces": [
     "./utils",
