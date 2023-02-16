@@ -17,7 +17,8 @@
       "packaged/*.wasm",
       "packaged/paima-sdk/**/*",
       "packaged/templates/**/*",
-      "packaged/smart-contract/**/*"
+      "packaged/smart-contract/**/*",
+      "packaged/documentation/**/*"
     ],
     "targets": [
       "node16-linux",

@@ -1,6 +1,6 @@
 import { doLog } from '@paima/utils';
 import { createInterface } from 'readline';
-import { prepareSDK, prepareTemplate, checkForPackedGameCode, prepareContract } from './file.js';
+import { prepareSDK, prepareTemplate, checkForPackedGameCode, prepareContract, prepareDocumentation } from './file.js';
 import paimaFunnel from '@paima/funnel';
 import paimaRuntime from '@paima/runtime';
 import type { ChainFunnel } from '@paima/utils';
@@ -47,6 +47,8 @@ export const argumentRouter = async (): Promise<void> => {
     await runPaimaEngine();
   } else if (base_arg == 'contract') {
     await contractCommand();
+  } else if (base_arg == 'docs') {
+    await documentationCommand();
   } else {
     await helpCommand();
   }
@@ -75,6 +77,7 @@ export const runPaimaEngine = async (): Promise<void> => {
   const POLLING_RATE = 1;
 
   if (checkForPackedGameCode()) {
+    doLog(`Starting Game Node...`)
     doLog(`Targeting Smart Contact: ${STORAGE_ADDRESS}`);
     const chainFunnel: ChainFunnel = await paimaFunnel.initialize(CHAIN_URI, STORAGE_ADDRESS);
     const stateMachine = gameSM();
@@ -98,14 +101,20 @@ export const contractCommand = async (): Promise<void> => {
   prepareContract();
 };
 
+// Docs command logic
+export const documentationCommand = async (): Promise<void> => {
+  prepareDocumentation();
+};
+
 // Help command printing
 export const helpCommand = async (): Promise<void> => {
   doLog(`Usage: paima-engine [COMMAND] ARG`);
   doLog(`Commands:`);
-  doLog(`   init      Enables initializing projects and SDK.`);
+  doLog(`   init      Enables initializing project templates and the SDK.`);
   doLog(`   run       Start your game node.`);
-  doLog(`   contract  Copies the Paima L2 Contract to your local filesystem.`);
-  doLog(`   help      Offers list of commands currently available.`);
+  doLog(`   contract  Saves the Paima L2 Contract to your local filesystem.`);
+  doLog(`   docs      Saves the Paima Engine documentation to your local filesystem.`);
+  doLog(`   help      Shows list of commands currently available.`);
 };
 
 // Check the template type

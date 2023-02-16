@@ -74,6 +74,16 @@ export const prepareContract = (): void => {
   prepareFolder(packagedPath, FOLDER_PATH, success, failure);
 };
 
+// Copies the smart contract project into the same folder as the executable
+export const prepareDocumentation = (): void => {
+  const FOLDER_PATH = `${process.cwd()}/documentation`;
+  const packagedPath = `${__dirname}/documentation`;
+  const success = `✅ Documentation Has Been Copied To ${FOLDER_PATH}.`;
+  const failure = `Documentation Already Exists: ${FOLDER_PATH}.`;
+
+  prepareFolder(packagedPath, FOLDER_PATH, success, failure);
+};
+
 // Checks that the user packed their game code and it is available for Paima Engine to use to run
 export const checkForPackedGameCode = (): boolean => {
   const GAME_CODE_PATH = `${process.cwd()}/backend.cjs`;

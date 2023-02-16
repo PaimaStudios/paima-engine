@@ -2,6 +2,14 @@
 
 To write a game node using Paima Engine one must first initialize a basic project which provides all of the essentials to get started. Of note, the Paima Engine executable ships with a baked in `paima-sdk` providing a batteries-included experience.
 
+## Accessing Documentation
+
+If you are reading this, you likely already have access to the Paima Engine documentation. Nonetheless, if you need a new copy simply call the `docs` command and Paima Engine will save one locally.
+
+```bash
+./paima-engine docs
+```
+
 ## Initializing Your Project
 
 When starting a new project with Paima Engine, the developer can choose to either go completely barebones (by only initializing `paima-sdk`) or use an included template to bootstrap with all of the essentials. Initializing the SDK by itself may also be useful in cases where the developer is upgrading their project to use a new version of Paima Engine which has introduced new incompatibilities in the SDK.
@@ -40,15 +48,15 @@ Both of these files need to remain in the same folder as the Paima Engine execut
 
 ## Setting Up Your DB
 
-Of note, Paima Engine requires for you to deploy a Postgres database which will be used to store all state of your game. The setup process is typical of any Postgres database, however each game template also includes a `init.sql` file in the `/db/migrations/init` folder which you should use to initialize the database.
+Of note, Paima Engine requires for you to deploy a Postgres database which will be used to store all state of your game.
 
-Later you can edit this `init.sql` with your own custom tables as well when writing your game code.
+Reference the [Deploying A Database](./deploying-a-database.md) documentation to learn how to quickly deploy a postgres DB via docker.
 
-## Deploying Your Game Smart Contract
+## Deploying Your Game's L2 Smart Contract
 
-...
+Each game built with Paima Engine is its very own Layer 2. This means that you will need to deploy the Paima L2 Smart Contract to whichever chain you wish to launch on.
 
-(include a second markdown file guide and link here)
+Reference the [Deploying L2 Smart Contract](./deploying-l2-smart-contract.md) documentation to easily deploy the contract.
 
 ## Setting Up Your Game Node Config
 
@@ -86,13 +94,6 @@ q325-q425
 
 These logs denote the block height numbers that the game node is syncing from the game smart contract on the blockchain. Other logs will also pop up when game inputs are read from the contract, which are all also stored in a `logs.log` file as well for easy parsing/backing up.
 
-
-
-- Docker setup
-- smart contract command
-- documentation command
-
-
-- Generic template
-- Turn Based template (tic-tac-toe)
-- Simultaneous Play Template (rock paper scissors)
+<!-- - Generic template -->
+<!-- - Turn Based template (tic-tac-toe) -->
+<!-- - Simultaneous Play Template (rock paper scissors) -->

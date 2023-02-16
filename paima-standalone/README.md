@@ -4,7 +4,7 @@ A compiled executable that wraps `Paima Engine Core` which serves as an entry po
 
 ## Building The Executable
 
-To build the `paima-engine` standalone, the following steps are required (in the root folder):
+To build the `paima-engine` standalone, the following steps are required (in the paima-engine root folder):
 
 1. `npm i`
 2. `npm run prepare:standalone` prepares public helper modules (sdk/docs/etc.) for inclusion in the standalone.
