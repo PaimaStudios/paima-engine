@@ -7,8 +7,9 @@ A compiled executable that wraps `Paima Engine Core` which serves as an entry po
 To build the `paima-engine` standalone, the following steps are required (in the paima-engine root folder):
 
 1. `npm i`
-2. `npm run prepare:standalone` prepares public helper modules (sdk/docs/etc.) for inclusion in the standalone.
-3. `npm run build:standalone` repackages the whole of paima engine core into a single JS file and bundles it together with paima-sdk, templates, and \*.wasm files into an executable.
+2. `npm run build` (required a single time after cloning the repo to build/expose the contract for paima-utils)
+3. `npm run prepare:standalone` prepares public helper modules (sdk/docs/etc.) for inclusion in the standalone.
+4. `npm run build:standalone` repackages the whole of paima engine core into a single JS file and bundles it together with paima-sdk, templates, and \*.wasm files into an executable.
 
 An executable will be generated for each desktop OS (linux, mac, windows) and will be available in the `/paima-standalone/packaged/@standalone` folder.
 
