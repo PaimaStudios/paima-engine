@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import '../lib/cheatcodes.sol';
-import '../lib/console.sol';
-import '../lib/ctest.sol';
+import '../test-lib/cheatcodes.sol';
+import '../test-lib/console.sol';
+import '../test-lib/ctest.sol';
 
 import '../src/contract/Storage.sol';
 

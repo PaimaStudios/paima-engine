@@ -11,6 +11,7 @@ import type {
   ErrorCode,
   ErrorMessageFxn,
   ErrorMessageMapping,
+  TsoaFunction,
   ETHAddress,
   GameStateMachine,
   GameStateMachineInitializer,
@@ -23,12 +24,14 @@ import type {
   TransactionTemplate,
 } from './types';
 import { tx } from './pg-tx';
+import { getConnection } from './pg-connection.js';
 const { isAddress } = pkg;
 
 export type { Web3 };
 export type { StorageContract };
 export {
   ChainFunnel,
+  TsoaFunction,
   ETHAddress,
   SQLUpdate,
   ErrorCode,
@@ -44,6 +47,7 @@ export {
   PaimaRuntime,
   ChainDataExtension,
   TransactionTemplate,
+  getConnection,
   logError,
   doLog,
   tx,

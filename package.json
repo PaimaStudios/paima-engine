@@ -7,8 +7,11 @@
     "cilint": "npm run cprettier && npm run eslint",
     "prebuild": "npm run prebuild --workspaces --if-present",
     "build": "npx tsc --build tsconfig.build.json",
+    "prepare:standalone": "sh paima-standalone/scripts/prepare_standalone_folders.sh",
+    "build:sdk": "tsc --build --clean tsconfig.lib.json && npx tsc --build tsconfig.lib.json",
+    "build:standalone": "npm run build && npm run build:binary -w paima-standalone",
     "cprettier": "prettier --check '**/*.{ts,tsx}'",
-    "eslint": "eslint '**/*.{ts,tsx}' --ignore-path .gitignore",
+    "eslint": "eslint '**/*.{ts,tsx}' --ignore-path .eslintignore",
     "prettier": "prettier --write '**/*.{ts,tsx}'",
     "prepare": "husky install && npm run prepare --workspaces --if-present"
   },
@@ -20,11 +23,13 @@
     "./paima-executors",
     "./paima-funnel",
     "./paima-sm",
-    "./paima-runtime"
+    "./paima-runtime",
+    "./paima-standalone"
   ],
   "devDependencies": {
     "@types/eslint": "^8.4.10",
     "@types/eslint-plugin-prettier": "^3.1.0",
+    "@types/node": "^18.11.18",
     "@types/pg": "^8.6.5",
     "@types/prettier": "^2.7.1",
     "@typescript-eslint/eslint-plugin": "^5.43.0",

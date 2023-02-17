@@ -23,7 +23,7 @@ process.on('SIGTERM', () => {
 });
 
 process.on('exit', code => {
-  doLog(`Exiting with code: ${code}`);
+  // doLog(`Exiting with code: ${code}`);
 });
 
 const paimaEngine: PaimaRuntimeInitializer = {
@@ -121,12 +121,13 @@ async function requireLatestBlockHeight(sm: GameStateMachine, waitPeriod: number
     try {
       const latestReadBlockHeight = await sm.latestBlockHeight();
       if (wasDown) {
-        doLog('[runIterativeFunnel] DB connection back up!');
+        doLog('[requireLatestBlockHeight] Block height re-acquired successfully.');
       }
       return latestReadBlockHeight;
     } catch (err) {
       if (!wasDown) {
-        doLog('[runIterativeFunnel] DB connection down, waiting for it to go back up...');
+        doLog(`[requireLatestBlockHeight] encountered error, retrying after ${waitPeriod} ms`);
+        logError(err);
       }
       wasDown = true;
     }

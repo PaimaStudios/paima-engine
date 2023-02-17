@@ -12,7 +12,7 @@ module.exports = {
     },
   },
   contract_config: {
-    owner: "0x9333EDaE2e7A17487ed258bBc9f3DC97e454a860",
+    owner: "",
     fee: 10n ** 16n
   },
   networks: {
