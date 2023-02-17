@@ -101,4 +101,4 @@ LinkError: WebAssembly.Instance(): Import #4 module="__wbindgen_placeholder__" f
 
 ## How To Use Paima Engine Standalone
 
-Refer to [how to guide](documentation/how-to-use-paima-engine.md).
+Refer to [how to guide](user-documentation/how-to-use-paima-engine.md).
