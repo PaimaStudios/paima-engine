@@ -1,10 +1,10 @@
 # How To Use Paima Engine
 
-To write a game node using Paima Engine one must first initialize a basic project which provides all of the essentials to get started. Of note, the Paima Engine executable ships with a baked in `paima-sdk` providing a batteries-included experience.
+Paima Engine is as an all-in-one batteries-included executable which provides you with everything you need to get started writing your own trustless Web3 game.
 
 ## Accessing Documentation
 
-If you are reading this, you likely already have access to the Paima Engine documentation. Nonetheless, if you need a new copy simply call the `docs` command and Paima Engine will save one locally.
+If you are reading this, you likely already have access to the Paima Engine documentation. Nonetheless, if you need a new copy simply call the `docs` command and Paima Engine will save a copy of the docs locally.
 
 ```bash
 ./paima-engine docs
@@ -69,7 +69,7 @@ One side note, as you begin writing your game logic (or when building a template
 
 ## Deploying Your Game's L2 Smart Contract
 
-Each game built with Paima Engine is its very own Layer 2. This means that you will need to deploy the Paima L2 Smart Contract to whichever chain you wish to launch on.
+Each game built with Paima Engine is its very own Layer 2. This means that you will need to deploy the Paima L2 Smart Contract for your game, to whichever chain you wish to launch on.
 
 Reference the [Deploying L2 Smart Contract](./deploying-l2-smart-contract.md) documentation to easily deploy the contract.
 
@@ -81,8 +81,8 @@ Thus you must fill out this env file with all of the pre-requisites to proceed f
 
 Specifically with the included barebones config, you must specify:
 
-- `CHAIN_URI` (A URL to the RPC of an EVM chain node)
-- `STORAGE_ADDRESS` (The address of your deployed Paima L2 Smart Contract for your game)
+- `CHAIN_URI` (A URL to the RPC of an EVM chain node of the network you are targeting)
+- `STORAGE_ADDRESS` (The contract address of your deployed Paima L2 Smart Contract for your game)
 - `START_BLOCKHEIGHT` (The block height that your smart contact was deployed on, so Paima Engine knows from what block height to start syncing)
 - Postgres DB Credentials
 
@@ -107,7 +107,7 @@ q325-q425
 ...
 ```
 
-These logs denote the block height numbers that the game node is syncing from the game smart contract on the blockchain. Other logs will also pop up, such as when game inputs are read from the contract. Of note, logs are also saved in the `logs.log` file for easy parsing/backing up.
+These logs denote the block height numbers that the game node is syncing from the deployed L2 smart contract on the blockchain. Other logs will also pop up, such as when game inputs are read from the contract. Of note, logs are also saved in the `logs.log` file for easy access.
 
 ## Deploying Your Game Node
 
@@ -118,13 +118,15 @@ If you wish to deploy your game on a server/move into a production environment, 
 - `.env.*` (Your game node config)
 - `paima-engine` (The Paima Engine executable)
 
-In other words, you do not require your unpacked game code or `paima-sdk`, allowing you to easily run your game node wherever you deem best.
+In other words, you do not require your unpacked game code or `paima-sdk`, allowing you to easily run your game node wherever you deem best (without even needing node installed or any external dependencies).
 
 ## Snapshots
 
 Lastly, if you have `pg_dump` installed on the machine running your game node (typically included in the postgres package of your OS), then Paima Engine will automatically take snapshots every day of your game node DB and store them in a `snapshots` folder. The last 3 days of snapshots are maintained, and everything older is automatically deleted.
 
 If `pg_dump` is not available, then when you start your game node an error will be printed in the terminal denoting of such, however the game node will still function perfectly fine nonetheless (and will simply skip taking snapshots).
+
+Of note, unlike in the Web2/2.5 world, these snapshots are _not vital_. You are building a trustless Web3 game using Paima Engine, which means that even if your entire DB gets corrupted or deleted, a brand new game node can be synced from scratch by just reading from the blockchain. These snapshots are simply a quality-of-life enhancement, as they allow you to deploy new game nodes much faster without having to resync from scratch.
 
 <!-- - Generic template -->
 <!-- - Turn Based template (tic-tac-toe) -->

@@ -51,7 +51,11 @@ cp package-lock.json $SDK_PATH/package-lock.json
 # Prepare smart contract project to be packed
 echo $CONTRACT_PATH
 rm -rf $CONTRACT_PATH
-cp -r storage-contract $CONTRACT_PATH
+mkdir $CONTRACT_PATH
+cp -r storage-contract/src $CONTRACT_PATH
+cp -r storage-contract/package.json $CONTRACT_PATH
+cp -r storage-contract/truffle-config.js $CONTRACT_PATH
+# cp -r storage-contract/ $CONTRACT_PATH
 
 
 # Prepare documentation to be packed
