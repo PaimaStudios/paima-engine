@@ -15,49 +15,7 @@ on:
       - "errors.log"
 
 jobs:
-  # changes:
-  #   runs-on: ubuntu-latest
-  #   permissions:
-  #     pull-requests: write
-
-  #   outputs:
-  #     packages: ${{ steps.filter.outputs.changes }}
-  #   steps:
-  #     - name: Check out repository
-  #       if: ${{ github.event_name != 'pull_request' }}
-  #       uses: actions/checkout@v3
-
-  #     - uses: dorny/paths-filter@v2
-  #       id: filter
-  #       with:
-  #         filters: |
-  #           "paima-prando":
-  #             - "paima-prando/**"
-  #             - ".github/workflows/nodejs.yml"
-  #           "paima-utils":
-  #             - "paima-utils/**"
-  #             - ".github/workflows/nodejs.yml"
-  #           "paima-tx":
-  #             - "paima-tx/**"
-  #             - ".github/workflows/nodejs.yml"
-  #           "executors":
-  #             - "executors/**"
-  #             - ".github/workflows/nodejs.yml"
-  #           "funnel":
-  #             - "funnel/**"
-  #             - ".github/workflows/nodejs.yml"
-  #           "SM":
-  #             - "SM/**"
-  #             - ".github/workflows/nodejs.yml"
-  #           "runtime":
-  #             - "runtime/**"
-  #             - ".github/workflows/nodejs.yml"
-  #           "admin-panel":
-  #             - "admin-panel/**"
-  #             - ".github/workflows/nodejs.yml"
-
   node_ci:
-    # needs: changes
     runs-on: ${{ matrix.os }}
     env:
       NODE_CACHE: "npm"
@@ -67,7 +25,6 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         node: [16, 18]
-        # dir: ${{ fromJSON(needs.changes.outputs.packages) }}
 
     steps:
       -
@@ -83,6 +40,13 @@ jobs:
           registry-url: https://registry.npmjs.org
           # cache: ${{ env.NODE_CACHE }}
           # cache-dependency-path: ${{ matrix.dir }}/package-lock.json
+      -
+        name: Cleanup for node > 16
+        if: ${{ matrix.node!='16' }}
+        shell: bash -e -l {0}
+        run: |
+          sh wipe.sh
+          npm i --package-lock --no-audit
       -
         name: Build workspace
         shell: bash -e -l {0}
