@@ -29,8 +29,10 @@ export function createNonce(web3: Web3, nonceInput: string): string {
 export function determineAddressType(address: string): AddressType {
   if (address.slice(0, 2) === '0x') {
     return AddressType.Ethereum;
-  } else {
+  } else if (address.slice(0, 4) === 'addr') {
     return AddressType.Cardano;
+  } else {
+    return AddressType.Polkadot;
   }
 }
 
