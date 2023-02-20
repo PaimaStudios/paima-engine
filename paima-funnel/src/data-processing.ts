@@ -11,6 +11,7 @@ import { OUTER_DIVIDER, INNER_DIVIDER, AddressType } from './constants.js';
 import { createNonce, determineAddressType, unpackValidatedData } from './utils.js';
 import verifySignatureEthereum from './verification-ethereum.js';
 import verifySignatureCardano from './verification-cardano.js';
+import verifySignaturePolkadot from './verification-polkadot.js';
 
 const { hexToUtf8 } = web3UtilsPkg;
 
@@ -135,6 +136,8 @@ async function validateSubunit(
       return verifySignatureEthereum(web3, message, userAddress, userSignature);
     case AddressType.Cardano:
       return await verifySignatureCardano(userAddress, message, userSignature);
+    case AddressType.Polkadot:
+      return verifySignaturePolkadot(userAddress, message, userSignature);
     default:
       return false;
   }
