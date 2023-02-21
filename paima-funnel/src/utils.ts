@@ -1,8 +1,7 @@
 import type Web3 from 'web3';
 
 import type { SubmittedChainData } from '@paima/utils';
-import { doLog } from '@paima/utils';
-import { AddressType } from './constants';
+import { AddressType, doLog } from '@paima/utils';
 
 export interface ValidatedSubmittedChainData extends SubmittedChainData {
   validated: boolean;
@@ -24,16 +23,6 @@ export function createNonce(web3: Web3, nonceInput: string): string {
     nonce = '';
   }
   return nonce;
-}
-
-export function determineAddressType(address: string): AddressType {
-  if (address.slice(0, 2) === '0x') {
-    return AddressType.Ethereum;
-  } else if (address.slice(0, 4) === 'addr') {
-    return AddressType.Cardano;
-  } else {
-    return AddressType.Polkadot;
-  }
 }
 
 // Timeout function for promises
