@@ -53,6 +53,8 @@ export {
   tx,
 };
 
+export { AddressType } from "./constants";
+
 export const DEFAULT_GAS_PRICE = '61000000000' as const;
 
 export const SCHEDULED_DATA_ADDRESS = '0x0';
