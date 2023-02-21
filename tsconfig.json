@@ -98,5 +98,7 @@
   },
   "exclude": [
     "node_modules",
-    "admin-panel"]
+    "admin-panel",
+    "paima-standalone"
+  ]
 }
