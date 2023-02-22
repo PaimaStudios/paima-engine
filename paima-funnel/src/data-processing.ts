@@ -2,12 +2,11 @@ import type Web3 from 'web3';
 import type { BlockTransactionString } from 'web3-eth';
 import web3UtilsPkg from 'web3-utils';
 
-import { AddressType, doLog } from '@paima/utils';
+import { AddressType, doLog, INNER_BATCH_DIVIDER, OUTER_BATCH_DIVIDER } from '@paima/utils';
 import type { SubmittedChainData } from '@paima/utils';
 import type { PaimaGameInteraction } from '@paima/utils/src/contract-types/Storage';
 
 import type { ValidatedSubmittedChainData } from './utils.js';
-import { OUTER_DIVIDER, INNER_DIVIDER } from './constants.js';
 import { createNonce, unpackValidatedData } from './utils.js';
 import verifySignatureEthereum from './verification-ethereum.js';
 import verifySignatureCardano from './verification-cardano.js';
@@ -45,7 +44,7 @@ export async function processDataUnit(
   blockHeight: number
 ): Promise<SubmittedChainData[]> {
   try {
-    if (!unit.inputData.includes(OUTER_DIVIDER)) {
+    if (!unit.inputData.includes(OUTER_BATCH_DIVIDER)) {
       // Directly submitted input, prepare nonce and return:
       const hashInput = blockHeight.toString(10) + unit.userAddress + unit.inputData;
       const inputNonce = createNonce(web3, hashInput);
@@ -57,8 +56,8 @@ export async function processDataUnit(
       ];
     }
 
-    const hasClosingDivider = unit.inputData[unit.inputData.length - 1] === OUTER_DIVIDER;
-    const elems = unit.inputData.split(OUTER_DIVIDER);
+    const hasClosingDivider = unit.inputData[unit.inputData.length - 1] === OUTER_BATCH_DIVIDER;
+    const elems = unit.inputData.split(OUTER_BATCH_DIVIDER);
     const afterLastIndex = elems.length - (hasClosingDivider ? 1 : 0);
 
     const prefix = elems[0];
@@ -96,7 +95,7 @@ async function processBatchedSubunit(
     validated: false,
   };
 
-  const elems = input.split(INNER_DIVIDER);
+  const elems = input.split(INNER_BATCH_DIVIDER);
   if (elems.length !== 5) {
     return INVALID_INPUT;
   }

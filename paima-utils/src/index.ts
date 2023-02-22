@@ -25,6 +25,8 @@ import type {
 } from './types';
 import { tx } from './pg-tx';
 import { getConnection } from './pg-connection.js';
+import { AddressType, INNER_BATCH_DIVIDER, OUTER_BATCH_DIVIDER } from './constants';
+
 const { isAddress } = pkg;
 
 export type { Web3 };
@@ -47,13 +49,14 @@ export {
   PaimaRuntime,
   ChainDataExtension,
   TransactionTemplate,
+  AddressType,
+  INNER_BATCH_DIVIDER,
+  OUTER_BATCH_DIVIDER,
   getConnection,
   logError,
   doLog,
   tx,
 };
-
-export { AddressType } from './constants';
 
 export const DEFAULT_GAS_PRICE = '61000000000' as const;
 
