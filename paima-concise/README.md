@@ -2,11 +2,11 @@
   Paima Concise Encoding Library library
 </h1>
 
-An encoding library that all games (and Paima batcher eventually) can use to build and consume concisely encoded game inputs. This library acts as one level of abstraction up from the game input strings, and supports abstractions such as state identifier. For more info see [a complete documentation](../documentation/paimaConcise.md)
+An encoding library that all games can use to build and consume concisely encoded game inputs. This library acts as one level of abstraction up from the game input strings, and supports abstractions such as the state identifier.
 
 ## Forbidden symbols
 
-Certain symbols have a special in concise encoding or in the underlying ecosystem, and thus should not be used inside the added values. The paima-concise builder should automatically reject all these.
+Certain symbols are reserved for internal use in the Paima concise encoding format, and thus must not be used by developers in the game inputs. The paima-concise builder automatically rejects these to ensure this is the case so that invalid game inputs are not created (and thus preventing user game inputs from being rejected in production by mistake).
 
 The current list of forbidden symbols can be found in [`./src/v1/consts.ts`](./src/v1/consts.ts), which as of 2023-02-22 contains the following symbols:
 
