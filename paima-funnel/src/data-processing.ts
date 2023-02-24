@@ -2,15 +2,15 @@ import type Web3 from 'web3';
 import type { BlockTransactionString } from 'web3-eth';
 import web3UtilsPkg from 'web3-utils';
 
-import { doLog } from '@paima/utils';
+import { AddressType, doLog, INNER_BATCH_DIVIDER, OUTER_BATCH_DIVIDER } from '@paima/utils';
 import type { SubmittedChainData } from '@paima/utils';
 import type { PaimaGameInteraction } from '@paima/utils/src/contract-types/Storage';
 
 import type { ValidatedSubmittedChainData } from './utils.js';
-import { OUTER_DIVIDER, INNER_DIVIDER, AddressType } from './constants.js';
-import { createNonce, determineAddressType, unpackValidatedData } from './utils.js';
+import { createNonce, unpackValidatedData } from './utils.js';
 import verifySignatureEthereum from './verification-ethereum.js';
 import verifySignatureCardano from './verification-cardano.js';
+import verifySignaturePolkadot from './verification-polkadot.js';
 
 const { hexToUtf8 } = web3UtilsPkg;
 
@@ -44,7 +44,7 @@ export async function processDataUnit(
   blockHeight: number
 ): Promise<SubmittedChainData[]> {
   try {
-    if (!unit.inputData.includes(OUTER_DIVIDER)) {
+    if (!unit.inputData.includes(OUTER_BATCH_DIVIDER)) {
       // Directly submitted input, prepare nonce and return:
       const hashInput = blockHeight.toString(10) + unit.userAddress + unit.inputData;
       const inputNonce = createNonce(web3, hashInput);
@@ -56,9 +56,9 @@ export async function processDataUnit(
       ];
     }
 
-    const hasClosingTilde = unit.inputData[unit.inputData.length - 1] === OUTER_DIVIDER;
-    const elems = unit.inputData.split(OUTER_DIVIDER);
-    const afterLastIndex = elems.length - (hasClosingTilde ? 1 : 0);
+    const hasClosingDivider = unit.inputData[unit.inputData.length - 1] === OUTER_BATCH_DIVIDER;
+    const elems = unit.inputData.split(OUTER_BATCH_DIVIDER);
+    const afterLastIndex = elems.length - (hasClosingDivider ? 1 : 0);
 
     const prefix = elems[0];
     const subunitCount = elems.length - 1;
@@ -95,14 +95,16 @@ async function processBatchedSubunit(
     validated: false,
   };
 
-  const elems = input.split(INNER_DIVIDER);
-  if (elems.length !== 4) {
+  const elems = input.split(INNER_BATCH_DIVIDER);
+  if (elems.length !== 5) {
     return INVALID_INPUT;
   }
 
-  const [userAddress, userSignature, inputData, millisecondTimestamp] = elems;
+  const [addressTypeStr, userAddress, userSignature, inputData, millisecondTimestamp] = elems;
+  const addressType = parseInt(addressTypeStr, 10);
   const validated = await validateSubunit(
     web3,
+    addressType,
     userAddress,
     userSignature,
     inputData,
@@ -123,18 +125,20 @@ async function processBatchedSubunit(
 
 async function validateSubunit(
   web3: Web3,
+  addressType: AddressType,
   userAddress: string,
   userSignature: string,
   inputData: string,
   millisecondTimestamp: string
 ): Promise<boolean> {
-  const addressType = determineAddressType(userAddress);
   const message: string = inputData + millisecondTimestamp;
   switch (addressType) {
-    case AddressType.Ethereum:
+    case AddressType.EVM:
       return verifySignatureEthereum(web3, message, userAddress, userSignature);
-    case AddressType.Cardano:
+    case AddressType.CARDANO:
       return await verifySignatureCardano(userAddress, message, userSignature);
+    case AddressType.POLKADOT:
+      return verifySignaturePolkadot(userAddress, message, userSignature);
     default:
       return false;
   }

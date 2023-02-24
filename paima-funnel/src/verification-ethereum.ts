@@ -1,4 +1,5 @@
 import type Web3 from 'web3';
+
 import { doLog } from '@paima/utils';
 
 export default function (

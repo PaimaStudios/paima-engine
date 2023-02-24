@@ -16,6 +16,8 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@polkadot/util": "^10.4.2",
+    "@polkadot/util-crypto": "^10.4.2",
     "prettier": "^2.6.2",
     "prettier-plugin-organize-imports": "^2.3.4",
     "typescript": "^4.7.4"

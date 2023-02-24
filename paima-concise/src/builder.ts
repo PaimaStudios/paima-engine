@@ -9,8 +9,17 @@ import type {
 import { EncodingVersion } from './types.js';
 import { isHexString } from './utils.js';
 import buildv1 from './v1/builder.js';
-import { separator } from './v1/consts.js';
+import { separator, FORBIDDEN_CHARACTERS } from './v1/consts.js';
 import { toConciseValue } from './v1/utils.js';
+
+function validateString(s: string): boolean {
+  for (const c of FORBIDDEN_CHARACTERS) {
+    if (s.includes(c)) {
+      return false;
+    }
+  }
+  return true;
+}
 
 const initialize = (input?: InputString, version = EncodingVersion.V1): ConciseBuilder => {
   let initialConciseInput = '';
@@ -20,6 +29,13 @@ const initialize = (input?: InputString, version = EncodingVersion.V1): ConciseB
   if (input && version === EncodingVersion.V1) {
     initialConciseInput = isHexString(input) ? web3.hexToUtf8(input) : input;
     const [prefix, ...stringValues] = initialConciseInput.split(separator);
+
+    for (const s of [prefix, ...stringValues]) {
+      if (!validateString(s)) {
+        throw new Error('Cannot use forbidden symbols in concise builder');
+      }
+    }
+
     concisePrefix = prefix;
     conciseValues = stringValues.map(toConciseValue);
   }
@@ -35,12 +51,23 @@ const initialize = (input?: InputString, version = EncodingVersion.V1): ConciseB
       this.concisePrefix = value;
     },
     addValue(value: ConciseValue): void {
+      if (!validateString(value.value)) {
+        throw new Error('Cannot use forbidden symbols in concise builder');
+      }
       this.conciseValues.push(value);
     },
     addValues(values: ConciseValue[]): void {
+      for (const value of values) {
+        if (!validateString(value.value)) {
+          throw new Error('Cannot use forbidden symbols in concise builder');
+        }
+      }
       this.conciseValues = this.conciseValues.concat(values);
     },
     insertValue(position: number, value: ConciseValue): void {
+      if (!validateString(value.value)) {
+        throw new Error('Cannot use forbidden symbols in concise builder');
+      }
       const index = position - 1;
       this.conciseValues.splice(index, 0, value);
     },
