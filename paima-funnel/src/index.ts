@@ -2,7 +2,8 @@ import { doLog, getStorageContract, initWeb3, validateStorageAddress } from '@pa
 
 import type { ChainFunnel, ChainData, ChainDataExtension } from '@paima/utils';
 
-import { internalReadDataMulti, timeout } from './reading.js';
+import { internalReadDataMulti } from './reading.js';
+import { timeout } from './utils.js';
 
 const DEFAULT_BLOCK_COUNT = 100;
 const GET_BLOCK_NUMBER_TIMEOUT = 5000;

@@ -17,8 +17,7 @@
     "paima-utils": "file:../../paima-engine/paima-utils",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
-    "rollup-plugin-node-polyfills": "^0.2.1",
-    "web3": "^1.8.1"
+    "rollup-plugin-node-polyfills": "^0.2.1"
   },
   "devDependencies": {
     "@types/react": "^18.0.0",

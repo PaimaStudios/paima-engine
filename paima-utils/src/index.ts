@@ -139,3 +139,19 @@ export async function retryPromise<T>(
     throw failure;
   }
 }
+
+function hexStringToBytes(hexString: string): number[] {
+  const bytes: number[] = [];
+  if (hexString.length % 2 !== 0) {
+    hexString = '0' + hexString;
+  }
+  for (let c = 0; c < hexString.length; c += 2) {
+    const nextByte = hexString.slice(c, c + 2);
+    bytes.push(parseInt(nextByte, 16));
+  }
+  return bytes;
+}
+
+export function hexStringToUint8Array(hexString: string): Uint8Array {
+  return new Uint8Array(hexStringToBytes(hexString));
+}
