@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { ROUTER_FILENAME, API_FILENAME } from './import';
 import { doLog } from '@paima/utils';
 import { templateMap, type TemplateTypes } from './input';
 
@@ -91,7 +92,7 @@ export const prepareDocumentation = (): void => {
 
 // Checks that the user packed their game code and it is available for Paima Engine to use to run
 export const checkForPackedGameCode = (): boolean => {
-  const GAME_CODE_PATH = `${process.cwd()}/backend.cjs`;
-  const ENDPOINTS_PATH = `${process.cwd()}/registerEndpoints.cjs`;
+  const GAME_CODE_PATH = `${process.cwd()}/${ROUTER_FILENAME}`;
+  const ENDPOINTS_PATH = `${process.cwd()}/${API_FILENAME}`;
   return fs.existsSync(ENDPOINTS_PATH) && fs.existsSync(GAME_CODE_PATH);
 };

@@ -42,9 +42,9 @@ As the `generic-game-template` folder has already been initialized in the previo
 npm run pack
 ```
 
-This will generate two files (`backend.cjs` and `registerEndpoints.cjs`) in the parent folder (where the executable is). The former holds the vast majority of the "backend" code (all of your code related to your game) and the latter holds code related to setting up the webserver endpoints of your game node.
+This will generate two files (`backend.cjs` and `registerEndpoints.cjs`) which will be placed in a `packaged` folder (where the executable is). The former file holds the vast majority of the "game" (all of your code related to your game logic and state transitions) and the latter holds code related to setting up the webserver endpoints of your game node.
 
-Both of these files need to remain in the same folder as the Paima Engine executable.
+Both of these files need to remain in the `packaged` folder (which is required to be in the same root folder as the Paima Engine executable itself).
 
 ## Setting Up Your Game Node DB
 
@@ -113,8 +113,8 @@ These logs denote the block height numbers that the game node is syncing from th
 
 If you wish to deploy your game on a server/move into a production environment, the following files are all that is needed for Paima Engine to run your game node:
 
-- `backend.cjs` (packed game code file #1)
-- `registerEndpoints.cjs` (packed game code file #2)
+- `packaged/backend.cjs` (packed game code)
+- `packaged/registerEndpoints.cjs` (packed webserver code)
 - `.env.*` (Your game node config)
 - `paima-engine` (The Paima Engine executable)
 
