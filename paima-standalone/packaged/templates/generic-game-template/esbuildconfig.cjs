@@ -7,8 +7,8 @@ if (!workspace) throw new Error('BUNDLE_WORKSPACE variable not set.');
 if (!fs.existsSync(workspace)) throw new Error(`Invalid workspace: ${workspace}.`);
 
 const outFile = {
-  api: 'registerEndpoints.cjs',
-  backend: 'backend.cjs',
+  api: 'endpoints.cjs',
+  backend: 'gameCode.cjs',
 };
 
 // packaging config based on paima-standalone module

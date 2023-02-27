@@ -97,7 +97,7 @@ export const runPaimaEngine = async (): Promise<void> => {
   } else {
     doLog(`Packed game code not found.`);
     doLog(
-      `Please ensure that you have built/packed your game code and it is available in the same directory as this executable.`
+      `Please ensure that you have packed your game code and it is accessible by the executable.`
     );
   }
 };
