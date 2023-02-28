@@ -1,6 +1,6 @@
-# echo "Installing dependencies"
-# npm i
-
+cd ..
+npm run build
+cd middleware
 
 sh scripts/set_fs_removal.sh
 echo "FS dependency removed"
