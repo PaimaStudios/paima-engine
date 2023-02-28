@@ -15,6 +15,7 @@
   ],
   "scripts": {
     "prebuild": "npm run generate-types",
+    "compile": "npx pgtyped -w -c pgtypedconfig.json",
     "build": "tsc",
     "generate-types": "npx typechain --target=web3-v1 'src/artifacts/*.json' --out-dir src/contract-types",
     "test": "echo \"Error: no test specified\" && exit 1",

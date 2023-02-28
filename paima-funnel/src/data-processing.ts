@@ -3,10 +3,10 @@ import type { BlockTransactionString } from 'web3-eth';
 import web3UtilsPkg from 'web3-utils';
 
 import { AddressType, doLog, INNER_BATCH_DIVIDER, OUTER_BATCH_DIVIDER } from '@paima/utils';
-import type { SubmittedChainData } from '@paima/utils';
+import type { SubmittedData } from '@paima/utils';
 import type { PaimaGameInteraction } from '@paima/utils/src/contract-types/Storage';
 
-import type { ValidatedSubmittedChainData } from './utils.js';
+import type { ValidatedSubmittedData } from './utils.js';
 import { createNonce, unpackValidatedData } from './utils.js';
 import verifySignatureEthereum from './verification-ethereum.js';
 import verifySignatureCardano from './verification-cardano.js';
@@ -18,8 +18,8 @@ export async function extractSubmittedData(
   web3: Web3,
   block: BlockTransactionString,
   events: PaimaGameInteraction[]
-): Promise<SubmittedChainData[]> {
-  const eventMapper = (e: PaimaGameInteraction): Promise<SubmittedChainData[]> => {
+): Promise<SubmittedData[]> {
+  const eventMapper = (e: PaimaGameInteraction): Promise<SubmittedData[]> => {
     const data = e.returnValues.data;
     const decodedData = data && data.length > 0 ? hexToUtf8(data) : '';
     return processDataUnit(
@@ -29,6 +29,7 @@ export async function extractSubmittedData(
         inputData: decodedData,
         inputNonce: '',
         suppliedValue: e.returnValues.value,
+        scheduled: false,
       },
       block.number
     );
@@ -40,9 +41,9 @@ export async function extractSubmittedData(
 
 export async function processDataUnit(
   web3: Web3,
-  unit: SubmittedChainData,
+  unit: SubmittedData,
   blockHeight: number
-): Promise<SubmittedChainData[]> {
+): Promise<SubmittedData[]> {
   try {
     if (!unit.inputData.includes(OUTER_BATCH_DIVIDER)) {
       // Directly submitted input, prepare nonce and return:
@@ -86,12 +87,13 @@ async function processBatchedSubunit(
   web3: Web3,
   input: string,
   suppliedValue: string
-): Promise<ValidatedSubmittedChainData> {
-  const INVALID_INPUT: ValidatedSubmittedChainData = {
+): Promise<ValidatedSubmittedData> {
+  const INVALID_INPUT: ValidatedSubmittedData = {
     inputData: '',
     userAddress: '',
     inputNonce: '',
     suppliedValue: '0',
+    scheduled: false,
     validated: false,
   };
 
@@ -119,6 +121,7 @@ async function processBatchedSubunit(
     userAddress,
     inputNonce,
     suppliedValue,
+    scheduled: false,
     validated,
   };
 }

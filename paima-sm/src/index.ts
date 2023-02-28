@@ -1,7 +1,7 @@
 import type { Pool } from 'pg';
 
 import { tx, doLog, SCHEDULED_DATA_ADDRESS, getConnection } from '@paima/utils';
-import type { SubmittedChainData } from '@paima/utils';
+import type { SubmittedData } from '@paima/utils';
 import type { ChainData, GameStateMachineInitializer } from '@paima/utils';
 import Prando from '@paima/prando';
 
@@ -39,7 +39,7 @@ const SM: GameStateMachineInitializer = {
       process: async (latestChainData: ChainData): Promise<void> => {
         // Acquire correct STF based on router (based on block height)
         const gameStateTransition = gameStateTransitionRouter(latestChainData.blockNumber);
-        // Save blockHeight and randomness seed (which uses the blockHash)
+        // Save blockHeight and randomness seed
         const getSeed = randomnessRouter(randomnessProtocolEnum);
         const seed = await getSeed(latestChainData, readonlyDBConn);
         await saveLastBlockHeight.run(
@@ -55,11 +55,12 @@ const SM: GameStateMachineInitializer = {
           readonlyDBConn
         );
         for (const data of scheduledData) {
-          const inputData: SubmittedChainData = {
+          const inputData: SubmittedData = {
             userAddress: SCHEDULED_DATA_ADDRESS,
             inputData: data.input_data,
             inputNonce: '',
             suppliedValue: '0',
+            scheduled: true,
           };
           // Trigger STF
           const sqlQueries = await gameStateTransition(

@@ -4,6 +4,7 @@ import pkg from 'web3-utils';
 import storageBuild from './artifacts/Storage.js';
 import type { Storage as StorageContract } from './contract-types/Storage';
 import { doLog, logError } from './logging.js';
+import { createScheduledData, deleteScheduledData } from './db';
 import type {
   ChainData,
   ChainDataExtension,
@@ -20,6 +21,7 @@ import type {
   PaimaRuntime,
   PaimaRuntimeInitializer,
   SQLUpdate,
+  SubmittedData,
   SubmittedChainData,
   TransactionTemplate,
 } from './types';
@@ -39,6 +41,7 @@ export {
   ErrorCode,
   ErrorMessageFxn,
   ErrorMessageMapping,
+  SubmittedData,
   SubmittedChainData,
   ChainData,
   GameStateTransitionFunctionRouter,
@@ -56,6 +59,8 @@ export {
   logError,
   doLog,
   tx,
+  createScheduledData,
+  deleteScheduledData,
 };
 
 export const DEFAULT_GAS_PRICE = '61000000000' as const;

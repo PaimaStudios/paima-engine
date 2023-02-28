@@ -8,13 +8,42 @@ export type ErrorCode = number;
 export type ErrorMessageFxn = (errorCode: ErrorCode) => string;
 export type ErrorMessageMapping = Record<ErrorCode, string>;
 
-export interface ChainDataExtension {}
+export type ETHAddress = string;
+export type WalletAddress = string;
+
+export type SQLUpdate = [PreparedQuery<any, any>, any];
+
+export type VersionString = `${number}.${number}.${number}`;
+
+export type TsoaFunction = (s: Express) => void;
 
 export type TransactionTemplate = {
   data: string;
   to: string;
   gasPrice: string;
 };
+
+type NonceString = string;
+type InputDataString = string;
+export interface SubmittedData {
+  userAddress: WalletAddress;
+  inputData: InputDataString;
+  inputNonce: NonceString;
+  suppliedValue: string;
+  scheduled: boolean;
+}
+export type SubmittedChainData = SubmittedData;
+
+export interface ChainData {
+  timestamp: number | string;
+  blockHash: string;
+  blockNumber: number;
+  submittedData: SubmittedData[];
+  extensionDatums?: ChainDataExtensionDatum[];
+}
+
+type ChainDataExtensionDatum = any;
+export interface ChainDataExtension {}
 
 export interface ChainFunnel {
   nodeUrl: string;
@@ -24,38 +53,18 @@ export interface ChainFunnel {
   storage: StorageContract;
   readData: (blockHeight: number) => Promise<ChainData[]>; // if using internalReadData
 }
-export type ETHAddress = string;
-
-export type SQLUpdate = [PreparedQuery<any, any>, any];
-
-type EncodedGameDataString = string;
-type NonceString = string;
-export interface SubmittedChainData {
-  userAddress: ETHAddress;
-  inputData: EncodedGameDataString;
-  inputNonce: NonceString;
-  suppliedValue: string;
-}
-export interface ChainData {
-  timestamp: number | string;
-  blockHash: string;
-  blockNumber: number;
-  submittedData: SubmittedChainData[];
-  extensionDatums?: ChainDataExtensionDatum[];
-}
-
-type ChainDataExtensionDatum = any;
-type METHOD = 'GET' | 'POST';
 
 export type GameStateTransitionFunctionRouter = (
   blockHeight: number
 ) => GameStateTransitionFunction;
+
 export type GameStateTransitionFunction = (
-  inputData: SubmittedChainData,
+  inputData: SubmittedData,
   blockHeight: number,
   randomnessGenerator: any,
   DBConn: Pool
 ) => Promise<SQLUpdate[]>;
+
 export interface GameStateMachineInitializer {
   initialize: (
     databaseInfo: PoolConfig,
@@ -64,12 +73,13 @@ export interface GameStateMachineInitializer {
     startBlockHeight: number
   ) => GameStateMachine;
 }
+
 export interface GameStateMachine {
   latestBlockHeight: () => Promise<number>;
   getReadonlyDbConn: () => Pool;
   process: (chainData: ChainData) => Promise<void>;
 }
-export type VersionString = `${number}.${number}.${number}`;
+
 export interface PaimaRuntimeInitializer {
   initialize: (
     chainFunnel: ChainFunnel,
@@ -77,7 +87,7 @@ export interface PaimaRuntimeInitializer {
     gameBackendVersion: VersionString
   ) => PaimaRuntime;
 }
-export type TsoaFunction = (s: Express) => void;
+
 export interface PaimaRuntime {
   pollingRate: number;
   setPollingRate: (n: number) => void;
