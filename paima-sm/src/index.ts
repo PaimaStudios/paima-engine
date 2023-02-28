@@ -60,6 +60,7 @@ const SM: GameStateMachineInitializer = {
             inputData: data.input_data,
             inputNonce: '',
             suppliedValue: '0',
+            scheduled: true,
           };
           // Trigger STF
           const sqlQueries = await gameStateTransition(

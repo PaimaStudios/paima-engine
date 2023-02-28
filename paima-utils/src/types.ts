@@ -9,6 +9,7 @@ export type ErrorMessageFxn = (errorCode: ErrorCode) => string;
 export type ErrorMessageMapping = Record<ErrorCode, string>;
 
 export type ETHAddress = string;
+export type WalletAddress = string;
 
 export type SQLUpdate = [PreparedQuery<any, any>, any];
 
@@ -23,12 +24,13 @@ export type TransactionTemplate = {
 };
 
 type NonceString = string;
-type EncodedGameDataString = string;
+type InputDataString = string;
 export interface SubmittedData {
-  userAddress: ETHAddress;
-  inputData: EncodedGameDataString;
+  userAddress: WalletAddress;
+  inputData: InputDataString;
   inputNonce: NonceString;
   suppliedValue: string;
+  scheduled: boolean;
 }
 export type SubmittedChainData = SubmittedData;
 
@@ -41,7 +43,6 @@ export interface ChainData {
 }
 
 type ChainDataExtensionDatum = any;
-type METHOD = 'GET' | 'POST';
 export interface ChainDataExtension { }
 
 export interface ChainFunnel {

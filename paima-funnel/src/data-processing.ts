@@ -29,6 +29,7 @@ export async function extractSubmittedData(
         inputData: decodedData,
         inputNonce: '',
         suppliedValue: e.returnValues.value,
+        scheduled: false,
       },
       block.number
     );
@@ -92,6 +93,7 @@ async function processBatchedSubunit(
     userAddress: '',
     inputNonce: '',
     suppliedValue: '0',
+    scheduled: false,
     validated: false,
   };
 
@@ -119,6 +121,7 @@ async function processBatchedSubunit(
     userAddress,
     inputNonce,
     suppliedValue,
+    scheduled: false,
     validated,
   };
 }
