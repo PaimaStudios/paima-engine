@@ -21,6 +21,7 @@ import type {
   PaimaRuntime,
   PaimaRuntimeInitializer,
   SQLUpdate,
+  SubmittedData,
   SubmittedChainData,
   TransactionTemplate,
 } from './types';
@@ -40,6 +41,7 @@ export {
   ErrorCode,
   ErrorMessageFxn,
   ErrorMessageMapping,
+  SubmittedData,
   SubmittedChainData,
   ChainData,
   GameStateTransitionFunctionRouter,

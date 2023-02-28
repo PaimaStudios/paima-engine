@@ -24,24 +24,25 @@ export type TransactionTemplate = {
 
 type NonceString = string;
 type EncodedGameDataString = string;
-export interface SubmittedChainData {
+export interface SubmittedData {
   userAddress: ETHAddress;
   inputData: EncodedGameDataString;
   inputNonce: NonceString;
   suppliedValue: string;
 }
+export type SubmittedChainData = SubmittedData;
 
 export interface ChainData {
   timestamp: number | string;
   blockHash: string;
   blockNumber: number;
-  submittedData: SubmittedChainData[];
+  submittedData: SubmittedData[];
   extensionDatums?: ChainDataExtensionDatum[];
 }
 
 type ChainDataExtensionDatum = any;
 type METHOD = 'GET' | 'POST';
-export interface ChainDataExtension {}
+export interface ChainDataExtension { }
 
 export interface ChainFunnel {
   nodeUrl: string;
@@ -57,7 +58,7 @@ export type GameStateTransitionFunctionRouter = (
 ) => GameStateTransitionFunction;
 
 export type GameStateTransitionFunction = (
-  inputData: SubmittedChainData,
+  inputData: SubmittedData,
   blockHeight: number,
   randomnessGenerator: any,
   DBConn: Pool

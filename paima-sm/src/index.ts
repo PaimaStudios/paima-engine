@@ -1,7 +1,7 @@
 import type { Pool } from 'pg';
 
 import { tx, doLog, SCHEDULED_DATA_ADDRESS, getConnection } from '@paima/utils';
-import type { SubmittedChainData } from '@paima/utils';
+import type { SubmittedData } from '@paima/utils';
 import type { ChainData, GameStateMachineInitializer } from '@paima/utils';
 import Prando from '@paima/prando';
 
@@ -55,7 +55,7 @@ const SM: GameStateMachineInitializer = {
           readonlyDBConn
         );
         for (const data of scheduledData) {
-          const inputData: SubmittedChainData = {
+          const inputData: SubmittedData = {
             userAddress: SCHEDULED_DATA_ADDRESS,
             inputData: data.input_data,
             inputNonce: '',
