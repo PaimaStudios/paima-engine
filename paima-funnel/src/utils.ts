@@ -7,9 +7,7 @@ export interface ValidatedSubmittedData extends SubmittedData {
   validated: boolean;
 }
 
-export function unpackValidatedData(
-  validatedData: ValidatedSubmittedData
-): SubmittedData {
+export function unpackValidatedData(validatedData: ValidatedSubmittedData): SubmittedData {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const o = validatedData as any;
   delete o.validated;

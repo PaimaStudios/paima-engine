@@ -43,7 +43,7 @@ export interface ChainData {
 }
 
 type ChainDataExtensionDatum = any;
-export interface ChainDataExtension { }
+export interface ChainDataExtension {}
 
 export interface ChainFunnel {
   nodeUrl: string;
