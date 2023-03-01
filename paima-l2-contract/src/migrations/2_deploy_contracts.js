@@ -1,4 +1,4 @@
-const storage = artifacts.require("Storage");
+const paimaL2Contract = artifacts.require("PaimaL2Contract");
 const contractConfig = require("../../truffle-config.js").contract_config;
 
 module.exports = function (deployer) {
@@ -6,5 +6,5 @@ module.exports = function (deployer) {
     owner: owner,
     fee: fee
   } = contractConfig;
-  deployer.deploy(storage, owner, fee.toString(10));
+  deployer.deploy(paimaL2Contract, owner, fee.toString(10));
 };

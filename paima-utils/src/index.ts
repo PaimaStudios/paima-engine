@@ -1,8 +1,8 @@
 import Web3 from 'web3';
 import type { AbiItem } from 'web3-utils';
 import pkg from 'web3-utils';
-import storageBuild from './artifacts/Storage.js';
-import type { Storage as StorageContract } from './contract-types/Storage';
+import paimaL2ContractBuild from './artifacts/PaimaL2Contract';
+import type { PaimaL2Contract } from './contract-types/PaimaL2Contract';
 import { doLog, logError } from './logging.js';
 import { createScheduledData, deleteScheduledData } from './db';
 import type {
@@ -32,7 +32,7 @@ import { AddressType, INNER_BATCH_DIVIDER, OUTER_BATCH_DIVIDER } from './constan
 const { isAddress } = pkg;
 
 export type { Web3 };
-export type { StorageContract };
+export type { PaimaL2Contract };
 export {
   ChainFunnel,
   TsoaFunction,
@@ -87,24 +87,24 @@ export async function initWeb3(nodeUrl: string): Promise<Web3> {
   return web3;
 }
 
-export function getStorageContract(address?: string, web3?: Web3): StorageContract {
+export function getPaimaL2Contract(address?: string, web3?: Web3): PaimaL2Contract {
   if (web3 === undefined) {
     web3 = new Web3();
   }
   return new web3.eth.Contract(
-    storageBuild.abi as AbiItem[],
+    paimaL2ContractBuild.abi as AbiItem[],
     address
-  ) as unknown as StorageContract;
+  ) as unknown as PaimaL2Contract;
 }
 
-export function validateStorageAddress(address: string): void {
+export function validatePaimaL2ContractAddress(address: string): void {
   if (!isAddress(address)) {
     throw new Error('Invalid storage address supplied');
   }
 }
 
 export async function retrieveFee(address: string, web3: Web3): Promise<string> {
-  const contract = getStorageContract(address, web3);
+  const contract = getPaimaL2Contract(address, web3);
   return await contract.methods.fee().call();
 }
 
@@ -113,8 +113,8 @@ export const wait = async (ms: number): Promise<void> =>
     setTimeout(() => resolve(), ms);
   });
 
-export async function getOwner(address: string, web3: Web3): Promise<string> {
-  const contract = getStorageContract(address, web3);
+export async function getPaimaL2ContractOwner(address: string, web3: Web3): Promise<string> {
+  const contract = getPaimaL2Contract(address, web3);
   return await contract.methods.owner().call();
 }
 
