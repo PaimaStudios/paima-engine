@@ -8,7 +8,7 @@ export const CHAIN_CURRENCY_NAME = process.env.CHAIN_CURRENCY_NAME || '';
 export const CHAIN_CURRENCY_SYMBOL = process.env.CHAIN_CURRENCY_SYMBOL || '';
 export const CHAIN_CURRENCY_DECIMALS = parseInt(process.env.CHAIN_CURRENCY_DECIMALS || '0', 10);
 
-export const STORAGE_ADDRESS = process.env.STORAGE_ADDRESS || ''; // from catapult
+export const STORAGE_ADDRESS = process.env.STORAGE_ADDRESS || '';
 export const STORAGE_CONTRACT_DEPLOYMENT_BLOCKHEIGHT = parseInt(
   process.env.STORAGE_CONTRACT_DEPLOYMENT_BLOCKHEIGHT || '0'
 );
@@ -18,7 +18,6 @@ export const START_BLOCKHEIGHT = parseInt(process.env.START_BLOCKHEIGHT || '0', 
 
 export const BACKEND_URI = process.env.BACKEND_URI || '';
 export const INDEXER_URI = process.env.INDEXER_URI || '';
-// export const BATCHER_URI = "http://jw-backend.paimastudios.com:3334";
 export const BATCHER_URI = process.env.BATCHER_URI || '';
 export const STATEFUL_URI = process.env.STATEFUL_URI || '';
 export const SERVER_ONLY_MODE = process.env.SERVER_ONLY_MODE === 'true';

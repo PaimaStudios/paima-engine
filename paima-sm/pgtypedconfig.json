@@ -15,12 +15,11 @@
   "failOnError": false,
   "camelCaseColumnNames": false,
   "db": {
-    "dbName": "paima_catapult",
-    "user": "paima",
-    "password": "pi",
+    "dbName": "postgres",
+    "user": "postgres",
+    "password": "postgres",
     "host": "localhost",
     "port": 5432,
-    "ssl": false,
-    "dbUrl": "postgres://paima:pi@localhost/paima_catapult"
+    "ssl": false
   }
 }

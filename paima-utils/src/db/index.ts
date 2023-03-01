@@ -4,7 +4,7 @@ import type { SQLUpdate } from '../types';
 
 // Create an SQL update which schedules a piece of data to be run through
 // the STF at a future block height.
-export function createScheduledData(inputData: string, blockHeight: number): SQLUpdate[] {
+export function createScheduledData(inputData: string, blockHeight: number): SQLUpdate {
   const nsdParams: INewScheduledDataParams = {
     block_height: blockHeight,
     input_data: inputData,
@@ -14,7 +14,7 @@ export function createScheduledData(inputData: string, blockHeight: number): SQL
 }
 
 // Create an SQL update which deletes an upcoming scheduled data
-export function deleteScheduledData(inputData: string, blockHeight: number): SQLUpdate[] {
+export function deleteScheduledData(inputData: string, blockHeight: number): SQLUpdate {
   const dsdParams: IRemoveScheduledDataParams = {
     block_height: blockHeight,
     input_data: inputData,
