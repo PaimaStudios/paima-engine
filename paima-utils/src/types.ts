@@ -2,7 +2,7 @@ import type Web3 from 'web3';
 import type { PreparedQuery } from '@pgtyped/query';
 import type { Express, RequestHandler } from 'express';
 import type { Pool, PoolConfig } from 'pg';
-import type { Storage as StorageContract } from './contract-types/index';
+import type { PaimaL2Contract } from './contract-types/index';
 
 export type ErrorCode = number;
 export type ErrorMessageFxn = (errorCode: ErrorCode) => string;
@@ -47,10 +47,10 @@ export interface ChainDataExtension {}
 
 export interface ChainFunnel {
   nodeUrl: string;
-  storageAddress: string;
+  paimaL2ContractAddress: string;
   extensions: ChainDataExtension[];
   web3: Web3;
-  storage: StorageContract;
+  paimaL2Contract: PaimaL2Contract;
   readData: (blockHeight: number) => Promise<ChainData[]>; // if using internalReadData
 }
 

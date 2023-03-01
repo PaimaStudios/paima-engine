@@ -5,13 +5,13 @@ import '../test-lib/cheatcodes.sol';
 import '../test-lib/console.sol';
 import '../test-lib/ctest.sol';
 
-import '../src/contract/Storage.sol';
+import '../src/contract/PaimaL2Contract.sol';
 
-contract StorageTest is CTest {
+contract PaimaL2ContractTest is CTest {
   event PaimaGameInteraction(address indexed userAddress, bytes data, uint256 value);
 
   CheatCodes cheats = CheatCodes(HEVM_ADDRESS);
-  Storage strg;
+  PaimaL2Contract strg;
 
   address account1 = 0x766FCe3d50d795Fe6DcB1020AB58bccddd5C5c77;
   address account2 = 0x078D888E40faAe0f32594342c85940AF3949E666;
@@ -20,7 +20,7 @@ contract StorageTest is CTest {
   uint256 constant FEE = 1e16;
 
   function setUp() public {
-    strg = new Storage(address(account1), FEE);
+    strg = new PaimaL2Contract(address(account1), FEE);
     cheats.deal(account1, 100 ether);
     cheats.deal(account2, 100 ether);
   }

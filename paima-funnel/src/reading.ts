@@ -1,16 +1,16 @@
 import type Web3 from 'web3';
 
-import type { StorageContract } from '@paima/utils';
+import type { PaimaL2Contract } from '@paima/utils';
 import type { ChainData } from '@paima/utils';
 import { doLog } from '@paima/utils';
-import type { PaimaGameInteraction } from '@paima/utils/src/contract-types/Storage';
+import type { PaimaGameInteraction } from '@paima/utils/src/contract-types/PaimaL2Contract';
 
 import { extractSubmittedData } from './data-processing.js';
 import { timeout } from './utils.js';
 
 async function processBlock(
   web3: Web3,
-  storage: StorageContract,
+  storage: PaimaL2Contract,
   blockNumber: number
 ): Promise<ChainData> {
   try {
@@ -38,7 +38,7 @@ async function processBlock(
 
 export async function internalReadDataMulti(
   web3: Web3,
-  storage: StorageContract,
+  storage: PaimaL2Contract,
   fromBlock: number,
   toBlock: number
 ): Promise<ChainData[]> {

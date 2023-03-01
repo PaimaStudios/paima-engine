@@ -4,7 +4,7 @@ import web3UtilsPkg from 'web3-utils';
 
 import { AddressType, doLog, INNER_BATCH_DIVIDER, OUTER_BATCH_DIVIDER } from '@paima/utils';
 import type { SubmittedData } from '@paima/utils';
-import type { PaimaGameInteraction } from '@paima/utils/src/contract-types/Storage';
+import type { PaimaGameInteraction } from '@paima/utils/src/contract-types/PaimaL2Contract';
 
 import type { ValidatedSubmittedData } from './utils.js';
 import { createNonce, unpackValidatedData } from './utils.js';

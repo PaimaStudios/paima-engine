@@ -1,4 +1,4 @@
-import { doLog, getStorageContract, initWeb3, validateStorageAddress } from '@paima/utils';
+import { doLog, getPaimaL2Contract, initWeb3, validatePaimaL2ContractAddress } from '@paima/utils';
 
 import type { ChainFunnel, ChainData, ChainDataExtension } from '@paima/utils';
 
@@ -10,16 +10,16 @@ const GET_BLOCK_NUMBER_TIMEOUT = 5000;
 
 // TODO: paimaFunnel here does not correspond to any type definition
 const paimaFunnel = {
-  async initialize(nodeUrl: string, storageAddress: string): Promise<ChainFunnel> {
-    validateStorageAddress(storageAddress);
+  async initialize(nodeUrl: string, paimaL2ContractAddress: string): Promise<ChainFunnel> {
+    validatePaimaL2ContractAddress(paimaL2ContractAddress);
     const web3 = await initWeb3(nodeUrl);
-    const storage = getStorageContract(storageAddress, web3);
+    const paimaL2Contract = getPaimaL2Contract(paimaL2ContractAddress, web3);
     return {
       nodeUrl,
-      storageAddress,
+      paimaL2ContractAddress,
       extensions: [] as ChainDataExtension[],
       web3,
-      storage,
+      paimaL2Contract,
       async readData(
         blockHeight: number,
         blockCount: number = DEFAULT_BLOCK_COUNT
@@ -46,7 +46,7 @@ const paimaFunnel = {
             } else {
               doLog(`q${fromBlock}-${toBlock}`);
             }
-            await internalReadDataMulti(web3, storage, fromBlock, toBlock)
+            await internalReadDataMulti(web3, paimaL2Contract, fromBlock, toBlock)
               .then(res => (blocks = res))
               .catch(err => {
                 doLog(`[paima-funnel::readData] Block reading failed: ${err}`);
