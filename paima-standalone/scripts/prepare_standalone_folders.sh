@@ -52,9 +52,9 @@ cp package-lock.json $SDK_PATH/package-lock.json
 echo $CONTRACT_PATH
 rm -rf $CONTRACT_PATH
 mkdir $CONTRACT_PATH
-cp -r storage-contract/src $CONTRACT_PATH
-cp -r storage-contract/package.json $CONTRACT_PATH
-cp -r storage-contract/truffle-config.js $CONTRACT_PATH
+cp -r paima-l2-contract/src $CONTRACT_PATH
+cp -r paima-l2-contract/package.json $CONTRACT_PATH
+cp -r paima-l2-contract/truffle-config.js $CONTRACT_PATH
 # cp -r storage-contract/ $CONTRACT_PATH
 
 
