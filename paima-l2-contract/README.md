@@ -14,7 +14,7 @@ To deploy the contract, you will need the following:
 
 When the prerequisites are ready, deploy with the following steps (on the Milkomeda testnet):
 
-1. Navigate to the _storage-contract_ directory;
+1. Navigate to the `paima-l2-contract` directory;
 2. Check the contract configuration in `truffle-config.js`, in particular, set the owner address to the address of the owner account;
 3. Set the deployment account private key to an environment variable called `PRIVATE_KEY` and export it to child processes, e.g. in Bash, run `export PRIVATE_KEY=...` with your private key (without the `0x` prefix) instead of the ellipsis;
 4. Deploy the contract by running `npx truffle migrate --network testnet` and note the address at which the contract was deployed (including the `0x` prefix).
@@ -32,7 +32,7 @@ Install dependencies:
 npm i
 ```
 
-If you want to change the Storage smart contract (`./src/contract/Storage.sol`)
+If you want to change the PaimaL2Contract (`./src/contract/PaimaL2Contract.sol`)
 you'll further need Truffle (`npm i -g truffle`) and
 
 ```
