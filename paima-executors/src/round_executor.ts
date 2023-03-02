@@ -28,6 +28,7 @@ interface RoundExecutorInitializer {
 
 const roundExecutor: RoundExecutorInitializer = {
   initialize: (matchEnvironment, matchState, userInputs, randomnessGenerator, processTick) => {
+    randomnessGenerator.reset();
     return {
       currentTick: 1,
       currentState: matchState,
