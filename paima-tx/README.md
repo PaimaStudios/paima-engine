@@ -6,9 +6,6 @@ Both Paima-tx and the Paima Contract are currently implemented to be usable on t
 
 ## Usage
 
-Currently the library is in development, unpublished, and to be
-imported and used locally.
-
 The exported function `getTxTemplate` can be used as follows to help build store data transaction structures to be sent using Metamask:
 
 ```ts

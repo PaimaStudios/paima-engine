@@ -4,34 +4,34 @@ import type { RoundNumbered, Seed } from './types.js';
 
 interface MatchExecutorInitializer {
   initialize: <
-    MatchType,
-    UserStateType,
+    MatchEnvironment,
+    MatchState,
     MoveType extends RoundNumbered,
     TickEvent,
-    RoundState extends RoundNumbered
+    RoundStateCheckpoint extends RoundNumbered
   >(
-    matchEnvironment: MatchType,
+    matchEnvironment: MatchEnvironment,
     maxRound: number,
-    roundState: RoundState[],
+    roundStateCheckpoints: RoundStateCheckpoint[],
     seeds: Seed[],
     userInputs: MoveType[],
-    stateMutator: (r: RoundState[]) => UserStateType,
+    stateMutator: (r: RoundStateCheckpoint[]) => MatchState,
     processTick: (
-      mt: MatchType,
-      s: UserStateType,
-      m: MoveType[],
-      c: number,
+      matchEnvironment: MatchEnvironment,
+      matchState: MatchState,
+      submittedMoves: MoveType[],
+      currentTick: number,
       randomnessGenerator: Prando
-    ) => TickEvent
+    ) => TickEvent[]
   ) => {
     currentRound: number;
     roundExecutor: null | {
       currentTick: number;
-      currentState: UserStateType;
-      tick: () => TickEvent;
-      endState: () => UserStateType;
+      currentState: MatchState;
+      tick: () => TickEvent[];
+      endState: () => MatchState;
     };
-    tick: () => TickEvent | null;
+    tick: () => TickEvent[] | null;
   };
 }
 
@@ -72,13 +72,14 @@ const matchExecutorInitializer: MatchExecutorInitializer = {
           );
           this.roundExecutor = executor;
         }
-        const event = this.roundExecutor.tick();
+        const events = this.roundExecutor.tick();
 
-        // If no event, it means that the previous round executor finished, so we recurse this function to increment the round and try again
-        if (!event) {
+        // If no tick events, it means that the previous round executor finished
+        // so we recurse this function to increment the round and try again
+        if (!events) {
           this.roundExecutor = null;
           return this.tick();
-        } else return event;
+        } else return events;
       },
     };
   },
