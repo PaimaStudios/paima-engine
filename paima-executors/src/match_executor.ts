@@ -22,13 +22,13 @@ interface MatchExecutorInitializer {
       submittedMoves: MoveType[],
       currentTick: number,
       randomnessGenerator: Prando
-    ) => TickEvent[]
+    ) => TickEvent[] | null
   ) => {
     currentRound: number;
     roundExecutor: null | {
       currentTick: number;
       currentState: MatchState;
-      tick: () => TickEvent[];
+      tick: () => TickEvent[] | null;
       endState: () => MatchState;
     };
     tick: () => TickEvent[] | null;

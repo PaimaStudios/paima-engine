@@ -17,11 +17,11 @@ interface RoundExecutorInitializer {
       submittedMoves: MoveType[],
       currentTick: number,
       randomnessGenerator: Prando
-    ) => TickEvent[]
+    ) => TickEvent[] | null
   ) => {
     currentTick: number;
     currentState: MatchState;
-    tick: () => TickEvent[];
+    tick: () => TickEvent[] | null;
     endState: () => MatchState;
   };
 }
