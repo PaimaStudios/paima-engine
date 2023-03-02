@@ -2,6 +2,8 @@ import roundExecutor from './round_executor.js';
 import Prando from '@paima/prando';
 import type { RoundNumbered, Seed } from './types.js';
 
+export type MatchExecutor = any;
+
 interface MatchExecutorInitializer {
   initialize: <
     MatchEnvironment,
@@ -35,7 +37,7 @@ interface MatchExecutorInitializer {
   };
 }
 
-const matchExecutorInitializer: MatchExecutorInitializer = {
+export const matchExecutor: MatchExecutorInitializer = {
   initialize: (
     matchEnvironment,
     maxRound,
@@ -85,4 +87,4 @@ const matchExecutorInitializer: MatchExecutorInitializer = {
   },
 };
 
-export default matchExecutorInitializer;
+export default matchExecutor;

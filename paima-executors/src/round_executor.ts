@@ -1,6 +1,8 @@
 import type Prando from '@paima/prando';
 import type { RoundNumbered } from './types.js';
 
+export type RoundExecutor = any;
+
 // The round executor enables games to build encapsulated "mini-state machines" in their game that natively work with frontends.
 // Round executors typically hold most real gameplay logic, and emit `TickEvent`s to describe updates to the `matchState`.
 // Data related to the match which should not be mutated by the round executor should be in `matchEnvironment`.
@@ -26,7 +28,7 @@ interface RoundExecutorInitializer {
   };
 }
 
-const roundExecutor: RoundExecutorInitializer = {
+export const roundExecutor: RoundExecutorInitializer = {
   initialize: (matchEnvironment, matchState, userInputs, randomnessGenerator, processTick) => {
     randomnessGenerator.reset();
     return {
