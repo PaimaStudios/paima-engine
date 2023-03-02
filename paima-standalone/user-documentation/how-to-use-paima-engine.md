@@ -109,6 +109,14 @@ q325-q425
 
 These logs denote the block height numbers that the game node is syncing from the deployed L2 smart contract on the blockchain. Other logs will also pop up, such as when game inputs are read from the contract. Of note, logs are also saved in the `logs.log` file for easy access.
 
+## Testing Out Your Game Node
+
+Now that your game node is syncing, we recommend testing to ensure that both the contract you deployed and the node itself are all in working order/configured properly.
+
+Simply follow the [posting test game inputs to L2 contract] written tutorial and within a couple minutes you'll have gone through a full end-to-end loop of using Paima Engine!
+
+Of note, the above tutorial teaches you an easy way to manually submit custom-crafted game inputs, which is specifically useful when implementing new features as you develop your games/apps.
+
 ## Deploying Your Game Node
 
 If you wish to deploy your game on a server/move into a production environment, the following files are all that is needed for Paima Engine to run your game node:
