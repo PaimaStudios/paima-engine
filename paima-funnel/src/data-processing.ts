@@ -14,14 +14,26 @@ import verifySignaturePolkadot from './verification-polkadot.js';
 
 const { hexToUtf8 } = web3UtilsPkg;
 
+function decodeEventData(eventData: string): string {
+  if (eventData.length > 0) {
+    try {
+      const decodedData = hexToUtf8(eventData);
+      return decodedData;
+    } catch (err) {
+      return '';
+    }
+  } else {
+    return '';
+  }
+}
+
 export async function extractSubmittedData(
   web3: Web3,
   block: BlockTransactionString,
   events: PaimaGameInteraction[]
 ): Promise<SubmittedData[]> {
   const eventMapper = (e: PaimaGameInteraction): Promise<SubmittedData[]> => {
-    const data = e.returnValues.data;
-    const decodedData = data && data.length > 0 ? hexToUtf8(data) : '';
+    const decodedData = decodeEventData(e.returnValues.data);
     return processDataUnit(
       web3,
       {
