@@ -1,0 +1,24 @@
+{
+  "name": "@paima/mw-core",
+  "version": "1.0.0",
+  "description": "Middleware core to be reused among all Paima games",
+  "type": "module",
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
+  "files": [
+    "/build"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "prettier --write '**/*.ts'"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "prettier": "^2.6.2",
+    "prettier-plugin-organize-imports": "^2.3.4",
+    "typescript": "^4.7.4"
+  },
+  "dependencies": {}
+}
