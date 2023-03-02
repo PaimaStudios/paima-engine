@@ -2,33 +2,33 @@ import type Prando from '@paima/prando';
 import type { RoundNumbered } from './types.js';
 
 interface RoundExecutorInitializer {
-  initialize: <MatchType, RoundStateType, MoveType extends RoundNumbered, TickEvent>(
-    matchEnvironment: MatchType,
-    userStates: RoundStateType,
-    userInputs: MoveType[],
+  initialize: <MatchEnvironment, MatchState, MoveType extends RoundNumbered, TickEvent>(
+    matchEnvironment: MatchEnvironment,
+    matchState: MatchState,
+    submittedMoves: MoveType[],
     randomnessGenerator: Prando,
     processTick: (
-      matchEnvironment: MatchType,
-      userState: RoundStateType,
-      moves: MoveType[],
+      matchEnvironment: MatchEnvironment,
+      matchState: MatchState,
+      submittedMoves: MoveType[],
       currentTick: number,
       randomnessGenerator: Prando
-    ) => TickEvent
+    ) => TickEvent[]
   ) => {
     currentTick: number;
-    currentState: RoundStateType;
-    tick: () => TickEvent;
-    endState: () => RoundStateType;
+    currentState: MatchState;
+    tick: () => TickEvent[];
+    endState: () => MatchState;
   };
 }
 
 const roundExecutor: RoundExecutorInitializer = {
-  initialize: (matchEnvironment, roundState, userInputs, randomnessGenerator, processTick) => {
+  initialize: (matchEnvironment, matchState, userInputs, randomnessGenerator, processTick) => {
     return {
       currentTick: 1,
-      currentState: roundState,
+      currentState: matchState,
       tick(): ReturnType<typeof this.tick> {
-        const event = processTick(
+        const events = processTick(
           matchEnvironment,
           this.currentState,
           userInputs,
@@ -36,7 +36,7 @@ const roundExecutor: RoundExecutorInitializer = {
           randomnessGenerator
         );
         this.currentTick++;
-        return event;
+        return events;
       },
       endState(): ReturnType<typeof this.endState> {
         while (this.tick() !== null);
