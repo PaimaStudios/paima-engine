@@ -71,7 +71,7 @@ One side note, as you begin writing your game logic (or when building a template
 
 Each game built with Paima Engine is its very own Layer 2. This means that you will need to deploy the Paima L2 Smart Contract for your game, to whichever chain you wish to launch on.
 
-Reference the [Deploying L2 Smart Contract](./deploying-l2-smart-contract.md) documentation to easily deploy the contract.
+Reference the [Deploying L2 Smart Contract](./2%20-%20deploying-l2-smart-contract.md) documentation to easily deploy the contract.
 
 ## Setting Up Your Game Node Config
 
@@ -113,9 +113,9 @@ These logs denote the block height numbers that the game node is syncing from th
 
 Now that your game node is syncing, we recommend testing to ensure that both the contract you deployed and the node itself are all in working order/configured properly.
 
-Simply follow the [posting test game inputs to L2 contract] written tutorial and within a couple minutes you'll have gone through a full end-to-end loop of using Paima Engine!
+Simply follow the [posting test game inputs to L2 contract tutorial](./3%20-%20posting-test-game-inputs.md) and within a couple minutes you'll have experienced the end-to-end loop of using Paima Engine!
 
-Of note, the above tutorial teaches you an easy way to manually submit custom-crafted game inputs, which is specifically useful when implementing new features as you develop your games/apps.
+Of note, the above tutorial teaches you an easy way to manually submit custom-crafted game inputs, which is also useful when implementing new features as you develop your games/apps.
 
 ## Deploying Your Game Node
 
@@ -135,7 +135,3 @@ Lastly, if you have `pg_dump` installed on the machine running your game node (t
 If `pg_dump` is not available, then when you start your game node an error will be printed in the terminal denoting of such, however the game node will still function perfectly fine nonetheless (and will simply skip taking snapshots).
 
 Of note, unlike in the Web2/2.5 world, these snapshots are _not vital_. You are building a trustless Web3 game using Paima Engine, which means that even if your entire DB gets corrupted or deleted, a brand new game node can be synced from scratch by just reading from the blockchain. These snapshots are simply a quality-of-life enhancement, as they allow you to deploy new game nodes much faster without having to resync from scratch.
-
-<!-- - Generic template -->
-<!-- - Turn Based template (tic-tac-toe) -->
-<!-- - Simultaneous Play Template (rock paper scissors) -->
