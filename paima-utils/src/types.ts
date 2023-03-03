@@ -4,6 +4,8 @@ import type { Express, RequestHandler } from 'express';
 import type { Pool, PoolConfig } from 'pg';
 import type { PaimaL2Contract } from './contract-types/index';
 
+export type Deployment = 'C1' | 'A1';
+
 export type ErrorCode = number;
 export type ErrorMessageFxn = (errorCode: ErrorCode) => string;
 export type ErrorMessageMapping = Record<ErrorCode, string>;

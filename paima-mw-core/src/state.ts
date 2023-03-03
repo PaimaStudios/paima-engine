@@ -15,6 +15,7 @@ import {
 import type {
   CardanoAddress,
   ContractAddress,
+  Deployment,
   ETHAddress,
   PolkadotAddress,
   URI,
@@ -22,15 +23,8 @@ import type {
   Web3,
 } from '@paima/utils';
 import { initWeb3 } from '@paima/utils';
-import { PaimaMiddlewareErrorCode, errorMessageFxn } from './errors';
-import type {
-  CardanoApi,
-  Deployment,
-  MiddlewareConnectionDetails,
-  PolkadotSignFxn,
-  PostingInfo,
-  PostingModeString,
-} from './types';
+import { PaimaMiddlewareErrorCode, paimaErrorMessageFxn } from './errors';
+import type { CardanoApi, PolkadotSignFxn, PostingInfo, PostingModeString } from './types';
 import type { HDWalletProvider } from './wallets/truffle';
 
 export const enum PostingMode {
@@ -180,15 +174,9 @@ export const getActiveAddress = (): string => {
       return truffleAddress;
     default:
       const errorCode = PaimaMiddlewareErrorCode.INTERNAL_INVALID_POSTING_MODE;
-      throw new Error(errorMessageFxn(errorCode));
+      throw new Error(paimaErrorMessageFxn(errorCode));
   }
 };
-
-export const getConnectionDetails = (): MiddlewareConnectionDetails => ({
-  storageAddress,
-  backendUri,
-  batcherUri,
-});
 
 export const getPostingInfo = (): PostingInfo => ({
   address: getActiveAddress(),

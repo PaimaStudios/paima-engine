@@ -9,6 +9,7 @@ import type {
   ChainData,
   ChainDataExtension,
   ChainFunnel,
+  Deployment,
   ErrorCode,
   ErrorMessageFxn,
   ErrorMessageMapping,
@@ -78,6 +79,12 @@ export function buildErrorCodeTranslator(obj: ErrorMessageMapping): ErrorMessage
       return obj[errorCode];
     }
   };
+}
+
+export function getBlockTime(deployment: Deployment): number {
+  if (deployment === 'C1') return 4;
+  else if (deployment === 'A1') return 4.5;
+  else throw new Error(`[getBlockTime] unsupported deployment: ${deployment}`);
 }
 
 export async function initWeb3(nodeUrl: string): Promise<Web3> {

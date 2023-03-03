@@ -13,7 +13,7 @@ function queryValueToString(value: QueryValue): string {
   }
 }
 
-function buildQuery(endpoint: string, options: QueryOptions): string {
+export function buildQuery(endpoint: string, options: QueryOptions): string {
   const optStrings: string[] = [];
   for (let opt in options) {
     const valString = queryValueToString(options[opt]);
@@ -26,11 +26,11 @@ function buildQuery(endpoint: string, options: QueryOptions): string {
   }
 }
 
-function buildBackendQuery(endpoint: string, options: QueryOptions): string {
+export function buildBackendQuery(endpoint: string, options: QueryOptions): string {
   return `${getBackendUri()}/${buildQuery(endpoint, options)}`;
 }
 
-function buildBatcherQuery(endpoint: string, options: QueryOptions): string {
+export function buildBatcherQuery(endpoint: string, options: QueryOptions): string {
   return `${getBatcherUri()}/${buildQuery(endpoint, options)}`;
 }
 

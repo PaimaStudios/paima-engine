@@ -49,9 +49,10 @@ export const enum PaimaMiddlewareErrorCode {
   // Internal, should never occur:
   INTERNAL_INVALID_DEPLOYMENT,
   INTERNAL_INVALID_POSTING_MODE,
+  FINAL_PAIMA_GENERIC_ERROR, // only to be used as a counter
 }
 
-const PAIMA_MIDDLEWARE_ERROR_MESSAGES: PaimaErrorMessageMapping = {
+export const PAIMA_MIDDLEWARE_ERROR_MESSAGES: PaimaErrorMessageMapping = {
   [PaimaMiddlewareErrorCode.OK]: '',
   [PaimaMiddlewareErrorCode.UNKNOWN]: 'Unknown error',
   [PaimaMiddlewareErrorCode.METAMASK_NOT_INSTALLED]: 'Metamask not installed',
@@ -91,13 +92,18 @@ const PAIMA_MIDDLEWARE_ERROR_MESSAGES: PaimaErrorMessageMapping = {
   [PaimaMiddlewareErrorCode.INTERNAL_INVALID_DEPLOYMENT]: 'Internal error: Invalid deployment set',
   [PaimaMiddlewareErrorCode.INTERNAL_INVALID_POSTING_MODE]:
     'Internal error: Invalid posting mode set',
+  [PaimaMiddlewareErrorCode.FINAL_PAIMA_GENERIC_ERROR]:
+    'Internal error: unknown generic paima error (FINAL_PAIMA_GENERIC_ERROR)',
 };
 
-export const errorMessageFxn: ErrorMessageFxn = buildErrorCodeTranslator(
+export const paimaErrorMessageFxn: ErrorMessageFxn = buildErrorCodeTranslator(
   PAIMA_MIDDLEWARE_ERROR_MESSAGES
 );
 
-export function buildEndpointErrorFxn(endpointName: string): EndpointErrorFxn {
+export function buildAbstractEndpointErrorFxn(
+  errorMessageFxn: ErrorMessageFxn,
+  endpointName: string
+): EndpointErrorFxn {
   return function (errorDescription: ErrorCode | string, err?: any, errorCode?: number) {
     let msg: string = '';
     let errorOccured: boolean = false;
@@ -123,4 +129,8 @@ export function buildEndpointErrorFxn(endpointName: string): EndpointErrorFxn {
       errorCode: errorCode ? errorCode : FE_ERR_GENERIC,
     };
   };
+}
+
+export function buildEndpointErrorFxn(endpointName: string): EndpointErrorFxn {
+  return buildAbstractEndpointErrorFxn(paimaErrorMessageFxn, endpointName);
 }

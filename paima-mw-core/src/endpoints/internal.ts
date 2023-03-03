@@ -6,7 +6,6 @@ import { connectWallet as connectTruffleWallet } from '../wallets/truffle';
 import {
   getActiveAddress,
   getCardanoAddress,
-  getConnectionDetails,
   getEthAddress,
   getGameVersion,
   getPostingInfo,
@@ -18,20 +17,7 @@ import {
   setBatchedPolkadotMode,
   setUnbatchedMode,
 } from '../state';
-import type {
-  MiddlewareConfig,
-  PostingInfo,
-  PostingModeSwitchResult,
-  Result,
-  Wallet,
-} from '../types';
-
-export function getMiddlewareConfig(): MiddlewareConfig {
-  return {
-    ...getConnectionDetails(),
-    localVersion: getGameVersion(),
-  };
-}
+import type { PostingInfo, PostingModeSwitchResult, Result, Wallet } from '../types';
 
 export async function userWalletLoginWithoutChecks(): Promise<Result<Wallet>> {
   const errorFxn = buildEndpointErrorFxn('userWalletLoginWithoutChecks');

@@ -16,16 +16,6 @@ export interface BatchedSubunit {
   millisecondTimestamp: string;
 }
 
-export interface MiddlewareConnectionDetails {
-  storageAddress: ContractAddress;
-  backendUri: URI;
-  batcherUri: URI;
-}
-
-export interface MiddlewareConfig extends MiddlewareConnectionDetails {
-  localVersion: string;
-}
-
 export interface PostingInfo {
   address: WalletAddress;
   postingModeString: PostingModeString;
@@ -49,8 +39,6 @@ export type SignFunction = (userAddress: WalletAddress, message: string) => Prom
 export type CardanoApi = any;
 
 export type PolkadotSignFxn = any;
-
-export type Deployment = 'C1' | 'A1';
 
 export interface SuccessfulResultMessage {
   success: true;
