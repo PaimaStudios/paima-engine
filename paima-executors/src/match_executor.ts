@@ -7,12 +7,7 @@ export interface NewRoundEvent {
   nextRound: number;
 }
 interface MatchExecutorInitializer {
-  initialize: <
-    MatchType,
-    RoundState,
-    MoveType extends RoundNumbered,
-    TickEvent
-  >(
+  initialize: <MatchType, RoundState, MoveType extends RoundNumbered, TickEvent>(
     matchEnvironment: MatchType,
     maxRound: number,
     roundState: RoundState,
@@ -47,10 +42,6 @@ const matchExecutorInitializer: MatchExecutorInitializer = {
       totalRounds: totalRounds,
       roundExecutor: null,
       __nextRound(): void {
-        if (this.currentRound >= totalRounds) {
-          this.roundExecutor = null;
-          return;
-        }
         this.currentRound++;
         const seed = seeds.find(s => s.round === this.currentRound);
         if (!seed) {
@@ -69,18 +60,30 @@ const matchExecutorInitializer: MatchExecutorInitializer = {
         this.roundExecutor = executor;
       },
       tick(): ReturnType<typeof this.tick> {
-        if (!this.roundExecutor) {
-          return null;
-        }
+        // If the match executor was just initialized,
+        // fetch the round executor of the first round
+        if (this.currentRound === 0) this.__nextRound();
+        // If no round executor is available, return null
+        // ending the match executor itself
+        if (!this.roundExecutor) return null;
+        // If all good, call the round executor and return its output
         const event = this.roundExecutor.tick();
-        if (event) {
-          return event;
-        } else {
-          this.__nextRound();
-          return {
-            eventType: 'newRound',
-            nextRound: this.currentRound + 1,
-          };
+        if (event) return event;
+        // If the round executor returned null, the round is ended
+        // so we increment the round
+        else {
+          // Unless we're already at the last round. If so,
+          // delete the round executor and return null
+          if (this.currentRound === totalRounds) return null;
+          else {
+            // If there are still rounds to execute, increment round
+            // and return newRound event
+            this.__nextRound();
+            return {
+              eventType: 'newRound',
+              nextRound: this.currentRound, // incremented by __nextRound(),
+            };
+          }
         }
       },
     };

@@ -49,7 +49,6 @@ const matchExecutorInitializer: MatchExecutorInitializer = {
       currentRound: 0,
       roundExecutor: null,
       tick(): ReturnType<typeof this.tick> {
-        console.log(this.currentRound, 'currentRound');
         if (this.currentRound > maxRound) return null; // null if reached end of the match
         if (!this.roundExecutor) {
           // Set round executor if null
