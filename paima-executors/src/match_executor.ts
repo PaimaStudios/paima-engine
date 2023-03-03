@@ -5,13 +5,13 @@ import type { RoundNumbered, Seed, NewRoundEvent } from './types.js';
 interface MatchExecutorInitializer {
   initialize: <MatchType, MatchState, MoveType extends RoundNumbered, TickEvent>(
     matchEnvironment: MatchType,
-    maxRound: number,
-    roundState: MatchState,
+    totalRounds: number,
+    initialState: MatchState,
     seeds: Seed[],
     submittedMoves: MoveType[],
     processTick: (
       matchEnvironment: MatchType,
-      roundState: MatchState,
+      matchState: MatchState,
       submittedMoves: MoveType[],
       currentTick: number,
       randomnessGenerator: Prando
@@ -26,12 +26,12 @@ interface MatchExecutorInitializer {
       endState: () => MatchState;
     };
     __nextRound: () => void;
-    tick: () => TickEvent[] | [NewRoundEvent] | null;
+    tick: () => TickEvent[] | NewRoundEvent[] | null;
   };
 }
 
 const matchExecutorInitializer: MatchExecutorInitializer = {
-  initialize: (matchEnvironment, totalRounds, initialState, seeds, userInputs, processTick) => {
+  initialize: (matchEnvironment, totalRounds, initialState, seeds, submittedMoves, processTick) => {
     return {
       currentRound: 0,
       currentState: initialState,
@@ -45,7 +45,7 @@ const matchExecutorInitializer: MatchExecutorInitializer = {
           return;
         }
         const randomnessGenerator = new Prando(seed.seed);
-        const inputs = userInputs.filter(ui => ui.round == this.currentRound);
+        const inputs = submittedMoves.filter(ui => ui.round == this.currentRound);
         const executor = roundExecutor.initialize(
           matchEnvironment,
           this.currentState,
