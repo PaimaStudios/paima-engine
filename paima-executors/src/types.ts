@@ -7,3 +7,8 @@ export interface Seed {
   block_height: number;
   round: number;
 }
+
+export interface NewRoundEvent {
+  eventType: 'newRound';
+  roundNumber: number;
+}

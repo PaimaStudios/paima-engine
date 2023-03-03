@@ -1,25 +1,16 @@
 import roundExecutor from './round_executor.js';
 import Prando from '@paima/prando';
-import type { RoundNumbered, Seed } from './types.js';
-
-export type MatchExecutor = any;
+import type { RoundNumbered, Seed, NewRoundEvent } from './types.js';
 
 interface MatchExecutorInitializer {
-  initialize: <
-    MatchEnvironment,
-    MatchState,
-    MoveType extends RoundNumbered,
-    TickEvent,
-    RoundStateCheckpoint extends RoundNumbered
-  >(
-    matchEnvironment: MatchEnvironment,
-    maxRound: number,
-    roundStateCheckpoints: RoundStateCheckpoint[],
+  initialize: <MatchType, MatchState, MoveType extends RoundNumbered, TickEvent>(
+    matchEnvironment: MatchType,
+    totalRounds: number,
+    initialState: MatchState,
     seeds: Seed[],
-    userInputs: MoveType[],
-    stateMutator: (r: RoundStateCheckpoint[]) => MatchState,
+    submittedMoves: MoveType[],
     processTick: (
-      matchEnvironment: MatchEnvironment,
+      matchEnvironment: MatchType,
       matchState: MatchState,
       submittedMoves: MoveType[],
       currentTick: number,
@@ -27,64 +18,74 @@ interface MatchExecutorInitializer {
     ) => TickEvent[] | null
   ) => {
     currentRound: number;
+    currentState: MatchState;
     roundExecutor: null | {
       currentTick: number;
       currentState: MatchState;
       tick: () => TickEvent[] | null;
       endState: () => MatchState;
     };
-    tick: () => TickEvent[] | null;
+    __nextRound: () => void;
+    tick: () => TickEvent[] | NewRoundEvent[] | null;
   };
 }
 
-export const matchExecutor: MatchExecutorInitializer = {
-  initialize: (
-    matchEnvironment,
-    maxRound,
-    roundStates,
-    seeds,
-    userInputs,
-    stateMutator,
-    processTick
-  ) => {
+const matchExecutorInitializer: MatchExecutorInitializer = {
+  initialize: (matchEnvironment, totalRounds, initialState, seeds, submittedMoves, processTick) => {
     return {
       currentRound: 0,
+      currentState: initialState,
+      totalRounds: totalRounds,
       roundExecutor: null,
-      tick(): ReturnType<typeof this.tick> {
-        console.log(this.currentRound, 'currentRound');
-        if (this.currentRound > maxRound) return null; // null if reached end of the match
-        if (!this.roundExecutor) {
-          // Set round executor if null
-          this.currentRound++;
-          const states = roundStates.filter(rs => rs.round == this.currentRound);
-          if (states.length === 0) return null; // This shouldn't happen but good to check nonetheless
-          const stateObj = stateMutator(states);
-          const seed = seeds.find(s => s.round === this.currentRound);
-          if (!seed) {
-            return null;
-          }
-          const randomnessGenerator = new Prando(seed.seed);
-          const inputs = userInputs.filter(ui => ui.round == this.currentRound);
-          const executor = roundExecutor.initialize(
-            matchEnvironment,
-            stateObj,
-            inputs,
-            randomnessGenerator,
-            processTick
-          );
-          this.roundExecutor = executor;
-        }
-        const events = this.roundExecutor.tick();
-
-        // If no tick events, it means that the previous round executor finished
-        // so we recurse this function to increment the round and try again
-        if (!events) {
+      __nextRound(): void {
+        this.currentRound++;
+        const seed = seeds.find(s => s.round === this.currentRound);
+        if (!seed) {
           this.roundExecutor = null;
-          return this.tick();
-        } else return events;
+          return;
+        }
+        const randomnessGenerator = new Prando(seed.seed);
+        const inputs = submittedMoves.filter(ui => ui.round == this.currentRound);
+        const executor = roundExecutor.initialize(
+          matchEnvironment,
+          this.currentState,
+          inputs,
+          randomnessGenerator,
+          processTick
+        );
+        this.roundExecutor = executor;
+      },
+      tick(): ReturnType<typeof this.tick> {
+        // If the match executor was just initialized,
+        // fetch the round executor of the first round
+        if (this.currentRound === 0) this.__nextRound();
+        // If no round executor is available, return null
+        // ending the match executor itself
+        if (!this.roundExecutor) return null;
+        // If all good, call the round executor and return its output
+        const events = this.roundExecutor.tick();
+        if (events) return events;
+        // If the round executor returned null, the round is ended
+        // so we increment the round
+        else {
+          // Unless we're already at the last round. If so,
+          // delete the round executor and return null
+          if (this.currentRound === totalRounds) return null;
+          else {
+            // If there are still rounds to execute, increment round
+            // and return newRound event
+            this.__nextRound();
+            return [
+              {
+                eventType: 'newRound',
+                roundNumber: this.currentRound, // incremented by __nextRound(),
+              },
+            ];
+          }
+        }
       },
     };
   },
 };
 
-export default matchExecutor;
+export default matchExecutorInitializer;
