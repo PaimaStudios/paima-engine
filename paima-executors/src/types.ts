@@ -1,3 +1,7 @@
+// Placeholder types for the time being
+export type RoundExecutor = any;
+export type MatchExecutor = any;
+
 export interface RoundNumbered {
   round: number;
 }
