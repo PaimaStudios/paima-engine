@@ -31,6 +31,9 @@ import { AddressType, INNER_BATCH_DIVIDER, OUTER_BATCH_DIVIDER } from './constan
 
 const { isAddress } = pkg;
 
+export * from './config';
+export * from './types';
+
 export type { Web3 };
 export type { PaimaL2Contract };
 export {
