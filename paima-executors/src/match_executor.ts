@@ -7,30 +7,30 @@ export interface NewRoundEvent {
   nextRound: number;
 }
 interface MatchExecutorInitializer {
-  initialize: <MatchType, RoundState, MoveType extends RoundNumbered, TickEvent>(
+  initialize: <MatchType, MatchState, MoveType extends RoundNumbered, TickEvent>(
     matchEnvironment: MatchType,
     maxRound: number,
-    roundState: RoundState,
+    roundState: MatchState,
     seeds: Seed[],
     userInputs: MoveType[],
     processTick: (
       matchEnvironment: MatchType,
-      roundState: RoundState,
-      moves: MoveType[],
+      roundState: MatchState,
+      submittedMoves: MoveType[],
       currentTick: number,
       randomnessGenerator: Prando
-    ) => TickEvent
+    ) => TickEvent[] | null
   ) => {
     currentRound: number;
-    currentState: RoundState;
+    currentState: MatchState;
     roundExecutor: null | {
       currentTick: number;
-      currentState: RoundState;
-      tick: () => TickEvent;
-      endState: () => RoundState;
+      currentState: MatchState;
+      tick: () => TickEvent[] | null;
+      endState: () => MatchState;
     };
     __nextRound: () => void;
-    tick: () => TickEvent | NewRoundEvent | null;
+    tick: () => TickEvent[] | [NewRoundEvent] | null;
   };
 }
 
@@ -67,8 +67,8 @@ const matchExecutorInitializer: MatchExecutorInitializer = {
         // ending the match executor itself
         if (!this.roundExecutor) return null;
         // If all good, call the round executor and return its output
-        const event = this.roundExecutor.tick();
-        if (event) return event;
+        const events = this.roundExecutor.tick();
+        if (events) return events;
         // If the round executor returned null, the round is ended
         // so we increment the round
         else {
@@ -79,10 +79,10 @@ const matchExecutorInitializer: MatchExecutorInitializer = {
             // If there are still rounds to execute, increment round
             // and return newRound event
             this.__nextRound();
-            return {
+            return [{
               eventType: 'newRound',
               nextRound: this.currentRound, // incremented by __nextRound(),
-            };
+            }];
           }
         }
       },
