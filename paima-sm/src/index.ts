@@ -1,7 +1,7 @@
-import pg from 'pg';
+import type { Pool } from 'pg';
 
-import { tx, doLog, logError, SCHEDULED_DATA_ADDRESS } from '@paima/utils';
-import type { SubmittedChainData } from '@paima/utils';
+import { tx, doLog, SCHEDULED_DATA_ADDRESS, getConnection } from '@paima/utils';
+import type { SubmittedData } from '@paima/utils';
 import type { ChainData, GameStateMachineInitializer } from '@paima/utils';
 import Prando from '@paima/prando';
 
@@ -23,28 +23,8 @@ const SM: GameStateMachineInitializer = {
     gameStateTransitionRouter,
     startBlockHeight
   ) => {
-    const DBConn = new pg.Pool(databaseInfo);
-    const readonlyDBConn = new pg.Pool(databaseInfo);
-    const ensureReadOnly = `SET SESSION CHARACTERISTICS AS TRANSACTION READ ONLY;`;
-    const readonlyset = readonlyDBConn.query(ensureReadOnly); // note: this query modifies the DB state
-
-    DBConn.on('error', err => logError(err));
-
-    DBConn.on('connect', (_client: pg.PoolClient) => {
-      // On each new client initiated, need to register for error(this is a serious bug on pg, the client throw errors although it should not)
-      _client.on('error', (err: Error) => {
-        logError(err);
-      });
-    });
-
-    readonlyDBConn.on('error', err => logError(err));
-
-    readonlyDBConn.on('connect', (_client: pg.PoolClient) => {
-      // On each new client initiated, need to register for error(this is a serious bug on pg, the client throw errors although it should not)
-      _client.on('error', (err: Error) => {
-        logError(err);
-      });
-    });
+    const DBConn: Pool = getConnection(databaseInfo);
+    const readonlyDBConn: Pool = getConnection(databaseInfo, true);
 
     return {
       latestBlockHeight: async (): Promise<number> => {
@@ -52,14 +32,14 @@ const SM: GameStateMachineInitializer = {
         const blockHeight = b?.block_height ?? startBlockHeight ?? 0;
         return blockHeight;
       },
-      getReadonlyDbConn: (): pg.Pool => {
+      getReadonlyDbConn: (): Pool => {
         return readonlyDBConn;
       },
       // Core function which triggers state transitions
       process: async (latestChainData: ChainData): Promise<void> => {
         // Acquire correct STF based on router (based on block height)
         const gameStateTransition = gameStateTransitionRouter(latestChainData.blockNumber);
-        // Save blockHeight and randomness seed (which uses the blockHash)
+        // Save blockHeight and randomness seed
         const getSeed = randomnessRouter(randomnessProtocolEnum);
         const seed = await getSeed(latestChainData, readonlyDBConn);
         await saveLastBlockHeight.run(
@@ -75,11 +55,12 @@ const SM: GameStateMachineInitializer = {
           readonlyDBConn
         );
         for (const data of scheduledData) {
-          const inputData: SubmittedChainData = {
+          const inputData: SubmittedData = {
             userAddress: SCHEDULED_DATA_ADDRESS,
             inputData: data.input_data,
             inputNonce: '',
             suppliedValue: '0',
+            scheduled: true,
           };
           // Trigger STF
           const sqlQueries = await gameStateTransition(

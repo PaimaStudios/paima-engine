@@ -82,7 +82,7 @@ export interface ChainData {
   timestamp: number;
   blockHash: string;
   blockNumber: number;
-  submittedData: SubmittedChainData[];
+  submittedData: SubmittedData[];
   extensionDatums: ChainDataExtensionDatum[];
 }
 ```

@@ -1,9 +1,10 @@
 import Web3 from 'web3';
 import type { AbiItem } from 'web3-utils';
 import pkg from 'web3-utils';
-import storageBuild from './artifacts/Storage.js';
-import type { Storage as StorageContract } from './contract-types/Storage';
+import paimaL2ContractBuild from './artifacts/PaimaL2Contract';
+import type { PaimaL2Contract } from './contract-types/PaimaL2Contract';
 import { doLog, logError } from './logging.js';
+import { createScheduledData, deleteScheduledData } from './db';
 import type {
   ChainData,
   ChainDataExtension,
@@ -11,6 +12,7 @@ import type {
   ErrorCode,
   ErrorMessageFxn,
   ErrorMessageMapping,
+  TsoaFunction,
   ETHAddress,
   GameStateMachine,
   GameStateMachineInitializer,
@@ -19,21 +21,27 @@ import type {
   PaimaRuntime,
   PaimaRuntimeInitializer,
   SQLUpdate,
+  SubmittedData,
   SubmittedChainData,
   TransactionTemplate,
 } from './types';
 import { tx } from './pg-tx';
+import { getConnection } from './pg-connection.js';
+import { AddressType, INNER_BATCH_DIVIDER, OUTER_BATCH_DIVIDER } from './constants';
+
 const { isAddress } = pkg;
 
 export type { Web3 };
-export type { StorageContract };
+export type { PaimaL2Contract };
 export {
   ChainFunnel,
+  TsoaFunction,
   ETHAddress,
   SQLUpdate,
   ErrorCode,
   ErrorMessageFxn,
   ErrorMessageMapping,
+  SubmittedData,
   SubmittedChainData,
   ChainData,
   GameStateTransitionFunctionRouter,
@@ -44,9 +52,15 @@ export {
   PaimaRuntime,
   ChainDataExtension,
   TransactionTemplate,
+  AddressType,
+  INNER_BATCH_DIVIDER,
+  OUTER_BATCH_DIVIDER,
+  getConnection,
   logError,
   doLog,
   tx,
+  createScheduledData,
+  deleteScheduledData,
 };
 
 export const DEFAULT_GAS_PRICE = '61000000000' as const;
@@ -73,24 +87,24 @@ export async function initWeb3(nodeUrl: string): Promise<Web3> {
   return web3;
 }
 
-export function getStorageContract(address?: string, web3?: Web3): StorageContract {
+export function getPaimaL2Contract(address?: string, web3?: Web3): PaimaL2Contract {
   if (web3 === undefined) {
     web3 = new Web3();
   }
   return new web3.eth.Contract(
-    storageBuild.abi as AbiItem[],
+    paimaL2ContractBuild.abi as AbiItem[],
     address
-  ) as unknown as StorageContract;
+  ) as unknown as PaimaL2Contract;
 }
 
-export function validateStorageAddress(address: string): void {
+export function validatePaimaL2ContractAddress(address: string): void {
   if (!isAddress(address)) {
     throw new Error('Invalid storage address supplied');
   }
 }
 
 export async function retrieveFee(address: string, web3: Web3): Promise<string> {
-  const contract = getStorageContract(address, web3);
+  const contract = getPaimaL2Contract(address, web3);
   return await contract.methods.fee().call();
 }
 
@@ -99,8 +113,8 @@ export const wait = async (ms: number): Promise<void> =>
     setTimeout(() => resolve(), ms);
   });
 
-export async function getOwner(address: string, web3: Web3): Promise<string> {
-  const contract = getStorageContract(address, web3);
+export async function getPaimaL2ContractOwner(address: string, web3: Web3): Promise<string> {
+  const contract = getPaimaL2Contract(address, web3);
   return await contract.methods.owner().call();
 }
 
@@ -134,4 +148,20 @@ export async function retryPromise<T>(
   } else {
     throw failure;
   }
+}
+
+function hexStringToBytes(hexString: string): number[] {
+  const bytes: number[] = [];
+  if (hexString.length % 2 !== 0) {
+    hexString = '0' + hexString;
+  }
+  for (let c = 0; c < hexString.length; c += 2) {
+    const nextByte = hexString.slice(c, c + 2);
+    bytes.push(parseInt(nextByte, 16));
+  }
+  return bytes;
+}
+
+export function hexStringToUint8Array(hexString: string): Uint8Array {
+  return new Uint8Array(hexStringToBytes(hexString));
 }

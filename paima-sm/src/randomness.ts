@@ -1,5 +1,5 @@
 import Prando from '@paima/prando';
-import type { ChainData, SubmittedChainData } from '@paima/utils';
+import type { ChainData, SubmittedData } from '@paima/utils';
 import Crypto from 'crypto';
 import type pg from 'pg';
 import { consumer } from '@paima/concise';
@@ -11,11 +11,11 @@ export function randomnessRouter(n: number): typeof getSeed1 {
 }
 
 function parseInput(encodedInput: string): string[] {
-  const conciseConsumer = consumer.tryInitialize(encodedInput);
+  const conciseConsumer = consumer.initialize(encodedInput);
   return conciseConsumer.conciseValues.map(cValue => cValue.value);
 }
 
-function chooseData(submittedData: SubmittedChainData[], seed: string): string[] {
+function chooseData(submittedData: SubmittedData[], seed: string): string[] {
   const prando = new Prando(seed);
   const randomSelection = (): boolean => {
     const randomValue = Math.round(prando.next());

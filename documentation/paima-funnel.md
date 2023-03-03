@@ -19,7 +19,7 @@ Thus to initialize a `PaimaFunnel` the developer should call:
 ```ts
 const nodeUrl = "https://...";
 const storageAddress = "0x...";
-cosnt extensions = [...];
+const extensions = [...];
 const chainFunnel = PaimaFunnel.initialize(nodeUrl, storageAddress, extensions);
 ```
 

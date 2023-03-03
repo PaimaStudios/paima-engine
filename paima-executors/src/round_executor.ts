@@ -1,34 +1,41 @@
 import type Prando from '@paima/prando';
 import type { RoundNumbered } from './types.js';
 
+export type RoundExecutor = any;
+
+// The round executor enables games to build encapsulated "mini-state machines" in their game that natively work with frontends.
+// Round executors typically hold most real gameplay logic, and emit `TickEvent`s to describe updates to the `matchState`.
+// Data related to the match which should not be mutated by the round executor should be in `matchEnvironment`.
+// Data related to match state which should be mutated should be stored in `matchState`.
 interface RoundExecutorInitializer {
-  initialize: <MatchType, RoundStateType, MoveType extends RoundNumbered, TickEvent>(
-    matchEnvironment: MatchType,
-    userStates: RoundStateType,
-    userInputs: MoveType[],
+  initialize: <MatchEnvironment, MatchState, MoveType extends RoundNumbered, TickEvent>(
+    matchEnvironment: MatchEnvironment,
+    matchState: MatchState,
+    submittedMoves: MoveType[],
     randomnessGenerator: Prando,
     processTick: (
-      matchEnvironment: MatchType,
-      userState: RoundStateType,
-      moves: MoveType[],
+      matchEnvironment: MatchEnvironment,
+      matchState: MatchState,
+      submittedMoves: MoveType[],
       currentTick: number,
       randomnessGenerator: Prando
-    ) => TickEvent
+    ) => TickEvent[] | null
   ) => {
     currentTick: number;
-    currentState: RoundStateType;
-    tick: () => TickEvent;
-    endState: () => RoundStateType;
+    currentState: MatchState;
+    tick: () => TickEvent[] | null;
+    endState: () => MatchState;
   };
 }
 
-const roundExecutor: RoundExecutorInitializer = {
-  initialize: (matchEnvironment, roundState, userInputs, randomnessGenerator, processTick) => {
+export const roundExecutor: RoundExecutorInitializer = {
+  initialize: (matchEnvironment, matchState, userInputs, randomnessGenerator, processTick) => {
+    randomnessGenerator.reset();
     return {
       currentTick: 1,
-      currentState: roundState,
+      currentState: matchState,
       tick(): ReturnType<typeof this.tick> {
-        const event = processTick(
+        const events = processTick(
           matchEnvironment,
           this.currentState,
           userInputs,
@@ -36,7 +43,7 @@ const roundExecutor: RoundExecutorInitializer = {
           randomnessGenerator
         );
         this.currentTick++;
-        return event;
+        return events;
       },
       endState(): ReturnType<typeof this.endState> {
         while (this.tick() !== null);

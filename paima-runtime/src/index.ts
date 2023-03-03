@@ -8,21 +8,24 @@ import { doLog, logError } from '@paima/utils';
 import process from 'process';
 import { server, startServer } from './server.js';
 import { initSnapshots, snapshotIfTime } from './snapshots.js';
-let run = true;
+let run = false;
 
 process.on('SIGINT', () => {
+  if (!run) process.exit(0);
   doLog('Caught SIGINT. Waiting for engine to finish processing current block');
   run = false;
 });
 
 process.on('SIGTERM', () => {
+  if (!run) process.exit(0);
   doLog('Caught SIGTERM. Waiting for engine to finish processing current block');
   run = false;
 });
 
 process.on('exit', code => {
-  doLog(`Exiting with code: ${code}`);
+  // doLog(`Exiting with code: ${code}`);
 });
+
 const paimaEngine: PaimaRuntimeInitializer = {
   initialize(chainFunnel, gameStateMachine, gameBackendVersion) {
     // initialize snapshot folder
@@ -98,6 +101,7 @@ async function securedIterativeFunnel(
   stopBlockHeight: number | null
 ): Promise<void> {
   let i = 1;
+  run = true;
   while (run) {
     try {
       doLog(`Run ${i} of iterative funnel:`);
@@ -117,12 +121,13 @@ async function requireLatestBlockHeight(sm: GameStateMachine, waitPeriod: number
     try {
       const latestReadBlockHeight = await sm.latestBlockHeight();
       if (wasDown) {
-        doLog('[runIterativeFunnel] DB connection back up!');
+        doLog('[requireLatestBlockHeight] Block height re-acquired successfully.');
       }
       return latestReadBlockHeight;
     } catch (err) {
       if (!wasDown) {
-        doLog('[runIterativeFunnel] DB connection down, waiting for it to go back up...');
+        doLog(`[requireLatestBlockHeight] encountered error, retrying after ${waitPeriod} ms`);
+        logError(err);
       }
       wasDown = true;
     }
@@ -157,7 +162,7 @@ async function runIterativeFunnel(
 
     try {
       // Read latest chain data from funnel
-      latestChainDataList = (await chainFunnel.readData(latestReadBlockHeight + 1)) as ChainData[];
+      latestChainDataList = await chainFunnel.readData(latestReadBlockHeight + 1);
       // Checking if should safely close after fetching all chain data
       // which may take some time
       exitIfStopped(run);

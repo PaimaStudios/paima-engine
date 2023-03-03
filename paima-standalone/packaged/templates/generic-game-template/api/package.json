@@ -1,0 +1,26 @@
+{
+  "name": "@game/api",
+  "version": "1.0.0",
+  "description": "REST API for [GAME_NAME] game middleware",
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "compile": "npx tsoa routes"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@game/utils": "1.0.0",
+    "cors": "^2.8.5",
+    "express": "^4.18.1",
+    "fp-ts": "^2.12.3",
+    "io-ts": "^2.2.18",
+    "morgan": "^1.10.0",
+    "tsoa": "^4.1.2"
+  },
+  "devDependencies": {
+    "@types/morgan": "^1.9.4"
+  }
+}

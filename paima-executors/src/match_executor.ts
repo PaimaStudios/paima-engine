@@ -17,7 +17,7 @@ interface MatchExecutorInitializer {
       matchEnvironment: MatchType,
       roundState: RoundState,
       moves: MoveType[],
-      c: number,
+      currentTick: number,
       randomnessGenerator: Prando
     ) => TickEvent
   ) => {
