@@ -1,7 +1,6 @@
 import {
   BACKEND_URI,
   BATCHER_URI,
-  CardanoAddress,
   CHAIN_CURRENCY_DECIMALS,
   CHAIN_CURRENCY_NAME,
   CHAIN_CURRENCY_SYMBOL,
@@ -9,14 +8,19 @@ import {
   CHAIN_ID,
   CHAIN_NAME,
   CHAIN_URI,
-  ContractAddress,
   DEFAULT_FEE,
   DEPLOYMENT,
   STORAGE_ADDRESS,
+} from '@paima/utils';
+import type {
+  CardanoAddress,
+  ContractAddress,
+  ETHAddress,
+  PolkadotAddress,
   URI,
   VersionString,
+  Web3,
 } from '@paima/utils';
-import type { ETHAddress, Web3 } from '@paima/utils';
 import { initWeb3 } from '@paima/utils';
 import { PaimaMiddlewareErrorCode, errorMessageFxn } from './errors';
 import type {
@@ -78,16 +82,17 @@ let cardanoHexAddress: CardanoAddress = '';
 let cardanoApi: CardanoApi = undefined;
 let cardanoActiveWallet: string = '';
 
-let polkadotAddress: string = '';
+let polkadotAddress: PolkadotAddress = '';
 let polkadotSignFxn: PolkadotSignFxn = undefined;
 
-export const setBackendUri = (newUri: URI) => (backendUri = newUri);
+export const setBackendUri = (newUri: URI): URI => (backendUri = newUri);
 export const getBackendUri = (): URI => backendUri;
 export const getBatcherUri = (): URI => batcherUri;
 
-export const setGameVersion = (newGameVersion: VersionString) => (gameVersion = newGameVersion);
+export const setGameVersion = (newGameVersion: VersionString): VersionString =>
+  (gameVersion = newGameVersion);
 export const getGameVersion = (): VersionString => gameVersion;
-export const setGameName = (newGameName: string) => (gameName = newGameName);
+export const setGameName = (newGameName: string): string => (gameName = newGameName);
 export const getGameName = (): string => gameName;
 
 export const getChainUri = (): URI => chainUri;
@@ -104,49 +109,55 @@ export const getDeployment = (): Deployment => deployment;
 
 export const getPostingMode = (): PostingMode => postingMode;
 export const getPostingModeString = (): PostingModeString => POSTING_MODE_NAMES[postingMode];
-const setPostingMode = (newMode: PostingMode) => (postingMode = newMode);
-export const setUnbatchedMode = () => setPostingMode(PostingMode.UNBATCHED);
-export const setBatchedEthMode = () => setPostingMode(PostingMode.BATCHED_ETH);
-export const setBatchedCardanoMode = () => setPostingMode(PostingMode.BATCHED_CARDANO);
-export const setBatchedPolkadotMode = () => setPostingMode(PostingMode.BATCHED_POLKADOT);
-export const setAutomaticMode = () => setPostingMode(PostingMode.AUTOMATIC);
+const setPostingMode = (newMode: PostingMode): PostingMode => (postingMode = newMode);
+export const setUnbatchedMode = (): PostingMode => setPostingMode(PostingMode.UNBATCHED);
+export const setBatchedEthMode = (): PostingMode => setPostingMode(PostingMode.BATCHED_ETH);
+export const setBatchedCardanoMode = (): PostingMode => setPostingMode(PostingMode.BATCHED_CARDANO);
+export const setBatchedPolkadotMode = (): PostingMode =>
+  setPostingMode(PostingMode.BATCHED_POLKADOT);
+export const setAutomaticMode = (): PostingMode => setPostingMode(PostingMode.AUTOMATIC);
 
-export const setEthAddress = (addr: ETHAddress) => (ethAddress = addr);
+export const setEthAddress = (addr: ETHAddress): ETHAddress => (ethAddress = addr);
 export const getEthAddress = (): ETHAddress => ethAddress;
 export const ethConnected = (): boolean => ethAddress !== '';
 
-export const setCardanoAddress = (addr: CardanoAddress) => (cardanoAddress = addr);
+export const setCardanoAddress = (addr: CardanoAddress): CardanoAddress => (cardanoAddress = addr);
 export const getCardanoAddress = (): CardanoAddress => cardanoAddress;
-export const setCardanoHexAddress = (addr: CardanoAddress) => (cardanoHexAddress = addr);
+export const setCardanoHexAddress = (addr: CardanoAddress): CardanoAddress =>
+  (cardanoHexAddress = addr);
 export const getCardanoHexAddress = (): CardanoAddress => cardanoHexAddress;
 export const cardanoConnected = (): boolean => cardanoActiveWallet !== '';
 
-export const setCardanoApi = (api: CardanoApi) => (cardanoApi = api);
+export const setCardanoApi = (api: CardanoApi): CardanoApi => (cardanoApi = api);
 export const getCardanoApi = (): CardanoApi => cardanoApi;
 
-export const setCardanoActiveWallet = (newWallet: string) => (cardanoActiveWallet = newWallet);
+export const setCardanoActiveWallet = (newWallet: string): string =>
+  (cardanoActiveWallet = newWallet);
 export const getCardanoActiveWallet = (): string => cardanoActiveWallet;
 
-export const setPolkadotAddress = (addr: string) => (polkadotAddress = addr);
-export const getPolkadotAddress = (): string => polkadotAddress;
+export const setPolkadotAddress = (addr: PolkadotAddress): PolkadotAddress =>
+  (polkadotAddress = addr);
+export const getPolkadotAddress = (): PolkadotAddress => polkadotAddress;
 
-export const setPolkadotSignFxn = (fxn: PolkadotSignFxn) => (polkadotSignFxn = fxn);
+export const setPolkadotSignFxn = (fxn: PolkadotSignFxn): PolkadotSignFxn =>
+  (polkadotSignFxn = fxn);
 export const getPolkadotSignFxn = (): PolkadotSignFxn => polkadotSignFxn;
 
 export const polkadotConnected = (): boolean => !!polkadotSignFxn;
 
-export const setTruffleAddress = (addr: ETHAddress) => (truffleAddress = addr);
+export const setTruffleAddress = (addr: ETHAddress): ETHAddress => (truffleAddress = addr);
 export const getTruffleAddress = (): ETHAddress => truffleAddress;
 export const truffleConnected = (): boolean =>
   truffleAddress !== '' && truffleProvider !== undefined && truffleWeb3 !== undefined;
 
-export const setTruffleProvider = (provider: HDWalletProvider) => (truffleProvider = provider);
+export const setTruffleProvider = (provider: HDWalletProvider): HDWalletProvider =>
+  (truffleProvider = provider);
 export const getTruffleProvider = (): HDWalletProvider | undefined => truffleProvider;
 
-export const setTruffleWeb3 = (w3: Web3) => (truffleWeb3 = w3);
+export const setTruffleWeb3 = (w3: Web3): Web3 => (truffleWeb3 = w3);
 export const getTruffleWeb3 = (): Web3 | undefined => truffleWeb3;
 
-export const setFee = (newFee: string) => (fee = newFee);
+export const setFee = (newFee: string): string => (fee = newFee);
 export const getFee = (): string => fee;
 
 export const getWeb3 = async (): Promise<Web3> => {

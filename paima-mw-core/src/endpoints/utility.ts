@@ -1,6 +1,6 @@
 import { joinLogs, pushLog as log } from '../helpers/logging';
 
-const exportLogs = () => {
+const exportLogs = (): string => {
   return joinLogs();
 };
 

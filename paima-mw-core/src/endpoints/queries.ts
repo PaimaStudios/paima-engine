@@ -1,11 +1,11 @@
 import { buildEndpointErrorFxn, PaimaMiddlewareErrorCode } from '../errors';
 import { getRawLatestProcessedBlockHeight } from '../helpers/auxiliary-queries';
-import { FailedResult, SuccessfulResult } from '../types';
+import type { Result } from '../types';
 
-async function getLatestProcessedBlockHeight(): Promise<SuccessfulResult<number> | FailedResult> {
+async function getLatestProcessedBlockHeight(): Promise<Result<number>> {
   const errorFxn = buildEndpointErrorFxn('getLatestProcessedBlockHeight');
   try {
-    return getRawLatestProcessedBlockHeight();
+    return await getRawLatestProcessedBlockHeight();
   } catch (err) {
     return errorFxn(PaimaMiddlewareErrorCode.UNKNOWN, err);
   }

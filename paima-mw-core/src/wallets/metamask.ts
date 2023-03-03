@@ -1,5 +1,6 @@
 import pkg from 'web3-utils';
-const { utf8ToHex } = pkg;
+
+import type { UserSignature } from '@paima/utils';
 
 import {
   buildEndpointErrorFxn,
@@ -18,9 +19,11 @@ import {
   getEthAddress,
   setEthAddress,
 } from '../state';
-import { OldResult, Result, Wallet } from '../types';
+import type { OldResult, Result, Wallet } from '../types';
 import { pushLog } from '../helpers/logging';
 import { updateFee } from '../helpers/posting';
+
+const { utf8ToHex } = pkg;
 
 interface MetamaskSwitchError {
   code: number;
@@ -96,7 +99,7 @@ export async function switchChain(): Promise<boolean> {
 
 export async function verifyWalletChain(): Promise<boolean> {
   try {
-    return window.ethereum
+    return await window.ethereum
       .request({ method: 'eth_chainId' })
       .then(res => parseInt(res as string) === getChainId());
   } catch (e) {
@@ -105,7 +108,7 @@ export async function verifyWalletChain(): Promise<boolean> {
   }
 }
 
-export async function signMessageEth(userAddress: string, message: string): Promise<string> {
+export async function signMessageEth(userAddress: string, message: string): Promise<UserSignature> {
   const hexMessage = utf8ToHex(message);
   const signature = await window.ethereum.request({
     method: 'personal_sign',
@@ -118,7 +121,7 @@ export async function signMessageEth(userAddress: string, message: string): Prom
   return signature;
 }
 
-export async function initAccountGuard() {
+export async function initAccountGuard(): Promise<void> {
   // Update the selected Eth address if the user changes after logging in.
   window.ethereum.on('accountsChanged', newAccounts => {
     const accounts = newAccounts as string[];

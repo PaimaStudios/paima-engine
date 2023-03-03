@@ -17,17 +17,18 @@ function stringify(blob: any): string {
   }
 }
 
-export const pushLog = (message: any, ...optionalParams: any[]) => {
+export const pushLog = (message: any, ...optionalParams: any[]): void => {
   if (logBuffer.length >= LOG_LIMIT) {
     logBuffer.shift();
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
   console.log(message, ...optionalParams);
   const timestamp = new Date().toISOString();
   const fileMessage = `[${timestamp}] ${stringify(message)} ${stringify(optionalParams)}`;
   logBuffer.push(fileMessage);
 };
 
-export const joinLogs = () => {
+export const joinLogs = (): string => {
   return logBuffer.join('\n');
 };

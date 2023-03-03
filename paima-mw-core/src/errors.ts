@@ -1,4 +1,5 @@
-import { buildErrorCodeTranslator, ErrorCode, ErrorMessageFxn } from '@paima/utils';
+import { buildErrorCodeTranslator } from '@paima/utils';
+import type { ErrorCode, ErrorMessageFxn } from '@paima/utils';
 import { pushLog } from './helpers/logging';
 import type { FailedResult } from './types';
 

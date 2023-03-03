@@ -1,5 +1,5 @@
 import { getBackendUri, getBatcherUri } from '../state';
-import { QueryOptions, QueryValue } from '../types';
+import type { QueryOptions, QueryValue } from '../types';
 
 function queryValueToString(value: QueryValue): string {
   if (typeof value === 'string') {

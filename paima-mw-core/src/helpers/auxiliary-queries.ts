@@ -1,15 +1,13 @@
 import { buildEndpointErrorFxn, PaimaMiddlewareErrorCode } from '../errors';
 import { getGameVersion } from '../state';
-import { FailedResult, SuccessfulResult } from '../types';
+import type { Result } from '../types';
 import { pushLog } from './logging';
 import {
   backendQueryBackendVersion,
   backendQueryLatestProcessedBlockHeight,
 } from './query-constructors';
 
-export async function getRawLatestProcessedBlockHeight(): Promise<
-  SuccessfulResult<number> | FailedResult
-> {
+export async function getRawLatestProcessedBlockHeight(): Promise<Result<number>> {
   const errorFxn = buildEndpointErrorFxn('getRawLatestProcessedBlockHeight');
 
   let res: Response;
@@ -62,7 +60,8 @@ export async function awaitBlock(awaitedBlock: number): Promise<void> {
   const BLOCK_DELAY = 1000;
   let currentBlock: number;
 
-  function waitLoop() {
+  function waitLoop(): void {
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
     setTimeout(async () => {
       const res = await getRawLatestProcessedBlockHeight();
       if (res.success) {

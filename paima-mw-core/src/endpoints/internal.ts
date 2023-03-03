@@ -1,4 +1,4 @@
-import { URI } from '@paima/utils';
+import type { URI } from '@paima/utils';
 import { buildEndpointErrorFxn, PaimaMiddlewareErrorCode } from '../errors';
 import { cardanoLoginAny } from '../wallets/cardano';
 import { rawWalletLogin } from '../wallets/metamask';
@@ -18,7 +18,13 @@ import {
   setBatchedPolkadotMode,
   setUnbatchedMode,
 } from '../state';
-import { MiddlewareConfig, PostingInfo, PostingModeSwitchResult, Result, Wallet } from '../types';
+import type {
+  MiddlewareConfig,
+  PostingInfo,
+  PostingModeSwitchResult,
+  Result,
+  Wallet,
+} from '../types';
 
 export function getMiddlewareConfig(): MiddlewareConfig {
   return {
@@ -126,6 +132,6 @@ export async function retrievePostingInfo(): Promise<Result<PostingInfo>> {
   };
 }
 
-export async function updateBackendUri(newUri: URI) {
+export async function updateBackendUri(newUri: URI): Promise<void> {
   setBackendUri(newUri);
 }

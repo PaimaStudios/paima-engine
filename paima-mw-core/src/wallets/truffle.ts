@@ -18,6 +18,7 @@ export async function connectWallet(privateKey: string): Promise<boolean> {
   });
   // The line below should work without the <any> addition, and does in other projects (with the same versions of imported packages),
   // but for some reason causes typing issues here.
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
   const web3 = new Web3(<any>wallet);
   const address = wallet.getAddress();
 

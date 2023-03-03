@@ -1,5 +1,6 @@
 import web3UtilsPkg from 'web3-utils';
 
+import type { UserSignature } from '@paima/utils';
 import { hexStringToUint8Array } from '@paima/utils';
 
 import type { CardanoApi, OldResult, Result, Wallet } from '../types';
@@ -25,7 +26,7 @@ const { utf8ToHex } = web3UtilsPkg;
 
 const SUPPORTED_WALLET_IDS = ['nami', 'nufi', 'flint', 'eternl'];
 
-export async function initCardanoLib() {
+export async function initCardanoLib(): Promise<void> {
   await RustModule.load();
 }
 
@@ -64,6 +65,7 @@ export async function cardanoLoginAny(): Promise<void> {
     }
   }
   if (!cardanoConnected()) {
+    console.log('[cardanoLoginAny] error while attempting login:', error);
     throw new Error('[cardanoLogin] Unable to connect to any supported Cardano wallet');
   }
 }
@@ -82,7 +84,10 @@ async function pickCardanoAddress(api: CardanoApi): Promise<string> {
   throw new Error('[pickCardanoAddress] no used or unused addresses');
 }
 
-export async function signMessageCardano(userAddress: string, message: string): Promise<string> {
+export async function signMessageCardano(
+  userAddress: string,
+  message: string
+): Promise<UserSignature> {
   await cardanoLoginAny();
   const api = getCardanoApi();
   const hexMessage = utf8ToHex(message).slice(2);

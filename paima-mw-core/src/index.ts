@@ -25,13 +25,16 @@ import { initAccountGuard } from './wallets/metamask';
 
 import { polkadotLoginRaw, signMessagePolkadot } from './wallets/polkadot';
 import { setGameName, setGameVersion } from './state';
-import { VersionString } from '@paima/utils';
+import type { VersionString } from '@paima/utils';
 
-export function initMiddlewareCore(gameName: string, gameVersion: VersionString) {
+export async function initMiddlewareCore(
+  gameName: string,
+  gameVersion: VersionString
+): Promise<void> {
   setGameName(gameName);
   setGameVersion(gameVersion);
-  initCardanoLib();
-  initAccountGuard();
+  await initCardanoLib();
+  await initAccountGuard();
 }
 
 const endpoints = {

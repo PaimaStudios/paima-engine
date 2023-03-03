@@ -1,4 +1,5 @@
 import type {
+  AddressType,
   ContractAddress,
   Hash,
   URI,
@@ -6,7 +7,6 @@ import type {
   UserSignature,
   InputDataString,
 } from '@paima/utils';
-import { AddressType } from '@paima/utils';
 
 export interface BatchedSubunit {
   addressType: AddressType;
@@ -44,7 +44,7 @@ interface PostingModeSwitchSuccessfulResult extends PostingInfo {
   success: true;
 }
 
-export type SignFunction = (userAddress: WalletAddress, message: string) => Promise<string>;
+export type SignFunction = (userAddress: WalletAddress, message: string) => Promise<UserSignature>;
 
 export type CardanoApi = any;
 

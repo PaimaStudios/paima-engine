@@ -30,7 +30,7 @@ const TX_VERIFICATION_RETRY_COUNT = 8;
 
 type PostFxn = (tx: Record<string, any>) => Promise<string>;
 
-export async function updateFee() {
+export async function updateFee(): Promise<void> {
   try {
     const web3 = await getWeb3();
     const newFee = await retrieveFee(getStorageAddress(), web3);
@@ -48,27 +48,30 @@ export async function postConciselyEncodedData(gameInput: string): Promise<Resul
 
   switch (postingMode) {
     case PostingMode.UNBATCHED:
-      return postString(sendMetamaskWalletTransaction, getEthAddress(), gameInput);
+      return await postString(sendMetamaskWalletTransaction, getEthAddress(), gameInput);
     case PostingMode.BATCHED_ETH:
-      return buildBatchedSubunit(AddressType.EVM, getEthAddress(), getEthAddress(), gameInput).then(
-        submitToBatcher
-      );
+      return await buildBatchedSubunit(
+        AddressType.EVM,
+        getEthAddress(),
+        getEthAddress(),
+        gameInput
+      ).then(submitToBatcher);
     case PostingMode.BATCHED_CARDANO:
-      return buildBatchedSubunit(
+      return await buildBatchedSubunit(
         AddressType.CARDANO,
         getCardanoAddress(),
         getCardanoHexAddress(),
         gameInput
       ).then(submitToBatcher);
     case PostingMode.BATCHED_POLKADOT:
-      return buildBatchedSubunit(
+      return await buildBatchedSubunit(
         AddressType.POLKADOT,
         getPolkadotAddress(),
         getPolkadotAddress(),
         gameInput
       ).then(submitToBatcher);
     case PostingMode.AUTOMATIC:
-      return postString(sendTruffleWalletTransaction, getTruffleAddress(), gameInput);
+      return await postString(sendTruffleWalletTransaction, getTruffleAddress(), gameInput);
     default:
       return errorFxn(
         PaimaMiddlewareErrorCode.INTERNAL_INVALID_POSTING_MODE,
@@ -87,7 +90,7 @@ async function postString(
 
   try {
     const txHash = await sendWalletTransaction(tx);
-    return retryPromise(
+    return await retryPromise(
       () => verifyTx(txHash, TX_VERIFICATION_DELAY),
       TX_VERIFICATION_RETRY_DELAY,
       TX_VERIFICATION_RETRY_COUNT
@@ -135,7 +138,7 @@ async function submitToBatcher(subunit: BatchedSubunit): Promise<Result<number>>
   }
 
   try {
-    return verifyBatcherSubmission(inputHash);
+    return await verifyBatcherSubmission(inputHash);
   } catch (err) {
     errorFxn(`Rejected input: "${body}"`);
     return errorFxn(PaimaMiddlewareErrorCode.FAILURE_VERIFYING_BATCHER_ACCEPTANCE, err);

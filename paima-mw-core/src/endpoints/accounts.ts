@@ -4,16 +4,16 @@ import { checkCardanoWalletStatus } from '../wallets/cardano';
 import { checkEthWalletStatus } from '../wallets/metamask';
 import { specificWalletLogin, stringToWalletMode } from '../wallets/wallets';
 import { getPostingMode, PostingMode } from '../state';
-import { Result, OldResult, Wallet } from '../types';
+import type { Result, OldResult, Wallet } from '../types';
 
 // Wrapper function for all wallet status checking functions
 async function checkWalletStatus(): Promise<OldResult> {
   switch (getPostingMode()) {
     case PostingMode.UNBATCHED:
     case PostingMode.BATCHED_ETH:
-      return checkEthWalletStatus();
+      return await checkEthWalletStatus();
     case PostingMode.BATCHED_CARDANO:
-      return checkCardanoWalletStatus();
+      return await checkCardanoWalletStatus();
     default:
       return {
         success: true,

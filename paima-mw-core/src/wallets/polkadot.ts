@@ -1,6 +1,8 @@
 import web3UtilsPkg from 'web3-utils';
 import { web3Accounts, web3Enable, web3FromSource } from '@polkadot/extension-dapp';
 
+import type { UserSignature } from '@paima/utils';
+
 import {
   buildEndpointErrorFxn,
   PaimaMiddlewareErrorCode,
@@ -14,7 +16,7 @@ import {
   setPolkadotAddress,
   setPolkadotSignFxn,
 } from '../state';
-import { Result, Wallet } from '../types';
+import type { Result, Wallet } from '../types';
 
 const { utf8ToHex } = web3UtilsPkg;
 
@@ -48,7 +50,10 @@ export async function polkadotLoginRaw(): Promise<Result<true>> {
   };
 }
 
-export async function signMessagePolkadot(userAddress: string, message: string) {
+export async function signMessagePolkadot(
+  userAddress: string,
+  message: string
+): Promise<UserSignature> {
   if (!polkadotConnected()) {
     throw new Error('[polkadot] Not connected!');
   }
