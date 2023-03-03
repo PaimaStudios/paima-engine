@@ -1,18 +1,14 @@
 import roundExecutor from './round_executor.js';
 import Prando from '@paima/prando';
-import type { RoundNumbered, Seed } from './types.js';
+import type { RoundNumbered, Seed, NewRoundEvent } from './types.js';
 
-export interface NewRoundEvent {
-  eventType: 'newRound';
-  nextRound: number;
-}
 interface MatchExecutorInitializer {
   initialize: <MatchType, MatchState, MoveType extends RoundNumbered, TickEvent>(
     matchEnvironment: MatchType,
     maxRound: number,
     roundState: MatchState,
     seeds: Seed[],
-    userInputs: MoveType[],
+    submittedMoves: MoveType[],
     processTick: (
       matchEnvironment: MatchType,
       roundState: MatchState,
@@ -79,10 +75,12 @@ const matchExecutorInitializer: MatchExecutorInitializer = {
             // If there are still rounds to execute, increment round
             // and return newRound event
             this.__nextRound();
-            return [{
-              eventType: 'newRound',
-              nextRound: this.currentRound, // incremented by __nextRound(),
-            }];
+            return [
+              {
+                eventType: 'newRound',
+                roundNumber: this.currentRound, // incremented by __nextRound(),
+              },
+            ];
           }
         }
       },
