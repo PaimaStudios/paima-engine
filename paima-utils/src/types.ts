@@ -4,12 +4,22 @@ import type { Express, RequestHandler } from 'express';
 import type { Pool, PoolConfig } from 'pg';
 import type { PaimaL2Contract } from './contract-types/index';
 
+export type Deployment = 'C1' | 'A1';
+
 export type ErrorCode = number;
 export type ErrorMessageFxn = (errorCode: ErrorCode) => string;
 export type ErrorMessageMapping = Record<ErrorCode, string>;
 
 export type ETHAddress = string;
-export type WalletAddress = string;
+export type CardanoAddress = string;
+export type PolkadotAddress = string;
+export type WalletAddress = ETHAddress | CardanoAddress | PolkadotAddress;
+
+export type ContractAddress = ETHAddress;
+
+export type Hash = string;
+export type URI = string;
+export type UserSignature = string;
 
 export type SQLUpdate = [PreparedQuery<any, any>, any];
 
@@ -24,7 +34,7 @@ export type TransactionTemplate = {
 };
 
 type NonceString = string;
-type InputDataString = string;
+export type InputDataString = string;
 export interface SubmittedData {
   userAddress: WalletAddress;
   inputData: InputDataString;

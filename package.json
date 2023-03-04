@@ -21,6 +21,7 @@
     "./paima-prando",
     "./paima-tx",
     "./paima-executors",
+    "./paima-mw-core",
     "./paima-funnel",
     "./paima-sm",
     "./paima-runtime",
