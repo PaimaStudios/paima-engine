@@ -1,5 +1,3 @@
-//TODO: improve default values (?)
-
 // Target Blockchain:
 export const CHAIN_URI = process.env.CHAIN_URI || '';
 export const CHAIN_NAME = process.env.CHAIN_NAME || '';
