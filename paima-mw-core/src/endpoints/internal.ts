@@ -18,20 +18,13 @@ import {
   setUnbatchedMode,
 } from '../state';
 import type { PostingInfo, PostingModeSwitchResult, Result, Wallet } from '../types';
+import { specificWalletLogin, stringToWalletMode } from '../wallets/wallets';
 
-export async function userWalletLoginWithoutChecks(): Promise<Result<Wallet>> {
+export async function userWalletLoginWithoutChecks(loginType: string): Promise<Result<Wallet>> {
   const errorFxn = buildEndpointErrorFxn('userWalletLoginWithoutChecks');
-  try {
-    await rawWalletLogin();
-    return {
-      success: true,
-      result: {
-        walletAddress: getEthAddress(),
-      },
-    };
-  } catch (err) {
-    return errorFxn(PaimaMiddlewareErrorCode.METAMASK_LOGIN, err);
-  }
+
+  const walletMode = stringToWalletMode(loginType);
+  return await specificWalletLogin(walletMode);
 }
 
 export async function cardanoWalletLoginEndpoint(): Promise<Result<Wallet>> {
