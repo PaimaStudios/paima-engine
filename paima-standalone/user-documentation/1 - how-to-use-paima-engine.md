@@ -42,7 +42,7 @@ As the `generic-game-template` folder has already been initialized in the previo
 npm run pack
 ```
 
-This will generate two files (`backend.cjs` and `registerEndpoints.cjs`) which will be placed in a `packaged` folder (where the executable is). The former file holds the vast majority of the "game" (all of your code related to your game logic and state transitions) and the latter holds code related to setting up the webserver endpoints of your game node.
+This will generate two files (`gameCode.cjs` and `endpoints.cjs`) which will be placed in a `packaged` folder (located next to the executable). The former file holds the vast majority of the "game" (all of your code related to your game logic and state transitions) and the latter holds code related to setting up the webserver endpoints of your game node.
 
 Both of these files need to remain in the `packaged` folder (which is required to be in the same root folder as the Paima Engine executable itself).
 
@@ -121,8 +121,8 @@ Of note, the above tutorial teaches you an easy way to manually submit custom-cr
 
 If you wish to deploy your game on a server/move into a production environment, the following files are all that is needed for Paima Engine to run your game node:
 
-- `packaged/backend.cjs` (packed game code)
-- `packaged/registerEndpoints.cjs` (packed webserver code)
+- `packaged/gameCode.cjs` (packed game code)
+- `packaged/endpoints.cjs` (packed webserver code)
 - `.env.*` (Your game node config)
 - `paima-engine` (The Paima Engine executable)
 

@@ -53,8 +53,8 @@ Since the database is no longer created by docker, you need to initialize it exp
 This file used to be the main connection point between game code and `paima-engine` itself. In order to eliminate this connection all of the logic was moved over to `paima-standalone`. That now takes care of:
 
 - initializing the `paima-funnel`
-- initializing the `paima-sm`: the logic (previously as default export from `sm.js`) is now hidden in the standalone and only the router is replaced with recompiled `backend.cjs` code (user specified game/backend code)
-- initializing&running the `paima-runtime`: `registerEndpoints` function from the `api` module is now replaced with recompiled `registerEndpoints.cjs` code (api module)
+- initializing the `paima-sm`: the logic (previously as default export from `sm.js`) is now hidden in the standalone and only the router is replaced with recompiled `gameCode.cjs` code (user specified game/backend code)
+- initializing&running the `paima-runtime`: `registerEndpoints` function from the `api` module is now replaced with recompiled `endpoints.cjs` code (api module)
 - setting the DB pool was removed from this file. Now done internally in paima-engine (can be accessed with `getConnection` from `paima-sdk/utils`)
 
 ### Backend - sm.js
