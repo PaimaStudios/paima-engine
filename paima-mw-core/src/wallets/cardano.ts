@@ -71,14 +71,22 @@ export async function cardanoLoginAny(): Promise<void> {
 }
 
 async function pickCardanoAddress(api: CardanoApi): Promise<string> {
-  const addresses = await api.getUsedAddresses();
-  if (addresses.length > 0) {
-    return addresses[0];
+  try {
+    const addresses = await api.getUsedAddresses();
+    if (addresses.length > 0) {
+      return addresses[0];
+    }
+  } catch (err) {
+    console.log('[pickCardanoAddress] error calling getUsedAddresses:', err);
   }
 
-  const unusedAddresses = await api.getUnusedAddresses();
-  if (unusedAddresses.length > 0) {
-    return unusedAddresses[0];
+  try {
+    const unusedAddresses = await api.getUnusedAddresses();
+    if (unusedAddresses.length > 0) {
+      return unusedAddresses[0];
+    }
+  } catch (err) {
+    console.log('[pickCardanoAddress] error calling getUnusedAddresses:', err);
   }
 
   throw new Error('[pickCardanoAddress] no used or unused addresses');
