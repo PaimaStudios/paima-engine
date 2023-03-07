@@ -141,7 +141,7 @@ export async function cardanoLoginWrapper(walletMode: WalletMode): Promise<Resul
   try {
     await cardanoLoginSpecific(walletName);
   } catch (err) {
-    return errorFxn(PaimaMiddlewareErrorCode.CARDANO_LOGIN);
+    return errorFxn(PaimaMiddlewareErrorCode.CARDANO_LOGIN, err);
     // TODO: improve error differentiation
   }
 
