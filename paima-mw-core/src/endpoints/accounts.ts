@@ -28,9 +28,9 @@ async function userWalletLogin(loginType: string): Promise<Result<Wallet>> {
   const errorFxn = buildEndpointErrorFxn('userWalletLogin');
 
   const walletMode = stringToWalletMode(loginType);
-  const result = await specificWalletLogin(walletMode);
-  if (!result.success) {
-    return result;
+  const response = await specificWalletLogin(walletMode);
+  if (!response.success) {
+    return response;
   }
 
   try {
@@ -41,7 +41,13 @@ async function userWalletLogin(loginType: string): Promise<Result<Wallet>> {
     return errorFxn(PaimaMiddlewareErrorCode.ERROR_QUERYING_BACKEND_ENDPOINT, err);
   }
 
-  return result;
+  return {
+    ...response,
+    result: {
+      ...response.result,
+      walletAddress: response.result.walletAddress.toLowerCase(),
+    },
+  };
 }
 
 export const accountsEndpoints = {
