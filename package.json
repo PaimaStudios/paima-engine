@@ -8,7 +8,7 @@
     "prebuild": "npm run prebuild --workspaces --if-present",
     "build": "npx tsc --build tsconfig.build.json",
     "prepare:standalone": "sh paima-standalone/scripts/prepare_standalone_folders.sh",
-    "build:sdk": "tsc --build --clean tsconfig.lib.json && npx tsc --build tsconfig.lib.json",
+    "build:sdk": "npx tsc --build --clean tsconfig.lib.json && npx tsc --build tsconfig.lib.json",
     "build:standalone": "npm run build && npm run build:binary -w paima-standalone",
     "cprettier": "prettier --check '**/*.{ts,tsx}'",
     "eslint": "eslint '**/*.{ts,tsx}' --ignore-path .eslintignore",

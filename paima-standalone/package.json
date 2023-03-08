@@ -14,7 +14,6 @@
   "pkg": {
     "scripts": [],
     "assets": [
-      "packaged/*.wasm",
       "packaged/paima-sdk/**/*",
       "packaged/templates/**/*",
       "packaged/smart-contract/**/*",

@@ -61,7 +61,6 @@ The following command will convert the UTF text representation of the game input
 
 ```js
 gameInput = web3.utils.utf8ToHex('j|*Xs6Q9GAqZVwe');
-
 ```
 
 From here we simply need to request a recommended fee from the smart contract:

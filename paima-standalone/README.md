@@ -22,7 +22,7 @@ Scope: `paima-engine` root folder
 This command is intended to be used only if you:
 
 - pulled a fresh repository (don't forget to run `npm i` as well)
-- made changes to `paima-engine` public modules (_paima-concise_, _paima-executors_, _paima-prando_, _paima-tx_, _storage_contract_, or _paima-utils_)
+- made changes to `paima-engine` public modules (_paima-concise_, _paima-executors_, _paima-mw-core_, _paima-prando_, _paima-tx_, _storage_contract_, or _paima-utils_)
 
 It does a clean rebuild of the whole `paima-engine`, not just the above mentioned modules, and prepares all of the needed public helper modules to be included inside of the standalone executable.
 
@@ -53,8 +53,8 @@ Since the database is no longer created by docker, you need to initialize it exp
 This file used to be the main connection point between game code and `paima-engine` itself. In order to eliminate this connection all of the logic was moved over to `paima-standalone`. That now takes care of:
 
 - initializing the `paima-funnel`
-- initializing the `paima-sm`: the logic (previously as default export from `sm.js`) is now hidden in the standalone and only the router is replaced with recompiled `backend.cjs` code (user specified game/backend code)
-- initializing&running the `paima-runtime`: `registerEndpoints` function from the `api` module is now replaced with recompiled `registerEndpoints.cjs` code (api module)
+- initializing the `paima-sm`: the logic (previously as default export from `sm.js`) is now hidden in the standalone and only the router is replaced with recompiled `gameCode.cjs` code (user specified game/backend code)
+- initializing&running the `paima-runtime`: `registerEndpoints` function from the `api` module is now replaced with recompiled `endpoints.cjs` code (api module)
 - setting the DB pool was removed from this file. Now done internally in paima-engine (can be accessed with `getConnection` from `paima-sdk/utils`)
 
 ### Backend - sm.js
@@ -85,20 +85,6 @@ Paima standalone game templates intentionally left out the following modules fro
 - documentation
 - integration-testing
 - test-frontend
-
-## Current limitations
-
-Paima Funnel contains two dependencies that `pkg` isn't able to pack automatically. In order for that to work, change of how these `.wasm` files are imported in the libraries themselves would be needed. That's why we have a `packaged` folder and we are telling `pkg` explicitly that these 2 files taken from the libraries should be included.
-
-Updating of these two libraries must be done with this in mind.
-
-- `cardano_message_signing_bg.wasm` from `@emurgo/cardano-message-signing-nodejs`
-<!-- TODO: can be removed after https://github.com/PaimaStudios/paima-engine/pull/78 is merged -->
-- `cardano_multiplatform_lib_bg.wasm` from `@dcspark/cardano-multiplatform-lib-nodejs`: also `pkg` is not compatible with latest version `@3.1.2` due to error below so `3.1.0` is now used instead.
-
-```
-LinkError: WebAssembly.Instance(): Import #4 module="__wbindgen_placeholder__" function="__wbg_getRandomValues_fb6b088efb6bead2" error: function import requires a callable
-```
 
 ## How To Use Paima Engine Standalone
 

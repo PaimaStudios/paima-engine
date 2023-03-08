@@ -2,10 +2,12 @@
 const esbuild = require('esbuild');
 const fs = require('fs');
 
-const prepareSDK = `npm run prepare:sdk`;
+const prepareScript = `npm run prepare:standalone`;
 const sdkDirectory = 'packaged/paima-sdk';
 if (!fs.existsSync(sdkDirectory)) {
-  throw new Error(`Missing ${sdkDirectory}. Did you forget to \x1b[32m${prepareSDK}\x1b[0m first?`);
+  throw new Error(
+    `Missing ${sdkDirectory}. Did you forget to \x1b[32m${prepareScript}\x1b[0m first?`
+  );
 }
 
 // TODO: improve messages after pulling templates from separate repo
