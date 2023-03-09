@@ -15,6 +15,7 @@ export const FE_ERR_OK = 0;
 export const FE_ERR_GENERIC = 1;
 export const FE_ERR_METAMASK_NOT_INSTALLED = 2;
 export const FE_ERR_SPECIFIC_WALLET_NOT_INSTALLED = 3;
+export const FE_ERR_BATCHER_REJECTED_INPUT = 4;
 
 export const enum PaimaMiddlewareErrorCode {
   OK,

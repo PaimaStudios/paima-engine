@@ -1,5 +1,9 @@
 import { retrieveFee, retryPromise, wait, AddressType } from '@paima/utils';
-import { buildEndpointErrorFxn, PaimaMiddlewareErrorCode } from '../errors';
+import {
+  buildEndpointErrorFxn,
+  FE_ERR_BATCHER_REJECTED_INPUT,
+  PaimaMiddlewareErrorCode,
+} from '../errors';
 import {
   getCardanoAddress,
   getCardanoHexAddress,
@@ -130,7 +134,11 @@ async function submitToBatcher(subunit: BatchedSubunit): Promise<Result<number>>
     // TODO: proper error checking
     if (!response.success) {
       const msg = `Batcher rejected input "${body}" with response "${response.message}"`;
-      return errorFxn(PaimaMiddlewareErrorCode.BATCHER_REJECTED_INPUT, msg);
+      return errorFxn(
+        PaimaMiddlewareErrorCode.BATCHER_REJECTED_INPUT,
+        msg,
+        FE_ERR_BATCHER_REJECTED_INPUT
+      );
     }
     inputHash = response.hash;
   } catch (err) {
