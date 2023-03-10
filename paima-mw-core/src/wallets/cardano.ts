@@ -20,13 +20,11 @@ import {
   FE_ERR_SPECIFIC_WALLET_NOT_INSTALLED,
 } from '../errors';
 import { WalletMode } from './wallet-modes';
-import converter from "bech32-converting"
-
+import converter from 'bech32-converting';
 
 const { utf8ToHex } = web3UtilsPkg;
 
 const SUPPORTED_WALLET_IDS = ['nami', 'nufi', 'flint', 'eternl'];
-
 
 export async function cardanoLoginSpecific(walletId: string): Promise<void> {
   if (getCardanoActiveWallet() === walletId) {
