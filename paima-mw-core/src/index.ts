@@ -25,7 +25,7 @@ import { pushLog } from './helpers/logging';
 
 import { initAccountGuard } from './wallets/metamask';
 import { sendWalletTransaction as sendMetamaskWalletTransaction } from './wallets/metamask';
-import { initCardanoLib, signMessageCardano } from './wallets/cardano';
+import { signMessageCardano } from './wallets/cardano';
 import { polkadotLoginRaw, signMessagePolkadot } from './wallets/polkadot';
 
 import {
@@ -49,7 +49,6 @@ export async function initMiddlewareCore(
 ): Promise<void> {
   setGameName(gameName);
   setGameVersion(gameVersion);
-  await initCardanoLib();
   await initAccountGuard();
 }
 

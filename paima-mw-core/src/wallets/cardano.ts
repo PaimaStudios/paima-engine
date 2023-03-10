@@ -14,21 +14,19 @@ import {
   setCardanoApi,
   setCardanoHexAddress,
 } from '../state';
-import { RustModule } from '../helpers/rust-loader';
 import {
   buildEndpointErrorFxn,
   PaimaMiddlewareErrorCode,
   FE_ERR_SPECIFIC_WALLET_NOT_INSTALLED,
 } from '../errors';
 import { WalletMode } from './wallet-modes';
+import converter from "bech32-converting"
+
 
 const { utf8ToHex } = web3UtilsPkg;
 
 const SUPPORTED_WALLET_IDS = ['nami', 'nufi', 'flint', 'eternl'];
 
-export async function initCardanoLib(): Promise<void> {
-  await RustModule.load();
-}
 
 export async function cardanoLoginSpecific(walletId: string): Promise<void> {
   if (getCardanoActiveWallet() === walletId) {
@@ -42,8 +40,7 @@ export async function cardanoLoginSpecific(walletId: string): Promise<void> {
   const api = await (window as any).cardano[walletId].enable();
   setCardanoApi(api);
   const hexAddress = await pickCardanoAddress(api);
-  const addrArray = hexStringToUint8Array(hexAddress);
-  const userAddress = RustModule.CardanoAddress.from_bytes(addrArray).to_bech32();
+  const userAddress = converter('addr').toBech32(hexAddress);
   setCardanoAddress(userAddress);
   setCardanoHexAddress(hexAddress);
   setCardanoActiveWallet(walletId);
