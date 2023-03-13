@@ -3,6 +3,7 @@
   "references": [
     { "path": "./paima-utils" },
     { "path": "./paima-concise" },
+    { "path": "./paima-mw-core" },
     { "path": "./paima-prando" },
     { "path": "./paima-tx" },
     { "path": "./paima-executors" }
