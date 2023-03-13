@@ -20,7 +20,7 @@ import {
   FE_ERR_SPECIFIC_WALLET_NOT_INSTALLED,
 } from '../errors';
 import { WalletMode } from './wallet-modes';
-import converter from 'bech32-converting';
+import { bech32 } from 'bech32';
 
 const { utf8ToHex } = web3UtilsPkg;
 
@@ -38,7 +38,8 @@ export async function cardanoLoginSpecific(walletId: string): Promise<void> {
   const api = await (window as any).cardano[walletId].enable();
   setCardanoApi(api);
   const hexAddress = await pickCardanoAddress(api);
-  const userAddress = converter('addr').toBech32(hexAddress);
+  const words = bech32.toWords(hexStringToUint8Array(hexAddress));
+  const userAddress = bech32.encode('addr', words, 200);
   setCardanoAddress(userAddress);
   setCardanoHexAddress(hexAddress);
   setCardanoActiveWallet(walletId);
