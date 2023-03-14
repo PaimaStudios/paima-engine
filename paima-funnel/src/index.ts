@@ -1,5 +1,5 @@
 import {
-  DEFAULT_FUNNEL_BATCH_SIZE,
+  DEFAULT_FUNNEL_GROUP_SIZE,
   doLog,
   getPaimaL2Contract,
   initWeb3,
@@ -27,7 +27,7 @@ const paimaFunnel = {
       paimaL2Contract,
       async readData(
         blockHeight: number,
-        blockCount: number = DEFAULT_FUNNEL_BATCH_SIZE
+        blockCount: number = DEFAULT_FUNNEL_GROUP_SIZE
       ): Promise<ChainData[]> {
         let blocks: ChainData[] = [];
         let latestBlock: number = 0;
