@@ -1,11 +1,16 @@
-import { doLog, getPaimaL2Contract, initWeb3, validatePaimaL2ContractAddress } from '@paima/utils';
+import {
+  DEFAULT_FUNNEL_GROUP_SIZE,
+  doLog,
+  getPaimaL2Contract,
+  initWeb3,
+  validatePaimaL2ContractAddress,
+} from '@paima/utils';
 
 import type { ChainFunnel, ChainData, ChainDataExtension } from '@paima/utils';
 
 import { internalReadDataMulti } from './reading.js';
 import { timeout } from './utils.js';
 
-const DEFAULT_BLOCK_COUNT = 100;
 const GET_BLOCK_NUMBER_TIMEOUT = 5000;
 
 // TODO: paimaFunnel here does not correspond to any type definition
@@ -22,7 +27,7 @@ const paimaFunnel = {
       paimaL2Contract,
       async readData(
         blockHeight: number,
-        blockCount: number = DEFAULT_BLOCK_COUNT
+        blockCount: number = DEFAULT_FUNNEL_GROUP_SIZE
       ): Promise<ChainData[]> {
         let blocks: ChainData[] = [];
         let latestBlock: number = 0;

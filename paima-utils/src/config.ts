@@ -15,6 +15,10 @@ export const DEFAULT_FEE = process.env.DEFAULT_FEE || '';
 
 // Game node config:
 export const START_BLOCKHEIGHT = parseInt(process.env.START_BLOCKHEIGHT || '0', 10);
+export const DEFAULT_FUNNEL_GROUP_SIZE = parseInt(
+  process.env.DEFAULT_FUNNEL_GROUP_SIZE || '100',
+  10
+);
 export const SERVER_ONLY_MODE = process.env.SERVER_ONLY_MODE === 'true';
 export const STOP_BLOCKHEIGHT = process.env.STOP_BLOCKHEIGHT
   ? parseInt(process.env.STOP_BLOCKHEIGHT)
