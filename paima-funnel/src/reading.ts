@@ -31,7 +31,7 @@ async function processBlock(
       submittedData: await extractSubmittedData(web3, block, events),
     };
   } catch (err) {
-    doLog(`[funnel::processBlock] caught ${err}`);
+    doLog(`[funnel::processBlock] at ${blockNumber} caught ${err}`);
     throw err;
   }
 }
