@@ -4,7 +4,6 @@ import pkg from 'web3-utils';
 import paimaL2ContractBuild from './artifacts/PaimaL2Contract';
 import type { PaimaL2Contract } from './contract-types/PaimaL2Contract';
 import { doLog, logError } from './logging.js';
-import { createScheduledData, deleteScheduledData } from './db';
 import type {
   ChainData,
   ChainDataExtension,
@@ -15,19 +14,11 @@ import type {
   ErrorMessageMapping,
   TsoaFunction,
   ETHAddress,
-  GameStateMachine,
-  GameStateMachineInitializer,
-  GameStateTransitionFunction,
-  GameStateTransitionFunctionRouter,
   PaimaRuntime,
-  PaimaRuntimeInitializer,
-  SQLUpdate,
   SubmittedData,
   SubmittedChainData,
   TransactionTemplate,
 } from './types';
-import { tx } from './pg-tx';
-import { getConnection } from './pg-connection.js';
 import { AddressType, INNER_BATCH_DIVIDER, OUTER_BATCH_DIVIDER } from './constants';
 
 const { isAddress } = pkg;
@@ -41,30 +32,20 @@ export {
   ChainFunnel,
   TsoaFunction,
   ETHAddress,
-  SQLUpdate,
   ErrorCode,
   ErrorMessageFxn,
   ErrorMessageMapping,
   SubmittedData,
   SubmittedChainData,
   ChainData,
-  GameStateTransitionFunctionRouter,
-  GameStateTransitionFunction,
-  GameStateMachineInitializer,
-  GameStateMachine,
-  PaimaRuntimeInitializer,
   PaimaRuntime,
   ChainDataExtension,
   TransactionTemplate,
   AddressType,
   INNER_BATCH_DIVIDER,
   OUTER_BATCH_DIVIDER,
-  getConnection,
   logError,
   doLog,
-  tx,
-  createScheduledData,
-  deleteScheduledData,
 };
 
 export const DEFAULT_GAS_PRICE = '61000000000' as const;

@@ -1,8 +1,9 @@
 import type { Pool } from 'pg';
 
-import { tx, doLog, SCHEDULED_DATA_ADDRESS, getConnection } from '@paima/utils';
-import type { SubmittedData } from '@paima/utils';
-import type { ChainData, GameStateMachineInitializer } from '@paima/utils';
+import { doLog, SCHEDULED_DATA_ADDRESS } from '@paima/utils';
+import { tx, getConnection } from '@paima/db';
+import type { GameStateMachineInitializer } from '@paima/db';
+import type { ChainData, SubmittedData } from '@paima/utils';
 import Prando from '@paima/prando';
 
 import {
