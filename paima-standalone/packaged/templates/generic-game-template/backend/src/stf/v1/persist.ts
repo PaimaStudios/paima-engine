@@ -1,4 +1,4 @@
-import type { SQLUpdate } from 'paima-sdk/paima-utils';
+import type { SQLUpdate } from 'paima-sdk/paima-db';
 import type { IGetUserResult, IUpsertUserParams } from '@game/db';
 import { upsertUser } from '@game/db';
 import { calculateProgress } from '@game/game-logic';

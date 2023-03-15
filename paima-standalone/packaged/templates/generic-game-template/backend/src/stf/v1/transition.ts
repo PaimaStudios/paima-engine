@@ -1,6 +1,7 @@
 import parse, { isInvalid } from './parser.js';
 import type Prando from 'paima-sdk/paima-prando';
-import type { SQLUpdate, SubmittedData } from 'paima-sdk/paima-utils';
+import type { SQLUpdate } from 'paima-sdk/paima-db';
+import type { SubmittedData } from 'paima-sdk/paima-utils';
 import { persistUserUpdate } from './persist.js';
 import type { IGetUserResult, Pool } from '@game/db';
 import { getUser } from '@game/db';

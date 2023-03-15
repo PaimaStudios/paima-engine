@@ -1,5 +1,5 @@
 import type { Pool } from 'pg';
-import { getConnection } from 'paima-sdk/paima-utils';
+import { getConnection } from 'paima-sdk/paima-db';
 /**
  * Pool of Postgres connections to avoid overhead of connecting on every request.
  */
