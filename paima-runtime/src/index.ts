@@ -1,10 +1,6 @@
-import type {
-  ChainData,
-  ChainFunnel,
-  GameStateMachine,
-  PaimaRuntimeInitializer,
-} from '@paima/utils';
+import type { ChainData, ChainFunnel } from '@paima/utils';
 import { doLog, logError } from '@paima/utils';
+import type { GameStateMachine, PaimaRuntimeInitializer } from '@paima/db';
 import process from 'process';
 import { server, startServer } from './server.js';
 import { initSnapshots, snapshotIfTime } from './snapshots.js';

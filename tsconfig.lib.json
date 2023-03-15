@@ -6,6 +6,7 @@
     { "path": "./paima-mw-core" },
     { "path": "./paima-prando" },
     { "path": "./paima-tx" },
-    { "path": "./paima-executors" }
+    { "path": "./paima-executors" },
+    { "path": "./paima-db" }
   ]
 }

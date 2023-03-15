@@ -7,6 +7,7 @@
     { "path": "./paima-tx" },
     { "path": "./paima-executors" },
     { "path": "./paima-mw-core" },
+    { "path": "./paima-db" },
     { "path": "./paima-funnel" },
     { "path": "./paima-sm" },
     { "path": "./paima-runtime" },

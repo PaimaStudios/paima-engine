@@ -22,6 +22,7 @@
     "./paima-tx",
     "./paima-executors",
     "./paima-mw-core",
+    "./paima-db",
     "./paima-funnel",
     "./paima-sm",
     "./paima-runtime",

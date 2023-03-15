@@ -1,6 +1,7 @@
 import type { PoolClient, PoolConfig } from 'pg';
 import pg from 'pg';
-import { logError } from './logging';
+
+import { logError } from '@paima/utils';
 
 let readonlyDBConn: pg.Pool | null;
 
