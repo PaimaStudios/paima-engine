@@ -56,12 +56,7 @@ const paimaEngine: PaimaRuntimeInitializer = {
         if (serverOnlyMode) {
           doLog(`Running in webserver-only mode. No new blocks/game inputs will be synced.`);
         } else {
-          await startSafeRuntime(
-            gameStateMachine,
-            chainFunnel,
-            this.pollingRate,
-            stopBlockHeight
-          );
+          await startSafeRuntime(gameStateMachine, chainFunnel, this.pollingRate, stopBlockHeight);
         }
       },
     };
@@ -120,7 +115,9 @@ async function acquireLatestBlockHeight(sm: GameStateMachine, waitPeriod: number
       return latestReadBlockHeight;
     } catch (err) {
       if (!wasDown) {
-        doLog(`[paima-runtime] Encountered error in reading latest block height, retrying after ${waitPeriod} ms`);
+        doLog(
+          `[paima-runtime] Encountered error in reading latest block height, retrying after ${waitPeriod} ms`
+        );
         logError(err);
       }
       wasDown = true;
@@ -162,7 +159,10 @@ async function startRuntime(
 
     // Fetching new chain data via the funnel
     let latestChainDataList: ChainData[];
-    if (loopCount == 1) doLog('-------------------------------------\nBeginning Syncing & Processing Blocks\n-------------------------------------');
+    if (loopCount == 1)
+      doLog(
+        '-------------------------------------\nBeginning Syncing & Processing Blocks\n-------------------------------------'
+      );
     try {
       latestChainDataList = await chainFunnel.readData(latestReadBlockHeight + 1);
       exitIfStopped(run);
@@ -192,7 +192,9 @@ async function startRuntime(
             break;
           }
         } catch (err) {
-          doLog(`[paima-runtime] Error occurred prior to running STF for block ${chainData.blockNumber}:`);
+          doLog(
+            `[paima-runtime] Error occurred prior to running STF for block ${chainData.blockNumber}:`
+          );
           logError(err);
           break;
         }
@@ -201,7 +203,9 @@ async function startRuntime(
           await gameStateMachine.process(chainData);
           exitIfStopped(run);
         } catch (err) {
-          doLog(`[paima-runtime] Error occurred while running STF for block ${chainData.blockNumber}:`);
+          doLog(
+            `[paima-runtime] Error occurred while running STF for block ${chainData.blockNumber}:`
+          );
           logError(err);
           break;
         }
@@ -212,7 +216,9 @@ async function startRuntime(
           exitIfStopped(run);
           await loopIfStopBlockReached(latestReadBlockHeight, stopBlockHeight);
         } catch (err) {
-          doLog(`[paima-runtime] Error occurred after running STF for block ${chainData.blockNumber}:`);
+          doLog(
+            `[paima-runtime] Error occurred after running STF for block ${chainData.blockNumber}:`
+          );
           logError(err);
           break;
         }
