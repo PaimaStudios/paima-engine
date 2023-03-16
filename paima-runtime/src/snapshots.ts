@@ -61,9 +61,6 @@ async function saveSnapshot(blockHeight: number): Promise<void> {
         doLog(`[paima-runtime::snapshots] pg_dump stderr: ${stderr}`);
         logError(error);
       }
-      else {
-        doLog(`[paima-runtime::snapshots] Snapshot successfully saved`)
-      }
     }
   );
   snapshotNames.push(fileName);

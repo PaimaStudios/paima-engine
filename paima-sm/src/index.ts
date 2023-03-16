@@ -78,7 +78,7 @@ const SM: GameStateMachineInitializer = {
               await deleteScheduled.run({ id: data.id }, db);
             });
           } catch (err) {
-            doLog(`Database error: ${err}`);
+            doLog(`[paima-sm] Database error: ${err}`);
           }
         }
 
@@ -116,9 +116,15 @@ const SM: GameStateMachineInitializer = {
               );
             });
           } catch (err) {
-            doLog(`Database error: ${err}`);
+            doLog(`[paima-sm] Database error: ${err}`);
           }
         }
+        // Extra logging
+        const userInputsLength = latestChainData.submittedData.length;
+        const scheduledInputsLength = scheduledData.length;
+        if (userInputsLength + scheduledInputsLength > 0)
+          doLog(`Processed ${userInputsLength} user inputs and ${scheduledInputsLength} scheduled inputs in block #${latestChainData.blockNumber}`);
+        // Commit finishing of processing to DB
         await blockHeightDone.run({ block_height: latestChainData.blockNumber }, DBConn);
       },
     };
