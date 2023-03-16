@@ -4,18 +4,18 @@ import type { GameStateMachine, PaimaRuntimeInitializer } from '@paima/db';
 import process from 'process';
 import { server, startServer } from './server.js';
 import { initSnapshots, snapshotIfTime } from './snapshots.js';
-let run = false;
+let keepRunning = false;
 
 process.on('SIGINT', () => {
-  if (!run) process.exit(0);
+  if (!keepRunning) process.exit(0);
   doLog('Caught SIGINT. Waiting for engine to finish processing current block');
-  run = false;
+  keepRunning = false;
 });
 
 process.on('SIGTERM', () => {
-  if (!run) process.exit(0);
+  if (!keepRunning) process.exit(0);
   doLog('Caught SIGTERM. Waiting for engine to finish processing current block');
-  run = false;
+  keepRunning = false;
 });
 
 process.on('exit', code => {
@@ -59,12 +59,7 @@ const paimaEngine: PaimaRuntimeInitializer = {
           doLog(`Running in webserver-only mode.`);
         } else {
           doLog(`Final block height set to ${stopBlockHeight}`);
-          await securedIterativeFunnel(
-            gameStateMachine,
-            chainFunnel,
-            this.pollingRate,
-            stopBlockHeight
-          );
+          await securedMainLoop(gameStateMachine, chainFunnel, this.pollingRate, stopBlockHeight);
         }
       },
     };
@@ -77,7 +72,7 @@ async function loopIfStopBlockReached(
 ): Promise<void> {
   if (stopBlockHeight !== null && latestReadBlockHeight >= stopBlockHeight) {
     doLog(`Reached stop block height, stopping the funnel...`);
-    while (run) {
+    while (keepRunning) {
       await delay(2000);
     }
     process.exit(0);
@@ -90,20 +85,20 @@ function exitIfStopped(run: boolean): void {
   }
 }
 
-async function securedIterativeFunnel(
+async function securedMainLoop(
   gameStateMachine: GameStateMachine,
   chainFunnel: ChainFunnel,
   pollingRate: number,
   stopBlockHeight: number | null
 ): Promise<void> {
   let i = 1;
-  run = true;
-  while (run) {
+  keepRunning = true;
+  while (keepRunning) {
     try {
-      doLog(`Run ${i} of iterative funnel:`);
-      await runIterativeFunnel(gameStateMachine, chainFunnel, pollingRate, stopBlockHeight);
+      doLog(`Run ${i} of main loop:`);
+      await runMainLoop(gameStateMachine, chainFunnel, pollingRate, stopBlockHeight);
     } catch (err) {
-      doLog('runIterativeFunnel failure!');
+      doLog('runMainLoop failure!');
       logError(err);
       doLog('Running again...');
       i++;
@@ -113,7 +108,7 @@ async function securedIterativeFunnel(
 
 async function requireLatestBlockHeight(sm: GameStateMachine, waitPeriod: number): Promise<number> {
   let wasDown = false;
-  while (run) {
+  while (keepRunning) {
     try {
       const latestReadBlockHeight = await sm.latestBlockHeight();
       if (wasDown) {
@@ -129,27 +124,27 @@ async function requireLatestBlockHeight(sm: GameStateMachine, waitPeriod: number
     }
     await delay(waitPeriod);
   }
-  exitIfStopped(run);
+  exitIfStopped(keepRunning);
   return -1;
 }
 
-async function runIterativeFunnel(
+async function runMainLoop(
   gameStateMachine: GameStateMachine,
   chainFunnel: ChainFunnel,
   pollingRate: number,
   stopBlockHeight: number | null
 ): Promise<void> {
   const pollingPeriod = pollingRate * 1000;
-  while (run) {
+  while (keepRunning) {
     let latestReadBlockHeight: number;
 
     try {
       latestReadBlockHeight = await requireLatestBlockHeight(gameStateMachine, pollingPeriod);
       await snapshotIfTime(latestReadBlockHeight);
       await loopIfStopBlockReached(latestReadBlockHeight, stopBlockHeight);
-      exitIfStopped(run);
+      exitIfStopped(keepRunning);
     } catch (err) {
-      doLog('[runIterativeFunnel] error in pre-read phase:');
+      doLog('[runMainLoop] error in pre-read phase:');
       logError(err);
       continue;
     }
@@ -161,14 +156,14 @@ async function runIterativeFunnel(
       latestChainDataList = await chainFunnel.readData(latestReadBlockHeight + 1);
       // Checking if should safely close after fetching all chain data
       // which may take some time
-      exitIfStopped(run);
+      exitIfStopped(keepRunning);
 
       if (!latestChainDataList || !latestChainDataList?.length) {
         await delay(pollingPeriod);
         continue;
       }
     } catch (err) {
-      doLog('[runIterativeFunnel] error in read phase:');
+      doLog('[runMainLoop] error in read phase:');
       logError(err);
       continue;
     }
@@ -176,7 +171,7 @@ async function runIterativeFunnel(
     try {
       for (const block of latestChainDataList) {
         // Checking if should safely close in between processing blocks
-        exitIfStopped(run);
+        exitIfStopped(keepRunning);
         try {
           const latestReadBlockHeight = await requireLatestBlockHeight(
             gameStateMachine,
@@ -186,16 +181,16 @@ async function runIterativeFunnel(
             break;
           }
         } catch (err) {
-          doLog(`[runIterativeFunnel] error before processing block ${block.blockNumber}:`);
+          doLog(`[runMainLoop] error before processing block ${block.blockNumber}:`);
           logError(err);
           break;
         }
 
         try {
           await gameStateMachine.process(block);
-          exitIfStopped(run);
+          exitIfStopped(keepRunning);
         } catch (err) {
-          doLog(`[runIterativeFunnel] error while processing block ${block.blockNumber}:`);
+          doLog(`[runMainLoop] error while processing block ${block.blockNumber}:`);
           logError(err);
           break;
         }
@@ -203,16 +198,16 @@ async function runIterativeFunnel(
         try {
           const latestReadBlockHeight = await gameStateMachine.latestBlockHeight();
           await snapshotIfTime(latestReadBlockHeight);
-          exitIfStopped(run);
+          exitIfStopped(keepRunning);
           await loopIfStopBlockReached(latestReadBlockHeight, stopBlockHeight);
         } catch (err) {
-          doLog(`[runIterativeFunnel] error after processing block ${block.blockNumber}:`);
+          doLog(`[runMainLoop] error after processing block ${block.blockNumber}:`);
           logError(err);
           break;
         }
       }
     } catch (err) {
-      doLog('[runIterativeFunnel] error in process phase:');
+      doLog('[runMainLoop] error in process phase:');
       logError(err);
       continue;
     }
