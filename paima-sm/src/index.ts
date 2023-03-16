@@ -2,7 +2,7 @@ import type { Pool } from 'pg';
 
 import { doLog, SCHEDULED_DATA_ADDRESS } from '@paima/utils';
 import { tx, getConnection } from '@paima/db';
-import type { GameStateMachineInitializer } from '@paima/db';
+import type { GameStateTransitionFunction, GameStateMachineInitializer } from '@paima/db';
 import type { ChainData, SubmittedData } from '@paima/utils';
 import Prando from '@paima/prando';
 
@@ -51,78 +51,125 @@ const SM: GameStateMachineInitializer = {
         const randomnessGenerator = new Prando(seed);
 
         // Fetch and execute scheduled input data
-        const scheduledData = await getScheduledDataByBlockHeight.run(
-          { block_height: latestChainData.blockNumber },
-          readonlyDBConn
+        const scheduledInputsLength = await processScheduledData(
+          latestChainData,
+          readonlyDBConn,
+          DBConn,
+          gameStateTransition,
+          randomnessGenerator
         );
-        for (const data of scheduledData) {
-          const inputData: SubmittedData = {
-            userAddress: SCHEDULED_DATA_ADDRESS,
-            inputData: data.input_data,
-            inputNonce: '',
-            suppliedValue: '0',
-            scheduled: true,
-          };
-          // Trigger STF
-          const sqlQueries = await gameStateTransition(
-            inputData,
-            data.block_height,
-            randomnessGenerator,
-            readonlyDBConn
-          );
-          try {
-            await tx<void>(DBConn, async db => {
-              for (const [query, params] of sqlQueries) {
-                await query.run(params, db);
-              }
-              await deleteScheduled.run({ id: data.id }, db);
-            });
-          } catch (err) {
-            doLog(`Database error: ${err}`);
-          }
-        }
 
         // Execute user submitted input data
-        for (const inputData of latestChainData.submittedData) {
-          // Check nonce is valid
-          if (inputData.inputNonce === '') {
-            doLog(`Skipping inputData with invalid empty nonce: ${inputData}`);
-            continue;
-          }
-          const nonceData = await findNonce.run({ nonce: inputData.inputNonce }, readonlyDBConn);
-          if (nonceData.length > 0) {
-            doLog(`Skipping inputData with duplicate nonce: ${inputData}`);
-            continue;
-          }
+        const userInputsLength = await processUserInputs(
+          latestChainData,
+          readonlyDBConn,
+          DBConn,
+          gameStateTransition,
+          randomnessGenerator
+        );
 
-          // Trigger STF
-          const sqlQueries = await gameStateTransition(
-            inputData,
-            latestChainData.blockNumber,
-            randomnessGenerator,
-            readonlyDBConn
+        // Extra logging
+        if (userInputsLength + scheduledInputsLength > 0)
+          doLog(
+            `Processed ${userInputsLength} user inputs and ${scheduledInputsLength} scheduled inputs in block #${latestChainData.blockNumber}`
           );
-          try {
-            await tx<void>(DBConn, async db => {
-              for (const [query, params] of sqlQueries) {
-                await query.run(params, db);
-              }
-              await insertNonce.run(
-                {
-                  nonce: inputData.inputNonce,
-                  block_height: latestChainData.blockNumber,
-                },
-                db
-              );
-            });
-          } catch (err) {
-            doLog(`Database error: ${err}`);
-          }
-        }
+        // Commit finishing of processing to DB
         await blockHeightDone.run({ block_height: latestChainData.blockNumber }, DBConn);
       },
     };
   },
 };
+
+// Process all of the scheduled data inputs by running each of them through the game STF,
+// saving the results to the DB, and deleting the schedule data all together in one postgres tx.
+// Function returns number of scheduled inputs that were processed.
+async function processScheduledData(
+  latestChainData: ChainData,
+  readonlyDBConn: Pool,
+  DBConn: Pool,
+  gameStateTransition: GameStateTransitionFunction,
+  randomnessGenerator: Prando
+): Promise<number> {
+  const scheduledData = await getScheduledDataByBlockHeight.run(
+    { block_height: latestChainData.blockNumber },
+    readonlyDBConn
+  );
+  for (const data of scheduledData) {
+    const inputData: SubmittedData = {
+      userAddress: SCHEDULED_DATA_ADDRESS,
+      inputData: data.input_data,
+      inputNonce: '',
+      suppliedValue: '0',
+      scheduled: true,
+    };
+    // Trigger STF
+    const sqlQueries = await gameStateTransition(
+      inputData,
+      data.block_height,
+      randomnessGenerator,
+      readonlyDBConn
+    );
+    try {
+      await tx<void>(DBConn, async db => {
+        for (const [query, params] of sqlQueries) {
+          await query.run(params, db);
+        }
+        await deleteScheduled.run({ id: data.id }, db);
+      });
+    } catch (err) {
+      doLog(`[paima-sm] Database error: ${err}`);
+    }
+  }
+  return scheduledData.length;
+}
+
+// Process all of the user inputs data inputs by running each of them through the game STF,
+// saving the results to the DB with the nonces, all together in one postgres tx.
+// Function returns number of user inputs that were processed.
+async function processUserInputs(
+  latestChainData: ChainData,
+  readonlyDBConn: Pool,
+  DBConn: Pool,
+  gameStateTransition: GameStateTransitionFunction,
+  randomnessGenerator: Prando
+): Promise<number> {
+  for (const inputData of latestChainData.submittedData) {
+    // Check nonce is valid
+    if (inputData.inputNonce === '') {
+      doLog(`Skipping inputData with invalid empty nonce: ${inputData}`);
+      continue;
+    }
+    const nonceData = await findNonce.run({ nonce: inputData.inputNonce }, readonlyDBConn);
+    if (nonceData.length > 0) {
+      doLog(`Skipping inputData with duplicate nonce: ${inputData}`);
+      continue;
+    }
+
+    // Trigger STF
+    const sqlQueries = await gameStateTransition(
+      inputData,
+      latestChainData.blockNumber,
+      randomnessGenerator,
+      readonlyDBConn
+    );
+    try {
+      await tx<void>(DBConn, async db => {
+        for (const [query, params] of sqlQueries) {
+          await query.run(params, db);
+        }
+        await insertNonce.run(
+          {
+            nonce: inputData.inputNonce,
+            block_height: latestChainData.blockNumber,
+          },
+          db
+        );
+      });
+    } catch (err) {
+      doLog(`[paima-sm] Database error: ${err}`);
+    }
+  }
+  return latestChainData.submittedData.length;
+}
 
 export default SM;

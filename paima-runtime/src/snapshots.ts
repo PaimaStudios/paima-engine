@@ -49,7 +49,7 @@ async function saveSnapshot(blockHeight: number): Promise<void> {
   const host = process.env.DB_HOST;
   const port = process.env.DB_PORT || '5432';
   const fileName = `paima-snapshot-${blockHeight}.sql`;
-  doLog(`Attempting to save snapshot: ${fileName}`);
+  doLog(`[paima-runtime::snapshots] Saving Snapshot: ${fileName}`);
   exec(
     `pg_dump --dbname=postgresql://${username}:${password}@${host}:${port}/${database} -f ${snapshotPath(
       fileName
@@ -57,10 +57,10 @@ async function saveSnapshot(blockHeight: number): Promise<void> {
     (error: ExecException | null, stdout: string, stderr: string) => {
       if (error) {
         doLog(`[paima-runtime::snapshots] Error saving snapshot:`);
+        doLog(`[paima-runtime::snapshots] pg_dump stdout: ${stdout}`);
+        doLog(`[paima-runtime::snapshots] pg_dump stderr: ${stderr}`);
         logError(error);
       }
-      doLog(`[paima-runtime::snapshots] pg_dump stdout: ${stdout}`);
-      doLog(`[paima-runtime::snapshots] pg_dump stderr: ${stderr}`);
     }
   );
   snapshotNames.push(fileName);
@@ -99,7 +99,7 @@ export async function snapshotIfTime(latestReadBlockHeight: number): Promise<voi
     } catch (err) {
       doLog(`[paima-runtime::snapshots] error while attempting to clean snapshots`);
     }
-    doLog(`[paima-runtime::snapshots] Set snapshotTrigger to ${snapshotTrigger}`);
+    doLog(`[paima-runtime::snapshots] Next snapshot scheduled at height ${snapshotTrigger}`);
   }
 }
 
@@ -112,5 +112,4 @@ export async function initSnapshots(): Promise<void> {
     logError(err);
     snapshotTrigger = 0;
   }
-  doLog(`[paima-runtime::snapshots] Initialized snapshotTrigger as ${snapshotTrigger}`);
 }

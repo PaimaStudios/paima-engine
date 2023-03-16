@@ -48,23 +48,15 @@ const paimaEngine: PaimaRuntimeInitializer = {
           res.status(200).json(gameBackendVersion);
         });
 
-        doLog(`DB_PORT: ${process.env.DB_PORT}`);
-
         await initSnapshots();
 
         // pass endpoints to web server and run
         startServer();
 
         if (serverOnlyMode) {
-          doLog(`Running in webserver-only mode.`);
+          doLog(`Running in webserver-only mode. No new blocks/game inputs will be synced.`);
         } else {
-          doLog(`Final block height set to ${stopBlockHeight}`);
-          await securedIterativeFunnel(
-            gameStateMachine,
-            chainFunnel,
-            this.pollingRate,
-            stopBlockHeight
-          );
+          await startSafeRuntime(gameStateMachine, chainFunnel, this.pollingRate, stopBlockHeight);
         }
       },
     };
@@ -90,7 +82,9 @@ function exitIfStopped(run: boolean): void {
   }
 }
 
-async function securedIterativeFunnel(
+// A wrapper around the actual runtime which ensures the game node (aka. backend) will never go down due to uncaught exceptions.
+// Of note, current implementation will continue to restart the runtime no matter what the issue is at hand.
+async function startSafeRuntime(
   gameStateMachine: GameStateMachine,
   chainFunnel: ChainFunnel,
   pollingRate: number,
@@ -100,29 +94,30 @@ async function securedIterativeFunnel(
   run = true;
   while (run) {
     try {
-      doLog(`Run ${i} of iterative funnel:`);
-      await runIterativeFunnel(gameStateMachine, chainFunnel, pollingRate, stopBlockHeight);
+      await startRuntime(gameStateMachine, chainFunnel, pollingRate, stopBlockHeight);
     } catch (err) {
-      doLog('runIterativeFunnel failure!');
+      doLog('[paima-runtime] An error has been propagated all the way up to the runtime.');
       logError(err);
-      doLog('Running again...');
+      doLog(`[paima-runtime] Attempt #${i} to restart and continue forward.`);
       i++;
     }
   }
 }
 
-async function requireLatestBlockHeight(sm: GameStateMachine, waitPeriod: number): Promise<number> {
+async function acquireLatestBlockHeight(sm: GameStateMachine, waitPeriod: number): Promise<number> {
   let wasDown = false;
   while (run) {
     try {
       const latestReadBlockHeight = await sm.latestBlockHeight();
       if (wasDown) {
-        doLog('[requireLatestBlockHeight] Block height re-acquired successfully.');
+        doLog('[paima-runtime] Block height re-acquired successfully.');
       }
       return latestReadBlockHeight;
     } catch (err) {
       if (!wasDown) {
-        doLog(`[requireLatestBlockHeight] encountered error, retrying after ${waitPeriod} ms`);
+        doLog(
+          `[paima-runtime] Encountered error in reading latest block height, retrying after ${waitPeriod} ms`
+        );
         logError(err);
       }
       wasDown = true;
@@ -133,69 +128,84 @@ async function requireLatestBlockHeight(sm: GameStateMachine, waitPeriod: number
   return -1;
 }
 
-async function runIterativeFunnel(
+// The core logic of paima runtime which polls the funnel and processes the resulting chain data using the game's state machine.
+// Of note, the runtime is designed to continue running/attempting to process the next required block no matter what errors propagate upwards.
+// This is a good approach in the case of networking problems or other edge cases which address themselves over time, and ensuring that the game node never goes offline.
+// However of note, it is possible for the game node to get into a "soft-lock" state if the game state machine is badly coded and has uncaught exceptions which cause
+// the runtime to continuously retry syncing the same block, and failing each time.
+async function startRuntime(
   gameStateMachine: GameStateMachine,
   chainFunnel: ChainFunnel,
   pollingRate: number,
   stopBlockHeight: number | null
 ): Promise<void> {
   const pollingPeriod = pollingRate * 1000;
+  let loopCount = 0;
   while (run) {
-    let latestReadBlockHeight: number;
+    loopCount++;
 
+    // Initializing the latest read block height and snapshotting
+    let latestReadBlockHeight: number;
     try {
-      latestReadBlockHeight = await requireLatestBlockHeight(gameStateMachine, pollingPeriod);
+      latestReadBlockHeight = await acquireLatestBlockHeight(gameStateMachine, pollingPeriod);
       await snapshotIfTime(latestReadBlockHeight);
       await loopIfStopBlockReached(latestReadBlockHeight, stopBlockHeight);
       exitIfStopped(run);
     } catch (err) {
-      doLog('[runIterativeFunnel] error in pre-read phase:');
+      doLog('[paima-runtime] Error in pre-funnel phase:');
       logError(err);
       continue;
     }
 
+    // Fetching new chain data via the funnel
     let latestChainDataList: ChainData[];
-
+    if (loopCount == 1)
+      doLog(
+        '-------------------------------------\nBeginning Syncing & Processing Blocks\n-------------------------------------'
+      );
     try {
-      // Read latest chain data from funnel
       latestChainDataList = await chainFunnel.readData(latestReadBlockHeight + 1);
-      // Checking if should safely close after fetching all chain data
-      // which may take some time
       exitIfStopped(run);
 
+      // If no new chain data, delay for the duration of the pollingPeriod
       if (!latestChainDataList || !latestChainDataList?.length) {
         await delay(pollingPeriod);
         continue;
       }
     } catch (err) {
-      doLog('[runIterativeFunnel] error in read phase:');
+      doLog('[paima-runtime] Error received from the funnel:');
       logError(err);
       continue;
     }
 
+    // Iterate through all of the returned chainData and process each one via the state machine's STF
     try {
-      for (const block of latestChainDataList) {
+      for (const chainData of latestChainDataList) {
         // Checking if should safely close in between processing blocks
         exitIfStopped(run);
         try {
-          const latestReadBlockHeight = await requireLatestBlockHeight(
+          const latestReadBlockHeight = await acquireLatestBlockHeight(
             gameStateMachine,
             pollingPeriod
           );
-          if (block.blockNumber !== latestReadBlockHeight + 1) {
+          if (chainData.blockNumber !== latestReadBlockHeight + 1) {
             break;
           }
         } catch (err) {
-          doLog(`[runIterativeFunnel] error before processing block ${block.blockNumber}:`);
+          doLog(
+            `[paima-runtime] Error occurred prior to running STF for block ${chainData.blockNumber}:`
+          );
           logError(err);
           break;
         }
 
         try {
-          await gameStateMachine.process(block);
+          await gameStateMachine.process(chainData);
           exitIfStopped(run);
         } catch (err) {
-          doLog(`[runIterativeFunnel] error while processing block ${block.blockNumber}:`);
+          doLog(
+            `[paima-runtime] Error occurred while running STF for block ${chainData.blockNumber}:`
+          );
           logError(err);
           break;
         }
@@ -206,13 +216,15 @@ async function runIterativeFunnel(
           exitIfStopped(run);
           await loopIfStopBlockReached(latestReadBlockHeight, stopBlockHeight);
         } catch (err) {
-          doLog(`[runIterativeFunnel] error after processing block ${block.blockNumber}:`);
+          doLog(
+            `[paima-runtime] Error occurred after running STF for block ${chainData.blockNumber}:`
+          );
           logError(err);
           break;
         }
       }
     } catch (err) {
-      doLog('[runIterativeFunnel] error in process phase:');
+      doLog('[paima-runtime] Uncaught error propagated to runtime while processing chain data:');
       logError(err);
       continue;
     }

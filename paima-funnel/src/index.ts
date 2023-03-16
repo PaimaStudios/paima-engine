@@ -47,9 +47,9 @@ const paimaFunnel = {
 
           if (toBlock >= fromBlock) {
             if (toBlock === fromBlock) {
-              doLog(`q${toBlock}`);
+              doLog(`#${toBlock}`);
             } else {
-              doLog(`q${fromBlock}-${toBlock}`);
+              doLog(`#${fromBlock}-${toBlock}`);
             }
             await internalReadDataMulti(web3, paimaL2Contract, fromBlock, toBlock)
               .then(res => (blocks = res))
@@ -60,7 +60,7 @@ const paimaFunnel = {
             blocks = [];
           }
         } catch (err) {
-          doLog(`[paima-funnel::readData] Exception occured while reading blocks: ${err}`);
+          doLog(`[paima-funnel::readData] Exception occurred while reading blocks: ${err}`);
           return [];
         }
         return blocks;
