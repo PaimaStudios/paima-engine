@@ -17,13 +17,17 @@
     "prebuild": "npm run generate-types",
     "build": "tsc",
     "generate-types": "npx typechain --target=web3-v1 'src/artifacts/*.json' --out-dir src/contract-types",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest",
     "lint": "prettier --write '**/*.ts'"
   },
   "devDependencies": {
     "@typechain/web3-v1": "^6.0.2",
     "@types/express": "^4.17.13",
     "@types/node": "^17.0.25",
+    "ts-jest": "^29.0.5",
     "typechain": "^8.1.1"
+  },
+  "dependencies": {
+    "ebnf": "^1.9.0"
   }
 }
