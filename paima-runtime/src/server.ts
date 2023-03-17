@@ -13,7 +13,7 @@ server.use(bodyParser);
 
 function startServer(): void {
   server.listen(port, () => {
-    doLog(`server started at http://localhost:${port}`);
+    doLog(`Game Node Webserver Started At: http://localhost:${port}`);
   });
 }
 export { server, startServer };
