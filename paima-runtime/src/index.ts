@@ -8,13 +8,13 @@ let run = false;
 
 process.on('SIGINT', () => {
   if (!run) process.exit(0);
-  doLog('Caught SIGINT. Waiting for engine to finish processing current block');
+  doLog('Caught SIGINT. Waiting for engine to finish processing current block before closing');
   run = false;
 });
 
 process.on('SIGTERM', () => {
   if (!run) process.exit(0);
-  doLog('Caught SIGTERM. Waiting for engine to finish processing current block');
+  doLog('Caught SIGTERM. Waiting for engine to finish processing current block before closing');
   run = false;
 });
 
@@ -24,17 +24,6 @@ process.on('exit', code => {
 
 const paimaEngine: PaimaRuntimeInitializer = {
   initialize(chainFunnel, gameStateMachine, gameBackendVersion) {
-    // Verify env file is filled out
-    if (
-      !process.env.STORAGE_ADDRESS ||
-      !process.env.CHAIN_URI ||
-      !process.env.CHAIN_ID ||
-      !process.env.START_BLOCKHEIGHT
-    ) {
-      doLog('Please ensure that your .env file is filled out properly before starting your game node.');
-      process.exit(0);
-    }
-
     // initialize snapshot folder
     return {
       pollingRate: 4,

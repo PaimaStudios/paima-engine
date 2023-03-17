@@ -38,7 +38,7 @@ Specifically, the fields you will want to look at editing are:
 - `providerOrURL` (URL to an RPC node of the target network you want to deploy on. Default included RPC is for the Milkomeda C1 devnet)
 - `network_id` (The network id of the target network you want to deploy on.)
 
-You will notice that the current config is setup for targetting a `testnet` network. Feel free to also create a `mainnet` network config in the future for your mainnet deployment.
+You will notice that the current config is setup for targeting a `testnet` network. Feel free to also create a `mainnet` network config in the future for your mainnet deployment.
 
 Once you have filled out the above fields, your config is ready-to-go.
 
