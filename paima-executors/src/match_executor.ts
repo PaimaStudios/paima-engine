@@ -1,33 +1,16 @@
 import roundExecutor from './round_executor.js';
 import Prando from '@paima/prando';
-import type { RoundNumbered, Seed, NewRoundEvent } from './types.js';
+import type { RoundNumbered, Seed, MatchExecutor, ProcessTickFn } from './types.js';
 
 interface MatchExecutorInitializer {
-  initialize: <MatchType, MatchState, MoveType extends RoundNumbered, TickEvent>(
-    matchEnvironment: MatchType,
+  initialize: <MatchEnvironment, MatchState, MoveType extends RoundNumbered, TickEvent>(
+    matchEnvironment: MatchEnvironment,
     totalRounds: number,
     initialState: MatchState,
     seeds: Seed[],
     submittedMoves: MoveType[],
-    processTick: (
-      matchEnvironment: MatchType,
-      matchState: MatchState,
-      submittedMoves: MoveType[],
-      currentTick: number,
-      randomnessGenerator: Prando
-    ) => TickEvent[] | null
-  ) => {
-    currentRound: number;
-    currentState: MatchState;
-    roundExecutor: null | {
-      currentTick: number;
-      currentState: MatchState;
-      tick: () => TickEvent[] | null;
-      endState: () => MatchState;
-    };
-    __nextRound: () => void;
-    tick: () => TickEvent[] | NewRoundEvent[] | null;
-  };
+    processTick: ProcessTickFn<MatchEnvironment, MatchState, MoveType, TickEvent>
+  ) => MatchExecutor<MatchState, TickEvent>;
 }
 
 const matchExecutorInitializer: MatchExecutorInitializer = {
@@ -39,13 +22,13 @@ const matchExecutorInitializer: MatchExecutorInitializer = {
       roundExecutor: null,
       __nextRound(): void {
         this.currentRound++;
-        const seed = seeds.find(s => s.round === this.currentRound);
+        const seed = seeds.find(seed => seed.round === this.currentRound);
         if (!seed) {
           this.roundExecutor = null;
           return;
         }
         const randomnessGenerator = new Prando(seed.seed);
-        const inputs = submittedMoves.filter(ui => ui.round == this.currentRound);
+        const inputs = submittedMoves.filter(move => move.round == this.currentRound);
         const executor = roundExecutor.initialize(
           matchEnvironment,
           this.currentState,
