@@ -13,7 +13,7 @@ userScheduledData   = u|*user|result
 const parserCommands = {
   createLobby: {
     numOfRounds: PaimaParser.NumberParser(3, 1000),
-    roundLength: PaimaParser.RoundLength(),
+    roundLength: PaimaParser.DefaultRoundLength(),
     isHidden: PaimaParser.TrueFalseParser(false),
     isPractice: PaimaParser.TrueFalseParser(false),
   },

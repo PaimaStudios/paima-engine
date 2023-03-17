@@ -186,7 +186,7 @@ export class PaimaParser {
     };
   }
 
-  public static RoundLength(): ParserCommandExec {
+  public static DefaultRoundLength(): ParserCommandExec {
     return (keyName: string, input: string): number => {
       if (input == null) throw new Error(`${keyName} must be defined`);
       const n = parseInt(input, 10);
