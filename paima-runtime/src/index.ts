@@ -24,7 +24,6 @@ process.on('exit', code => {
 
 const paimaEngine: PaimaRuntimeInitializer = {
   initialize(chainFunnel, gameStateMachine, gameBackendVersion) {
-    // initialize snapshot folder
     return {
       pollingRate: 4,
       chainDataExtensions: [],
@@ -48,6 +47,7 @@ const paimaEngine: PaimaRuntimeInitializer = {
           res.status(200).json(gameBackendVersion);
         });
 
+        // initialize snapshot folder
         await initSnapshots();
 
         // pass endpoints to web server and run
