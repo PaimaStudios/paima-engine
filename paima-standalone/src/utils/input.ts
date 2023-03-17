@@ -1,4 +1,3 @@
-import { doLog } from '@paima/utils';
 import { createInterface } from 'readline';
 import {
   prepareSDK,
@@ -13,12 +12,14 @@ import type { ChainFunnel } from '@paima/utils';
 import { gameSM } from '../sm.js';
 import { importTsoaFunction } from './import.js';
 import {
+  doLog,
   CHAIN_URI,
-  gameBackendVersion,
   SERVER_ONLY_MODE,
   STOP_BLOCKHEIGHT,
   STORAGE_ADDRESS,
-} from './index.js';
+  GAME_NODE_VERSION,
+  POLLING_RATE,
+} from '@paima/utils';
 
 // Templates type & map
 export type TemplateTypes = 'generic' | 'turn';
@@ -80,8 +81,6 @@ export const initCommand = async (): Promise<void> => {
 
 // Run command logic
 export const runPaimaEngine = async (): Promise<void> => {
-  const POLLING_RATE = 1;
-
   // Verify env file is filled out before progressing
   if (
     !process.env.STORAGE_ADDRESS ||
@@ -102,7 +101,7 @@ export const runPaimaEngine = async (): Promise<void> => {
     doLog(`Targeting Smart Contact: ${STORAGE_ADDRESS}`);
     const chainFunnel: ChainFunnel = await paimaFunnel.initialize(CHAIN_URI, STORAGE_ADDRESS);
     const stateMachine = gameSM();
-    const engine = paimaRuntime.initialize(chainFunnel, stateMachine, gameBackendVersion);
+    const engine = paimaRuntime.initialize(chainFunnel, stateMachine, GAME_NODE_VERSION);
     const registerEndpoints = importTsoaFunction();
 
     engine.setPollingRate(POLLING_RATE);

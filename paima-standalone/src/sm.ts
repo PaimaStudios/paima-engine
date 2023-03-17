@@ -1,7 +1,8 @@
 import type { GameStateMachine } from '@paima/db';
 import PaimaSM from '@paima/sm';
 import { importGameStateTransitionRouter } from './utils/import';
-import { poolConfig, START_BLOCKHEIGHT } from './utils';
+import { poolConfig } from './utils';
+import { START_BLOCKHEIGHT } from '@paima/utils';
 
 export const gameSM = (): GameStateMachine => {
   const gameStateTransitionRouter = importGameStateTransitionRouter();
