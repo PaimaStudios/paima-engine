@@ -238,6 +238,7 @@ export class PaimaParser {
 
   private log(message: string): void {
     if (this.debug) {
+      // eslint-disable-next-line no-console
       console.log('[Paima-Parser]', message);
     }
   }
@@ -253,7 +254,8 @@ export class PaimaParser {
     const getFromTree = (type: string, ast: IToken): string =>
       ast?.children?.find(c => c.type === type)?.text as string;
 
-    const interpreter: Record<string, ParserValues | ParserCommandExec> = this.commands[parseTree.children[0].type];
+    const interpreter: Record<string, ParserValues | ParserCommandExec> =
+      this.commands[parseTree.children[0].type];
     const results: Record<string, ParserValues> = {};
     Object.keys(interpreter).forEach((key: string) => {
       const parserCommand: ParserValues | ParserCommandExec = interpreter[key];

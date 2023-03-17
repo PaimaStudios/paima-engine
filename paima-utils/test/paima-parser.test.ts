@@ -45,15 +45,14 @@ describe('Test if parsed', () => {
     inputs.forEach((i: [string, boolean]) => {
       test(`${i[0]} to be ${i[1]}`, () => {
         try {
-          const value = !!(parser.start(i[0]));
+          const value = !!parser.start(i[0]);
           expect(value).toBe(i[1]);
         } catch (e) {
           expect(false).toBe(i[1]);
         }
-      })
+      });
     });
   };
-
 
   startTest([
     ['c|3|100||', true],

@@ -23,7 +23,7 @@ import { AddressType, INNER_BATCH_DIVIDER, OUTER_BATCH_DIVIDER } from './constan
 
 const { isAddress } = pkg;
 
-export * from './parser/PaimaParser'
+export * from './parser/PaimaParser';
 
 export * from './config';
 export * from './types';
