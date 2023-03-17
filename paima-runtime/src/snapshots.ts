@@ -21,8 +21,7 @@ async function getLatestSnapshotBlockheight(): Promise<number> {
     const max = maxnum?.[0] || '0';
     return parseInt(max);
   } catch (err) {
-    doLog(`[paima-runtime::snapshots] error while checking for latest snapshot`);
-    logError(err);
+    doLog(`[paima-runtime::snapshots] Creating snapshot folder as none found.`);
     await fs.mkdir(SNAPSHOT_DIR);
     return 0;
   }
