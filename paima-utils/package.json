@@ -28,6 +28,7 @@
     "typechain": "^8.1.1"
   },
   "dependencies": {
-    "ebnf": "^1.9.0"
+    "ebnf": "^1.9.0",
+    "dotenv": "^16.0.3"
   }
 }
