@@ -11,15 +11,7 @@ import paimaRuntime from '@paima/runtime';
 import type { ChainFunnel } from '@paima/utils';
 import { gameSM } from '../sm.js';
 import { importTsoaFunction } from './import.js';
-import {
-  doLog,
-  CHAIN_URI,
-  SERVER_ONLY_MODE,
-  STOP_BLOCKHEIGHT,
-  STORAGE_ADDRESS,
-  GAME_NODE_VERSION,
-  POLLING_RATE,
-} from '@paima/utils';
+import { doLog, ENV } from '@paima/utils';
 
 // Templates type & map
 export type TemplateTypes = 'generic' | 'turn';
@@ -97,17 +89,17 @@ export const runPaimaEngine = async (): Promise<void> => {
   // Check that packed game code is available
   if (checkForPackedGameCode()) {
     doLog(`Starting Game Node...`);
-    doLog(`Using RPC: ${CHAIN_URI}`);
-    doLog(`Targeting Smart Contact: ${STORAGE_ADDRESS}`);
-    const chainFunnel: ChainFunnel = await paimaFunnel.initialize(CHAIN_URI, STORAGE_ADDRESS);
+    doLog(`Using RPC: ${ENV.CHAIN_URI}`);
+    doLog(`Targeting Smart Contact: ${ENV.STORAGE_ADDRESS}`);
+    const chainFunnel: ChainFunnel = await paimaFunnel.initialize(ENV.CHAIN_URI, ENV.STORAGE_ADDRESS);
     const stateMachine = gameSM();
-    const engine = paimaRuntime.initialize(chainFunnel, stateMachine, GAME_NODE_VERSION);
+    const engine = paimaRuntime.initialize(chainFunnel, stateMachine, ENV.GAME_NODE_VERSION);
     const registerEndpoints = importTsoaFunction();
 
-    engine.setPollingRate(POLLING_RATE);
+    engine.setPollingRate(ENV.POLLING_RATE);
     engine.addEndpoints(registerEndpoints);
 
-    void engine.run(STOP_BLOCKHEIGHT, SERVER_ONLY_MODE);
+    void engine.run(ENV.STOP_BLOCKHEIGHT, ENV.SERVER_ONLY_MODE);
   } else {
     doLog(`Packed game code not found.`);
     doLog(

@@ -1,6 +1,6 @@
 import type { IToken, Parser } from 'ebnf';
 import { Grammars } from 'ebnf';
-import { BLOCK_TIME } from '../config';
+import { ENV } from '../config';
 
 //
 // This Parser converts PaimaLang:
@@ -190,7 +190,7 @@ export class PaimaParser {
     return (keyName: string, input: string): number => {
       if (input == null) throw new Error(`${keyName} must be defined`);
       const n = parseInt(input, 10);
-      const BLOCKS_PER_MINUTE = 60 / BLOCK_TIME;
+      const BLOCKS_PER_MINUTE = 60 / ENV.BLOCK_TIME;
       const BLOCKS_PER_DAY = BLOCKS_PER_MINUTE * 60 * 24;
       if (n < BLOCKS_PER_MINUTE) throw new Error(`${keyName} is less then ${BLOCKS_PER_MINUTE}`);
       if (n > BLOCKS_PER_DAY) throw new Error(`${keyName} is greater then ${BLOCKS_PER_DAY}`);
