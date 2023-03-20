@@ -44,7 +44,7 @@ const chainCurrencyName: string = ENV.CHAIN_CURRENCY_NAME;
 const chainCurrencySymbol: string = ENV.CHAIN_CURRENCY_SYMBOL;
 const chainCurrencyDecimals: number = ENV.CHAIN_CURRENCY_DECIMALS;
 
-const storageAddress: ContractAddress = ENV.STORAGE_ADDRESS;
+const storageAddress: ContractAddress = ENV.CONTRACT_ADDRESS;
 
 const deployment: Deployment = ENV.DEPLOYMENT as Deployment;
 

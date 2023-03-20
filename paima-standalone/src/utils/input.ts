@@ -75,10 +75,10 @@ export const initCommand = async (): Promise<void> => {
 export const runPaimaEngine = async (): Promise<void> => {
   // Verify env file is filled out before progressing
   if (
-    !process.env.STORAGE_ADDRESS ||
-    !process.env.CHAIN_URI ||
-    !process.env.CHAIN_ID ||
-    !process.env.START_BLOCKHEIGHT
+    !ENV.CONTRACT_ADDRESS ||
+    !ENV.CHAIN_URI ||
+    !ENV.CHAIN_ID ||
+    !ENV.START_BLOCKHEIGHT
   ) {
     doLog(
       'Please ensure that your .env file is filled out properly before starting your game node.'
@@ -90,10 +90,10 @@ export const runPaimaEngine = async (): Promise<void> => {
   if (checkForPackedGameCode()) {
     doLog(`Starting Game Node...`);
     doLog(`Using RPC: ${ENV.CHAIN_URI}`);
-    doLog(`Targeting Smart Contact: ${ENV.STORAGE_ADDRESS}`);
+    doLog(`Targeting Smart Contact: ${ENV.CONTRACT_ADDRESS}`);
     const chainFunnel: ChainFunnel = await paimaFunnel.initialize(
       ENV.CHAIN_URI,
-      ENV.STORAGE_ADDRESS
+      ENV.CONTRACT_ADDRESS
     );
     const stateMachine = gameSM();
     const engine = paimaRuntime.initialize(chainFunnel, stateMachine, ENV.GAME_NODE_VERSION);

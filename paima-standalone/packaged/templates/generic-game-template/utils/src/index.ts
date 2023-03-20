@@ -8,7 +8,7 @@ export const CHAIN_CURRENCY_NAME = process.env.CHAIN_CURRENCY_NAME || '';
 export const CHAIN_CURRENCY_SYMBOL = process.env.CHAIN_CURRENCY_SYMBOL || '';
 export const CHAIN_CURRENCY_DECIMALS = parseInt(process.env.CHAIN_CURRENCY_DECIMALS || '0', 10);
 
-export const STORAGE_ADDRESS = process.env.STORAGE_ADDRESS || '';
+export const CONTRACT_ADDRESS = process.env.CONTRACT_ADDRESS || '';
 export const STORAGE_CONTRACT_DEPLOYMENT_BLOCKHEIGHT = parseInt(
   process.env.STORAGE_CONTRACT_DEPLOYMENT_BLOCKHEIGHT || '0'
 );
