@@ -4,7 +4,7 @@ export class ENV {
   static doHealthCheck(): void {
     if (!ENV.STORAGE_ADDRESS) {
       const env = process.env.NODE_ENV || 'DEVELOPMENT';
-      throw new Error(`Please set your .env.${env}`)
+      throw new Error(`Please set your .env.${env}`);
     }
   }
 
