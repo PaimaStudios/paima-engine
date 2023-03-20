@@ -1,6 +1,13 @@
 import type { VersionString } from './types';
 
 export class ENV {
+  static doHealthCheck(): void {
+    if (!ENV.STORAGE_ADDRESS) {
+      const env = process.env.NODE_ENV || 'DEVELOPMENT';
+      throw new Error(`Please set your .env.${env}`)
+    }
+  }
+
   // Target Blockchain:
   static get CHAIN_URI(): string {
     return process.env.CHAIN_URI || '';

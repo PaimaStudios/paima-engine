@@ -1,10 +1,13 @@
 // Load environment variables before everything else.
 import { config } from 'dotenv';
-export const path = `${process.cwd()}/.env.${process.env.NODE_ENV || 'development'}`;
-config({ path });
-
-// eslint-disable-next-line import/imports-first
+import { ENV } from '@paima/utils';
 import { argumentRouter } from './utils/input.js';
+
+// Load environment variables
+config({ path: `${process.cwd()}/.env.${process.env.NODE_ENV || 'development'}` });
+
+// Check if .env loaded correctly
+ENV.doHealthCheck();
 
 async function main(): Promise<void> {
   await argumentRouter();
