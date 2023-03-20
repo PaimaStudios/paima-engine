@@ -91,7 +91,10 @@ export const runPaimaEngine = async (): Promise<void> => {
     doLog(`Starting Game Node...`);
     doLog(`Using RPC: ${ENV.CHAIN_URI}`);
     doLog(`Targeting Smart Contact: ${ENV.STORAGE_ADDRESS}`);
-    const chainFunnel: ChainFunnel = await paimaFunnel.initialize(ENV.CHAIN_URI, ENV.STORAGE_ADDRESS);
+    const chainFunnel: ChainFunnel = await paimaFunnel.initialize(
+      ENV.CHAIN_URI,
+      ENV.STORAGE_ADDRESS
+    );
     const stateMachine = gameSM();
     const engine = paimaRuntime.initialize(chainFunnel, stateMachine, ENV.GAME_NODE_VERSION);
     const registerEndpoints = importTsoaFunction();
