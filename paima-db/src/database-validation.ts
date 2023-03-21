@@ -4,6 +4,12 @@ import { TABLES } from './paima-tables';
 import { createTable, tableExists, tableIsValid } from './postgres-metadata';
 import type { TableData } from './table-types';
 
+const FAILURE_MESSAGE: string = `Please remove these tables from your database or update them to conform with
+Paima requirements.
+Alternatively, set FORCE_INVALID_PAIMA_DB_TABLE_DELETION="true" in your .env
+config file to force the runtime to automatically delete and re-create these
+tables. This might delete some of your data, so use at your own risk!`;
+
 export async function initializePaimaTables(pool: Pool, force: boolean = false): Promise<boolean> {
   const invalidTables: string[] = [];
   let noIssues: boolean = true;
@@ -25,12 +31,7 @@ export async function initializePaimaTables(pool: Pool, force: boolean = false):
     for (const tableName of invalidTables) {
       doLog(` - ${tableName}`);
     }
-    doLog(
-      'Please remove these tables from your database or update them to conform with Paima requirements.'
-    );
-    doLog(
-      'Alternatively, set FORCE_INVALID_PAIMA_DB_TABLE_DELETION="true" in your .env config file to force the runtime to automatically delete and re-create these tables. This might delete some of your data, so use at your own risk!'
-    );
+    doLog(FAILURE_MESSAGE);
   }
 
   return noIssues;
