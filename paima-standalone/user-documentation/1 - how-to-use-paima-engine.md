@@ -82,7 +82,7 @@ Thus you must fill out this env file with all of the pre-requisites to proceed f
 Specifically with the included barebones config, you must specify:
 
 - `CHAIN_URI` (A URL to the RPC of an EVM chain node of the network you are targeting)
-- `STORAGE_ADDRESS` (The contract address of your deployed Paima L2 Smart Contract for your game)
+- `CONTRACT_ADDRESS` (The contract address of your deployed Paima L2 Smart Contract for your game)
 - `START_BLOCKHEIGHT` (The block height that your smart contact was deployed on, so Paima Engine knows from what block height to start syncing)
 - Postgres DB Credentials
 

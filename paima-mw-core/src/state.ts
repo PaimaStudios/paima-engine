@@ -1,17 +1,4 @@
-import {
-  BACKEND_URI,
-  BATCHER_URI,
-  CHAIN_CURRENCY_DECIMALS,
-  CHAIN_CURRENCY_NAME,
-  CHAIN_CURRENCY_SYMBOL,
-  CHAIN_EXPLORER_URI,
-  CHAIN_ID,
-  CHAIN_NAME,
-  CHAIN_URI,
-  DEFAULT_FEE,
-  DEPLOYMENT,
-  STORAGE_ADDRESS,
-} from '@paima/utils';
+import { ENV } from '@paima/utils';
 import type {
   CardanoAddress,
   ContractAddress,
@@ -46,20 +33,20 @@ export const POSTING_MODE_NAMES: Record<PostingMode, PostingModeString> = {
 let gameVersion: VersionString = '0.0.0';
 let gameName: string = '';
 
-let backendUri: URI = BACKEND_URI;
-const batcherUri: URI = BATCHER_URI;
+let backendUri: URI = ENV.BACKEND_URI;
+const batcherUri: URI = ENV.BATCHER_URI;
 
-const chainUri: URI = CHAIN_URI;
-const chainExplorerUri: URI = CHAIN_EXPLORER_URI;
-const chainId: number = CHAIN_ID;
-const chainName: string = CHAIN_NAME;
-const chainCurrencyName: string = CHAIN_CURRENCY_NAME;
-const chainCurrencySymbol: string = CHAIN_CURRENCY_SYMBOL;
-const chainCurrencyDecimals: number = CHAIN_CURRENCY_DECIMALS;
+const chainUri: URI = ENV.CHAIN_URI;
+const chainExplorerUri: URI = ENV.CHAIN_EXPLORER_URI;
+const chainId: number = ENV.CHAIN_ID;
+const chainName: string = ENV.CHAIN_NAME;
+const chainCurrencyName: string = ENV.CHAIN_CURRENCY_NAME;
+const chainCurrencySymbol: string = ENV.CHAIN_CURRENCY_SYMBOL;
+const chainCurrencyDecimals: number = ENV.CHAIN_CURRENCY_DECIMALS;
 
-const storageAddress: ContractAddress = STORAGE_ADDRESS;
+const storageAddress: ContractAddress = ENV.CONTRACT_ADDRESS;
 
-const deployment: Deployment = DEPLOYMENT as Deployment;
+const deployment: Deployment = ENV.DEPLOYMENT as Deployment;
 
 let postingMode: PostingMode = PostingMode.UNBATCHED;
 
@@ -69,7 +56,7 @@ let truffleProvider: HDWalletProvider | undefined = undefined;
 let truffleWeb3: Web3 | undefined = undefined;
 
 let web3: Web3 | undefined = undefined;
-let fee: string = DEFAULT_FEE;
+let fee: string = ENV.DEFAULT_FEE;
 
 let cardanoAddress: CardanoAddress = '';
 let cardanoHexAddress: CardanoAddress = '';

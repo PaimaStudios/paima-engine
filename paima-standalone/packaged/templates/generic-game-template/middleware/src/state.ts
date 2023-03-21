@@ -12,7 +12,7 @@ import {
   DEFAULT_FEE,
   INDEXER_URI,
   STATEFUL_URI,
-  STORAGE_ADDRESS,
+  CONTRACT_ADDRESS,
 } from '@game/utils';
 import type { ETHAddress, Web3 } from 'paima-sdk/paima-utils';
 import { initWeb3 } from 'paima-sdk/paima-utils';
@@ -30,7 +30,7 @@ const chainCurrencyName: string = CHAIN_CURRENCY_NAME;
 const chainCurrencySymbol: string = CHAIN_CURRENCY_SYMBOL;
 const chainCurrencyDecimals: number = CHAIN_CURRENCY_DECIMALS;
 
-const storageAddress: ContractAddress = STORAGE_ADDRESS;
+const storageAddress: ContractAddress = CONTRACT_ADDRESS;
 
 let ethAddress: EthAddress = '';
 
