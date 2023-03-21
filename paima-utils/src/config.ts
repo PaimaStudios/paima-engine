@@ -64,6 +64,9 @@ export class ENV {
   static get STOP_BLOCKHEIGHT(): number | null {
     return process.env.STOP_BLOCKHEIGHT ? parseInt(process.env.STOP_BLOCKHEIGHT) : null;
   }
+  static get FORCE_INVALID_PAIMA_DB_TABLE_DELETION(): boolean {
+    return process.env.FORCE_INVALID_PAIMA_DB_TABLE_DELETION === 'true';
+  }
 
   // Middleware config:
   static get BACKEND_URI(): string {
