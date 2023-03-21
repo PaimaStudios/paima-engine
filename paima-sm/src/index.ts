@@ -1,7 +1,7 @@
 import type { Pool } from 'pg';
 
 import { doLog, SCHEDULED_DATA_ADDRESS } from '@paima/utils';
-import { tx, getConnection } from '@paima/db';
+import { tx, getConnection, initializePaimaTables } from '@paima/db';
 import type { GameStateTransitionFunction, GameStateMachineInitializer } from '@paima/db';
 import type { ChainData, SubmittedData } from '@paima/utils';
 import Prando from '@paima/prando';
@@ -32,6 +32,9 @@ const SM: GameStateMachineInitializer = {
         const [b] = await getLatestBlockHeight.run(undefined, readonlyDBConn);
         const blockHeight = b?.block_height ?? startBlockHeight ?? 0;
         return blockHeight;
+      },
+      initializeDatabase: async (force: boolean = false): Promise<boolean> => {
+        return await initializePaimaTables(DBConn, force);
       },
       getReadonlyDbConn: (): Pool => {
         return readonlyDBConn;
