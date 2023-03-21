@@ -19,6 +19,7 @@ export async function initializePaimaTables(pool: Pool, force: boolean = false):
       const success = await processTable(pool, table, force);
       if (!success) {
         invalidTables.push(table.tableName);
+        noIssues = false;
       }
     } catch (err) {
       doLog(`Error while initializing ${table.tableName}: ${err}`);
