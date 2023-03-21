@@ -141,6 +141,16 @@ async function startRuntime(
 ): Promise<void> {
   const pollingPeriod = pollingRate * 1000;
   let loopCount = 0;
+
+  doLog('[paima-runtime] Validating / initializing DB...');
+  const initResult = await gameStateMachine.initializeDatabase(false);
+  if (!initResult) {
+    doLog('[paima-runtime] Unable to initialize DB! Shutting down...');
+    run = false;
+  } else {
+    doLog('[paima-runtime] DB validated / initialized successfully!');
+  }
+
   while (run) {
     loopCount++;
 
