@@ -41,7 +41,7 @@ export async function createTable(pool: Pool, table: TableData): Promise<boolean
   try {
     await pool.query(`DROP TABLE ${table.tableName}`);
   } catch (err) {
-    doLog(`[database-validation] Error while dropping table: ${err}`);
+    // pass -- we don't care about errors while deleting as long as creation goes through fine
   }
 
   try {
