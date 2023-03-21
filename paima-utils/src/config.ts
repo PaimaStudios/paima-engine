@@ -2,7 +2,7 @@ import type { VersionString } from './types';
 
 export class ENV {
   static doHealthCheck(): void {
-    if (!ENV.STORAGE_ADDRESS) {
+    if (!ENV.CONTRACT_ADDRESS) {
       const env = process.env.NODE_ENV || 'DEVELOPMENT';
       throw new Error(`Please ensure your .env.${env} is properly filled out.`);
     }
@@ -41,10 +41,6 @@ export class ENV {
   }
 
   // PaimaL2Contract:
-  // Old naming for contract address, supports backwards compatibility
-  static get STORAGE_ADDRESS(): string {
-    return this.CONTRACT_ADDRESS;
-  }
   static get CONTRACT_ADDRESS(): string {
     return process.env.CONTRACT_ADDRESS || process.env.STORAGE_ADDRESS || '';
   }
