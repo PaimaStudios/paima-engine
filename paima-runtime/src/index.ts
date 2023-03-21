@@ -1,5 +1,5 @@
 import type { ChainData, ChainFunnel } from '@paima/utils';
-import { doLog, logError } from '@paima/utils';
+import { doLog, logError, ENV } from '@paima/utils';
 import type { GameStateMachine, PaimaRuntimeInitializer } from '@paima/db';
 import process from 'process';
 import { server, startServer } from './server.js';
@@ -141,6 +141,18 @@ async function startRuntime(
 ): Promise<void> {
   const pollingPeriod = pollingRate * 1000;
   let loopCount = 0;
+
+  doLog('[paima-runtime] Validating / initializing DB...');
+  const initResult = await gameStateMachine.initializeDatabase(
+    ENV.FORCE_INVALID_PAIMA_DB_TABLE_DELETION
+  );
+  if (!initResult) {
+    doLog('[paima-runtime] Unable to initialize DB! Shutting down...');
+    run = false;
+  } else {
+    doLog('[paima-runtime] DB validated / initialized successfully!');
+  }
+
   while (run) {
     loopCount++;
 
