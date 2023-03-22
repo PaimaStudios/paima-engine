@@ -1,6 +1,6 @@
 import type { IToken, Parser } from 'ebnf';
 import { Grammars } from 'ebnf';
-import { ENV } from '../config';
+import { ENV } from '@paima/utils';
 
 //
 // This Parser converts PaimaLang:

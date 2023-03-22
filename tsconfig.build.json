@@ -2,6 +2,7 @@
   "files": [],
   "references": [
     { "path": "./paima-utils" },
+    { "path": "./paima-utils-backend" },
     { "path": "./paima-concise" },
     { "path": "./paima-prando" },
     { "path": "./paima-tx" },

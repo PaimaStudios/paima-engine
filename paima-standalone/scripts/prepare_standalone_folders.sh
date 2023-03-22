@@ -43,6 +43,13 @@ cp -a $module/build/. $SDK_PATH/$module/build/
 cp $module/README.md $SDK_PATH/$module/README.md
 cp $module/package.json $SDK_PATH/$module/package.json
 
+module="paima-utils-backend"
+echo $SDK_PATH/$module
+mkdir $SDK_PATH/$module
+cp -a $module/build/. $SDK_PATH/$module/build/
+cp $module/README.md $SDK_PATH/$module/README.md
+cp $module/package.json $SDK_PATH/$module/package.json
+
 module="paima-mw-core"
 echo $SDK_PATH/$module
 mkdir $SDK_PATH/$module
