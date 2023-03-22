@@ -76,7 +76,7 @@ export const runPaimaEngine = async (): Promise<void> => {
   // Verify env file is filled out before progressing
   if (!ENV.CONTRACT_ADDRESS || !ENV.CHAIN_URI || !ENV.CHAIN_ID || !ENV.START_BLOCKHEIGHT) {
     doLog(
-      'Please ensure that your .env file is filled out properly before starting your game node.'
+      'Please ensure that your .env.{NODE_ENV} file is filled out properly before starting your game node.'
     );
     process.exit(0);
   }
