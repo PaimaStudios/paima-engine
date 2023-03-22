@@ -18,6 +18,7 @@
   },
   "workspaces": [
     "./paima-utils",
+    "./paima-utils-backend",
     "./paima-concise",
     "./paima-prando",
     "./paima-tx",
