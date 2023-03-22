@@ -26,6 +26,12 @@ const { utf8ToHex } = web3UtilsPkg;
 
 const SUPPORTED_WALLET_IDS = ['nami', 'nufi', 'flint', 'eternl'];
 
+const NETWORK_TAG_MAINNET = '1';
+const NETWORK_TAG_TESTNET = '0';
+
+const PREFIX_MAINNET = 'addr';
+const PREFIX_TESTNET = 'addr_test';
+
 export async function cardanoLoginSpecific(walletId: string): Promise<void> {
   if (getCardanoActiveWallet() === walletId) {
     return;
@@ -34,15 +40,30 @@ export async function cardanoLoginSpecific(walletId: string): Promise<void> {
   if (!SUPPORTED_WALLET_IDS.includes(walletId)) {
     throw new Error(`[cardanoLoginSpecific] Cardano wallet "${walletId}" not supported`);
   }
-
   const api = await (window as any).cardano[walletId].enable();
   setCardanoApi(api);
   const hexAddress = await pickCardanoAddress(api);
+  const prefix = pickBech32Prefix(hexAddress);
   const words = bech32.toWords(hexStringToUint8Array(hexAddress));
-  const userAddress = bech32.encode('addr', words, 200);
+  const userAddress = bech32.encode(prefix, words, 200);
   setCardanoAddress(userAddress);
   setCardanoHexAddress(hexAddress);
   setCardanoActiveWallet(walletId);
+}
+
+function pickBech32Prefix(hexAddress: string): string {
+  if (hexAddress.length < 2) {
+    throw new Error(`[cardanoLoginSpecific] Invalid address returned from wallet: ${hexAddress}`);
+  }
+  const networkTag = hexAddress.at(1);
+  switch (networkTag) {
+    case NETWORK_TAG_MAINNET:
+      return PREFIX_MAINNET;
+    case NETWORK_TAG_TESTNET:
+      return PREFIX_TESTNET;
+    default:
+      throw new Error(`[cardanoLoginSpecific] Invalid network tag in address ${hexAddress}`);
+  }
 }
 
 export async function cardanoLoginAny(): Promise<void> {
