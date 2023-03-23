@@ -14,3 +14,10 @@ CREATE TABLE nonces (
   nonce TEXT PRIMARY KEY,
   block_height INTEGER NOT NULL
 );
+
+CREATE TABLE historical_game_inputs (
+  id SERIAL PRIMARY KEY,
+  block_height INTEGER NOT NULL,
+  user_address TEXT NOT NULL,
+  input_data TEXT NOT NULL
+);

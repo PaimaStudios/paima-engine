@@ -1,6 +1,6 @@
 import type { SQLUpdate } from './types';
-import { newScheduledData, removeScheduledData } from './scheduled.queries';
-import type { INewScheduledDataParams, IRemoveScheduledDataParams } from './scheduled.queries';
+import { newScheduledData, removeScheduledData } from './sql/scheduled.queries';
+import type { INewScheduledDataParams, IRemoveScheduledDataParams } from './sql/scheduled.queries';
 
 // Create an SQL update which schedules a piece of data to be run through
 // the STF at a future block height.

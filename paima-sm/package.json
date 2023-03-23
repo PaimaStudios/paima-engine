@@ -9,8 +9,7 @@
     "/build"
   ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "compile": "npx pgtyped -w -c pgtypedconfig.json"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
   "license": "ISC",

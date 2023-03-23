@@ -1,4 +1,4 @@
-/** Types generated for queries found in "src/scheduled/scheduled.sql" */
+/** Types generated for queries found in "src/sql/scheduled.sql" */
 import { PreparedQuery } from '@pgtyped/query';
 
 /** 'NewScheduledData' parameters type */
@@ -85,5 +85,31 @@ const removeScheduledDataIR: any = {"usedParamSet":{"block_height":true,"input_d
  * ```
  */
 export const removeScheduledData = new PreparedQuery<IRemoveScheduledDataParams,IRemoveScheduledDataResult>(removeScheduledDataIR);
+
+
+/** 'DeleteScheduled' parameters type */
+export interface IDeleteScheduledParams {
+  id: number;
+}
+
+/** 'DeleteScheduled' return type */
+export type IDeleteScheduledResult = void;
+
+/** 'DeleteScheduled' query type */
+export interface IDeleteScheduledQuery {
+  params: IDeleteScheduledParams;
+  result: IDeleteScheduledResult;
+}
+
+const deleteScheduledIR: any = {"usedParamSet":{"id":true},"params":[{"name":"id","required":true,"transform":{"type":"scalar"},"locs":[{"a":38,"b":41}]}],"statement":"DELETE FROM scheduled_data\nWHERE id = :id!"};
+
+/**
+ * Query generated from SQL:
+ * ```
+ * DELETE FROM scheduled_data
+ * WHERE id = :id!
+ * ```
+ */
+export const deleteScheduled = new PreparedQuery<IDeleteScheduledParams,IDeleteScheduledResult>(deleteScheduledIR);
 
 

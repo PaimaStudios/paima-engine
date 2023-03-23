@@ -5,4 +5,9 @@ import { initializePaimaTables } from './database-validation';
 
 export * from './types';
 
+export * from './sql/block-heights.queries';
+export * from './sql/scheduled.queries';
+export * from './sql/nonces.queries';
+export * from './sql/historical.queries';
+
 export { tx, getConnection, createScheduledData, deleteScheduledData, initializePaimaTables };

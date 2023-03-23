@@ -11,3 +11,7 @@ ORDER BY id ASC;
 DELETE FROM scheduled_data
 WHERE block_height = :block_height!
 AND input_data = :input_data!;
+
+/* @name deleteScheduled */
+DELETE FROM scheduled_data
+WHERE id = :id!;

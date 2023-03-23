@@ -1,20 +1,23 @@
 import type { Pool } from 'pg';
 
-import { doLog, SCHEDULED_DATA_ADDRESS } from '@paima/utils';
-import { tx, getConnection, initializePaimaTables } from '@paima/db';
-import type { GameStateTransitionFunction, GameStateMachineInitializer } from '@paima/db';
-import type { ChainData, SubmittedData } from '@paima/utils';
-import Prando from '@paima/prando';
-
+import { doLog, ENV, SCHEDULED_DATA_ADDRESS } from '@paima/utils';
 import {
+  tx,
+  getConnection,
+  initializePaimaTables,
+  storeGameInput,
   blockHeightDone,
   deleteScheduled,
   findNonce,
   insertNonce,
-  getLatestBlockHeight,
+  getLatestProcessedBlockHeight,
   getScheduledDataByBlockHeight,
   saveLastBlockHeight,
-} from './sql/queries.queries.js';
+} from '@paima/db';
+import type { GameStateTransitionFunction, GameStateMachineInitializer } from '@paima/db';
+import type { ChainData, SubmittedData } from '@paima/utils';
+import Prando from '@paima/prando';
+
 import { randomnessRouter } from './randomness.js';
 
 const SM: GameStateMachineInitializer = {
@@ -28,8 +31,8 @@ const SM: GameStateMachineInitializer = {
     const readonlyDBConn: Pool = getConnection(databaseInfo, true);
 
     return {
-      latestBlockHeight: async (): Promise<number> => {
-        const [b] = await getLatestBlockHeight.run(undefined, readonlyDBConn);
+      latestProcessedBlockHeight: async (): Promise<number> => {
+        const [b] = await getLatestProcessedBlockHeight.run(undefined, readonlyDBConn);
         const blockHeight = b?.block_height ?? startBlockHeight ?? 0;
         return blockHeight;
       },
@@ -167,6 +170,16 @@ async function processUserInputs(
           },
           db
         );
+        if (ENV.STORE_HISTORICAL_GAME_INPUTS) {
+          await storeGameInput.run(
+            {
+              block_height: latestChainData.blockNumber,
+              input_data: inputData.inputData,
+              user_address: inputData.userAddress,
+            },
+            db
+          );
+        }
       });
     } catch (err) {
       doLog(`[paima-sm] Database error: ${err}`);
