@@ -22,7 +22,7 @@ Scope: `paima-engine` root folder
 This command is intended to be used only if you:
 
 - pulled a fresh repository (don't forget to run `npm i` as well)
-- made changes to `paima-engine` public modules (_paima-concise_, _paima-executors_, _paima-mw-core_, _paima-prando_, _paima-tx_, _storage_contract_, or _paima-utils_)
+- made changes to `paima-engine` public modules (_paima-concise_, _paima-executors_, _paima-mw-core_, _paima-prando_, _storage_contract_, or _paima-utils_)
 
 It does a clean rebuild of the whole `paima-engine`, not just the above mentioned modules, and prepares all of the needed public helper modules to be included inside of the standalone executable.
 

@@ -21,7 +21,6 @@
     "./paima-utils-backend",
     "./paima-concise",
     "./paima-prando",
-    "./paima-tx",
     "./paima-executors",
     "./paima-mw-core",
     "./paima-db",
