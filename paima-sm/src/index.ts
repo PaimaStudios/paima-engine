@@ -31,7 +31,7 @@ const SM: GameStateMachineInitializer = {
     const readonlyDBConn: Pool = getConnection(databaseInfo, true);
 
     return {
-      latestBlockHeight: async (): Promise<number> => {
+      latestProcessedBlockHeight: async (): Promise<number> => {
         const [b] = await getLatestProcessedBlockHeight.run(undefined, readonlyDBConn);
         const blockHeight = b?.block_height ?? startBlockHeight ?? 0;
         return blockHeight;

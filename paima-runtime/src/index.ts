@@ -48,7 +48,7 @@ const paimaEngine: PaimaRuntimeInitializer = {
         });
         this.addGET('/latest_processed_blockheight', (req, res): void => {
           gameStateMachine
-            .latestBlockHeight()
+            .latestProcessedBlockHeight()
             .then(blockHeight => res.json({ block_height: blockHeight }))
             .catch(_error => res.status(500));
         });
@@ -114,7 +114,7 @@ async function acquireLatestBlockHeight(sm: GameStateMachine, waitPeriod: number
   let wasDown = false;
   while (run) {
     try {
-      const latestReadBlockHeight = await sm.latestBlockHeight();
+      const latestReadBlockHeight = await sm.latestProcessedBlockHeight();
       if (wasDown) {
         doLog('[paima-runtime] Block height re-acquired successfully.');
       }
@@ -226,7 +226,7 @@ async function startRuntime(
         }
 
         try {
-          const latestReadBlockHeight = await gameStateMachine.latestBlockHeight();
+          const latestReadBlockHeight = await gameStateMachine.latestProcessedBlockHeight();
           await snapshotIfTime(latestReadBlockHeight);
           exitIfStopped(run);
           await loopIfStopBlockReached(latestReadBlockHeight, stopBlockHeight);
