@@ -59,6 +59,36 @@ const getBlockSeedsIR: any = {"usedParamSet":{},"params":[],"statement":"SELECT 
 export const getBlockSeeds = new PreparedQuery<IGetBlockSeedsParams,IGetBlockSeedsResult>(getBlockSeedsIR);
 
 
+/** 'GetBlockHeight' parameters type */
+export interface IGetBlockHeightParams {
+  block_height: number | null | void;
+}
+
+/** 'GetBlockHeight' return type */
+export interface IGetBlockHeightResult {
+  block_height: number;
+  done: boolean;
+  seed: string;
+}
+
+/** 'GetBlockHeight' query type */
+export interface IGetBlockHeightQuery {
+  params: IGetBlockHeightParams;
+  result: IGetBlockHeightResult;
+}
+
+const getBlockHeightIR: any = {"usedParamSet":{"block_height":true},"params":[{"name":"block_height","required":false,"transform":{"type":"scalar"},"locs":[{"a":50,"b":62}]}],"statement":"SELECT * FROM block_heights \nWHERE block_height = :block_height"};
+
+/**
+ * Query generated from SQL:
+ * ```
+ * SELECT * FROM block_heights 
+ * WHERE block_height = :block_height
+ * ```
+ */
+export const getBlockHeight = new PreparedQuery<IGetBlockHeightParams,IGetBlockHeightResult>(getBlockHeightIR);
+
+
 /** 'SaveLastBlockHeight' parameters type */
 export interface ISaveLastBlockHeightParams {
   block_height: number;
