@@ -1,12 +1,11 @@
 import type { Pool } from 'pg';
 
 import { doLog, ENV, SCHEDULED_DATA_ADDRESS } from '@paima/utils';
-import { tx, getConnection, initializePaimaTables, storeGameInput } from '@paima/db';
-import type { GameStateTransitionFunction, GameStateMachineInitializer } from '@paima/db';
-import type { ChainData, SubmittedData } from '@paima/utils';
-import Prando from '@paima/prando';
-
 import {
+  tx,
+  getConnection,
+  initializePaimaTables,
+  storeGameInput,
   blockHeightDone,
   deleteScheduled,
   findNonce,
@@ -14,7 +13,11 @@ import {
   getLatestBlockHeight,
   getScheduledDataByBlockHeight,
   saveLastBlockHeight,
-} from './sql/queries.queries.js';
+} from '@paima/db';
+import type { GameStateTransitionFunction, GameStateMachineInitializer } from '@paima/db';
+import type { ChainData, SubmittedData } from '@paima/utils';
+import Prando from '@paima/prando';
+
 import { randomnessRouter } from './randomness.js';
 
 const SM: GameStateMachineInitializer = {

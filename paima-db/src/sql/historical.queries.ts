@@ -1,4 +1,4 @@
-/** Types generated for queries found in "src/historical.sql" */
+/** Types generated for queries found in "src/sql/historical.sql" */
 import { PreparedQuery } from '@pgtyped/query';
 
 /** 'StoreGameInput' parameters type */

@@ -3,7 +3,7 @@ import type { ChainData, SubmittedData } from '@paima/utils';
 import Crypto from 'crypto';
 import type pg from 'pg';
 import { consumer } from '@paima/concise';
-import { getBlockSeeds } from './sql/queries.queries.js';
+import { getBlockSeeds } from '@paima/db';
 
 export function randomnessRouter(n: number): typeof getSeed1 {
   if (n) return getSeed1;
