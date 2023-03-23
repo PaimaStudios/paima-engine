@@ -1,4 +1,4 @@
-/* @name getLatestBlockHeight */
+/* @name getLatestProcessedBlockHeight */
 SELECT * FROM block_heights
 WHERE done IS TRUE
 ORDER BY block_height DESC

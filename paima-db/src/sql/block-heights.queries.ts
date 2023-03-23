@@ -1,23 +1,23 @@
 /** Types generated for queries found in "src/sql/block-heights.sql" */
 import { PreparedQuery } from '@pgtyped/query';
 
-/** 'GetLatestBlockHeight' parameters type */
-export type IGetLatestBlockHeightParams = void;
+/** 'GetLatestProcessedBlockHeight' parameters type */
+export type IGetLatestProcessedBlockHeightParams = void;
 
-/** 'GetLatestBlockHeight' return type */
-export interface IGetLatestBlockHeightResult {
+/** 'GetLatestProcessedBlockHeight' return type */
+export interface IGetLatestProcessedBlockHeightResult {
   block_height: number;
   done: boolean;
   seed: string;
 }
 
-/** 'GetLatestBlockHeight' query type */
-export interface IGetLatestBlockHeightQuery {
-  params: IGetLatestBlockHeightParams;
-  result: IGetLatestBlockHeightResult;
+/** 'GetLatestProcessedBlockHeight' query type */
+export interface IGetLatestProcessedBlockHeightQuery {
+  params: IGetLatestProcessedBlockHeightParams;
+  result: IGetLatestProcessedBlockHeightResult;
 }
 
-const getLatestBlockHeightIR: any = {"usedParamSet":{},"params":[],"statement":"SELECT * FROM block_heights\nWHERE done IS TRUE\nORDER BY block_height DESC\nLIMIT 1"};
+const getLatestProcessedBlockHeightIR: any = {"usedParamSet":{},"params":[],"statement":"SELECT * FROM block_heights\nWHERE done IS TRUE\nORDER BY block_height DESC\nLIMIT 1"};
 
 /**
  * Query generated from SQL:
@@ -28,7 +28,7 @@ const getLatestBlockHeightIR: any = {"usedParamSet":{},"params":[],"statement":"
  * LIMIT 1
  * ```
  */
-export const getLatestBlockHeight = new PreparedQuery<IGetLatestBlockHeightParams,IGetLatestBlockHeightResult>(getLatestBlockHeightIR);
+export const getLatestProcessedBlockHeight = new PreparedQuery<IGetLatestProcessedBlockHeightParams,IGetLatestProcessedBlockHeightResult>(getLatestProcessedBlockHeightIR);
 
 
 /** 'GetBlockSeeds' parameters type */

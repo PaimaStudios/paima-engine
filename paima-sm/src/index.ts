@@ -10,7 +10,7 @@ import {
   deleteScheduled,
   findNonce,
   insertNonce,
-  getLatestBlockHeight,
+  getLatestProcessedBlockHeight,
   getScheduledDataByBlockHeight,
   saveLastBlockHeight,
 } from '@paima/db';
@@ -32,7 +32,7 @@ const SM: GameStateMachineInitializer = {
 
     return {
       latestBlockHeight: async (): Promise<number> => {
-        const [b] = await getLatestBlockHeight.run(undefined, readonlyDBConn);
+        const [b] = await getLatestProcessedBlockHeight.run(undefined, readonlyDBConn);
         const blockHeight = b?.block_height ?? startBlockHeight ?? 0;
         return blockHeight;
       },

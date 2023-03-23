@@ -5,7 +5,7 @@ import { initializePaimaTables } from './database-validation';
 
 import {
   blockHeightDone,
-  getLatestBlockHeight,
+  getLatestProcessedBlockHeight,
   saveLastBlockHeight,
   getBlockSeeds,
 } from './sql/block-heights.queries';
@@ -22,7 +22,7 @@ export {
   deleteScheduledData,
   initializePaimaTables,
   blockHeightDone,
-  getLatestBlockHeight,
+  getLatestProcessedBlockHeight,
   saveLastBlockHeight,
   getBlockSeeds,
   deleteScheduled,
