@@ -46,6 +46,12 @@ const paimaEngine: PaimaRuntimeInitializer = {
         this.addGET('/backend_version', (req, res): void => {
           res.status(200).json(gameBackendVersion);
         });
+        this.addGET('/latest_processed_blockheight', (req, res): void => {
+          gameStateMachine
+            .latestBlockHeight()
+            .then(blockHeight => res.json({ block_height: blockHeight }))
+            .catch(_error => res.status(500));
+        });
 
         // initialize snapshot folder
         await initSnapshots();
