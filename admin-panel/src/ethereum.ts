@@ -1,8 +1,8 @@
 import { MetaMaskInpageProvider } from '@metamask/providers';
 import Web3 from 'web3';
 
-import { getTxTemplate } from 'paima-tx';
 import type { TransactionTemplate } from 'paima-utils';
+import { getTxTemplate } from './tx-template';
 
 export interface Window {
   ethereum: MetaMaskInpageProvider;

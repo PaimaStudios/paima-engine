@@ -7,7 +7,7 @@ rm -rf $SDK_PATH
 mkdir $SDK_PATH
 npm run build:sdk
 
-# SDK_MODULES=( "paima-concise" "paima-db" "paima-executors" "paima-mw-core" "paima-prando" "paima-tx" "paima-utils" )
+# SDK_MODULES=( "paima-concise" "paima-db" "paima-executors" "paima-mw-core" "paima-prando" "paima-utils" )
 
 # Prepare SDK modules
 module="paima-concise"
@@ -27,13 +27,6 @@ module="paima-prando"
 echo $SDK_PATH/$module
 mkdir $SDK_PATH/$module
 cp -a $module/build/. $SDK_PATH/$module/build/
-cp $module/package.json $SDK_PATH/$module/package.json
-
-module="paima-tx"
-echo $SDK_PATH/$module
-mkdir $SDK_PATH/$module
-cp -a $module/build/. $SDK_PATH/$module/build/
-cp $module/README.md $SDK_PATH/$module/README.md
 cp $module/package.json $SDK_PATH/$module/package.json
 
 module="paima-utils"
