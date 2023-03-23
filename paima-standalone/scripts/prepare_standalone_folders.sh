@@ -65,7 +65,8 @@ cp $module/README.md $SDK_PATH/$module/README.md
 cp $module/package.json $SDK_PATH/$module/package.json
 
 # Prepare SDK root folder files
-cp package.json $SDK_PATH/package.json
+# remove husky from "SDK" package.json to avoid using it in user templates
+sed 's/husky install && //g' package.json > $SDK_PATH/package.json
 cp package-lock.json $SDK_PATH/package-lock.json
 
 
