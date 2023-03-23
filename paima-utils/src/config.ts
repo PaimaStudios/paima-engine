@@ -67,6 +67,9 @@ export class ENV {
   static get FORCE_INVALID_PAIMA_DB_TABLE_DELETION(): boolean {
     return process.env.FORCE_INVALID_PAIMA_DB_TABLE_DELETION === 'true';
   }
+  static get STORE_HISTORICAL_GAME_INPUTS(): boolean {
+    return (process.env.STORE_HISTORICAL_GAME_INPUTS || 'true') === 'true';
+  }
 
   // Middleware config:
   static get BACKEND_URI(): string {
