@@ -1,7 +1,7 @@
 import type { Pool } from 'pg';
 
-import { doLog, SCHEDULED_DATA_ADDRESS } from '@paima/utils';
-import { tx, getConnection, initializePaimaTables } from '@paima/db';
+import { doLog, ENV, SCHEDULED_DATA_ADDRESS } from '@paima/utils';
+import { tx, getConnection, initializePaimaTables, storeGameInput } from '@paima/db';
 import type { GameStateTransitionFunction, GameStateMachineInitializer } from '@paima/db';
 import type { ChainData, SubmittedData } from '@paima/utils';
 import Prando from '@paima/prando';
@@ -167,6 +167,16 @@ async function processUserInputs(
           },
           db
         );
+        if (ENV.STORE_HISTORICAL_GAME_INPUTS) {
+          await storeGameInput.run(
+            {
+              block_height: latestChainData.blockNumber,
+              input_data: inputData.inputData,
+              user_address: inputData.userAddress,
+            },
+            db
+          );
+        }
       });
     } catch (err) {
       doLog(`[paima-sm] Database error: ${err}`);
