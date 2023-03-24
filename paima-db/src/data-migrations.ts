@@ -36,7 +36,7 @@ export class DataMigrations {
 
   public static hasPendingMigration(currentBlock: number): boolean {
     if (DataMigrations.pendingMigrations.length === 0) return false;
-    // We need only to check the first. DataMigrations are sorted for first to latest.
+    // We need only to check the first, pendingMigrations are sorted first to last.
     return DataMigrations.pendingMigrations[0] + ENV.START_BLOCKHEIGHT === currentBlock;
   }
 
