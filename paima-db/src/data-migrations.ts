@@ -29,7 +29,7 @@ export class DataMigrations {
         );
       }
     } catch (e) {
-      if (!String(e).match(/no such file or directory/)) {
+      if (!String(e).match(/ENOENT/)) {
         throw e; // if error not "director not found" throw error.
       }
     }
