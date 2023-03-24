@@ -85,6 +85,5 @@ cp -r paima-standalone/user-documentation $DOC_PATH
 
 # Fetch templates
 rm -rf $TEMPLATES_PATH
-# TODO: add -b [tag_name] once proper versioning is in place for paima-engine & templates 
-git clone git@github.com:PaimaStudios/paima-standalone-templates.git $TEMPLATES_PATH
+git clone --depth=1 git@github.com:PaimaStudios/paima-standalone-templates.git $TEMPLATES_PATH
 rm -rf $TEMPLATES_PATH/.git
