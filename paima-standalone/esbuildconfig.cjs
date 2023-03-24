@@ -10,16 +10,6 @@ if (!fs.existsSync(sdkDirectory)) {
   );
 }
 
-// TODO: improve messages after pulling templates from separate repo
-const templatesDirectory = 'packaged/templates';
-if (!fs.existsSync(templatesDirectory)) {
-  throw new Error(`Missing ${templatesDirectory}.`);
-}
-const templates = fs.readdirSync(templatesDirectory);
-if (templates.length === 0) {
-  throw new Error(`No templates present in ${templatesDirectory}, please check the setup.`);
-}
-
 void esbuild.build({
   platform: 'node',
   entryPoints: ['build/index.js'],

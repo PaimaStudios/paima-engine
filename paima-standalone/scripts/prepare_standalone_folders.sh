@@ -1,6 +1,9 @@
-SDK_PATH="./paima-standalone/packaged/paima-sdk"
-CONTRACT_PATH="./paima-standalone/packaged/smart-contract"
-DOC_PATH="./paima-standalone/packaged/documentation"
+PACKAGED_PATH="./paima-standalone/packaged"
+
+SDK_PATH="$PACKAGED_PATH/paima-sdk"
+CONTRACT_PATH="$PACKAGED_PATH/smart-contract"
+DOC_PATH="$PACKAGED_PATH/documentation"
+TEMPLATES_PATH="$PACKAGED_PATH/templates"
 
 # Prepare stage
 rm -rf $SDK_PATH
@@ -57,6 +60,7 @@ cp -a $module/build/. $SDK_PATH/$module/build/
 cp $module/README.md $SDK_PATH/$module/README.md
 cp $module/package.json $SDK_PATH/$module/package.json
 
+
 # Prepare SDK root folder files
 # remove husky from "SDK" package.json to avoid using it in user templates
 sed 's/husky install && //g' package.json > $SDK_PATH/package.json
@@ -77,3 +81,10 @@ cp -r paima-l2-contract/truffle-config.js $CONTRACT_PATH
 echo $DOC_PATH
 rm -rf $DOC_PATH
 cp -r paima-standalone/user-documentation $DOC_PATH
+
+
+# Fetch templates
+rm -rf $TEMPLATES_PATH
+# TODO: add -b [tag_name] once proper versioning is in place for paima-engine & templates 
+git clone git@github.com:PaimaStudios/paima-standalone-templates.git $TEMPLATES_PATH
+rm -rf $TEMPLATES_PATH/.git
