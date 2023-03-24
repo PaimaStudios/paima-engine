@@ -42,6 +42,9 @@ const SM: GameStateMachineInitializer = {
       getReadonlyDbConn: (): Pool => {
         return readonlyDBConn;
       },
+      getReadWriteDbConn: (): Pool => {
+        return DBConn;
+      },
       // Core function which triggers state transitions
       process: async (latestChainData: ChainData): Promise<void> => {
         // Acquire correct STF based on router (based on block height)

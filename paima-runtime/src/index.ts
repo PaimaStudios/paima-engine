@@ -1,6 +1,7 @@
 import type { ChainData, ChainFunnel } from '@paima/utils';
 import { doLog, logError, ENV } from '@paima/utils';
 import type { GameStateMachine, PaimaRuntimeInitializer } from '@paima/db';
+import { DataMigrations } from '@paima/db';
 import process from 'process';
 import { server, startServer } from './server.js';
 import { initSnapshots, snapshotIfTime } from './snapshots.js';
@@ -156,6 +157,10 @@ async function startRuntime(
     run = false;
   }
 
+  // Load data migrations
+  const lastBlockHeightAtLaunch = await acquireLatestBlockHeight(gameStateMachine, pollingPeriod);
+  DataMigrations.loadDataMigrations(lastBlockHeightAtLaunch);
+
   while (run) {
     loopCount++;
 
@@ -215,6 +220,12 @@ async function startRuntime(
         }
 
         try {
+          if (DataMigrations.hasPendingMigration(chainData.blockNumber)) {
+            await DataMigrations.applyDataDBMigrations(
+              gameStateMachine.getReadonlyDbConn(),
+              chainData.blockNumber
+            );
+          }
           await gameStateMachine.process(chainData);
           exitIfStopped(run);
         } catch (err) {
