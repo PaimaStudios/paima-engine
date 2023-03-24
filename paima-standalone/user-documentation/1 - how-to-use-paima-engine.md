@@ -135,3 +135,46 @@ Lastly, if you have `pg_dump` installed on the machine running your game node (t
 If `pg_dump` is not available, then when you start your game node an error will be printed in the terminal denoting of such, however the game node will still function perfectly fine nonetheless (and will simply skip taking snapshots).
 
 Of note, unlike in the Web2/2.5 world, these snapshots are _not vital_. You are building a trustless Web3 game using Paima Engine, which means that even if your entire DB gets corrupted or deleted, a brand new game node can be synced from scratch by just reading from the blockchain. These snapshots are simply a quality-of-life enhancement, as they allow you to deploy new game nodes much faster without having to resync from scratch.
+ 
+
+## Data Migrations
+
+Data Migrations allow game developers to add data to the database e.g., World Setup, NPC, Items, and other system tables.  
+
+IMPORTANT: You should never add data to the database manually. It should be done only through state-transitions and data migrations.
+
+Data Migrations are applied at a specific block-height. The file name indicates the OFFSET from the START_BLOCKHEIGHT (defined in the .env file).
+
+File structure:
+
+```
+root_folder
+   | --- paima-sdk
+   | --- paima-engine-{linux|macos}
+   | --- packaged
+             | --- endpoints.cjs
+             | --- gameCode.cjs
+             | --- migrations
+                          | --- 1000.sql
+                          | --- 5500.sql
+``` 
+
+1000.sql will be applied at block-height START_BLOCKHEIGHT + 1000.  
+5500.sql will be applied at block-height START_BLOCKHEIGHT + 5500.  
+Both will be applied before any other inputs are processed for that block-height.
+
+The *.sql files are PGSQL scripts. We ABSOLUTELY recommend writing your SQL script as a transaction, so if it fails the block-process-loop will stop and the script can be fixed and reapplied.
+
+1000.sql example:
+```
+BEGIN; 
+-- INSERT... ; 
+-- UPDATE ...; 
+COMMIT;
+```
+
+
+
+
+
+

@@ -159,7 +159,7 @@ async function startRuntime(
 
   // Load data migrations
   const lastBlockHeightAtLaunch = await acquireLatestBlockHeight(gameStateMachine, pollingPeriod);
-  DataMigrations.loadDataMigrations(lastBlockHeightAtLaunch);
+  await DataMigrations.loadDataMigrations(lastBlockHeightAtLaunch);
 
   while (run) {
     loopCount++;

@@ -45,7 +45,7 @@ export class DataMigrations {
     if (DataMigrations.pendingMigrations[0] + ENV.START_BLOCKHEIGHT !== currentBlock) {
       throw new Error('No data migration to apply at: ' + currentBlock);
     }
-    console.log(`Appling Data Migration ${DataMigrations.pendingMigrations[0]}.sql`);
+    console.log(`Applying Data Migration ${DataMigrations.pendingMigrations[0]}.sql`);
     const sqlQueries = await readFile(
       `${this.migrationPath}/${DataMigrations.pendingMigrations[0]}.sql`,
       'utf-8'
