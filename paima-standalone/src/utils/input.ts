@@ -7,6 +7,7 @@ import {
   prepareDocumentation,
   getFolderNames,
   PACKAGED_TEMPLATES_PATH,
+  getPaimaEngineVersion,
 } from './file.js';
 import paimaFunnel from '@paima/funnel';
 import paimaRuntime from '@paima/runtime';
@@ -43,6 +44,8 @@ export const argumentRouter = async (): Promise<void> => {
     contractCommand();
   } else if (base_arg == 'docs') {
     documentationCommand();
+  } else if (base_arg == 'version') {
+    versionCommand();
   } else {
     helpCommand();
   }
@@ -114,15 +117,20 @@ export const documentationCommand = (): void => {
   prepareDocumentation();
 };
 
+export const versionCommand = (): void => {
+  doLog(`paima-engine v${getPaimaEngineVersion()}`);
+};
+
 // Help command printing
 export const helpCommand = (): void => {
-  doLog(`Usage: paima-engine [COMMAND] ARG`);
+  doLog(`v${getPaimaEngineVersion()} Usage: paima-engine [COMMAND] ARG`);
   doLog(`Commands:`);
   doLog(`   init      Enables initializing project templates and the SDK.`);
   doLog(`   run       Start your game node.`);
   doLog(`   contract  Saves the Paima L2 Contract to your local filesystem.`);
   doLog(`   docs      Saves the Paima Engine documentation to your local filesystem.`);
   doLog(`   help      Shows list of commands currently available.`);
+  doLog(`   version   Shows the version of used paima-engine.`);
 };
 
 // Allows the user to choose the game template
