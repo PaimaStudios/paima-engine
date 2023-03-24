@@ -99,11 +99,10 @@ export async function switchChain(): Promise<boolean> {
 
 export async function verifyWalletChain(): Promise<boolean> {
   try {
-    return await window.ethereum
-      .request({ method: 'eth_chainId' })
-      .then(res => parseInt(res as string) === getChainId());
+    const walletChain = await window.ethereum.request({ method: 'eth_chainId' });
+    return parseInt(walletChain as string) === getChainId();
   } catch (e) {
-    console.error(e);
+    pushLog('[verifyWalletChain] error:', e);
     return false;
   }
 }
