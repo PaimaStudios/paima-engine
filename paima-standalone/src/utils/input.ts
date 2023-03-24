@@ -45,11 +45,11 @@ export const argumentRouter = async (): Promise<void> => {
   } else if (base_arg == 'run') {
     await runPaimaEngine();
   } else if (base_arg == 'contract') {
-    await contractCommand();
+    contractCommand();
   } else if (base_arg == 'docs') {
-    await documentationCommand();
+    documentationCommand();
   } else {
-    await helpCommand();
+    helpCommand();
   }
 };
 
@@ -107,17 +107,17 @@ export const runPaimaEngine = async (): Promise<void> => {
 };
 
 // Contract command logic
-export const contractCommand = async (): Promise<void> => {
+export const contractCommand = (): void => {
   prepareContract();
 };
 
 // Docs command logic
-export const documentationCommand = async (): Promise<void> => {
+export const documentationCommand = (): void => {
   prepareDocumentation();
 };
 
 // Help command printing
-export const helpCommand = async (): Promise<void> => {
+export const helpCommand = (): void => {
   doLog(`Usage: paima-engine [COMMAND] ARG`);
   doLog(`Commands:`);
   doLog(`   init      Enables initializing project templates and the SDK.`);
