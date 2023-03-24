@@ -29,7 +29,9 @@ export class DataMigrations {
         );
       }
     } catch (e) {
-      console.log('No migration loaded. (./packaged/', String(e));
+      if (!String(e).match(/no such file or directory/)) {
+        throw e; // if error not "director not found" throw error.
+      }
     }
     return DataMigrations.pendingMigrations.length;
   }
