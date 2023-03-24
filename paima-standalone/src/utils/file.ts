@@ -4,6 +4,7 @@ import { ROUTER_FILENAME, API_FILENAME } from './import';
 import { doLog } from '@paima/utils';
 
 export const PACKAGED_TEMPLATES_PATH = `${__dirname}/templates`;
+const PACKAGED_SDK_PATH = `${__dirname}/paima-sdk`;
 
 const copy = (src: string, dest: string): void => {
   const list = fs.readdirSync(src);
@@ -66,11 +67,10 @@ export const prepareFolder = (
 // Initializes the SDK in the same folder as the executable
 export const prepareSDK = (silentMode = false): void => {
   const SDK_FOLDER_PATH = `${process.cwd()}/paima-sdk`;
-  const packagedSDKPath = `${__dirname}/paima-sdk`;
   const success = '✅ SDK Initialized.';
   const failure = silentMode ? '' : `Existing SDK Found: ${SDK_FOLDER_PATH}.`;
 
-  prepareFolder(packagedSDKPath, SDK_FOLDER_PATH, success, failure);
+  prepareFolder(PACKAGED_SDK_PATH, SDK_FOLDER_PATH, success, failure);
 };
 
 // Initializes a project template
@@ -108,4 +108,10 @@ export const checkForPackedGameCode = (): boolean => {
   const GAME_CODE_PATH = `${process.cwd()}/${ROUTER_FILENAME}`;
   const ENDPOINTS_PATH = `${process.cwd()}/${API_FILENAME}`;
   return fs.existsSync(ENDPOINTS_PATH) && fs.existsSync(GAME_CODE_PATH);
+};
+
+export const getPaimaEngineVersion = (): string => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { version } = require(`${PACKAGED_SDK_PATH}/package.json`);
+  return version;
 };
