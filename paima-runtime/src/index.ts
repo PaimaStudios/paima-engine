@@ -159,7 +159,10 @@ async function startRuntime(
 
   // Load data migrations
   const lastBlockHeightAtLaunch = await acquireLatestBlockHeight(gameStateMachine, pollingPeriod);
-  await DataMigrations.loadDataMigrations(lastBlockHeightAtLaunch);
+
+  if ((await DataMigrations.loadDataMigrations(lastBlockHeightAtLaunch)) > 0) {
+    DataMigrations.setDBConnection(gameStateMachine.getNewReadWriteDbConn());
+  }
 
   while (run) {
     loopCount++;
@@ -221,10 +224,7 @@ async function startRuntime(
 
         try {
           if (DataMigrations.hasPendingMigration(chainData.blockNumber)) {
-            await DataMigrations.applyDataDBMigrations(
-              gameStateMachine.getReadonlyDbConn(),
-              chainData.blockNumber
-            );
+            await DataMigrations.applyDataDBMigrations(chainData.blockNumber);
           }
           await gameStateMachine.process(chainData);
           exitIfStopped(run);

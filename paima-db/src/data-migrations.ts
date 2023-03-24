@@ -4,6 +4,7 @@ import { readdir, readFile } from 'fs/promises';
 import type { Pool } from 'pg';
 
 export class DataMigrations {
+  private static pool: Pool;
   protected static pendingMigrations: number[] = [];
   private static readonly migrationPath = `${process.cwd()}/packaged/migrations/`;
 
@@ -36,13 +37,17 @@ export class DataMigrations {
     return DataMigrations.pendingMigrations.length;
   }
 
+  public static setDBConnection(pool: Pool): void {
+    DataMigrations.pool = pool;
+  }
+
   public static hasPendingMigration(currentBlock: number): boolean {
     if (DataMigrations.pendingMigrations.length === 0) return false;
     // We need only to check the first, pendingMigrations are sorted first to last.
     return DataMigrations.pendingMigrations[0] + ENV.START_BLOCKHEIGHT === currentBlock;
   }
 
-  public static async applyDataDBMigrations(pool: Pool, currentBlock: number): Promise<void> {
+  public static async applyDataDBMigrations(currentBlock: number): Promise<void> {
     // check if migration within
     if (DataMigrations.pendingMigrations[0] + ENV.START_BLOCKHEIGHT !== currentBlock) {
       throw new Error('No data migration to apply at: ' + currentBlock);
@@ -52,7 +57,7 @@ export class DataMigrations {
       `${this.migrationPath}/${DataMigrations.pendingMigrations[0]}.sql`,
       'utf-8'
     );
-    await pool.query(sqlQueries);
+    await DataMigrations.pool.query(sqlQueries);
     return;
   }
 }

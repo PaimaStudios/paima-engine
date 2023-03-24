@@ -42,8 +42,8 @@ const SM: GameStateMachineInitializer = {
       getReadonlyDbConn: (): Pool => {
         return readonlyDBConn;
       },
-      getReadWriteDbConn: (): Pool => {
-        return DBConn;
+      getNewReadWriteDbConn: (): Pool => {
+        return getConnection(databaseInfo);
       },
       // Core function which triggers state transitions
       process: async (latestChainData: ChainData): Promise<void> => {
