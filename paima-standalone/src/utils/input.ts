@@ -5,6 +5,8 @@ import {
   checkForPackedGameCode,
   prepareContract,
   prepareDocumentation,
+  getFolderNames,
+  PACKAGED_TEMPLATES_PATH,
 } from './file.js';
 import paimaFunnel from '@paima/funnel';
 import paimaRuntime from '@paima/runtime';
@@ -12,13 +14,6 @@ import type { ChainFunnel } from '@paima/utils';
 import { gameSM } from '../sm.js';
 import { importTsoaFunction } from './import.js';
 import { doLog, ENV } from '@paima/utils';
-
-// Templates type & map
-export type TemplateTypes = 'generic' | 'turn';
-export const templateMap: Record<TemplateTypes, string> = {
-  generic: 'generic-game-template',
-  turn: 'turn-game-template',
-};
 
 // Prompt user for input in the CLI
 export const userPrompt = (query: string): Promise<string> => {
@@ -60,14 +55,17 @@ export const initCommand = async (): Promise<void> => {
   if (init_arg == 'sdk') {
     prepareSDK();
   } else if (init_arg == 'template') {
-    const chosenTemplate = await pickGameTemplate();
+    const chosenTemplate = await pickGameTemplate(process.argv[4]);
     prepareTemplate(chosenTemplate);
-    prepareSDK();
+    prepareSDK(true);
   } else {
     doLog(`Usage: paima-engine init ARG`);
     doLog(`Valid Arguments:`);
     doLog(`   sdk       Initializes the SDK by itself.`);
     doLog(`   template  Initializes a new project via a template.`);
+    doLog(
+      `   template [TEMPLATE_NAME] Initializes a new project via a chosen template if you're familiar with available options.`
+    );
   }
 };
 
@@ -127,26 +125,21 @@ export const helpCommand = (): void => {
   doLog(`   help      Shows list of commands currently available.`);
 };
 
-// Check the template type
-function isTemplateType(arg: string): arg is TemplateTypes {
-  return templateMap[arg as TemplateTypes] != undefined;
-}
-
 // Allows the user to choose the game template
-const pickGameTemplate = async (): Promise<TemplateTypes> => {
-  const templateArg = process.argv[2];
-  if (isTemplateType(templateArg)) return templateArg;
+const pickGameTemplate = async (templateArg: string): Promise<string> => {
+  const availableTemplates = getFolderNames(PACKAGED_TEMPLATES_PATH);
+  if (availableTemplates.includes(templateArg)) return templateArg;
 
   doLog(`Please select one of the following templates:`);
 
-  Object.keys(templateMap).forEach(templateName => {
+  availableTemplates.forEach(templateName => {
     doLog(`  - ${templateName}`);
   });
 
   const chosenTemplate = await userPrompt(``);
-  if (isTemplateType(chosenTemplate)) return chosenTemplate;
+  if (availableTemplates.includes(chosenTemplate)) return chosenTemplate;
 
-  const defaultTemplate: TemplateTypes = 'generic';
+  const defaultTemplate = availableTemplates[0];
   doLog(`Unknown selection, ${defaultTemplate} will be used.`);
   return defaultTemplate;
 };

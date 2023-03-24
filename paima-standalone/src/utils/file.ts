@@ -2,7 +2,8 @@ import fs from 'fs';
 import path from 'path';
 import { ROUTER_FILENAME, API_FILENAME } from './import';
 import { doLog } from '@paima/utils';
-import { templateMap, type TemplateTypes } from './input';
+
+export const PACKAGED_TEMPLATES_PATH = `${__dirname}/templates`;
 
 const copy = (src: string, dest: string): void => {
   const list = fs.readdirSync(src);
@@ -18,6 +19,18 @@ const copy = (src: string, dest: string): void => {
       copy(curSrc, curDest);
     }
   });
+};
+
+/**
+ * @param directoryPath root folder to search in
+ * @returns names of all direct directories in a given folder
+ */
+export const getFolderNames = (directoryPath: string): string[] => {
+  const folders = fs
+    .readdirSync(directoryPath, { withFileTypes: true })
+    .filter(dirent => dirent.isDirectory())
+    .map(dirent => dirent.name);
+  return folders;
 };
 
 /**
@@ -51,19 +64,19 @@ export const prepareFolder = (
 };
 
 // Initializes the SDK in the same folder as the executable
-export const prepareSDK = (): void => {
+export const prepareSDK = (silentMode = false): void => {
   const SDK_FOLDER_PATH = `${process.cwd()}/paima-sdk`;
   const packagedSDKPath = `${__dirname}/paima-sdk`;
   const success = '✅ SDK Initialized.';
-  const failure = `Existing SDK Found: ${SDK_FOLDER_PATH}.`;
+  const failure = silentMode ? '' : `Existing SDK Found: ${SDK_FOLDER_PATH}.`;
 
   prepareFolder(packagedSDKPath, SDK_FOLDER_PATH, success, failure);
 };
 
 // Initializes a project template
-export const prepareTemplate = (templateKey: TemplateTypes): void => {
-  const TEMPLATE_FOLDER_PATH = `${process.cwd()}/${templateMap[templateKey]}`;
-  const packagedTemplatePath = `${__dirname}/templates/${templateMap[templateKey]}`;
+export const prepareTemplate = (folder: string): void => {
+  const TEMPLATE_FOLDER_PATH = `${process.cwd()}/${folder}`;
+  const packagedTemplatePath = `${PACKAGED_TEMPLATES_PATH}/${folder}`;
   const success = `✅ Game template initialized: ${TEMPLATE_FOLDER_PATH}`;
   const failure = `Game template ${TEMPLATE_FOLDER_PATH} already exists.`;
 
