@@ -10,6 +10,8 @@
     "prepare:standalone": "sh paima-standalone/scripts/prepare_standalone_folders.sh",
     "build:sdk": "npx tsc --build --clean tsconfig.lib.json && npx tsc --build tsconfig.lib.json",
     "build:standalone": "npm run build && npm run build:binary -w paima-standalone",
+    "build:dev-standalone-macos": "npm run build && npm run build:dev-binary-macos -w paima-standalone",
+    "build:dev-standalone-linux": "npm run build && npm run build:dev-binary-linux -w paima-standalone",
     "standalone": "npm run prepare:standalone && npm run build:standalone",
     "cprettier": "prettier --check '**/*.{ts,tsx}'",
     "eslint": "eslint '**/*.{ts,tsx}' --ignore-path .eslintignore",

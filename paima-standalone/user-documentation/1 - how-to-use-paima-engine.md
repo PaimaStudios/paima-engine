@@ -130,12 +130,44 @@ In other words, you do not require your unpacked game code or `paima-sdk`, allow
 
 ## Snapshots
 
-Lastly, if you have `pg_dump` installed on the machine running your game node (typically included in the postgres package of your OS), then Paima Engine will automatically take snapshots every day of your game node DB and store them in a `snapshots` folder. The last 3 days of snapshots are maintained, and everything older is automatically deleted.
+If you have `pg_dump` installed on the machine running your game node (typically included in the postgres package of your OS), then Paima Engine will automatically take snapshots every day of your game node DB and store them in a `snapshots` folder. The last 3 days of snapshots are maintained, and everything older is automatically deleted.
 
 If `pg_dump` is not available, then when you start your game node an error will be printed in the terminal denoting of such, however the game node will still function perfectly fine nonetheless (and will simply skip taking snapshots).
 
 Of note, unlike in the Web2/2.5 world, these snapshots are _not vital_. You are building a trustless Web3 game using Paima Engine, which means that even if your entire DB gets corrupted or deleted, a brand new game node can be synced from scratch by just reading from the blockchain. These snapshots are simply a quality-of-life enhancement, as they allow you to deploy new game nodes much faster without having to resync from scratch.
- 
+
+
+## Debugging 
+
+Paima-Engine includes 4 binaries:
+
+* Linux production `paima-engine-linux`
+* Linux development `paima-engine-macos`
+* Macos x64 production `dev-paima-engine-linux`
+* Macos x64 development `dev-paima-engine-macos`
+
+The binaries named `dev-*` run a node.js inspector and should only be used for development and not for production environments.
+
+### How to debug
+
+1. Launching your game with the `./dev-paima-engine-linux run` or `./dev-paima-engine-macos run` you will see a message similar to:  
+
+```
+Debugger listening on ws://127.0.0.1:9229/e6e784f8-bcd8-4ace-8b17-9b515ae45f7d
+For help, see: https://nodejs.org/en/docs/inspector
+```
+
+2. Open in a Google Chrome browser: `chrome://inspect`  
+You should see a `Remote Target` entry with the name `PKG_DUMMY_ENTRYPOINT file:///` click on `inspect`.  
+NOTE: If you do not see the entry: in `Configure...` add `localhost:9229` where the actual port is the one informed in the message in step 1.  
+A new debug "DevTools" window will pop up. 
+
+3. In the new DevTools, go to the `Sources` tab and click on `+ Add folder to workspace` select the folder `packaged` where your compiled game is located you should see `endpoints.cjs` and `gameCode.cjs` select this folder.  
+The first time DevTools might request permission to access your hard drive: allow access.
+
+4. Now you are ready to DEBUG.
+In the `sources` tab you can place breakpoints in endpoint.cjs and gameCode.cjs by clicking on line-number on the left side of the line. 
+
 
 ## Data Migrations
 
@@ -172,9 +204,3 @@ BEGIN;
 -- UPDATE ...; 
 COMMIT;
 ```
-
-
-
-
-
-
