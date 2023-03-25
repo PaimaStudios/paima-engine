@@ -130,7 +130,7 @@ In other words, you do not require your unpacked game code or `paima-sdk`, allow
 
 ## Snapshots
 
-Lastly, if you have `pg_dump` installed on the machine running your game node (typically included in the postgres package of your OS), then Paima Engine will automatically take snapshots every day of your game node DB and store them in a `snapshots` folder. The last 3 days of snapshots are maintained, and everything older is automatically deleted.
+If you have `pg_dump` installed on the machine running your game node (typically included in the postgres package of your OS), then Paima Engine will automatically take snapshots every day of your game node DB and store them in a `snapshots` folder. The last 3 days of snapshots are maintained, and everything older is automatically deleted.
 
 If `pg_dump` is not available, then when you start your game node an error will be printed in the terminal denoting of such, however the game node will still function perfectly fine nonetheless (and will simply skip taking snapshots).
 
@@ -167,3 +167,40 @@ The first time DevTools might request permission to access your hard drive: allo
 
 4. Now you are ready to DEBUG.
 In the `sources` tab you can place breakpoints in endpoint.cjs and gameCode.cjs by clicking on line-number on the left side of the line. 
+
+
+## Data Migrations
+
+Data Migrations allow game developers to add data to the database e.g., World Setup, NPC, Items, and other system tables.  
+
+IMPORTANT: You should never add data to the database manually. It should be done only through state-transitions and data migrations.
+
+Data Migrations are applied at a specific block-height. The file name indicates the OFFSET from the START_BLOCKHEIGHT (defined in the .env file).
+
+File structure:
+
+```
+root_folder
+   | --- paima-sdk
+   | --- paima-engine-{linux|macos}
+   | --- packaged
+             | --- endpoints.cjs
+             | --- gameCode.cjs
+             | --- migrations
+                          | --- 1000.sql
+                          | --- 5500.sql
+``` 
+
+1000.sql will be applied at block-height START_BLOCKHEIGHT + 1000.  
+5500.sql will be applied at block-height START_BLOCKHEIGHT + 5500.  
+Both will be applied before any other inputs are processed for that block-height.
+
+The *.sql files are PGSQL scripts. We ABSOLUTELY recommend writing your SQL script as a transaction, so if it fails the block-process-loop will stop and the script can be fixed and reapplied.
+
+1000.sql example:
+```
+BEGIN; 
+-- INSERT... ; 
+-- UPDATE ...; 
+COMMIT;
+```

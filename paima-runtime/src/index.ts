@@ -1,6 +1,7 @@
 import type { ChainData, ChainFunnel } from '@paima/utils';
 import { doLog, logError, ENV } from '@paima/utils';
 import type { GameStateMachine, PaimaRuntimeInitializer } from '@paima/db';
+import { DataMigrations } from '@paima/db';
 import process from 'process';
 import { server, startServer } from './server.js';
 import { initSnapshots, snapshotIfTime } from './snapshots.js';
@@ -48,7 +49,7 @@ const paimaEngine: PaimaRuntimeInitializer = {
         });
         this.addGET('/latest_processed_blockheight', (req, res): void => {
           gameStateMachine
-            .latestBlockHeight()
+            .latestProcessedBlockHeight()
             .then(blockHeight => res.json({ block_height: blockHeight }))
             .catch(_error => res.status(500));
         });
@@ -114,7 +115,7 @@ async function acquireLatestBlockHeight(sm: GameStateMachine, waitPeriod: number
   let wasDown = false;
   while (run) {
     try {
-      const latestReadBlockHeight = await sm.latestBlockHeight();
+      const latestReadBlockHeight = await sm.latestProcessedBlockHeight();
       if (wasDown) {
         doLog('[paima-runtime] Block height re-acquired successfully.');
       }
@@ -154,6 +155,13 @@ async function startRuntime(
   if (!initResult) {
     doLog('[paima-runtime] Unable to initialize DB! Shutting down...');
     run = false;
+  }
+
+  // Load data migrations
+  const lastBlockHeightAtLaunch = await acquireLatestBlockHeight(gameStateMachine, pollingPeriod);
+
+  if ((await DataMigrations.loadDataMigrations(lastBlockHeightAtLaunch)) > 0) {
+    DataMigrations.setDBConnection(gameStateMachine.getNewReadWriteDbConn());
   }
 
   while (run) {
@@ -215,6 +223,9 @@ async function startRuntime(
         }
 
         try {
+          if (DataMigrations.hasPendingMigration(chainData.blockNumber)) {
+            await DataMigrations.applyDataDBMigrations(chainData.blockNumber);
+          }
           await gameStateMachine.process(chainData);
           exitIfStopped(run);
         } catch (err) {
@@ -226,7 +237,7 @@ async function startRuntime(
         }
 
         try {
-          const latestReadBlockHeight = await gameStateMachine.latestBlockHeight();
+          const latestReadBlockHeight = await gameStateMachine.latestProcessedBlockHeight();
           await snapshotIfTime(latestReadBlockHeight);
           exitIfStopped(run);
           await loopIfStopBlockReached(latestReadBlockHeight, stopBlockHeight);

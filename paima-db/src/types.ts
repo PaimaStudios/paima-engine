@@ -33,8 +33,9 @@ export interface GameStateMachineInitializer {
 
 export interface GameStateMachine {
   initializeDatabase: (force: boolean) => Promise<boolean>;
-  latestBlockHeight: () => Promise<number>;
+  latestProcessedBlockHeight: () => Promise<number>;
   getReadonlyDbConn: () => Pool;
+  getNewReadWriteDbConn: () => Pool;
   process: (chainData: ChainData) => Promise<void>;
 }
 

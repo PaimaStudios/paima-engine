@@ -6,11 +6,5 @@
 # DB
 snapshots
 
-# re-compiled backend into a single cjs file (PKG doesn't support ESM)
-packaged/engineCorePacked.js
-# output folder for pkg (based on package.json outDir + name)
-packaged/@paima
-packaged/@standalone
-packaged/paima-sdk
-packaged/smart-contract
-packaged/documentation
+# Generated, copied, compiled and fetched files that are included in the executable
+packaged
