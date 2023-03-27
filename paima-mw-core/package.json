@@ -12,8 +12,8 @@
     "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "prettier --write '**/*.ts'",
-    "build:standalone": "DOTENV_CONFIG_PATH=\"../../.env.development\" node --require dotenv/config ./esbuildconfig.cjs",
-    "start:standalone": "npx http-server ./web -o"
+    "build:standalone-web-ui": "DOTENV_CONFIG_PATH=\"../../.env.${NODE_ENV}\" node --require dotenv/config ./esbuildconfig.cjs",
+    "start:standalone-web-ui": "npx http-server ./web -o"
   },
   "author": "",
   "license": "ISC",

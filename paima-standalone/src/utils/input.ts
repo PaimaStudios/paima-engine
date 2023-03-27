@@ -151,15 +151,19 @@ export const helpCommand = (): void => {
 const startWebServer = (): Promise<void> =>
   new Promise((resolve, reject) => {
     // running `npm ci` in `/paima-sdk` is required to this command to work.
-    exec('npm run build:standalone && npm run start:standalone', {
-      env: {
-        NODE_ENV: ENV.NODE_ENV,
+    exec(
+      'npm run build:standalone-web-ui && npm run start:standalone-web-ui',
+      {
+        env: {
+          NODE_ENV: ENV.NODE_ENV,
+        },
+        cwd: './paima-sdk/paima-mw-core',
       },
-      cwd: './paima-sdk/paima-mw-core',
-    }, (err) => {
-      if (err) return reject(err);
-      return resolve();
-    });
+      err => {
+        if (err) return reject(err);
+        return resolve();
+      }
+    );
   });
 
 // Allows the user to choose the game template
