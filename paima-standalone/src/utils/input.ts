@@ -40,29 +40,31 @@ export const argumentRouter = async (): Promise<void> => {
       await initCommand();
       break;
 
-  case 'run':
-    await runPaimaEngine();
-    break;
+    case 'run':
+      await runPaimaEngine();
+      break;
 
-  case 'contract':
-    contractCommand();
-    break;
+    case 'contract':
+      contractCommand();
+      break;
 
-  case 'docs':
-    documentationCommand();
-    break;
+    case 'docs':
+      documentationCommand();
+      break;
 
-  case 'version':
-    versionCommand();
-    break;
+    case 'version':
+      versionCommand();
+      break;
 
-  case 'webui':
-    // npm ci is required first in paima-sdk
-    exec('npm run build:standalone && npm run start:standalone', { cwd: './paima-sdk/paima-mw-core' })
-    break;
+    case 'webui':
+      // npm ci is required first in paima-sdk
+      exec('npm run build:standalone && npm run start:standalone', {
+        cwd: './paima-sdk/paima-mw-core',
+      });
+      break;
 
-  default:
-    helpCommand();
+    default:
+      helpCommand();
   }
 };
 
