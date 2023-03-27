@@ -19,7 +19,12 @@ import type {
   SubmittedChainData,
   TransactionTemplate,
 } from './types';
-import { AddressType, INNER_BATCH_DIVIDER, OUTER_BATCH_DIVIDER } from './constants';
+import {
+  AddressType,
+  INNER_BATCH_DIVIDER,
+  OUTER_BATCH_DIVIDER,
+  ChainDataExtensionType,
+} from './constants';
 
 const { isAddress } = pkg;
 
@@ -42,6 +47,7 @@ export {
   ChainDataExtension,
   TransactionTemplate,
   AddressType,
+  ChainDataExtensionType,
   INNER_BATCH_DIVIDER,
   OUTER_BATCH_DIVIDER,
   logError,

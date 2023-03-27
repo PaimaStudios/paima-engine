@@ -1,6 +1,8 @@
 import type Web3 from 'web3';
 import type { Express, RequestHandler } from 'express';
+
 import type { PaimaL2Contract } from './contract-types/index';
+import type { ChainDataExtensionType } from './constants';
 
 export type Deployment = 'C1' | 'A1';
 
@@ -48,8 +50,46 @@ export interface ChainData {
   extensionDatums?: ChainDataExtensionDatum[];
 }
 
-type ChainDataExtensionDatum = any;
-export interface ChainDataExtension {}
+interface ChainDataExtensionErc20Payload {
+  from: string;
+  to: string;
+  value: string;
+}
+
+interface ChainDataExtensionErc721Payload {
+  from: string;
+  to: string;
+  tokenId: number;
+}
+
+type ChainDataExtensionPayload = ChainDataExtensionErc20Payload | ChainDataExtensionErc721Payload;
+
+interface ChainDataExtensionDatumBase {
+  cdeId: number;
+  cdeType: ChainDataExtensionType;
+  blockNumber: number;
+  payload: ChainDataExtensionPayload;
+}
+
+interface ChainDataExtensionErc20Datum extends ChainDataExtensionDatumBase {
+  cdeType: ChainDataExtensionType.ERC20;
+  payload: ChainDataExtensionErc20Payload;
+}
+
+interface ChainDataExtensionErc721Datum extends ChainDataExtensionDatumBase {
+  cdeType: ChainDataExtensionType.ERC721;
+  payload: ChainDataExtensionErc721Payload;
+}
+
+export type ChainDataExtensionDatum = ChainDataExtensionErc20Datum | ChainDataExtensionErc721Datum;
+
+export interface ChainDataExtension {
+  cdeId: number;
+  cdeType: ChainDataExtensionType;
+  contractAddress: string;
+  startBlockHeight: number;
+  initializationPrefix: string;
+}
 
 export interface ChainFunnel {
   nodeUrl: string;
@@ -57,7 +97,8 @@ export interface ChainFunnel {
   extensions: ChainDataExtension[];
   web3: Web3;
   paimaL2Contract: PaimaL2Contract;
-  readData: (blockHeight: number) => Promise<ChainData[]>; // if using internalReadData
+  readData: (blockHeight: number) => Promise<ChainData[]>;
+  presyncRead: (fromBlock: number, toBlock: number) => Promise<ChainDataExtensionDatum[][]>;
 }
 
 export interface PaimaRuntime {
