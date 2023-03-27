@@ -155,9 +155,6 @@ const startWebServer = (): Promise<void> =>
     exec(
       'npm run build:standalone-web-ui && npm run start:standalone-web-ui',
       {
-        env: {
-          NODE_ENV: ENV.NODE_ENV,
-        },
         cwd: './paima-sdk/paima-mw-core',
       },
       err => {
