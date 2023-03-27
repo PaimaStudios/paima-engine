@@ -22,7 +22,9 @@ export async function tableIsValid(pool: Pool, table: TableData): Promise<boolea
 
   for (const primaryKeyColumn of primaryKeyColumns) {
     if (!(await checkTablePkey(pool, tableName, primaryKeyColumn))) {
-      doLog(`[database-validation] table ${tableName} failing on primary key column ${primaryKeyColumn}`);
+      doLog(
+        `[database-validation] table ${tableName} failing on primary key column ${primaryKeyColumn}`
+      );
       return false;
     }
   }
