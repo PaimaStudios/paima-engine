@@ -153,7 +153,7 @@ export const helpCommand = (): void => {
 const startWebServer = (): Promise<void> =>
   new Promise((resolve, reject) => {
     // running `npm ci` in `/paima-sdk` is required to this command to work.
-    doLog('Standalone WebUI Client at https://localhost:8080');
+    doLog('Standalone WebUI Client at http://127.0.0.1:8080');
     exec(
       'npm run build:standalone-web-ui && npm run start:standalone-web-ui',
       {
