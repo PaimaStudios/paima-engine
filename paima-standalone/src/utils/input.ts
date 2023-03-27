@@ -23,31 +23,34 @@ export const userPrompt = (query: string): Promise<string> => {
     output: process.stdout,
   });
 
-  return new Promise(resolve =>
-    rl.question(query, ans => {
-      rl.close();
-      resolve(ans);
-    })
-  );
+  return new Promise(resolve => rl.question(query, ans => {
+    rl.close();
+    resolve(ans);
+  }));
 };
 
 // Top level CLI argument parser/router
-// Potentially switch to https://github.com/75lb/command-line-args or otherwise
 export const argumentRouter = async (): Promise<void> => {
-  const base_arg = process.argv[2];
+  const command = process.argv[2];
 
-  if (base_arg == 'init') {
-    await initCommand();
-  } else if (base_arg == 'run') {
-    await runPaimaEngine();
-  } else if (base_arg == 'contract') {
-    contractCommand();
-  } else if (base_arg == 'docs') {
-    documentationCommand();
-  } else if (base_arg == 'version') {
-    versionCommand();
-  } else {
-    helpCommand();
+  switch (command) {
+    case 'init':
+      await initCommand();
+      break;
+    case 'run':
+      await runPaimaEngine();
+      break;
+    case 'contract':
+      contractCommand();
+      break;
+    case 'docs':
+      documentationCommand();
+      break;
+    case 'version':
+      versionCommand();
+      break;
+    default:
+      helpCommand();
   }
 };
 
@@ -64,10 +67,10 @@ export const initCommand = async (): Promise<void> => {
   } else {
     doLog(`Usage: paima-engine init ARG`);
     doLog(`Valid Arguments:`);
-    doLog(`   sdk       Initializes the SDK by itself.`);
-    doLog(`   template  Initializes a new project via a template.`);
+    doLog(`   sdk                        Initializes the SDK by itself.`);
+    doLog(`   template                   Provides an interactive interface for initializing a template.`);
     doLog(
-      `   template [TEMPLATE_NAME] Initializes a new project via a chosen template if you're familiar with available options.`
+      `   template [TEMPLATE_NAME]   Initializes the template if you're familiar with the direct template name (lower case).`
     );
   }
 };
