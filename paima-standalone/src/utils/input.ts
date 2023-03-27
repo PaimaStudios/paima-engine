@@ -15,6 +15,7 @@ import type { ChainFunnel } from '@paima/utils';
 import { gameSM } from '../sm.js';
 import { importTsoaFunction } from './import.js';
 import { doLog, ENV } from '@paima/utils';
+import { exec } from 'child_process';
 
 // Prompt user for input in the CLI
 export const userPrompt = (query: string): Promise<string> => {
@@ -33,24 +34,31 @@ export const userPrompt = (query: string): Promise<string> => {
 
 // Top level CLI argument parser/router
 export const argumentRouter = async (): Promise<void> => {
-  const command = process.argv[2];
-
-  switch (command) {
+  switch (process.argv[2]) {
     case 'init':
       await initCommand();
       break;
+
     case 'run':
       await runPaimaEngine();
       break;
+
     case 'contract':
       contractCommand();
       break;
+
     case 'docs':
       documentationCommand();
       break;
+
     case 'version':
       versionCommand();
       break;
+
+    case 'webui':
+      await startWebServer();
+      break;
+
     default:
       helpCommand();
   }
@@ -136,9 +144,27 @@ export const helpCommand = (): void => {
   doLog(`   run       Start your game node.`);
   doLog(`   contract  Saves the Paima L2 Contract to your local filesystem.`);
   doLog(`   docs      Saves the Paima Engine documentation to your local filesystem.`);
+  doLog(`   webui     Starts Paima Game Input Tester WebUI.`);
   doLog(`   help      Shows list of commands currently available.`);
   doLog(`   version   Shows the version of used paima-engine.`);
 };
+
+// Build middleware for specific .env file and launch webserver:
+const startWebServer = (): Promise<void> =>
+  new Promise((resolve, reject) => {
+    // running `npm ci` in `/paima-sdk` is required to this command to work.
+    doLog('Standalone WebUI Client at http://127.0.0.1:8080');
+    exec(
+      'npm run build:standalone-web-ui && npm run start:standalone-web-ui',
+      {
+        cwd: './paima-sdk/paima-mw-core',
+      },
+      err => {
+        if (err) return reject(err);
+        return resolve();
+      }
+    );
+  });
 
 // Allows the user to choose the game template
 const pickGameTemplate = async (templateArg: string): Promise<string> => {

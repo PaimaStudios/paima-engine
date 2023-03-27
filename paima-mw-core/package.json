@@ -11,11 +11,18 @@
   "scripts": {
     "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "lint": "prettier --write '**/*.ts'"
+    "lint": "prettier --write '**/*.ts'",
+    "build:standalone-web-ui": "NODE_ENV=${NODE_ENV:=development} DOTENV_CONFIG_PATH=\"../../.env.$NODE_ENV\" node --require dotenv/config ./esbuildconfig.cjs",
+    "start:standalone-web-ui": "npx http-server ./web -o --port 8080"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
+    "@esbuild-plugins/node-modules-polyfill": "^0.2.2",
+    "dotenv": "^16.0.3",
+    "esbuild": "^0.17.14",
+    "esbuild-plugin-d.ts": "^1.1.0",
     "prettier": "^2.6.2",
     "prettier-plugin-organize-imports": "^2.3.4",
     "typescript": "^4.7.4"
