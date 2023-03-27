@@ -57,10 +57,7 @@ export const argumentRouter = async (): Promise<void> => {
       break;
 
     case 'webui':
-      // npm ci is required first in paima-sdk
-      exec('npm run build:standalone && npm run start:standalone', {
-        cwd: './paima-sdk/paima-mw-core',
-      });
+      await startWebServer();
       break;
 
     default:
@@ -149,6 +146,21 @@ export const helpCommand = (): void => {
   doLog(`   help      Shows list of commands currently available.`);
   doLog(`   version   Shows the version of used paima-engine.`);
 };
+
+// Build middleware for specific .env file and launch webserver:
+const startWebServer = (): Promise<void> =>
+  new Promise((resolve, reject) => {
+    // running `npm ci` in `/paima-sdk` is required to this command to work.
+    exec('npm run build:standalone && npm run start:standalone', {
+      env: {
+        NODE_ENV: ENV.NODE_ENV,
+      },
+      cwd: './paima-sdk/paima-mw-core',
+    }, (err) => {
+      if (err) return reject(err);
+      return resolve();
+    });
+  });
 
 // Allows the user to choose the game template
 const pickGameTemplate = async (templateArg: string): Promise<string> => {

@@ -2,7 +2,6 @@
 const esbuild = require('esbuild');
 const g = require('@esbuild-plugins/node-globals-polyfill');
 const m = require('@esbuild-plugins/node-modules-polyfill');
-const { dtsPlugin } = require('esbuild-plugin-d.ts');
 const modules = m.NodeModulesPolyfillPlugin();
 
 const define = { global: 'window' };
@@ -35,7 +34,7 @@ const config = {
   globalName: 'middleware',
   define,
   outfile: 'web/middleware.js',
-  plugins: [global, modules, dtsPlugin()],
+  plugins: [global, modules],
   external: ['pg-native'],
 };
 
