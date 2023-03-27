@@ -144,7 +144,7 @@ export const helpCommand = (): void => {
   doLog(`   run       Start your game node.`);
   doLog(`   contract  Saves the Paima L2 Contract to your local filesystem.`);
   doLog(`   docs      Saves the Paima Engine documentation to your local filesystem.`);
-  doLog(`   webui     Starts WebUI for sending manual commands to game engine.`);
+  doLog(`   webui     Starts Paima Game Input Tester WebUI.`);
   doLog(`   help      Shows list of commands currently available.`);
   doLog(`   version   Shows the version of used paima-engine.`);
 };

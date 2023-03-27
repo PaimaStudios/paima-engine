@@ -3,9 +3,33 @@
 Once you have the Paima L2 contract deployed for your game together with your game node up and running, you will inevitably want to test sending game inputs to the blockchain
 to verify that everything is configured properly.
 
-We will continue to use truffle and manually craft a game input to send to the deployed L2 contract.
+## Using The Paima Game Input Tester Web UI
 
-## Starting Truffle Console
+Since Paima Engine v0.5.0, we have included a `./paima-engine webui` command which launches a tiny web dApp that allows you to submit your manually crafted game inputs to your deployed L2 contract with a simple and pleasant UI. Do note, you need to have your .env file filled out and your game node running before calling the `webui` command and using it.
+
+### Posting Test Game Inputs via Web UI
+
+To post game inputs with the web ui, you simply need to enter them into the input box on the Paima Game Input Tester webpage which automatically opens, and press the submit button. You are required to have an EVM compatible wallet to use this functionality.
+
+The game input you post is expected to be manually crafted (as you are simply entering it into the input box directly) thereby providing a simple method of testing your game code/node configuration.
+
+For example you can use this game input with the chess or RPS game templates which allow a user to join a lobby (assuming lobby Xs6Q9GAqZVwe exists):
+
+```js
+j|*Xs6Q9GAqZVwe
+```
+
+After clicking the submit button, you will have a transaction pop up in your wallet, which you can then confirm to submit on-chain.
+
+If you have your game node configured properly, you will new logs as it detects the posted game input and attempts to process it.
+
+Congratulations, you have gone through a full end-to-end loop of using Paima Engine!
+
+## (Obsolete) Doing It Manually Via Truffle Console
+
+This method is generally obsolete, but left here for educational purposes.
+
+### Starting Truffle Console
 
 To interact with the deployed contract and call its methods, you can use `truffle console`, a tool provided with truffle. To proceed you will need:
 
@@ -22,7 +46,7 @@ To run the truffle console and connect to the target network, do the following:
 
 Reminder, the connection info truffle will use is found in `truffle-config.js`. If you followed the deployment instructions, this config file will be good-to-go, otherwise, please reference [the deployment guide](./deploying-l2-smart-contract.md) for more details.
 
-## Interacting With Your Deployed L2 Contract
+### Interacting With Your Deployed L2 Contract
 
 You will now be placed inside of truffle's interactive console which will be waiting for your input.
 
@@ -45,7 +69,7 @@ To make the output more human-readable, you can call it as follows to convert it
 contract.fee().then(result => result.toString());
 ```
 
-## Posting Test Game Inputs
+### Posting Test Game Inputs
 
 To post game inputs to the contract, we will call the `paimaSubmitGameInput` method on L2 contract.
 
