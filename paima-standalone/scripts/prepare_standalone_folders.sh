@@ -1,4 +1,5 @@
 PACKAGED_PATH="./paima-standalone/packaged"
+mkdir -p $PACKAGED_PATH
 
 SDK_PATH="$PACKAGED_PATH/paima-sdk"
 CONTRACT_PATH="$PACKAGED_PATH/smart-contract"
@@ -49,10 +50,10 @@ cp $module/package.json $SDK_PATH/$module/package.json
 module="paima-mw-core"
 echo $SDK_PATH/$module
 mkdir $SDK_PATH/$module
+mkdir $SDK_PATH/$module/web
 cp -a $module/build/. $SDK_PATH/$module/build/
 cp $module/README.md $SDK_PATH/$module/README.md
 cp $module/package.json $SDK_PATH/$module/package.json
-mkdir $SDK_PATH/$module/web
 cp $module/web/index.html $SDK_PATH/$module/web/index.html
 cp -r $module/web/TemplateData $SDK_PATH/$module/web/TemplateData
 cp $module/esbuildconfig.cjs $SDK_PATH/$module/esbuildconfig.cjs
