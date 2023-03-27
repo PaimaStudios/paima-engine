@@ -34,7 +34,7 @@ CREATE TABLE historical_game_inputs (
 
 const TABLE_DATA_BLOCKHEIGHTS: TableData = {
   tableName: 'block_heights',
-  primaryKey: 'block_height',
+  primaryKeyColumns: ['block_height'],
   columnData: packTuples([
     ['block_height', 'integer', 'NO', ''],
     ['seed', 'text', 'NO', ''],
@@ -46,7 +46,7 @@ const TABLE_DATA_BLOCKHEIGHTS: TableData = {
 
 const TABLE_DATA_NONCES: TableData = {
   tableName: 'nonces',
-  primaryKey: 'nonce',
+  primaryKeyColumns: ['nonce'],
   columnData: packTuples([
     ['nonce', 'text', 'NO', ''],
     ['block_height', 'integer', 'NO', ''],
@@ -57,7 +57,7 @@ const TABLE_DATA_NONCES: TableData = {
 
 const TABLE_DATA_SCHEDULED: TableData = {
   tableName: 'scheduled_data',
-  primaryKey: 'id',
+  primaryKeyColumns: ['id'],
   columnData: packTuples([
     ['id', 'integer', 'NO', ''],
     ['block_height', 'integer', 'NO', ''],
@@ -69,7 +69,7 @@ const TABLE_DATA_SCHEDULED: TableData = {
 
 const TABLE_DATA_HISTORICAL: TableData = {
   tableName: 'historical_game_inputs',
-  primaryKey: 'id',
+  primaryKeyColumns: ['id'],
   columnData: packTuples([
     ['id', 'integer', 'NO', ''],
     ['block_height', 'integer', 'NO', ''],
