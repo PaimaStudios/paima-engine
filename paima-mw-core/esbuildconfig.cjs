@@ -29,7 +29,7 @@ const global = g.NodeGlobalsPolyfillPlugin({
 });
 
 const config = {
-  entryPoints: ['src/index.ts'],
+  entryPoints: ['build/index.js'],
   bundle: true,
   format: 'iife',
   globalName: 'middleware',

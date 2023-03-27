@@ -15,6 +15,7 @@ import type { ChainFunnel } from '@paima/utils';
 import { gameSM } from '../sm.js';
 import { importTsoaFunction } from './import.js';
 import { doLog, ENV } from '@paima/utils';
+import { exec } from 'child_process';
 
 // Prompt user for input in the CLI
 export const userPrompt = (query: string): Promise<string> => {
@@ -34,19 +35,33 @@ export const userPrompt = (query: string): Promise<string> => {
 // Top level CLI argument parser/router
 // Potentially switch to https://github.com/75lb/command-line-args or otherwise
 export const argumentRouter = async (): Promise<void> => {
-  const base_arg = process.argv[2];
+  switch (process.argv[2]) {
+    case 'init':
+      await initCommand();
+      break;
 
-  if (base_arg == 'init') {
-    await initCommand();
-  } else if (base_arg == 'run') {
+  case 'run':
     await runPaimaEngine();
-  } else if (base_arg == 'contract') {
+    break;
+
+  case 'contract':
     contractCommand();
-  } else if (base_arg == 'docs') {
+    break;
+
+  case 'docs':
     documentationCommand();
-  } else if (base_arg == 'version') {
+    break;
+
+  case 'version':
     versionCommand();
-  } else {
+    break;
+
+  case 'webui':
+    // npm ci is required first in paima-sdk
+    exec('npm run build:standalone && npm run start:standalone', { cwd: './paima-sdk/paima-mw-core' })
+    break;
+
+  default:
     helpCommand();
   }
 };
