@@ -135,18 +135,42 @@ export const helpCommand = (): void => {
 
 // Allows the user to choose the game template
 const pickGameTemplate = async (templateArg: string): Promise<string> => {
-  const availableTemplates = getFolderNames(PACKAGED_TEMPLATES_PATH);
+  let availableTemplates = getFolderNames(PACKAGED_TEMPLATES_PATH);
   if (availableTemplates.includes(templateArg)) return templateArg;
 
-  doLog(`Please select one of the following templates:`);
+  // Move the "generic" template to the first position if it exists
+  availableTemplates = availableTemplates.sort((a, b) => (a === 'generic' ? -1 : b === 'generic' ? 1 : 0));
 
-  availableTemplates.forEach(templateName => {
-    doLog(`  - ${templateName}`);
+  doLog(`Please select one of the following templates (by number):`);
+
+  // Print out the template names
+  availableTemplates.forEach((templateName, index) => {
+    let displayName: string;
+
+    switch (templateName) {
+      case 'generic':
+        displayName = 'Generic (Unity FE)';
+        break;
+      case 'chess':
+        displayName = 'Chess (TypeScript FE)';
+        break;
+      case 'rock-paper-scissors':
+        displayName = 'Rock Paper Scissors (TypeScript FE)';
+        break;
+      default:
+        displayName = templateName;
+    }
+
+    doLog(`  ${index + 1}. ${displayName}`);
   });
 
-  const chosenTemplate = await userPrompt(``);
-  if (availableTemplates.includes(chosenTemplate)) return chosenTemplate;
+  // User template choosing
+  const chosenTemplateIndex = parseInt(await userPrompt(``));
+  if (!isNaN(chosenTemplateIndex) && chosenTemplateIndex > 0 && chosenTemplateIndex <= availableTemplates.length) {
+    return availableTemplates[chosenTemplateIndex - 1];
+  }
 
+  // Default case
   const defaultTemplate = availableTemplates[0];
   doLog(`Unknown selection, ${defaultTemplate} will be used.`);
   return defaultTemplate;
