@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Sample</title>
+<script src="middleware.js"></script>
+</head>
+<body>
+
+<h1>GameNode + Wallet Command Tester</h1>
+
+<form name="paima-mw-wallet" action="javascript:login()">
+  <input name="submit"  type="submit" value="Login"/>
+</form>
+<br>
+
+<form name="paima-mw-commands" action="javascript:concise()">
+  <input name="concise" type="text" value="" id="concise_id"/>
+  <input name="submit"  type="submit" value="Send Command" />
+</form>
+
+
+</body>
+<script>
+  let wallet = null;
+
+  function login() {
+    middleware.paimaEndpoints
+     .userWalletLogin('metamask')
+     .then(w => {
+       console.log('Wallet OK', w);
+       wallet = w;
+      })
+     .catch(e => console.log('Wallet Error', e));
+  }
+
+  function concise() {
+    if (!wallet) { 
+      console.log('Connect wallet first');
+      return;
+    }
+
+    const conciseId = document.getElementById("concise_id");
+    const value = conciseId.value;
+    if (!value) {
+     console.log('Please set command to send');
+     return;
+    }
+ 
+    middleware.postConciselyEncodedData(value)
+    .then(m => {
+      conciseId.value = '';
+      alert(value + '\n ' + JSON.stringify(m, null, 2));   
+    })
+    .catch(e => {
+      conciseId.value = '';
+      alert(value + '\n ' + JSON.stringify(e, null, 2));
+    });
+  }   
+
+</script>
+</html>
+
+
