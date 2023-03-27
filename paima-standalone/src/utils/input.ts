@@ -23,10 +23,12 @@ export const userPrompt = (query: string): Promise<string> => {
     output: process.stdout,
   });
 
-  return new Promise(resolve => rl.question(query, ans => {
-    rl.close();
-    resolve(ans);
-  }));
+  return new Promise(resolve =>
+    rl.question(query, ans => {
+      rl.close();
+      resolve(ans);
+    })
+  );
 };
 
 // Top level CLI argument parser/router
@@ -68,7 +70,9 @@ export const initCommand = async (): Promise<void> => {
     doLog(`Usage: paima-engine init ARG`);
     doLog(`Valid Arguments:`);
     doLog(`   sdk                        Initializes the SDK by itself.`);
-    doLog(`   template                   Provides an interactive interface for initializing a template.`);
+    doLog(
+      `   template                   Provides an interactive interface for initializing a template.`
+    );
     doLog(
       `   template [TEMPLATE_NAME]   Initializes the template if you're familiar with the direct template name (lower case).`
     );
@@ -142,7 +146,9 @@ const pickGameTemplate = async (templateArg: string): Promise<string> => {
   if (availableTemplates.includes(templateArg)) return templateArg;
 
   // Move the "generic" template to the first position if it exists
-  availableTemplates = availableTemplates.sort((a, b) => (a === 'generic' ? -1 : b === 'generic' ? 1 : 0));
+  availableTemplates = availableTemplates.sort((a, b) =>
+    a === 'generic' ? -1 : b === 'generic' ? 1 : 0
+  );
 
   doLog(`Please select one of the following templates (by number):`);
 
@@ -169,7 +175,11 @@ const pickGameTemplate = async (templateArg: string): Promise<string> => {
 
   // User template choosing
   const chosenTemplateIndex = parseInt(await userPrompt(``));
-  if (!isNaN(chosenTemplateIndex) && chosenTemplateIndex > 0 && chosenTemplateIndex <= availableTemplates.length) {
+  if (
+    !isNaN(chosenTemplateIndex) &&
+    chosenTemplateIndex > 0 &&
+    chosenTemplateIndex <= availableTemplates.length
+  ) {
     return availableTemplates[chosenTemplateIndex - 1];
   }
 
