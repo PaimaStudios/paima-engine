@@ -28,21 +28,24 @@
                   alt="Paima Studios Logo"
                 />
                 <div>
-                  <h1 style="color: white; font-size: 30px; text-align: center;">Paima Game Node Tester</h1>
-                  <div style="color: white; text-align: center;">Easily send manually crafted game inputs to your deployed L2 smart contract. (Ex. "c|T|1").</div>
-                  <div style="color: white; text-align: center;">If you run into issues, please read the docs included with Paima Engine.</div>
+                  <h1 style="color: white;font-size: 40px;text-align: center;font-weight: 800;">Paima Game Node Tester</h1>
+                  <div style="color: white;text-align: center;margin-top: 10px;">Easily send manually crafted game inputs to your deployed L2 smart contract. (Ex. "c|T|1").</div>
+                  <div style="color: white; text-align: center;">Your game node will pick these up and process them using your game logic automatically.</div>
                 </div>
                 
-                <form class="flex flex-col" style="margin-top: 40px;" name="paima-mw-commands" action="javascript:walletCommand()">
+                <form class="flex flex-col" style="margin-top: 25px;width: 70%;" name="paima-mw-commands" action="javascript:walletCommand()">
                   <input 
                   style="height: 40px; border-radius: 4px; padding: 4px;"
                   name="concise" type="text" value="" id="concise_id" />
                   <input 
-                    style="background-color: rgb(173, 173, 173); 
-                    cursor: pointer; 
+                    style="
+                    background-color: rgb(10 46 37);
+                    cursor: pointer;
                     margin-top: 20px;
-                    padding: 6px 10px 6px 10px; 
-                    border-radius: 4px;"
+                    padding: 6px 10px 6px 10px;
+                    border-radius: 4px;
+                    color: white;
+                    font-weight: 700;"
                   name="submit"  type="submit" value="Send Game Input" />
                 </form>
                 
