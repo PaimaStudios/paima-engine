@@ -3,7 +3,7 @@ import type { BlockTransactionString } from 'web3-eth';
 import web3UtilsPkg from 'web3-utils';
 
 import { AddressType, doLog, INNER_BATCH_DIVIDER, OUTER_BATCH_DIVIDER } from '@paima/utils';
-import type { SubmittedData } from '@paima/utils';
+import type { ChainDataExtensionDatum, SubmittedData } from '@paima/utils';
 import type { PaimaGameInteraction } from '@paima/utils/src/contract-types/PaimaL2Contract';
 
 import type { ValidatedSubmittedData } from './utils.js';
@@ -49,6 +49,28 @@ export async function extractSubmittedData(
 
   const unflattenedList = await Promise.all(events.map(eventMapper));
   return unflattenedList.flat();
+}
+
+export function groupCdeData(
+  ungroupedData: ChainDataExtensionDatum[]
+): ChainDataExtensionDatum[][] {
+  const result: ChainDataExtensionDatum[][] = [];
+  let latestBlockheight = -1;
+  let groupList: ChainDataExtensionDatum[] = [];
+  for (const datum of ungroupedData) {
+    if (datum.blockNumber !== latestBlockheight) {
+      if (groupList.length > 0) {
+        result.push(groupList);
+      }
+      groupList = [];
+      latestBlockheight = datum.blockNumber;
+    }
+    groupList.push(datum);
+  }
+  if (groupList.length > 0) {
+    result.push(groupList);
+  }
+  return result;
 }
 
 export async function processDataUnit(

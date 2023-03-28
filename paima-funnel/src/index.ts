@@ -7,11 +7,18 @@ import {
   initWeb3,
   validatePaimaL2ContractAddress,
 } from '@paima/utils';
-import type { ChainFunnel, ChainData, ChainDataExtension, PaimaL2Contract } from '@paima/utils';
+import type {
+  ChainFunnel,
+  ChainData,
+  ChainDataExtension,
+  ChainDataExtensionDatum,
+  PaimaL2Contract,
+} from '@paima/utils';
 import { loadChainDataExtensions } from '@paima/utils-backend';
 
-import { processBlock } from './reading.js';
+import { getAllCdeData, processBlock } from './reading.js';
 import { timeout } from './utils.js';
+import { groupCdeData } from './data-processing.js';
 
 const GET_BLOCK_NUMBER_TIMEOUT = 5000;
 
@@ -53,17 +60,32 @@ class PaimaFunnel {
         doLog(`#${fromBlock}-${toBlock}`);
       }
 
-      return await this.internalReadDataMulti(fromBlock, toBlock);
+      return await this.internalReadDataMulti(this.extensions, fromBlock, toBlock);
     } catch (err) {
       doLog(`[paima-funnel::readData] Exception occurred while reading blocks: ${err}`);
       return [];
     }
   };
 
+  public presyncRead = async (
+    fromBlock: number,
+    toBlock: number
+  ): Promise<ChainDataExtensionDatum[][]> => {
+    if (toBlock > ENV.START_BLOCKHEIGHT) {
+      toBlock = ENV.START_BLOCKHEIGHT;
+    }
+    if (fromBlock > toBlock) {
+      return [];
+    }
+
+    const data = await getAllCdeData(this.web3, this.extensions, fromBlock, toBlock);
+    return groupCdeData(data);
+  };
+
   // Will return [-1, -2] if the range is determined to be empty.
   // It should be enough to check that fromBlock >= 0,
   // but this will also fail a fromBlock <= toBlock check.
-  public adjustBlockHeightRange = async (
+  private adjustBlockHeightRange = async (
     firstBlockHeight: number,
     blockCount: number
   ): Promise<[number, number]> => {
@@ -90,7 +112,8 @@ class PaimaFunnel {
     }
   };
 
-  public internalReadDataMulti = async (
+  private internalReadDataMulti = async (
+    extensions: ChainDataExtension[],
     fromBlock: number,
     toBlock: number
   ): Promise<ChainData[]> => {
@@ -99,7 +122,7 @@ class PaimaFunnel {
     }
     const blockPromises: Promise<ChainData>[] = [];
     for (let i = fromBlock; i <= toBlock; i++) {
-      const block = processBlock(this.web3, this.paimaL2Contract, i);
+      const block = processBlock(this.web3, this.paimaL2Contract, extensions, i);
       const timeoutBlock = timeout(block, 5000);
       blockPromises.push(timeoutBlock);
     }
