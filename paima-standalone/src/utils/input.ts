@@ -192,6 +192,9 @@ const pickGameTemplate = async (templateArg: string): Promise<string> => {
       case 'rock-paper-scissors':
         displayName = 'Rock Paper Scissors (TypeScript FE)';
         break;
+      case 'open-world':
+        displayName = 'Open World (JavaScript FE)';
+        break;
       default:
         displayName = templateName;
     }
