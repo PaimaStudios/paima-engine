@@ -6,7 +6,7 @@ const myGrammar = `
 `;
 
 const parserCommands = {
-  join: {}
+  join: {},
 };
 
 describe('Test single commands', () => {

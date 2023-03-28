@@ -131,9 +131,7 @@ export class PaimaParser {
         // myCommandName = s|custom|named|parameters
         const parts = x.split('=').map(x => x.trim());
         if (parts.length !== 2) throw new Error('Incorrect parser format');
-        const c = parts[1]
-          .split('|')
-          .filter(x => !!x); // filter when pipe is at end e.g., "j|"
+        const c = parts[1].split('|').filter(x => !!x); // filter when pipe is at end e.g., "j|"
         const literal = c.shift();
         if (!literal) throw new Error('Missing literal');
         commandLiterals[parts[0]] = literal;
