@@ -1,6 +1,5 @@
 import type { IToken, Parser } from 'ebnf';
 import { Grammars } from 'ebnf';
-import { ENV } from '@paima/utils';
 
 //
 // This Parser converts PaimaLang:
@@ -132,7 +131,7 @@ export class PaimaParser {
         // myCommandName = s|custom|named|parameters
         const parts = x.split('=').map(x => x.trim());
         if (parts.length !== 2) throw new Error('Incorrect parser format');
-        const c = parts[1].split('|');
+        const c = parts[1].split('|').filter(x => !!x); // filter when pipe is at end e.g., "j|"
         const literal = c.shift();
         if (!literal) throw new Error('Missing literal');
         commandLiterals[parts[0]] = literal;
@@ -190,7 +189,9 @@ export class PaimaParser {
     return (keyName: string, input: string): number => {
       if (input == null) throw new Error(`${keyName} must be defined`);
       const n = parseInt(input, 10);
-      const BLOCKS_PER_MINUTE = 60 / ENV.BLOCK_TIME;
+      // We should use ENV.BLOCK_TIME instead of process.env.BLOCK_TIME
+      // Jest is failing with js modules.
+      const BLOCKS_PER_MINUTE = 60 / parseInt(process.env.BLOCK_TIME || '4', 0);
       const BLOCKS_PER_DAY = BLOCKS_PER_MINUTE * 60 * 24;
       if (n < BLOCKS_PER_MINUTE) throw new Error(`${keyName} is less then ${BLOCKS_PER_MINUTE}`);
       if (n > BLOCKS_PER_DAY) throw new Error(`${keyName} is greater then ${BLOCKS_PER_DAY}`);
