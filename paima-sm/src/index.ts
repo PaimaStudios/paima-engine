@@ -1,6 +1,7 @@
 import type { Pool } from 'pg';
 
 import { doLog, ENV, SCHEDULED_DATA_ADDRESS } from '@paima/utils';
+import type { ChainData, SubmittedData, ChainDataExtensionDatum } from '@paima/utils';
 import {
   tx,
   getConnection,
@@ -13,12 +14,15 @@ import {
   getLatestProcessedBlockHeight,
   getScheduledDataByBlockHeight,
   saveLastBlockHeight,
+  markPresyncBlockheightTouched,
+  markPresyncBlockheightProcessed,
+  getLatestProcessedPresyncBlockheight,
 } from '@paima/db';
 import type { GameStateTransitionFunction, GameStateMachineInitializer } from '@paima/db';
-import type { ChainData, SubmittedData } from '@paima/utils';
 import Prando from '@paima/prando';
 
 import { randomnessRouter } from './randomness.js';
+import { processCdeDatum } from './cde-processing.js';
 
 const SM: GameStateMachineInitializer = {
   initialize: (
@@ -36,6 +40,11 @@ const SM: GameStateMachineInitializer = {
         const blockHeight = b?.block_height ?? startBlockHeight ?? 0;
         return blockHeight;
       },
+      getPresyncBlockHeight: async (): Promise<number> => {
+        const [b] = await getLatestProcessedPresyncBlockheight.run(undefined, readonlyDBConn);
+        const blockHeight = b?.block_height ?? 0;
+        return blockHeight;
+      },
       initializeDatabase: async (force: boolean = false): Promise<boolean> => {
         return await initializePaimaTables(DBConn, force);
       },
@@ -44,6 +53,29 @@ const SM: GameStateMachineInitializer = {
       },
       getNewReadWriteDbConn: (): Pool => {
         return getConnection(databaseInfo);
+      },
+      presyncProcess: async (latestCdeData: ChainDataExtensionDatum[]): Promise<void> => {
+        if (latestCdeData.length === 0) {
+          return;
+        }
+        const blockHeight = latestCdeData[0].blockNumber;
+        await markPresyncBlockheightTouched.run({ block_height: blockHeight }, DBConn);
+        try {
+          await tx<void>(DBConn, async db => {
+            for (const datum of latestCdeData) {
+              if (datum.blockNumber !== blockHeight) {
+                doLog('[paima-sm] CDE data out of order detected!');
+              }
+              await processCdeDatum(DBConn, datum);
+            }
+            await markPresyncBlockheightProcessed.run({ block_height: blockHeight }, DBConn);
+          });
+        } catch (err) {
+          doLog(`[paima-sm] Database error: ${err}`);
+        }
+      },
+      markPresyncMilestone: async (blockHeight: number): Promise<void> => {
+        await markPresyncBlockheightProcessed.run({ block_height: blockHeight }, DBConn);
       },
       // Core function which triggers state transitions
       process: async (latestChainData: ChainData): Promise<void> => {
@@ -58,6 +90,12 @@ const SM: GameStateMachineInitializer = {
         );
         // Generate Prando object
         const randomnessGenerator = new Prando(seed);
+
+        const cdeDataLength = await processCdeData(
+          latestChainData.blockNumber,
+          latestChainData.extensionDatums,
+          DBConn
+        );
 
         // Fetch and execute scheduled input data
         const scheduledInputsLength = await processScheduledData(
@@ -78,9 +116,9 @@ const SM: GameStateMachineInitializer = {
         );
 
         // Extra logging
-        if (userInputsLength + scheduledInputsLength > 0)
+        if (cdeDataLength + userInputsLength + scheduledInputsLength > 0)
           doLog(
-            `Processed ${userInputsLength} user inputs and ${scheduledInputsLength} scheduled inputs in block #${latestChainData.blockNumber}`
+            `Processed ${userInputsLength} user inputs, ${scheduledInputsLength} scheduled inputs and ${cdeDataLength} CDE events in block #${latestChainData.blockNumber}`
           );
         // Commit finishing of processing to DB
         await blockHeightDone.run({ block_height: latestChainData.blockNumber }, DBConn);
@@ -88,6 +126,34 @@ const SM: GameStateMachineInitializer = {
     };
   },
 };
+
+async function processCdeData(
+  blockHeight: number,
+  cdeData: ChainDataExtensionDatum[] | undefined,
+  DBConn: Pool
+): Promise<number> {
+  if (!cdeData) {
+    return 0;
+  }
+  let count = 0;
+  try {
+    await tx<void>(DBConn, async db => {
+      for (const datum of cdeData) {
+        if (datum.blockNumber !== blockHeight) {
+          doLog('[paima-sm] CDE data out of order detected!');
+        }
+        if (await processCdeDatum(DBConn, datum)) {
+          count++;
+        }
+      }
+      await markPresyncBlockheightProcessed.run({ block_height: blockHeight }, DBConn);
+    });
+  } catch (err) {
+    doLog(`[paima-sm] Database error: ${err}`);
+    return 0;
+  }
+  return count;
+}
 
 // Process all of the scheduled data inputs by running each of them through the game STF,
 // saving the results to the DB, and deleting the schedule data all together in one postgres tx.
