@@ -99,7 +99,15 @@ import { Grammars } from 'ebnf';
 type ParserValues = string | boolean | number | null;
 type ParserCommandExec = (keyName: string, input: string) => ParserValues;
 
-export type ParserCommands = Record<string, Record<string, ParserValues | ParserCommandExec>>;
+type InputKeys<T> = keyof Omit<T, 'input'>;
+export type ParserRecord<T = { input: string }> = Record<
+  InputKeys<T>,
+  ParserValues | ParserCommandExec
+> & {
+  renameCommand?: string;
+};
+
+export type ParserCommands = Record<string, ParserRecord>;
 
 export class PaimaParser {
   private readonly grammar: string;
