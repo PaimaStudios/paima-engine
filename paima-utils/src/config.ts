@@ -62,6 +62,9 @@ export class ENV {
   static get DEFAULT_FUNNEL_GROUP_SIZE(): number {
     return parseInt(process.env.DEFAULT_FUNNEL_GROUP_SIZE || '100', 10);
   }
+  static get DEFAULT_PRESYNC_STEP_SIZE(): number {
+    return parseInt(process.env.DEFAULT_PRESYNC_STEP_SIZE || '1000', 10);
+  }
   static get SERVER_ONLY_MODE(): boolean {
     return process.env.SERVER_ONLY_MODE === 'true';
   }
