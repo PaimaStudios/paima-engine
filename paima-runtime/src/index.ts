@@ -149,6 +149,7 @@ async function startRuntime(
   const pollingPeriod = pollingRate * 1000;
   let loopCount = 0;
 
+  // Initialization:
   const initResult = await gameStateMachine.initializeDatabase(
     ENV.FORCE_INVALID_PAIMA_DB_TABLE_DELETION
   );
@@ -164,6 +165,39 @@ async function startRuntime(
     DataMigrations.setDBConnection(gameStateMachine.getNewReadWriteDbConn());
   }
 
+  // Presync:
+  const PRESYNC_START = 4502749; // TODO: determine from CDE table after initialization
+  const syncMark = await acquireLatestBlockHeight(gameStateMachine, pollingPeriod);
+  if (syncMark <= ENV.START_BLOCKHEIGHT + 1) {
+    let presyncBlockHeight = PRESYNC_START;
+    const presyncMark = await gameStateMachine.getPresyncBlockHeight();
+    if (presyncMark > 0) {
+      presyncBlockHeight = presyncMark;
+    }
+
+    while (run && presyncBlockHeight <= ENV.START_BLOCKHEIGHT) {
+      const upper = Math.min(
+        presyncBlockHeight + ENV.DEFAULT_PRESYNC_STEP_SIZE,
+        ENV.START_BLOCKHEIGHT
+      );
+      if (upper > presyncBlockHeight) {
+        doLog(`p${presyncBlockHeight}-${upper}`);
+      } else {
+        doLog(`p${presyncBlockHeight}`);
+      }
+      const cdeDataGroups = await chainFunnel.presyncRead(presyncBlockHeight, upper);
+      for (const group of cdeDataGroups) {
+        await gameStateMachine.presyncProcess(group);
+      }
+      await gameStateMachine.markPresyncMilestone(upper);
+      presyncBlockHeight = upper + 1;
+    }
+    doLog(`[paima-runtime] Presync finished at ${presyncBlockHeight}`);
+  } else {
+    doLog(`[paima-runtime] syncMark ${syncMark}`);
+  }
+
+  // Main sync:
   while (run) {
     loopCount++;
 
