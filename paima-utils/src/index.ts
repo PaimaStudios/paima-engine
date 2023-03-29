@@ -3,8 +3,10 @@ import type { AbiItem } from 'web3-utils';
 import pkg from 'web3-utils';
 import paimaL2ContractBuild from './artifacts/PaimaL2Contract';
 import erc20ContractBuild from './artifacts/ERC20Contract';
+import erc721ContractBuild from './artifacts/ERC721Contract';
 import type { PaimaL2Contract } from './contract-types/PaimaL2Contract';
 import type { ERC20Contract } from './contract-types/ERC20Contract';
+import type { ERC721Contract } from './contract-types/ERC721Contract';
 import { doLog, logError } from './logging.js';
 import type {
   ChainData,
@@ -35,7 +37,7 @@ export * from './types';
 
 export type { Web3 };
 export type { PaimaL2Contract };
-export type { ERC20Contract };
+export type { ERC20Contract, ERC721Contract };
 export {
   ChainFunnel,
   TsoaFunction,
@@ -105,6 +107,16 @@ export function getErc20Contract(address?: string, web3?: Web3): ERC20Contract {
     erc20ContractBuild.abi as AbiItem[],
     address
   ) as unknown as ERC20Contract;
+}
+
+export function getErc721Contract(address?: string, web3?: Web3): ERC721Contract {
+  if (web3 === undefined) {
+    web3 = new Web3();
+  }
+  return new web3.eth.Contract(
+    erc721ContractBuild.abi as AbiItem[],
+    address
+  ) as unknown as ERC721Contract;
 }
 
 export function validatePaimaL2ContractAddress(address: string): void {
