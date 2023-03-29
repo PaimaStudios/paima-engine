@@ -43,7 +43,7 @@ CREATE TABLE cde_erc20_data (
 
 CREATE TABLE cde_erc721_data (
   cde_id INTEGER NOT NULL,
-  token_id INTEGER NOT NULL,
+  token_id TEXT NOT NULL,
   nft_owner TEXT NOT NULL,
   PRIMARY KEY (cde_id, token_id)
 );

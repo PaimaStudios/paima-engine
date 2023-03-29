@@ -4,14 +4,14 @@ import { PreparedQuery } from '@pgtyped/query';
 /** 'CdeErc721GetOwner' parameters type */
 export interface ICdeErc721GetOwnerParams {
   cde_id: number | null | void;
-  token_id: number | null | void;
+  token_id: string | null | void;
 }
 
 /** 'CdeErc721GetOwner' return type */
 export interface ICdeErc721GetOwnerResult {
   cde_id: number;
   nft_owner: string;
-  token_id: number;
+  token_id: string;
 }
 
 /** 'CdeErc721GetOwner' query type */
@@ -37,7 +37,7 @@ export const cdeErc721GetOwner = new PreparedQuery<ICdeErc721GetOwnerParams,ICde
 export interface ICdeErc721InsertOwnerParams {
   cde_id: number;
   nft_owner: string;
-  token_id: number;
+  token_id: string;
 }
 
 /** 'CdeErc721InsertOwner' return type */
@@ -72,7 +72,7 @@ export const cdeErc721InsertOwner = new PreparedQuery<ICdeErc721InsertOwnerParam
 export interface ICdeErc721UpdateOwnerParams {
   cde_id: number;
   nft_owner: string;
-  token_id: number;
+  token_id: string;
 }
 
 /** 'CdeErc721UpdateOwner' return type */

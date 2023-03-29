@@ -145,7 +145,7 @@ const TABLE_DATA_CDE_ERC20: TableData = {
 const QUERY_CREATE_TABLE_CDE_ERC721 = `
 CREATE TABLE cde_erc721_data (
   cde_id INTEGER NOT NULL,
-  token_id INTEGER NOT NULL,
+  token_id TEXT NOT NULL,
   nft_owner TEXT NOT NULL,
   PRIMARY KEY (cde_id, token_id)
 );
@@ -156,7 +156,7 @@ const TABLE_DATA_CDE_ERC721: TableData = {
   primaryKeyColumns: ['cde_id', 'token_id'],
   columnData: packTuples([
     ['cde_id', 'integer', 'NO', ''],
-    ['token_id', 'integer', 'NO', ''],
+    ['token_id', 'text', 'NO', ''],
     ['nft_owner', 'text', 'NO', ''],
   ]),
   serialColumns: [],

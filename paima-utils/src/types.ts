@@ -59,7 +59,7 @@ interface ChainDataExtensionErc20Payload {
 interface ChainDataExtensionErc721Payload {
   from: string;
   to: string;
-  tokenId: number;
+  tokenId: string;
 }
 
 type ChainDataExtensionPayload = ChainDataExtensionErc20Payload | ChainDataExtensionErc721Payload;
