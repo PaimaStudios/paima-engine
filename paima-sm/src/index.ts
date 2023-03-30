@@ -45,6 +45,14 @@ const SM: GameStateMachineInitializer = {
         const blockHeight = b?.block_height ?? 0;
         return blockHeight;
       },
+      presyncStarted: async (): Promise<boolean> => {
+        const res = await getLatestProcessedPresyncBlockheight.run(undefined, readonlyDBConn);
+        return res.length > 0;
+      },
+      syncStarted: async (): Promise<boolean> => {
+        const res = await getLatestProcessedBlockHeight.run(undefined, readonlyDBConn);
+        return res.length > 0;
+      },
       initializeDatabase: async (force: boolean = false): Promise<boolean> => {
         return await initializePaimaTables(DBConn, force);
       },

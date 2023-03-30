@@ -34,6 +34,8 @@ export interface GameStateMachineInitializer {
 
 export interface GameStateMachine {
   initializeDatabase: (force: boolean) => Promise<boolean>;
+  presyncStarted: () => Promise<boolean>;
+  syncStarted: () => Promise<boolean>;
   latestProcessedBlockHeight: () => Promise<number>;
   getPresyncBlockHeight: () => Promise<number>;
   getReadonlyDbConn: () => Pool;
