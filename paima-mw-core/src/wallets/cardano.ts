@@ -149,11 +149,14 @@ function cardanoWalletModeToName(walletMode: WalletMode): string {
 
 export async function cardanoLoginWrapper(walletMode: WalletMode): Promise<Result<Wallet>> {
   const errorFxn = buildEndpointErrorFxn('cardanoLoginWrapper');
+  console.log('[cardanoLoginWrapper] window.cardano:', (window as any).cardano);
 
   const walletName = cardanoWalletModeToName(walletMode);
   if (!walletName) {
     return errorFxn(PaimaMiddlewareErrorCode.CARDANO_WALLET_NOT_INSTALLED);
   }
+
+  console.log(`[cardanoLoginWrapper] Attempting to log into ${walletName}`);
 
   if (typeof (window as any).cardano === 'undefined') {
     return errorFxn(
@@ -166,6 +169,7 @@ export async function cardanoLoginWrapper(walletMode: WalletMode): Promise<Resul
   try {
     await cardanoLoginSpecific(walletName);
   } catch (err) {
+    console.log(`[cardanoLoginWrapper] Error while logging into wallet ${walletName}`);
     return errorFxn(PaimaMiddlewareErrorCode.CARDANO_LOGIN, err);
     // TODO: improve error differentiation
   }
