@@ -20,7 +20,7 @@ export type ConciseBuilder = {
   concisePrefix: string;
   conciseValues: ConciseValue[];
 
-  setPrefix: (prefix: UTF8String) => void;
+  setPrefix: (prefix: UTF8String, implicitUserAddress?: boolean) => void;
   addValue: (value: ConciseValue) => void;
   build: () => UTF8String;
 
@@ -51,6 +51,7 @@ export type ConciseConsumer = {
 };
 
 export type ConciseConsumerInternals = {
+  conciseImplicitUser: boolean;
   conciseInput: string;
   concisePrefix: string;
   conciseValues: ConciseValue[];
