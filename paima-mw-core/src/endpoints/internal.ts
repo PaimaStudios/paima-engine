@@ -1,13 +1,10 @@
 import type { URI } from '@paima/utils';
 import { buildEndpointErrorFxn, PaimaMiddlewareErrorCode } from '../errors';
 import { cardanoLoginAny } from '../wallets/cardano';
-import { rawWalletLogin } from '../wallets/metamask';
 import { connectWallet as connectTruffleWallet } from '../wallets/truffle';
 import {
   getActiveAddress,
   getCardanoAddress,
-  getEthAddress,
-  getGameVersion,
   getPostingInfo,
   getTruffleAddress,
   setAutomaticMode,
@@ -21,8 +18,6 @@ import type { PostingInfo, PostingModeSwitchResult, Result, Wallet } from '../ty
 import { specificWalletLogin, stringToWalletMode } from '../wallets/wallets';
 
 export async function userWalletLoginWithoutChecks(loginType: string): Promise<Result<Wallet>> {
-  const errorFxn = buildEndpointErrorFxn('userWalletLoginWithoutChecks');
-
   const walletMode = stringToWalletMode(loginType);
   return await specificWalletLogin(walletMode);
 }
