@@ -4,6 +4,7 @@ import { ChainDataExtensionType } from '@paima/utils';
 import type { ChainDataExtensionDatum } from '@paima/utils';
 
 import processErc20Datum from './cde-erc20';
+import processErc721Datum from './cde-erc721';
 
 type ProcessCdeDatumFunction = (
   DBConn: Pool,
@@ -22,6 +23,8 @@ function selectCdeProcessingFunction(cdeType: ChainDataExtensionType): ProcessCd
   switch (cdeType) {
     case ChainDataExtensionType.ERC20:
       return processErc20Datum;
+    case ChainDataExtensionType.ERC721:
+      return processErc721Datum;
     default:
       throw new Error(`[paima-sm] Unknown CDE type: ${cdeType}`);
   }
