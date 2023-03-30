@@ -20,7 +20,7 @@
       "packaged/documentation/**/*"
     ],
     "targets": [
-      "node18-linux",
+      "node18-linux-x64",
       "node18-macos-x64"
     ],
     "outputPath": "packaged"
@@ -32,7 +32,7 @@
     "install-binaries": "./scripts/unpack.sh",
     "build:dev-binary": "npm run build:dev-binary-macos && npm run build:dev-binary-linux",
     "build:dev-binary-macos": "npm run build && pkg-dev packaged/engineCorePacked.js --output packaged/@standalone/dev-paima-engine-macos -t node18-macos-x64 -b --options \"inspect,experimental-specifier-resolution=node,no-warnings\" --config package.json",
-    "build:dev-binary-linux": "npm run build && pkg-dev packaged/engineCorePacked.js --output packaged/@standalone/dev-paima-engine-linux -t node18-linux -b --options \"inspect,experimental-specifier-resolution=node,no-warnings\" --config package.json"
+    "build:dev-binary-linux": "npm run build && pkg-dev packaged/engineCorePacked.js --output packaged/@standalone/dev-paima-engine-linux -t node18-linux-x64 -b --options \"inspect,experimental-specifier-resolution=node,no-warnings\" --config package.json"
   },
   "devDependencies": {
     "cross-env": "^7.0.3",
