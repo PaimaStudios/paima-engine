@@ -9,6 +9,7 @@ import { extractSubmittedData } from './data-processing.js';
 import { ChainDataExtensionType } from '@paima/utils/src/constants.js';
 
 import getCdeErc20Data from './cde-erc20';
+import getCdeErc721Data from './cde-erc721';
 
 type GetCdeDataFunction = (
   web3: Web3,
@@ -86,6 +87,8 @@ function getGetCdeDataFunction(cdeType: ChainDataExtensionType): GetCdeDataFunct
   switch (cdeType) {
     case ChainDataExtensionType.ERC20:
       return getCdeErc20Data;
+    case ChainDataExtensionType.ERC721:
+      return getCdeErc721Data;
     default:
       throw new Error('[funnel] Invalid CDE type!');
   }
