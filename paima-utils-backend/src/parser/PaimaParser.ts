@@ -10,7 +10,7 @@ import { Grammars } from 'ebnf';
 // closeLobby          = cs|*lobbyID
 // moves               = s|*lobbyID|roundNumber|move_rps
 // zombieScheduledData = z|*lobbyID
-// userScheduledData   = u|*user|result
+// userScheduledData   = @u|result
 // sample              = x|sampleParam
 // `
 // ----------------------------------------
@@ -42,7 +42,7 @@ import { Grammars } from 'ebnf';
 // A special parameterName "renameCommand" is used for RENAMING the command in the output.
 // Because PaimaLang doesn't allow duplicated commandNames
 //
-// There are some reserved parameterName: asterisk | pipe | syntax
+// There are some reserved parameterName: asterisk | pipe | syntax | at
 //
 // PaimaParser includes Parsers for common types, e.g., Numbers, Booleans, WalletAddress, etc.
 // Or accepts inlined custom functions with the signature (key: string, value: string) => string
@@ -142,7 +142,12 @@ export class PaimaParser {
         const c = parts[1].split('|').filter(x => !!x); // filter when pipe is at end e.g., "j|"
         const literal = c.shift();
         if (!literal) throw new Error('Missing literal');
-        commandLiterals[parts[0]] = literal;
+        const hasUserAt = literal.match(/^@(\w+)/);
+        if (hasUserAt) {
+          commandLiterals[parts[0]] = `at "${hasUserAt[1]}"`;
+        } else {
+          commandLiterals[parts[0]] = `"${literal}"`;
+        }
         commandParameters[parts[0]] = c;
       })
       .join('');
@@ -151,7 +156,7 @@ export class PaimaParser {
     const uniqueParameters: Set<string> = new Set();
     grammar = `syntax ::= ${Object.keys(commandParameters).join(' | ')}\n`;
     Object.keys(commandParameters).forEach(key => {
-      grammar += `${key} ::= "${commandLiterals[key]}" pipe ${commandParameters[key]
+      grammar += `${key} ::= ${commandLiterals[key]} pipe ${commandParameters[key]
         .map(parameter => {
           // Check for asterisks and optional question marks
           if (parameter.match(/\*/)) {
@@ -172,7 +177,7 @@ export class PaimaParser {
     });
 
     // Add standard - common expressions to parse * and |
-    grammar += 'asterisk  ::= "*"\npipe ::= "|" \n';
+    grammar += 'asterisk  ::= "*"\npipe ::= "|" \nat ::= "@"\n';
 
     // Add parameters back-into grammar
     [...uniqueParameters].forEach(w => {
