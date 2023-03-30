@@ -1,8 +1,6 @@
 import type {
   AddressType,
-  ContractAddress,
   Hash,
-  URI,
   WalletAddress,
   UserSignature,
   InputDataString,
@@ -56,20 +54,11 @@ export interface FailedResult {
   errorCode: number;
 }
 
-export interface RoundEnd {
-  blocks: number;
-  seconds: number;
-}
-
 export type QueryValue = string | number | boolean;
 export type QueryOptions = Record<string, QueryValue>;
 
 export type Result<T> = SuccessfulResult<T> | FailedResult;
 export type OldResult = SuccessfulResultMessage | FailedResult;
-
-export type MapName = 'jungle' | 'ocean';
-
-export type UserAnimal = 'piranha' | 'gorilla' | 'anaconda' | 'jaguar' | 'macaw' | 'sloth';
 
 export interface Wallet {
   walletAddress: WalletAddress;
