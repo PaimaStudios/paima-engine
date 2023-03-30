@@ -51,6 +51,7 @@ const preParse = (input: string, version: EncodingVersion): ConciseConsumerInter
   let conciseValues: ConciseValue[] = [];
   let concisePrefix = '';
   let conciseInput = '';
+  let conciseImplicitUser = false;
 
   if (version === EncodingVersion.EMPTY) {
     return getEmptyInternals();
@@ -62,11 +63,18 @@ const preParse = (input: string, version: EncodingVersion): ConciseConsumerInter
     }
 
     const [inputPrefix, ...stringValues] = conciseInput.split(separator);
-    concisePrefix = inputPrefix;
+    const hasImplicitUser = inputPrefix.match(/^@(\w+)/);
+    if (hasImplicitUser) {
+      conciseImplicitUser = true;
+      concisePrefix = hasImplicitUser[1];
+    } else {
+      concisePrefix = inputPrefix;
+    }
     conciseValues = stringValues.map(toConciseValue);
   }
 
   return {
+    conciseImplicitUser,
     conciseValues,
     concisePrefix,
     conciseInput,
@@ -75,6 +83,7 @@ const preParse = (input: string, version: EncodingVersion): ConciseConsumerInter
 
 const getEmptyInternals = (): ConciseConsumerInternals => {
   return {
+    conciseImplicitUser: false,
     conciseValues: [],
     concisePrefix: '',
     conciseInput: '',

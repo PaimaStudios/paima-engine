@@ -8,6 +8,8 @@ closeLobby          = cs|*lobbyID
 moves               = s|*lobbyID|roundNumber|move_rps
 zombieScheduledData = z|*lobbyID
 userScheduledData   = u|*user|result
+userAlt             = @u|result
+
 `;
 
 const parserCommands = {
@@ -35,6 +37,10 @@ const parserCommands = {
   userScheduledData: {
     renameCommand: 'scheduledData',
     user: PaimaParser.WalletAddress(),
+    result: PaimaParser.RegexParser(/^[w|t|l]$/),
+  },
+  userAlt: {
+    renameCommand: 'scheduledData',
     result: PaimaParser.RegexParser(/^[w|t|l]$/),
   },
 };
@@ -115,5 +121,23 @@ describe('Test if parsed', () => {
     ['u|*0x1234|w', true],
     ['u|*0xabcd|t', true],
     ['u|*0x0000|l', true],
+
+    ['@u|1234|w', false],
+    ['@u|*0x1234|M', false],
+    ['@u|*0x1234|', false],
+    ['@u|0x1234|w', false],
+    ['@u|0xabcd|t', false],
+    ['@u|0x0000|l', false],
+    ['@u|0x123m|w', false],
+    ['@u|*0x1234|w', false],
+    ['@u|*0xabcd|t', false],
+    ['@u|*0x0000|l', false],
+
+    ['@u|W', false],
+    ['@u|M', false],
+    ['@u|', false],
+    ['@u|w', false],
+    ['@u|t', true],
+    ['@u|l', true],
   ]);
 });

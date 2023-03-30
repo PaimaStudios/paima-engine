@@ -44,11 +44,11 @@ const initialize = (input?: InputString, version = EncodingVersion.V1): ConciseB
     initialConciseInput,
     concisePrefix,
     conciseValues,
-    setPrefix(value: string): void {
+    setPrefix(value: string, implicitUserAddress = false): void {
       if (!value) {
         throw new Error("Can't use empty value as prefix in concise builder");
       }
-      this.concisePrefix = value;
+      this.concisePrefix = (implicitUserAddress ? '@' : '') + value;
     },
     addValue(value: ConciseValue): void {
       if (!validateString(value.value)) {
