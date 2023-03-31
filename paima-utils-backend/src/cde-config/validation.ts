@@ -13,6 +13,7 @@ export async function validatePersistentCdeConfig(
   if (persistentConfig.length === 0) {
     if (smStarted) {
       return false;
+      // TODO: accept if latest processed blockheight is lower than the lowest CDE start blockheight?
     }
 
     return await storeCdeConfig(config, DBConn);
@@ -47,6 +48,7 @@ async function storeCdeConfig(config: ChainDataExtension[], DBConn: Pool): Promi
           cde_type: cde.cdeType,
           contract_address: cde.contractAddress,
           start_blockheight: cde.startBlockHeight,
+          scheduled_prefix: cde.initializationPrefix,
         },
         DBConn
       );

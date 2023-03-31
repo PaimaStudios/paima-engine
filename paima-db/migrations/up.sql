@@ -31,7 +31,8 @@ CREATE TABLE chain_data_extensions (
   cde_id INTEGER PRIMARY KEY,
   cde_type INTEGER NOT NULL,
   contract_address TEXT NOT NULL,
-  start_blockheight INTEGER NOT NULL
+  start_blockheight INTEGER NOT NULL,
+  scheduled_prefix TEXT
 );
 
 CREATE TABLE cde_erc20_data (
