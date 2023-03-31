@@ -1,8 +1,14 @@
 import type { Pool } from 'pg';
 
-import { ChainDataExtensionType, doLog } from '@paima/utils';
-import type { ChainDataExtensionDatum } from '@paima/utils';
-import { cdeErc721GetOwner, cdeErc721InsertOwner, cdeErc721UpdateOwner } from '@paima/db';
+import { ChainDataExtensionType, doLog, ENV } from '@paima/utils';
+import type { ChainDataExtensionDatum, ChainDataExtensionErc721Datum } from '@paima/utils';
+import {
+  cdeErc721GetOwner,
+  cdeErc721InsertOwner,
+  cdeErc721UpdateOwner,
+  getSpecificChainDataExtension,
+  newScheduledData,
+} from '@paima/db';
 
 export default async function processErc721Datum(
   DBConn: Pool,
@@ -22,11 +28,43 @@ export default async function processErc721Datum(
       await cdeErc721InsertOwner.run({ cde_id: cdeId, token_id: tokenId, nft_owner: to }, DBConn);
     }
 
-    // TODO: if from is 0, mint event -- schedule input (need to know what blockheight to schedule it for -- can be inferred from blockheight)
+    if (from.match(/^0x0+$/g)) {
+      // Mint event:
+      await scheduleMintInput(DBConn, cdeDatum);
+    }
   } catch (err) {
     doLog(`[paima-sm] error while processing erc721 datum: ${err}`);
     return false;
   }
 
   return true;
+}
+
+async function scheduleMintInput(
+  DBConn: Pool,
+  cdeDatum: ChainDataExtensionErc721Datum
+): Promise<void> {
+  const result = await getSpecificChainDataExtension.run({ cde_id: cdeDatum.cdeId }, DBConn);
+  if (result.length === 0) {
+    doLog(`[paima-sm] encountered CDE datum with invalid cde_id: ${cdeDatum.cdeId}`);
+    return;
+  }
+
+  const [prefix, address, tokenId] = [
+    result[0].scheduled_prefix,
+    result[0].contract_address,
+    cdeDatum.payload.tokenId,
+  ];
+
+  if (!prefix) {
+    return;
+  }
+
+  await newScheduledData.run(
+    {
+      block_height: Math.max(cdeDatum.blockNumber, ENV.START_BLOCKHEIGHT + 1),
+      input_data: `${prefix}|${address}|${tokenId}`, // TODO: concise builder?
+    },
+    DBConn
+  );
 }
