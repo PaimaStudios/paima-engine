@@ -247,7 +247,9 @@ export class PaimaParser {
   }
 
   public static WalletAddress(): ParserCommandExec {
-    return PaimaParser.RegexParser(/^[a-zA-Z0-9]+$/);
+    return PaimaParser.RegexParser(/^[a-zA-Z0-9_]+$/);
+  }
+
   }
 
   private log(message: string): void {
