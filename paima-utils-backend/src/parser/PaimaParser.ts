@@ -250,6 +250,17 @@ export class PaimaParser {
     return PaimaParser.RegexParser(/^[a-zA-Z0-9_]+$/);
   }
 
+  public static EnumParser(
+    values: readonly string[],
+    transform?: (value: string) => string
+  ): ParserCommandExec {
+    return (keyName: string, input: string): string => {
+      if (input == null) throw new Error(`${keyName} must be defined`);
+      if (!values.includes(input)) {
+        throw new Error(`${input} not found in provided list of possible values`);
+      }
+      return transform ? transform(input) : input;
+    };
   }
 
   private log(message: string): void {
