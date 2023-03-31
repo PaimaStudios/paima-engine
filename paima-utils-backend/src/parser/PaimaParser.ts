@@ -212,13 +212,13 @@ export class PaimaParser {
     };
   }
 
-  public static NumberParser(min: number, max: number): ParserCommandExec {
+  public static NumberParser(min?: number, max?: number): ParserCommandExec {
     return (keyName: string, input: string): number => {
       if (input == null) throw new Error(`${keyName} must be defined`);
       const n = parseInt(input, 10);
       if (isNaN(n)) throw new Error(`${keyName} not a number`);
-      if (n < min) throw new Error(`${keyName} must be greater than ${min}`);
-      if (n > max) throw new Error(`${keyName} must be less than ${max}`);
+      if (min != undefined && n < min) throw new Error(`${keyName} must be greater than ${min}`);
+      if (max != undefined && n > max) throw new Error(`${keyName} must be less than ${max}`);
       return n;
     };
   }
