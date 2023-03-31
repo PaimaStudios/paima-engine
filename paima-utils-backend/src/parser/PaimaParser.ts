@@ -212,13 +212,13 @@ export class PaimaParser {
     };
   }
 
-  public static NumberParser(min: number, max: number): ParserCommandExec {
+  public static NumberParser(min?: number, max?: number): ParserCommandExec {
     return (keyName: string, input: string): number => {
       if (input == null) throw new Error(`${keyName} must be defined`);
       const n = parseInt(input, 10);
       if (isNaN(n)) throw new Error(`${keyName} not a number`);
-      if (n < min) throw new Error(`${keyName} must be greater than ${min}`);
-      if (n > max) throw new Error(`${keyName} must be less than ${max}`);
+      if (min != undefined && n < min) throw new Error(`${keyName} must be greater than ${min}`);
+      if (max != undefined && n > max) throw new Error(`${keyName} must be less than ${max}`);
       return n;
     };
   }
@@ -247,7 +247,20 @@ export class PaimaParser {
   }
 
   public static WalletAddress(): ParserCommandExec {
-    return PaimaParser.RegexParser(/^[a-zA-Z0-9]+$/);
+    return PaimaParser.RegexParser(/^[a-zA-Z0-9_]+$/);
+  }
+
+  public static EnumParser(
+    values: readonly string[],
+    transform?: (value: string) => string
+  ): ParserCommandExec {
+    return (keyName: string, input: string): string => {
+      if (input == null) throw new Error(`${keyName} must be defined`);
+      if (!values.includes(input)) {
+        throw new Error(`${input} not found in provided list of possible values`);
+      }
+      return transform ? transform(input) : input;
+    };
   }
 
   private log(message: string): void {
