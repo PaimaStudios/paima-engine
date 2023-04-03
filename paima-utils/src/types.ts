@@ -42,6 +42,12 @@ export interface SubmittedData {
 }
 export type SubmittedChainData = SubmittedData;
 
+export interface BlockData {
+  timestamp: number | string;
+  blockHash: string;
+  blockNumber: number;
+}
+
 export interface ChainData {
   timestamp: number | string;
   blockHash: string;

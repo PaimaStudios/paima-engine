@@ -1,7 +1,12 @@
 import type Web3 from 'web3';
 
-import type { InstantiatedChainDataExtension, PaimaL2Contract, SubmittedData } from '@paima/utils';
-import type { ChainData } from '@paima/utils';
+import type {
+  BlockData,
+  ChainData,
+  InstantiatedChainDataExtension,
+  PaimaL2Contract,
+  SubmittedData,
+} from '@paima/utils';
 import { doLog } from '@paima/utils';
 import type { PaimaGameInteraction } from '@paima/utils/src/contract-types/PaimaL2Contract';
 
@@ -15,16 +20,14 @@ export async function processBlock(
   blockNumber: number
 ): Promise<ChainData> {
   try {
-    const [block, submittedData, cdeData] = await Promise.all([
-      web3.eth.getBlock(blockNumber),
+    const [blockData, submittedData, cdeData] = await Promise.all([
+      getBlockData(web3, blockNumber),
       getSubmittedData(web3, paimaL2Contract, blockNumber, blockNumber),
       getAllCdeData(web3, extensions, blockNumber, blockNumber),
     ]);
 
     return {
-      timestamp: block.timestamp,
-      blockHash: block.hash,
-      blockNumber: block.number,
+      ...blockData,
       submittedData,
       extensionDatums: cdeData.flat(),
     };
@@ -32,6 +35,15 @@ export async function processBlock(
     doLog(`[funnel::processBlock] at ${blockNumber} caught ${err}`);
     throw err;
   }
+}
+
+export async function getBlockData(web3: Web3, blockNumber: number): Promise<BlockData> {
+  const block = await web3.eth.getBlock(blockNumber);
+  return {
+    timestamp: block.timestamp,
+    blockHash: block.hash,
+    blockNumber: block.number,
+  };
 }
 
 export async function getSubmittedData(
