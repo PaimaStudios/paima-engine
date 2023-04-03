@@ -1,5 +1,4 @@
 import type Web3 from 'web3';
-import type { BlockTransactionString } from 'web3-eth';
 import web3UtilsPkg from 'web3-utils';
 
 import { AddressType, doLog, INNER_BATCH_DIVIDER, OUTER_BATCH_DIVIDER } from '@paima/utils';
@@ -29,7 +28,6 @@ function decodeEventData(eventData: string): string {
 
 export async function extractSubmittedData(
   web3: Web3,
-  block: BlockTransactionString,
   events: PaimaGameInteraction[]
 ): Promise<SubmittedData[]> {
   const eventMapper = (e: PaimaGameInteraction): Promise<SubmittedData[]> => {
@@ -43,7 +41,7 @@ export async function extractSubmittedData(
         suppliedValue: e.returnValues.value,
         scheduled: false,
       },
-      block.number
+      e.blockNumber
     );
   };
 

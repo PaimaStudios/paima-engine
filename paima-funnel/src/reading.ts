@@ -33,7 +33,7 @@ export async function processBlock(
       timestamp: block.timestamp,
       blockHash: block.hash,
       blockNumber: block.number,
-      submittedData: await extractSubmittedData(web3, block, events),
+      submittedData: await extractSubmittedData(web3, events),
       extensionDatums: cdeData.flat(),
     };
   } catch (err) {
