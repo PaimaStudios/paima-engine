@@ -2,6 +2,7 @@ import type { ChainData, ChainFunnel } from '@paima/utils';
 import { doLog, logError, ENV } from '@paima/utils';
 import type { GameStateMachine, PaimaRuntimeInitializer } from '@paima/db';
 import { DataMigrations } from '@paima/db';
+import { getEarliestStartBlockheight, validatePersistentCdeConfig } from '@paima/utils-backend';
 import process from 'process';
 import { server, startServer } from './server.js';
 import { initSnapshots, snapshotIfTime } from './snapshots.js';
@@ -149,12 +150,25 @@ async function startRuntime(
   const pollingPeriod = pollingRate * 1000;
   let loopCount = 0;
 
-  // Initialization:
+  // DB initialization:
   const initResult = await gameStateMachine.initializeDatabase(
     ENV.FORCE_INVALID_PAIMA_DB_TABLE_DELETION
   );
   if (!initResult) {
     doLog('[paima-runtime] Unable to initialize DB! Shutting down...');
+    run = false;
+  }
+
+  // CDE config initialization:
+  const smStarted =
+    (await gameStateMachine.presyncStarted()) || (await gameStateMachine.syncStarted());
+  const cdeResult = await validatePersistentCdeConfig(
+    chainFunnel.extensions,
+    gameStateMachine.getNewReadWriteDbConn(),
+    smStarted
+  );
+  if (!cdeResult) {
+    doLog('[paima-runtime] Invalid CDE configuration! Shutting down...');
     run = false;
   }
 
@@ -166,18 +180,20 @@ async function startRuntime(
   }
 
   // Presync:
-  const PRESYNC_START = 4502749; // TODO: determine from CDE table after initialization
+  const earliestCdeSbh = getEarliestStartBlockheight(chainFunnel.extensions);
+  const presyncStart = earliestCdeSbh > 0 ? earliestCdeSbh : ENV.START_BLOCKHEIGHT + 1;
   const syncMark = await acquireLatestBlockHeight(gameStateMachine, pollingPeriod);
-  if (syncMark <= ENV.START_BLOCKHEIGHT + 1) {
-    let presyncBlockHeight = PRESYNC_START;
+
+  if (syncMark <= ENV.START_BLOCKHEIGHT + 1 && presyncStart <= ENV.START_BLOCKHEIGHT) {
+    let presyncBlockHeight = presyncStart;
     const presyncMark = await gameStateMachine.getPresyncBlockHeight();
     if (presyncMark > 0) {
-      presyncBlockHeight = presyncMark;
+      presyncBlockHeight = presyncMark + 1;
     }
 
     while (run && presyncBlockHeight <= ENV.START_BLOCKHEIGHT) {
       const upper = Math.min(
-        presyncBlockHeight + ENV.DEFAULT_PRESYNC_STEP_SIZE,
+        presyncBlockHeight + ENV.DEFAULT_PRESYNC_STEP_SIZE - 1,
         ENV.START_BLOCKHEIGHT
       );
       if (upper > presyncBlockHeight) {
@@ -185,16 +201,15 @@ async function startRuntime(
       } else {
         doLog(`p${presyncBlockHeight}`);
       }
-      const cdeDataGroups = await chainFunnel.presyncRead(presyncBlockHeight, upper);
-      for (const group of cdeDataGroups) {
-        await gameStateMachine.presyncProcess(group);
+      const latestPresyncDataList = await chainFunnel.readPresyncData(presyncBlockHeight, upper);
+      for (const presyncData of latestPresyncDataList) {
+        await gameStateMachine.presyncProcess(presyncData);
       }
-      await gameStateMachine.markPresyncMilestone(upper);
       presyncBlockHeight = upper + 1;
     }
     doLog(`[paima-runtime] Presync finished at ${presyncBlockHeight}`);
   } else {
-    doLog(`[paima-runtime] syncMark ${syncMark}`);
+    doLog(`[paima-runtime] Skipping presync due to syncMark ${syncMark}`);
   }
 
   // Main sync:
