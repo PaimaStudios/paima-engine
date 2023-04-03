@@ -42,7 +42,7 @@ import { Grammars } from 'ebnf';
 // A special parameterName "renameCommand" is used for RENAMING the command in the output.
 // Because PaimaLang doesn't allow duplicated commandNames
 //
-// There are some reserved parameterName: asterisk | pipe | syntax | at
+// There are some reserved parameterName: asterisk | pipe | syntax | at | char
 //
 // PaimaParser includes Parsers for common types, e.g., Numbers, Booleans, WalletAddress, etc.
 // Or accepts inlined custom functions with the signature (key: string, value: string) => string
@@ -97,7 +97,7 @@ import { Grammars } from 'ebnf';
 //  will output: { command: sample, args : { sampleParam: 'helloWorld' } }
 //
 type ParserValues = string | boolean | number | null;
-type ParserCommandExec = (keyName: string, input: string) => ParserValues;
+type ParserCommandExec = (keyName: string, input: string) => ParserValues | ParserValues[];
 
 type InputKeys<T> = keyof Omit<T, 'input'>;
 export type ParserRecord<T = { input: string }> = Record<
@@ -177,15 +177,32 @@ export class PaimaParser {
     });
 
     // Add standard - common expressions to parse * and |
-    grammar += 'asterisk  ::= "*"\npipe ::= "|" \nat ::= "@"\n';
+    grammar += `
+asterisk  ::= "*"
+pipe ::= "|" 
+at ::= "@"
+char ::= [a-zA-Z0-9,]
+`;
 
     // Add parameters back-into grammar
     [...uniqueParameters].forEach(w => {
-      grammar += `${w} ::= [a-zA-Z0-9]* \n`;
+      grammar += `${w} ::= char* \n`;
     });
 
     this.log(`Parser Syntax: \n----------------\n${grammar}\n----------------`);
     return grammar;
+  }
+
+  public static ArrayParser<T extends ParserValues>(iter: {
+    item: ParserCommandExec;
+  }): ParserCommandExec {
+    return (keyName: string, input: string): T[] => {
+      if (input == null) return [];
+      const parts: ParserValues[] = (input.split(',') || []).map(
+        (x, index) => iter.item(`${keyName}-${index}`, x) as ParserValues
+      );
+      return parts as any;
+    };
   }
 
   public static TrueFalseParser(defaultValue?: boolean): ParserCommandExec {
@@ -270,7 +287,10 @@ export class PaimaParser {
     }
   }
 
-  start(sentence: string): { command: string; args: Record<string, ParserValues> } {
+  start(sentence: string): {
+    command: string;
+    args: Record<string, ParserValues | ParserValues[]>;
+  } {
     const parseTree: IToken = this.parser.getAST(sentence);
 
     if (!parseTree) {
@@ -283,7 +303,7 @@ export class PaimaParser {
 
     const interpreter: Record<string, ParserValues | ParserCommandExec> =
       this.commands[parseTree.children[0].type];
-    const results: Record<string, ParserValues> = {};
+    const results: Record<string, ParserValues | ParserValues[]> = {};
     Object.keys(interpreter).forEach((key: string) => {
       const parserCommand: ParserValues | ParserCommandExec = interpreter[key];
       if (parserCommand && typeof parserCommand === 'function') {
