@@ -68,11 +68,9 @@ const SM: GameStateMachineInitializer = {
       getNewReadWriteDbConn: (): Pool => {
         return getConnection(databaseInfo);
       },
-      presyncProcess: async (
-        extensions: ChainDataExtension[],
-        latestCdeData: PresyncDataUnit
-      ): Promise<void> => {
-        const cdeArrayIndices = extensions.map(_ => 0);
+      presyncProcess: async (latestCdeData: PresyncDataUnit): Promise<void> => {
+        const cdeCount = latestCdeData.data.length;
+        const cdeArrayIndices = new Array(cdeCount).fill(0);
         // For each blockheight in the range:
         for (
           let blockHeight = latestCdeData.fromBlock;

@@ -42,10 +42,7 @@ export interface GameStateMachine {
   getReadonlyDbConn: () => Pool;
   getNewReadWriteDbConn: () => Pool;
   process: (chainData: ChainData) => Promise<void>;
-  presyncProcess: (
-    extensions: ChainDataExtension[],
-    latestCdeData: PresyncDataUnit
-  ) => Promise<void>;
+  presyncProcess: (latestCdeData: PresyncDataUnit) => Promise<void>;
   markPresyncMilestone: (blockHeight: number) => Promise<void>;
 }
 
