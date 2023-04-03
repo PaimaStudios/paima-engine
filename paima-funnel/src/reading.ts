@@ -41,7 +41,7 @@ export async function processBlock(
       blockHash: block.hash,
       blockNumber: block.number,
       submittedData: await extractSubmittedData(web3, block, events),
-      extensionDatums: cdeData,
+      extensionDatums: cdeData.flat(),
     };
   } catch (err) {
     doLog(`[funnel::processBlock] at ${blockNumber} caught ${err}`);
@@ -54,18 +54,14 @@ export async function getAllCdeData(
   extensions: ChainDataExtension[],
   fromBlock: number,
   toBlock: number
-): Promise<ChainDataExtensionDatum[]> {
+): Promise<ChainDataExtensionDatum[][]> {
   if (fromBlock > toBlock) {
-    return [];
+    return extensions.map(_ => []);
   }
   const allData = await Promise.all(
     extensions.map(extension => getSpecificCdeData(web3, extension, fromBlock, toBlock))
   );
-  // TODO: optimize to avoid sort when fromBlock === toBlock?
-  return allData.flat().sort((a, b) => {
-    const blockHeightDiff = a.blockNumber - b.blockNumber;
-    return blockHeightDiff === 0 ? a.cdeId - b.cdeId : blockHeightDiff;
-  });
+  return allData;
 }
 
 async function getSpecificCdeData(

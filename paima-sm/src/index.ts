@@ -1,7 +1,13 @@
 import type { Pool } from 'pg';
 
 import { doLog, ENV, SCHEDULED_DATA_ADDRESS } from '@paima/utils';
-import type { ChainData, SubmittedData, ChainDataExtensionDatum } from '@paima/utils';
+import type {
+  ChainData,
+  SubmittedData,
+  ChainDataExtension,
+  ChainDataExtensionDatum,
+  PresyncDataUnit,
+} from '@paima/utils';
 import {
   tx,
   getConnection,
@@ -62,25 +68,36 @@ const SM: GameStateMachineInitializer = {
       getNewReadWriteDbConn: (): Pool => {
         return getConnection(databaseInfo);
       },
-      presyncProcess: async (latestCdeData: ChainDataExtensionDatum[]): Promise<void> => {
-        if (latestCdeData.length === 0) {
-          return;
-        }
-        const blockHeight = latestCdeData[0].blockNumber;
-        await markPresyncBlockheightTouched.run({ block_height: blockHeight }, DBConn);
-        try {
-          await tx<void>(DBConn, async db => {
-            for (const datum of latestCdeData) {
-              if (datum.blockNumber !== blockHeight) {
-                doLog('[paima-sm] CDE data out of order detected!');
+      presyncProcess: async (
+        extensions: ChainDataExtension[],
+        latestCdeData: PresyncDataUnit
+      ): Promise<void> => {
+        const cdeArrayIndices = extensions.map(_ => 0);
+        // For each blockheight in the range:
+        for (
+          let blockHeight = latestCdeData.fromBlock;
+          blockHeight <= latestCdeData.toBlock;
+          blockHeight++
+        ) {
+          try {
+            // For each CDE:
+            for (const [cdeIndex, data] of latestCdeData.data.entries()) {
+              let arrayIndex = cdeArrayIndices[cdeIndex];
+              // For all data from the current blockheight:
+              while (arrayIndex < data.length && data[arrayIndex].blockNumber <= blockHeight) {
+                if (data[arrayIndex].blockNumber !== blockHeight) {
+                  doLog('[paima-sm] CDE data out of order detected!');
+                }
+                await processCdeDatum(DBConn, data[arrayIndex]);
+                arrayIndex++;
               }
-              await processCdeDatum(DBConn, datum);
+              cdeArrayIndices[cdeIndex] = arrayIndex;
             }
-            await markPresyncBlockheightProcessed.run({ block_height: blockHeight }, DBConn);
-          });
-        } catch (err) {
-          doLog(`[paima-sm] Database error: ${err}`);
+          } catch (err) {
+            doLog(`[paima-sm] Database error: ${err}`);
+          }
         }
+        await markPresyncBlockheightProcessed.run({ block_height: latestCdeData.toBlock }, DBConn);
       },
       markPresyncMilestone: async (blockHeight: number): Promise<void> => {
         await markPresyncBlockheightProcessed.run({ block_height: blockHeight }, DBConn);

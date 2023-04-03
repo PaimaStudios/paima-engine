@@ -11,14 +11,13 @@ import type {
   ChainFunnel,
   ChainData,
   ChainDataExtension,
-  ChainDataExtensionDatum,
+  PresyncDataUnit,
   PaimaL2Contract,
 } from '@paima/utils';
 import { loadChainDataExtensions } from '@paima/utils-backend';
 
 import { getAllCdeData, processBlock } from './reading.js';
 import { timeout } from './utils.js';
-import { groupCdeData } from './data-processing.js';
 
 const GET_BLOCK_NUMBER_TIMEOUT = 5000;
 
@@ -67,19 +66,24 @@ class PaimaFunnel {
     }
   };
 
-  public presyncRead = async (
-    fromBlock: number,
-    toBlock: number
-  ): Promise<ChainDataExtensionDatum[][]> => {
+  public presyncRead = async (fromBlock: number, toBlock: number): Promise<PresyncDataUnit> => {
     if (toBlock > ENV.START_BLOCKHEIGHT) {
       toBlock = ENV.START_BLOCKHEIGHT;
     }
     if (fromBlock > toBlock) {
-      return [];
+      return {
+        fromBlock: -1,
+        toBlock: -2,
+        data: [],
+      };
     }
 
     const data = await getAllCdeData(this.web3, this.extensions, fromBlock, toBlock);
-    return groupCdeData(data);
+    return {
+      fromBlock,
+      toBlock,
+      data,
+    };
   };
 
   // Will return [-1, -2] if the range is determined to be empty.

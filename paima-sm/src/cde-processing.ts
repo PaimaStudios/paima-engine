@@ -15,17 +15,12 @@ export async function processCdeDatum(
   DBConn: Pool,
   cdeDatum: ChainDataExtensionDatum
 ): Promise<boolean> {
-  const processFunction = selectCdeProcessingFunction(cdeDatum.cdeType);
-  return await processFunction(DBConn, cdeDatum);
-}
-
-function selectCdeProcessingFunction(cdeType: ChainDataExtensionType): ProcessCdeDatumFunction {
-  switch (cdeType) {
+  switch (cdeDatum.cdeType) {
     case ChainDataExtensionType.ERC20:
-      return processErc20Datum;
+      return await processErc20Datum(DBConn, cdeDatum);
     case ChainDataExtensionType.ERC721:
-      return processErc721Datum;
+      return await processErc721Datum(DBConn, cdeDatum);
     default:
-      throw new Error(`[paima-sm] Unknown CDE type: ${cdeType}`);
+      throw new Error(`[paima-sm] Unknown type on CDE datum: ${cdeDatum}`);
   }
 }
