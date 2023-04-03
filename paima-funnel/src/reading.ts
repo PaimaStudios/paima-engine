@@ -11,13 +11,6 @@ import { ChainDataExtensionType } from '@paima/utils/src/constants.js';
 import getCdeErc20Data from './cde-erc20';
 import getCdeErc721Data from './cde-erc721';
 
-type GetCdeDataFunction = (
-  web3: Web3,
-  extension: ChainDataExtension,
-  fromBlock: number,
-  toBlock: number
-) => Promise<ChainDataExtensionDatum[]>;
-
 export async function processBlock(
   web3: Web3,
   storage: PaimaL2Contract,
@@ -75,16 +68,11 @@ async function getSpecificCdeData(
   } else if (fromBlock < extension.startBlockHeight) {
     fromBlock = extension.startBlockHeight;
   }
-  const getCdeData = getGetCdeDataFunction(extension.cdeType);
-  return await getCdeData(web3, extension, fromBlock, toBlock);
-}
-
-function getGetCdeDataFunction(cdeType: ChainDataExtensionType): GetCdeDataFunction {
-  switch (cdeType) {
+  switch (extension.cdeType) {
     case ChainDataExtensionType.ERC20:
-      return getCdeErc20Data;
+      return await getCdeErc20Data(web3, extension, fromBlock, toBlock);
     case ChainDataExtensionType.ERC721:
-      return getCdeErc721Data;
+      return await getCdeErc721Data(web3, extension, fromBlock, toBlock);
     default:
       throw new Error('[funnel] Invalid CDE type!');
   }
