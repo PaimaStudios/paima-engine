@@ -59,7 +59,7 @@ class PaimaFunnel {
         doLog(`#${fromBlock}-${toBlock}`);
       }
 
-      return await this.internalReadDataMulti(this.extensions, fromBlock, toBlock);
+      return await this.internalReadDataMulti(fromBlock, toBlock);
     } catch (err) {
       doLog(`[paima-funnel::readData] Exception occurred while reading blocks: ${err}`);
       return [];
@@ -117,7 +117,6 @@ class PaimaFunnel {
   };
 
   private internalReadDataMulti = async (
-    extensions: ChainDataExtension[],
     fromBlock: number,
     toBlock: number
   ): Promise<ChainData[]> => {
@@ -126,7 +125,7 @@ class PaimaFunnel {
     }
     const blockPromises: Promise<ChainData>[] = [];
     for (let i = fromBlock; i <= toBlock; i++) {
-      const block = processBlock(this.web3, this.paimaL2Contract, extensions, i);
+      const block = processBlock(this.web3, this.paimaL2Contract, this.extensions, i);
       const timeoutBlock = timeout(block, 5000);
       blockPromises.push(timeoutBlock);
     }
@@ -152,6 +151,7 @@ const paimaFunnelInitializer = {
     const web3 = await initWeb3(nodeUrl);
     const paimaL2Contract = getPaimaL2Contract(paimaL2ContractAddress, web3);
     const extensions = await loadChainDataExtensions();
+    // TODO: check / get extension start blockheights
     return new PaimaFunnel(nodeUrl, paimaL2ContractAddress, extensions, web3, paimaL2Contract);
   },
 };
