@@ -44,15 +44,9 @@ async function scheduleMintInput(
   DBConn: Pool,
   cdeDatum: ChainDataExtensionErc721Datum
 ): Promise<void> {
-  const result = await getSpecificChainDataExtension.run({ cde_id: cdeDatum.cdeId }, DBConn);
-  if (result.length === 0) {
-    doLog(`[paima-sm] encountered CDE datum with invalid cde_id: ${cdeDatum.cdeId}`);
-    return;
-  }
-
   const [prefix, address, tokenId] = [
-    result[0].scheduled_prefix,
-    result[0].contract_address,
+    cdeDatum.initializationPrefix,
+    cdeDatum.contractAddress,
     cdeDatum.payload.tokenId,
   ];
 

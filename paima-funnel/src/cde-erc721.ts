@@ -15,12 +15,15 @@ export default async function getCdeData(
     fromBlock: fromBlock,
     toBlock: toBlock,
   })) as unknown as Transfer[];
-  return events.map((e: Transfer) => transferToCdeDatum(e, extension.cdeId));
+  return events.map((e: Transfer) => transferToCdeDatum(e, extension));
 }
 
-function transferToCdeDatum(event: Transfer, cdeId: number): ChainDataExtensionDatum {
+function transferToCdeDatum(
+  event: Transfer,
+  extension: ChainDataExtension
+): ChainDataExtensionDatum {
   return {
-    cdeId: cdeId,
+    cdeId: extension.cdeId,
     cdeType: ChainDataExtensionType.ERC721,
     blockNumber: event.blockNumber,
     payload: {
@@ -28,5 +31,7 @@ function transferToCdeDatum(event: Transfer, cdeId: number): ChainDataExtensionD
       to: event.returnValues.to,
       tokenId: event.returnValues.tokenId,
     },
+    contractAddress: extension.contractAddress,
+    initializationPrefix: extension.initializationPrefix,
   };
 }
