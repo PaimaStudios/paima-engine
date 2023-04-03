@@ -11,12 +11,14 @@ import type {
   ChainFunnel,
   ChainData,
   ChainDataExtension,
+  InstantiatedChainDataExtension,
   PresyncDataUnit,
   PaimaL2Contract,
 } from '@paima/utils';
 import { loadChainDataExtensions } from '@paima/utils-backend';
 
-import { getAllCdeData, processBlock } from './reading.js';
+import { processBlock } from './reading.js';
+import { getAllCdeData, instantiateExtension } from './cde.js';
 import { timeout } from './utils.js';
 
 const GET_BLOCK_NUMBER_TIMEOUT = 5000;
@@ -27,6 +29,7 @@ class PaimaFunnel {
   public extensions: ChainDataExtension[];
   public web3: Web3;
   public paimaL2Contract: PaimaL2Contract;
+  private instantiatedExtensions: InstantiatedChainDataExtension[];
 
   constructor(
     nodeUrl: string,
@@ -40,6 +43,7 @@ class PaimaFunnel {
     this.extensions = extensions;
     this.web3 = web3;
     this.paimaL2Contract = paimaL2Contract;
+    this.instantiatedExtensions = extensions.map(e => instantiateExtension(web3, e));
   }
 
   public readData = async (
@@ -78,7 +82,7 @@ class PaimaFunnel {
       };
     }
 
-    const data = await getAllCdeData(this.web3, this.extensions, fromBlock, toBlock);
+    const data = await getAllCdeData(this.web3, this.instantiatedExtensions, fromBlock, toBlock);
     return {
       fromBlock,
       toBlock,
@@ -125,7 +129,7 @@ class PaimaFunnel {
     }
     const blockPromises: Promise<ChainData>[] = [];
     for (let i = fromBlock; i <= toBlock; i++) {
-      const block = processBlock(this.web3, this.paimaL2Contract, this.extensions, i);
+      const block = processBlock(this.web3, this.paimaL2Contract, this.instantiatedExtensions, i);
       const timeoutBlock = timeout(block, 5000);
       blockPromises.push(timeoutBlock);
     }

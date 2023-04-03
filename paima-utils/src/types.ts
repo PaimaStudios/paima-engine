@@ -1,7 +1,7 @@
 import type Web3 from 'web3';
 import type { Express, RequestHandler } from 'express';
 
-import type { PaimaL2Contract } from './contract-types/index';
+import type { ERC20Contract, ERC721Contract, PaimaL2Contract } from './contract-types/index';
 import type { ChainDataExtensionType } from './constants';
 
 export type Deployment = 'C1' | 'A1';
@@ -92,6 +92,20 @@ export interface ChainDataExtension {
   startBlockHeight: number;
   initializationPrefix: string;
 }
+
+interface InstantiatedChainDataExtensionErc20 extends ChainDataExtension {
+  cdeType: ChainDataExtensionType.ERC20;
+  contract: ERC20Contract;
+}
+
+interface InstantiatedChainDataExtensionErc721 extends ChainDataExtension {
+  cdeType: ChainDataExtensionType.ERC721;
+  contract: ERC721Contract;
+}
+
+export type InstantiatedChainDataExtension =
+  | InstantiatedChainDataExtensionErc20
+  | InstantiatedChainDataExtensionErc721;
 
 export interface PresyncDataUnit {
   fromBlock: number;
