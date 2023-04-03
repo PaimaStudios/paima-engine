@@ -1,6 +1,11 @@
 import type Web3 from 'web3';
 
-import type { ChainDataExtension, ChainDataExtensionDatum, PaimaL2Contract } from '@paima/utils';
+import type {
+  ChainDataExtension,
+  ChainDataExtensionDatum,
+  PaimaL2Contract,
+  SubmittedData,
+} from '@paima/utils';
 import type { ChainData } from '@paima/utils';
 import { doLog } from '@paima/utils';
 import type { PaimaGameInteraction } from '@paima/utils/src/contract-types/PaimaL2Contract';
@@ -18,14 +23,9 @@ export async function processBlock(
   blockNumber: number
 ): Promise<ChainData> {
   try {
-    const [block, events, cdeData] = await Promise.all([
+    const [block, submittedData, cdeData] = await Promise.all([
       web3.eth.getBlock(blockNumber),
-      // TOOD: typechain is missing the proper type generation for getPastEvents
-      // https://github.com/dethcrypto/TypeChain/issues/767
-      paimaL2Contract.getPastEvents('PaimaGameInteraction', {
-        fromBlock: blockNumber,
-        toBlock: blockNumber,
-      }) as unknown as Promise<PaimaGameInteraction[]>,
+      getSubmittedData(web3, paimaL2Contract, blockNumber, blockNumber),
       getAllCdeData(web3, extensions, blockNumber, blockNumber),
     ]);
 
@@ -33,13 +33,28 @@ export async function processBlock(
       timestamp: block.timestamp,
       blockHash: block.hash,
       blockNumber: block.number,
-      submittedData: await extractSubmittedData(web3, events),
+      submittedData,
       extensionDatums: cdeData.flat(),
     };
   } catch (err) {
     doLog(`[funnel::processBlock] at ${blockNumber} caught ${err}`);
     throw err;
   }
+}
+
+export async function getSubmittedData(
+  web3: Web3,
+  paimaL2Contract: PaimaL2Contract,
+  fromBlock: number,
+  toBlock: number
+): Promise<SubmittedData[]> {
+  // TOOD: typechain is missing the proper type generation for getPastEvents
+  // https://github.com/dethcrypto/TypeChain/issues/767
+  const events = (await paimaL2Contract.getPastEvents('PaimaGameInteraction', {
+    fromBlock,
+    toBlock,
+  })) as unknown as PaimaGameInteraction[];
+  return await extractSubmittedData(web3, events);
 }
 
 export async function getAllCdeData(
