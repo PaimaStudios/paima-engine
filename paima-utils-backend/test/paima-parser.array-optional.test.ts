@@ -4,7 +4,7 @@ import { PaimaParser } from '../src/parser/PaimaParser';
 const myGrammar = `
   arrayCommand = a|array?
   arrayCommandNumber = b|array
-  arrayCommandExtra = z|text|array
+  arrayCommandExtra = z|text|array?
 `;
 
 const parserCommands = {
@@ -16,20 +16,28 @@ const parserCommands = {
   },
   arrayCommandExtra: {
     text: PaimaParser.RegexParser(/[a-z]/),
-    array: PaimaParser.ArrayParser<string>({ item: PaimaParser.RegexParser(/[a-z0-1]/) }),
+    array: PaimaParser.ArrayParser<string>({ item: PaimaParser.RegexParser(/[a-z]/) }),
   },
 };
 
 describe('Test Array Commands', () => {
-  const startTest = (inputs: [string, boolean][]): void => {
+  const startTest = (inputs: [string, boolean, any?][]): void => {
     const parser = new PaimaParser(myGrammar, parserCommands);
-    inputs.forEach((i: [string, boolean]) => {
-      test(`${i[0]} to be ${i[1]}`, () => {
+    inputs.forEach((i: [string, boolean, any?]) => {
+      const testCase = i[0];
+      const isParseable = i[1];
+      const referenceParse = i[2];
+
+      test(`${testCase} to be ${isParseable}`, () => {
+        let value;
         try {
-          const value = parser.start(i[0]);
-          expect(!!value).toBe(i[1]);
+          value = parser.start(testCase);
+          expect(!!value).toBe(isParseable);
         } catch (e) {
-          expect(false).toBe(i[1]);
+          expect(false).toBe(isParseable);
+        }
+        if (referenceParse) {
+          expect(value).toStrictEqual(referenceParse);
         }
       });
     });
@@ -37,10 +45,10 @@ describe('Test Array Commands', () => {
 
   startTest([
     // Array examples
-    ['a|hello,world', true],
+    ['a|hello,world', true, { command: 'arrayCommand', args: { array: ['hello', 'world'] } }],
     ['a|hello', true],
-    ['a|', true],
-    ['a|0,1', true],
+    ['a|', true, { command: 'arrayCommand', args: { array: [] } }],
+    ['a|0,1', true, { command: 'arrayCommand', args: { array: ['0', '1'] } }],
     ['a|1', true],
     ['a|2', false],
     ['a|HELLO,WORLD', false],
@@ -49,14 +57,24 @@ describe('Test Array Commands', () => {
     // Numeric Array examples
     ['b|hello,world', false],
     ['b|hello', false],
-    ['b|1,99', true],
+    ['b|1,99', true, { command: 'arrayCommandNumber', args: { array: [1, 99] } }],
     ['b|0', true],
     ['b|', false],
     ['b|101', false],
 
     // Extra
-    ['a|extra|hello,world', true],
-    ['a|extra|hello', true],
-    ['a|extra|', true],
+    ['z|hello,world', false],
+
+    [
+      'z|extra|hello,world',
+      true,
+      { command: 'arrayCommandExtra', args: { text: 'extra', array: ['hello', 'world'] } },
+    ],
+    [
+      'z|extra|hello',
+      true,
+      { command: 'arrayCommandExtra', args: { text: 'extra', array: ['hello'] } },
+    ],
+    ['z|extra|', true, { command: 'arrayCommandExtra', args: { text: 'extra', array: [] } }],
   ]);
 });

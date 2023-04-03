@@ -177,11 +177,16 @@ export class PaimaParser {
     });
 
     // Add standard - common expressions to parse * and |
-    grammar += 'asterisk  ::= "*"\npipe ::= "|" \nat ::= "@"\nchar ::= [a-zA-Z0-9]\n';
+    grammar += `
+asterisk  ::= "*"
+pipe ::= "|" 
+at ::= "@"
+char ::= [a-zA-Z0-9,]
+`;
 
     // Add parameters back-into grammar
     [...uniqueParameters].forEach(w => {
-      grammar += `${w} ::= (char | ",")* \n`;
+      grammar += `${w} ::= char* \n`;
     });
 
     this.log(`Parser Syntax: \n----------------\n${grammar}\n----------------`);
