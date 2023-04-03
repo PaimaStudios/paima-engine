@@ -13,7 +13,7 @@ import getCdeErc721Data from './cde-erc721';
 
 export async function processBlock(
   web3: Web3,
-  storage: PaimaL2Contract,
+  paimaL2Contract: PaimaL2Contract,
   extensions: ChainDataExtension[],
   blockNumber: number
 ): Promise<ChainData> {
@@ -22,7 +22,7 @@ export async function processBlock(
       web3.eth.getBlock(blockNumber),
       // TOOD: typechain is missing the proper type generation for getPastEvents
       // https://github.com/dethcrypto/TypeChain/issues/767
-      storage.getPastEvents('PaimaGameInteraction', {
+      paimaL2Contract.getPastEvents('PaimaGameInteraction', {
         fromBlock: blockNumber,
         toBlock: blockNumber,
       }) as unknown as Promise<PaimaGameInteraction[]>,
