@@ -7,8 +7,7 @@ import type {
   ChainFunnel,
   VersionString,
   PaimaRuntime,
-  PresyncDataUnit,
-  ChainDataExtension,
+  PresyncChainData,
 } from '@paima/utils';
 
 export type SQLUpdate = [PreparedQuery<any, any>, any];
@@ -42,7 +41,7 @@ export interface GameStateMachine {
   getReadonlyDbConn: () => Pool;
   getNewReadWriteDbConn: () => Pool;
   process: (chainData: ChainData) => Promise<void>;
-  presyncProcess: (latestCdeData: PresyncDataUnit) => Promise<void>;
+  presyncProcess: (latestCdeData: PresyncChainData) => Promise<void>;
   markPresyncMilestone: (blockHeight: number) => Promise<void>;
 }
 

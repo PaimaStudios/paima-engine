@@ -56,6 +56,11 @@ export interface ChainData {
   extensionDatums?: ChainDataExtensionDatum[];
 }
 
+export interface PresyncChainData {
+  blockNumber: number;
+  extensionDatums: ChainDataExtensionDatum[];
+}
+
 interface ChainDataExtensionErc20Payload {
   from: string;
   to: string;
@@ -113,12 +118,6 @@ export type InstantiatedChainDataExtension =
   | InstantiatedChainDataExtensionErc20
   | InstantiatedChainDataExtensionErc721;
 
-export interface PresyncDataUnit {
-  fromBlock: number;
-  toBlock: number;
-  data: ChainDataExtensionDatum[][];
-}
-
 export interface ChainFunnel {
   nodeUrl: string;
   paimaL2ContractAddress: string;
@@ -126,7 +125,7 @@ export interface ChainFunnel {
   web3: Web3;
   paimaL2Contract: PaimaL2Contract;
   readData: (blockHeight: number) => Promise<ChainData[]>;
-  presyncRead: (fromBlock: number, toBlock: number) => Promise<PresyncDataUnit>;
+  readPresyncData: (fromBlock: number, toBlock: number) => Promise<PresyncChainData[]>;
 }
 
 export interface PaimaRuntime {

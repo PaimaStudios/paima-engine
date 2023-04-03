@@ -3,10 +3,9 @@ import type { Pool } from 'pg';
 import { doLog, ENV, SCHEDULED_DATA_ADDRESS } from '@paima/utils';
 import type {
   ChainData,
+  PresyncChainData,
   SubmittedData,
-  ChainDataExtension,
   ChainDataExtensionDatum,
-  PresyncDataUnit,
 } from '@paima/utils';
 import {
   tx,
@@ -20,7 +19,6 @@ import {
   getLatestProcessedBlockHeight,
   getScheduledDataByBlockHeight,
   saveLastBlockHeight,
-  markPresyncBlockheightTouched,
   markPresyncBlockheightProcessed,
   getLatestProcessedPresyncBlockheight,
 } from '@paima/db';
@@ -28,7 +26,7 @@ import type { GameStateTransitionFunction, GameStateMachineInitializer } from '@
 import Prando from '@paima/prando';
 
 import { randomnessRouter } from './randomness.js';
-import { processCdeDatum } from './cde-processing.js';
+import { cdeTransitionFunction } from './cde-processing.js';
 
 const SM: GameStateMachineInitializer = {
   initialize: (
@@ -68,34 +66,16 @@ const SM: GameStateMachineInitializer = {
       getNewReadWriteDbConn: (): Pool => {
         return getConnection(databaseInfo);
       },
-      presyncProcess: async (latestCdeData: PresyncDataUnit): Promise<void> => {
-        const cdeCount = latestCdeData.data.length;
-        const cdeArrayIndices = new Array(cdeCount).fill(0);
-        // For each blockheight in the range:
-        for (
-          let blockHeight = latestCdeData.fromBlock;
-          blockHeight <= latestCdeData.toBlock;
-          blockHeight++
-        ) {
-          try {
-            // For each CDE:
-            for (const [cdeIndex, data] of latestCdeData.data.entries()) {
-              let arrayIndex = cdeArrayIndices[cdeIndex];
-              // For all data from the current blockheight:
-              while (arrayIndex < data.length && data[arrayIndex].blockNumber <= blockHeight) {
-                if (data[arrayIndex].blockNumber !== blockHeight) {
-                  doLog('[paima-sm] CDE data out of order detected!');
-                }
-                await processCdeDatum(DBConn, data[arrayIndex]);
-                arrayIndex++;
-              }
-              cdeArrayIndices[cdeIndex] = arrayIndex;
-            }
-          } catch (err) {
-            doLog(`[paima-sm] Database error: ${err}`);
-          }
+      presyncProcess: async (latestCdeData: PresyncChainData): Promise<void> => {
+        const cdeDataLength = await processCdeData(
+          latestCdeData.blockNumber,
+          latestCdeData.extensionDatums,
+          readonlyDBConn,
+          DBConn
+        );
+        if (cdeDataLength > 0) {
+          doLog(`Processed ${cdeDataLength} CDE events in block #${latestCdeData.blockNumber}`);
         }
-        await markPresyncBlockheightProcessed.run({ block_height: latestCdeData.toBlock }, DBConn);
       },
       markPresyncMilestone: async (blockHeight: number): Promise<void> => {
         await markPresyncBlockheightProcessed.run({ block_height: blockHeight }, DBConn);
@@ -117,6 +97,7 @@ const SM: GameStateMachineInitializer = {
         const cdeDataLength = await processCdeData(
           latestChainData.blockNumber,
           latestChainData.extensionDatums,
+          readonlyDBConn,
           DBConn
         );
 
@@ -153,29 +134,33 @@ const SM: GameStateMachineInitializer = {
 async function processCdeData(
   blockHeight: number,
   cdeData: ChainDataExtensionDatum[] | undefined,
+  readonlyDBConn: Pool,
   DBConn: Pool
 ): Promise<number> {
   if (!cdeData) {
     return 0;
   }
-  let count = 0;
+
+  for (const datum of cdeData) {
+    const sqlQueries = await cdeTransitionFunction(readonlyDBConn, datum);
+    try {
+      await tx<void>(DBConn, async db => {
+        for (const [query, params] of sqlQueries) {
+          await query.run(params, db);
+        }
+      });
+    } catch (err) {
+      doLog(`[paima-sm] Database error: ${err}`);
+    }
+  }
+
   try {
-    await tx<void>(DBConn, async db => {
-      for (const datum of cdeData) {
-        if (datum.blockNumber !== blockHeight) {
-          doLog('[paima-sm] CDE data out of order detected!');
-        }
-        if (await processCdeDatum(DBConn, datum)) {
-          count++;
-        }
-      }
-      await markPresyncBlockheightProcessed.run({ block_height: blockHeight }, DBConn);
-    });
+    await markPresyncBlockheightProcessed.run({ block_height: blockHeight }, DBConn);
   } catch (err) {
     doLog(`[paima-sm] Database error: ${err}`);
     return 0;
   }
-  return count;
+  return cdeData.length;
 }
 
 // Process all of the scheduled data inputs by running each of them through the game STF,

@@ -6,44 +6,45 @@ import {
   cdeErc721GetOwner,
   cdeErc721InsertOwner,
   cdeErc721UpdateOwner,
-  getSpecificChainDataExtension,
-  newScheduledData,
+  createScheduledData,
 } from '@paima/db';
+import type { SQLUpdate } from '@paima/db';
 
 export default async function processErc721Datum(
-  DBConn: Pool,
+  readonlyDBConn: Pool,
   cdeDatum: ChainDataExtensionDatum
-): Promise<boolean> {
+): Promise<SQLUpdate[]> {
   if (cdeDatum.cdeType !== ChainDataExtensionType.ERC721) {
-    return false;
+    return [];
   }
   const cdeId = cdeDatum.cdeId;
   const { from, to, tokenId } = cdeDatum.payload;
 
+  const updateList: SQLUpdate[] = [];
   try {
-    const ownerRow = await cdeErc721GetOwner.run({ cde_id: cdeId, token_id: tokenId }, DBConn);
+    const ownerRow = await cdeErc721GetOwner.run(
+      { cde_id: cdeId, token_id: tokenId },
+      readonlyDBConn
+    );
+    const newOwnerData = { cde_id: cdeId, token_id: tokenId, nft_owner: to };
     if (ownerRow.length > 0) {
-      await cdeErc721UpdateOwner.run({ cde_id: cdeId, token_id: tokenId, nft_owner: to }, DBConn);
+      updateList.push([cdeErc721UpdateOwner, newOwnerData]);
     } else {
-      await cdeErc721InsertOwner.run({ cde_id: cdeId, token_id: tokenId, nft_owner: to }, DBConn);
+      updateList.push([cdeErc721InsertOwner, newOwnerData]);
     }
 
     if (from.match(/^0x0+$/g)) {
-      // Mint event:
-      await scheduleMintInput(DBConn, cdeDatum);
+      updateList.push(...scheduleMintInput(cdeDatum));
     }
   } catch (err) {
     doLog(`[paima-sm] error while processing erc721 datum: ${err}`);
-    return false;
+    return [];
   }
 
-  return true;
+  return updateList;
 }
 
-async function scheduleMintInput(
-  DBConn: Pool,
-  cdeDatum: ChainDataExtensionErc721Datum
-): Promise<void> {
+function scheduleMintInput(cdeDatum: ChainDataExtensionErc721Datum): SQLUpdate[] {
   const [prefix, address, tokenId] = [
     cdeDatum.initializationPrefix,
     cdeDatum.contractAddress,
@@ -51,14 +52,10 @@ async function scheduleMintInput(
   ];
 
   if (!prefix) {
-    return;
+    return [];
   }
 
-  await newScheduledData.run(
-    {
-      block_height: Math.max(cdeDatum.blockNumber, ENV.START_BLOCKHEIGHT + 1),
-      input_data: `${prefix}|${address}|${tokenId}`, // TODO: concise builder?
-    },
-    DBConn
-  );
+  const scheduledBlockHeight = Math.max(cdeDatum.blockNumber, ENV.START_BLOCKHEIGHT + 1);
+  const scheduledInputData = `${prefix}|${address}|${tokenId}`;
+  return [createScheduledData(scheduledInputData, scheduledBlockHeight)];
 }
