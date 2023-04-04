@@ -1,6 +1,14 @@
 import type { SQLUpdate } from './types';
-import { newScheduledData, removeScheduledData } from './sql/scheduled.queries';
-import type { INewScheduledDataParams, IRemoveScheduledDataParams } from './sql/scheduled.queries';
+import {
+  newScheduledData,
+  removeAllScheduledDataByInputData,
+  removeScheduledData,
+} from './sql/scheduled.queries';
+import type {
+  INewScheduledDataParams,
+  IRemoveScheduledDataParams,
+  IRemoveAllScheduledDataByInputDataParams,
+} from './sql/scheduled.queries';
 
 // Create an SQL update which schedules a piece of data to be run through
 // the STF at a future block height.
@@ -14,11 +22,19 @@ export function createScheduledData(inputData: string, blockHeight: number): SQL
 }
 
 // Create an SQL update which deletes an upcoming scheduled data
-export function deleteScheduledData(inputData: string, blockHeight: number): SQLUpdate {
+// NOTE: if blockHeight is null, then delete ALL schedules that match inputData.
+export function deleteScheduledData(inputData: string, blockHeight: number | null): SQLUpdate {
+  if (blockHeight === null) {
+    const dsdParams: IRemoveAllScheduledDataByInputDataParams = {
+      input_data: inputData,
+    };
+    return [removeAllScheduledDataByInputData, dsdParams];
+  }
+
+  // Delete exact schedule by command and height
   const dsdParams: IRemoveScheduledDataParams = {
     block_height: blockHeight,
     input_data: inputData,
   };
-  const deleteScheduledDataTuple: SQLUpdate = [removeScheduledData, dsdParams];
-  return deleteScheduledDataTuple;
+  return [removeScheduledData, dsdParams];
 }
