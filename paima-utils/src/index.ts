@@ -187,3 +187,17 @@ function hexStringToBytes(hexString: string): number[] {
 export function hexStringToUint8Array(hexString: string): Uint8Array {
   return new Uint8Array(hexStringToBytes(hexString));
 }
+
+export function cutAfterFirstRejected<T>(results: PromiseSettledResult<T>[]): T[] {
+  let firstRejected = results.findIndex(elem => elem.status === 'rejected');
+  if (firstRejected < 0) {
+    firstRejected = results.length;
+  }
+  return (
+    results
+      .slice(0, firstRejected)
+      // note: we cast the promise to be a successfully fulfilled promise
+      // we know this is safe because the above-line sliced up until the first rejection
+      .map(elem => (elem as PromiseFulfilledResult<T>).value)
+  );
+}

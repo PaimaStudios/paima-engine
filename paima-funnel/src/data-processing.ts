@@ -2,7 +2,14 @@ import type Web3 from 'web3';
 import web3UtilsPkg from 'web3-utils';
 
 import { AddressType, doLog, INNER_BATCH_DIVIDER, OUTER_BATCH_DIVIDER } from '@paima/utils';
-import type { ChainDataExtensionDatum, PresyncChainData, SubmittedData } from '@paima/utils';
+import type {
+  BlockData,
+  BlockSubmittedData,
+  ChainData,
+  ChainDataExtensionDatum,
+  PresyncChainData,
+  SubmittedData,
+} from '@paima/utils';
 import type { PaimaGameInteraction } from '@paima/utils/src/contract-types/PaimaL2Contract';
 
 import type { ValidatedSubmittedData } from './utils.js';
@@ -173,12 +180,33 @@ export function groupCdeData(
         }
       }
     }
-    if (extensionDatums.length > 0) {
-      result.push({
-        blockNumber,
-        extensionDatums,
-      });
-    }
+    result.push({
+      blockNumber,
+      extensionDatums,
+    });
   }
   return result;
+}
+
+export function composeChainData(
+  cutBlockData: BlockData[],
+  submittedDataBlocks: BlockSubmittedData[],
+  cdeData: ChainDataExtensionDatum[][]
+): ChainData[] {
+  const length = Math.min(cutBlockData.length, submittedDataBlocks.length, cdeData.length);
+  if (length === 0) {
+    return [];
+  }
+  cutBlockData = cutBlockData.slice(length);
+  submittedDataBlocks = submittedDataBlocks.slice(length);
+  cdeData = cdeData.slice(length);
+
+  const fromBlock = cutBlockData[0].blockNumber;
+  const toBlock = cutBlockData[cutBlockData.length - 1].blockNumber;
+  const groupedCdeData = groupCdeData(fromBlock, toBlock, cdeData);
+  return cutBlockData.map((blockData, index) => ({
+    ...blockData,
+    submittedData: submittedDataBlocks[index].submittedData,
+    extensionDatums: groupedCdeData[index].extensionDatums,
+  }));
 }

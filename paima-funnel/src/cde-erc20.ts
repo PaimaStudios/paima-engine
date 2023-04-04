@@ -10,6 +10,8 @@ export default async function getCdeData(
   fromBlock: number,
   toBlock: number
 ): Promise<ChainDataExtensionDatum[]> {
+  // TOOD: typechain is missing the proper type generation for getPastEvents
+  // https://github.com/dethcrypto/TypeChain/issues/767
   const events = (await extension.contract.getPastEvents('Transfer', {
     fromBlock: fromBlock,
     toBlock: toBlock,

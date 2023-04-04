@@ -61,6 +61,11 @@ export interface PresyncChainData {
   extensionDatums: ChainDataExtensionDatum[];
 }
 
+export interface BlockSubmittedData {
+  blockNumber: number;
+  submittedData: SubmittedData[];
+}
+
 interface ChainDataExtensionErc20Payload {
   from: string;
   to: string;

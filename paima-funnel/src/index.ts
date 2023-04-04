@@ -17,10 +17,15 @@ import type {
 } from '@paima/utils';
 import { loadChainDataExtensions } from '@paima/utils-backend';
 
-import { processBlock } from './reading.js';
+import {
+  getBlockData,
+  getMultipleBlockData,
+  getSubmittedDataMulti,
+  getSubmittedDataSingle,
+} from './paima-l2-reading.js';
 import { getAllCdeData, instantiateExtension } from './cde.js';
 import { timeout } from './utils.js';
-import { groupCdeData } from './data-processing.js';
+import { composeChainData, groupCdeData } from './data-processing.js';
 
 const GET_BLOCK_NUMBER_TIMEOUT = 5000;
 
@@ -60,11 +65,11 @@ class PaimaFunnel {
 
       if (toBlock === fromBlock) {
         doLog(`#${toBlock}`);
+        return await this.internalReadDataSingle(fromBlock);
       } else {
         doLog(`#${fromBlock}-${toBlock}`);
+        return await this.internalReadDataMulti(fromBlock, toBlock);
       }
-
-      return await this.internalReadDataMulti(fromBlock, toBlock);
     } catch (err) {
       doLog(`[paima-funnel::readData] Exception occurred while reading blocks: ${err}`);
       return [];
@@ -83,7 +88,8 @@ class PaimaFunnel {
     }
 
     const data = await getAllCdeData(this.web3, this.instantiatedExtensions, fromBlock, toBlock);
-    return groupCdeData(fromBlock, toBlock, data);
+    const groupedData = groupCdeData(fromBlock, toBlock, data);
+    return groupedData.filter(unit => unit.extensionDatums.length > 0);
   };
 
   // Will return [-1, -2] if the range is determined to be empty.
@@ -116,6 +122,30 @@ class PaimaFunnel {
     }
   };
 
+  private internalReadDataSingle = async (blockNumber: number): Promise<ChainData[]> => {
+    if (blockNumber < 0) {
+      return [];
+    }
+    try {
+      const [blockData, submittedData, cdeData] = await Promise.all([
+        getBlockData(this.web3, blockNumber),
+        getSubmittedDataSingle(this.web3, this.paimaL2Contract, blockNumber),
+        getAllCdeData(this.web3, this.instantiatedExtensions, blockNumber, blockNumber),
+      ]);
+
+      return [
+        {
+          ...blockData,
+          submittedData,
+          extensionDatums: cdeData.flat(),
+        },
+      ];
+    } catch (err) {
+      doLog(`[funnel] at ${blockNumber} caught ${err}`);
+      throw err;
+    }
+  };
+
   private internalReadDataMulti = async (
     fromBlock: number,
     toBlock: number
@@ -123,25 +153,17 @@ class PaimaFunnel {
     if (toBlock < fromBlock || fromBlock < 0) {
       return [];
     }
-    const blockPromises: Promise<ChainData>[] = [];
-    for (let i = fromBlock; i <= toBlock; i++) {
-      const block = processBlock(this.web3, this.paimaL2Contract, this.instantiatedExtensions, i);
-      const timeoutBlock = timeout(block, 5000);
-      blockPromises.push(timeoutBlock);
+    try {
+      const [blockResults, submittedDataBlocks, cdeData] = await Promise.all([
+        getMultipleBlockData(this.web3, fromBlock, toBlock),
+        getSubmittedDataMulti(this.web3, this.paimaL2Contract, fromBlock, toBlock),
+        getAllCdeData(this.web3, this.instantiatedExtensions, fromBlock, toBlock),
+      ]);
+      return composeChainData(blockResults, submittedDataBlocks, cdeData);
+    } catch (err) {
+      doLog(`[funnel] at ${fromBlock}-${toBlock} caught ${err}`);
+      throw err;
     }
-    return await Promise.allSettled(blockPromises).then(resList => {
-      let firstRejected = resList.findIndex(elem => elem.status === 'rejected');
-      if (firstRejected < 0) {
-        firstRejected = resList.length;
-      }
-      return (
-        resList
-          .slice(0, firstRejected)
-          // note: we cast the promise to be a successfully fulfilled promise
-          // we know this is safe because the above-line sliced up until the first rejection
-          .map(elem => (elem as PromiseFulfilledResult<ChainData>).value)
-      );
-    });
   };
 }
 
