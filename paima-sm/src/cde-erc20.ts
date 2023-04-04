@@ -2,7 +2,7 @@ import type { Pool } from 'pg';
 
 import { ChainDataExtensionType, doLog } from '@paima/utils';
 import type { ChainDataExtensionDatum } from '@paima/utils';
-import { cdeErc20GetBalance, cdeErc20UpdateBalance } from '@paima/db';
+import { cdeErc20GetBalance, cdeErc20InsertBalance, cdeErc20UpdateBalance } from '@paima/db';
 import type { SQLUpdate } from '@paima/db';
 
 export default async function processErc20Datum(
@@ -51,7 +51,7 @@ export default async function processErc20Datum(
       ]);
     } else {
       updateList.push([
-        cdeErc20UpdateBalance,
+        cdeErc20InsertBalance,
         {
           cde_id: cdeId,
           wallet_address: to,
