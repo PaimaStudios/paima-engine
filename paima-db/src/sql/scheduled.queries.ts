@@ -87,6 +87,32 @@ const removeScheduledDataIR: any = {"usedParamSet":{"block_height":true,"input_d
 export const removeScheduledData = new PreparedQuery<IRemoveScheduledDataParams,IRemoveScheduledDataResult>(removeScheduledDataIR);
 
 
+/** 'RemoveAllScheduledDataByInputData' parameters type */
+export interface IRemoveAllScheduledDataByInputDataParams {
+  input_data: string;
+}
+
+/** 'RemoveAllScheduledDataByInputData' return type */
+export type IRemoveAllScheduledDataByInputDataResult = void;
+
+/** 'RemoveAllScheduledDataByInputData' query type */
+export interface IRemoveAllScheduledDataByInputDataQuery {
+  params: IRemoveAllScheduledDataByInputDataParams;
+  result: IRemoveAllScheduledDataByInputDataResult;
+}
+
+const removeAllScheduledDataByInputDataIR: any = {"usedParamSet":{"input_data":true},"params":[{"name":"input_data","required":true,"transform":{"type":"scalar"},"locs":[{"a":46,"b":57}]}],"statement":"DELETE FROM scheduled_data\nWHERE input_data = :input_data!"};
+
+/**
+ * Query generated from SQL:
+ * ```
+ * DELETE FROM scheduled_data
+ * WHERE input_data = :input_data!
+ * ```
+ */
+export const removeAllScheduledDataByInputData = new PreparedQuery<IRemoveAllScheduledDataByInputDataParams,IRemoveAllScheduledDataByInputDataResult>(removeAllScheduledDataByInputDataIR);
+
+
 /** 'DeleteScheduled' parameters type */
 export interface IDeleteScheduledParams {
   id: number;
