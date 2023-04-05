@@ -82,14 +82,14 @@ const TABLE_DATA_HISTORICAL: TableData = {
 };
 
 const QUERY_CREATE_TABLE_PRESYNC = `
-CREATE TABLE presync_block_heights (
+CREATE TABLE cde_processing (
   block_height INTEGER PRIMARY KEY,
   done BOOLEAN NOT NULL DEFAULT false
 );
 `;
 
 const TABLE_DATA_PRESYNC: TableData = {
-  tableName: 'presync_block_heights',
+  tableName: 'cde_processing',
   primaryKeyColumns: ['block_height'],
   columnData: packTuples([
     ['block_height', 'integer', 'NO', ''],

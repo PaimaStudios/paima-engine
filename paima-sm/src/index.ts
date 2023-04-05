@@ -19,8 +19,8 @@ import {
   getLatestProcessedBlockHeight,
   getScheduledDataByBlockHeight,
   saveLastBlockHeight,
-  markPresyncBlockheightProcessed,
-  getLatestProcessedPresyncBlockheight,
+  markCdeBlockheightProcessed,
+  getLatestProcessedCdeBlockheight,
 } from '@paima/db';
 import type { GameStateTransitionFunction, GameStateMachineInitializer } from '@paima/db';
 import Prando from '@paima/prando';
@@ -45,12 +45,12 @@ const SM: GameStateMachineInitializer = {
         return blockHeight;
       },
       getPresyncBlockHeight: async (): Promise<number> => {
-        const [b] = await getLatestProcessedPresyncBlockheight.run(undefined, readonlyDBConn);
+        const [b] = await getLatestProcessedCdeBlockheight.run(undefined, readonlyDBConn);
         const blockHeight = b?.block_height ?? 0;
         return blockHeight;
       },
       presyncStarted: async (): Promise<boolean> => {
-        const res = await getLatestProcessedPresyncBlockheight.run(undefined, readonlyDBConn);
+        const res = await getLatestProcessedCdeBlockheight.run(undefined, readonlyDBConn);
         return res.length > 0;
       },
       syncStarted: async (): Promise<boolean> => {
@@ -78,7 +78,7 @@ const SM: GameStateMachineInitializer = {
         }
       },
       markPresyncMilestone: async (blockHeight: number): Promise<void> => {
-        await markPresyncBlockheightProcessed.run({ block_height: blockHeight }, DBConn);
+        await markCdeBlockheightProcessed.run({ block_height: blockHeight }, DBConn);
       },
       // Core function which triggers state transitions
       process: async (latestChainData: ChainData): Promise<void> => {
@@ -155,7 +155,7 @@ async function processCdeData(
   }
 
   try {
-    await markPresyncBlockheightProcessed.run({ block_height: blockHeight }, DBConn);
+    await markCdeBlockheightProcessed.run({ block_height: blockHeight }, DBConn);
   } catch (err) {
     doLog(`[paima-sm] Database error: ${err}`);
     return 0;

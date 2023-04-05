@@ -22,7 +22,7 @@ CREATE TABLE historical_game_inputs (
   input_data TEXT NOT NULL
 );
 
-CREATE TABLE presync_block_heights (
+CREATE TABLE cde_processing (
   block_height INTEGER PRIMARY KEY,
   done BOOLEAN NOT NULL DEFAULT false
 );
