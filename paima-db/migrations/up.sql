@@ -22,8 +22,9 @@ CREATE TABLE historical_game_inputs (
   input_data TEXT NOT NULL
 );
 
-CREATE TABLE cde_processing (
+CREATE TABLE cde_tracking (
   block_height INTEGER PRIMARY KEY,
+  datum_count INTEGER NOT NULL,
   done BOOLEAN NOT NULL DEFAULT false
 );
 

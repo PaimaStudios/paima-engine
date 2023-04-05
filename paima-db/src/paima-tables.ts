@@ -81,22 +81,24 @@ const TABLE_DATA_HISTORICAL: TableData = {
   creationQuery: QUERY_CREATE_TABLE_HISTORICAL,
 };
 
-const QUERY_CREATE_TABLE_PRESYNC = `
-CREATE TABLE cde_processing (
+const QUERY_CREATE_TABLE_CDE_TRACKING = `
+CREATE TABLE cde_tracking (
   block_height INTEGER PRIMARY KEY,
+  datum_count INTEGER NOT NULL,
   done BOOLEAN NOT NULL DEFAULT false
 );
 `;
 
-const TABLE_DATA_PRESYNC: TableData = {
-  tableName: 'cde_processing',
+const TABLE_DATA_CDE_TRACKING: TableData = {
+  tableName: 'cde_tracking',
   primaryKeyColumns: ['block_height'],
   columnData: packTuples([
     ['block_height', 'integer', 'NO', ''],
+    ['datum_count', 'integer', 'NO', ''],
     ['done', 'boolean', 'NO', 'false'],
   ]),
   serialColumns: [],
-  creationQuery: QUERY_CREATE_TABLE_PRESYNC,
+  creationQuery: QUERY_CREATE_TABLE_CDE_TRACKING,
 };
 
 const QUERY_CREATE_TABLE_CDE = `
@@ -170,7 +172,7 @@ export const TABLES: TableData[] = [
   TABLE_DATA_NONCES,
   TABLE_DATA_SCHEDULED,
   TABLE_DATA_HISTORICAL,
-  TABLE_DATA_PRESYNC,
+  TABLE_DATA_CDE_TRACKING,
   TABLE_DATA_CDE,
   TABLE_DATA_CDE_ERC20,
   TABLE_DATA_CDE_ERC721,
