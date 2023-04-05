@@ -9,6 +9,7 @@ export const OUTER_BATCH_DIVIDER: string = '\x02';
 export const INNER_BATCH_DIVIDER: string = '\x03';
 
 export const enum ChainDataExtensionType {
-  ERC20 = 0,
-  ERC721 = 1,
+  UNKNOWN = 0,
+  ERC20 = 1,
+  ERC721 = 2,
 }

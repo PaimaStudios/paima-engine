@@ -23,9 +23,10 @@ import {
   getSubmittedDataMulti,
   getSubmittedDataSingle,
 } from './paima-l2-reading.js';
-import { getAllCdeData, instantiateExtension } from './cde.js';
+import { getAllCdeData } from './cde.js';
 import { timeout } from './utils.js';
 import { composeChainData, groupCdeData } from './data-processing.js';
+import { instantiateExtension } from './cde-initialization.js';
 
 const GET_BLOCK_NUMBER_TIMEOUT = 5000;
 
@@ -172,8 +173,7 @@ const paimaFunnelInitializer = {
     validatePaimaL2ContractAddress(paimaL2ContractAddress);
     const web3 = await initWeb3(nodeUrl);
     const paimaL2Contract = getPaimaL2Contract(paimaL2ContractAddress, web3);
-    const extensions = await loadChainDataExtensions();
-    // TODO: check / get extension start blockheights
+    const extensions = await loadChainDataExtensions(ENV.CDE_CONFIG_PATH);
     return new PaimaFunnel(nodeUrl, paimaL2ContractAddress, extensions, web3, paimaL2Contract);
   },
 };

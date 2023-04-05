@@ -181,7 +181,7 @@ async function startRuntime(
 
   // Presync:
   const earliestCdeSbh = getEarliestStartBlockheight(chainFunnel.extensions);
-  const presyncStart = earliestCdeSbh > 0 ? earliestCdeSbh : ENV.START_BLOCKHEIGHT + 1;
+  const presyncStart = earliestCdeSbh >= 0 ? earliestCdeSbh : ENV.START_BLOCKHEIGHT + 1;
   const syncMark = await acquireLatestBlockHeight(gameStateMachine, pollingPeriod);
 
   if (syncMark <= ENV.START_BLOCKHEIGHT + 1 && presyncStart <= ENV.START_BLOCKHEIGHT) {

@@ -77,6 +77,9 @@ export class ENV {
   static get STORE_HISTORICAL_GAME_INPUTS(): boolean {
     return (process.env.STORE_HISTORICAL_GAME_INPUTS || 'true') === 'true';
   }
+  static get CDE_CONFIG_PATH(): string {
+    return process.env.CDE_CONFIG_PATH || 'extensions.yml';
+  }
 
   // Middleware config:
   static get BACKEND_URI(): string {
