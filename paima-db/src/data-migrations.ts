@@ -52,11 +52,9 @@ export class DataMigrations {
     if (DataMigrations.pendingMigrations[0] + ENV.START_BLOCKHEIGHT !== currentBlock) {
       throw new Error('No data migration to apply at: ' + currentBlock);
     }
-    console.log(`Applying Data Migration ${DataMigrations.pendingMigrations[0]}.sql`);
-    const sqlQueries = await readFile(
-      `${this.migrationPath}/${DataMigrations.pendingMigrations[0]}.sql`,
-      'utf-8'
-    );
+    const migration = DataMigrations.pendingMigrations.shift();
+    console.log(`Applying Data Migration ${migration}.sql`);
+    const sqlQueries = await readFile(`${this.migrationPath}/${migration}.sql`, 'utf-8');
     await DataMigrations.pool.query(sqlQueries);
     return;
   }
