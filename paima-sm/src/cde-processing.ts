@@ -6,6 +6,7 @@ import type { ChainDataExtensionDatum } from '@paima/utils';
 import processErc20Datum from './cde-erc20';
 import processErc721Datum from './cde-erc721';
 import type { SQLUpdate } from '@paima/db';
+import { getSpecificCdeBlockheight } from '@paima/db';
 
 export async function cdeTransitionFunction(
   readonlyDBConn: Pool,
@@ -19,4 +20,18 @@ export async function cdeTransitionFunction(
     default:
       throw new Error(`[paima-sm] Unknown type on CDE datum: ${cdeDatum}`);
   }
+}
+
+export async function getProcessedCdeDatumCount(
+  readonlyDBConn: Pool,
+  blockHeight: number
+): Promise<number> {
+  const cdeStatus = await getSpecificCdeBlockheight.run(
+    { block_height: blockHeight },
+    readonlyDBConn
+  );
+  if (cdeStatus.length === 0) {
+    return 0;
+  }
+  return cdeStatus[0].datum_count;
 }
