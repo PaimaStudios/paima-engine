@@ -1,10 +1,15 @@
 import type Web3 from 'web3';
 
 import { ChainDataExtensionType } from '@paima/utils';
-import type { ChainDataExtensionDatum, InstantiatedChainDataExtension } from '@paima/utils';
+import type {
+  ChainDataExtensionDatum,
+  InstantiatedChainDataExtension,
+  PresyncChainData,
+} from '@paima/utils';
 
 import getCdeErc20Data from './cde-erc20';
 import getCdeErc721Data from './cde-erc721';
+import { groupCdeData } from './data-processing';
 
 export async function getAllCdeData(
   web3: Web3,
@@ -19,6 +24,16 @@ export async function getAllCdeData(
     extensions.map(extension => getSpecificCdeData(web3, extension, fromBlock, toBlock))
   );
   return allData;
+}
+
+export async function getGroupedCdeData(
+  web3: Web3,
+  extensions: InstantiatedChainDataExtension[],
+  fromBlock: number,
+  toBlock: number
+): Promise<PresyncChainData[]> {
+  const ungroupedData = await getAllCdeData(web3, extensions, fromBlock, toBlock);
+  return groupCdeData(fromBlock, toBlock, ungroupedData);
 }
 
 async function getSpecificCdeData(

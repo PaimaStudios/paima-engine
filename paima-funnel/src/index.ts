@@ -23,9 +23,9 @@ import {
   getSubmittedDataMulti,
   getSubmittedDataSingle,
 } from './paima-l2-reading.js';
-import { getAllCdeData } from './cde.js';
+import { getAllCdeData, getGroupedCdeData } from './cde.js';
 import { timeout } from './utils.js';
-import { composeChainData, groupCdeData } from './data-processing.js';
+import { composeChainData } from './data-processing.js';
 import { instantiateExtension } from './cde-initialization.js';
 
 const GET_BLOCK_NUMBER_TIMEOUT = 5000;
@@ -88,9 +88,13 @@ class PaimaFunnel {
       return [];
     }
 
-    const data = await getAllCdeData(this.web3, this.instantiatedExtensions, fromBlock, toBlock);
-    const groupedData = groupCdeData(fromBlock, toBlock, data);
-    return groupedData.filter(unit => unit.extensionDatums.length > 0);
+    const data = await getGroupedCdeData(
+      this.web3,
+      this.instantiatedExtensions,
+      fromBlock,
+      toBlock
+    );
+    return data.filter(unit => unit.extensionDatums.length > 0);
   };
 
   // Will return [-1, -2] if the range is determined to be empty.
@@ -158,7 +162,7 @@ class PaimaFunnel {
       const [blockResults, submittedDataBlocks, cdeData] = await Promise.all([
         getMultipleBlockData(this.web3, fromBlock, toBlock),
         getSubmittedDataMulti(this.web3, this.paimaL2Contract, fromBlock, toBlock),
-        getAllCdeData(this.web3, this.instantiatedExtensions, fromBlock, toBlock),
+        getGroupedCdeData(this.web3, this.instantiatedExtensions, fromBlock, toBlock),
       ]);
       return composeChainData(blockResults, submittedDataBlocks, cdeData);
     } catch (err) {

@@ -191,22 +191,19 @@ export function groupCdeData(
 export function composeChainData(
   cutBlockData: BlockData[],
   submittedDataBlocks: BlockSubmittedData[],
-  cdeData: ChainDataExtensionDatum[][]
+  cdeData: PresyncChainData[]
 ): ChainData[] {
   const length = Math.min(cutBlockData.length, submittedDataBlocks.length, cdeData.length);
   if (length === 0) {
     return [];
   }
-  cutBlockData = cutBlockData.slice(length);
-  submittedDataBlocks = submittedDataBlocks.slice(length);
-  cdeData = cdeData.slice(length);
+  cutBlockData = cutBlockData.slice(0, length);
+  submittedDataBlocks = submittedDataBlocks.slice(0, length);
+  cdeData = cdeData.slice(0, length);
 
-  const fromBlock = cutBlockData[0].blockNumber;
-  const toBlock = cutBlockData[cutBlockData.length - 1].blockNumber;
-  const groupedCdeData = groupCdeData(fromBlock, toBlock, cdeData);
   return cutBlockData.map((blockData, index) => ({
     ...blockData,
     submittedData: submittedDataBlocks[index].submittedData,
-    extensionDatums: groupedCdeData[index].extensionDatums,
+    extensionDatums: cdeData[index].extensionDatums,
   }));
 }
