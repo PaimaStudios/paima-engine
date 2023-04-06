@@ -3,8 +3,8 @@ import { PreparedQuery } from '@pgtyped/query';
 
 /** 'CdeErc721GetOwner' parameters type */
 export interface ICdeErc721GetOwnerParams {
-  cde_id: number | null | void;
-  token_id: string | null | void;
+  cde_id: number;
+  token_id: string;
 }
 
 /** 'CdeErc721GetOwner' return type */
@@ -20,17 +20,49 @@ export interface ICdeErc721GetOwnerQuery {
   result: ICdeErc721GetOwnerResult;
 }
 
-const cdeErc721GetOwnerIR: any = {"usedParamSet":{"cde_id":true,"token_id":true},"params":[{"name":"cde_id","required":false,"transform":{"type":"scalar"},"locs":[{"a":45,"b":51}]},{"name":"token_id","required":false,"transform":{"type":"scalar"},"locs":[{"a":68,"b":76}]}],"statement":"SELECT * FROM cde_erc721_data\nWHERE cde_id = :cde_id\nAND token_id = :token_id"};
+const cdeErc721GetOwnerIR: any = {"usedParamSet":{"cde_id":true,"token_id":true},"params":[{"name":"cde_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":45,"b":52}]},{"name":"token_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":69,"b":78}]}],"statement":"SELECT * FROM cde_erc721_data\nWHERE cde_id = :cde_id!\nAND token_id = :token_id!"};
 
 /**
  * Query generated from SQL:
  * ```
  * SELECT * FROM cde_erc721_data
- * WHERE cde_id = :cde_id
- * AND token_id = :token_id
+ * WHERE cde_id = :cde_id!
+ * AND token_id = :token_id!
  * ```
  */
 export const cdeErc721GetOwner = new PreparedQuery<ICdeErc721GetOwnerParams,ICdeErc721GetOwnerResult>(cdeErc721GetOwnerIR);
+
+
+/** 'CdeErc721GetOwnedNfts' parameters type */
+export interface ICdeErc721GetOwnedNftsParams {
+  cde_id: number;
+  nft_owner: string;
+}
+
+/** 'CdeErc721GetOwnedNfts' return type */
+export interface ICdeErc721GetOwnedNftsResult {
+  cde_id: number;
+  nft_owner: string;
+  token_id: string;
+}
+
+/** 'CdeErc721GetOwnedNfts' query type */
+export interface ICdeErc721GetOwnedNftsQuery {
+  params: ICdeErc721GetOwnedNftsParams;
+  result: ICdeErc721GetOwnedNftsResult;
+}
+
+const cdeErc721GetOwnedNftsIR: any = {"usedParamSet":{"cde_id":true,"nft_owner":true},"params":[{"name":"cde_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":45,"b":52}]},{"name":"nft_owner","required":true,"transform":{"type":"scalar"},"locs":[{"a":70,"b":80}]}],"statement":"SELECT * FROM cde_erc721_data\nWHERE cde_id = :cde_id!\nAND nft_owner = :nft_owner!"};
+
+/**
+ * Query generated from SQL:
+ * ```
+ * SELECT * FROM cde_erc721_data
+ * WHERE cde_id = :cde_id!
+ * AND nft_owner = :nft_owner!
+ * ```
+ */
+export const cdeErc721GetOwnedNfts = new PreparedQuery<ICdeErc721GetOwnedNftsParams,ICdeErc721GetOwnedNftsResult>(cdeErc721GetOwnedNftsIR);
 
 
 /** 'CdeErc721InsertOwner' parameters type */
