@@ -18,51 +18,133 @@ export async function startRuntime(
   gameStateMachine: GameStateMachine,
   chainFunnel: ChainFunnel,
   pollingRate: number,
+  presyncStepSize: number,
+  startBlockHeight: number,
   stopBlockHeight: number | null
 ): Promise<void> {
   const pollingPeriod = pollingRate * 1000;
 
   // Presync:
-  const earliestCdeSbh = getEarliestStartBlockheight(chainFunnel.getExtensions());
-  const presyncStart = earliestCdeSbh >= 0 ? earliestCdeSbh : ENV.START_BLOCKHEIGHT + 1;
-  const syncMark = await acquireLatestBlockHeight(gameStateMachine, pollingPeriod);
-
-  if (syncMark <= ENV.START_BLOCKHEIGHT + 1 && presyncStart <= ENV.START_BLOCKHEIGHT) {
-    let presyncBlockHeight = presyncStart;
-    const presyncMark = await gameStateMachine.getPresyncBlockHeight();
-    if (presyncMark > 0) {
-      presyncBlockHeight = presyncMark + 1;
-    }
-
-    while (run && presyncBlockHeight <= ENV.START_BLOCKHEIGHT) {
-      const upper = Math.min(
-        presyncBlockHeight + ENV.DEFAULT_PRESYNC_STEP_SIZE - 1,
-        ENV.START_BLOCKHEIGHT
-      );
-      if (upper > presyncBlockHeight) {
-        doLog(`p${presyncBlockHeight}-${upper}`);
-      } else {
-        doLog(`p${presyncBlockHeight}`);
-      }
-      const latestPresyncDataList = await chainFunnel.readPresyncData(presyncBlockHeight, upper);
-      if (!latestPresyncDataList || latestPresyncDataList.length === 0) {
-        await delay(pollingPeriod);
-        continue;
-      }
-      const filteredPresyncDataList = latestPresyncDataList.filter(
-        unit => unit.extensionDatums.length > 0
-      );
-      for (const presyncData of filteredPresyncDataList) {
-        await gameStateMachine.presyncProcess(presyncData);
-      }
-      presyncBlockHeight = upper + 1;
-    }
-    doLog(`[paima-runtime] Presync finished at ${presyncBlockHeight}`);
-  } else {
-    doLog(`[paima-runtime] Skipping presync due to syncMark ${syncMark}`);
-  }
+  await runPresync(
+    gameStateMachine,
+    chainFunnel,
+    pollingPeriod,
+    presyncStepSize,
+    startBlockHeight,
+    stopBlockHeight
+  );
 
   // Main sync:
+  await runSync(gameStateMachine, chainFunnel, pollingPeriod, stopBlockHeight);
+
+  process.exit(0);
+}
+
+async function runPresync(
+  gameStateMachine: GameStateMachine,
+  chainFunnel: ChainFunnel,
+  pollingPeriod: number,
+  stepSize: number,
+  startBlockHeight: number,
+  stopBlockHeight: number | null
+): Promise<void> {
+  const maximumPresyncBlockheight = stopBlockHeight
+    ? Math.min(startBlockHeight, stopBlockHeight)
+    : startBlockHeight;
+  let presyncBlockHeight = await getPresyncStartBlockheight(
+    gameStateMachine,
+    chainFunnel,
+    pollingPeriod,
+    maximumPresyncBlockheight
+  );
+
+  if (presyncBlockHeight > maximumPresyncBlockheight) {
+    doLog(
+      `[paima-runtime] Skipping presync (presync block height: ${presyncBlockHeight}, maximum presync block height: ${startBlockHeight})`
+    );
+    return;
+  }
+
+  if (run) {
+    doLog(
+      '-------------------------------------\nBeginning Presync\n-------------------------------------'
+    );
+  }
+  while (run && presyncBlockHeight <= maximumPresyncBlockheight) {
+    const upper = Math.min(presyncBlockHeight + stepSize - 1, maximumPresyncBlockheight);
+    if (upper > presyncBlockHeight) {
+      doLog(`p${presyncBlockHeight}-${upper}`);
+    } else {
+      doLog(`p${presyncBlockHeight}`);
+    }
+
+    presyncBlockHeight = await runPresyncRound(
+      gameStateMachine,
+      chainFunnel,
+      pollingPeriod,
+      presyncBlockHeight,
+      upper
+    );
+  }
+  await loopIfStopBlockReached(presyncBlockHeight, stopBlockHeight);
+  doLog(`[paima-runtime] Presync finished at ${presyncBlockHeight}`);
+}
+
+async function getPresyncStartBlockheight(
+  gameStateMachine: GameStateMachine,
+  chainFunnel: ChainFunnel,
+  pollingPeriod: number,
+  maximumPresyncBlockheight: number
+): Promise<number> {
+  const earliestCdeSbh = getEarliestStartBlockheight(chainFunnel.getExtensions());
+  const freshPresyncStart = earliestCdeSbh >= 0 ? earliestCdeSbh : maximumPresyncBlockheight + 1;
+  const latestSyncBlockheight = await acquireLatestBlockHeight(gameStateMachine, pollingPeriod);
+
+  if (
+    freshPresyncStart > maximumPresyncBlockheight ||
+    latestSyncBlockheight > maximumPresyncBlockheight
+  ) {
+    // No need for presync:
+    return maximumPresyncBlockheight + 1;
+  }
+
+  const latestPresyncBlockheight = await gameStateMachine.getPresyncBlockHeight();
+  if (latestPresyncBlockheight > 0) {
+    // Continue previously unfinished presync:
+    return latestPresyncBlockheight + 1;
+  } else {
+    // Start fresh presync:
+    return freshPresyncStart;
+  }
+}
+
+async function runPresyncRound(
+  gameStateMachine: GameStateMachine,
+  chainFunnel: ChainFunnel,
+  pollingPeriod: number,
+  fromBlock: number,
+  toBlock: number
+): Promise<number> {
+  const latestPresyncDataList = await chainFunnel.readPresyncData(fromBlock, toBlock);
+  if (!latestPresyncDataList || latestPresyncDataList.length === 0) {
+    await delay(pollingPeriod);
+    return fromBlock;
+  }
+  const filteredPresyncDataList = latestPresyncDataList.filter(
+    unit => unit.extensionDatums.length > 0
+  );
+  for (const presyncData of filteredPresyncDataList) {
+    await gameStateMachine.presyncProcess(presyncData);
+  }
+  return toBlock + 1;
+}
+
+async function runSync(
+  gameStateMachine: GameStateMachine,
+  chainFunnel: ChainFunnel,
+  pollingPeriod: number,
+  stopBlockHeight: number | null
+): Promise<void> {
   if (run) {
     doLog(
       '-------------------------------------\nBeginning Syncing & Processing Blocks\n-------------------------------------'
@@ -70,83 +152,31 @@ export async function startRuntime(
   }
   while (run) {
     // Initializing the latest read block height and snapshotting
-    let latestReadBlockHeight: number;
-    try {
-      latestReadBlockHeight = await acquireLatestBlockHeight(gameStateMachine, pollingPeriod);
-      await snapshotIfTime(latestReadBlockHeight);
-      await loopIfStopBlockReached(latestReadBlockHeight, stopBlockHeight);
-      exitIfStopped(run);
-    } catch (err) {
-      doLog('[paima-runtime] Error in pre-funnel phase:');
-      logError(err);
+    const latestProcessedBlockHeight = await getSyncRoundStart(
+      gameStateMachine,
+      pollingPeriod,
+      stopBlockHeight
+    );
+    if (latestProcessedBlockHeight < 0) {
       continue;
     }
 
     // Fetching new chain data via the funnel
-    let latestChainDataList: ChainData[];
-    try {
-      latestChainDataList = await chainFunnel.readData(latestReadBlockHeight + 1);
-      exitIfStopped(run);
-
-      // If no new chain data, delay for the duration of the pollingPeriod
-      if (!latestChainDataList || !latestChainDataList?.length) {
-        await delay(pollingPeriod);
-        continue;
-      }
-    } catch (err) {
-      doLog('[paima-runtime] Error received from the funnel:');
-      logError(err);
+    const latestChainDataList = await getSyncRoundData(
+      chainFunnel,
+      pollingPeriod,
+      latestProcessedBlockHeight
+    );
+    if (latestChainDataList.length === 0) {
       continue;
     }
 
     // Iterate through all of the returned chainData and process each one via the state machine's STF
     try {
       for (const chainData of latestChainDataList) {
-        // Checking if should safely close in between processing blocks
-        exitIfStopped(run);
-        try {
-          const latestReadBlockHeight = await acquireLatestBlockHeight(
-            gameStateMachine,
-            pollingPeriod
-          );
-          if (chainData.blockNumber !== latestReadBlockHeight + 1) {
-            doLog(
-              `[paima-runtime] Block number ${chainData.blockNumber} encountered out of order!`
-            );
-            break;
-          }
-        } catch (err) {
-          doLog(
-            `[paima-runtime] Error occurred prior to running STF for block ${chainData.blockNumber}:`
-          );
-          logError(err);
-          break;
-        }
-
-        try {
-          if (DataMigrations.hasPendingMigration(chainData.blockNumber)) {
-            await DataMigrations.applyDataDBMigrations(chainData.blockNumber);
-          }
-          await gameStateMachine.process(chainData);
-          exitIfStopped(run);
-        } catch (err) {
-          doLog(
-            `[paima-runtime] Error occurred while running STF for block ${chainData.blockNumber}:`
-          );
-          logError(err);
-          break;
-        }
-
-        try {
-          const latestReadBlockHeight = await gameStateMachine.latestProcessedBlockHeight();
-          await snapshotIfTime(latestReadBlockHeight);
-          exitIfStopped(run);
-          await loopIfStopBlockReached(latestReadBlockHeight, stopBlockHeight);
-        } catch (err) {
-          doLog(
-            `[paima-runtime] Error occurred after running STF for block ${chainData.blockNumber}:`
-          );
-          logError(err);
+        if (
+          !(await processSyncBlockData(gameStateMachine, chainData, pollingPeriod, stopBlockHeight))
+        ) {
           break;
         }
       }
@@ -156,5 +186,133 @@ export async function startRuntime(
       continue;
     }
   }
-  process.exit(0);
+}
+
+async function getSyncRoundStart(
+  gameStateMachine: GameStateMachine,
+  pollingPeriod: number,
+  stopBlockHeight: number | null
+): Promise<number> {
+  try {
+    const latestProcessedBlockHeight = await acquireLatestBlockHeight(
+      gameStateMachine,
+      pollingPeriod
+    );
+    await snapshotIfTime(latestProcessedBlockHeight);
+    await loopIfStopBlockReached(latestProcessedBlockHeight, stopBlockHeight);
+    exitIfStopped(run);
+    return latestProcessedBlockHeight;
+  } catch (err) {
+    doLog('[paima-runtime] Error in pre-funnel phase:');
+    logError(err);
+    return -1;
+  }
+}
+
+async function getSyncRoundData(
+  chainFunnel: ChainFunnel,
+  pollingPeriod: number,
+  latestProcessedBlockHeight: number
+): Promise<ChainData[]> {
+  try {
+    const latestChainDataList = await chainFunnel.readData(latestProcessedBlockHeight + 1);
+    exitIfStopped(run);
+
+    // If no new chain data, delay for the duration of the pollingPeriod
+    if (!latestChainDataList || !latestChainDataList?.length) {
+      await delay(pollingPeriod);
+      return [];
+    }
+
+    return latestChainDataList;
+  } catch (err) {
+    doLog('[paima-runtime] Error received from the funnel:');
+    logError(err);
+    return [];
+  }
+}
+
+async function processSyncBlockData(
+  gameStateMachine: GameStateMachine,
+  chainData: ChainData,
+  pollingPeriod: number,
+  stopBlockHeight: number | null
+): Promise<boolean> {
+  // Checking if should safely close in between processing blocks
+  exitIfStopped(run);
+
+  // Before processing -- sanity check of block height:
+  if (!(await blockPreProcess(gameStateMachine, chainData.blockNumber, pollingPeriod))) {
+    return false;
+  }
+
+  // Processing proper -- data migrations and passing chain data to SM
+  if (!(await blockCoreProcess(gameStateMachine, chainData))) {
+    return false;
+  }
+
+  // After processing -- checking
+  if (!(await blockPostProcess(gameStateMachine, chainData.blockNumber, stopBlockHeight))) {
+    return false;
+  }
+
+  return true;
+}
+
+async function blockPreProcess(
+  gameStateMachine: GameStateMachine,
+  blockNumber: number,
+  pollingPeriod: number
+): Promise<boolean> {
+  try {
+    const latestReadBlockHeight = await acquireLatestBlockHeight(gameStateMachine, pollingPeriod);
+    if (blockNumber !== latestReadBlockHeight + 1) {
+      doLog(`[paima-runtime] Block number ${blockNumber} encountered out of order!`);
+      return false;
+    }
+  } catch (err) {
+    doLog(`[paima-runtime] Error occurred prior to SM processing of block ${blockNumber}:`);
+    logError(err);
+    return false;
+  }
+
+  return true;
+}
+
+async function blockCoreProcess(
+  gameStateMachine: GameStateMachine,
+  chainData: ChainData
+): Promise<boolean> {
+  try {
+    if (DataMigrations.hasPendingMigration(chainData.blockNumber)) {
+      await DataMigrations.applyDataDBMigrations(chainData.blockNumber);
+    }
+    await gameStateMachine.process(chainData);
+    exitIfStopped(run);
+  } catch (err) {
+    doLog(`[paima-runtime] Error occurred while SM processing of block ${chainData.blockNumber}:`);
+    logError(err);
+    return false;
+  }
+
+  return true;
+}
+
+async function blockPostProcess(
+  gameStateMachine: GameStateMachine,
+  blockNumber: number,
+  stopBlockHeight: number | null
+): Promise<boolean> {
+  try {
+    const latestReadBlockHeight = await gameStateMachine.latestProcessedBlockHeight();
+    await snapshotIfTime(latestReadBlockHeight);
+    exitIfStopped(run);
+    await loopIfStopBlockReached(latestReadBlockHeight, stopBlockHeight);
+  } catch (err) {
+    doLog(`[paima-runtime] Error occurred after SM processing of block ${blockNumber}:`);
+    logError(err);
+    return false;
+  }
+
+  return true;
 }
