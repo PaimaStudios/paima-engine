@@ -55,7 +55,7 @@ const paimaEngine: PaimaRuntimeInitializer = {
         });
 
         // initialize snapshot folder
-        if (!(await runInitializationProcedures(gameStateMachine, chainFunnel, this.pollingRate))) {
+        if (!(await runInitializationProcedures(gameStateMachine, chainFunnel))) {
           doLog(`[paima-runtime] Aborting due to initialization issues.`);
           return;
         }
@@ -75,11 +75,8 @@ const paimaEngine: PaimaRuntimeInitializer = {
 
 async function runInitializationProcedures(
   gameStateMachine: GameStateMachine,
-  chainFunnel: ChainFunnel,
-  pollingRate: number
+  chainFunnel: ChainFunnel
 ): Promise<boolean> {
-  const pollingPeriod = pollingRate * 1000;
-
   // Initialize snaphots directory:
   await initSnapshots();
 
@@ -92,7 +89,7 @@ async function runInitializationProcedures(
     return false;
   }
 
-  // CDE config initialization:
+  // CDE config validation / storing:
   const smStarted =
     (await gameStateMachine.presyncStarted()) || (await gameStateMachine.syncStarted());
   const cdeResult = await validatePersistentCdeConfig(
@@ -106,7 +103,7 @@ async function runInitializationProcedures(
   }
 
   // Load data migrations
-  const lastBlockHeightAtLaunch = await acquireLatestBlockHeight(gameStateMachine, pollingPeriod);
+  const lastBlockHeightAtLaunch = await gameStateMachine.latestProcessedBlockHeight();
 
   if ((await DataMigrations.loadDataMigrations(lastBlockHeightAtLaunch)) > 0) {
     DataMigrations.setDBConnection(gameStateMachine.getReadWriteDbConn());
