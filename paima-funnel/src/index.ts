@@ -24,9 +24,9 @@ import {
   getSubmittedDataMulti,
   getSubmittedDataSingle,
 } from './reading.js';
-import { getUngroupedCdeData } from './cde.js';
+import { getUngroupedCdeData } from './cde/reading.js';
 import { composeChainData, groupCdeData } from './utils.js';
-import { instantiateExtension } from './cde-initialization.js';
+import { instantiateExtension } from './cde/initialization.js';
 
 const GET_BLOCK_NUMBER_TIMEOUT = 5000;
 

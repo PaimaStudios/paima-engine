@@ -3,8 +3,8 @@ import type Web3 from 'web3';
 import { ChainDataExtensionType } from '@paima/utils';
 import type { ChainDataExtensionDatum, InstantiatedChainDataExtension } from '@paima/utils';
 
-import getCdeErc20Data from './cde-erc20';
-import getCdeErc721Data from './cde-erc721';
+import getCdeErc20Data from './erc20';
+import getCdeErc721Data from './erc721';
 
 export async function getUngroupedCdeData(
   web3: Web3,
