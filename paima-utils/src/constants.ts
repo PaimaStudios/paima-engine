@@ -8,6 +8,8 @@ export const enum AddressType {
 export const OUTER_BATCH_DIVIDER: string = '\x02';
 export const INNER_BATCH_DIVIDER: string = '\x03';
 
+export const DEFAULT_FUNNEL_TIMEOUT = 5000;
+
 export const enum ChainDataExtensionType {
   UNKNOWN = 0,
   ERC20 = 1,
