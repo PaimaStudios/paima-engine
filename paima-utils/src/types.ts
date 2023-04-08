@@ -124,11 +124,7 @@ export type InstantiatedChainDataExtension =
   | InstantiatedChainDataExtensionErc721;
 
 export interface ChainFunnel {
-  nodeUrl: string;
-  paimaL2ContractAddress: string;
-  extensions: ChainDataExtension[];
-  web3: Web3;
-  paimaL2Contract: PaimaL2Contract;
+  getExtensions: () => ChainDataExtension[];
   readData: (blockHeight: number) => Promise<ChainData[]>;
   readPresyncData: (fromBlock: number, toBlock: number) => Promise<PresyncChainData[]>;
 }

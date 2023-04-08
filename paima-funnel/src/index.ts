@@ -31,27 +31,23 @@ import { instantiateExtension } from './cde-initialization.js';
 const GET_BLOCK_NUMBER_TIMEOUT = 5000;
 
 class PaimaFunnel {
-  public nodeUrl: string;
-  public paimaL2ContractAddress: string;
-  public extensions: ChainDataExtension[];
-  public web3: Web3;
-  public paimaL2Contract: PaimaL2Contract;
-  private instantiatedExtensions: InstantiatedChainDataExtension[];
+  private extensions: InstantiatedChainDataExtension[];
+  private web3: Web3;
+  private paimaL2Contract: PaimaL2Contract;
 
   constructor(
-    nodeUrl: string,
-    paimaL2ContractAddress: string,
-    extensions: ChainDataExtension[],
     web3: Web3,
-    paimaL2Contract: PaimaL2Contract
+    paimaL2Contract: PaimaL2Contract,
+    extensions: InstantiatedChainDataExtension[]
   ) {
-    this.nodeUrl = nodeUrl;
-    this.paimaL2ContractAddress = paimaL2ContractAddress;
     this.extensions = extensions;
     this.web3 = web3;
     this.paimaL2Contract = paimaL2Contract;
-    this.instantiatedExtensions = extensions.map(e => instantiateExtension(web3, e));
   }
+
+  public getExtensions = (): ChainDataExtension[] => {
+    return this.extensions;
+  };
 
   public readData = async (
     blockHeight: number,
@@ -88,12 +84,7 @@ class PaimaFunnel {
       return [];
     }
 
-    const data = await getGroupedCdeData(
-      this.web3,
-      this.instantiatedExtensions,
-      fromBlock,
-      toBlock
-    );
+    const data = await getGroupedCdeData(this.web3, this.extensions, fromBlock, toBlock);
     return data.filter(unit => unit.extensionDatums.length > 0);
   };
 
@@ -120,9 +111,7 @@ class PaimaFunnel {
         return ERR_RESULT;
       }
     } catch (err) {
-      doLog(
-        `[paima-funnel] Exception occured while getting latest block number: ${err}`
-      );
+      doLog(`[paima-funnel] Exception occured while getting latest block number: ${err}`);
       return ERR_RESULT;
     }
   };
@@ -135,7 +124,7 @@ class PaimaFunnel {
       const [blockData, submittedData, cdeData] = await Promise.all([
         getBlockData(this.web3, blockNumber),
         getSubmittedDataSingle(this.web3, this.paimaL2Contract, blockNumber),
-        getAllCdeData(this.web3, this.instantiatedExtensions, blockNumber, blockNumber),
+        getAllCdeData(this.web3, this.extensions, blockNumber, blockNumber),
       ]);
 
       return [
@@ -162,7 +151,7 @@ class PaimaFunnel {
       const [blockResults, submittedDataBlocks, cdeData] = await Promise.all([
         getMultipleBlockData(this.web3, fromBlock, toBlock),
         getSubmittedDataMulti(this.web3, this.paimaL2Contract, fromBlock, toBlock),
-        getGroupedCdeData(this.web3, this.instantiatedExtensions, fromBlock, toBlock),
+        getGroupedCdeData(this.web3, this.extensions, fromBlock, toBlock),
       ]);
       return composeChainData(blockResults, submittedDataBlocks, cdeData);
     } catch (err) {
@@ -178,7 +167,8 @@ const paimaFunnelInitializer = {
     const web3 = await initWeb3(nodeUrl);
     const paimaL2Contract = getPaimaL2Contract(paimaL2ContractAddress, web3);
     const extensions = await loadChainDataExtensions(ENV.CDE_CONFIG_PATH);
-    return new PaimaFunnel(nodeUrl, paimaL2ContractAddress, extensions, web3, paimaL2Contract);
+    const instantiatedExtensions = extensions.map(e => instantiateExtension(web3, e));
+    return new PaimaFunnel(web3, paimaL2Contract, instantiatedExtensions);
   },
 };
 
