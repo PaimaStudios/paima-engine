@@ -135,7 +135,7 @@ async function runInitializationProcedures(
     (await gameStateMachine.presyncStarted()) || (await gameStateMachine.syncStarted());
   const cdeResult = await validatePersistentCdeConfig(
     chainFunnel.getExtensions(),
-    gameStateMachine.getNewReadWriteDbConn(),
+    gameStateMachine.getReadWriteDbConn(),
     smStarted
   );
   if (!cdeResult) {
@@ -147,7 +147,7 @@ async function runInitializationProcedures(
   const lastBlockHeightAtLaunch = await acquireLatestBlockHeight(gameStateMachine, pollingPeriod);
 
   if ((await DataMigrations.loadDataMigrations(lastBlockHeightAtLaunch)) > 0) {
-    DataMigrations.setDBConnection(gameStateMachine.getNewReadWriteDbConn());
+    DataMigrations.setDBConnection(gameStateMachine.getReadWriteDbConn());
   }
 
   return true;

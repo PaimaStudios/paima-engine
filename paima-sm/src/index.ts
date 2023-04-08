@@ -64,7 +64,7 @@ const SM: GameStateMachineInitializer = {
       getReadonlyDbConn: (): Pool => {
         return readonlyDBConn;
       },
-      getNewReadWriteDbConn: (): Pool => {
+      getReadWriteDbConn: (): Pool => {
         return getConnection(databaseInfo);
       },
       presyncProcess: async (latestCdeData: PresyncChainData): Promise<void> => {

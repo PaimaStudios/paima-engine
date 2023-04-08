@@ -39,7 +39,7 @@ export interface GameStateMachine {
   latestProcessedBlockHeight: () => Promise<number>;
   getPresyncBlockHeight: () => Promise<number>;
   getReadonlyDbConn: () => Pool;
-  getNewReadWriteDbConn: () => Pool;
+  getReadWriteDbConn: () => Pool;
   process: (chainData: ChainData) => Promise<void>;
   presyncProcess: (latestCdeData: PresyncChainData) => Promise<void>;
   markPresyncMilestone: (blockHeight: number) => Promise<void>;
