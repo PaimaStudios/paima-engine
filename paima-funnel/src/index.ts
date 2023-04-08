@@ -77,9 +77,8 @@ class PaimaFunnel {
     fromBlock: number,
     toBlock: number
   ): Promise<PresyncChainData[]> => {
-    if (toBlock > ENV.START_BLOCKHEIGHT) {
-      toBlock = ENV.START_BLOCKHEIGHT;
-    }
+    toBlock = Math.min(toBlock, ENV.START_BLOCKHEIGHT);
+    fromBlock = Math.max(fromBlock, 0);
     if (fromBlock > toBlock) {
       return [];
     }
@@ -107,8 +106,8 @@ class PaimaFunnel {
         GET_BLOCK_NUMBER_TIMEOUT
       );
 
-      const fromBlock = firstBlockHeight;
-      const toBlock = Math.min(latestBlock, fromBlock + blockCount - 1);
+      const fromBlock = Math.max(0, firstBlockHeight);
+      const toBlock = Math.min(latestBlock, firstBlockHeight + blockCount - 1);
 
       if (fromBlock <= toBlock) {
         return [fromBlock, toBlock];
