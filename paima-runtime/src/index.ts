@@ -28,7 +28,6 @@ const paimaEngine: PaimaRuntimeInitializer = {
   initialize(chainFunnel, gameStateMachine, gameBackendVersion) {
     return {
       pollingRate: 4,
-      chainDataExtensions: [],
       addEndpoints(tsoaFunction): void {
         tsoaFunction(server);
       },
@@ -40,9 +39,6 @@ const paimaEngine: PaimaRuntimeInitializer = {
       },
       setPollingRate(seconds: number): void {
         this.pollingRate = seconds;
-      },
-      addExtensions(chainDataExtensions): void {
-        this.chainDataExtensions = [...this.chainDataExtensions, ...chainDataExtensions];
       },
       async run(stopBlockHeight: number | null, serverOnlyMode = false): Promise<void> {
         this.addGET('/backend_version', (req, res): void => {
@@ -56,7 +52,10 @@ const paimaEngine: PaimaRuntimeInitializer = {
         });
 
         // initialize snapshot folder
-        await initSnapshots();
+        if (!(await runInitializationProcedures(gameStateMachine, chainFunnel, this.pollingRate))) {
+          doLog(`[paima-runtime] Aborting due to initialization issues.`);
+          return;
+        }
 
         // pass endpoints to web server and run
         startServer();
@@ -112,6 +111,48 @@ async function startSafeRuntime(
   }
 }
 
+async function runInitializationProcedures(
+  gameStateMachine: GameStateMachine,
+  chainFunnel: ChainFunnel,
+  pollingRate: number
+): Promise<boolean> {
+  const pollingPeriod = pollingRate * 1000;
+
+  // Initialize snaphots directory:
+  await initSnapshots();
+
+  // DB initialization:
+  const initResult = await gameStateMachine.initializeDatabase(
+    ENV.FORCE_INVALID_PAIMA_DB_TABLE_DELETION
+  );
+  if (!initResult) {
+    doLog('[paima-runtime] Unable to initialize DB! Shutting down...');
+    return false;
+  }
+
+  // CDE config initialization:
+  const smStarted =
+    (await gameStateMachine.presyncStarted()) || (await gameStateMachine.syncStarted());
+  const cdeResult = await validatePersistentCdeConfig(
+    chainFunnel.getExtensions(),
+    gameStateMachine.getNewReadWriteDbConn(),
+    smStarted
+  );
+  if (!cdeResult) {
+    doLog('[paima-runtime] Invalid CDE configuration! Shutting down...');
+    return false;
+  }
+
+  // Load data migrations
+  const lastBlockHeightAtLaunch = await acquireLatestBlockHeight(gameStateMachine, pollingPeriod);
+
+  if ((await DataMigrations.loadDataMigrations(lastBlockHeightAtLaunch)) > 0) {
+    DataMigrations.setDBConnection(gameStateMachine.getNewReadWriteDbConn());
+  }
+
+  return true;
+}
+
 async function acquireLatestBlockHeight(sm: GameStateMachine, waitPeriod: number): Promise<number> {
   let wasDown = false;
   while (run) {
@@ -148,39 +189,9 @@ async function startRuntime(
   stopBlockHeight: number | null
 ): Promise<void> {
   const pollingPeriod = pollingRate * 1000;
-  let loopCount = 0;
-
-  // DB initialization:
-  const initResult = await gameStateMachine.initializeDatabase(
-    ENV.FORCE_INVALID_PAIMA_DB_TABLE_DELETION
-  );
-  if (!initResult) {
-    doLog('[paima-runtime] Unable to initialize DB! Shutting down...');
-    run = false;
-  }
-
-  // CDE config initialization:
-  const smStarted =
-    (await gameStateMachine.presyncStarted()) || (await gameStateMachine.syncStarted());
-  const cdeResult = await validatePersistentCdeConfig(
-    chainFunnel.extensions,
-    gameStateMachine.getNewReadWriteDbConn(),
-    smStarted
-  );
-  if (!cdeResult) {
-    doLog('[paima-runtime] Invalid CDE configuration! Shutting down...');
-    run = false;
-  }
-
-  // Load data migrations
-  const lastBlockHeightAtLaunch = await acquireLatestBlockHeight(gameStateMachine, pollingPeriod);
-
-  if ((await DataMigrations.loadDataMigrations(lastBlockHeightAtLaunch)) > 0) {
-    DataMigrations.setDBConnection(gameStateMachine.getNewReadWriteDbConn());
-  }
 
   // Presync:
-  const earliestCdeSbh = getEarliestStartBlockheight(chainFunnel.extensions);
+  const earliestCdeSbh = getEarliestStartBlockheight(chainFunnel.getExtensions());
   const presyncStart = earliestCdeSbh >= 0 ? earliestCdeSbh : ENV.START_BLOCKHEIGHT + 1;
   const syncMark = await acquireLatestBlockHeight(gameStateMachine, pollingPeriod);
 
@@ -202,7 +213,14 @@ async function startRuntime(
         doLog(`p${presyncBlockHeight}`);
       }
       const latestPresyncDataList = await chainFunnel.readPresyncData(presyncBlockHeight, upper);
-      for (const presyncData of latestPresyncDataList) {
+      if (!latestPresyncDataList || latestPresyncDataList.length === 0) {
+        await delay(pollingPeriod);
+        continue;
+      }
+      const filteredPresyncDataList = latestPresyncDataList.filter(
+        unit => unit.extensionDatums.length > 0
+      );
+      for (const presyncData of filteredPresyncDataList) {
         await gameStateMachine.presyncProcess(presyncData);
       }
       presyncBlockHeight = upper + 1;
@@ -213,9 +231,12 @@ async function startRuntime(
   }
 
   // Main sync:
+  if (run) {
+    doLog(
+      '-------------------------------------\nBeginning Syncing & Processing Blocks\n-------------------------------------'
+    );
+  }
   while (run) {
-    loopCount++;
-
     // Initializing the latest read block height and snapshotting
     let latestReadBlockHeight: number;
     try {
@@ -231,10 +252,6 @@ async function startRuntime(
 
     // Fetching new chain data via the funnel
     let latestChainDataList: ChainData[];
-    if (loopCount == 1)
-      doLog(
-        '-------------------------------------\nBeginning Syncing & Processing Blocks\n-------------------------------------'
-      );
     try {
       latestChainDataList = await chainFunnel.readData(latestReadBlockHeight + 1);
       exitIfStopped(run);
@@ -261,6 +278,9 @@ async function startRuntime(
             pollingPeriod
           );
           if (chainData.blockNumber !== latestReadBlockHeight + 1) {
+            doLog(
+              `[paima-runtime] Block number ${chainData.blockNumber} encountered out of order!`
+            );
             break;
           }
         } catch (err) {
@@ -307,6 +327,7 @@ async function startRuntime(
   process.exit(0);
 }
 
+// TODO: move to utils if not already there
 function delay(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
