@@ -1,7 +1,8 @@
 import type Web3 from 'web3';
+import { sha3 } from 'web3-utils';
 
 import type { SubmittedData } from '@paima/utils';
-import { AddressType, doLog } from '@paima/utils';
+import { doLog } from '@paima/utils';
 
 export interface ValidatedSubmittedData extends SubmittedData {
   validated: boolean;
@@ -14,15 +15,12 @@ export function unpackValidatedData(validatedData: ValidatedSubmittedData): Subm
   return o as SubmittedData;
 }
 
-export function createNonce(web3: Web3, nonceInput: string): string {
-  let nonce = web3.utils.sha3(nonceInput);
+export function createNonce(nonceInput: string): string {
+  let nonce = sha3(nonceInput);
+  // TODO: ok if empty string?
   if (!nonce) {
     doLog(`[funnel] WARNING: failure generating nonce from: ${nonceInput}`);
     nonce = '';
   }
   return nonce;
 }
-
-// Timeout function for promises
-export const timeout = <T>(prom: Promise<T>, time: number): Promise<Awaited<T>> =>
-  Promise.race([prom, new Promise<T>((_resolve, reject) => setTimeout(reject, time))]);

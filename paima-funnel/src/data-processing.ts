@@ -65,7 +65,7 @@ export async function processDataUnit(
     if (!unit.inputData.includes(OUTER_BATCH_DIVIDER)) {
       // Directly submitted input, prepare nonce and return:
       const hashInput = blockHeight.toString(10) + unit.userAddress + unit.inputData;
-      const inputNonce = createNonce(web3, hashInput);
+      const inputNonce = createNonce(hashInput);
       return [
         {
           ...unit,
@@ -131,7 +131,7 @@ async function processBatchedSubunit(
   );
 
   const hashInput = millisecondTimestamp + userAddress + inputData;
-  const inputNonce = createNonce(web3, hashInput);
+  const inputNonce = createNonce(hashInput);
 
   return {
     inputData,

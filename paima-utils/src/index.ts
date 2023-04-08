@@ -27,6 +27,7 @@ import {
   AddressType,
   INNER_BATCH_DIVIDER,
   OUTER_BATCH_DIVIDER,
+  DEFAULT_FUNNEL_TIMEOUT,
   ChainDataExtensionType,
 } from './constants';
 
@@ -55,6 +56,7 @@ export {
   ChainDataExtensionType,
   INNER_BATCH_DIVIDER,
   OUTER_BATCH_DIVIDER,
+  DEFAULT_FUNNEL_TIMEOUT,
   logError,
   doLog,
 };
@@ -129,6 +131,13 @@ export async function retrieveFee(address: string, web3: Web3): Promise<string> 
   const contract = getPaimaL2Contract(address, web3);
   return await contract.methods.fee().call();
 }
+
+// Timeout function for promises
+export const timeout = <T>(prom: Promise<T>, time: number): Promise<Awaited<T>> =>
+  Promise.race([
+    prom,
+    new Promise<T>((_resolve, reject) => setTimeout(() => reject('Timeout'), time)),
+  ]);
 
 export const wait = async (ms: number): Promise<void> =>
   await new Promise<void>(resolve => {
