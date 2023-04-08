@@ -1,8 +1,8 @@
 import * as fs from 'fs/promises';
 import YAML from 'yaml';
 
+import { ChainDataExtensionType, doLog } from '@paima/utils';
 import type { ChainDataExtension } from '@paima/utils';
-import { ChainDataExtensionType } from '@paima/utils';
 import { parseCdeType } from './utils';
 
 const HARDCODED_CDE_DJED_SC: ChainDataExtension = {
@@ -32,22 +32,28 @@ const HARCDODED_CDE_NFT: ChainDataExtension = {
 export async function loadChainDataExtensions(
   configFilePath: string
 ): Promise<ChainDataExtension[]> {
-  const configFileData = await fs.readFile(configFilePath, 'utf8');
-  const configObject = YAML.parse(configFileData);
-
-  if (!configObject.extensions || !Array.isArray(configObject.extensions)) {
+  let configFileData: string;
+  try {
+    configFileData = await fs.readFile(configFilePath, 'utf8');
+  } catch (err) {
+    doLog(`[cde-config] config file not found: ${configFilePath}, assuming no CDEs.`);
     return [];
   }
 
-  const config = configObject.extensions.map((e: any, i: number) => processCdeConfig(e, i + 1));
+  try {
+    const configObject = YAML.parse(configFileData);
 
-  console.log('[cde-config] configObject:', configObject);
-  console.log('[cde-config] config:', config);
+    if (!configObject.extensions || !Array.isArray(configObject.extensions)) {
+      throw new Error(`[cde-config] extensions field missing or invalid`);
+    }
 
-  return config;
+    const config = configObject.extensions.map((e: any, i: number) => processCdeConfig(e, i + 1));
 
-  //return [HARDCODED_CDE_DJED_SC, HARDCODED_CDE_DJED_RC, HARCDODED_CDE_NFT];
-  //return [];
+    return config;
+  } catch (err) {
+    doLog(`[cde-config] Invalid config file, assuming no CDEs. Error: ${err}`);
+    return [];
+  }
 }
 
 function processCdeConfig(extension: any, cdeId: number): ChainDataExtension {
