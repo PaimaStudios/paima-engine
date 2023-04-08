@@ -132,8 +132,6 @@ export interface ChainFunnel {
 export interface PaimaRuntime {
   pollingRate: number;
   setPollingRate: (n: number) => void;
-  chainDataExtensions: ChainDataExtension[];
-  addExtensions: (e: ChainDataExtension[]) => void;
   addGET: (route: string, callback: RequestHandler) => void;
   addPOST: (route: string, callback: RequestHandler) => void;
   addEndpoints: (t: TsoaFunction) => void;
