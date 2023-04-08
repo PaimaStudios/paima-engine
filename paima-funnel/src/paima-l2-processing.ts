@@ -11,31 +11,31 @@ import verifySignaturePolkadot from './verification/polkadot.js';
 
 const { toBN, sha3, hexToUtf8 } = web3UtilsPkg;
 
+interface ValidatedSubmittedData extends SubmittedData {
+  validated: boolean;
+}
+
 export async function extractSubmittedData(
   web3: Web3,
   events: PaimaGameInteraction[]
 ): Promise<SubmittedData[]> {
-  const eventMapper = (e: PaimaGameInteraction): Promise<SubmittedData[]> => {
-    const decodedData = decodeEventData(e.returnValues.data);
-    return processDataUnit(
-      web3,
-      {
-        userAddress: e.returnValues.userAddress,
-        inputData: decodedData,
-        inputNonce: '',
-        suppliedValue: e.returnValues.value,
-        scheduled: false,
-      },
-      e.blockNumber
-    );
-  };
-
-  const unflattenedList = await Promise.all(events.map(eventMapper));
+  const unflattenedList = await Promise.all(events.map(e => eventMapper(web3, e)));
   return unflattenedList.flat();
 }
 
-interface ValidatedSubmittedData extends SubmittedData {
-  validated: boolean;
+async function eventMapper(web3: Web3, e: PaimaGameInteraction): Promise<SubmittedData[]> {
+  const decodedData = decodeEventData(e.returnValues.data);
+  return await processDataUnit(
+    web3,
+    {
+      userAddress: e.returnValues.userAddress,
+      inputData: decodedData,
+      inputNonce: '',
+      suppliedValue: e.returnValues.value,
+      scheduled: false,
+    },
+    e.blockNumber
+  );
 }
 
 function unpackValidatedData(validatedData: ValidatedSubmittedData): SubmittedData {
