@@ -6,6 +6,7 @@ import {
   getPaimaL2Contract,
   initWeb3,
   validatePaimaL2ContractAddress,
+  timeout,
 } from '@paima/utils';
 import type {
   ChainFunnel,
@@ -24,7 +25,6 @@ import {
   getSubmittedDataSingle,
 } from './paima-l2-reading.js';
 import { getAllCdeData, getGroupedCdeData } from './cde.js';
-import { timeout } from './utils.js';
 import { composeChainData } from './data-processing.js';
 import { instantiateExtension } from './cde-initialization.js';
 
@@ -121,7 +121,7 @@ class PaimaFunnel {
       }
     } catch (err) {
       doLog(
-        `[paima-funnel] Exception (presumably timeout) occured while getting latest block number: ${err}`
+        `[paima-funnel] Exception occured while getting latest block number: ${err}`
       );
       return ERR_RESULT;
     }

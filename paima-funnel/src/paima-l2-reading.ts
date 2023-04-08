@@ -1,11 +1,10 @@
 import type Web3 from 'web3';
 
-import { cutAfterFirstRejected } from '@paima/utils';
+import { timeout, cutAfterFirstRejected } from '@paima/utils';
 import type { BlockData, BlockSubmittedData, SubmittedData, PaimaL2Contract } from '@paima/utils';
 import type { PaimaGameInteraction } from '@paima/utils/src/contract-types/PaimaL2Contract';
 
 import { extractSubmittedData } from './data-processing.js';
-import { timeout } from './utils.js';
 
 const DEFAULT_TIMEOUT = 5000;
 
@@ -25,7 +24,7 @@ export async function getMultipleBlockData(
 ): Promise<BlockData[]> {
   const blockPromises: Promise<BlockData>[] = [];
   for (let i = fromBlock; i <= toBlock; i++) {
-    blockPromises.push(timeout(getBlockData(web3, i), DEFAULT_TIMEOUT));
+    blockPromises.push(getBlockData(web3, i));
   }
   const blockResults = await Promise.allSettled(blockPromises);
   return cutAfterFirstRejected(blockResults);

@@ -1,6 +1,6 @@
 import type Web3 from 'web3';
 
-import { ChainDataExtensionType } from '@paima/utils';
+import { ChainDataExtensionType, DEFAULT_FUNNEL_TIMEOUT, timeout } from '@paima/utils';
 import type { ChainDataExtensionDatum, InstantiatedChainDataExtension } from '@paima/utils';
 import type { Transfer } from '@paima/utils/src/contract-types/ERC721Contract';
 
@@ -12,10 +12,13 @@ export default async function getCdeData(
 ): Promise<ChainDataExtensionDatum[]> {
   // TOOD: typechain is missing the proper type generation for getPastEvents
   // https://github.com/dethcrypto/TypeChain/issues/767
-  const events = (await extension.contract.getPastEvents('Transfer', {
-    fromBlock: fromBlock,
-    toBlock: toBlock,
-  })) as unknown as Transfer[];
+  const events = (await timeout(
+    extension.contract.getPastEvents('Transfer', {
+      fromBlock: fromBlock,
+      toBlock: toBlock,
+    }),
+    DEFAULT_FUNNEL_TIMEOUT
+  )) as unknown as Transfer[];
   return events.map((e: Transfer) => transferToCdeDatum(e, extension));
 }
 
