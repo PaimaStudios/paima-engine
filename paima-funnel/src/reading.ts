@@ -1,15 +1,13 @@
 import type Web3 from 'web3';
 
-import { timeout, cutAfterFirstRejected } from '@paima/utils';
+import { timeout, cutAfterFirstRejected, DEFAULT_FUNNEL_TIMEOUT } from '@paima/utils';
 import type { BlockData, BlockSubmittedData, SubmittedData, PaimaL2Contract } from '@paima/utils';
 import type { PaimaGameInteraction } from '@paima/utils/src/contract-types/PaimaL2Contract';
 
 import { extractSubmittedData } from './paima-l2-processing.js';
 
-const DEFAULT_TIMEOUT = 5000;
-
 export async function getBlockData(web3: Web3, blockNumber: number): Promise<BlockData> {
-  const block = await timeout(web3.eth.getBlock(blockNumber), DEFAULT_TIMEOUT);
+  const block = await timeout(web3.eth.getBlock(blockNumber), DEFAULT_FUNNEL_TIMEOUT);
   return {
     timestamp: block.timestamp,
     blockHash: block.hash,
@@ -69,6 +67,6 @@ async function getPaimaEvents(
       fromBlock,
       toBlock,
     }),
-    DEFAULT_TIMEOUT
+    DEFAULT_FUNNEL_TIMEOUT
   )) as unknown as PaimaGameInteraction[];
 }
