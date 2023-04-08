@@ -15,8 +15,6 @@ export * from './sql/extensions.queries';
 export * from './sql/cde-erc20.queries';
 export * from './sql/cde-erc721.queries';
 
-export * from './cde-access';
-
 export {
   tx,
   getConnection,

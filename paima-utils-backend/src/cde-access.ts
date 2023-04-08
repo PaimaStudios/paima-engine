@@ -1,13 +1,13 @@
 import type { Pool } from 'pg';
 
 import {
+  cdeErc20GetBalance,
+  cdeErc721GetOwnedNfts,
+  cdeErc721GetOwner,
   selectChainDataExtensionsByAddress,
   selectChainDataExtensionsByTypeAndAddress,
-} from './sql/extensions.queries';
+} from '@paima/db';
 import type { ChainDataExtensionType } from '@paima/utils';
-import { cdeErc721GetOwnedNfts, cdeErc721GetOwner } from './sql/cde-erc721.queries';
-import { cdeErc20GetBalance } from './sql/cde-erc20.queries';
-
 // To get the CDE ID:
 
 export async function getCdeIdByAddress(

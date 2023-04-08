@@ -7,22 +7,6 @@ Paima-db is a simple package containing database-related code used by `paima-eng
 Currently the library is in development, unpublished, and to be
 imported and used locally.
 
-### CDE Access
-
-A simple example of how functions in `src/cde-access.ts` can be used follows (picking out one to get a CDE handle and another to get CDE data &ndash; they can be mixed an matched with others wherever it makes sense):
-
-```ts
-async function getUserNfts(readonlyDBConn: Pool, userAddress: string): Promise<string[]> {
-  const cdes = await getCdeIdByAddress(readonlyDBConn, NFT_CONTRACT_ADDRESS);
-  if (cdes.length === 0) {
-    throw new Error('NFT CDE not registered!');
-  }
-  const cde = cdes[0];
-  const ownedAddresses = await getOwnedNfts(readonlyDBConn, cde, userAddress);
-  return ownedAddresses;
-}
-```
-
 ## Migrations
 
 (Not to be confused with Data Migrations implemented in `src/data-migrations.ts`)
