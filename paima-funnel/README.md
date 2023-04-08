@@ -26,6 +26,8 @@ There are at least two kind of issues the funnel can encounter when processing c
 - Invalid data on-chain &ndash; as long as the input was read correctly, this _must_ be handled as if the input was not there at all and cannot raise an error that would lead to retries;
 - Error while reading data &ndash; usually connection issues, these operations need to be retried. Helper functions can generally handle this by simply throwing (or not catching) an error, on the top-level (funnel's `readData` and `readPresyncData` methods) this can be handled by returning an empty list of data units (rather than a non-empty list of data units containing no data).
 
+Furthermore, each call to the RPC node (calls to `web3.eth.getBlockNumber`, `web3.eth.getBlock` and `[contract].getPastEvents`) should be wrapped in a `timeout`.
+
 ## Development
 
 Install dependencies:
