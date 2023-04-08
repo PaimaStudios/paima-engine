@@ -9,7 +9,7 @@ import verifySignatureEthereum from './verification/ethereum.js';
 import verifySignatureCardano from './verification/cardano.js';
 import verifySignaturePolkadot from './verification/polkadot.js';
 
-const { sha3, hexToUtf8 } = web3UtilsPkg;
+const { toBN, sha3, hexToUtf8 } = web3UtilsPkg;
 
 export async function extractSubmittedData(
   web3: Web3,
@@ -91,10 +91,7 @@ async function processDataUnit(
 
     const prefix = elems[0];
     const subunitCount = elems.length - 1;
-    const subunitValue = web3.utils
-      .toBN(unit.suppliedValue)
-      .div(web3.utils.toBN(subunitCount))
-      .toString(10);
+    const subunitValue = toBN(unit.suppliedValue).div(toBN(subunitCount)).toString(10);
 
     if (prefix === 'B') {
       const validatedSubUnits = await Promise.all(
