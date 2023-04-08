@@ -11,15 +11,13 @@ imported and used locally.
 
 ## Architecture
 
-The funnel can be viewed as consisting of several layers, roughly corresponding to the different source files:
-
 - `index.ts` contains the top-level object with the initialization function and the main API endpoints of the funnel (`readData` and `readPresyncData`), responsible for ensuring meaningful inputs, logging the querying and returning an empty list of data on error;
   - the lower functions MUST NOT throw an error on invalid data, or it will cause the whole runtime to loop inifinitely;
-- `paima-l2-reading.ts` contains functions for retrieving main blockchain data from the RPC node;
-- `cde.ts` and `cde-*.ts` additionally process CDE data;
-- `data-processing.ts` contains the required processing of blockchain data, especially of batched inputs;
-- `verification-*.ts` are responsible for providing signature verification functions for their respective chains;
-- `constants.ts` and `utils.ts` contain additional values and functions used by different layers.
+- `reading.ts` contains functions for retrieving main blockchain data from the RPC node (block information + user inputs);
+- files in `cde\` additionally process CDE data;
+- `paima-l2-processing.ts` contains functionality to process user submitted input, including batched inputs;
+- files in `verification\` are responsible for providing signature verification functions for their respective chains;
+- `utils.ts` contain additional helper functions used only by the funnel.
 
 ### Error handling
 
