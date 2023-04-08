@@ -1,26 +1,51 @@
-import type Web3 from 'web3';
-import { sha3 } from 'web3-utils';
+import type {
+  BlockData,
+  BlockSubmittedData,
+  ChainData,
+  ChainDataExtensionDatum,
+  PresyncChainData,
+} from '@paima/utils';
 
-import type { SubmittedData } from '@paima/utils';
-import { doLog } from '@paima/utils';
-
-export interface ValidatedSubmittedData extends SubmittedData {
-  validated: boolean;
-}
-
-export function unpackValidatedData(validatedData: ValidatedSubmittedData): SubmittedData {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const o = validatedData as any;
-  delete o.validated;
-  return o as SubmittedData;
-}
-
-export function createNonce(nonceInput: string): string {
-  let nonce = sha3(nonceInput);
-  // TODO: ok if empty string?
-  if (!nonce) {
-    doLog(`[funnel] WARNING: failure generating nonce from: ${nonceInput}`);
-    nonce = '';
+export function groupCdeData(
+  fromBlock: number,
+  toBlock: number,
+  data: ChainDataExtensionDatum[][]
+): PresyncChainData[] {
+  const result: PresyncChainData[] = [];
+  for (let blockNumber = fromBlock; blockNumber <= toBlock; blockNumber++) {
+    const extensionDatums: ChainDataExtensionDatum[] = [];
+    for (const dataStream of data) {
+      while (dataStream.length > 0 && dataStream[0].blockNumber === blockNumber) {
+        const datum = dataStream.shift();
+        if (datum) {
+          extensionDatums.push(datum);
+        }
+      }
+    }
+    result.push({
+      blockNumber,
+      extensionDatums,
+    });
   }
-  return nonce;
+  return result;
+}
+
+export function composeChainData(
+  cutBlockData: BlockData[],
+  submittedDataBlocks: BlockSubmittedData[],
+  cdeData: PresyncChainData[]
+): ChainData[] {
+  const length = Math.min(cutBlockData.length, submittedDataBlocks.length, cdeData.length);
+  if (length === 0) {
+    return [];
+  }
+  cutBlockData = cutBlockData.slice(0, length);
+  submittedDataBlocks = submittedDataBlocks.slice(0, length);
+  cdeData = cdeData.slice(0, length);
+
+  return cutBlockData.map((blockData, index) => ({
+    ...blockData,
+    submittedData: submittedDataBlocks[index].submittedData,
+    extensionDatums: cdeData[index].extensionDatums,
+  }));
 }

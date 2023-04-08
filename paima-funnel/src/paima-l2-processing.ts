@@ -2,36 +2,14 @@ import type Web3 from 'web3';
 import web3UtilsPkg from 'web3-utils';
 
 import { AddressType, doLog, INNER_BATCH_DIVIDER, OUTER_BATCH_DIVIDER } from '@paima/utils';
-import type {
-  BlockData,
-  BlockSubmittedData,
-  ChainData,
-  ChainDataExtensionDatum,
-  PresyncChainData,
-  SubmittedData,
-} from '@paima/utils';
+import type { SubmittedData } from '@paima/utils';
 import type { PaimaGameInteraction } from '@paima/utils/src/contract-types/PaimaL2Contract';
 
-import type { ValidatedSubmittedData } from './utils.js';
-import { createNonce, unpackValidatedData } from './utils.js';
-import verifySignatureEthereum from './verification-ethereum.js';
-import verifySignatureCardano from './verification-cardano.js';
-import verifySignaturePolkadot from './verification-polkadot.js';
+import verifySignatureEthereum from './verification/ethereum.js';
+import verifySignatureCardano from './verification/cardano.js';
+import verifySignaturePolkadot from './verification/polkadot.js';
 
-const { hexToUtf8 } = web3UtilsPkg;
-
-function decodeEventData(eventData: string): string {
-  if (eventData.length > 0) {
-    try {
-      const decodedData = hexToUtf8(eventData);
-      return decodedData;
-    } catch (err) {
-      return '';
-    }
-  } else {
-    return '';
-  }
-}
+const { sha3, hexToUtf8 } = web3UtilsPkg;
 
 export async function extractSubmittedData(
   web3: Web3,
@@ -56,7 +34,40 @@ export async function extractSubmittedData(
   return unflattenedList.flat();
 }
 
-export async function processDataUnit(
+interface ValidatedSubmittedData extends SubmittedData {
+  validated: boolean;
+}
+
+function unpackValidatedData(validatedData: ValidatedSubmittedData): SubmittedData {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const o = validatedData as any;
+  delete o.validated;
+  return o as SubmittedData;
+}
+
+function createNonce(nonceInput: string): string {
+  let nonce = sha3(nonceInput);
+  if (!nonce) {
+    doLog(`[funnel] WARNING: failure generating nonce from: ${nonceInput}`);
+    nonce = '';
+  }
+  return nonce;
+}
+
+function decodeEventData(eventData: string): string {
+  if (eventData.length > 0) {
+    try {
+      const decodedData = hexToUtf8(eventData);
+      return decodedData;
+    } catch (err) {
+      return '';
+    }
+  } else {
+    return '';
+  }
+}
+
+async function processDataUnit(
   web3: Web3,
   unit: SubmittedData,
   blockHeight: number
@@ -162,48 +173,4 @@ async function validateSubunit(
     default:
       return false;
   }
-}
-
-export function groupCdeData(
-  fromBlock: number,
-  toBlock: number,
-  data: ChainDataExtensionDatum[][]
-): PresyncChainData[] {
-  const result: PresyncChainData[] = [];
-  for (let blockNumber = fromBlock; blockNumber <= toBlock; blockNumber++) {
-    const extensionDatums: ChainDataExtensionDatum[] = [];
-    for (const dataStream of data) {
-      while (dataStream.length > 0 && dataStream[0].blockNumber === blockNumber) {
-        const datum = dataStream.shift();
-        if (datum) {
-          extensionDatums.push(datum);
-        }
-      }
-    }
-    result.push({
-      blockNumber,
-      extensionDatums,
-    });
-  }
-  return result;
-}
-
-export function composeChainData(
-  cutBlockData: BlockData[],
-  submittedDataBlocks: BlockSubmittedData[],
-  cdeData: PresyncChainData[]
-): ChainData[] {
-  const length = Math.min(cutBlockData.length, submittedDataBlocks.length, cdeData.length);
-  if (length === 0) {
-    return [];
-  }
-  cutBlockData = cutBlockData.slice(0, length);
-  submittedDataBlocks = submittedDataBlocks.slice(0, length);
-  cdeData = cdeData.slice(0, length);
-
-  return cutBlockData.map((blockData, index) => ({
-    ...blockData,
-    submittedData: submittedDataBlocks[index].submittedData,
-    extensionDatums: cdeData[index].extensionDatums,
-  }));
 }

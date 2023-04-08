@@ -4,7 +4,7 @@ import { timeout, cutAfterFirstRejected } from '@paima/utils';
 import type { BlockData, BlockSubmittedData, SubmittedData, PaimaL2Contract } from '@paima/utils';
 import type { PaimaGameInteraction } from '@paima/utils/src/contract-types/PaimaL2Contract';
 
-import { extractSubmittedData } from './data-processing.js';
+import { extractSubmittedData } from './paima-l2-processing.js';
 
 const DEFAULT_TIMEOUT = 5000;
 

@@ -23,9 +23,9 @@ import {
   getMultipleBlockData,
   getSubmittedDataMulti,
   getSubmittedDataSingle,
-} from './paima-l2-reading.js';
-import { getAllCdeData, getGroupedCdeData } from './cde.js';
-import { composeChainData } from './data-processing.js';
+} from './reading.js';
+import { getUngroupedCdeData } from './cde.js';
+import { composeChainData, groupCdeData } from './utils.js';
 import { instantiateExtension } from './cde-initialization.js';
 
 const GET_BLOCK_NUMBER_TIMEOUT = 5000;
@@ -56,7 +56,7 @@ class PaimaFunnel {
     try {
       const [fromBlock, toBlock] = await this.adjustBlockHeightRange(blockHeight, blockCount);
 
-      if (fromBlock < 0) {
+      if (fromBlock < 0 || toBlock < fromBlock) {
         return [];
       }
 
@@ -84,8 +84,13 @@ class PaimaFunnel {
       return [];
     }
 
-    const data = await getGroupedCdeData(this.web3, this.extensions, fromBlock, toBlock);
-    return data.filter(unit => unit.extensionDatums.length > 0);
+    const ungroupedCdeData = await getUngroupedCdeData(
+      this.web3,
+      this.extensions,
+      fromBlock,
+      toBlock
+    );
+    return groupCdeData(fromBlock, toBlock, ungroupedCdeData);
   };
 
   // Will return [-1, -2] if the range is determined to be empty.
@@ -124,7 +129,7 @@ class PaimaFunnel {
       const [blockData, submittedData, cdeData] = await Promise.all([
         getBlockData(this.web3, blockNumber),
         getSubmittedDataSingle(this.web3, this.paimaL2Contract, blockNumber),
-        getAllCdeData(this.web3, this.extensions, blockNumber, blockNumber),
+        getUngroupedCdeData(this.web3, this.extensions, blockNumber, blockNumber),
       ]);
 
       return [
@@ -148,12 +153,13 @@ class PaimaFunnel {
       return [];
     }
     try {
-      const [blockResults, submittedDataBlocks, cdeData] = await Promise.all([
+      const [blockData, submittedData, ungroupedCdeData] = await Promise.all([
         getMultipleBlockData(this.web3, fromBlock, toBlock),
         getSubmittedDataMulti(this.web3, this.paimaL2Contract, fromBlock, toBlock),
-        getGroupedCdeData(this.web3, this.extensions, fromBlock, toBlock),
+        getUngroupedCdeData(this.web3, this.extensions, fromBlock, toBlock),
       ]);
-      return composeChainData(blockResults, submittedDataBlocks, cdeData);
+      const cdeData = groupCdeData(fromBlock, toBlock, ungroupedCdeData);
+      return composeChainData(blockData, submittedData, cdeData);
     } catch (err) {
       doLog(`[funnel] at ${fromBlock}-${toBlock} caught ${err}`);
       throw err;
