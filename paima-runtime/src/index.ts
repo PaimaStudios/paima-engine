@@ -1,7 +1,7 @@
+import { doLog, logError, ENV, delay } from '@paima/utils';
 import type { ChainData, ChainFunnel } from '@paima/utils';
-import { doLog, logError, ENV } from '@paima/utils';
-import type { GameStateMachine, PaimaRuntimeInitializer } from '@paima/db';
 import { DataMigrations } from '@paima/db';
+import type { GameStateMachine, PaimaRuntimeInitializer } from '@paima/db';
 import { getEarliestStartBlockheight, validatePersistentCdeConfig } from '@paima/utils-backend';
 import process from 'process';
 import { server, startServer } from './server.js';
@@ -325,11 +325,6 @@ async function startRuntime(
     }
   }
   process.exit(0);
-}
-
-// TODO: move to utils if not already there
-function delay(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 export default paimaEngine;

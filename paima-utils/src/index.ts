@@ -144,6 +144,10 @@ export const wait = async (ms: number): Promise<void> =>
     setTimeout(() => resolve(), ms);
   });
 
+export function delay(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 export async function getPaimaL2ContractOwner(address: string, web3: Web3): Promise<string> {
   const contract = getPaimaL2Contract(address, web3);
   return await contract.methods.owner().call();
