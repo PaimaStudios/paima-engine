@@ -54,7 +54,9 @@ const paimaEngine: PaimaRuntimeInitializer = {
             .catch(_error => res.status(500));
         });
 
-        // initialize snapshot folder
+        setRunFlag();
+
+        // run all initializations needed before starting the runtime loop
         if (!(await runInitializationProcedures(gameStateMachine, chainFunnel))) {
           doLog(`[paima-runtime] Aborting due to initialization issues.`);
           return;
@@ -121,7 +123,6 @@ async function startSafeRuntime(
   stopBlockHeight: number | null
 ): Promise<void> {
   let i = 1;
-  setRunFlag();
   while (run) {
     try {
       await startRuntime(
