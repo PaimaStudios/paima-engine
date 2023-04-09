@@ -23,6 +23,23 @@ async function getUserNfts(readonlyDBConn: Pool, userAddress: string): Promise<s
 }
 ```
 
+### CDE Access Objects
+
+Similar results are achieved here, using CDE Access objects rather than using the CDE Access functions directly. Unfortunately, in the current implementation, TypeScript cannot predict the exact type of the abstractly constructed object.
+
+```ts
+const cdeAccess = await CdeAccessObject.fromTypeAndContractAddress(
+  pool,
+  ChainDataExtensionType.ERC721,
+  GameENV.NFT_CONTRACT
+);
+if (!cdeAccess) {
+  throw new Error('Unable to find registered CDE!');
+}
+const nftAccess = cdeAccess as Erc721AccessObject;
+const ownerNfts = await nftAccess.getOwnedNfts(userAddress);
+```
+
 ## Development
 
 Install dependencies:
