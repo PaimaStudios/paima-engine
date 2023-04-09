@@ -54,7 +54,7 @@ async function runPresync(
   let presyncBlockHeight = await getPresyncStartBlockheight(
     gameStateMachine,
     chainFunnel,
-    pollingPeriod,
+    startBlockHeight,
     maximumPresyncBlockheight
   );
 
@@ -93,17 +93,14 @@ async function runPresync(
 async function getPresyncStartBlockheight(
   gameStateMachine: GameStateMachine,
   chainFunnel: ChainFunnel,
-  pollingPeriod: number,
+  startBlockHeight: number,
   maximumPresyncBlockheight: number
 ): Promise<number> {
   const earliestCdeSbh = getEarliestStartBlockheight(chainFunnel.getExtensions());
   const freshPresyncStart = earliestCdeSbh >= 0 ? earliestCdeSbh : maximumPresyncBlockheight + 1;
-  const latestSyncBlockheight = await acquireLatestBlockHeight(gameStateMachine, pollingPeriod);
+  const latestSyncBlockheight = await gameStateMachine.latestProcessedBlockHeight();
 
-  if (
-    freshPresyncStart > maximumPresyncBlockheight ||
-    latestSyncBlockheight > maximumPresyncBlockheight
-  ) {
+  if (freshPresyncStart > maximumPresyncBlockheight || latestSyncBlockheight > startBlockHeight) {
     // No need for presync:
     return maximumPresyncBlockheight + 1;
   }
