@@ -9,19 +9,13 @@ import type { ERC20Contract } from './contract-types/ERC20Contract';
 import type { ERC721Contract } from './contract-types/ERC721Contract';
 import { doLog, logError } from './logging.js';
 import type {
-  ChainData,
-  ChainDataExtension,
-  ChainFunnel,
   Deployment,
   ErrorCode,
   ErrorMessageFxn,
   ErrorMessageMapping,
-  TsoaFunction,
   ETHAddress,
-  PaimaRuntime,
-  SubmittedData,
-  SubmittedChainData,
   TransactionTemplate,
+  InputDataString,
 } from './types';
 import {
   AddressType,
@@ -40,20 +34,14 @@ export type { Web3 };
 export type { PaimaL2Contract };
 export type { ERC20Contract, ERC721Contract };
 export {
-  ChainFunnel,
-  TsoaFunction,
   ETHAddress,
   ErrorCode,
   ErrorMessageFxn,
   ErrorMessageMapping,
-  SubmittedData,
-  SubmittedChainData,
-  ChainData,
-  PaimaRuntime,
-  ChainDataExtension,
   TransactionTemplate,
   AddressType,
   ChainDataExtensionType,
+  InputDataString,
   INNER_BATCH_DIVIDER,
   OUTER_BATCH_DIVIDER,
   DEFAULT_FUNNEL_TIMEOUT,

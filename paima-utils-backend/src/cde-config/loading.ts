@@ -2,7 +2,8 @@ import * as fs from 'fs/promises';
 import YAML from 'yaml';
 
 import { doLog } from '@paima/utils';
-import type { ChainDataExtension } from '@paima/utils';
+
+import type { ChainDataExtension } from '../types';
 import { parseCdeType } from './utils';
 
 export async function loadChainDataExtensions(

@@ -1,14 +1,13 @@
-import { doLog, logError, ENV } from '@paima/utils';
-import type { ChainFunnel } from '@paima/utils';
-import { DataMigrations } from '@paima/db';
-import type { GameStateMachine, PaimaRuntimeInitializer } from '@paima/db';
-import { validatePersistentCdeConfig } from '@paima/utils-backend';
 import process from 'process';
+
+import { doLog, logError, ENV } from '@paima/utils';
+import { DataMigrations } from '@paima/db';
+import { validatePersistentCdeConfig } from '@paima/utils-backend';
+import type { ChainFunnel, GameStateMachine, PaimaRuntimeInitializer } from '@paima/utils-backend';
 
 import { run, setRunFlag, clearRunFlag } from './run-flag';
 import { server, startServer } from './server.js';
 import { initSnapshots } from './snapshots.js';
-import { acquireLatestBlockHeight } from './utils';
 import { startRuntime } from './runtime-loops';
 
 process.on('SIGINT', () => {

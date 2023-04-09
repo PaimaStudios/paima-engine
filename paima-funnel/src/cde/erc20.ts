@@ -1,7 +1,7 @@
 import type Web3 from 'web3';
 
 import { ChainDataExtensionType, timeout } from '@paima/utils';
-import type { ChainDataExtensionDatum, InstantiatedChainDataExtension } from '@paima/utils';
+import type { ChainDataExtensionDatum, InstantiatedChainDataExtension } from '@paima/utils-backend';
 import type { Transfer } from '@paima/utils/src/contract-types/ERC20Contract';
 import { DEFAULT_FUNNEL_TIMEOUT } from '@paima/utils';
 

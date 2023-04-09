@@ -1,8 +1,9 @@
 import type { Pool } from 'pg';
 
-import type { ChainDataExtension } from '@paima/utils';
 import { doLog } from '@paima/utils';
 import { getChainDataExtensions, registerChainDataExtension } from '@paima/db';
+
+import type { ChainDataExtension } from '../types';
 
 export async function validatePersistentCdeConfig(
   config: ChainDataExtension[],

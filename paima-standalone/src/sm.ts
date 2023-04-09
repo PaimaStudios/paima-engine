@@ -1,4 +1,4 @@
-import type { GameStateMachine } from '@paima/db';
+import type { GameStateMachine } from '@paima/utils-backend';
 import PaimaSM from '@paima/sm';
 import { importGameStateTransitionRouter } from './utils/import';
 import { poolConfig } from './utils';

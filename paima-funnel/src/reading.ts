@@ -1,7 +1,8 @@
 import type Web3 from 'web3';
 
 import { timeout, cutAfterFirstRejected, DEFAULT_FUNNEL_TIMEOUT } from '@paima/utils';
-import type { BlockData, BlockSubmittedData, SubmittedData, PaimaL2Contract } from '@paima/utils';
+import type { PaimaL2Contract } from '@paima/utils';
+import type { BlockData, BlockSubmittedData, SubmittedData } from '@paima/utils-backend';
 import type { PaimaGameInteraction } from '@paima/utils/src/contract-types/PaimaL2Contract';
 
 import { extractSubmittedData } from './paima-l2-processing.js';

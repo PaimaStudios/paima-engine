@@ -1,7 +1,7 @@
 import type { Pool } from 'pg';
 
 import { ChainDataExtensionType } from '@paima/utils';
-import type { ChainDataExtensionDatum } from '@paima/utils';
+import type { ChainDataExtensionDatum } from '@paima/utils-backend';
 
 import processErc20Datum from './cde-erc20';
 import processErc721Datum from './cde-erc721';

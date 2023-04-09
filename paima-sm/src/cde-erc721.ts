@@ -1,7 +1,7 @@
 import type { Pool } from 'pg';
 
 import { ChainDataExtensionType, doLog, ENV } from '@paima/utils';
-import type { ChainDataExtensionDatum, ChainDataExtensionErc721Datum } from '@paima/utils';
+import type { ChainDataExtensionDatum, ChainDataExtensionErc721Datum } from '@paima/utils-backend';
 import {
   cdeErc721GetOwner,
   cdeErc721InsertOwner,

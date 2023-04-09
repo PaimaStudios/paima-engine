@@ -1,9 +1,9 @@
-import { doLog, logError, ENV, delay } from '@paima/utils';
-import type { ChainData, ChainFunnel } from '@paima/utils';
-import { DataMigrations } from '@paima/db';
-import type { GameStateMachine } from '@paima/db';
-import { getEarliestStartBlockheight } from '@paima/utils-backend';
 import process from 'process';
+
+import { doLog, logError, delay } from '@paima/utils';
+import { DataMigrations } from '@paima/db';
+import { getEarliestStartBlockheight } from '@paima/utils-backend';
+import type { ChainData, ChainFunnel, GameStateMachine } from '@paima/utils-backend';
 
 import { run } from './run-flag';
 import { snapshotIfTime } from './snapshots.js';

@@ -6,7 +6,7 @@ import type {
   PresyncChainData,
   SubmittedData,
   ChainDataExtensionDatum,
-} from '@paima/utils';
+} from '@paima/utils-backend';
 import {
   tx,
   getConnection,
@@ -23,7 +23,10 @@ import {
   markCdeBlockheightProcessed,
   getLatestProcessedCdeBlockheight,
 } from '@paima/db';
-import type { GameStateTransitionFunction, GameStateMachineInitializer } from '@paima/db';
+import type {
+  GameStateTransitionFunction,
+  GameStateMachineInitializer,
+} from '@paima/utils-backend';
 import Prando from '@paima/prando';
 
 import { randomnessRouter } from './randomness.js';

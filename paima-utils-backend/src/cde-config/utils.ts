@@ -1,5 +1,6 @@
 import { ChainDataExtensionType } from '@paima/utils';
-import type { ChainDataExtension } from '@paima/utils';
+
+import type { ChainDataExtension } from '../types';
 
 const CDE_TYPE_MAP: Record<string, ChainDataExtensionType> = {
   erc20: ChainDataExtensionType.ERC20,

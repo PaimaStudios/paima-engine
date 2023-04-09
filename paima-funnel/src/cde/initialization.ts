@@ -1,7 +1,7 @@
 import type Web3 from 'web3';
 
 import { ChainDataExtensionType, getErc20Contract, getErc721Contract } from '@paima/utils';
-import type { ChainDataExtension, InstantiatedChainDataExtension } from '@paima/utils';
+import type { ChainDataExtension, InstantiatedChainDataExtension } from '@paima/utils-backend';
 
 export function instantiateExtension(
   web3: Web3,

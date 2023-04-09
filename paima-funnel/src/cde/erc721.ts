@@ -1,7 +1,7 @@
 import type Web3 from 'web3';
 
 import { ChainDataExtensionType, DEFAULT_FUNNEL_TIMEOUT, timeout } from '@paima/utils';
-import type { ChainDataExtensionDatum, InstantiatedChainDataExtension } from '@paima/utils';
+import type { ChainDataExtensionDatum, InstantiatedChainDataExtension } from '@paima/utils-backend';
 import type { Transfer } from '@paima/utils/src/contract-types/ERC721Contract';
 
 export default async function getCdeData(
