@@ -8,9 +8,9 @@
     { "path": "./paima-prando" },
     { "path": "./paima-executors" },
     { "path": "./paima-mw-core" },
+    { "path": "./paima-runtime" },
     { "path": "./paima-funnel" },
     { "path": "./paima-sm" },
-    { "path": "./paima-runtime" },
     { "path": "./paima-standalone" }
   ]
 }
