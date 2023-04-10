@@ -24,3 +24,14 @@ export type TransactionTemplate = {
   to: string;
   gasPrice: string;
 };
+
+export type NonceString = string;
+
+export interface SubmittedData {
+  userAddress: WalletAddress;
+  inputData: InputDataString;
+  inputNonce: NonceString;
+  suppliedValue: string;
+  scheduled: boolean;
+}
+export type SubmittedChainData = SubmittedData;

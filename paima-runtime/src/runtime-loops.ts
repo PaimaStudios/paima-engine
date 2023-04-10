@@ -59,16 +59,14 @@ async function runPresync(
   );
 
   if (presyncBlockHeight > maximumPresyncBlockheight) {
-    doLog(
-      `[paima-runtime] Skipping presync (presync block height: ${presyncBlockHeight}, maximum presync block height: ${startBlockHeight})`
-    );
+    // doLog(
+    //   `[paima-runtime] Skipping presync (presync block height: ${presyncBlockHeight}, maximum presync block height: ${startBlockHeight})`
+    // );
     return;
   }
 
   if (run) {
-    doLog(
-      '-------------------------------------\nBeginning Presync\n-------------------------------------'
-    );
+    doLog('---------------------------\nBeginning Presync\n---------------------------');
   }
   while (run && presyncBlockHeight <= maximumPresyncBlockheight) {
     const upper = Math.min(presyncBlockHeight + stepSize - 1, maximumPresyncBlockheight);

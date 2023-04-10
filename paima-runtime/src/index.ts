@@ -62,7 +62,7 @@ const paimaEngine: PaimaRuntimeInitializer = {
 
         // run all initializations needed before starting the runtime loop
         if (!(await runInitializationProcedures(gameStateMachine, chainFunnel))) {
-          doLog(`[paima-runtime] Aborting due to initialization issues.`);
+          doLog(`[paima-runtime] Aborting starting game node due to initialization issues.`);
           return;
         }
 
@@ -104,7 +104,9 @@ async function runInitializationProcedures(
     smStarted
   );
   if (!cdeResult) {
-    doLog('[paima-runtime] Invalid CDE configuration! Shutting down...');
+    doLog(
+      `[paima-runtime] New/changed extensions detected in 'extensions.yml'. Please resync your game node from scratch after adding/removing/changing extensions.`
+    );
     return false;
   }
 

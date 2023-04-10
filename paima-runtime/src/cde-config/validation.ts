@@ -11,12 +11,13 @@ export async function validatePersistentCdeConfig(
   smStarted: boolean
 ): Promise<boolean> {
   const persistentConfig = await getChainDataExtensions.run(undefined, DBConn);
-  doLog('persistent config length:' + persistentConfig.length.toString());
 
   // Checking cases if config is specified and if it needs to be saved
   if (persistentConfig.length === 0 && config.length > 0) {
     // If the node has already started syncing with no persistent config but now has a filled out yaml config
-    if (smStarted) return false;
+    if (smStarted) {
+      return false;
+    }
     // Else if it hasn't started syncing yet, store the yaml config
     return await storeCdeConfig(config, DBConn);
   }

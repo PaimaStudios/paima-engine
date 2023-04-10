@@ -6,23 +6,14 @@ import type {
   ERC20Contract,
   ERC721Contract,
   ChainDataExtensionType,
-  InputDataString,
   VersionString,
-  WalletAddress,
+  SubmittedChainData,
+  SubmittedData,
 } from '@paima/utils';
 
+export { SubmittedChainData, SubmittedData };
+
 export type TsoaFunction = (s: Express) => void;
-
-type NonceString = string;
-
-export interface SubmittedData {
-  userAddress: WalletAddress;
-  inputData: InputDataString;
-  inputNonce: NonceString;
-  suppliedValue: string;
-  scheduled: boolean;
-}
-export type SubmittedChainData = SubmittedData;
 
 export interface BlockData {
   timestamp: number | string;
