@@ -18,11 +18,15 @@ export async function tableExists(pool: Pool, tableName: string): Promise<boolea
 }
 
 export async function tableIsValid(pool: Pool, table: TableData): Promise<boolean> {
-  const { tableName, primaryKey, columnData, serialColumns } = table;
+  const { tableName, primaryKeyColumns, columnData, serialColumns } = table;
 
-  if (!(await checkTablePkey(pool, tableName, primaryKey))) {
-    doLog(`[database-validation] table ${tableName} failing on primary key`);
-    return false;
+  for (const primaryKeyColumn of primaryKeyColumns) {
+    if (!(await checkTablePkey(pool, tableName, primaryKeyColumn))) {
+      doLog(
+        `[database-validation] table ${tableName} failing on primary key column ${primaryKeyColumn}`
+      );
+      return false;
+    }
   }
   if (!(await checkAllTableColumns(pool, tableName, columnData))) {
     doLog(`[database-validation] table ${tableName} failing on columns`);

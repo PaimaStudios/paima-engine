@@ -12,7 +12,6 @@
     "lint": "prettier --write '**/*.ts'"
   },
   "author": "",
-  "license": "ISC",
   "devDependencies": {
     "typescript": "^4.7.4",
     "prettier": "^2.6.2",

@@ -55,10 +55,7 @@ async function saveSnapshot(blockHeight: number): Promise<void> {
     )}`,
     (error: ExecException | null, stdout: string, stderr: string) => {
       if (error) {
-        doLog(`[paima-runtime::snapshots] Error saving snapshot:`);
-        doLog(`[paima-runtime::snapshots] pg_dump stdout: ${stdout}`);
-        doLog(`[paima-runtime::snapshots] pg_dump stderr: ${stderr}`);
-        logError(error);
+        doLog(`[paima-runtime::snapshots] Error saving snapshot: ${stderr}`);
       }
     }
   );

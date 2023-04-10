@@ -1,18 +1,58 @@
 import type Web3 from 'web3';
-import type { BlockTransactionString } from 'web3-eth';
 import web3UtilsPkg from 'web3-utils';
 
 import { AddressType, doLog, INNER_BATCH_DIVIDER, OUTER_BATCH_DIVIDER } from '@paima/utils';
-import type { SubmittedData } from '@paima/utils';
+import type { SubmittedData } from '@paima/runtime';
 import type { PaimaGameInteraction } from '@paima/utils/src/contract-types/PaimaL2Contract';
 
-import type { ValidatedSubmittedData } from './utils.js';
-import { createNonce, unpackValidatedData } from './utils.js';
-import verifySignatureEthereum from './verification-ethereum.js';
-import verifySignatureCardano from './verification-cardano.js';
-import verifySignaturePolkadot from './verification-polkadot.js';
+import verifySignatureEthereum from './verification/ethereum.js';
+import verifySignatureCardano from './verification/cardano.js';
+import verifySignaturePolkadot from './verification/polkadot.js';
 
-const { hexToUtf8 } = web3UtilsPkg;
+const { toBN, sha3, hexToUtf8 } = web3UtilsPkg;
+
+interface ValidatedSubmittedData extends SubmittedData {
+  validated: boolean;
+}
+
+export async function extractSubmittedData(
+  web3: Web3,
+  events: PaimaGameInteraction[]
+): Promise<SubmittedData[]> {
+  const unflattenedList = await Promise.all(events.map(e => eventMapper(web3, e)));
+  return unflattenedList.flat();
+}
+
+async function eventMapper(web3: Web3, e: PaimaGameInteraction): Promise<SubmittedData[]> {
+  const decodedData = decodeEventData(e.returnValues.data);
+  return await processDataUnit(
+    web3,
+    {
+      userAddress: e.returnValues.userAddress,
+      inputData: decodedData,
+      inputNonce: '',
+      suppliedValue: e.returnValues.value,
+      scheduled: false,
+    },
+    e.blockNumber
+  );
+}
+
+function unpackValidatedData(validatedData: ValidatedSubmittedData): SubmittedData {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const o = validatedData as any;
+  delete o.validated;
+  return o as SubmittedData;
+}
+
+function createNonce(nonceInput: string): string {
+  let nonce = sha3(nonceInput);
+  if (!nonce) {
+    doLog(`[funnel] WARNING: failure generating nonce from: ${nonceInput}`);
+    nonce = '';
+  }
+  return nonce;
+}
 
 function decodeEventData(eventData: string): string {
   if (eventData.length > 0) {
@@ -27,31 +67,7 @@ function decodeEventData(eventData: string): string {
   }
 }
 
-export async function extractSubmittedData(
-  web3: Web3,
-  block: BlockTransactionString,
-  events: PaimaGameInteraction[]
-): Promise<SubmittedData[]> {
-  const eventMapper = (e: PaimaGameInteraction): Promise<SubmittedData[]> => {
-    const decodedData = decodeEventData(e.returnValues.data);
-    return processDataUnit(
-      web3,
-      {
-        userAddress: e.returnValues.userAddress,
-        inputData: decodedData,
-        inputNonce: '',
-        suppliedValue: e.returnValues.value,
-        scheduled: false,
-      },
-      block.number
-    );
-  };
-
-  const unflattenedList = await Promise.all(events.map(eventMapper));
-  return unflattenedList.flat();
-}
-
-export async function processDataUnit(
+async function processDataUnit(
   web3: Web3,
   unit: SubmittedData,
   blockHeight: number
@@ -60,7 +76,7 @@ export async function processDataUnit(
     if (!unit.inputData.includes(OUTER_BATCH_DIVIDER)) {
       // Directly submitted input, prepare nonce and return:
       const hashInput = blockHeight.toString(10) + unit.userAddress + unit.inputData;
-      const inputNonce = createNonce(web3, hashInput);
+      const inputNonce = createNonce(hashInput);
       return [
         {
           ...unit,
@@ -75,10 +91,7 @@ export async function processDataUnit(
 
     const prefix = elems[0];
     const subunitCount = elems.length - 1;
-    const subunitValue = web3.utils
-      .toBN(unit.suppliedValue)
-      .div(web3.utils.toBN(subunitCount))
-      .toString(10);
+    const subunitValue = toBN(unit.suppliedValue).div(toBN(subunitCount)).toString(10);
 
     if (prefix === 'B') {
       const validatedSubUnits = await Promise.all(
@@ -126,7 +139,7 @@ async function processBatchedSubunit(
   );
 
   const hashInput = millisecondTimestamp + userAddress + inputData;
-  const inputNonce = createNonce(web3, hashInput);
+  const inputNonce = createNonce(hashInput);
 
   return {
     inputData,

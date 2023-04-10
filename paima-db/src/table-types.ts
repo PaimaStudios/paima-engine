@@ -9,7 +9,7 @@ export interface ColumnData {
 
 export interface TableData {
   tableName: string;
-  primaryKey: string;
+  primaryKeyColumns: string[];
   columnData: ColumnData[];
   serialColumns: string[];
   creationQuery: string;

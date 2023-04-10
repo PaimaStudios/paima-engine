@@ -1,7 +1,6 @@
 {
   "name": "@standalone/paima-engine",
-  "author": "",
-  "license": "ISC",
+  "author": "Paima Studios",
   "version": "1.0.0",
   "description": "Paima Engine standalone, aka executable binary wrapper around the engine core.",
   "main": "build/index.js",

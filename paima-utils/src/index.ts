@@ -2,24 +2,28 @@ import Web3 from 'web3';
 import type { AbiItem } from 'web3-utils';
 import pkg from 'web3-utils';
 import paimaL2ContractBuild from './artifacts/PaimaL2Contract';
+import erc20ContractBuild from './artifacts/ERC20Contract';
+import erc721ContractBuild from './artifacts/ERC721Contract';
 import type { PaimaL2Contract } from './contract-types/PaimaL2Contract';
+import type { ERC20Contract } from './contract-types/ERC20Contract';
+import type { ERC721Contract } from './contract-types/ERC721Contract';
 import { doLog, logError } from './logging.js';
 import type {
-  ChainData,
-  ChainDataExtension,
-  ChainFunnel,
   Deployment,
   ErrorCode,
   ErrorMessageFxn,
   ErrorMessageMapping,
-  TsoaFunction,
   ETHAddress,
-  PaimaRuntime,
-  SubmittedData,
-  SubmittedChainData,
   TransactionTemplate,
+  InputDataString,
 } from './types';
-import { AddressType, INNER_BATCH_DIVIDER, OUTER_BATCH_DIVIDER } from './constants';
+import {
+  AddressType,
+  INNER_BATCH_DIVIDER,
+  OUTER_BATCH_DIVIDER,
+  DEFAULT_FUNNEL_TIMEOUT,
+  ChainDataExtensionType,
+} from './constants';
 
 const { isAddress } = pkg;
 
@@ -28,22 +32,19 @@ export * from './types';
 
 export type { Web3 };
 export type { PaimaL2Contract };
+export type { ERC20Contract, ERC721Contract };
 export {
-  ChainFunnel,
-  TsoaFunction,
   ETHAddress,
   ErrorCode,
   ErrorMessageFxn,
   ErrorMessageMapping,
-  SubmittedData,
-  SubmittedChainData,
-  ChainData,
-  PaimaRuntime,
-  ChainDataExtension,
   TransactionTemplate,
   AddressType,
+  ChainDataExtensionType,
+  InputDataString,
   INNER_BATCH_DIVIDER,
   OUTER_BATCH_DIVIDER,
+  DEFAULT_FUNNEL_TIMEOUT,
   logError,
   doLog,
 };
@@ -62,6 +63,7 @@ export function buildErrorCodeTranslator(obj: ErrorMessageMapping): ErrorMessage
   };
 }
 
+// DEPRECATED, use ENV.BLOCK_TIME instead
 export function getBlockTime(deployment: Deployment): number {
   if (deployment === 'C1') return 4;
   else if (deployment === 'A1') return 4.5;
@@ -88,6 +90,26 @@ export function getPaimaL2Contract(address?: string, web3?: Web3): PaimaL2Contra
   ) as unknown as PaimaL2Contract;
 }
 
+export function getErc20Contract(address?: string, web3?: Web3): ERC20Contract {
+  if (web3 === undefined) {
+    web3 = new Web3();
+  }
+  return new web3.eth.Contract(
+    erc20ContractBuild.abi as AbiItem[],
+    address
+  ) as unknown as ERC20Contract;
+}
+
+export function getErc721Contract(address?: string, web3?: Web3): ERC721Contract {
+  if (web3 === undefined) {
+    web3 = new Web3();
+  }
+  return new web3.eth.Contract(
+    erc721ContractBuild.abi as AbiItem[],
+    address
+  ) as unknown as ERC721Contract;
+}
+
 export function validatePaimaL2ContractAddress(address: string): void {
   if (!isAddress(address)) {
     throw new Error('Invalid storage address supplied');
@@ -99,10 +121,21 @@ export async function retrieveFee(address: string, web3: Web3): Promise<string> 
   return await contract.methods.fee().call();
 }
 
+// Timeout function for promises
+export const timeout = <T>(prom: Promise<T>, time: number): Promise<Awaited<T>> =>
+  Promise.race([
+    prom,
+    new Promise<T>((_resolve, reject) => setTimeout(() => reject('Timeout'), time)),
+  ]);
+
 export const wait = async (ms: number): Promise<void> =>
   await new Promise<void>(resolve => {
     setTimeout(() => resolve(), ms);
   });
+
+export function delay(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 export async function getPaimaL2ContractOwner(address: string, web3: Web3): Promise<string> {
   const contract = getPaimaL2Contract(address, web3);
@@ -155,4 +188,18 @@ function hexStringToBytes(hexString: string): number[] {
 
 export function hexStringToUint8Array(hexString: string): Uint8Array {
   return new Uint8Array(hexStringToBytes(hexString));
+}
+
+export function cutAfterFirstRejected<T>(results: PromiseSettledResult<T>[]): T[] {
+  let firstRejected = results.findIndex(elem => elem.status === 'rejected');
+  if (firstRejected < 0) {
+    firstRejected = results.length;
+  }
+  return (
+    results
+      .slice(0, firstRejected)
+      // note: we cast the promise to be a successfully fulfilled promise
+      // we know this is safe because the above-line sliced up until the first rejection
+      .map(elem => (elem as PromiseFulfilledResult<T>).value)
+  );
 }
