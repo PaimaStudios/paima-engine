@@ -38,6 +38,7 @@ async function getCdeIdByTypeAndAddress(
   return results[0].cde_id;
 }
 
+// Fetch the owner of the NFT from the database
 export async function getNftOwner(
   readonlyDBConn: Pool,
   contractAddress: string,
@@ -59,6 +60,19 @@ export async function getNftOwner(
   }
 }
 
+// Check if a given address is the owner of an nft
+export async function isNftOwner(
+  readonlyDBConn: Pool,
+  contractAddress: string,
+  nftId: string,
+  ownerAddress: string
+): Promise<boolean> {
+  const ownerRes = await getNftOwner(readonlyDBConn, contractAddress, nftId);
+  if (ownerRes && ownerRes == ownerAddress) return true;
+  return false;
+}
+
+// Fetch all NFTs the owner has for a given contract
 export async function getAllOwnedNfts(
   readonlyDBConn: Pool,
   contractAddress: string,
@@ -79,6 +93,7 @@ export async function getAllOwnedNfts(
   return results.map(row => row.token_id);
 }
 
+// Fetch the ERC-20 balance of a given address
 export async function getFungibleTokenBalance(
   readonlyDBConn: Pool,
   contractAddress: string,
