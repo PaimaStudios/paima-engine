@@ -1,5 +1,5 @@
 import Prando from '@paima/prando';
-import type { ChainData, SubmittedData } from '@paima/utils-backend';
+import type { ChainData, SubmittedData } from '@paima/runtime';
 import Crypto from 'crypto';
 import type pg from 'pg';
 import { consumer } from '@paima/concise';

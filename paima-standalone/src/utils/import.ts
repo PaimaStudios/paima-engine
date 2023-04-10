@@ -1,4 +1,4 @@
-import type { GameStateTransitionFunctionRouter, TsoaFunction } from '@paima/utils-backend';
+import type { GameStateTransitionFunctionRouter, TsoaFunction } from '@paima/runtime';
 
 function importFile<T>(file: string): T {
   // dynamic import cannot be used here due to PKG limitations

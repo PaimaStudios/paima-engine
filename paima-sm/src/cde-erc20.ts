@@ -1,7 +1,7 @@
 import type { Pool } from 'pg';
 
 import { ChainDataExtensionType, doLog } from '@paima/utils';
-import type { ChainDataExtensionDatum } from '@paima/utils-backend';
+import type { ChainDataExtensionDatum } from '@paima/runtime';
 import { cdeErc20GetBalance, cdeErc20InsertBalance, cdeErc20UpdateBalance } from '@paima/db';
 import type { SQLUpdate } from '@paima/db';
 

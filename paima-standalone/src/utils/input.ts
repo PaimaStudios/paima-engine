@@ -11,7 +11,7 @@ import {
 } from './file.js';
 import paimaFunnel from '@paima/funnel';
 import paimaRuntime from '@paima/runtime';
-import type { ChainFunnel } from '@paima/utils-backend';
+import type { ChainFunnel } from '@paima/runtime';
 import { gameSM } from '../sm.js';
 import { importTsoaFunction } from './import.js';
 import { doLog, ENV } from '@paima/utils';

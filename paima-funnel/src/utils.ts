@@ -4,7 +4,7 @@ import type {
   ChainData,
   ChainDataExtensionDatum,
   PresyncChainData,
-} from '@paima/utils-backend';
+} from '@paima/runtime';
 
 export function groupCdeData(
   fromBlock: number,

@@ -9,14 +9,14 @@ import {
   timeout,
 } from '@paima/utils';
 import type { PaimaL2Contract } from '@paima/utils';
-import { loadChainDataExtensions } from '@paima/utils-backend';
+import { loadChainDataExtensions } from '@paima/runtime';
 import type {
   ChainFunnel,
   ChainData,
   ChainDataExtension,
   InstantiatedChainDataExtension,
   PresyncChainData,
-} from '@paima/utils-backend';
+} from '@paima/runtime';
 
 import {
   getBlockData,

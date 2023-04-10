@@ -1,5 +1,5 @@
 import { doLog, logError, delay } from '@paima/utils';
-import type { GameStateMachine } from '@paima/utils-backend';
+import type { GameStateMachine } from './types';
 
 import { run } from './run-flag';
 

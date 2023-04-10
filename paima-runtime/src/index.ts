@@ -2,13 +2,19 @@ import process from 'process';
 
 import { doLog, logError, ENV } from '@paima/utils';
 import { DataMigrations } from '@paima/db';
-import { validatePersistentCdeConfig } from '@paima/utils-backend';
-import type { ChainFunnel, GameStateMachine, PaimaRuntimeInitializer } from '@paima/utils-backend';
+import { validatePersistentCdeConfig } from './cde-config/validation';
+import type { ChainFunnel, GameStateMachine, PaimaRuntimeInitializer } from './types';
 
 import { run, setRunFlag, clearRunFlag } from './run-flag';
 import { server, startServer } from './server.js';
 import { initSnapshots } from './snapshots.js';
 import { startRuntime } from './runtime-loops';
+
+
+export * from './cde-config/loading';
+export * from './cde-config/validation';
+export * from './cde-config/utils';
+export * from './types';
 
 process.on('SIGINT', () => {
   if (!run) process.exit(0);
