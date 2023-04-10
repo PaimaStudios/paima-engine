@@ -1,5 +1,4 @@
 import type { Pool } from 'pg';
-
 import {
   cdeErc20GetBalance,
   cdeErc721GetOwnedNfts,
@@ -7,40 +6,52 @@ import {
   selectChainDataExtensionsByAddress,
   selectChainDataExtensionsByTypeAndAddress,
 } from '@paima/db';
-import type { ChainDataExtensionType } from '@paima/utils';
-// To get the CDE ID:
+import { ChainDataExtensionType } from '@paima/utils';
 
-export async function getCdeIdByAddress(
+async function getCdeIdByAddress(
   readonlyDBConn: Pool,
   contractAddress: string
-): Promise<number[]> {
+): Promise<number | null> {
   const results = await selectChainDataExtensionsByAddress.run(
     { contract_address: contractAddress },
     readonlyDBConn
   );
-  return results.map(row => row.cde_id);
+
+  if (results.length === 0) {
+    return null;
+  }
+  return results[0].cde_id;
 }
 
-export async function getCdeIdByTypeAndAddress(
+async function getCdeIdByTypeAndAddress(
   readonlyDBConn: Pool,
   cdeType: ChainDataExtensionType,
   contractAddress: string
-): Promise<number[]> {
+): Promise<number | null> {
   const results = await selectChainDataExtensionsByTypeAndAddress.run(
     { cde_type: cdeType, contract_address: contractAddress },
     readonlyDBConn
   );
-  return results.map(row => row.cde_id);
+  if (results.length === 0) {
+    return null;
+  }
+  return results[0].cde_id;
 }
-
-// To get CDE data using the CDE ID:
 
 export async function getNftOwner(
   readonlyDBConn: Pool,
-  cdeId: number,
-  tokenId: string
+  contractAddress: string,
+  nftId: string
 ): Promise<string | null> {
-  const results = await cdeErc721GetOwner.run({ cde_id: cdeId, token_id: tokenId }, readonlyDBConn);
+  const cdeId = await getCdeIdByTypeAndAddress(
+    readonlyDBConn,
+    ChainDataExtensionType.ERC721,
+    contractAddress
+  );
+  if (cdeId == null) return null;
+
+  // Fetch owner
+  const results = await cdeErc721GetOwner.run({ cde_id: cdeId, token_id: nftId }, readonlyDBConn);
   if (results.length === 0) {
     return null;
   } else {
@@ -48,11 +59,19 @@ export async function getNftOwner(
   }
 }
 
-export async function getOwnedNfts(
+export async function getAllOwnedNfts(
   readonlyDBConn: Pool,
-  cdeId: number,
+  contractAddress: string,
   ownerAddress: string
 ): Promise<string[]> {
+  const cdeId = await getCdeIdByTypeAndAddress(
+    readonlyDBConn,
+    ChainDataExtensionType.ERC721,
+    contractAddress
+  );
+  if (cdeId == null) return [];
+
+  // Fetch owned nfts
   const results = await cdeErc721GetOwnedNfts.run(
     { cde_id: cdeId, nft_owner: ownerAddress },
     readonlyDBConn
@@ -60,11 +79,19 @@ export async function getOwnedNfts(
   return results.map(row => row.token_id);
 }
 
-export async function getTokenBalance(
+export async function getFungibleTokenBalance(
   readonlyDBConn: Pool,
-  cdeId: number,
+  contractAddress: string,
   walletAddress: string
-): Promise<string | null> {
+): Promise<number | null> {
+  const cdeId = await getCdeIdByTypeAndAddress(
+    readonlyDBConn,
+    ChainDataExtensionType.ERC20,
+    contractAddress
+  );
+  if (cdeId == null) return null;
+
+  // Fetch ERC20 balance
   const results = await cdeErc20GetBalance.run(
     { cde_id: cdeId, wallet_address: walletAddress },
     readonlyDBConn
@@ -72,6 +99,8 @@ export async function getTokenBalance(
   if (results.length === 0) {
     return null;
   } else {
-    return results[0].balance;
+    const balance = parseInt(results[0].balance, 10);
+    if (isNaN(balance)) return null;
+    return balance;
   }
 }

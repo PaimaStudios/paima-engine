@@ -23,10 +23,7 @@ import {
   markCdeBlockheightProcessed,
   getLatestProcessedCdeBlockheight,
 } from '@paima/db';
-import type {
-  GameStateTransitionFunction,
-  GameStateMachineInitializer,
-} from '@paima/runtime';
+import type { GameStateTransitionFunction, GameStateMachineInitializer } from '@paima/runtime';
 import Prando from '@paima/prando';
 
 import { randomnessRouter } from './randomness.js';
