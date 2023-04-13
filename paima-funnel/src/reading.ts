@@ -47,8 +47,10 @@ export async function getBaseChainDataSingle(
 
 async function getBlockData(web3: Web3, blockNumber: number): Promise<ChainData> {
   const block = await timeout(web3.eth.getBlock(blockNumber), DEFAULT_FUNNEL_TIMEOUT);
+  const timestamp =
+    typeof block.timestamp === 'string' ? parseInt(block.timestamp, 10) : block.timestamp;
   return {
-    timestamp: block.timestamp,
+    timestamp: timestamp,
     blockHash: block.hash,
     blockNumber: block.number,
     submittedData: [],

@@ -18,7 +18,7 @@ interface ValidatedSubmittedData extends SubmittedData {
 export async function extractSubmittedData(
   web3: Web3,
   events: PaimaGameInteraction[],
-  blockTimestamp: number | string
+  blockTimestamp: number
 ): Promise<SubmittedData[]> {
   const unflattenedList = await Promise.all(events.map(e => eventMapper(web3, e, blockTimestamp)));
   return unflattenedList.flat();
@@ -27,7 +27,7 @@ export async function extractSubmittedData(
 async function eventMapper(
   web3: Web3,
   e: PaimaGameInteraction,
-  blockTimestamp: number | string
+  blockTimestamp: number
 ): Promise<SubmittedData[]> {
   const decodedData = decodeEventData(e.returnValues.data);
   return await processDataUnit(
@@ -61,7 +61,7 @@ async function processDataUnit(
   web3: Web3,
   unit: SubmittedData,
   blockHeight: number,
-  blockTimestamp: number | string
+  blockTimestamp: number
 ): Promise<SubmittedData[]> {
   try {
     if (!unit.inputData.includes(OUTER_BATCH_DIVIDER)) {
@@ -105,7 +105,7 @@ async function processBatchedSubunit(
   web3: Web3,
   input: string,
   suppliedValue: string,
-  blockTimestamp: number | string
+  blockTimestamp: number
 ): Promise<ValidatedSubmittedData> {
   const INVALID_INPUT: ValidatedSubmittedData = {
     inputData: '',
@@ -132,7 +132,10 @@ async function processBatchedSubunit(
     millisecondTimestamp
   );
 
-  const timestampValidated = validateSubunitTimestamp(millisecondTimestamp, blockTimestamp); // TODO
+  const timestampValidated = validateSubunitTimestamp(
+    parseInt(millisecondTimestamp, 10),
+    blockTimestamp
+  ); // TODO
 
   const validated = signatureValidated && timestampValidated;
 
@@ -149,10 +152,7 @@ async function processBatchedSubunit(
   };
 }
 
-function validateSubunitTimestamp(
-  subunitTimestamp: string,
-  blockTimestamp: number | string
-): boolean {
+function validateSubunitTimestamp(subunitTimestamp: number, blockTimestamp: number): boolean {
   return true; // TODO: actually validate
 }
 
