@@ -1,10 +1,4 @@
-import type {
-  BlockData,
-  BlockSubmittedData,
-  ChainData,
-  ChainDataExtensionDatum,
-  PresyncChainData,
-} from '@paima/runtime';
+import type { ChainData, ChainDataExtensionDatum, PresyncChainData } from '@paima/runtime';
 
 export function groupCdeData(
   fromBlock: number,
@@ -31,21 +25,13 @@ export function groupCdeData(
 }
 
 export function composeChainData(
-  cutBlockData: BlockData[],
-  submittedDataBlocks: BlockSubmittedData[],
+  baseChainData: ChainData[],
   cdeData: PresyncChainData[]
 ): ChainData[] {
-  const length = Math.min(cutBlockData.length, submittedDataBlocks.length, cdeData.length);
-  if (length === 0) {
-    return [];
-  }
-  cutBlockData = cutBlockData.slice(0, length);
-  submittedDataBlocks = submittedDataBlocks.slice(0, length);
-  cdeData = cdeData.slice(0, length);
-
-  return cutBlockData.map((blockData, index) => ({
+  return baseChainData.map(blockData => ({
     ...blockData,
-    submittedData: submittedDataBlocks[index].submittedData,
-    extensionDatums: cdeData[index].extensionDatums,
+    extensionDatums: cdeData.find(
+      blockCdeData => blockCdeData.blockNumber === blockData.blockNumber
+    )?.extensionDatums,
   }));
 }
