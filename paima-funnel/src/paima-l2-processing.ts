@@ -15,6 +15,8 @@ interface ValidatedSubmittedData extends SubmittedData {
   validated: boolean;
 }
 
+const TIMESTAMP_LIMIT = 24 * 3600;
+
 export async function extractSubmittedData(
   web3: Web3,
   events: PaimaGameInteraction[],
@@ -132,10 +134,8 @@ async function processBatchedSubunit(
     millisecondTimestamp
   );
 
-  const timestampValidated = validateSubunitTimestamp(
-    parseInt(millisecondTimestamp, 10),
-    blockTimestamp
-  ); // TODO
+  const secondTimestamp = parseInt(millisecondTimestamp, 10) / 1000;
+  const timestampValidated = validateSubunitTimestamp(secondTimestamp, blockTimestamp); // TODO
 
   const validated = signatureValidated && timestampValidated;
 
@@ -153,7 +153,7 @@ async function processBatchedSubunit(
 }
 
 function validateSubunitTimestamp(subunitTimestamp: number, blockTimestamp: number): boolean {
-  return true; // TODO: actually validate
+  return Math.abs(subunitTimestamp - blockTimestamp) < TIMESTAMP_LIMIT;
 }
 
 async function validateSubunitSignature(
