@@ -15,14 +15,8 @@ export { SubmittedChainData, SubmittedData };
 
 export type TsoaFunction = (s: Express) => void;
 
-export interface BlockData {
-  timestamp: number | string;
-  blockHash: string;
-  blockNumber: number;
-}
-
 export interface ChainData {
-  timestamp: number | string;
+  timestamp: number;
   blockHash: string;
   blockNumber: number;
   submittedData: SubmittedData[];
@@ -32,11 +26,6 @@ export interface ChainData {
 export interface PresyncChainData {
   blockNumber: number;
   extensionDatums: ChainDataExtensionDatum[];
-}
-
-export interface BlockSubmittedData {
-  blockNumber: number;
-  submittedData: SubmittedData[];
 }
 
 interface ChainDataExtensionErc20Payload {

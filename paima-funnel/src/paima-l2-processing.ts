@@ -15,15 +15,22 @@ interface ValidatedSubmittedData extends SubmittedData {
   validated: boolean;
 }
 
+const TIMESTAMP_LIMIT = 24 * 3600;
+
 export async function extractSubmittedData(
   web3: Web3,
-  events: PaimaGameInteraction[]
+  events: PaimaGameInteraction[],
+  blockTimestamp: number
 ): Promise<SubmittedData[]> {
-  const unflattenedList = await Promise.all(events.map(e => eventMapper(web3, e)));
+  const unflattenedList = await Promise.all(events.map(e => eventMapper(web3, e, blockTimestamp)));
   return unflattenedList.flat();
 }
 
-async function eventMapper(web3: Web3, e: PaimaGameInteraction): Promise<SubmittedData[]> {
+async function eventMapper(
+  web3: Web3,
+  e: PaimaGameInteraction,
+  blockTimestamp: number
+): Promise<SubmittedData[]> {
   const decodedData = decodeEventData(e.returnValues.data);
   return await processDataUnit(
     web3,
@@ -34,24 +41,9 @@ async function eventMapper(web3: Web3, e: PaimaGameInteraction): Promise<Submitt
       suppliedValue: e.returnValues.value,
       scheduled: false,
     },
-    e.blockNumber
+    e.blockNumber,
+    blockTimestamp
   );
-}
-
-function unpackValidatedData(validatedData: ValidatedSubmittedData): SubmittedData {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const o = validatedData as any;
-  delete o.validated;
-  return o as SubmittedData;
-}
-
-function createNonce(nonceInput: string): string {
-  let nonce = sha3(nonceInput);
-  if (!nonce) {
-    doLog(`[funnel] WARNING: failure generating nonce from: ${nonceInput}`);
-    nonce = '';
-  }
-  return nonce;
 }
 
 function decodeEventData(eventData: string): string {
@@ -70,7 +62,8 @@ function decodeEventData(eventData: string): string {
 async function processDataUnit(
   web3: Web3,
   unit: SubmittedData,
-  blockHeight: number
+  blockHeight: number,
+  blockTimestamp: number
 ): Promise<SubmittedData[]> {
   try {
     if (!unit.inputData.includes(OUTER_BATCH_DIVIDER)) {
@@ -95,7 +88,9 @@ async function processDataUnit(
 
     if (prefix === 'B') {
       const validatedSubUnits = await Promise.all(
-        elems.slice(1, afterLastIndex).map(elem => processBatchedSubunit(web3, elem, subunitValue))
+        elems
+          .slice(1, afterLastIndex)
+          .map(elem => processBatchedSubunit(web3, elem, subunitValue, blockTimestamp))
       );
       return validatedSubUnits.filter(item => item.validated).map(unpackValidatedData);
     } else {
@@ -111,7 +106,8 @@ async function processDataUnit(
 async function processBatchedSubunit(
   web3: Web3,
   input: string,
-  suppliedValue: string
+  suppliedValue: string,
+  blockTimestamp: number
 ): Promise<ValidatedSubmittedData> {
   const INVALID_INPUT: ValidatedSubmittedData = {
     inputData: '',
@@ -129,7 +125,7 @@ async function processBatchedSubunit(
 
   const [addressTypeStr, userAddress, userSignature, inputData, millisecondTimestamp] = elems;
   const addressType = parseInt(addressTypeStr, 10);
-  const validated = await validateSubunit(
+  const signatureValidated = await validateSubunitSignature(
     web3,
     addressType,
     userAddress,
@@ -137,6 +133,11 @@ async function processBatchedSubunit(
     inputData,
     millisecondTimestamp
   );
+
+  const secondTimestamp = parseInt(millisecondTimestamp, 10) / 1000;
+  const timestampValidated = validateSubunitTimestamp(secondTimestamp, blockTimestamp); // TODO
+
+  const validated = signatureValidated && timestampValidated;
 
   const hashInput = millisecondTimestamp + userAddress + inputData;
   const inputNonce = createNonce(hashInput);
@@ -151,7 +152,11 @@ async function processBatchedSubunit(
   };
 }
 
-async function validateSubunit(
+function validateSubunitTimestamp(subunitTimestamp: number, blockTimestamp: number): boolean {
+  return Math.abs(subunitTimestamp - blockTimestamp) < TIMESTAMP_LIMIT;
+}
+
+async function validateSubunitSignature(
   web3: Web3,
   addressType: AddressType,
   userAddress: string,
@@ -170,4 +175,20 @@ async function validateSubunit(
     default:
       return false;
   }
+}
+
+function unpackValidatedData(validatedData: ValidatedSubmittedData): SubmittedData {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const o = validatedData as any;
+  delete o.validated;
+  return o as SubmittedData;
+}
+
+function createNonce(nonceInput: string): string {
+  let nonce = sha3(nonceInput);
+  if (!nonce) {
+    doLog(`[funnel] WARNING: failure generating nonce from: ${nonceInput}`);
+    nonce = '';
+  }
+  return nonce;
 }

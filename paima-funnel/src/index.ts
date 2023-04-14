@@ -18,12 +18,7 @@ import type {
   PresyncChainData,
 } from '@paima/runtime';
 
-import {
-  getBlockData,
-  getMultipleBlockData,
-  getSubmittedDataMulti,
-  getSubmittedDataSingle,
-} from './reading.js';
+import { getBaseChainDataMulti, getBaseChainDataSingle } from './reading.js';
 import { getUngroupedCdeData } from './cde/reading.js';
 import { composeChainData, groupCdeData } from './utils.js';
 import { instantiateExtension } from './cde/initialization.js';
@@ -125,16 +120,14 @@ class PaimaFunnel {
       return [];
     }
     try {
-      const [blockData, submittedData, cdeData] = await Promise.all([
-        getBlockData(this.web3, blockNumber),
-        getSubmittedDataSingle(this.web3, this.paimaL2Contract, blockNumber),
+      const [baseChainData, cdeData] = await Promise.all([
+        getBaseChainDataSingle(this.web3, this.paimaL2Contract, blockNumber),
         getUngroupedCdeData(this.web3, this.extensions, blockNumber, blockNumber),
       ]);
 
       return [
         {
-          ...blockData,
-          submittedData,
+          ...baseChainData,
           extensionDatums: cdeData.flat(),
         },
       ];
@@ -152,13 +145,12 @@ class PaimaFunnel {
       return [];
     }
     try {
-      const [blockData, submittedData, ungroupedCdeData] = await Promise.all([
-        getMultipleBlockData(this.web3, fromBlock, toBlock),
-        getSubmittedDataMulti(this.web3, this.paimaL2Contract, fromBlock, toBlock),
+      const [baseChainData, ungroupedCdeData] = await Promise.all([
+        getBaseChainDataMulti(this.web3, this.paimaL2Contract, fromBlock, toBlock),
         getUngroupedCdeData(this.web3, this.extensions, fromBlock, toBlock),
       ]);
       const cdeData = groupCdeData(fromBlock, toBlock, ungroupedCdeData);
-      return composeChainData(blockData, submittedData, cdeData);
+      return composeChainData(baseChainData, cdeData);
     } catch (err) {
       doLog(`[funnel] at ${fromBlock}-${toBlock} caught ${err}`);
       throw err;
