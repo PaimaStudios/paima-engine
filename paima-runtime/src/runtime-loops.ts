@@ -8,6 +8,7 @@ import type { ChainData, ChainFunnel, GameStateMachine } from './types';
 import { run } from './run-flag';
 import { snapshotIfTime } from './snapshots.js';
 import { acquireLatestBlockHeight, exitIfStopped, loopIfStopBlockReached } from './utils';
+import { cleanNoncesIfTime } from './nonce-gc';
 
 // The core logic of paima runtime which polls the funnel and processes the resulting chain data using the game's state machine.
 // Of note, the runtime is designed to continue running/attempting to process the next required block no matter what errors propagate upwards.
@@ -193,6 +194,7 @@ async function getSyncRoundStart(
       gameStateMachine,
       pollingPeriod
     );
+    await cleanNoncesIfTime(gameStateMachine.getReadWriteDbConn(), latestProcessedBlockHeight);
     await snapshotIfTime(latestProcessedBlockHeight);
     await loopIfStopBlockReached(latestProcessedBlockHeight, stopBlockHeight);
     exitIfStopped(run);
