@@ -76,6 +76,7 @@ export async function internalGetAllOwnedNfts(
   cdeId: number,
   ownerAddress: string
 ): Promise<bigint[]> {
+  ownerAddress = ownerAddress.toLowerCase();
   const results = await cdeErc721GetOwnedNfts.run(
     { cde_id: cdeId, nft_owner: ownerAddress },
     readonlyDBConn
@@ -88,6 +89,7 @@ export async function internalGetFungibleTokenBalance(
   cdeId: number,
   walletAddress: string
 ): Promise<bigint | null> {
+  walletAddress = walletAddress.toLowerCase();
   const results = await cdeErc20GetBalance.run(
     { cde_id: cdeId, wallet_address: walletAddress },
     readonlyDBConn
