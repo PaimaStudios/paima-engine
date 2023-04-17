@@ -5,6 +5,10 @@ SELECT * FROM chain_data_extensions;
 SELECT * FROM chain_data_extensions
 WHERE cde_id = :cde_id;
 
+/* @name selectChainDataExtensionsByName */
+SELECT * FROM chain_data_extensions
+WHERE cde_name = :cde_name!;
+
 /* @name selectChainDataExtensionsByTypeAndAddress */
 SELECT * FROM chain_data_extensions
 WHERE cde_type = :cde_type!

@@ -7,6 +7,7 @@ export type IGetChainDataExtensionsParams = void;
 /** 'GetChainDataExtensions' return type */
 export interface IGetChainDataExtensionsResult {
   cde_id: number;
+  cde_name: string;
   cde_type: number;
   contract_address: string;
   scheduled_prefix: string | null;
@@ -38,6 +39,7 @@ export interface IGetSpecificChainDataExtensionParams {
 /** 'GetSpecificChainDataExtension' return type */
 export interface IGetSpecificChainDataExtensionResult {
   cde_id: number;
+  cde_name: string;
   cde_type: number;
   contract_address: string;
   scheduled_prefix: string | null;
@@ -62,6 +64,39 @@ const getSpecificChainDataExtensionIR: any = {"usedParamSet":{"cde_id":true},"pa
 export const getSpecificChainDataExtension = new PreparedQuery<IGetSpecificChainDataExtensionParams,IGetSpecificChainDataExtensionResult>(getSpecificChainDataExtensionIR);
 
 
+/** 'SelectChainDataExtensionsByName' parameters type */
+export interface ISelectChainDataExtensionsByNameParams {
+  cde_name: string;
+}
+
+/** 'SelectChainDataExtensionsByName' return type */
+export interface ISelectChainDataExtensionsByNameResult {
+  cde_id: number;
+  cde_name: string;
+  cde_type: number;
+  contract_address: string;
+  scheduled_prefix: string | null;
+  start_blockheight: number;
+}
+
+/** 'SelectChainDataExtensionsByName' query type */
+export interface ISelectChainDataExtensionsByNameQuery {
+  params: ISelectChainDataExtensionsByNameParams;
+  result: ISelectChainDataExtensionsByNameResult;
+}
+
+const selectChainDataExtensionsByNameIR: any = {"usedParamSet":{"cde_name":true},"params":[{"name":"cde_name","required":true,"transform":{"type":"scalar"},"locs":[{"a":53,"b":62}]}],"statement":"SELECT * FROM chain_data_extensions\nWHERE cde_name = :cde_name!"};
+
+/**
+ * Query generated from SQL:
+ * ```
+ * SELECT * FROM chain_data_extensions
+ * WHERE cde_name = :cde_name!
+ * ```
+ */
+export const selectChainDataExtensionsByName = new PreparedQuery<ISelectChainDataExtensionsByNameParams,ISelectChainDataExtensionsByNameResult>(selectChainDataExtensionsByNameIR);
+
+
 /** 'SelectChainDataExtensionsByTypeAndAddress' parameters type */
 export interface ISelectChainDataExtensionsByTypeAndAddressParams {
   cde_type: number;
@@ -71,6 +106,7 @@ export interface ISelectChainDataExtensionsByTypeAndAddressParams {
 /** 'SelectChainDataExtensionsByTypeAndAddress' return type */
 export interface ISelectChainDataExtensionsByTypeAndAddressResult {
   cde_id: number;
+  cde_name: string;
   cde_type: number;
   contract_address: string;
   scheduled_prefix: string | null;
@@ -104,6 +140,7 @@ export interface ISelectChainDataExtensionsByAddressParams {
 /** 'SelectChainDataExtensionsByAddress' return type */
 export interface ISelectChainDataExtensionsByAddressResult {
   cde_id: number;
+  cde_name: string;
   cde_type: number;
   contract_address: string;
   scheduled_prefix: string | null;
