@@ -59,6 +59,6 @@ function scheduleMintInput(cdeDatum: ChainDataExtensionErc721Datum): SQLUpdate[]
   }
 
   const scheduledBlockHeight = Math.max(cdeDatum.blockNumber, ENV.START_BLOCKHEIGHT + 1);
-  const scheduledInputData = `${prefix}|${address}|${tokenId}`;
+  const scheduledInputData = `${prefix}|${address}|${tokenId}|`; // implicit empty string at the end
   return [createScheduledData(scheduledInputData, scheduledBlockHeight)];
 }
