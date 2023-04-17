@@ -1,13 +1,13 @@
 import type { Pool } from 'pg';
 
 import { ChainDataExtensionType, doLog } from '@paima/utils';
-import type { ChainDataExtensionDatum } from '@paima/runtime';
+import type { ChainDataExtensionErc20Datum } from '@paima/runtime';
 import { cdeErc20GetBalance, cdeErc20InsertBalance, cdeErc20UpdateBalance } from '@paima/db';
 import type { SQLUpdate } from '@paima/db';
 
 export default async function processErc20Datum(
   readonlyDBConn: Pool,
-  cdeDatum: ChainDataExtensionDatum
+  cdeDatum: ChainDataExtensionErc20Datum
 ): Promise<SQLUpdate[]> {
   if (cdeDatum.cdeType !== ChainDataExtensionType.ERC20) {
     return [];
@@ -15,11 +15,17 @@ export default async function processErc20Datum(
   const cdeId = cdeDatum.cdeId;
   const { from, to, value } = cdeDatum.payload;
 
+  const fromAddr = from.toLowerCase();
+  const toAddr = to.toLowerCase();
+
   const fromRow = await cdeErc20GetBalance.run(
-    { cde_id: cdeId, wallet_address: from },
+    { cde_id: cdeId, wallet_address: fromAddr },
     readonlyDBConn
   );
-  const toRow = await cdeErc20GetBalance.run({ cde_id: cdeId, wallet_address: to }, readonlyDBConn);
+  const toRow = await cdeErc20GetBalance.run(
+    { cde_id: cdeId, wallet_address: toAddr },
+    readonlyDBConn
+  );
 
   const numValue = BigInt(value);
 
@@ -32,7 +38,7 @@ export default async function processErc20Datum(
         cdeErc20UpdateBalance,
         {
           cde_id: cdeId,
-          wallet_address: from,
+          wallet_address: fromAddr,
           balance: fromNewBalance.toString(10),
         },
       ]);
@@ -45,7 +51,7 @@ export default async function processErc20Datum(
         cdeErc20UpdateBalance,
         {
           cde_id: cdeId,
-          wallet_address: to,
+          wallet_address: toAddr,
           balance: toNewBalance.toString(10),
         },
       ]);
@@ -54,7 +60,7 @@ export default async function processErc20Datum(
         cdeErc20InsertBalance,
         {
           cde_id: cdeId,
-          wallet_address: to,
+          wallet_address: toAddr,
           balance: value,
         },
       ]);

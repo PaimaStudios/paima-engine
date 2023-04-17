@@ -49,7 +49,7 @@ interface ChainDataExtensionDatumBase {
   payload: ChainDataExtensionPayload;
 }
 
-interface ChainDataExtensionErc20Datum extends ChainDataExtensionDatumBase {
+export interface ChainDataExtensionErc20Datum extends ChainDataExtensionDatumBase {
   cdeType: ChainDataExtensionType.ERC20;
   payload: ChainDataExtensionErc20Payload;
 }
