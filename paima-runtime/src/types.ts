@@ -66,6 +66,7 @@ export type ChainDataExtensionDatum = ChainDataExtensionErc20Datum | ChainDataEx
 export interface ChainDataExtension {
   cdeId: number;
   cdeType: ChainDataExtensionType;
+  cdeName: string;
   contractAddress: string;
   startBlockHeight: number;
   initializationPrefix: string;

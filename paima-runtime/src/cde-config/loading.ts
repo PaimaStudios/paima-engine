@@ -38,8 +38,10 @@ function processCdeConfig(extension: any, cdeId: number): ChainDataExtension {
     !extension ||
     !extension.type ||
     !extension.contractAddress ||
+    !extension.name ||
     typeof extension.type !== 'string' ||
-    typeof extension.contractAddress != 'string'
+    typeof extension.contractAddress != 'string' ||
+    typeof extension.name !== 'string'
   ) {
     throw new Error('[cde-config] Invalid extension entry');
   }
@@ -47,6 +49,7 @@ function processCdeConfig(extension: any, cdeId: number): ChainDataExtension {
   const cdeBase = {
     cdeId,
     cdeType: parseCdeType(extension.type as string),
+    cdeName: extension.name,
     contractAddress: extension.contractAddress,
     startBlockHeight: 0,
     initializationPrefix: '',

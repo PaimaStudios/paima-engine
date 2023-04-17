@@ -22,12 +22,14 @@ WHERE contract_address = :contract_address!;
 INSERT INTO chain_data_extensions(
     cde_id,
     cde_type,
+    cde_name,
     contract_address,
     start_blockheight,
     scheduled_prefix
 ) VALUES (
     :cde_id!,
     :cde_type!,
+    :cde_name!,
     :contract_address!,
     :start_blockheight!,
     :scheduled_prefix
