@@ -67,6 +67,16 @@ const matchExecutorInitializer: MatchExecutorInitializer = {
           }
         }
       },
+      processAllTicks(): Exclude<ReturnType<typeof this.tick>, null> {
+        const ticks: Exclude<ReturnType<typeof this.tick>, null> = [];
+        while (true) {
+          // Tick returns null after last event.
+          const tick: ReturnType<typeof this.tick> = this.tick();
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+          if (tick) tick.forEach(t => ticks.push(t as any)); // any as generic not exposed
+          else return ticks
+        }
+      }
     };
   },
 };

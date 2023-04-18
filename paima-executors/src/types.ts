@@ -4,6 +4,7 @@ export type RoundExecutor<MatchState = any, TickEvent = any> = {
   currentTick: number;
   currentState: MatchState;
   tick: () => TickEvent[] | null;
+  processAllTicks: () => TickEvent[];
   endState: () => MatchState;
 };
 
@@ -14,6 +15,7 @@ export type MatchExecutor<MatchState = any, TickEvent = any> = {
     currentTick: number;
     currentState: MatchState;
     tick: () => TickEvent[] | null;
+    processAllTicks: () => TickEvent[];
     endState: () => MatchState;
   };
   __nextRound: () => void;
