@@ -32,6 +32,15 @@ export const roundExecutor: RoundExecutorInitializer = {
         this.currentTick++;
         return events;
       },
+      processAllTicks(): Exclude<ReturnType<typeof this.tick>, null> {
+        const ticks: Exclude<ReturnType<typeof this.tick>, null> = [];
+        while (true) {
+          // Tick returns null after last event.
+          const tick: ReturnType<typeof this.tick> = this.tick();
+          if (tick) tick.forEach(t => ticks.push(t));
+          else return ticks;
+        }
+      },
       endState(): ReturnType<typeof this.endState> {
         while (this.tick() !== null);
         return this.currentState;
