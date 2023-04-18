@@ -38,7 +38,7 @@ export const roundExecutor: RoundExecutorInitializer = {
           // Tick returns null after last event.
           const tick: ReturnType<typeof this.tick> = this.tick();
           if (tick) tick.forEach(t => ticks.push(t));
-          else return ticks
+          else return ticks;
         }
       },
       endState(): ReturnType<typeof this.endState> {
