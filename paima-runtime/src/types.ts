@@ -63,28 +63,29 @@ export interface ChainDataExtensionErc721Datum extends ChainDataExtensionDatumBa
 
 export type ChainDataExtensionDatum = ChainDataExtensionErc20Datum | ChainDataExtensionErc721Datum;
 
-export interface ChainDataExtension {
+type CdeContract = ERC20Contract | ERC721Contract;
+
+interface ChainDataExtensionBase {
   cdeId: number;
   cdeType: ChainDataExtensionType;
   cdeName: string;
+  contract: CdeContract;
   contractAddress: string;
   startBlockHeight: number;
   initializationPrefix: string;
 }
 
-interface InstantiatedChainDataExtensionErc20 extends ChainDataExtension {
+export interface ChainDataExtensionErc20 extends ChainDataExtensionBase {
   cdeType: ChainDataExtensionType.ERC20;
   contract: ERC20Contract;
 }
 
-interface InstantiatedChainDataExtensionErc721 extends ChainDataExtension {
+export interface ChainDataExtensionErc721 extends ChainDataExtensionBase {
   cdeType: ChainDataExtensionType.ERC721;
   contract: ERC721Contract;
 }
 
-export type InstantiatedChainDataExtension =
-  | InstantiatedChainDataExtensionErc20
-  | InstantiatedChainDataExtensionErc721;
+export type ChainDataExtension = ChainDataExtensionErc20 | ChainDataExtensionErc721;
 
 export interface ChainFunnel {
   getExtensions: () => ChainDataExtension[];

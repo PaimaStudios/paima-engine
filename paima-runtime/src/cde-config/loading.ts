@@ -1,12 +1,26 @@
 import * as fs from 'fs/promises';
 import YAML from 'yaml';
+import type Web3 from 'web3';
 
 import { doLog } from '@paima/utils';
 
 import type { ChainDataExtension } from '../types';
 import { parseCdeType } from './utils';
+import { ChainDataExtensionType, getErc20Contract, getErc721Contract } from '@paima/utils';
+
+interface CdeConfig {
+  cdeId: number;
+  type: string;
+  name: string;
+  contractAddress: string;
+  startBlockHeight: number;
+  initializationPrefix: string;
+}
+
+type CdeBase = Omit<ChainDataExtension, 'cdeType' | 'contract'>;
 
 export async function loadChainDataExtensions(
+  web3: Web3,
   configFilePath: string
 ): Promise<ChainDataExtension[]> {
   let configFileData: string;
@@ -18,50 +32,90 @@ export async function loadChainDataExtensions(
   }
 
   try {
-    const configObject = YAML.parse(configFileData);
-
-    if (!configObject.extensions || !Array.isArray(configObject.extensions)) {
-      throw new Error(`[cde-config] extensions field missing or invalid`);
-    }
-
-    const config = configObject.extensions.map((e: any, i: number) => processCdeConfig(e, i + 1));
-
-    return config;
+    const config = parseCdeConfigFile(configFileData);
+    const instantiatedExtensions = await Promise.all(
+      config.map(e => instantiateExtension(e, web3))
+    );
+    return instantiatedExtensions;
   } catch (err) {
     doLog(`[cde-config] Invalid config file, assuming no CDEs. Error: ${err}`);
     return [];
   }
 }
 
-function processCdeConfig(extension: any, cdeId: number): ChainDataExtension {
-  if (
-    !extension ||
-    !extension.type ||
-    !extension.contractAddress ||
-    !extension.name ||
-    typeof extension.type !== 'string' ||
-    typeof extension.contractAddress != 'string' ||
-    typeof extension.name !== 'string'
-  ) {
-    throw new Error('[cde-config] Invalid extension entry');
+// Validate the overall structure of the config file and extract the relevant data
+function parseCdeConfigFile(configFileData: string): CdeConfig[] {
+  const configObject = YAML.parse(configFileData);
+
+  if (!configObject.extensions || !Array.isArray(configObject.extensions)) {
+    throw new Error(`[cde-config] extensions field missing or invalid`);
   }
 
-  const cdeBase = {
-    cdeId,
-    cdeType: parseCdeType(extension.type as string),
-    cdeName: extension.name,
-    contractAddress: extension.contractAddress,
-    startBlockHeight: 0,
-    initializationPrefix: '',
+  const config = configObject.extensions.map((e: any, i: number) => parseSingleCdeConfig(e, i + 1));
+
+  return config;
+}
+
+// Ensure the expected fields exist and are of correct types
+function parseSingleCdeConfig(config: any, cdeId: number): CdeConfig | null {
+  try {
+    if (
+      !config ||
+      typeof config.type !== 'string' ||
+      typeof config.contractAddress != 'string' ||
+      typeof config.name !== 'string' ||
+      typeof config.startBlockHeight !== 'number'
+    ) {
+      return null;
+    }
+
+    const { type, contractAddress, name, startBlockHeight } = config;
+
+    const initializationPrefix =
+      typeof config.initializationPrefix === 'string' ? config.initializationPrefix : '';
+
+    return {
+      cdeId,
+      type,
+      name,
+      contractAddress,
+      startBlockHeight,
+      initializationPrefix,
+    };
+  } catch (err) {
+    return null;
+  }
+}
+
+// Do type-specific initialization and construct contract objects
+async function instantiateExtension(config: CdeConfig, web3: Web3): Promise<ChainDataExtension> {
+  const cdeType = parseCdeType(config.type);
+  const cdeBase: CdeBase = {
+    cdeId: config.cdeId,
+    cdeName: config.name,
+    contractAddress: config.contractAddress,
+    startBlockHeight: config.startBlockHeight,
+    initializationPrefix: config.initializationPrefix,
   };
 
-  if (extension.startBlockHeight) {
-    cdeBase.startBlockHeight = extension.startBlockHeight;
+  switch (cdeType) {
+    case ChainDataExtensionType.ERC20:
+      return {
+        ...cdeBase,
+        cdeType,
+        contract: getErc20Contract(config.contractAddress, web3),
+      };
+    case ChainDataExtensionType.ERC721:
+      // TODO: once supported, differentiate between 721 and 721+ here
+      if (!config.initializationPrefix) {
+        throw new Error('[cde-config] Initialization prefix missing!');
+      }
+      return {
+        ...cdeBase,
+        cdeType,
+        contract: getErc721Contract(config.contractAddress, web3),
+      };
+    default:
+      throw new Error(`[cde-config] Invalid cde type: ${cdeType}`);
   }
-
-  if (extension.initializationPrefix) {
-    cdeBase.initializationPrefix = extension.initializationPrefix;
-  }
-
-  return cdeBase;
 }

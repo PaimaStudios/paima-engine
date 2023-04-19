@@ -1,12 +1,12 @@
 import type Web3 from 'web3';
 
 import { ChainDataExtensionType, DEFAULT_FUNNEL_TIMEOUT, timeout } from '@paima/utils';
-import type { ChainDataExtensionDatum, InstantiatedChainDataExtension } from '@paima/runtime';
+import type { ChainDataExtensionDatum, ChainDataExtensionErc721 } from '@paima/runtime';
 import type { Transfer } from '@paima/utils/src/contract-types/ERC721Contract';
 
 export default async function getCdeData(
   web3: Web3,
-  extension: InstantiatedChainDataExtension,
+  extension: ChainDataExtensionErc721,
   fromBlock: number,
   toBlock: number
 ): Promise<ChainDataExtensionDatum[]> {
@@ -24,7 +24,7 @@ export default async function getCdeData(
 
 function transferToCdeDatum(
   event: Transfer,
-  extension: InstantiatedChainDataExtension
+  extension: ChainDataExtensionErc721
 ): ChainDataExtensionDatum {
   return {
     cdeId: extension.cdeId,

@@ -10,31 +10,20 @@ import {
 } from '@paima/utils';
 import type { PaimaL2Contract } from '@paima/utils';
 import { loadChainDataExtensions } from '@paima/runtime';
-import type {
-  ChainFunnel,
-  ChainData,
-  ChainDataExtension,
-  InstantiatedChainDataExtension,
-  PresyncChainData,
-} from '@paima/runtime';
+import type { ChainFunnel, ChainData, ChainDataExtension, PresyncChainData } from '@paima/runtime';
 
 import { getBaseChainDataMulti, getBaseChainDataSingle } from './reading.js';
 import { getUngroupedCdeData } from './cde/reading.js';
 import { composeChainData, groupCdeData } from './utils.js';
-import { instantiateExtension } from './cde/initialization.js';
 
 const GET_BLOCK_NUMBER_TIMEOUT = 5000;
 
 class PaimaFunnel {
-  private extensions: InstantiatedChainDataExtension[];
+  private extensions: ChainDataExtension[];
   private web3: Web3;
   private paimaL2Contract: PaimaL2Contract;
 
-  constructor(
-    web3: Web3,
-    paimaL2Contract: PaimaL2Contract,
-    extensions: InstantiatedChainDataExtension[]
-  ) {
+  constructor(web3: Web3, paimaL2Contract: PaimaL2Contract, extensions: ChainDataExtension[]) {
     this.extensions = extensions;
     this.web3 = web3;
     this.paimaL2Contract = paimaL2Contract;
@@ -163,9 +152,8 @@ const paimaFunnelInitializer = {
     validatePaimaL2ContractAddress(paimaL2ContractAddress);
     const web3 = await initWeb3(nodeUrl);
     const paimaL2Contract = getPaimaL2Contract(paimaL2ContractAddress, web3);
-    const extensions = await loadChainDataExtensions(ENV.CDE_CONFIG_PATH);
-    const instantiatedExtensions = extensions.map(e => instantiateExtension(web3, e));
-    return new PaimaFunnel(web3, paimaL2Contract, instantiatedExtensions);
+    const extensions = await loadChainDataExtensions(web3, ENV.CDE_CONFIG_PATH);
+    return new PaimaFunnel(web3, paimaL2Contract, extensions);
   },
 };
 
