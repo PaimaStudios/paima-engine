@@ -88,4 +88,4 @@ Paima standalone game templates intentionally left out the following modules fro
 
 ## How To Use Paima Engine Standalone
 
-Refer to [how to guide](user-documentation/how-to-use-paima-engine.md).
+Refer to [how to guide](<user-documentation/1 - how-to-use-paima-engine.md>).
