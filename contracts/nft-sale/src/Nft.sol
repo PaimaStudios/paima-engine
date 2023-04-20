@@ -52,6 +52,8 @@ contract Nft is ERC721, Ownable {
 
     event Category(uint8 indexed category, uint256 indexed tokenId);
 
+    event Minted(uint256 indexed tokenId, string initialData);
+
     /// @dev contract constructor
     /// @param name Collection name.
     /// @param symbol Collection symbol.
@@ -69,7 +71,7 @@ contract Nft is ERC721, Ownable {
         transferOwnership(owner);
     }
 
-    function mint(address _to) external canMint returns (uint256) {
+    function mint(address _to, string memory initialData) external canMint returns (uint256) {
         require(maxSupply > totalSupply, "Nft: max supply reached");
 
         uint256 tokenId = currentTokenId;
@@ -82,6 +84,7 @@ contract Nft is ERC721, Ownable {
         totalSupply++;
         currentTokenId++;
 
+        emit Minted(tokenId, initialData);
         emit Category(category_, tokenId);
         return tokenId;
     }

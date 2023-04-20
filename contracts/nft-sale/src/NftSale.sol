@@ -65,7 +65,7 @@ contract NftSale is State, ERC1967, Ownable {
         // transfer tokens from buyer to contract
         ERC20(_tokenAddress).transferFrom(msg.sender, address(this), price);
 
-        uint256 tokenId = Nft(nftAddress).mint(receiverAddress);
+        uint256 tokenId = Nft(nftAddress).mint(receiverAddress, "");
 
         if (!depositedCurrenciesMap[_tokenAddress]) {
             depositedCurrencies.push(_tokenAddress);

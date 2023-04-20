@@ -45,7 +45,7 @@ contract NativeNftSale is BaseState, ERC1967, Ownable {
 
         uint256 price = nftPrice;
 
-        uint256 tokenId = Nft(nftAddress).mint(receiverAddress);
+        uint256 tokenId = Nft(nftAddress).mint(receiverAddress, "");
 
         emit BuyNFT(tokenId, price, receiverAddress, msg.sender);
 
