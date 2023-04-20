@@ -1,0 +1,17 @@
+# deps
+/node_modules
+package-lock.json
+
+# build
+/dist
+/build
+/cache
+/artifacts
+/cache_hardhat
+/out
+
+secrets.json
+.env.production
+.env.development
+scripts/arweave-upload/arweave-keyfile.json
+

@@ -1,0 +1,43 @@
+{
+    "name": "nft-sale",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "directories": {
+        "lib": "lib",
+        "test": "test"
+    },
+    "scripts": {
+        "test": "npx hardhat test",
+        "compile": "forge build && npx hardhat compile && npx ts-node ./scripts/gen-abi.ts",
+        "prettier": "prettier --write '**/*.{sol,js,ts}'"
+    },
+    "prettier": {
+        "tabWidth": 4,
+        "arrowParens": "avoid"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "@nomiclabs/hardhat-waffle": "^2.0.3",
+        "@openzeppelin/contracts": "^4.6.0",
+        "@openzeppelin/contracts-upgradeable": "^4.6.0",
+        "@openzeppelin/hardhat-upgrades": "^1.18.1",
+        "ardrive-core-js": "^1.15.1",
+        "arweave": "^1.11.4",
+        "commander": "^9.3.0",
+        "dotenv": "^16.0.1",
+        "ethers": "^5.6.8",
+        "prettier": "^2.6.2",
+        "prettier-plugin-organize-imports": "^2.3.4",
+        "prettier-plugin-solidity": "^1.0.0-beta.19",
+        "historical-indexer": "git@github.com:PaimaStudios/historical-nft-indexer.git"
+    },
+    "devDependencies": {
+        "@types/mocha": "^9.1.1",
+        "hardhat": "^2.9.7",
+        "hardhat-preprocessor": "^0.1.4",
+        "ts-node": "^10.8.1"
+    }
+}

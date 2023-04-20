@@ -1,0 +1,7 @@
+{
+    "testnet": {
+        "Paima Volcaneers": "0xcaa5272Ef0196511c1c8d9Ee8a40349e5806A5B5",
+        "NativeNftSale_Logic": "0x72CC5239d41D6CC36989de97f69866EeAC60e037",
+        "NativeNftSale_Proxy": "0xAc9A4F3B63895402476680e4B491fd5a6ae2230C"
+    }
+}
