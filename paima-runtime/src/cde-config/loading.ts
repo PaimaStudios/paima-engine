@@ -57,34 +57,30 @@ function parseCdeConfigFile(configFileData: string): CdeConfig[] {
 }
 
 // Ensure the expected fields exist and are of correct types
-function parseSingleCdeConfig(config: any, cdeId: number): CdeConfig | null {
-  try {
-    if (
-      !config ||
-      typeof config.type !== 'string' ||
-      typeof config.contractAddress != 'string' ||
-      typeof config.name !== 'string' ||
-      typeof config.startBlockHeight !== 'number'
-    ) {
-      return null;
-    }
-
-    const { type, contractAddress, name, startBlockHeight } = config;
-
-    const initializationPrefix =
-      typeof config.initializationPrefix === 'string' ? config.initializationPrefix : '';
-
-    return {
-      cdeId,
-      type,
-      name,
-      contractAddress,
-      startBlockHeight,
-      initializationPrefix,
-    };
-  } catch (err) {
-    return null;
+function parseSingleCdeConfig(config: any, cdeId: number): CdeConfig {
+  if (
+    !config ||
+    typeof config.type !== 'string' ||
+    typeof config.contractAddress != 'string' ||
+    typeof config.name !== 'string' ||
+    typeof config.startBlockHeight !== 'number'
+  ) {
+    throw new Error(`[cde-config] invalid config or required field of unexpected type`);
   }
+
+  const { type, contractAddress, name, startBlockHeight } = config;
+
+  const initializationPrefix =
+    typeof config.initializationPrefix === 'string' ? config.initializationPrefix : '';
+
+  return {
+    cdeId,
+    type,
+    name,
+    contractAddress,
+    startBlockHeight,
+    initializationPrefix,
+  };
 }
 
 // Do type-specific initialization and construct contract objects
