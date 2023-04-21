@@ -2,12 +2,16 @@
 pragma solidity ^0.8.13;
 
 import "./Nft.sol";
+import {NftType} from "./NftType.sol";
+import "./NftTypeMapper.sol";
 import "./State.sol";
 import "./ERC1967.sol";
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract NftSale is State, ERC1967, Ownable {
+    NftTypeMapper public typeMapper;
+
     event Initialized(
         ERC20[] indexed currencies,
         address indexed owner,
@@ -28,6 +32,10 @@ contract NftSale is State, ERC1967, Ownable {
         address indexed receiver,
         address buyer
     );
+
+    constructor() {
+        typeMapper = new NftTypeMapper();
+    }
 
     function initialize(
         ERC20[] memory currencies,
@@ -51,7 +59,7 @@ contract NftSale is State, ERC1967, Ownable {
 
     /// @dev Purchases an NFT using approved token. NFTs are sold based on FIFO
     /// @param _tokenAddress Address of ERC20 token to use for payment
-    function buyWithToken(ERC20 _tokenAddress, address receiverAddress)
+    function buyWithToken(ERC20 _tokenAddress, address receiverAddress, NftType nftType)
         external
         returns (uint256)
     {
@@ -65,7 +73,7 @@ contract NftSale is State, ERC1967, Ownable {
         // transfer tokens from buyer to contract
         ERC20(_tokenAddress).transferFrom(msg.sender, address(this), price);
 
-        uint256 tokenId = Nft(nftAddress).mint(receiverAddress, "");
+        uint256 tokenId = Nft(nftAddress).mint(receiverAddress, typeMapper.getNftTypeString(nftType));
 
         if (!depositedCurrenciesMap[_tokenAddress]) {
             depositedCurrencies.push(_tokenAddress);

@@ -2,12 +2,16 @@
 pragma solidity ^0.8.13;
 
 import "./Nft.sol";
+import {NftType} from "./NftType.sol";
+import "./NftTypeMapper.sol";
 import "./BaseState.sol";
 import "./ERC1967.sol";
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract NativeNftSale is BaseState, ERC1967, Ownable {
+    NftTypeMapper public typeMapper;
+
     event Initialized(address indexed owner, address indexed nft);
 
     event UpdatePrice(uint256 indexed oldPrice, uint256 indexed newPrice);
@@ -20,6 +24,10 @@ contract NativeNftSale is BaseState, ERC1967, Ownable {
         address indexed receiver,
         address buyer
     );
+
+    constructor() {
+        typeMapper = new NftTypeMapper();
+    }
 
     function initialize(
         address owner,
@@ -36,7 +44,7 @@ contract NativeNftSale is BaseState, ERC1967, Ownable {
         emit Initialized(owner, _nft);
     }
 
-    function buyNft(address receiverAddress)
+    function buyNft(address receiverAddress, NftType nftType)
         external
         payable
         returns (uint256)
@@ -45,7 +53,7 @@ contract NativeNftSale is BaseState, ERC1967, Ownable {
 
         uint256 price = nftPrice;
 
-        uint256 tokenId = Nft(nftAddress).mint(receiverAddress, "");
+        uint256 tokenId = Nft(nftAddress).mint(receiverAddress, typeMapper.getNftTypeString(nftType));
 
         emit BuyNFT(tokenId, price, receiverAddress, msg.sender);
 
