@@ -3,8 +3,9 @@ pragma solidity ^0.8.13;
 import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 
-contract Nft is ERC721, Ownable {
+contract Nft is ERC165, ERC721, Ownable {
     uint256 public currentTokenId;
     string public baseURI;
     uint256 public totalSupply;
@@ -69,6 +70,12 @@ contract Nft is ERC721, Ownable {
         currentTokenId = 1;
         baseExtension = ".json";
         transferOwnership(owner);
+    }
+
+    function supportsInterface(bytes4 interfaceID) public pure override(ERC165, ERC721) returns (bool) {
+        return
+          interfaceID == this.supportsInterface.selector || // ERC165
+          interfaceID == this.mint.selector; // ERC721 Paima-extended
     }
 
     function mint(address _to, string memory initialData) external canMint returns (uint256) {
