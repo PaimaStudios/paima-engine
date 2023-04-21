@@ -35,9 +35,11 @@
         "historical-indexer": "git@github.com:PaimaStudios/historical-nft-indexer.git"
     },
     "devDependencies": {
+        "@truffle/hdwallet-provider": "^2.0.8",
         "@types/mocha": "^9.1.1",
         "hardhat": "^2.9.7",
         "hardhat-preprocessor": "^0.1.4",
+        "truffle": "^5.5.20",
         "ts-node": "^10.8.1"
     }
 }
