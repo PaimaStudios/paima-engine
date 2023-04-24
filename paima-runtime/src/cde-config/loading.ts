@@ -2,7 +2,7 @@ import * as fs from 'fs/promises';
 import YAML from 'yaml';
 import type Web3 from 'web3';
 
-import { doLog } from '@paima/utils';
+import { doLog, getErc165Contract, getErc721PaimaExtendedContract } from '@paima/utils';
 
 import type { ChainDataExtension } from '../types';
 import { parseCdeType } from './utils';
@@ -102,16 +102,35 @@ async function instantiateExtension(config: CdeConfig, web3: Web3): Promise<Chai
         contract: getErc20Contract(config.contractAddress, web3),
       };
     case ChainDataExtensionType.ERC721:
-      // TODO: once supported, differentiate between 721 and 721+ here
       if (!config.initializationPrefix) {
         throw new Error('[cde-config] Initialization prefix missing!');
       }
-      return {
-        ...cdeBase,
-        cdeType,
-        contract: getErc721Contract(config.contractAddress, web3),
-      };
+      if (await isErc721PaimaExtended(config, web3)) {
+        return {
+          ...cdeBase,
+          cdeType: ChainDataExtensionType.ERC721PaimaExtended,
+          contract: getErc721PaimaExtendedContract(config.contractAddress, web3),
+        };
+      } else {
+        return {
+          ...cdeBase,
+          cdeType,
+          contract: getErc721Contract(config.contractAddress, web3),
+        };
+      }
     default:
       throw new Error(`[cde-config] Invalid cde type: ${cdeType}`);
+  }
+}
+
+async function isErc721PaimaExtended(cdeConfig: CdeConfig, web3: Web3): Promise<boolean> {
+  const PAIMA_EXTENDED_MINT_SIGNATURE = 'mint(address,string)';
+  const interfaceId = web3.utils.keccak256(PAIMA_EXTENDED_MINT_SIGNATURE).substring(0, 10);
+  try {
+    const erc165Contract = getErc165Contract(cdeConfig.contractAddress, web3);
+    return await erc165Contract.methods.supportsInterface(interfaceId).call();
+  } catch (err) {
+    doLog(`[cde-config] Error while attempting to specify ERC721 subtype: ${err}`);
+    return false;
   }
 }
