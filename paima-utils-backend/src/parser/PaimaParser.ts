@@ -181,16 +181,25 @@ export class PaimaParser {
 asterisk  ::= "*"
 pipe ::= "|" 
 at ::= "@"
-char ::= [a-zA-Z0-9,]
 `;
 
     // Add parameters back-into grammar
     [...uniqueParameters].forEach(w => {
-      grammar += `${w} ::= char* \n`;
+      grammar += `${w} ::= [a-zA-Z0-9+/=,]+ \n`;
     });
 
     this.log(`Parser Syntax: \n----------------\n${grammar}\n----------------`);
     return grammar;
+  }
+
+  public static OptionalParser(
+    defaultValue: ParserValues,
+    parser: ParserCommandExec
+  ): ParserCommandExec {
+    return (keyName: string, input: string): ParserValues => {
+      if (input === undefined || input === null) return defaultValue;
+      return parser(keyName, input) as ParserValues;
+    };
   }
 
   public static ArrayParser<T extends ParserValues>(iter: {
