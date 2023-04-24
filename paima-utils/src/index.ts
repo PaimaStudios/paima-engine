@@ -27,6 +27,7 @@ import {
   OUTER_BATCH_DIVIDER,
   DEFAULT_FUNNEL_TIMEOUT,
   ChainDataExtensionType,
+  ChainDataExtensionDatumType,
 } from './constants';
 
 const { isAddress } = pkg;
@@ -45,6 +46,7 @@ export {
   TransactionTemplate,
   AddressType,
   ChainDataExtensionType,
+  ChainDataExtensionDatumType,
   InputDataString,
   INNER_BATCH_DIVIDER,
   OUTER_BATCH_DIVIDER,
@@ -229,4 +231,30 @@ export function cutAfterFirstRejected<T>(results: PromiseSettledResult<T>[]): T[
       // we know this is safe because the above-line sliced up until the first rejection
       .map(elem => (elem as PromiseFulfilledResult<T>).value)
   );
+}
+
+// Only guaranteed to output a sorted array if both input arrays are sorted.
+// compare(a, b) should return a positive number if a > b, zero if a = b, negative if a < b.
+export function mergeSortedArrays<T>(arr1: T[], arr2: T[], compare: (a: T, b: T) => number): T[] {
+  const mergedArray: T[] = [];
+  let i1 = 0,
+    i2 = 0;
+
+  while (i1 < arr1.length && i2 < arr2.length) {
+    if (compare(arr1[i1], arr2[i2]) <= 0) {
+      mergedArray.push(arr1[i1++]);
+    } else {
+      mergedArray.push(arr2[i2++]);
+    }
+  }
+
+  // One of the arrays is now fully processed, finish processing the other one:
+  while (i1 < arr1.length) {
+    mergedArray.push(arr1[i1++]);
+  }
+  while (i2 < arr2.length) {
+    mergedArray.push(arr2[i2++]);
+  }
+
+  return mergedArray;
 }
