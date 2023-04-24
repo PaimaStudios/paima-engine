@@ -6,9 +6,11 @@ import type {
   ERC20Contract,
   ERC721Contract,
   ChainDataExtensionType,
+  ChainDataExtensionDatumType,
   VersionString,
   SubmittedChainData,
   SubmittedData,
+  ERC721PaimaExtendedContract,
 } from '@paima/utils';
 
 export { SubmittedChainData, SubmittedData };
@@ -28,42 +30,58 @@ export interface PresyncChainData {
   extensionDatums: ChainDataExtensionDatum[];
 }
 
-interface ChainDataExtensionErc20Payload {
+interface CdeDatumErc20TransferPayload {
   from: string;
   to: string;
   value: string;
 }
 
-interface ChainDataExtensionErc721Payload {
+interface CdeDatumErc721TransferPayload {
   from: string;
   to: string;
   tokenId: string;
 }
 
-type ChainDataExtensionPayload = ChainDataExtensionErc20Payload | ChainDataExtensionErc721Payload;
+interface CdeDatumErc721MintPayload {
+  tokenId: string;
+  mintData: string;
+}
 
-interface ChainDataExtensionDatumBase {
+type ChainDataExtensionPayload =
+  | CdeDatumErc20TransferPayload
+  | CdeDatumErc721MintPayload
+  | CdeDatumErc721TransferPayload;
+
+interface CdeDatumBase {
   cdeId: number;
-  cdeType: ChainDataExtensionType;
+  cdeDatumType: ChainDataExtensionDatumType;
   blockNumber: number;
   payload: ChainDataExtensionPayload;
 }
 
-export interface ChainDataExtensionErc20Datum extends ChainDataExtensionDatumBase {
-  cdeType: ChainDataExtensionType.ERC20;
-  payload: ChainDataExtensionErc20Payload;
+export interface CdeErc20TransferDatum extends CdeDatumBase {
+  cdeDatumType: ChainDataExtensionDatumType.ERC20Transfer;
+  payload: CdeDatumErc20TransferPayload;
 }
 
-export interface ChainDataExtensionErc721Datum extends ChainDataExtensionDatumBase {
-  cdeType: ChainDataExtensionType.ERC721;
-  payload: ChainDataExtensionErc721Payload;
+export interface CdeErc721TransferDatum extends CdeDatumBase {
+  cdeDatumType: ChainDataExtensionDatumType.ERC721Transfer;
+  payload: CdeDatumErc721TransferPayload;
+}
+
+export interface CdeErc721MintDatum extends CdeDatumBase {
+  cdeDatumType: ChainDataExtensionDatumType.ERC721Mint;
+  payload: CdeDatumErc721MintPayload;
   contractAddress: string;
   initializationPrefix: string;
 }
 
-export type ChainDataExtensionDatum = ChainDataExtensionErc20Datum | ChainDataExtensionErc721Datum;
+export type ChainDataExtensionDatum =
+  | CdeErc20TransferDatum
+  | CdeErc721MintDatum
+  | CdeErc721TransferDatum;
 
-type CdeContract = ERC20Contract | ERC721Contract;
+type CdeContract = ERC20Contract | ERC721Contract | ERC721PaimaExtendedContract;
 
 interface ChainDataExtensionBase {
   cdeId: number;
@@ -85,7 +103,15 @@ export interface ChainDataExtensionErc721 extends ChainDataExtensionBase {
   contract: ERC721Contract;
 }
 
-export type ChainDataExtension = ChainDataExtensionErc20 | ChainDataExtensionErc721;
+export interface ChainDataExtensionErc721PaimaExtended extends ChainDataExtensionBase {
+  cdeType: ChainDataExtensionType.ERC721PaimaExtended;
+  contract: ERC721PaimaExtendedContract;
+}
+
+export type ChainDataExtension =
+  | ChainDataExtensionErc20
+  | ChainDataExtensionErc721
+  | ChainDataExtensionErc721PaimaExtended;
 
 export interface ChainFunnel {
   getExtensions: () => ChainDataExtension[];

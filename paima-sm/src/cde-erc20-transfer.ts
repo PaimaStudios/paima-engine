@@ -1,17 +1,14 @@
 import type { Pool } from 'pg';
 
-import { ChainDataExtensionType, doLog } from '@paima/utils';
-import type { ChainDataExtensionErc20Datum } from '@paima/runtime';
+import { doLog } from '@paima/utils';
+import type { CdeErc20TransferDatum } from '@paima/runtime';
 import { cdeErc20GetBalance, cdeErc20InsertBalance, cdeErc20UpdateBalance } from '@paima/db';
 import type { SQLUpdate } from '@paima/db';
 
 export default async function processErc20Datum(
   readonlyDBConn: Pool,
-  cdeDatum: ChainDataExtensionErc20Datum
+  cdeDatum: CdeErc20TransferDatum
 ): Promise<SQLUpdate[]> {
-  if (cdeDatum.cdeType !== ChainDataExtensionType.ERC20) {
-    return [];
-  }
   const cdeId = cdeDatum.cdeId;
   const { from, to, value } = cdeDatum.payload;
 

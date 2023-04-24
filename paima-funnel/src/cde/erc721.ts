@@ -1,7 +1,12 @@
 import type Web3 from 'web3';
 
-import { ChainDataExtensionType, DEFAULT_FUNNEL_TIMEOUT, timeout } from '@paima/utils';
-import type { ChainDataExtensionDatum, ChainDataExtensionErc721 } from '@paima/runtime';
+import { ChainDataExtensionDatumType, DEFAULT_FUNNEL_TIMEOUT, timeout } from '@paima/utils';
+import type {
+  CdeErc721MintDatum,
+  CdeErc721TransferDatum,
+  ChainDataExtensionDatum,
+  ChainDataExtensionErc721,
+} from '@paima/runtime';
 import type { Transfer } from '@paima/utils/src/contract-types/ERC721Contract';
 
 export default async function getCdeData(
@@ -19,23 +24,52 @@ export default async function getCdeData(
     }),
     DEFAULT_FUNNEL_TIMEOUT
   )) as unknown as Transfer[];
-  return events.map((e: Transfer) => transferToCdeDatum(e, extension));
+  return events.map((e: Transfer) => transferToCdeData(e, extension)).flat();
 }
 
-function transferToCdeDatum(
+function transferToTransferDatum(
   event: Transfer,
   extension: ChainDataExtensionErc721
-): ChainDataExtensionDatum {
+): CdeErc721TransferDatum {
   return {
     cdeId: extension.cdeId,
-    cdeType: ChainDataExtensionType.ERC721,
+    cdeDatumType: ChainDataExtensionDatumType.ERC721Transfer,
     blockNumber: event.blockNumber,
     payload: {
       from: event.returnValues.from,
       to: event.returnValues.to,
       tokenId: event.returnValues.tokenId,
     },
+  };
+}
+
+function transferToMintDatum(
+  event: Transfer,
+  extension: ChainDataExtensionErc721
+): CdeErc721MintDatum {
+  return {
+    cdeId: extension.cdeId,
+    cdeDatumType: ChainDataExtensionDatumType.ERC721Mint,
+    blockNumber: event.blockNumber,
+    payload: {
+      tokenId: event.returnValues.tokenId,
+      mintData: '',
+    },
     contractAddress: extension.contractAddress,
     initializationPrefix: extension.initializationPrefix,
   };
+}
+
+function transferToCdeData(
+  event: Transfer,
+  extension: ChainDataExtensionErc721
+): ChainDataExtensionDatum[] {
+  const transferDatum = transferToTransferDatum(event, extension);
+  const fromAddr = event.returnValues.from;
+  if (fromAddr.match(/^0x0+$/g)) {
+    const mintDatum = transferToMintDatum(event, extension);
+    return [mintDatum, transferDatum];
+  } else {
+    return [transferDatum];
+  }
 }

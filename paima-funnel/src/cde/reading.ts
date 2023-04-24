@@ -5,6 +5,7 @@ import type { ChainDataExtensionDatum, ChainDataExtension } from '@paima/runtime
 
 import getCdeErc20Data from './erc20';
 import getCdeErc721Data from './erc721';
+import getCdeErc721PaimaExtendedData from './erc721PaimaExtended';
 
 export async function getUngroupedCdeData(
   web3: Web3,
@@ -37,6 +38,8 @@ async function getSpecificCdeData(
       return await getCdeErc20Data(web3, extension, fromBlock, toBlock);
     case ChainDataExtensionType.ERC721:
       return await getCdeErc721Data(web3, extension, fromBlock, toBlock);
+    case ChainDataExtensionType.ERC721PaimaExtended:
+      return await getCdeErc721PaimaExtendedData(web3, extension, fromBlock, toBlock);
     default:
       throw new Error('[funnel] Invalid CDE type!');
   }
