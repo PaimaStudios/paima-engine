@@ -1,5 +1,3 @@
-import type Web3 from 'web3';
-
 import {
   ChainDataExtensionDatumType,
   DEFAULT_FUNNEL_TIMEOUT,

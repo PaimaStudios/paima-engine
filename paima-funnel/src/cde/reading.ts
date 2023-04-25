@@ -17,13 +17,12 @@ export async function getUngroupedCdeData(
     return extensions.map(_ => []);
   }
   const allData = await Promise.all(
-    extensions.map(extension => getSpecificCdeData(web3, extension, fromBlock, toBlock))
+    extensions.map(extension => getSpecificCdeData(extension, fromBlock, toBlock))
   );
   return allData;
 }
 
 async function getSpecificCdeData(
-  web3: Web3,
   extension: ChainDataExtension,
   fromBlock: number,
   toBlock: number
