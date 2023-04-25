@@ -4,12 +4,12 @@ import pkg from 'web3-utils';
 import paimaL2ContractBuild from './artifacts/PaimaL2Contract';
 import erc20ContractBuild from './artifacts/ERC20Contract';
 import erc721ContractBuild from './artifacts/ERC721Contract';
-import erc721PaimaExtendedContractBuild from './artifacts/ERC721PaimaExtendedContract';
+import paimaErc721ContractBuild from './artifacts/PaimaERC721Contract';
 import erc165ContractBuild from './artifacts/ERC165Contract';
 import type { PaimaL2Contract } from './contract-types/PaimaL2Contract';
 import type { ERC20Contract } from './contract-types/ERC20Contract';
 import type { ERC721Contract } from './contract-types/ERC721Contract';
-import type { ERC721PaimaExtendedContract } from './contract-types/ERC721PaimaExtendedContract';
+import type { PaimaERC721Contract } from './contract-types/PaimaERC721Contract';
 import type { ERC165Contract } from './contract-types/ERC165Contract';
 import { doLog, logError } from './logging.js';
 import type {
@@ -37,7 +37,7 @@ export * from './types';
 
 export type { Web3 };
 export type { PaimaL2Contract };
-export type { ERC20Contract, ERC721Contract, ERC721PaimaExtendedContract, ERC165Contract };
+export type { ERC20Contract, ERC721Contract, PaimaERC721Contract, ERC165Contract };
 export {
   ETHAddress,
   ErrorCode,
@@ -116,17 +116,14 @@ export function getErc721Contract(address?: string, web3?: Web3): ERC721Contract
   ) as unknown as ERC721Contract;
 }
 
-export function getErc721PaimaExtendedContract(
-  address?: string,
-  web3?: Web3
-): ERC721PaimaExtendedContract {
+export function getPaimaErc721Contract(address?: string, web3?: Web3): PaimaERC721Contract {
   if (web3 === undefined) {
     web3 = new Web3();
   }
   return new web3.eth.Contract(
-    erc721PaimaExtendedContractBuild.abi as AbiItem[],
+    paimaErc721ContractBuild.abi as AbiItem[],
     address
-  ) as unknown as ERC721PaimaExtendedContract;
+  ) as unknown as PaimaERC721Contract;
 }
 
 export function getErc165Contract(address?: string, web3?: Web3): ERC165Contract {

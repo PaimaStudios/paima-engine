@@ -10,12 +10,12 @@ import type {
   CdeErc721MintDatum,
   CdeErc721TransferDatum,
   ChainDataExtensionDatum,
-  ChainDataExtensionErc721PaimaExtended,
+  ChainDataExtensionPaimaErc721,
 } from '@paima/runtime';
-import type { Minted, Transfer } from '@paima/utils/src/contract-types/ERC721PaimaExtendedContract';
+import type { Minted, Transfer } from '@paima/utils/src/contract-types/PaimaERC721Contract';
 
 export default async function getCdeData(
-  extension: ChainDataExtensionErc721PaimaExtended,
+  extension: ChainDataExtensionPaimaErc721,
   fromBlock: number,
   toBlock: number
 ): Promise<ChainDataExtensionDatum[]> {
@@ -35,7 +35,7 @@ export default async function getCdeData(
 }
 
 async function fetchTransferEvents(
-  extension: ChainDataExtensionErc721PaimaExtended,
+  extension: ChainDataExtensionPaimaErc721,
   fromBlock: number,
   toBlock: number
 ): Promise<Transfer[]> {
@@ -49,7 +49,7 @@ async function fetchTransferEvents(
 }
 
 async function fetchMintedEvents(
-  extension: ChainDataExtensionErc721PaimaExtended,
+  extension: ChainDataExtensionPaimaErc721,
   fromBlock: number,
   toBlock: number
 ): Promise<Minted[]> {
@@ -64,7 +64,7 @@ async function fetchMintedEvents(
 
 function transferToTransferDatum(
   event: Transfer,
-  extension: ChainDataExtensionErc721PaimaExtended
+  extension: ChainDataExtensionPaimaErc721
 ): CdeErc721TransferDatum {
   return {
     cdeId: extension.cdeId,
@@ -80,7 +80,7 @@ function transferToTransferDatum(
 
 function mintedToMintDatum(
   event: Minted,
-  extension: ChainDataExtensionErc721PaimaExtended
+  extension: ChainDataExtensionPaimaErc721
 ): CdeErc721MintDatum {
   return {
     cdeId: extension.cdeId,

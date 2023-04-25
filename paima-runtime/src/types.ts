@@ -10,7 +10,7 @@ import type {
   VersionString,
   SubmittedChainData,
   SubmittedData,
-  ERC721PaimaExtendedContract,
+  PaimaERC721Contract,
 } from '@paima/utils';
 
 export { SubmittedChainData, SubmittedData };
@@ -81,7 +81,7 @@ export type ChainDataExtensionDatum =
   | CdeErc721MintDatum
   | CdeErc721TransferDatum;
 
-type CdeContract = ERC20Contract | ERC721Contract | ERC721PaimaExtendedContract;
+type CdeContract = ERC20Contract | ERC721Contract | PaimaERC721Contract;
 
 interface ChainDataExtensionBase {
   cdeId: number;
@@ -103,15 +103,15 @@ export interface ChainDataExtensionErc721 extends ChainDataExtensionBase {
   contract: ERC721Contract;
 }
 
-export interface ChainDataExtensionErc721PaimaExtended extends ChainDataExtensionBase {
-  cdeType: ChainDataExtensionType.ERC721PaimaExtended;
-  contract: ERC721PaimaExtendedContract;
+export interface ChainDataExtensionPaimaErc721 extends ChainDataExtensionBase {
+  cdeType: ChainDataExtensionType.PaimaERC721;
+  contract: PaimaERC721Contract;
 }
 
 export type ChainDataExtension =
   | ChainDataExtensionErc20
   | ChainDataExtensionErc721
-  | ChainDataExtensionErc721PaimaExtended;
+  | ChainDataExtensionPaimaErc721;
 
 export interface ChainFunnel {
   getExtensions: () => ChainDataExtension[];
