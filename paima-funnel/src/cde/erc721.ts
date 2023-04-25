@@ -10,7 +10,6 @@ import type {
 import type { Transfer } from '@paima/utils/src/contract-types/ERC721Contract';
 
 export default async function getCdeData(
-  web3: Web3,
   extension: ChainDataExtensionErc721,
   fromBlock: number,
   toBlock: number

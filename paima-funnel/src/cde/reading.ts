@@ -35,11 +35,11 @@ async function getSpecificCdeData(
   }
   switch (extension.cdeType) {
     case ChainDataExtensionType.ERC20:
-      return await getCdeErc20Data(web3, extension, fromBlock, toBlock);
+      return await getCdeErc20Data(extension, fromBlock, toBlock);
     case ChainDataExtensionType.ERC721:
-      return await getCdeErc721Data(web3, extension, fromBlock, toBlock);
+      return await getCdeErc721Data(extension, fromBlock, toBlock);
     case ChainDataExtensionType.ERC721PaimaExtended:
-      return await getCdeErc721PaimaExtendedData(web3, extension, fromBlock, toBlock);
+      return await getCdeErc721PaimaExtendedData(extension, fromBlock, toBlock);
     default:
       throw new Error('[funnel] Invalid CDE type!');
   }

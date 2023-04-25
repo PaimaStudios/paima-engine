@@ -15,7 +15,6 @@ import type {
 import type { Minted, Transfer } from '@paima/utils/src/contract-types/ERC721PaimaExtendedContract';
 
 export default async function getCdeData(
-  web3: Web3,
   extension: ChainDataExtensionErc721PaimaExtended,
   fromBlock: number,
   toBlock: number

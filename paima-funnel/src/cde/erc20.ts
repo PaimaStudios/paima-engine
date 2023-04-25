@@ -6,7 +6,6 @@ import type { Transfer } from '@paima/utils/src/contract-types/ERC20Contract';
 import { DEFAULT_FUNNEL_TIMEOUT } from '@paima/utils';
 
 export default async function getCdeData(
-  web3: Web3,
   extension: ChainDataExtensionErc20,
   fromBlock: number,
   toBlock: number
