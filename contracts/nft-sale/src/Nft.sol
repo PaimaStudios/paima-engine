@@ -10,17 +10,9 @@ contract Nft is ERC165, ERC721, Ownable {
     string public baseURI;
     uint256 public totalSupply;
     uint256 public maxSupply;
-    uint8 public currentCategory;
     string public baseExtension;
-
-    // mappijng from token ID to NFT data
-    mapping(uint256 => Token) public tokens;
-
+    
     mapping(address => bool) public minters;
-
-    struct Token {
-        uint8 category;
-    }
 
     modifier canMint() {
         require(
@@ -51,8 +43,6 @@ contract Nft is ERC165, ERC721, Ownable {
 
     event SetBaseURI(string indexed oldUri, string indexed newUri);
 
-    event Category(uint8 indexed category, uint256 indexed tokenId);
-
     event Minted(uint256 indexed tokenId, string initialData);
 
     /// @dev contract constructor
@@ -66,7 +56,6 @@ contract Nft is ERC165, ERC721, Ownable {
         address owner
     ) ERC721(name, symbol) {
         maxSupply = supply;
-        currentCategory = 1;
         currentTokenId = 1;
         baseExtension = ".json";
         transferOwnership(owner);
@@ -84,15 +73,10 @@ contract Nft is ERC165, ERC721, Ownable {
         uint256 tokenId = currentTokenId;
         _safeMint(_to, tokenId);
 
-        uint8 category_ = category();
-        Token memory newToken = Token(category_);
-        tokens[tokenId] = newToken;
-
         totalSupply++;
         currentTokenId++;
 
         emit Minted(tokenId, initialData);
-        emit Category(category_, tokenId);
         return tokenId;
     }
 
@@ -103,9 +87,6 @@ contract Nft is ERC165, ERC721, Ownable {
     {
         totalSupply--;
         _burn(_tokenId);
-
-        uint8 category_ = tokens[_tokenId].category;
-        emit Category(category_, _tokenId);
     }
 
     function setMinter(address _minter) external onlyOwner {
@@ -158,17 +139,6 @@ contract Nft is ERC165, ERC721, Ownable {
 
         maxSupply = _maxSupply;
         emit UpdateMaxSupply(oldMaxSupply, _maxSupply);
-    }
-
-    function category() internal returns (uint8) {
-        uint8 currentCategory_ = currentCategory;
-        if (currentCategory_ == 4) {
-            currentCategory = 1;
-            return currentCategory_;
-        } else {
-            currentCategory++;
-            return currentCategory_;
-        }
     }
 
     function exists(uint256 _tokenId) external view returns (bool) {
