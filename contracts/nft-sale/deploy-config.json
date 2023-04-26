@@ -1,22 +1,22 @@
 {
-    "testnet": {
-        "Nft": {
-            "name": "Paima Volcaneers",
-            "symbol": "PV",
-            "supply": 2000,
-            "price": 3
-        },
-        "NftSale": {
-          "currencies": {
-            "USDT": "0x7d3B9AeC4F57C1F10bfd1668612c3E586498E4BE",
-            "USDC": "0x63D403E115213A66fE41a8605FFB1af8ab481593"
-          }
-        }
-    },
-    "mainnet": {
-        "name": "Paima Volcaneers",
-        "symbol": "PV",
-        "supply": 2000,
-        "price": 10
+  "Nft": {
+    "name": "Test NFT contract",
+    "symbol": "TNC",
+    "supply": 2000,
+    "owner": ""
+  },
+  "NftSale": {
+    "nftAddress": "",
+    "price": 3,
+    "owner": ""
+  },
+  "NativeNftSale": {
+    "decimals": 18
+  },
+  "Erc20NftSale": {
+    "currencies": {
+      "USDT": "0x7d3B9AeC4F57C1F10bfd1668612c3E586498E4BE",
+      "USDC": "0x63D403E115213A66fE41a8605FFB1af8ab481593"
     }
+  }
 }
