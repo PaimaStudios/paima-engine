@@ -1,10 +1,11 @@
 import type { Pool } from 'pg';
 
-import { ChainDataExtensionType } from '@paima/utils';
+import { ChainDataExtensionDatumType } from '@paima/utils';
 import type { ChainDataExtensionDatum } from '@paima/runtime';
 
-import processErc20Datum from './cde-erc20';
-import processErc721Datum from './cde-erc721';
+import processErc20TransferDatum from './cde-erc20-transfer';
+import processErc721TransferDatum from './cde-erc721-transfer';
+import processErc721MintDatum from './cde-erc721-mint';
 import type { SQLUpdate } from '@paima/db';
 import { getSpecificCdeBlockheight } from '@paima/db';
 
@@ -12,11 +13,13 @@ export async function cdeTransitionFunction(
   readonlyDBConn: Pool,
   cdeDatum: ChainDataExtensionDatum
 ): Promise<SQLUpdate[]> {
-  switch (cdeDatum.cdeType) {
-    case ChainDataExtensionType.ERC20:
-      return await processErc20Datum(readonlyDBConn, cdeDatum);
-    case ChainDataExtensionType.ERC721:
-      return await processErc721Datum(readonlyDBConn, cdeDatum);
+  switch (cdeDatum.cdeDatumType) {
+    case ChainDataExtensionDatumType.ERC20Transfer:
+      return await processErc20TransferDatum(readonlyDBConn, cdeDatum);
+    case ChainDataExtensionDatumType.ERC721Transfer:
+      return await processErc721TransferDatum(readonlyDBConn, cdeDatum);
+    case ChainDataExtensionDatumType.ERC721Mint:
+      return await processErc721MintDatum(cdeDatum);
     default:
       throw new Error(`[paima-sm] Unknown type on CDE datum: ${cdeDatum}`);
   }

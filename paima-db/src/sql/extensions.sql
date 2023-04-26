@@ -5,6 +5,10 @@ SELECT * FROM chain_data_extensions;
 SELECT * FROM chain_data_extensions
 WHERE cde_id = :cde_id;
 
+/* @name selectChainDataExtensionsByName */
+SELECT * FROM chain_data_extensions
+WHERE cde_name = :cde_name!;
+
 /* @name selectChainDataExtensionsByTypeAndAddress */
 SELECT * FROM chain_data_extensions
 WHERE cde_type = :cde_type!
@@ -18,12 +22,14 @@ WHERE contract_address = :contract_address!;
 INSERT INTO chain_data_extensions(
     cde_id,
     cde_type,
+    cde_name,
     contract_address,
     start_blockheight,
     scheduled_prefix
 ) VALUES (
     :cde_id!,
     :cde_type!,
+    :cde_name!,
     :contract_address!,
     :start_blockheight!,
     :scheduled_prefix

@@ -35,6 +35,7 @@ export async function validatePersistentCdeConfig(
     }
     if (
       persistent.cde_type !== cde.cdeType ||
+      persistent.cde_name !== cde.cdeName ||
       persistent.contract_address !== cde.contractAddress ||
       persistent.start_blockheight !== cde.startBlockHeight
     ) {
@@ -51,6 +52,7 @@ async function storeCdeConfig(config: ChainDataExtension[], DBConn: Pool): Promi
         {
           cde_id: cde.cdeId,
           cde_type: cde.cdeType,
+          cde_name: cde.cdeName,
           contract_address: cde.contractAddress,
           start_blockheight: cde.startBlockHeight,
           scheduled_prefix: cde.initializationPrefix,

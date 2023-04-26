@@ -105,6 +105,7 @@ const QUERY_CREATE_TABLE_CDE = `
 CREATE TABLE chain_data_extensions (
   cde_id INTEGER PRIMARY KEY,
   cde_type INTEGER NOT NULL,
+  cde_name TEXT NOT NULL,
   contract_address TEXT NOT NULL,
   start_blockheight INTEGER NOT NULL,
   scheduled_prefix TEXT
@@ -117,6 +118,7 @@ const TABLE_DATA_CDE: TableData = {
   columnData: packTuples([
     ['cde_id', 'integer', 'NO', ''],
     ['cde_type', 'integer', 'NO', ''],
+    ['cde_name', 'text', 'NO', ''],
     ['contract_address', 'text', 'NO', ''],
     ['start_blockheight', 'integer', 'NO', ''],
     ['scheduled_prefix', 'text', 'YES', ''],

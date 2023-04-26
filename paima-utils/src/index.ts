@@ -4,9 +4,13 @@ import pkg from 'web3-utils';
 import paimaL2ContractBuild from './artifacts/PaimaL2Contract';
 import erc20ContractBuild from './artifacts/ERC20Contract';
 import erc721ContractBuild from './artifacts/ERC721Contract';
+import paimaErc721ContractBuild from './artifacts/PaimaERC721Contract';
+import erc165ContractBuild from './artifacts/ERC165Contract';
 import type { PaimaL2Contract } from './contract-types/PaimaL2Contract';
 import type { ERC20Contract } from './contract-types/ERC20Contract';
 import type { ERC721Contract } from './contract-types/ERC721Contract';
+import type { PaimaERC721Contract } from './contract-types/PaimaERC721Contract';
+import type { ERC165Contract } from './contract-types/ERC165Contract';
 import { doLog, logError } from './logging.js';
 import type {
   Deployment,
@@ -23,6 +27,7 @@ import {
   OUTER_BATCH_DIVIDER,
   DEFAULT_FUNNEL_TIMEOUT,
   ChainDataExtensionType,
+  ChainDataExtensionDatumType,
 } from './constants';
 
 const { isAddress } = pkg;
@@ -32,7 +37,7 @@ export * from './types';
 
 export type { Web3 };
 export type { PaimaL2Contract };
-export type { ERC20Contract, ERC721Contract };
+export type { ERC20Contract, ERC721Contract, PaimaERC721Contract, ERC165Contract };
 export {
   ETHAddress,
   ErrorCode,
@@ -41,6 +46,7 @@ export {
   TransactionTemplate,
   AddressType,
   ChainDataExtensionType,
+  ChainDataExtensionDatumType,
   InputDataString,
   INNER_BATCH_DIVIDER,
   OUTER_BATCH_DIVIDER,
@@ -108,6 +114,26 @@ export function getErc721Contract(address?: string, web3?: Web3): ERC721Contract
     erc721ContractBuild.abi as AbiItem[],
     address
   ) as unknown as ERC721Contract;
+}
+
+export function getPaimaErc721Contract(address?: string, web3?: Web3): PaimaERC721Contract {
+  if (web3 === undefined) {
+    web3 = new Web3();
+  }
+  return new web3.eth.Contract(
+    paimaErc721ContractBuild.abi as AbiItem[],
+    address
+  ) as unknown as PaimaERC721Contract;
+}
+
+export function getErc165Contract(address?: string, web3?: Web3): ERC165Contract {
+  if (web3 === undefined) {
+    web3 = new Web3();
+  }
+  return new web3.eth.Contract(
+    erc165ContractBuild.abi as AbiItem[],
+    address
+  ) as unknown as ERC165Contract;
 }
 
 export function validatePaimaL2ContractAddress(address: string): void {
@@ -202,4 +228,30 @@ export function cutAfterFirstRejected<T>(results: PromiseSettledResult<T>[]): T[
       // we know this is safe because the above-line sliced up until the first rejection
       .map(elem => (elem as PromiseFulfilledResult<T>).value)
   );
+}
+
+// Only guaranteed to output a sorted array if both input arrays are sorted.
+// compare(a, b) should return a positive number if a > b, zero if a = b, negative if a < b.
+export function mergeSortedArrays<T>(arr1: T[], arr2: T[], compare: (a: T, b: T) => number): T[] {
+  const mergedArray: T[] = [];
+  let i1 = 0,
+    i2 = 0;
+
+  while (i1 < arr1.length && i2 < arr2.length) {
+    if (compare(arr1[i1], arr2[i2]) <= 0) {
+      mergedArray.push(arr1[i1++]);
+    } else {
+      mergedArray.push(arr2[i2++]);
+    }
+  }
+
+  // One of the arrays is now fully processed, finish processing the other one:
+  while (i1 < arr1.length) {
+    mergedArray.push(arr1[i1++]);
+  }
+  while (i2 < arr2.length) {
+    mergedArray.push(arr2[i2++]);
+  }
+
+  return mergedArray;
 }
