@@ -9,7 +9,7 @@ import "./ERC1967.sol";
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract NftSale is State, ERC1967, Ownable {
+contract Erc20NftSale is State, ERC1967, Ownable {
     NftTypeMapper public typeMapper;
 
     event Initialized(
