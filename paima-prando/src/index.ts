@@ -26,6 +26,9 @@ class Prando {
     return this.map(this._value, this.MIN, this.MAX, min, pseudoMax);
   }
 
+  /**
+   * @returns pseudo random number in the given range, inclusive: <min, max>
+   */
   nextInt(min = 10, max = 100): number {
     this.recalculate();
     return Math.floor(this.map(this._value, this.MIN, this.MAX, min, max + 1));
