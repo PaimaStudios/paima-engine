@@ -15,10 +15,13 @@ module.exports = {
     owner: ""
   },
   networks: {
-    ganache: {
-      host: "127.0.0.1",
-      port: 7545,
-      network_id: "*",
+    mainnet: {
+      provider: () =>
+        new HDWalletProvider({
+          privateKeys: [privateKey],
+          providerOrUrl: "https://rpc-mainnet-cardano-evm.c1.milkomeda.com",
+        }),
+      network_id: 2001,
     },
     testnet: {
       provider: () =>
