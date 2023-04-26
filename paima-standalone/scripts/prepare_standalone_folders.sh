@@ -82,10 +82,14 @@ cp -r paima-l2-contract/truffle-config.js $CONTRACT_PATH
 # cp -r storage-contract/ $CONTRACT_PATH
 
 
-# Prepare documentation to be packed
+# Fetch documentation
 echo $DOC_PATH
 rm -rf $DOC_PATH
-cp -r paima-standalone/user-documentation $DOC_PATH
+git clone --depth=1 git@github.com:PaimaStudios/paima-engine-docs.git $DOC_PATH
+# remove all images (to limit standalone size)
+find $DOC_PATH -type f -regextype posix-extended -regex '.*\.(png|jpg|jpeg|svg|gif|webp|bmp)' -delete
+rm  $DOC_PATH/README.md
+rm -rf $DOC_PATH/.git
 
 
 # Fetch templates
