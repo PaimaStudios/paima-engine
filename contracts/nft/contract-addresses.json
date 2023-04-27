@@ -1,0 +1,16 @@
+{
+    "testnet": {
+        "Nft": "",
+        "NativeNftSale": "",
+        "NativeProxy": "",
+        "Erc20NftSale": "",
+        "Proxy": ""
+    },
+    "mainnet": {
+        "Nft": "",
+        "NativeNftSale": "",
+        "NativeProxy": "",
+        "Erc20NftSale": "",
+        "Proxy": ""
+    }
+}
