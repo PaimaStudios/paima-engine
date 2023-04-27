@@ -2,17 +2,18 @@ const erc20NftSale = artifacts.require("Erc20NftSale");
 const proxy = artifacts.require("Proxy");
 const deployConfig = require("../deploy-config.json");
 
-module.exports = async function (deployer) {
-  const nftSaleConfig = deployConfig["NftSale"];
-  const erc20NftSaleConfig = deployConfig["Erc20NftSale"];
+module.exports = async function (deployer, network, accounts) {
+  const networkConfig = deployConfig[network];
+  const nftSaleConfig = networkConfig["NftSale"];
+  const erc20NftSaleConfig = networkConfig["Erc20NftSale"];
   const {
     nftAddress,
-    price,
-    owner
+    price
   } = nftSaleConfig;
   const {
     currencies
   } = erc20NftSaleConfig;
+  const owner = accounts[0];
   
   await deployer.deploy(erc20NftSale);
   const nftSaleInstance = await erc20NftSale.deployed();

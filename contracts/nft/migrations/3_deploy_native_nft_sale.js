@@ -2,17 +2,18 @@ const nativeNftSale = artifacts.require("NativeNftSale");
 const nativeProxy = artifacts.require("NativeProxy");
 const deployConfig = require("../deploy-config.json");
 
-module.exports = async function (deployer) {
-  const nftSaleConfig = deployConfig["NftSale"];
-  const nativeNftSaleConfig = deployConfig["NativeNftSale"];
+module.exports = async function (deployer, network, accounts) {
+  const networkConfig = deployConfig[network];
+  const nftSaleConfig = networkConfig["NftSale"];
+  const nativeNftSaleConfig = networkConfig["NativeNftSale"];
   const {
     nftAddress,
-    price,
-    owner
+    price
   } = nftSaleConfig;
   const {
     decimals
   } = nativeNftSaleConfig;
+  const owner = accounts[0];
 
   const decimalsMultiplier = 10n ** BigInt(decimals);
   const nativePrice = BigInt(price) * decimalsMultiplier;
