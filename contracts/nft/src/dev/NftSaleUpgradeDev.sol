@@ -1,10 +1,10 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-import "../NftSale.sol";
+import "../Erc20NftSale.sol";
 
 /// @dev For testing upgradeability.
-contract NftSaleUpgradeDev is NftSale {
+contract NftSaleUpgradeDev is Erc20NftSale {
     function version() public pure returns (uint8) {
         return 2;
     }
