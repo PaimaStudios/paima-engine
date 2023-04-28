@@ -7,10 +7,10 @@ module.exports = async function (deployer, network, accounts) {
   const nftSaleConfig = networkConfig["NftSale"];
   const nativeNftSaleConfig = networkConfig["NativeNftSale"];
   const {
-    nftAddress,
     price
   } = nftSaleConfig;
   const {
+    nftAddress,
     decimals
   } = nativeNftSaleConfig;
   const owner = accounts[0];

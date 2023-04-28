@@ -7,10 +7,10 @@ module.exports = async function (deployer, network, accounts) {
   const nftSaleConfig = networkConfig["NftSale"];
   const erc20NftSaleConfig = networkConfig["Erc20NftSale"];
   const {
-    nftAddress,
     price
   } = nftSaleConfig;
   const {
+    nftAddress,
     currencies
   } = erc20NftSaleConfig;
   const owner = accounts[0];
