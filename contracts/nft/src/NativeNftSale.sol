@@ -48,7 +48,8 @@ contract NativeNftSale is BaseState, ERC1967, Ownable {
         payable
         returns (uint256)
     {
-        require(msg.value >= nftPrice, "NativeNftSale: incorrect value");
+        require(msg.value == nftPrice, "NativeNftSale: incorrect value");
+        require(receiverAddress != address(0), "NativeNftSale: zero receiver address");
 
         uint256 price = nftPrice;
 
