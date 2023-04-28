@@ -7,8 +7,11 @@ import "./BaseState.sol";
 import "./ERC1967.sol";
 
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
 
 contract NativeNftSale is BaseState, ERC1967, Ownable {
+    using Address for address payable;
+
     NftTypeMapper public typeMapper;
 
     event Initialized(address indexed owner, address indexed nft);
@@ -67,13 +70,11 @@ contract NativeNftSale is BaseState, ERC1967, Ownable {
         emit UpdatePrice(oldPrice, _nftPrice);
     }
 
-    function withdraw(address _account) external onlyOwner {
+    function withdraw(address payable _account) external onlyOwner {
         uint256 balance = address(this).balance;
 
         require(balance > 0, "NativeNftSale: 0 balance");
-
-        (bool sent, ) = _account.call{value: balance}("");
-        require(sent, "NativeNftSale: Failed to send base currency");
+        _account.sendValue(balance);
     }
 
     function upgradeContract(address _newContract) external onlyOwner {
