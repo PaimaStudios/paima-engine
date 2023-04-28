@@ -3,6 +3,9 @@ src = 'src'                                                    # the source dire
 test = 'test'                                                  # the test directory
 out = 'build/artifacts'                                        # the output directory (for artifacts)
 libs = ['test-lib']                                            # a list of library directories    
+remappings = [                                                 # a list of remappings
+    '@openzeppelin/=node_modules/@openzeppelin/'
+]                 
 #libraries = []                                                # a list of deployed libraries to link against
 #cache = true                                                  # whether to cache builds or not
 #force = false                                                 # whether to ignore the cache (clean build)

@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
+import "@openzeppelin/contracts/utils/Address.sol";
+
 contract PaimaL2Contract {
+  using Address for address payable;
+
   event PaimaGameInteraction(address indexed userAddress, bytes data, uint256 value);
 
   address public owner;
@@ -23,7 +27,7 @@ contract PaimaL2Contract {
     require(msg.sender == owner, 'Only owner can withdraw funds');
     address payable to = payable(owner);
     uint256 balance = address(this).balance;
-    to.transfer(balance);
+    to.sendValue(balance);
   }
 
   function setOwner(address newOwner) public {
