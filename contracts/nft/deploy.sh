@@ -1,6 +1,10 @@
 #!/bin/bash
 
+echo "Ensuring prerequisites are installed..."
+npm install
+
 if [ -z ${TARGET_NETWORK+x} ]; then
+    echo ""
     echo "Which network would you like to deploy to?"
     echo "  1. Milkomeda C1 Mainnet"
     echo "  2. Milkomeda C1 Testnet"
@@ -24,7 +28,7 @@ fi
 
 if [ -z ${PRIVATE_KEY+x} ]; then
     echo ""
-    read -p "Deployment private key unset. Please provide the value: " PRIVATE_KEY
+    read -p "Deployment private key unset. Please provide the value (a hex string without the leading 0x): " PRIVATE_KEY
     export PRIVATE_KEY=$PRIVATE_KEY
 fi
 
@@ -42,12 +46,15 @@ read -p "Please enter your choice (1-3): " choice
 echo ""
 case $choice in
   1)
+    npx truffle migrate --from 2 --to 2 --network $TARGET_NETWORK
     echo "TODO: deploy Nft contract to $TARGET_NETWORK"
     ;;
   2)
+    npx truffle migrate --from 3 --to 3 --network $TARGET_NETWORK
     echo "TODO: deploy NativeNftSale contract to $TARGET_NETWORK"
     ;;
   3)
+    npx truffle migrate --from 4 --to 4 --network $TARGET_NETWORK
     echo "TODO: deploy Erc20NftSale contract to $TARGET_NETWORK"
     ;;
   *)
