@@ -13,7 +13,7 @@ module.exports = async function (deployer, network, accounts) {
     baseUri
   } = nftConfig;
   const owner = accounts[0];
-  deployer.deploy(nft, name, symbol, supply, owner);
+  await deployer.deploy(nft, name, symbol, supply, owner);
   const nftInstance = await nft.deployed();
   const nftAddress = nftInstance.address;
 
