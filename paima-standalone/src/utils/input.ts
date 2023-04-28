@@ -43,7 +43,7 @@ export const argumentRouter = async (): Promise<void> => {
       await runPaimaEngine();
       break;
 
-    case 'contract':
+    case 'contracts':
       contractCommand();
       break;
 
@@ -142,7 +142,7 @@ export const helpCommand = (): void => {
   doLog(`Commands:`);
   doLog(`   init      Enables initializing project templates and the SDK.`);
   doLog(`   run       Start your game node.`);
-  doLog(`   contract  Saves the Paima L2 Contract to your local filesystem.`);
+  doLog(`   contracts Saves the bundled smart contracts to your local filesystem.`);
   doLog(`   docs      Saves the Paima Engine documentation to your local filesystem.`);
   doLog(`   webui     Starts Paima Game Input Tester WebUI.`);
   doLog(`   help      Shows list of commands currently available.`);

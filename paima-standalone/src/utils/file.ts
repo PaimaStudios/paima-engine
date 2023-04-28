@@ -83,17 +83,17 @@ export const prepareTemplate = (folder: string): void => {
   prepareFolder(packagedTemplatePath, TEMPLATE_FOLDER_PATH, success, failure);
 };
 
-// Copies the smart contract project into the same folder as the executable
+// Copies the available contracts into the same folder as the executable
 export const prepareContract = (): void => {
-  const FOLDER_PATH = `${process.cwd()}/smart-contract`;
-  const packagedPath = `${__dirname}/smart-contract`;
-  const success = `✅ Smart Contract Has Been Copied To ${FOLDER_PATH}.`;
-  const failure = `Existing Smart Contract Folder Found: ${FOLDER_PATH}.`;
+  const FOLDER_PATH = `${process.cwd()}/contracts`;
+  const packagedPath = `${__dirname}/contracts`;
+  const success = `✅ Available Contracts Have Been Copied To ${FOLDER_PATH}.`;
+  const failure = `Existing Contracts Folder Found: ${FOLDER_PATH}.`;
 
   prepareFolder(packagedPath, FOLDER_PATH, success, failure);
 };
 
-// Copies the smart contract project into the same folder as the executable
+// Copies the documentation into the same folder as the executable
 export const prepareDocumentation = (): void => {
   const FOLDER_PATH = `${process.cwd()}/documentation`;
   const packagedPath = `${__dirname}/documentation`;

@@ -2,7 +2,7 @@ PACKAGED_PATH="./paima-standalone/packaged"
 mkdir -p $PACKAGED_PATH
 
 SDK_PATH="$PACKAGED_PATH/paima-sdk"
-CONTRACT_PATH="$PACKAGED_PATH/smart-contract"
+CONTRACT_PATH="$PACKAGED_PATH/contracts"
 DOC_PATH="$PACKAGED_PATH/documentation"
 TEMPLATES_PATH="$PACKAGED_PATH/templates"
 
@@ -72,14 +72,18 @@ sed 's/husky install && //g' package.json > $SDK_PATH/package.json
 cp package-lock.json $SDK_PATH/package-lock.json
 
 
-# Prepare smart contract project to be packed
+# Prepare smart contracts to be packed
+paima="paima-l2-contract"
 echo $CONTRACT_PATH
 rm -rf $CONTRACT_PATH
 mkdir $CONTRACT_PATH
-cp -r paima-l2-contract/src $CONTRACT_PATH
-cp -r paima-l2-contract/package.json $CONTRACT_PATH
-cp -r paima-l2-contract/truffle-config.js $CONTRACT_PATH
-# cp -r storage-contract/ $CONTRACT_PATH
+cp -r contracts/$paima/src $CONTRACT_PATH/$paima
+cp contracts/$paima/package.json $CONTRACT_PATH/$paima
+cp contracts/$paima/package-lock.json $CONTRACT_PATH/$paima
+cp contracts/$paima/truffle-config.js $CONTRACT_PATH/$paima
+git clean -Xdf contracts/nft
+cp -r contracts/nft $CONTRACT_PATH/nft
+
 
 
 # Fetch documentation
