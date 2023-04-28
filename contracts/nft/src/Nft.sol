@@ -68,6 +68,7 @@ contract Nft is ERC165, ERC721, Ownable {
 
     function mint(address _to, string memory initialData) external canMint returns (uint256) {
         require(maxSupply > totalSupply, "Nft: max supply reached");
+        require(_to != address(0), "Nft: zero receiver address");
 
         uint256 tokenId = currentTokenId;
         _safeMint(_to, tokenId);
