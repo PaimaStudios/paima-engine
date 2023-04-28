@@ -19,7 +19,7 @@ import {
 
 import { getBlockNumber, postDataToEndpoint } from './helpers/general';
 import { getRemoteBackendVersion, awaitBlock } from './helpers/auxiliary-queries';
-import { postConciselyEncodedData } from './helpers/posting';
+import { postConciselyEncodedData, postConciseData } from './helpers/posting';
 import { buildQuery, buildBackendQuery } from './helpers/query-constructors';
 import { pushLog } from './helpers/logging';
 
@@ -38,6 +38,7 @@ import {
   getDeployment,
 } from './state';
 import {
+  EndpointErrorFxn,
   buildAbstractEndpointErrorFxn,
   PaimaMiddlewareErrorCode,
   PAIMA_MIDDLEWARE_ERROR_MESSAGES,
@@ -68,12 +69,14 @@ export {
   getDeployment,
   getActiveAddress,
   getStorageAddress,
+  postConciseData,
   postConciselyEncodedData,
   awaitBlock,
   buildQuery,
   buildBackendQuery,
   pushLog,
   postDataToEndpoint,
+  EndpointErrorFxn,
   buildAbstractEndpointErrorFxn,
   PaimaMiddlewareErrorCode,
   PAIMA_MIDDLEWARE_ERROR_MESSAGES,

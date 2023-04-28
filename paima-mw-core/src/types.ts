@@ -100,3 +100,9 @@ export type BatcherTrackResponse =
   | BatcherTrackResponsePosted
   | BatcherTrackResponseRejected
   | BatcherTrackResponseOther;
+
+export type BaseSuccessResponse = {
+  success: true;
+};
+
+export type PostDataResponse = BaseSuccessResponse & { blockHeight: number };
