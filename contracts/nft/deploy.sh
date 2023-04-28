@@ -46,15 +46,15 @@ read -p "Please enter your choice (1-3): " choice
 echo ""
 case $choice in
   1)
-    npx truffle migrate --from 2 --to 2 --network $TARGET_NETWORK
+    npx truffle migrate --f 2 --to 2 --network $TARGET_NETWORK
     echo "TODO: deploy Nft contract to $TARGET_NETWORK"
     ;;
   2)
-    npx truffle migrate --from 3 --to 3 --network $TARGET_NETWORK
+    npx truffle migrate --f 3 --to 3 --network $TARGET_NETWORK
     echo "TODO: deploy NativeNftSale contract to $TARGET_NETWORK"
     ;;
   3)
-    npx truffle migrate --from 4 --to 4 --network $TARGET_NETWORK
+    npx truffle migrate --f 4 --to 4 --network $TARGET_NETWORK
     echo "TODO: deploy Erc20NftSale contract to $TARGET_NETWORK"
     ;;
   *)
