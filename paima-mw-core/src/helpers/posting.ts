@@ -1,4 +1,5 @@
 import { retrieveFee, retryPromise, wait, AddressType } from '@paima/utils';
+import type { EndpointErrorFxn } from '../errors';
 import {
   buildEndpointErrorFxn,
   FE_ERR_BATCHER_REJECTED_INPUT,
@@ -16,7 +17,14 @@ import {
   PostingMode,
   setFee,
 } from '../state';
-import type { BatchedSubunit, BatcherPostResponse, BatcherTrackResponse, Result } from '../types';
+import type {
+  BatchedSubunit,
+  BatcherPostResponse,
+  BatcherTrackResponse,
+  FailedResult,
+  PostDataResponse,
+  Result,
+} from '../types';
 import { batchedToJsonString, buildBatchedSubunit } from './data-processing';
 import { buildDirectTx } from './transaction-building';
 import { batcherQuerySubmitUserInput, batcherQueryTrackUserInput } from './query-constructors';
@@ -45,7 +53,40 @@ export async function updateFee(): Promise<void> {
   }
 }
 
-// On success returns the block number of the transaction.
+/**
+ * Wrapper around post concisely encoded data with added error handling
+ * @param data Concisely encoded data to post
+ * @param errorFxn Utility error function to handle error formatting
+ * @returns blockheight or failure
+ */
+export const postConciseData = async (
+  data: string,
+  errorFxn: EndpointErrorFxn
+): Promise<PostDataResponse | FailedResult> => {
+  try {
+    const response = await postConciselyEncodedData(data);
+    if (!response.success) {
+      return errorFxn(PaimaMiddlewareErrorCode.ERROR_POSTING_TO_CHAIN, response.errorMessage);
+    }
+    const blockHeight = response.result;
+
+    if (blockHeight < 0) {
+      return errorFxn(
+        PaimaMiddlewareErrorCode.ERROR_POSTING_TO_CHAIN,
+        `Received block height: ${blockHeight}`
+      );
+    }
+    return { success: true, blockHeight };
+  } catch (err) {
+    return errorFxn(PaimaMiddlewareErrorCode.ERROR_POSTING_TO_CHAIN, err);
+  }
+};
+
+/**
+ * @deprecated for outside use, utilize @see {postConciseData} instead
+ * @param gameInput
+ * @returns On success the block number of the transaction
+ */
 export async function postConciselyEncodedData(gameInput: string): Promise<Result<number>> {
   const errorFxn = buildEndpointErrorFxn('postConciselyEncodedData');
   const postingMode = getPostingMode();
