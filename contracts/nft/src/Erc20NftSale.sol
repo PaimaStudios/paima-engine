@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
 import "./Nft.sol";
@@ -65,8 +64,9 @@ contract Erc20NftSale is State, ERC1967, Ownable {
     {
         require(
             tokenIsWhitelisted(_tokenAddress),
-            "NftSale: token not whitelisted"
+            "Erc20NftSale: token not whitelisted"
         );
+        require(receiverAddress != address(0), "Erc20NftSale: zero receiver address");
 
         uint256 price = nftPrice;
 
@@ -86,7 +86,7 @@ contract Erc20NftSale is State, ERC1967, Ownable {
     }
 
     function removeWhitelistedToken(ERC20 _token) external onlyOwner {
-        require(tokenIsWhitelisted(_token), "NftSale: token not whitelisted");
+        require(tokenIsWhitelisted(_token), "Erc20NftSale: token not whitelisted");
 
         ERC20[] memory supportedCurrenciesMem = supportedCurrencies;
 
@@ -100,7 +100,7 @@ contract Erc20NftSale is State, ERC1967, Ownable {
 
         require(
             tokenIndex < supportedCurrenciesMem.length,
-            "NftSale: out of bounds"
+            "Erc20NftSale: out of bounds"
         );
 
         supportedCurrencies[tokenIndex] = supportedCurrencies[
