@@ -1,16 +1,16 @@
 {
-    "testnet": {
-        "Nft": "",
-        "NativeNftSale": "",
-        "NativeProxy": "",
-        "Erc20NftSale": "",
-        "Proxy": ""
-    },
-    "mainnet": {
-        "Nft": "",
-        "NativeNftSale": "",
-        "NativeProxy": "",
-        "Erc20NftSale": "",
-        "Proxy": ""
-    }
+  "testnet": {
+    "Nft": "0xbab38dfe39DDD1DfBc5C8E255dA04D32f92197Dc",
+    "NativeNftSale": "",
+    "NativeProxy": "",
+    "Erc20NftSale": "",
+    "Proxy": ""
+  },
+  "mainnet": {
+    "Nft": "",
+    "NativeNftSale": "",
+    "NativeProxy": "",
+    "Erc20NftSale": "",
+    "Proxy": ""
+  }
 }

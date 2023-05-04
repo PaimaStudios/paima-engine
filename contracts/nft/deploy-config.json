@@ -11,7 +11,6 @@
     },
     "NativeNftSale": {
       "decimals": 18,
-      "nftAddress": "",
       "owner": ""
     },
     "Erc20NftSale": {
@@ -19,7 +18,6 @@
         "USDT": "0x7d3B9AeC4F57C1F10bfd1668612c3E586498E4BE",
         "USDC": "0x63D403E115213A66fE41a8605FFB1af8ab481593"
       },
-      "nftAddress": "",
       "owner": ""
     }
   },
@@ -31,17 +29,18 @@
       "owner": ""
     },
     "NftSale": {
-      "nftAddress": "",
       "price": 3
     },
     "NativeNftSale": {
-      "decimals": 18
+      "decimals": 18,
+      "owner": ""
     },
     "Erc20NftSale": {
       "currencies": {
         "USDT": "",
         "USDC": ""
-      }
+      },
+      "owner": ""
     }
   }
 }

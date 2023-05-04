@@ -1,6 +1,9 @@
 const erc20NftSale = artifacts.require("Erc20NftSale");
 const proxy = artifacts.require("Proxy");
 const deployConfig = require("../deploy-config.json");
+const utils = require("../scripts/utils.js");
+
+const { addAddress, getAddress } = utils;
 
 module.exports = async function (deployer, network, accounts) {
   const networkConfig = deployConfig[network];
@@ -10,9 +13,9 @@ module.exports = async function (deployer, network, accounts) {
     price
   } = nftSaleConfig;
   const {
-    nftAddress,
     currencies
   } = erc20NftSaleConfig;
+  const nftAddress = getAddress(network, "Nft");
   const owner = accounts[0];
   
   await deployer.deploy(erc20NftSale);
@@ -28,7 +31,6 @@ module.exports = async function (deployer, network, accounts) {
   const proxyInstance = await proxy.deployed();
   const proxyAddress = proxyInstance.address;
 
-  console.log("Deployed ERC20 NFT Sale contract:")
-  console.log("   ERC20 NFT Sale address: ", nftSaleAddress);
-  console.log("   Proxy address:          ", proxyAddress);
+  addAddress(network, "Erc20NftSale", nftSaleAddress);
+  addAddress(network, "Proxy", proxyAddress);
 };

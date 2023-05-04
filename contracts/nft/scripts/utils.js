@@ -1,12 +1,37 @@
 const fs = require('fs');
 
-const ADDRESSES_PATH = "../contract-addresses.json"
+const ADDRESSES_PATH = "contract-addresses.json";
 
-export function loadAddresses() {
+function addAddress(network, key, address) {
+    const addresses = loadAddresses();
+    if (!addresses.hasOwnProperty(network)) {
+      addresses[network] = {};
+    }
+    addresses[network][key] = address;
+    saveAddresses(addresses);
+}
+
+function getAddress(network, key) {
+    const addresses = loadAddresses();
+    return addresses?.[network]?.[key];
+}
+
+function reportAddresses(network, keys) {
+    const maxKeyLength = Math.max(...keys.map(k => k.length));
+    console.log("Deployed contract addresses:");
+    for (const key of keys) {
+        const extraSpaceLength = maxKeyLength - key.length;
+        const extraSpace = " ".repeat(extraSpaceLength);
+        const address = getAddress(network, key);
+        console.log(`   ${key}:${extraSpace} ${address}`)
+    }
+}
+
+function loadAddresses() {
     return loadJSON(ADDRESSES_PATH)
 }
 
-export function saveAddresses(addresses) {
+function saveAddresses(addresses) {
     return saveJSON(ADDRESSES_PATH, addresses);
 }
 
@@ -19,3 +44,9 @@ function saveJSON(path, data) {
     const jsonData = JSON.stringify(data, null, 2);
     fs.writeFileSync(path, jsonData, 'utf8');
 }
+
+module.exports = {
+    addAddress,
+    getAddress,
+    reportAddresses
+};

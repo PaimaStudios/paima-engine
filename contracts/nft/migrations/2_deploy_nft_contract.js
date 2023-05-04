@@ -1,5 +1,8 @@
 const nft = artifacts.require("Nft");
 const deployConfig = require("../deploy-config.json");
+const utils = require("../scripts/utils.js");
+
+const { addAddress } = utils;
 
 module.exports = async function (deployer, network, accounts) {
   const networkConfig = deployConfig[network];
@@ -32,6 +35,5 @@ module.exports = async function (deployer, network, accounts) {
     await nftInstance.setBaseURI(baseUri, options);
   }
 
-  console.log("Deployed NFT contract:")
-  console.log("   NFT contract address:   ", nftAddress);
+  addAddress(network, "Nft", nftAddress);
 };
