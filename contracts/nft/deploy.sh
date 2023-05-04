@@ -1,8 +1,5 @@
 #!/bin/bash
 
-echo "Ensuring prerequisites are installed..."
-npm install
-
 if [ -z ${TARGET_NETWORK+x} ]; then
     echo ""
     echo "Which network would you like to deploy to?"
