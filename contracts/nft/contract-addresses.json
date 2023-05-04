@@ -1,10 +1,11 @@
 {
   "testnet": {
-    "Nft": "0xbab38dfe39DDD1DfBc5C8E255dA04D32f92197Dc",
+    "Nft": "0xbfe77c3604D9386689A5C519675f810Ac3728903",
     "NativeNftSale": "",
     "NativeProxy": "",
     "Erc20NftSale": "",
-    "Proxy": ""
+    "Proxy": "",
+    "NftDeploymentBlockHeight": 12235825
   },
   "mainnet": {
     "Nft": "",

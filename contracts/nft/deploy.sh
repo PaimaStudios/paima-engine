@@ -46,13 +46,13 @@ read -p "Please enter your choice (1-3): " choice
 echo ""
 case $choice in
   1)
-    npx truffle migrate --f 2 --to 2 --network $TARGET_NETWORK
+    npx truffle migrate --f 2 --to 2 --network $TARGET_NETWORK && node scripts/report-deployment-nft.js
     ;;
   2)
-    npx truffle migrate --f 3 --to 3 --network $TARGET_NETWORK
+    npx truffle migrate --f 3 --to 3 --network $TARGET_NETWORK && node scripts/report-deployment-native-sale.js
     ;;
   3)
-    npx truffle migrate --f 4 --to 4 --network $TARGET_NETWORK
+    npx truffle migrate --f 4 --to 4 --network $TARGET_NETWORK && node scripts/report-deployment-erc20-sale.js
     ;;
   *)
     echo "Invalid choice, deploying nothing."

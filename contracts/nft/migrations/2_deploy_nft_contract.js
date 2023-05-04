@@ -20,6 +20,9 @@ module.exports = async function (deployer, network, accounts) {
   const nftInstance = await nft.deployed();
   const nftAddress = nftInstance.address;
 
+  // might not be exact but simpler than going through deployment tx hash:
+  const nftDeploymentBlockHeight = await web3.eth.getBlockNumber();
+
   const options = {
     gasPrice: (10n ** 11n).toString(10),
     gasLimit: (5n * 10n ** 6n).toString(10)
@@ -36,4 +39,5 @@ module.exports = async function (deployer, network, accounts) {
   }
 
   addAddress(network, "Nft", nftAddress);
+  addAddress(network, "NftDeploymentBlockHeight", nftDeploymentBlockHeight);
 };
