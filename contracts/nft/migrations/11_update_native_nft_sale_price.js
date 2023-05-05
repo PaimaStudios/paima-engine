@@ -2,7 +2,7 @@ const nftSale = artifacts.require("NativeNftSale");
 const deployConfig = require("../deploy-config.json");
 const utils = require("../scripts/utils.js");
 
-const { getOptions } = utils;
+const { getAddress, getOptions } = utils;
 
 module.exports = async function (deployer, network, accounts) {
   const networkConfig = deployConfig[network];
