@@ -177,7 +177,7 @@ export async function cardanoLoginWrapper(walletMode: WalletMode): Promise<Resul
   return {
     success: true,
     result: {
-      walletAddress: getCardanoAddress(),
+      walletAddress: getCardanoAddress().toLocaleLowerCase(),
     },
   };
 }

@@ -185,7 +185,7 @@ export async function metamaskLoginWrapper(): Promise<Result<Wallet>> {
   return {
     success: true,
     result: {
-      walletAddress: getEthAddress(),
+      walletAddress: getEthAddress().toLocaleLowerCase(),
     },
   };
 }
