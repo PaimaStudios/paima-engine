@@ -4,7 +4,9 @@
       "name": "Test NFT contract",
       "symbol": "TNC",
       "supply": 2000,
-      "owner": ""
+      "owner": "",
+      "minter": "",
+      "baseUri": ""
     },
     "NftSale": {
       "price": 3
@@ -26,7 +28,9 @@
       "name": "Test NFT contract",
       "symbol": "TNC",
       "supply": 2000,
-      "owner": ""
+      "owner": "",
+      "minter": "",
+      "baseUri": ""
     },
     "NftSale": {
       "price": 3
