@@ -1,5 +1,8 @@
 const nft = artifacts.require("Nft");
 const deployConfig = require("../deploy-config.json");
+const utils = require("../scripts/utils.js");
+
+const { addAddress, getOptions } = utils;
 
 module.exports = async function (deployer, network, accounts) {
   const networkConfig = deployConfig[network];
@@ -9,29 +12,28 @@ module.exports = async function (deployer, network, accounts) {
     symbol,
     supply,
     minter,
-    maxSupply,
     baseUri
   } = nftConfig;
   const owner = accounts[0];
-  await deployer.deploy(nft, name, symbol, supply, owner);
+  const [
+    _,
+    nftDeploymentBlockHeight
+  ] = await Promise.all([
+    deployer.deploy(nft, name, symbol, supply, owner),
+    web3.eth.getBlockNumber() // might not be exact but simpler than going through deployment tx hash
+  ]);
   const nftInstance = await nft.deployed();
   const nftAddress = nftInstance.address;
 
-  const options = {
-    gasPrice: (10n ** 11n).toString(10),
-    gasLimit: (5n * 10n ** 6n).toString(10)
-  };
+  const options = getOptions();
 
   if (minter) {
     await nftInstance.setMinter(minter, options);
-  }
-  if (maxSupply) {
-    await nftInstance.updateMaxSupply(maxSupply, options);
   }
   if (baseUri) {
     await nftInstance.setBaseURI(baseUri, options);
   }
 
-  console.log("Deployed NFT contract:")
-  console.log("   NFT contract address:   ", nftAddress);
+  addAddress(network, "Nft", nftAddress);
+  addAddress(network, "NftDeploymentBlockHeight", nftDeploymentBlockHeight);
 };

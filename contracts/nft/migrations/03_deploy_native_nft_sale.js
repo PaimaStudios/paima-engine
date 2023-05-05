@@ -1,6 +1,10 @@
 const nativeNftSale = artifacts.require("NativeNftSale");
 const nativeProxy = artifacts.require("NativeProxy");
+const nft = artifacts.require("Nft");
 const deployConfig = require("../deploy-config.json");
+const utils = require("../scripts/utils.js");
+
+const { addAddress, getAddress, getOptions } = utils;
 
 module.exports = async function (deployer, network, accounts) {
   const networkConfig = deployConfig[network];
@@ -10,13 +14,15 @@ module.exports = async function (deployer, network, accounts) {
     price
   } = nftSaleConfig;
   const {
-    nftAddress,
     decimals
   } = nativeNftSaleConfig;
+  const nftAddress = getAddress(network, "Nft");
   const owner = accounts[0];
 
   const decimalsMultiplier = 10n ** BigInt(decimals);
   const nativePrice = BigInt(price) * decimalsMultiplier;
+
+  const options = getOptions();
   
   await deployer.deploy(nativeNftSale);
   const nftSaleInstance = await nativeNftSale.deployed();
@@ -26,7 +32,9 @@ module.exports = async function (deployer, network, accounts) {
   const proxyInstance = await nativeProxy.deployed();
   const proxyAddress = proxyInstance.address;
 
-  console.log("Deployed Native NFT Sale contract:")
-  console.log("   Native NFT Sale address:", nftSaleAddress);
-  console.log("   Native proxy address:   ", proxyAddress);
+  const nftInstance = await nft.deployed();
+  await nftInstance.setMinter(nftSaleAddress, options);
+
+  addAddress(network, "NativeNftSale", nftSaleAddress);
+  addAddress(network, "NativeProxy", proxyAddress);
 };

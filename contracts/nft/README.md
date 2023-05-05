@@ -18,8 +18,14 @@ Contract code can be found in the [src](src/) folder. Though there are multiple 
 
 ## Deployment
 
-To deploy the contracts, you can simply run the deploy script [`deploy.sh`](./deploy.sh) and follow the prompts. Note that there are a few prerequisites that you will be asked to fulfill:
- - You should ensure that the config in [`deploy-config.json`](./deploy-config.json) is up to date before deploying,
+Before using the deploy script, install dependencies by simply running:
+
+```
+npm clean-install
+```
+
+Afterwards, to deploy the contracts, you can simply run the deploy script [`deploy.sh`](./deploy.sh) and follow the prompts. Note that there are a few prerequisites that you will be asked to fulfill:
+ - You should ensure that the config [`deploy-config.json`](./deploy-config.json) is up to date before deploying,
  - You will be asked to provide a private key associated with a wallet with sufficient funds that will be used for deployment.
 
 ## Adding networks

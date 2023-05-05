@@ -1,6 +1,9 @@
 const nftSale = artifacts.require("NativeNftSale");
 const proxy = artifacts.require("NativeProxy");
 const deployConfig = require("../deploy-config.json");
+const utils = require("../scripts/utils.js");
+
+const { getAddress, getOptions } = utils;
 
 module.exports = async function (deployer, network, accounts) {
   const networkConfig = deployConfig[network];
@@ -9,12 +12,9 @@ module.exports = async function (deployer, network, accounts) {
     owner
   } = nftSaleConfig;
 
-  const options = {
-    gasPrice: (10n ** 11n).toString(10),
-    gasLimit: (5n * 10n ** 6n).toString(10)
-  };
+  const options = getOptions();
 
-  const proxyInstance = await proxy.deployed();
-  const nftSaleInstance = await nftSale.at(proxyInstance.address);
+  const proxyAddress = getAddress(network, "NativeProxy");
+  const nftSaleInstance = await nftSale.at(proxyAddress);
   await nftSaleInstance.transferOwnership(owner, options);
 };
