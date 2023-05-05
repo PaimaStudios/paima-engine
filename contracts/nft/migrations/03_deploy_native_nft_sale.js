@@ -4,7 +4,7 @@ const nft = artifacts.require("Nft");
 const deployConfig = require("../deploy-config.json");
 const utils = require("../scripts/utils.js");
 
-const { addAddress, getAddress } = utils;
+const { addAddress, getAddress, getOptions } = utils;
 
 module.exports = async function (deployer, network, accounts) {
   const networkConfig = deployConfig[network];
@@ -21,6 +21,8 @@ module.exports = async function (deployer, network, accounts) {
 
   const decimalsMultiplier = 10n ** BigInt(decimals);
   const nativePrice = BigInt(price) * decimalsMultiplier;
+
+  const options = getOptions();
   
   await deployer.deploy(nativeNftSale);
   const nftSaleInstance = await nativeNftSale.deployed();

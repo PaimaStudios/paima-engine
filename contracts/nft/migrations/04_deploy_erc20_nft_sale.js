@@ -4,7 +4,7 @@ const nft = artifacts.require("Nft");
 const deployConfig = require("../deploy-config.json");
 const utils = require("../scripts/utils.js");
 
-const { addAddress, getAddress } = utils;
+const { addAddress, getAddress, getOptions } = utils;
 
 module.exports = async function (deployer, network, accounts) {
   const networkConfig = deployConfig[network];
@@ -22,6 +22,8 @@ module.exports = async function (deployer, network, accounts) {
   await deployer.deploy(erc20NftSale);
   const nftSaleInstance = await erc20NftSale.deployed();
   const nftSaleAddress = nftSaleInstance.address;
+
+  const options = getOptions();
 
   const currenciesArray = [];
   for (const key in currencies) {
