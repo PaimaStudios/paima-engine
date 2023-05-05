@@ -45,7 +45,7 @@ async function userWalletLogin(loginType: string): Promise<Result<Wallet>> {
     ...response,
     result: {
       ...response.result,
-      walletAddress: response.result.walletAddress.toLowerCase(),
+      walletAddress: response.result.walletAddress,
     },
   };
 }
