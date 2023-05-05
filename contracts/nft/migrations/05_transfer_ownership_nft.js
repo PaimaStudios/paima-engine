@@ -2,28 +2,18 @@ const nft = artifacts.require("Nft");
 const deployConfig = require("../deploy-config.json");
 const utils = require("../scripts/utils.js");
 
-const { getOptions } = utils;
+const { getAddress, getOptions } = utils;
 
 module.exports = async function (deployer, network, accounts) {
   const networkConfig = deployConfig[network];
   const nftConfig = networkConfig["Nft"];
   const {
-    minter,
-    maxSupply,
-    baseUri
+    owner
   } = nftConfig;
 
+  const nftAddress = getAddress(network, "Nft");
   const options = getOptions();
 
-  const nftInstance = await nft.deployed();
-
-  if (minter) {
-    await nftInstance.setMinter(minter, options);
-  }
-  if (maxSupply) {
-    await nftInstance.updateMaxSupply(maxSupply, options);
-  }
-  if (baseUri) {
-    await nftInstance.setBaseURI(baseUri, options);
-  }
+  const nftInstance = await nft.at(nftAddress);
+  await nftInstance.transferOwnership(owner, options);
 };

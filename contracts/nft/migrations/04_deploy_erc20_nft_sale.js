@@ -32,7 +32,7 @@ module.exports = async function (deployer, network, accounts) {
   const proxyInstance = await proxy.deployed();
   const proxyAddress = proxyInstance.address;
 
-  const nftInstance = await nft.deployed();
+  const nftInstance = await nft.at(nftAddress);
   await nftInstance.setMinter(nftSaleAddress, options);
 
   addAddress(network, "Erc20NftSale", nftSaleAddress);
