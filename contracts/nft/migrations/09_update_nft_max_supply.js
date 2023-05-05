@@ -8,7 +8,7 @@ module.exports = async function (deployer, network, accounts) {
   const networkConfig = deployConfig[network];
   const nftConfig = networkConfig["Nft"];
   const {
-    maxSupply
+    supply
   } = nftConfig;
 
   const nftAddress = getAddress(network, "Nft");
@@ -16,7 +16,7 @@ module.exports = async function (deployer, network, accounts) {
 
   const nftInstance = await nft.at(nftAddress);
 
-  if (maxSupply) {
-    await nftInstance.updateMaxSupply(maxSupply, options);
+  if (supply) {
+    await nftInstance.updateMaxSupply(supply, options);
   }
 };

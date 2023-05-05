@@ -12,7 +12,6 @@ module.exports = async function (deployer, network, accounts) {
     symbol,
     supply,
     minter,
-    maxSupply,
     baseUri
   } = nftConfig;
   const owner = accounts[0];
@@ -30,9 +29,6 @@ module.exports = async function (deployer, network, accounts) {
 
   if (minter) {
     await nftInstance.setMinter(minter, options);
-  }
-  if (maxSupply) {
-    await nftInstance.updateMaxSupply(maxSupply, options);
   }
   if (baseUri) {
     await nftInstance.setBaseURI(baseUri, options);
