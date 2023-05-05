@@ -3,6 +3,13 @@ const deployConfig = require("../deploy-config.json");
 
 const ADDRESSES_PATH = "contract-addresses.json";
 
+function getOptions() {
+    return {
+        gasPrice: (10n ** 11n).toString(10),
+        gasLimit: (5n * 10n ** 6n).toString(10)
+    };
+}
+
 function addAddress(network, key, address) {
     const addresses = loadAddresses();
     if (!addresses.hasOwnProperty(network)) {
@@ -63,5 +70,6 @@ module.exports = {
     addAddress,
     getAddress,
     reportAddresses,
-    buildCdeConfig
+    buildCdeConfig,
+    getOptions
 };

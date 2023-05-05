@@ -1,5 +1,8 @@
 const nft = artifacts.require("Nft");
 const deployConfig = require("../deploy-config.json");
+const utils = require("../scripts/utils.js");
+
+const { getOptions } = utils;
 
 module.exports = async function (deployer, network, accounts) {
   const networkConfig = deployConfig[network];
@@ -8,10 +11,7 @@ module.exports = async function (deployer, network, accounts) {
     owner
   } = nftConfig;
 
-  const options = {
-    gasPrice: (10n ** 11n).toString(10),
-    gasLimit: (5n * 10n ** 6n).toString(10)
-  };
+  const options = getOptions();
 
   const nftInstance = await nft.deployed();
   await nftInstance.transferOwnership(owner, options);
