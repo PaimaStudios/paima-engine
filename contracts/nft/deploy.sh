@@ -90,8 +90,50 @@ function runDeployment() {
 
 function runAdmin() {
     echo ""
-    echo "Admin stuff NYI!"
+    echo "Please select which operation you want to perform. Inputs for the operations"
+    echo "are taken from deploy-config.json, so make sure it is up to date."
     echo ""
+    echo "What would you like to do?"
+    echo "  1. Transfer Nft contract ownership"
+    echo "  2. Transfer NativeNftSale contract ownership"
+    echo "  3. Transfer Erc20NftSale contract ownership"
+    echo "  4. Add a minter to the Nft contract"
+    echo "  5. Update max supply of the Nft contract"
+    echo "  6. Update base URI of the Nft contract"
+    echo "  7. Update NFT price in the NativeNftSale contract"
+    echo "  8. Update NFT price in the Erc20NftSale contract"
+    read -p "Please enter your choice (1-8): " choice
+
+    echo ""
+    case $choice in
+      1)
+        runMigration 5
+        ;;
+      2)
+        runMigration 6
+        ;;
+      3)
+        runMigration 7
+        ;;
+      4)
+        runMigration 8
+        ;;
+      5)
+        runMigration 9
+        ;;
+      6)
+        runMigration 10
+        ;;
+      7)
+        runMigration 11
+        ;;
+      8)
+        runMigration 12
+        ;;
+      *)
+        echo "Invalid choice, not doing anything."
+        ;;
+    esac
 }
 
 function deployNft() {
@@ -123,7 +165,16 @@ function deployErc20NftSale() {
     else
         echo "Something went wrong while deploying the Erc20NftSale contract."
     fi
+}
 
+function runMigration() {
+    npx truffle migrate --f $1 --to $1 --network $TARGET_NETWORK
+    local status=$?
+    if [ $status -eq 0 ]; then
+        echo "Operation completed successfully."
+    else
+        echo "Something went wrong with the operation."
+    fi
 }
 
 main
