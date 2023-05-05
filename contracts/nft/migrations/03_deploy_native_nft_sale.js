@@ -1,5 +1,6 @@
 const nativeNftSale = artifacts.require("NativeNftSale");
 const nativeProxy = artifacts.require("NativeProxy");
+const nft = artifacts.require("Nft");
 const deployConfig = require("../deploy-config.json");
 const utils = require("../scripts/utils.js");
 
@@ -28,6 +29,9 @@ module.exports = async function (deployer, network, accounts) {
   await deployer.deploy(nativeProxy, nftSaleAddress, owner, nftAddress, nativePrice.toString(10));
   const proxyInstance = await nativeProxy.deployed();
   const proxyAddress = proxyInstance.address;
+
+  const nftInstance = await nft.deployed();
+  await nftInstance.setMinter(nftSaleAddress, options);
 
   addAddress(network, "NativeNftSale", nftSaleAddress);
   addAddress(network, "NativeProxy", proxyAddress);
