@@ -171,7 +171,7 @@ async function validateSubunitSignature(
     case AddressType.CARDANO:
       return await verifySignatureCardano(userAddress, message, userSignature);
     case AddressType.POLKADOT:
-      return verifySignaturePolkadot(userAddress, message, userSignature);
+      return await verifySignaturePolkadot(userAddress, message, userSignature);
     default:
       return false;
   }
