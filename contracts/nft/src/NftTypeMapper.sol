@@ -6,12 +6,13 @@ contract NftTypeMapper {
     mapping(NftType => string) internal nftTypeToString;
 
     constructor() {
-        nftTypeToString[NftType.GORILLA] = "gorilla";
-        nftTypeToString[NftType.ANACONDA] = "anaconda";
-        nftTypeToString[NftType.JAGUAR] = "jaguar";
+        nftTypeToString[NftType.FIRE] = "fire";
+        nftTypeToString[NftType.WATER] = "water";
     }
 
-    function getNftTypeString(NftType nftType) external view returns (string memory) {
+    function getNftTypeString(
+        NftType nftType
+    ) external view returns (string memory) {
         return nftTypeToString[nftType];
     }
 }
