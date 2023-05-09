@@ -54,7 +54,7 @@ const paimaEngine: PaimaRuntimeInitializer = {
           console.log('[Input Validation]', gameInput, userAddress);
           gameStateMachine
             .dryRun(gameInput, userAddress)
-            .then((valid) => res.status(200).json({ valid }))
+            .then(valid => res.status(200).json({ valid }))
             .catch(() => res.status(500));
         });
         this.addGET('/backend_version', (req, res): void => {

@@ -81,7 +81,7 @@ const SM: GameStateMachineInitializer = {
       markPresyncMilestone: async (blockHeight: number): Promise<void> => {
         await markCdeBlockheightProcessed.run({ block_height: blockHeight }, DBConn);
       },
-      dryRun: async(gameInput: string, userAddress: string): Promise<boolean> => {
+      dryRun: async (gameInput: string, userAddress: string): Promise<boolean> => {
         const [b] = await getLatestProcessedBlockHeight.run(undefined, readonlyDBConn);
         const blockHeight = b?.block_height ?? startBlockHeight ?? 0;
         const gameStateTransition = gameStateTransitionRouter(blockHeight);
