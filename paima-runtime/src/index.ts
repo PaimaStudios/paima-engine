@@ -48,6 +48,15 @@ const paimaEngine: PaimaRuntimeInitializer = {
         this.pollingRate = seconds;
       },
       async run(stopBlockHeight: number | null, serverOnlyMode = false): Promise<void> {
+        this.addGET('/dry_run', (req, res): void => {
+          const gameInput = String(req.query.gameInput);
+          const userAddress = String(req.query.userAddress);
+          console.log('[Input Validation]', gameInput, userAddress);
+          gameStateMachine
+            .dryRun(gameInput, userAddress)
+            .then((valid) => res.status(200).json({ valid }))
+            .catch(() => res.status(500));
+        });
         this.addGET('/backend_version', (req, res): void => {
           res.status(200).json(gameBackendVersion);
         });

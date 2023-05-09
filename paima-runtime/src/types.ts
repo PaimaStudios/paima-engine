@@ -159,6 +159,7 @@ export interface GameStateMachine {
   process: (chainData: ChainData) => Promise<void>;
   presyncProcess: (latestCdeData: PresyncChainData) => Promise<void>;
   markPresyncMilestone: (blockHeight: number) => Promise<void>;
+  dryRun: (gameInput: string, userAddress: string) => Promise<boolean>;
 }
 
 export interface PaimaRuntimeInitializer {

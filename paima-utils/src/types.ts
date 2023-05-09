@@ -33,5 +33,6 @@ export interface SubmittedData {
   inputNonce: NonceString;
   suppliedValue: string;
   scheduled: boolean;
+  dryRun?: boolean;
 }
 export type SubmittedChainData = SubmittedData;
