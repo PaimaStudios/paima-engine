@@ -80,6 +80,9 @@ export class ENV {
   static get CDE_CONFIG_PATH(): string {
     return process.env.CDE_CONFIG_PATH || 'extensions.yml';
   }
+  static get DISABLE_DRY_RUN(): boolean {
+    return process.env.DISABLE_DRY_RUN === 'true';
+  }
 
   // Middleware config:
   static get BACKEND_URI(): string {
