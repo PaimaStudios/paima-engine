@@ -13,7 +13,7 @@ module.exports = {
   },
   contract_config: {
     owner: "",
-    fee: 10n ** 16n
+    fee: 10n ** 14n
   },
   networks: {
     ganache: {
