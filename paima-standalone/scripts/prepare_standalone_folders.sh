@@ -5,6 +5,7 @@ SDK_PATH="$PACKAGED_PATH/paima-sdk"
 CONTRACT_PATH="$PACKAGED_PATH/contracts"
 DOC_PATH="$PACKAGED_PATH/documentation"
 TEMPLATES_PATH="$PACKAGED_PATH/templates"
+BATCHER_PATH="$PACKAGED_PATH/batcher"
 
 # Prepare stage
 rm -rf $SDK_PATH
@@ -84,7 +85,11 @@ cp contracts/$paima/truffle-config.js $CONTRACT_PATH/$paima
 git clean -Xdf contracts/nft
 cp -r contracts/nft $CONTRACT_PATH/nft
 
-
+# Prepare batcher:
+component="batcher"
+rm -rf $BATCHER_PATH
+git clone --depth=1 git@github.com:PaimaStudios/paima-batcher.git $BATCHER_PATH
+rm -rf $BATCHER_PATH/.git
 
 # Fetch documentation
 echo $DOC_PATH

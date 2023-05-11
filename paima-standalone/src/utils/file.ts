@@ -73,6 +73,15 @@ export const prepareSDK = (silentMode = false): void => {
   prepareFolder(PACKAGED_SDK_PATH, SDK_FOLDER_PATH, success, failure);
 };
 
+// Initializes the batcher in the same folder as the executable
+export const prepareBatcher = (silentMode = false): void => {
+  const BATCHER_FOLDER_PATH = `${process.cwd()}/batcher`;
+  const success = '✅ Batcher Initialized.';
+  const failure = silentMode ? '' : `Existing Batcher Found: ${BATCHER_FOLDER_PATH}.`;
+
+  prepareFolder(PACKAGED_SDK_PATH, BATCHER_FOLDER_PATH, success, failure);
+};
+
 // Initializes a project template
 export const prepareTemplate = (folder: string): void => {
   const TEMPLATE_FOLDER_PATH = `${process.cwd()}/${folder}`;
