@@ -60,6 +60,10 @@ export const argumentRouter = async (): Promise<void> => {
       await startWebServer();
       break;
 
+    case 'batcher':
+      await batcherCommand();
+      break;
+
     default:
       helpCommand();
   }
@@ -148,6 +152,7 @@ export const helpCommand = (): void => {
   doLog(`   webui     Starts Paima Game Input Tester WebUI.`);
   doLog(`   help      Shows list of commands currently available.`);
   doLog(`   version   Shows the version of used paima-engine.`);
+  doLog(`   batcher   Saves the bundled batcher project to your local filesystem.`);
 };
 
 // Batcher commant logic
