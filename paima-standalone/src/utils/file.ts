@@ -5,6 +5,7 @@ import { doLog } from '@paima/utils';
 
 export const PACKAGED_TEMPLATES_PATH = `${__dirname}/templates`;
 const PACKAGED_SDK_PATH = `${__dirname}/paima-sdk`;
+const PACKAGED_BATCHER_PATH = `${__dirname}/batcher`;
 
 const copy = (src: string, dest: string): void => {
   const list = fs.readdirSync(src);
@@ -79,7 +80,7 @@ export const prepareBatcher = (silentMode = false): void => {
   const success = '✅ Batcher Initialized.';
   const failure = silentMode ? '' : `Existing Batcher Found: ${BATCHER_FOLDER_PATH}.`;
 
-  prepareFolder(PACKAGED_SDK_PATH, BATCHER_FOLDER_PATH, success, failure);
+  prepareFolder(PACKAGED_BATCHER_PATH, BATCHER_FOLDER_PATH, success, failure);
 };
 
 // Initializes a project template
