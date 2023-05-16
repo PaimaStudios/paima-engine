@@ -16,6 +16,7 @@
       "packaged/paima-sdk/**/*",
       "packaged/templates/**/*",
       "packaged/contracts/**/*",
+      "packaged/batcher/**/*",
       "packaged/documentation/**/*"
     ],
     "targets": [
