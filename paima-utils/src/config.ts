@@ -81,7 +81,7 @@ export class ENV {
     return process.env.CDE_CONFIG_PATH || 'extensions.yml';
   }
   static get DISABLE_DRY_RUN(): boolean {
-    return process.env.DISABLE_DRY_RUN === 'true';
+    return process.env.DISABLE_DRY_RUN !== 'false';
   }
 
   // Middleware config:
