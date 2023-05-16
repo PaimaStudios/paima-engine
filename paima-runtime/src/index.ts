@@ -48,7 +48,7 @@ const paimaEngine: PaimaRuntimeInitializer = {
         this.pollingRate = seconds;
       },
       async run(stopBlockHeight: number | null, serverOnlyMode = false): Promise<void> {
-        if (!ENV.DISABLE_DRY_RUN) {
+        if (ENV.ENABLE_DRY_RUN) {
           this.addGET('/dry_run', (req, res): void => {
             const gameInput = String(req.query.gameInput);
             const userAddress = String(req.query.userAddress);
