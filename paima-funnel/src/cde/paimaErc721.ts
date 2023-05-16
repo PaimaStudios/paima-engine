@@ -69,8 +69,8 @@ function transferToTransferDatum(
     cdeDatumType: ChainDataExtensionDatumType.ERC721Transfer,
     blockNumber: event.blockNumber,
     payload: {
-      from: event.returnValues.from,
-      to: event.returnValues.to,
+      from: event.returnValues.from.toLowerCase(),
+      to: event.returnValues.to.toLowerCase(),
       tokenId: event.returnValues.tokenId,
     },
   };
