@@ -49,7 +49,7 @@ export class ENV {
     return process.env.CONTRACT_ADDRESS || process.env.STORAGE_ADDRESS || '';
   }
   static get DEFAULT_FEE(): string {
-    return process.env.DEFAULT_FEE || '';
+    return process.env.DEFAULT_FEE || '100000000000000';
   }
 
   // Game node config:
