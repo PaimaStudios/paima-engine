@@ -41,11 +41,11 @@ function buildCdeConfig(network) {
     const nftName = deployConfig?.[network]?.["Nft"]?.name ?? "My Paima NFT Contract";
 
     console.log("To automatically add this contract's Data to your game node database, you can copy and paste the following to your CDE config file:");
-    console.log(`  - name: ${nftName}`);
+    console.log(`  - name: "${nftName}"`);
     console.log(`    type: erc721`);
-    console.log(`    contractAddress: ${nftAddress}`);
+    console.log(`    contractAddress: "${nftAddress}"`);
     console.log(`    startBlockHeight: ${nftDeploymentBlockHeight}`);
-    console.log(`    initializationPrefix: nftmint`);
+    console.log(`    initializationPrefix: "nftmint"`);
 }
 
 function loadAddresses() {
