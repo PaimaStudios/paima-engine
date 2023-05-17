@@ -61,19 +61,24 @@ class PaimaFunnel {
     fromBlock: number,
     toBlock: number
   ): Promise<PresyncChainData[]> => {
-    toBlock = Math.min(toBlock, ENV.START_BLOCKHEIGHT);
-    fromBlock = Math.max(fromBlock, 0);
-    if (fromBlock > toBlock) {
+    try {
+      toBlock = Math.min(toBlock, ENV.START_BLOCKHEIGHT);
+      fromBlock = Math.max(fromBlock, 0);
+      if (fromBlock > toBlock) {
+        return [];
+      }
+
+      const ungroupedCdeData = await getUngroupedCdeData(
+        this.web3,
+        this.extensions,
+        fromBlock,
+        toBlock
+      );
+      return groupCdeData(fromBlock, toBlock, ungroupedCdeData);
+    } catch (err) {
+      doLog(`[paima-funnel::readPresyncData] Exception occurred while reading blocks: ${err}`);
       return [];
     }
-
-    const ungroupedCdeData = await getUngroupedCdeData(
-      this.web3,
-      this.extensions,
-      fromBlock,
-      toBlock
-    );
-    return groupCdeData(fromBlock, toBlock, ungroupedCdeData);
   };
 
   // Will return [-1, -2] if the range is determined to be empty.
