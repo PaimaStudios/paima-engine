@@ -44,9 +44,24 @@ If you want to deploy to a network different than the networks configured in [`t
 When deploying contracts or executing admin functions using the deploy script, two config files are used to determine the values used:
 
 -   [`contract-addresses.json`](./contract-addresses.json) is used to retrieve addresses of the latest deployed contracts. It is updated automatically when a new contract is deployed, so you should never need to edit it manually, unless you want to perform actions with different instances of deployed contracts;
--   [`deploy-config.json`](./deploy-config.json) contain all other config data for the scripts.
+-   [`deploy-config.json`](./deploy-config.json) contains all other config data for the scripts. The individual fields are grouped by the contract they apply to:
+    -   `Nft`:
+        -   `name`
+        -   `symbol`
+        -   `supply` &ndash; the maximum number of NFTs that can be minted;
+        -   `owner` &ndash; the owner of the contract. Only used for the "transfer ownership" admin function, during deployment, the address of the deploying wallet will be used;
+        -   `minter` &ndash; intended primarily for the "add minter" admin function, also used during deployment if not empty;
+        -   `baseUri`
+    -   `NftSale`:
+        -   `price` &ndash; the price of buying an NFT through the sale contract, used both for `NativeNftSale` and `Erc20NftSale`. For native sale the price is multiplied by `10^decimals`;
+    -   `NativeNftSale`:
+        -   `decimals` &ndash; decimals of the underlying base currency of the chain, used for price calculation;
+        -   `owner` &ndash; see `Nft`'s `owner` field;
+    -   `Erc20NftSale`:
+        -   `currencies` &ndash; an object mapping symbols of supported ERC20 tokens to addresses of their contracts;
+        -   `owner` &ndash; see `Nft`'s `owner` field;
 
-Note that both these files contain separate sections for different networks.
+Both of these files contain separate sections for different networks, so when updating them, make sure you are applying your changes to the correct network.
 
 ### Deployed contract addresses
 
