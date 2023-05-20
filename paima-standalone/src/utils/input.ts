@@ -2,6 +2,7 @@ import { createInterface } from 'readline';
 import {
   prepareSDK,
   prepareTemplate,
+  prepareBatcher,
   checkForPackedGameCode,
   prepareContract,
   prepareDocumentation,
@@ -57,6 +58,10 @@ export const argumentRouter = async (): Promise<void> => {
 
     case 'webui':
       await startWebServer();
+      break;
+
+    case 'batcher':
+      await batcherCommand();
       break;
 
     default:
@@ -147,6 +152,12 @@ export const helpCommand = (): void => {
   doLog(`   webui     Starts Paima Game Input Tester WebUI.`);
   doLog(`   help      Shows list of commands currently available.`);
   doLog(`   version   Shows the version of used paima-engine.`);
+  doLog(`   batcher   Saves the bundled batcher project to your local filesystem.`);
+};
+
+// Batcher commant logic
+export const batcherCommand = async (): Promise<void> => {
+  prepareBatcher();
 };
 
 // Build middleware for specific .env file and launch webserver:
