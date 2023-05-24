@@ -20,18 +20,23 @@ export default async function getCdeData(
   return events.map((e: Transfer) => transferToCdeDatum(e, extension)).flat();
 }
 
-function transferToCdeDatum(event: Transfer, extension: ChainDataExtensionErc20Deposit): ChainDataExtensionDatum[] {
+function transferToCdeDatum(
+  event: Transfer,
+  extension: ChainDataExtensionErc20Deposit
+): ChainDataExtensionDatum[] {
   if (event.returnValues.to.toLowerCase() !== extension.depositAddress) {
     return [];
   }
-  return [{
-    cdeId: extension.cdeId,
-    cdeDatumType: ChainDataExtensionDatumType.ERC20Deposit,
-    blockNumber: event.blockNumber,
-    payload: {
-      from: event.returnValues.from.toLowerCase(),
-      value: event.returnValues.value,
+  return [
+    {
+      cdeId: extension.cdeId,
+      cdeDatumType: ChainDataExtensionDatumType.ERC20Deposit,
+      blockNumber: event.blockNumber,
+      payload: {
+        from: event.returnValues.from.toLowerCase(),
+        value: event.returnValues.value,
+      },
+      initializationPrefix: extension.initializationPrefix,
     },
-    initializationPrefix: extension.initializationPrefix
-  }];
+  ];
 }

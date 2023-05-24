@@ -1,5 +1,9 @@
 import { ChainDataExtensionDatumType, timeout } from '@paima/utils';
-import type { CdeErc20TransferDatum, ChainDataExtensionDatum, ChainDataExtensionErc20 } from '@paima/runtime';
+import type {
+  CdeErc20TransferDatum,
+  ChainDataExtensionDatum,
+  ChainDataExtensionErc20,
+} from '@paima/runtime';
 import type { Transfer } from '@paima/utils/src/contract-types/ERC20Contract';
 import { DEFAULT_FUNNEL_TIMEOUT } from '@paima/utils';
 

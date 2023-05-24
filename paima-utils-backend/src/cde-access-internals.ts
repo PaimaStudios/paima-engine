@@ -117,7 +117,7 @@ export async function internalGetTotalDeposited(
     return null;
   } else {
     return BigInt(results[0].total_deposited);
-  } 
+  }
 }
 
 export async function internalGetDonorsAboveThreshold(
@@ -125,10 +125,7 @@ export async function internalGetDonorsAboveThreshold(
   cdeId: number,
   threshold: bigint
 ): Promise<string[]> {
-  const results = await cdeErc20DepositSelectAll.run(
-    { cde_id: cdeId },
-    readonlyDBConn
-  );
+  const results = await cdeErc20DepositSelectAll.run({ cde_id: cdeId }, readonlyDBConn);
   const aboveThreshold = results.filter(res => BigInt(res.total_deposited) >= threshold);
   return aboveThreshold.map(res => res.wallet_address);
 }

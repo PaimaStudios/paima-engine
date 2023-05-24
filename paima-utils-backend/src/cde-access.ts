@@ -6,7 +6,7 @@ import {
   internalGetAllOwnedNfts,
   internalGetFungibleTokenBalance,
   internalGetTotalDeposited,
-  internalGetDonorsAboveThreshold
+  internalGetDonorsAboveThreshold,
 } from './cde-access-internals';
 
 // Fetch the owner of the NFT from the database

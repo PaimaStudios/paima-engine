@@ -3,7 +3,12 @@ import type { Pool } from 'pg';
 import { doLog, ENV } from '@paima/utils';
 import type { CdeErc20DepositDatum } from '@paima/runtime';
 import type { SQLUpdate } from '@paima/db';
-import { createScheduledData, cdeErc20DepositGetTotalDeposited, cdeErc20DepositInsertTotalDeposited, cdeErc20DepositUpdateTotalDeposited } from '@paima/db';
+import {
+  createScheduledData,
+  cdeErc20DepositGetTotalDeposited,
+  cdeErc20DepositInsertTotalDeposited,
+  cdeErc20DepositUpdateTotalDeposited,
+} from '@paima/db';
 
 export default async function processErc20Datum(
   readonlyDBConn: Pool,
