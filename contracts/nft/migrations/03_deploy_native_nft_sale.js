@@ -33,7 +33,7 @@ module.exports = async function (deployer, network, accounts) {
   const proxyAddress = proxyInstance.address;
 
   const nftInstance = await nft.deployed();
-  await nftInstance.setMinter(nftSaleAddress, options);
+  await nftInstance.setMinter(proxyAddress, options);
 
   addAddress(network, "NativeNftSale", nftSaleAddress);
   addAddress(network, "NativeProxy", proxyAddress);
