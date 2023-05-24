@@ -1,10 +1,10 @@
 import { ChainDataExtensionDatumType, timeout } from '@paima/utils';
-import type { CdeErc20TransferDatum, ChainDataExtensionDatum, ChainDataExtensionErc20 } from '@paima/runtime';
+import type { ChainDataExtensionDatum, ChainDataExtensionErc20Deposit } from '@paima/runtime';
 import type { Transfer } from '@paima/utils/src/contract-types/ERC20Contract';
 import { DEFAULT_FUNNEL_TIMEOUT } from '@paima/utils';
 
 export default async function getCdeData(
-  extension: ChainDataExtensionErc20,
+  extension: ChainDataExtensionErc20Deposit,
   fromBlock: number,
   toBlock: number
 ): Promise<ChainDataExtensionDatum[]> {
@@ -17,18 +17,21 @@ export default async function getCdeData(
     }),
     DEFAULT_FUNNEL_TIMEOUT
   )) as unknown as Transfer[];
-  return events.map((e: Transfer) => transferToCdeDatum(e, extension.cdeId));
+  return events.map((e: Transfer) => transferToCdeDatum(e, extension)).flat();
 }
 
-function transferToCdeDatum(event: Transfer, cdeId: number): CdeErc20TransferDatum {
-  return {
-    cdeId: cdeId,
-    cdeDatumType: ChainDataExtensionDatumType.ERC20Transfer,
+function transferToCdeDatum(event: Transfer, extension: ChainDataExtensionErc20Deposit): ChainDataExtensionDatum[] {
+  if (event.returnValues.to.toLowerCase() !== extension.depositAddress) {
+    return [];
+  }
+  return [{
+    cdeId: extension.cdeId,
+    cdeDatumType: ChainDataExtensionDatumType.ERC20Deposit,
     blockNumber: event.blockNumber,
     payload: {
       from: event.returnValues.from.toLowerCase(),
-      to: event.returnValues.to.toLowerCase(),
       value: event.returnValues.value,
     },
-  };
+    initializationPrefix: extension.initializationPrefix
+  }];
 }
