@@ -15,10 +15,12 @@ export const enum ChainDataExtensionType {
   ERC20 = 1,
   ERC721 = 2,
   PaimaERC721 = 3,
+  ERC20Deposit = 4,
 }
 
 export const enum ChainDataExtensionDatumType {
   ERC20Transfer,
+  ERC20Deposit,
   ERC721Mint,
   ERC721Transfer,
 }
