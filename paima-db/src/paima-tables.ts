@@ -108,7 +108,8 @@ CREATE TABLE chain_data_extensions (
   cde_name TEXT NOT NULL,
   contract_address TEXT NOT NULL,
   start_blockheight INTEGER NOT NULL,
-  scheduled_prefix TEXT
+  scheduled_prefix TEXT,
+  deposit_address TEXT
 );
 `;
 
@@ -122,6 +123,7 @@ const TABLE_DATA_CDE: TableData = {
     ['contract_address', 'text', 'NO', ''],
     ['start_blockheight', 'integer', 'NO', ''],
     ['scheduled_prefix', 'text', 'YES', ''],
+    ['deposit_address', 'text', 'YES', ''],
   ]),
   serialColumns: [],
   creationQuery: QUERY_CREATE_TABLE_CDE,
@@ -169,6 +171,27 @@ const TABLE_DATA_CDE_ERC721: TableData = {
   creationQuery: QUERY_CREATE_TABLE_CDE_ERC721,
 };
 
+const QUERY_CREATE_TABLE_CDE_ERC20_DEPOSIT = `
+CREATE TABLE cde_erc20_deposit_data (
+  cde_id INTEGER NOT NULL,
+  wallet_address TEXT NOT NULL,
+  total_deposited TEXT NOT NULL,
+  PRIMARY KEY (cde_id, wallet_address)
+);
+`;
+
+const TABLE_DATA_CDE_ERC20_DEPOSIT: TableData = {
+  tableName: 'cde_erc20_deposit_data',
+  primaryKeyColumns: ['cde_id', 'wallet_address'],
+  columnData: packTuples([
+    ['cde_id', 'integer', 'NO', ''],
+    ['wallet_address', 'text', 'NO', ''],
+    ['total_deposited', 'text', 'NO', ''],
+  ]),
+  serialColumns: [],
+  creationQuery: QUERY_CREATE_TABLE_CDE_ERC20_DEPOSIT,
+};
+
 export const TABLES: TableData[] = [
   TABLE_DATA_BLOCKHEIGHTS,
   TABLE_DATA_NONCES,
@@ -178,4 +201,5 @@ export const TABLES: TableData[] = [
   TABLE_DATA_CDE,
   TABLE_DATA_CDE_ERC20,
   TABLE_DATA_CDE_ERC721,
+  TABLE_DATA_CDE_ERC20_DEPOSIT
 ];

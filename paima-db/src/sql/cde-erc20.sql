@@ -1,7 +1,7 @@
 /* @name cdeErc20GetBalance */
 SELECT * FROM cde_erc20_data
-WHERE cde_id = :cde_id
-AND wallet_address = :wallet_address;
+WHERE cde_id = :cde_id!
+AND wallet_address = :wallet_address!;
 
 /* @name cdeErc20InsertBalance */
 INSERT INTO cde_erc20_data(

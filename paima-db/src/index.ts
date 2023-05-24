@@ -13,6 +13,7 @@ export * from './sql/cde-tracking.queries';
 export * from './sql/extensions.queries';
 export * from './sql/cde-erc20.queries';
 export * from './sql/cde-erc721.queries';
+export * from './sql/cde-erc20-deposit.queries';
 
 export {
   tx,
