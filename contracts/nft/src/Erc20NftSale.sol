@@ -32,10 +32,6 @@ contract Erc20NftSale is State, ERC1967, Ownable {
         address buyer
     );
 
-    constructor() {
-        typeMapper = new NftTypeMapper();
-    }
-
     function initialize(
         ERC20[] memory currencies,
         address owner,
@@ -51,6 +47,7 @@ contract Erc20NftSale is State, ERC1967, Ownable {
 
         nftPrice = _price;
         nftAddress = _nft;
+        typeMapper = new NftTypeMapper();
         _transferOwnership(owner);
 
         emit Initialized(currencies, owner, _nft);
@@ -58,22 +55,29 @@ contract Erc20NftSale is State, ERC1967, Ownable {
 
     /// @dev Purchases an NFT using approved token. NFTs are sold based on FIFO
     /// @param _tokenAddress Address of ERC20 token to use for payment
-    function buyWithToken(ERC20 _tokenAddress, address receiverAddress, NftType nftType)
-        external
-        returns (uint256)
-    {
+    function buyWithToken(
+        ERC20 _tokenAddress,
+        address receiverAddress,
+        NftType nftType
+    ) external returns (uint256) {
         require(
             tokenIsWhitelisted(_tokenAddress),
             "Erc20NftSale: token not whitelisted"
         );
-        require(receiverAddress != address(0), "Erc20NftSale: zero receiver address");
+        require(
+            receiverAddress != address(0),
+            "Erc20NftSale: zero receiver address"
+        );
 
         uint256 price = nftPrice;
 
         // transfer tokens from buyer to contract
         ERC20(_tokenAddress).transferFrom(msg.sender, address(this), price);
 
-        uint256 tokenId = Nft(nftAddress).mint(receiverAddress, typeMapper.getNftTypeString(nftType));
+        uint256 tokenId = Nft(nftAddress).mint(
+            receiverAddress,
+            typeMapper.getNftTypeString(nftType)
+        );
 
         if (!depositedCurrenciesMap[_tokenAddress]) {
             depositedCurrencies.push(_tokenAddress);
@@ -86,7 +90,10 @@ contract Erc20NftSale is State, ERC1967, Ownable {
     }
 
     function removeWhitelistedToken(ERC20 _token) external onlyOwner {
-        require(tokenIsWhitelisted(_token), "Erc20NftSale: token not whitelisted");
+        require(
+            tokenIsWhitelisted(_token),
+            "Erc20NftSale: token not whitelisted"
+        );
 
         ERC20[] memory supportedCurrenciesMem = supportedCurrencies;
 
