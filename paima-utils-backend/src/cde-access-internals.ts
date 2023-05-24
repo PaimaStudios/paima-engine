@@ -7,6 +7,8 @@ import {
   selectChainDataExtensionsByName,
   selectChainDataExtensionsByAddress,
   selectChainDataExtensionsByTypeAndAddress,
+  cdeErc20DepositGetTotalDeposited,
+  cdeErc20DepositSelectAll,
 } from '@paima/db';
 import type { ChainDataExtensionType } from '@paima/utils';
 
@@ -99,4 +101,34 @@ export async function internalGetFungibleTokenBalance(
   } else {
     return BigInt(results[0].balance);
   }
+}
+
+export async function internalGetTotalDeposited(
+  readonlyDBConn: Pool,
+  cdeId: number,
+  walletAddress: string
+): Promise<bigint | null> {
+  walletAddress = walletAddress.toLowerCase();
+  const results = await cdeErc20DepositGetTotalDeposited.run(
+    { cde_id: cdeId, wallet_address: walletAddress },
+    readonlyDBConn
+  );
+  if (results.length === 0) {
+    return null;
+  } else {
+    return BigInt(results[0].total_deposited);
+  } 
+}
+
+export async function internalGetDonorsAboveThreshold(
+  readonlyDBConn: Pool,
+  cdeId: number,
+  threshold: bigint
+): Promise<string[]> {
+  const results = await cdeErc20DepositSelectAll.run(
+    { cde_id: cdeId },
+    readonlyDBConn
+  );
+  const aboveThreshold = results.filter(res => BigInt(res.total_deposited) >= threshold);
+  return aboveThreshold.map(res => res.wallet_address);
 }
