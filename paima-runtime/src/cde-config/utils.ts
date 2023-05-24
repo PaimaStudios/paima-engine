@@ -5,6 +5,7 @@ import type { ChainDataExtension } from '../types';
 const CDE_TYPE_MAP: Record<string, ChainDataExtensionType> = {
   erc20: ChainDataExtensionType.ERC20,
   erc721: ChainDataExtensionType.ERC721,
+  "erc20-deposit": ChainDataExtensionType.ERC20Deposit
 };
 
 export function parseCdeType(typeString: string): ChainDataExtensionType {

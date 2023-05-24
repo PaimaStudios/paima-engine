@@ -15,6 +15,7 @@ interface CdeConfig {
   contractAddress: string;
   startBlockHeight: number;
   initializationPrefix: string;
+  depositAddress: string;
 }
 
 type CdeBase = Omit<ChainDataExtension, 'cdeType' | 'contract'>;
@@ -73,6 +74,9 @@ function parseSingleCdeConfig(config: any, cdeId: number): CdeConfig {
   const initializationPrefix =
     typeof config.initializationPrefix === 'string' ? config.initializationPrefix : '';
 
+  const depositAddress =
+    typeof config.depositAddress === 'string' ? config.depositAddress : '';
+
   return {
     cdeId,
     type,
@@ -80,6 +84,7 @@ function parseSingleCdeConfig(config: any, cdeId: number): CdeConfig {
     contractAddress,
     startBlockHeight,
     initializationPrefix,
+    depositAddress
   };
 }
 
@@ -92,6 +97,7 @@ async function instantiateExtension(config: CdeConfig, web3: Web3): Promise<Chai
     contractAddress: config.contractAddress,
     startBlockHeight: config.startBlockHeight,
     initializationPrefix: config.initializationPrefix,
+    depositAddress: config.depositAddress
   };
 
   switch (cdeType) {

@@ -56,6 +56,7 @@ async function storeCdeConfig(config: ChainDataExtension[], DBConn: Pool): Promi
           contract_address: cde.contractAddress,
           start_blockheight: cde.startBlockHeight,
           scheduled_prefix: cde.initializationPrefix,
+          deposit_address: cde.depositAddress
         },
         DBConn
       );
