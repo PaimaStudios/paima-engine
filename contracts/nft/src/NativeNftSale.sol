@@ -27,36 +27,34 @@ contract NativeNftSale is BaseState, ERC1967, Ownable {
         address buyer
     );
 
-    constructor() {
-        typeMapper = new NftTypeMapper();
-    }
-
-    function initialize(
-        address owner,
-        address _nft,
-        uint256 _price
-    ) public {
+    function initialize(address owner, address _nft, uint256 _price) public {
         require(!initialized, "Contract already initialized");
         initialized = true;
 
         nftPrice = _price;
         nftAddress = _nft;
+        typeMapper = new NftTypeMapper();
         _transferOwnership(owner);
 
         emit Initialized(owner, _nft);
     }
 
-    function buyNft(address receiverAddress, NftType nftType)
-        external
-        payable
-        returns (uint256)
-    {
+    function buyNft(
+        address receiverAddress,
+        NftType nftType
+    ) external payable returns (uint256) {
         require(msg.value == nftPrice, "NativeNftSale: incorrect value");
-        require(receiverAddress != address(0), "NativeNftSale: zero receiver address");
+        require(
+            receiverAddress != address(0),
+            "NativeNftSale: zero receiver address"
+        );
 
         uint256 price = nftPrice;
 
-        uint256 tokenId = Nft(nftAddress).mint(receiverAddress, typeMapper.getNftTypeString(nftType));
+        uint256 tokenId = Nft(nftAddress).mint(
+            receiverAddress,
+            typeMapper.getNftTypeString(nftType)
+        );
 
         emit BuyNFT(tokenId, price, receiverAddress, msg.sender);
 
