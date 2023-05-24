@@ -74,7 +74,8 @@ function parseSingleCdeConfig(config: any, cdeId: number): CdeConfig {
   const initializationPrefix =
     typeof config.initializationPrefix === 'string' ? config.initializationPrefix : '';
 
-  const depositAddress = typeof config.depositAddress === 'string' ? config.depositAddress : '';
+  const depositAddress =
+    typeof config.depositAddress === 'string' ? config.depositAddress.toLowerCase() : '';
 
   return {
     cdeId,
