@@ -1,5 +1,9 @@
 import { ChainDataExtensionDatumType, timeout } from '@paima/utils';
-import type { ChainDataExtensionDatum, ChainDataExtensionErc20 } from '@paima/runtime';
+import type {
+  CdeErc20TransferDatum,
+  ChainDataExtensionDatum,
+  ChainDataExtensionErc20,
+} from '@paima/runtime';
 import type { Transfer } from '@paima/utils/src/contract-types/ERC20Contract';
 import { DEFAULT_FUNNEL_TIMEOUT } from '@paima/utils';
 
@@ -20,7 +24,7 @@ export default async function getCdeData(
   return events.map((e: Transfer) => transferToCdeDatum(e, extension.cdeId));
 }
 
-function transferToCdeDatum(event: Transfer, cdeId: number): ChainDataExtensionDatum {
+function transferToCdeDatum(event: Transfer, cdeId: number): CdeErc20TransferDatum {
   return {
     cdeId: cdeId,
     cdeDatumType: ChainDataExtensionDatumType.ERC20Transfer,

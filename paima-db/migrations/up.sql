@@ -34,7 +34,8 @@ CREATE TABLE chain_data_extensions (
   cde_name TEXT NOT NULL,
   contract_address TEXT NOT NULL,
   start_blockheight INTEGER NOT NULL,
-  scheduled_prefix TEXT
+  scheduled_prefix TEXT,
+  deposit_address TEXT
 );
 
 CREATE TABLE cde_erc20_data (
@@ -49,4 +50,11 @@ CREATE TABLE cde_erc721_data (
   token_id TEXT NOT NULL,
   nft_owner TEXT NOT NULL,
   PRIMARY KEY (cde_id, token_id)
+);
+
+CREATE TABLE cde_erc20_deposit_data (
+  cde_id INTEGER NOT NULL,
+  wallet_address TEXT NOT NULL,
+  total_deposited TEXT NOT NULL,
+  PRIMARY KEY (cde_id, wallet_address)
 );

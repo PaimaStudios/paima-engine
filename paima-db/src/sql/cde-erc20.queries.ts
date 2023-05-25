@@ -3,8 +3,8 @@ import { PreparedQuery } from '@pgtyped/query';
 
 /** 'CdeErc20GetBalance' parameters type */
 export interface ICdeErc20GetBalanceParams {
-  cde_id: number | null | void;
-  wallet_address: string | null | void;
+  cde_id: number;
+  wallet_address: string;
 }
 
 /** 'CdeErc20GetBalance' return type */
@@ -20,14 +20,14 @@ export interface ICdeErc20GetBalanceQuery {
   result: ICdeErc20GetBalanceResult;
 }
 
-const cdeErc20GetBalanceIR: any = {"usedParamSet":{"cde_id":true,"wallet_address":true},"params":[{"name":"cde_id","required":false,"transform":{"type":"scalar"},"locs":[{"a":44,"b":50}]},{"name":"wallet_address","required":false,"transform":{"type":"scalar"},"locs":[{"a":73,"b":87}]}],"statement":"SELECT * FROM cde_erc20_data\nWHERE cde_id = :cde_id\nAND wallet_address = :wallet_address"};
+const cdeErc20GetBalanceIR: any = {"usedParamSet":{"cde_id":true,"wallet_address":true},"params":[{"name":"cde_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":44,"b":51}]},{"name":"wallet_address","required":true,"transform":{"type":"scalar"},"locs":[{"a":74,"b":89}]}],"statement":"SELECT * FROM cde_erc20_data\nWHERE cde_id = :cde_id!\nAND wallet_address = :wallet_address!"};
 
 /**
  * Query generated from SQL:
  * ```
  * SELECT * FROM cde_erc20_data
- * WHERE cde_id = :cde_id
- * AND wallet_address = :wallet_address
+ * WHERE cde_id = :cde_id!
+ * AND wallet_address = :wallet_address!
  * ```
  */
 export const cdeErc20GetBalance = new PreparedQuery<ICdeErc20GetBalanceParams,ICdeErc20GetBalanceResult>(cdeErc20GetBalanceIR);

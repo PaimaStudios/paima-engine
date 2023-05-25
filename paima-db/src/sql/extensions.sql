@@ -25,12 +25,14 @@ INSERT INTO chain_data_extensions(
     cde_name,
     contract_address,
     start_blockheight,
-    scheduled_prefix
+    scheduled_prefix,
+    deposit_address
 ) VALUES (
     :cde_id!,
     :cde_type!,
     :cde_name!,
     :contract_address!,
     :start_blockheight!,
-    :scheduled_prefix
+    :scheduled_prefix,
+    :deposit_address
 );

@@ -6,6 +6,7 @@ import type { ChainDataExtensionDatum } from '@paima/runtime';
 import processErc20TransferDatum from './cde-erc20-transfer';
 import processErc721TransferDatum from './cde-erc721-transfer';
 import processErc721MintDatum from './cde-erc721-mint';
+import processErc20DepositDatum from './cde-erc20-deposit';
 import type { SQLUpdate } from '@paima/db';
 import { getSpecificCdeBlockheight } from '@paima/db';
 
@@ -20,6 +21,8 @@ export async function cdeTransitionFunction(
       return await processErc721TransferDatum(readonlyDBConn, cdeDatum);
     case ChainDataExtensionDatumType.ERC721Mint:
       return await processErc721MintDatum(cdeDatum);
+    case ChainDataExtensionDatumType.ERC20Deposit:
+      return await processErc20DepositDatum(readonlyDBConn, cdeDatum);
     default:
       throw new Error(`[paima-sm] Unknown type on CDE datum: ${cdeDatum}`);
   }
