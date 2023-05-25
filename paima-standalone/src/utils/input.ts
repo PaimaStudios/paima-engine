@@ -206,6 +206,9 @@ const pickGameTemplate = async (templateArg: string): Promise<string> => {
       case 'open-world':
         displayName = 'Open World (JavaScript FE)';
         break;
+      case 'nft-lvlup':
+        displayName = 'NFT LevelUp (Stateful NFTs)';
+        break;
       default:
         displayName = templateName;
     }
