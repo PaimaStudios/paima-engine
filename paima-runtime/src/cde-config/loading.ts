@@ -124,6 +124,12 @@ async function instantiateExtension(config: CdeConfig, web3: Web3): Promise<Chai
           contract: getErc721Contract(config.contractAddress, web3),
         };
       }
+    case ChainDataExtensionType.ERC20Deposit:
+      return {
+        ...cdeBase,
+        cdeType,
+        contract: getErc20Contract(config.contractAddress, web3),
+      };
     default:
       throw new Error(`[cde-config] Invalid cde type: ${cdeType}`);
   }
