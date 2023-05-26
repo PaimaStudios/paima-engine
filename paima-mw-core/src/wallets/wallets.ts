@@ -1,5 +1,10 @@
 import { buildEndpointErrorFxn, FE_ERR_SPECIFIC_WALLET_NOT_INSTALLED } from '../errors';
-import { setBatchedCardanoMode, setBatchedPolkadotMode, setUnbatchedMode } from '../state';
+import {
+  setBatchedCardanoMode,
+  setBatchedEthMode,
+  setBatchedPolkadotMode,
+  setUnbatchedMode,
+} from '../state';
 import type { Result, Wallet } from '../types';
 import { cardanoLoginWrapper } from './cardano';
 import { evmLoginWrapper } from './evm';
@@ -27,13 +32,20 @@ export function stringToWalletMode(loginType: string): WalletMode {
   }
 }
 
-export async function specificWalletLogin(walletMode: WalletMode): Promise<Result<Wallet>> {
+export async function specificWalletLogin(
+  walletMode: WalletMode,
+  preferBatchedMode: boolean
+): Promise<Result<Wallet>> {
   const errorFxn = buildEndpointErrorFxn('specificWalletLogin');
 
   switch (walletMode) {
     case WalletMode.METAMASK:
     case WalletMode.EVM_FLINT:
-      setUnbatchedMode();
+      if (preferBatchedMode) {
+        setBatchedEthMode();
+      } else {
+        setUnbatchedMode();
+      }
       return await evmLoginWrapper(walletMode);
     case WalletMode.CARDANO_FLINT:
     case WalletMode.CARDANO_NUFI:
