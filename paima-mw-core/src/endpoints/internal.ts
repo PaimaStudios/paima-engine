@@ -17,9 +17,12 @@ import {
 import type { PostingInfo, PostingModeSwitchResult, Result, Wallet } from '../types';
 import { specificWalletLogin, stringToWalletMode } from '../wallets/wallets';
 
-export async function userWalletLoginWithoutChecks(loginType: string): Promise<Result<Wallet>> {
+export async function userWalletLoginWithoutChecks(
+  loginType: string,
+  preferBatchedMode = false
+): Promise<Result<Wallet>> {
   const walletMode = stringToWalletMode(loginType);
-  return await specificWalletLogin(walletMode);
+  return await specificWalletLogin(walletMode, preferBatchedMode);
 }
 
 export async function cardanoWalletLoginEndpoint(): Promise<Result<Wallet>> {
