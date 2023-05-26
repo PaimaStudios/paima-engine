@@ -2,7 +2,7 @@ import { AddressType } from '@paima/utils';
 
 import type { BatchedSubunit, SignFunction } from '../types';
 import { signMessageCardano } from '../wallets/cardano';
-import { signMessageEth } from '../wallets/metamask';
+import { signMessageEth } from '../wallets/evm';
 import { signMessagePolkadot } from '../wallets/polkadot';
 
 export function batchedToJsonString(b: BatchedSubunit): string {

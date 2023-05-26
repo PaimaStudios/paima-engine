@@ -1,7 +1,7 @@
 import { buildEndpointErrorFxn, PaimaMiddlewareErrorCode } from '../errors';
 import { localRemoteVersionsCompatible } from '../helpers/auxiliary-queries';
 import { checkCardanoWalletStatus } from '../wallets/cardano';
-import { checkEthWalletStatus } from '../wallets/metamask';
+import { checkEthWalletStatus } from '../wallets/evm';
 import { specificWalletLogin, stringToWalletMode } from '../wallets/wallets';
 import { getPostingMode, PostingMode } from '../state';
 import type { Result, OldResult, Wallet } from '../types';

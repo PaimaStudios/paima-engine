@@ -2,7 +2,7 @@ import { buildEndpointErrorFxn, FE_ERR_SPECIFIC_WALLET_NOT_INSTALLED } from '../
 import { setBatchedCardanoMode, setBatchedPolkadotMode, setUnbatchedMode } from '../state';
 import type { Result, Wallet } from '../types';
 import { cardanoLoginWrapper } from './cardano';
-import { evmLoginWrapper } from './metamask';
+import { evmLoginWrapper } from './evm';
 import { polkadotLoginWrapper } from './polkadot';
 import { WalletMode } from './wallet-modes';
 
