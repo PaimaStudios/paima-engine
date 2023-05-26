@@ -23,8 +23,7 @@ import { postConciselyEncodedData, postConciseData } from './helpers/posting';
 import { buildQuery, buildBackendQuery } from './helpers/query-constructors';
 import { pushLog } from './helpers/logging';
 
-import { initAccountGuard } from './wallets/metamask';
-import { sendWalletTransaction as sendMetamaskWalletTransaction } from './wallets/metamask';
+import { initAccountGuard, sendWalletTransaction as sendEvmWalletTransaction } from './wallets/evm';
 import { signMessageCardano } from './wallets/cardano';
 import { polkadotLoginRaw, signMessagePolkadot } from './wallets/polkadot';
 
@@ -94,7 +93,7 @@ export {
   userWalletLoginWithoutChecks,
   automaticWalletLogin,
   updateBackendUri,
-  sendMetamaskWalletTransaction,
+  sendEvmWalletTransaction,
   signMessageCardano,
   getRemoteBackendVersion,
   polkadotLoginRaw,

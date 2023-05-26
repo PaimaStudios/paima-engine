@@ -5,7 +5,7 @@ import type { UserSignature } from '@paima/utils';
 import {
   buildEndpointErrorFxn,
   PaimaMiddlewareErrorCode,
-  FE_ERR_METAMASK_NOT_INSTALLED,
+  FE_ERR_SPECIFIC_WALLET_NOT_INSTALLED,
 } from '../errors';
 import {
   getActiveAddress,
@@ -17,20 +17,32 @@ import {
   getChainName,
   getChainUri,
   getEthAddress,
+  getEvmActiveWallet,
+  getEvmApi,
   setEthAddress,
+  setEvmActiveWallet,
+  setEvmApi,
 } from '../state';
-import type { OldResult, Result, Wallet } from '../types';
+import type { EvmApi, OldResult, Result, Wallet } from '../types';
 import { pushLog } from '../helpers/logging';
 import { updateFee } from '../helpers/posting';
 
+import { WalletMode } from './wallet-modes';
+
+/**
+ * NOTE: https://eips.ethereum.org/EIPS/eip-5749
+ */
+
+const SUPPORTED_WALLET_IDS = ['flint', 'metamask'];
+
 const { utf8ToHex } = pkg;
 
-interface MetamaskSwitchError {
+interface SwitchError {
   code: number;
 }
 
-export async function rawWalletLogin(): Promise<string> {
-  const accounts = (await window.ethereum.request({
+async function rawWalletLogin(): Promise<string> {
+  const accounts = (await getEvmApi()?.request({
     method: 'eth_requestAccounts',
   })) as string[];
   if (!accounts || accounts.length === 0) {
@@ -41,7 +53,7 @@ export async function rawWalletLogin(): Promise<string> {
 }
 
 export async function sendWalletTransaction(tx: Record<string, any>): Promise<string> {
-  const hash = await window.ethereum.request({
+  const hash = await getEvmApi()?.request({
     method: 'eth_sendTransaction',
     params: [tx],
   });
@@ -52,24 +64,24 @@ export async function sendWalletTransaction(tx: Record<string, any>): Promise<st
   return hash;
 }
 
-export async function switchChain(): Promise<boolean> {
+async function switchChain(): Promise<boolean> {
   const errorFxn = buildEndpointErrorFxn('switchChain');
 
   const CHAIN_NOT_ADDED_ERROR_CODE = 4902;
   const hexChainId = '0x' + getChainId().toString(16);
 
   try {
-    await window.ethereum.request({
+    await getEvmApi()?.request({
       method: 'wallet_switchEthereumChain',
       params: [{ chainId: hexChainId }],
     });
     return await verifyWalletChain();
   } catch (switchError) {
-    // This error code indicates that the chain has not been added to MetaMask.
-    const se = switchError as MetamaskSwitchError;
+    // This error code indicates that the chain has not been added to the wallet.
+    const se = switchError as SwitchError;
     if (se.hasOwnProperty('code') && se.code === CHAIN_NOT_ADDED_ERROR_CODE) {
       try {
-        await window.ethereum.request({
+        await getEvmApi()?.request({
           method: 'wallet_addEthereumChain',
           params: [
             {
@@ -97,9 +109,9 @@ export async function switchChain(): Promise<boolean> {
   }
 }
 
-export async function verifyWalletChain(): Promise<boolean> {
+async function verifyWalletChain(): Promise<boolean> {
   try {
-    const walletChain = await window.ethereum.request({ method: 'eth_chainId' });
+    const walletChain = await getEvmApi()?.request({ method: 'eth_chainId' });
     return parseInt(walletChain as string) === getChainId();
   } catch (e) {
     pushLog('[verifyWalletChain] error:', e);
@@ -109,7 +121,7 @@ export async function verifyWalletChain(): Promise<boolean> {
 
 export async function signMessageEth(userAddress: string, message: string): Promise<UserSignature> {
   const hexMessage = utf8ToHex(message);
-  const signature = await window.ethereum.request({
+  const signature = await getEvmApi()?.request({
     method: 'personal_sign',
     params: [hexMessage, userAddress, ''],
   });
@@ -120,6 +132,10 @@ export async function signMessageEth(userAddress: string, message: string): Prom
   return signature;
 }
 
+/**
+ * Metamask specific address switch detection.
+ * Not supported by Flint.
+ */
 export async function initAccountGuard(): Promise<void> {
   // Update the selected Eth address if the user changes after logging in.
   window.ethereum.on('accountsChanged', newAccounts => {
@@ -139,30 +155,70 @@ export async function checkEthWalletStatus(): Promise<OldResult> {
 
   try {
     if (!(await verifyWalletChain())) {
-      return errorFxn(PaimaMiddlewareErrorCode.METAMASK_WRONG_CHAIN);
+      return errorFxn(PaimaMiddlewareErrorCode.EVM_WRONG_CHAIN);
     }
   } catch (err) {
-    return errorFxn(PaimaMiddlewareErrorCode.METAMASK_CHAIN_VERIFICATION, err);
+    return errorFxn(PaimaMiddlewareErrorCode.EVM_CHAIN_VERIFICATION, err);
   }
 
   return { success: true, message: '' };
 }
 
-export async function metamaskLoginWrapper(): Promise<Result<Wallet>> {
-  const errorFxn = buildEndpointErrorFxn('metamaskLoginWrapper');
-
-  if (typeof window.ethereum === 'undefined') {
-    return errorFxn(
-      PaimaMiddlewareErrorCode.METAMASK_NOT_INSTALLED,
-      undefined,
-      FE_ERR_METAMASK_NOT_INSTALLED
-    );
+function evmApiInitialize(walletId: string): void {
+  if (getEvmActiveWallet() === walletId) {
+    return;
   }
 
+  if (!SUPPORTED_WALLET_IDS.includes(walletId)) {
+    throw new Error(`[evmApiInitialize] EVM wallet "${walletId}" not supported`);
+  }
+  switch (walletId) {
+    case 'flint':
+      setEvmApi(window.evmproviders?.flint);
+      break;
+    case 'metamask':
+      setEvmApi(window.ethereum as EvmApi);
+      break;
+  }
+}
+
+function evmWalletModeToName(walletMode: WalletMode): string {
+  switch (walletMode) {
+    case WalletMode.METAMASK:
+      return 'metamask';
+    case WalletMode.EVM_FLINT:
+      return 'flint';
+    default:
+      return '';
+  }
+}
+
+export async function evmLoginWrapper(walletMode: WalletMode): Promise<Result<Wallet>> {
+  const errorFxn = buildEndpointErrorFxn('evmLoginWrapper');
+
+  const walletName = evmWalletModeToName(walletMode);
+  if (!walletName) {
+    return errorFxn(PaimaMiddlewareErrorCode.WALLET_NOT_SUPPORTED);
+  }
+  console.log(`[evmLoginWrapper] Attempting to log into ${walletName}`);
+
   try {
+    evmApiInitialize(walletName);
+
+    if (typeof getEvmApi() === 'undefined') {
+      return errorFxn(
+        PaimaMiddlewareErrorCode.EVM_WALLET_NOT_INSTALLED,
+        undefined,
+        FE_ERR_SPECIFIC_WALLET_NOT_INSTALLED
+      );
+    }
+
     await rawWalletLogin();
+    setEvmActiveWallet(walletName);
   } catch (err) {
-    return errorFxn(PaimaMiddlewareErrorCode.METAMASK_LOGIN);
+    console.log(`[evmLoginWrapper] Error while logging into wallet ${walletName}`);
+
+    return errorFxn(PaimaMiddlewareErrorCode.EVM_LOGIN, err);
   }
 
   try {
@@ -175,11 +231,11 @@ export async function metamaskLoginWrapper(): Promise<Result<Wallet>> {
   try {
     if (!(await verifyWalletChain())) {
       if (!(await switchChain())) {
-        return errorFxn(PaimaMiddlewareErrorCode.METAMASK_CHAIN_SWITCH);
+        return errorFxn(PaimaMiddlewareErrorCode.EVM_CHAIN_SWITCH);
       }
     }
   } catch (err) {
-    return errorFxn(PaimaMiddlewareErrorCode.METAMASK_CHAIN_SWITCH, err);
+    return errorFxn(PaimaMiddlewareErrorCode.EVM_CHAIN_SWITCH, err);
   }
 
   return {

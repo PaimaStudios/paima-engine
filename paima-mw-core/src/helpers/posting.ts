@@ -28,7 +28,7 @@ import type {
 import { batchedToJsonString, buildBatchedSubunit } from './data-processing';
 import { buildDirectTx } from './transaction-building';
 import { batcherQuerySubmitUserInput, batcherQueryTrackUserInput } from './query-constructors';
-import { sendWalletTransaction as sendMetamaskWalletTransaction } from '../wallets/metamask';
+import { sendWalletTransaction as sendEvmWalletTransaction } from '../wallets/evm';
 import { sendWalletTransaction as sendTruffleWalletTransaction } from '../wallets/truffle';
 import { postDataToEndpoint } from './general';
 import { pushLog } from './logging';
@@ -93,7 +93,7 @@ export async function postConciselyEncodedData(gameInput: string): Promise<Resul
 
   switch (postingMode) {
     case PostingMode.UNBATCHED:
-      return await postString(sendMetamaskWalletTransaction, getEthAddress(), gameInput);
+      return await postString(sendEvmWalletTransaction, getEthAddress(), gameInput);
     case PostingMode.BATCHED_ETH:
       return await buildBatchedSubunit(
         AddressType.EVM,

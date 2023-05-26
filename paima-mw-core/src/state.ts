@@ -11,7 +11,7 @@ import type {
 } from '@paima/utils';
 import { initWeb3 } from '@paima/utils';
 import { PaimaMiddlewareErrorCode, paimaErrorMessageFxn } from './errors';
-import type { CardanoApi, PolkadotSignFxn, PostingInfo, PostingModeString } from './types';
+import type { CardanoApi, EvmApi, PolkadotSignFxn, PostingInfo, PostingModeString } from './types';
 import type { HDWalletProvider } from './wallets/truffle';
 
 export const enum PostingMode {
@@ -51,6 +51,9 @@ const deployment: Deployment = ENV.DEPLOYMENT as Deployment;
 let postingMode: PostingMode = PostingMode.UNBATCHED;
 
 let ethAddress: ETHAddress = '';
+let evmApi: EvmApi = undefined;
+let evmActiveWallet: string = '';
+
 let truffleAddress: ETHAddress = '';
 let truffleProvider: HDWalletProvider | undefined = undefined;
 let truffleWeb3: Web3 | undefined = undefined;
@@ -101,6 +104,10 @@ export const setAutomaticMode = (): PostingMode => setPostingMode(PostingMode.AU
 export const setEthAddress = (addr: ETHAddress): ETHAddress => (ethAddress = addr);
 export const getEthAddress = (): ETHAddress => ethAddress;
 export const ethConnected = (): boolean => ethAddress !== '';
+export const setEvmApi = (api: EvmApi): EvmApi => (evmApi = api);
+export const getEvmApi = (): EvmApi => evmApi;
+export const setEvmActiveWallet = (newWallet: string): string => (evmActiveWallet = newWallet);
+export const getEvmActiveWallet = (): string => evmActiveWallet;
 
 export const setCardanoAddress = (addr: CardanoAddress): CardanoAddress => (cardanoAddress = addr);
 export const getCardanoAddress = (): CardanoAddress => cardanoAddress;
@@ -161,7 +168,8 @@ export const getActiveAddress = (): string => {
       return truffleAddress;
     default:
       const errorCode = PaimaMiddlewareErrorCode.INTERNAL_INVALID_POSTING_MODE;
-      throw new Error(paimaErrorMessageFxn(errorCode));
+      const errorMessage = `${paimaErrorMessageFxn(errorCode)}: ${postingMode}`;
+      throw new Error(errorMessage);
   }
 };
 
