@@ -1,3 +1,4 @@
+import type { MetaMaskInpageProvider } from '@metamask/providers';
 import type {
   AddressType,
   Hash,
@@ -35,6 +36,7 @@ interface PostingModeSwitchSuccessfulResult extends PostingInfo {
 export type SignFunction = (userAddress: WalletAddress, message: string) => Promise<UserSignature>;
 
 export type CardanoApi = any;
+export type EvmApi = MetaMaskInpageProvider | undefined;
 
 export type PolkadotSignFxn = any;
 
