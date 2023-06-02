@@ -3,6 +3,7 @@ import type { Pool } from 'pg';
 import {
   cdeErc20GetBalance,
   cdeErc721GetOwnedNfts,
+  cdeErc721GetAllOwnedNfts,
   cdeErc721GetOwner,
   selectChainDataExtensionsByName,
   selectChainDataExtensionsByAddress,
@@ -10,7 +11,7 @@ import {
   cdeErc20DepositGetTotalDeposited,
   cdeErc20DepositSelectAll,
 } from '@paima/db';
-import type { ChainDataExtensionType } from '@paima/utils';
+import type { ChainDataExtensionType, OwnedNftsResponse } from '@paima/utils';
 
 /* Functions to retrieve CDE ID: */
 
@@ -74,6 +75,19 @@ export async function internalGetNftOwner(
 }
 
 export async function internalGetAllOwnedNfts(
+  readonlyDBConn: Pool,
+  ownerAddress: string
+): Promise<OwnedNftsResponse[]> {
+  ownerAddress = ownerAddress.toLowerCase();
+
+  const results = await cdeErc721GetAllOwnedNfts.run({ nft_owner: ownerAddress }, readonlyDBConn);
+  return results.map(row => ({
+    cdeName: row.cde_name,
+    tokenId: BigInt(row.token_id),
+  }));
+}
+
+export async function internalGetOwnedNfts(
   readonlyDBConn: Pool,
   cdeId: number,
   ownerAddress: string

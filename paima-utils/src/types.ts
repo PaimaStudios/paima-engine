@@ -36,3 +36,8 @@ export interface SubmittedData {
   dryRun?: boolean;
 }
 export type SubmittedChainData = SubmittedData;
+
+export interface OwnedNftsResponse {
+  cdeName: string;
+  tokenId: bigint;
+}
