@@ -3,13 +3,17 @@ import type { Pool } from 'pg';
 import {
   getCdeIdByName,
   internalGetNftOwner,
-  internalGetAllOwnedNfts,
+  internalGetOwnedNfts,
   internalGetFungibleTokenBalance,
   internalGetTotalDeposited,
   internalGetDonorsAboveThreshold,
+  internalGetAllOwnedNfts,
 } from './cde-access-internals';
+import type { OwnedNftsResponse } from '@paima/utils';
 
-// Fetch the owner of the NFT from the database
+/**
+ * Fetch the owner of the NFT from the database
+ */
 export async function getNftOwner(
   readonlyDBConn: Pool,
   cdeName: string,
@@ -20,7 +24,9 @@ export async function getNftOwner(
   return await internalGetNftOwner(readonlyDBConn, cdeId, nftId);
 }
 
-// Check if a given address is the owner of an nft
+/**
+ * Check if a given address is the owner of an nft
+ */
 export async function isNftOwner(
   readonlyDBConn: Pool,
   cdeName: string,
@@ -32,18 +38,32 @@ export async function isNftOwner(
   return false;
 }
 
-// Fetch all NFTs the owner has for a given contract
+/**
+ * Fetch all NFTs the owner has (across all CDEs)
+ */
 export async function getAllOwnedNfts(
+  readonlyDBConn: Pool,
+  ownerAddress: string
+): Promise<OwnedNftsResponse[]> {
+  return await internalGetAllOwnedNfts(readonlyDBConn, ownerAddress);
+}
+
+/**
+ * Fetch all NFTs the owner has for a given contract
+ */
+export async function getOwnedNfts(
   readonlyDBConn: Pool,
   cdeName: string,
   ownerAddress: string
 ): Promise<bigint[]> {
   const cdeId = await getCdeIdByName(readonlyDBConn, cdeName);
   if (cdeId === null) return [];
-  return await internalGetAllOwnedNfts(readonlyDBConn, cdeId, ownerAddress);
+  return await internalGetOwnedNfts(readonlyDBConn, cdeId, ownerAddress);
 }
 
-// Fetch the ERC-20 balance of a given address
+/**
+ * Fetch the ERC-20 balance of a given address
+ */
 export async function getFungibleTokenBalance(
   readonlyDBConn: Pool,
   cdeName: string,
@@ -54,7 +74,9 @@ export async function getFungibleTokenBalance(
   return await internalGetFungibleTokenBalance(readonlyDBConn, cdeId, walletAddress);
 }
 
-// Fetch the total ERC-20 amount deposited to deposit address from given address
+/**
+ * Fetch the total ERC-20 amount deposited to deposit address from given address
+ */
 export async function totalAmountDeposited(
   readonlyDBConn: Pool,
   cdeName: string,
@@ -65,7 +87,9 @@ export async function totalAmountDeposited(
   return await internalGetTotalDeposited(readonlyDBConn, cdeId, walletAddress);
 }
 
-// Fetch all addresses which deposited more than the given ERC-20 amount to deposit address
+/**
+ * Fetch all addresses which deposited more than the given ERC-20 amount to deposit address
+ */
 export async function findUsersWithDepositsGreaterThan(
   readonlyDBConn: Pool,
   cdeName: string,

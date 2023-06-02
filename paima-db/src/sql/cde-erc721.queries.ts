@@ -131,3 +131,33 @@ const cdeErc721UpdateOwnerIR: any = {"usedParamSet":{"nft_owner":true,"cde_id":t
 export const cdeErc721UpdateOwner = new PreparedQuery<ICdeErc721UpdateOwnerParams,ICdeErc721UpdateOwnerResult>(cdeErc721UpdateOwnerIR);
 
 
+/** 'CdeErc721GetAllOwnedNfts' parameters type */
+export interface ICdeErc721GetAllOwnedNftsParams {
+  nft_owner: string;
+}
+
+/** 'CdeErc721GetAllOwnedNfts' return type */
+export interface ICdeErc721GetAllOwnedNftsResult {
+  cde_name: string;
+  token_id: string;
+}
+
+/** 'CdeErc721GetAllOwnedNfts' query type */
+export interface ICdeErc721GetAllOwnedNftsQuery {
+  params: ICdeErc721GetAllOwnedNftsParams;
+  result: ICdeErc721GetAllOwnedNftsResult;
+}
+
+const cdeErc721GetAllOwnedNftsIR: any = {"usedParamSet":{"nft_owner":true},"params":[{"name":"nft_owner","required":true,"transform":{"type":"scalar"},"locs":[{"a":150,"b":160}]}],"statement":"SELECT cde_name, token_id  FROM cde_erc721_data\nJOIN chain_data_extensions ON chain_data_extensions.cde_id = cde_erc721_data.cde_id\nWHERE nft_owner = :nft_owner!"};
+
+/**
+ * Query generated from SQL:
+ * ```
+ * SELECT cde_name, token_id  FROM cde_erc721_data
+ * JOIN chain_data_extensions ON chain_data_extensions.cde_id = cde_erc721_data.cde_id
+ * WHERE nft_owner = :nft_owner!
+ * ```
+ */
+export const cdeErc721GetAllOwnedNfts = new PreparedQuery<ICdeErc721GetAllOwnedNftsParams,ICdeErc721GetAllOwnedNftsResult>(cdeErc721GetAllOwnedNftsIR);
+
+
