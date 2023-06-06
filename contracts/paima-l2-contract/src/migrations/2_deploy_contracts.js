@@ -8,7 +8,7 @@ module.exports = async function (deployer, network) {
     owner: owner,
     fee: fee
   } = contractConfig;
-  deployer.deploy(paimaL2Contract, owner, fee.toString(10));
+  await deployer.deploy(paimaL2Contract, owner, fee.toString(10));
 
   const contractInstance = await paimaL2Contract.deployed();
   const contractAddress = contractInstance.address;

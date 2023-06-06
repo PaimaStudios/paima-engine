@@ -77,8 +77,9 @@ cp package-lock.json $SDK_PATH/package-lock.json
 paima="paima-l2-contract"
 echo $CONTRACT_PATH
 rm -rf $CONTRACT_PATH
-mkdir $CONTRACT_PATH
+mkdir -p $CONTRACT_PATH/$paima/src
 cp -r contracts/$paima/src $CONTRACT_PATH/$paima
+cp contracts/$paima/contract-addresses.json $CONTRACT_PATH/$paima
 cp contracts/$paima/package.json $CONTRACT_PATH/$paima
 cp contracts/$paima/package-lock.json $CONTRACT_PATH/$paima
 cp contracts/$paima/truffle-config.js $CONTRACT_PATH/$paima
