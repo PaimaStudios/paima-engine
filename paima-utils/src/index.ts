@@ -69,7 +69,9 @@ export function buildErrorCodeTranslator(obj: ErrorMessageMapping): ErrorMessage
   };
 }
 
-// DEPRECATED, use ENV.BLOCK_TIME instead
+/**
+ * @deprecated use ENV.BLOCK_TIME instead
+ */
 export function getBlockTime(deployment: Deployment): number {
   if (deployment === 'C1') return 4;
   else if (deployment === 'A1') return 4.5;
