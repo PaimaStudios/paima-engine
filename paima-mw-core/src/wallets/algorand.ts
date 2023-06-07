@@ -1,4 +1,7 @@
 import { PeraWalletConnect } from "@perawallet/connect";
+
+import type { UserSignature } from "@paima/utils";
+
 import { getAlgorandAddress, setAlgorandAddress, setAlgorandApi } from "../state";
 import type { Result, Wallet } from "../types";
 import { PaimaMiddlewareErrorCode, buildEndpointErrorFxn } from "../errors";
@@ -29,4 +32,18 @@ export async function algorandLoginWrapper(): Promise<Result<Wallet>> {
       walletAddress: getAlgorandAddress(),
     },
   };
+}
+
+export async function signMessageAlgorand(
+    userAddress: string,
+    message: string
+): Promise<UserSignature> {
+    throw new Error("Algorand signing NYI");
+    /*
+    await cardanoLoginAny();
+    const api = getCardanoApi();
+    const hexMessage = utf8ToHex(message).slice(2);
+    const { signature, key } = await api.signData(userAddress, hexMessage);
+    return `${signature}+${key}`;
+    */
 }

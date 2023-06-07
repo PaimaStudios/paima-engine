@@ -4,6 +4,7 @@ import type { BatchedSubunit, SignFunction } from '../types';
 import { signMessageCardano } from '../wallets/cardano';
 import { signMessageEth } from '../wallets/evm';
 import { signMessagePolkadot } from '../wallets/polkadot';
+import { signMessageAlgorand } from '../wallets/algorand';
 
 export function batchedToJsonString(b: BatchedSubunit): string {
   return JSON.stringify({
@@ -27,6 +28,8 @@ function selectSignFunction(addressType: AddressType): SignFunction {
       return signMessageCardano;
     case AddressType.POLKADOT:
       return signMessagePolkadot;
+    case AddressType.ALGORAND:
+      return signMessageAlgorand
     default:
       throw new Error(`[selectSignFunction] invalid address type: ${addressType}`);
   }
