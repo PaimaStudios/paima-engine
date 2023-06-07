@@ -3,7 +3,7 @@ export const enum AddressType {
   EVM = 1,
   CARDANO = 2,
   POLKADOT = 3,
-  ALGORAND = 4
+  ALGORAND = 4,
 }
 
 export const OUTER_BATCH_DIVIDER: string = '\x02';

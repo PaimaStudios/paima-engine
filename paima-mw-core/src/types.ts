@@ -1,5 +1,5 @@
 import type { MetaMaskInpageProvider } from '@metamask/providers';
-import type { PeraWalletConnect } from "@perawallet/connect";
+import type { PeraWalletConnect } from '@perawallet/connect';
 import type {
   AddressType,
   Hash,

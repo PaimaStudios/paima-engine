@@ -1,5 +1,5 @@
-import { AlgorandAddress, ENV } from '@paima/utils';
 import type {
+  AlgorandAddress,
   CardanoAddress,
   ContractAddress,
   Deployment,
@@ -9,9 +9,18 @@ import type {
   VersionString,
   Web3,
 } from '@paima/utils';
+import { ENV } from '@paima/utils';
 import { initWeb3 } from '@paima/utils';
+
 import { PaimaMiddlewareErrorCode, paimaErrorMessageFxn } from './errors';
-import type { AlgorandApi, CardanoApi, EvmApi, PolkadotSignFxn, PostingInfo, PostingModeString } from './types';
+import type {
+  AlgorandApi,
+  CardanoApi,
+  EvmApi,
+  PolkadotSignFxn,
+  PostingInfo,
+  PostingModeString,
+} from './types';
 import type { HDWalletProvider } from './wallets/truffle';
 
 export const enum PostingMode {
@@ -104,8 +113,8 @@ export const setBatchedEthMode = (): PostingMode => setPostingMode(PostingMode.B
 export const setBatchedCardanoMode = (): PostingMode => setPostingMode(PostingMode.BATCHED_CARDANO);
 export const setBatchedPolkadotMode = (): PostingMode =>
   setPostingMode(PostingMode.BATCHED_POLKADOT);
-  export const setBatchedAlgorandMode = (): PostingMode =>
-    setPostingMode(PostingMode.BATCHED_ALGORAND);
+export const setBatchedAlgorandMode = (): PostingMode =>
+  setPostingMode(PostingMode.BATCHED_ALGORAND);
 export const setAutomaticMode = (): PostingMode => setPostingMode(PostingMode.AUTOMATIC);
 
 export const setEthAddress = (addr: ETHAddress): ETHAddress => (ethAddress = addr);
@@ -140,7 +149,8 @@ export const getPolkadotSignFxn = (): PolkadotSignFxn => polkadotSignFxn;
 
 export const polkadotConnected = (): boolean => !!polkadotSignFxn;
 
-export const setAlgorandAddress = (addr: AlgorandAddress): AlgorandAddress => (algorandAddress = addr);
+export const setAlgorandAddress = (addr: AlgorandAddress): AlgorandAddress =>
+  (algorandAddress = addr);
 export const getAlgorandAddress = (): AlgorandAddress => algorandAddress;
 export const setAlgorandApi = (api: AlgorandApi): AlgorandApi => (algorandApi = api);
 export const getAlgorandApi = (): AlgorandApi => algorandApi;

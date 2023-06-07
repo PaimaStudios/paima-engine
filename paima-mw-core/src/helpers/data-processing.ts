@@ -29,7 +29,7 @@ function selectSignFunction(addressType: AddressType): SignFunction {
     case AddressType.POLKADOT:
       return signMessagePolkadot;
     case AddressType.ALGORAND:
-      return signMessageAlgorand
+      return signMessageAlgorand;
     default:
       throw new Error(`[selectSignFunction] invalid address type: ${addressType}`);
   }
