@@ -37,6 +37,7 @@ export const enum PaimaMiddlewareErrorCode {
   CARDANO_LOGIN,
   POLKADOT_WALLET_NOT_INSTALLED,
   POLKADOT_LOGIN,
+  ALGORAND_LOGIN,
   TRUFFLE_LOGIN,
   // Input posting related:
   ERROR_POSTING_TO_CHAIN,
@@ -76,6 +77,7 @@ export const PAIMA_MIDDLEWARE_ERROR_MESSAGES: PaimaErrorMessageMapping = {
   [PaimaMiddlewareErrorCode.CARDANO_LOGIN]: 'Error while connecting to the Cardano wallet',
   [PaimaMiddlewareErrorCode.POLKADOT_WALLET_NOT_INSTALLED]: 'No Polkadot wallet installed',
   [PaimaMiddlewareErrorCode.POLKADOT_LOGIN]: 'Error while connecting to the Polkadot wallet',
+  [PaimaMiddlewareErrorCode.ALGORAND_LOGIN]: 'Error while connecting to the Algorand wallet',
   [PaimaMiddlewareErrorCode.TRUFFLE_LOGIN]: 'Error while connecting the Truffle HDWallet',
   [PaimaMiddlewareErrorCode.ERROR_POSTING_TO_CHAIN]:
     'An error occured while posting data to the blockchain',

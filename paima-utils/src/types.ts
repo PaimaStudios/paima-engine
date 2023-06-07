@@ -7,7 +7,8 @@ export type ErrorMessageMapping = Record<ErrorCode, string>;
 export type ETHAddress = string;
 export type CardanoAddress = string;
 export type PolkadotAddress = string;
-export type WalletAddress = ETHAddress | CardanoAddress | PolkadotAddress;
+export type AlgorandAddress = string;
+export type WalletAddress = ETHAddress | CardanoAddress | PolkadotAddress | AlgorandAddress;
 
 export type ContractAddress = ETHAddress;
 

@@ -1,11 +1,13 @@
 import { buildEndpointErrorFxn, FE_ERR_SPECIFIC_WALLET_NOT_INSTALLED } from '../errors';
 import {
+  setBatchedAlgorandMode,
   setBatchedCardanoMode,
   setBatchedEthMode,
   setBatchedPolkadotMode,
   setUnbatchedMode,
 } from '../state';
 import type { Result, Wallet } from '../types';
+import { algorandLoginWrapper } from './algorand';
 import { cardanoLoginWrapper } from './cardano';
 import { evmLoginWrapper } from './evm';
 import { polkadotLoginWrapper } from './polkadot';
@@ -27,6 +29,8 @@ export function stringToWalletMode(loginType: string): WalletMode {
       return WalletMode.CARDANO_ETERNL;
     case 'polkadot':
       return WalletMode.POLKADOT;
+    case 'pera':
+      return WalletMode.ALGORAND_PERA;
     default:
       return WalletMode.NO_WALLET;
   }
@@ -56,6 +60,9 @@ export async function specificWalletLogin(
     case WalletMode.POLKADOT:
       setBatchedPolkadotMode();
       return await polkadotLoginWrapper();
+    case WalletMode.ALGORAND_PERA:
+      setBatchedAlgorandMode();
+      return await algorandLoginWrapper();
     default:
       return errorFxn(FE_ERR_SPECIFIC_WALLET_NOT_INSTALLED);
   }

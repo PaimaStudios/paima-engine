@@ -1,4 +1,4 @@
-import { ENV } from '@paima/utils';
+import { AlgorandAddress, ENV } from '@paima/utils';
 import type {
   CardanoAddress,
   ContractAddress,
@@ -11,7 +11,7 @@ import type {
 } from '@paima/utils';
 import { initWeb3 } from '@paima/utils';
 import { PaimaMiddlewareErrorCode, paimaErrorMessageFxn } from './errors';
-import type { CardanoApi, EvmApi, PolkadotSignFxn, PostingInfo, PostingModeString } from './types';
+import type { AlgorandApi, CardanoApi, EvmApi, PolkadotSignFxn, PostingInfo, PostingModeString } from './types';
 import type { HDWalletProvider } from './wallets/truffle';
 
 export const enum PostingMode {
@@ -19,6 +19,7 @@ export const enum PostingMode {
   BATCHED_ETH,
   BATCHED_CARDANO,
   BATCHED_POLKADOT,
+  BATCHED_ALGORAND,
   AUTOMATIC,
 }
 
@@ -27,6 +28,7 @@ export const POSTING_MODE_NAMES: Record<PostingMode, PostingModeString> = {
   [PostingMode.BATCHED_ETH]: 'batched-eth',
   [PostingMode.BATCHED_CARDANO]: 'batched-cardano',
   [PostingMode.BATCHED_POLKADOT]: 'batched-polkadot',
+  [PostingMode.BATCHED_ALGORAND]: 'batched-algorand',
   [PostingMode.AUTOMATIC]: 'automatic',
 };
 
@@ -69,6 +71,9 @@ let cardanoActiveWallet: string = '';
 let polkadotAddress: PolkadotAddress = '';
 let polkadotSignFxn: PolkadotSignFxn = undefined;
 
+let algorandAddress: AlgorandAddress = '';
+let algorandApi: AlgorandApi = undefined;
+
 export const setBackendUri = (newUri: URI): URI => (backendUri = newUri);
 export const getBackendUri = (): URI => backendUri;
 export const getBatcherUri = (): URI => batcherUri;
@@ -99,6 +104,8 @@ export const setBatchedEthMode = (): PostingMode => setPostingMode(PostingMode.B
 export const setBatchedCardanoMode = (): PostingMode => setPostingMode(PostingMode.BATCHED_CARDANO);
 export const setBatchedPolkadotMode = (): PostingMode =>
   setPostingMode(PostingMode.BATCHED_POLKADOT);
+  export const setBatchedAlgorandMode = (): PostingMode =>
+    setPostingMode(PostingMode.BATCHED_ALGORAND);
 export const setAutomaticMode = (): PostingMode => setPostingMode(PostingMode.AUTOMATIC);
 
 export const setEthAddress = (addr: ETHAddress): ETHAddress => (ethAddress = addr);
@@ -133,6 +140,12 @@ export const getPolkadotSignFxn = (): PolkadotSignFxn => polkadotSignFxn;
 
 export const polkadotConnected = (): boolean => !!polkadotSignFxn;
 
+export const setAlgorandAddress = (addr: AlgorandAddress): AlgorandAddress => (algorandAddress = addr);
+export const getAlgorandAddress = (): AlgorandAddress => algorandAddress;
+export const setAlgorandApi = (api: AlgorandApi): AlgorandApi => (algorandApi = api);
+export const getAlgorandApi = (): AlgorandApi => algorandApi;
+export const algorandConnected = (): boolean => !!algorandApi;
+
 export const setTruffleAddress = (addr: ETHAddress): ETHAddress => (truffleAddress = addr);
 export const getTruffleAddress = (): ETHAddress => truffleAddress;
 export const truffleConnected = (): boolean =>
@@ -166,6 +179,8 @@ export const getActiveAddress = (): string => {
       return polkadotAddress;
     case PostingMode.AUTOMATIC:
       return truffleAddress;
+    case PostingMode.BATCHED_ALGORAND:
+      return algorandAddress;
     default:
       const errorCode = PaimaMiddlewareErrorCode.INTERNAL_INVALID_POSTING_MODE;
       const errorMessage = `${paimaErrorMessageFxn(errorCode)}: ${postingMode}`;

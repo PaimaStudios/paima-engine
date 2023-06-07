@@ -1,4 +1,5 @@
 import type { MetaMaskInpageProvider } from '@metamask/providers';
+import type { PeraWalletConnect } from "@perawallet/connect";
 import type {
   AddressType,
   Hash,
@@ -25,6 +26,7 @@ export type PostingModeString =
   | 'batched-eth'
   | 'batched-cardano'
   | 'batched-polkadot'
+  | 'batched-algorand'
   | 'automatic';
 
 export type PostingModeSwitchResult = PostingModeSwitchSuccessfulResult | FailedResult;
@@ -37,6 +39,7 @@ export type SignFunction = (userAddress: WalletAddress, message: string) => Prom
 
 export type CardanoApi = any;
 export type EvmApi = MetaMaskInpageProvider | undefined;
+export type AlgorandApi = PeraWalletConnect | undefined;
 
 export type PolkadotSignFxn = any;
 
