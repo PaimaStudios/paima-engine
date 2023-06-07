@@ -17,8 +17,8 @@
     "eslint": "eslint '**/*.{ts,tsx}' --ignore-path .eslintignore",
     "prettier": "prettier --write '**/*.{ts,tsx}'",
     "prepare": "husky install && npm run prepare --workspaces --if-present",
-    "patch-standalone-dev": "sed -i 's/\"Paima Studios\",/\"Paima Studios\", \"license\": \"ISC\",/' paima-standalone/package.json ",
-    "unpatch-standalone-dev": "sed -i 's/\"Paima Studios\",.*/\"Paima Studios\",/' paima-standalone/package.json "
+    "patch-standalone-dev": "./paima-standalone/scripts/sed.sh patch",
+    "unpatch-standalone-dev": "./paima-standalone/scripts/sed.sh unpatch"
   },
   "workspaces": [
     "./paima-utils",
