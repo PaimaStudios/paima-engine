@@ -8,6 +8,7 @@ import type { PaimaGameInteraction } from '@paima/utils/src/contract-types/Paima
 import verifySignatureEthereum from './verification/ethereum.js';
 import verifySignatureCardano from './verification/cardano.js';
 import verifySignaturePolkadot from './verification/polkadot.js';
+import verifySignatureAlgorand from './verification/algorand.js';
 
 const { toBN, sha3, hexToUtf8 } = web3UtilsPkg;
 
@@ -124,6 +125,9 @@ async function processBatchedSubunit(
   }
 
   const [addressTypeStr, userAddress, userSignature, inputData, millisecondTimestamp] = elems;
+  if (!/^[0-9]+$/.test(addressTypeStr)) {
+    return INVALID_INPUT;
+  }
   const addressType = parseInt(addressTypeStr, 10);
   const signatureValidated = await validateSubunitSignature(
     web3,
@@ -172,6 +176,8 @@ async function validateSubunitSignature(
       return await verifySignatureCardano(userAddress, message, userSignature);
     case AddressType.POLKADOT:
       return await verifySignaturePolkadot(userAddress, message, userSignature);
+    case AddressType.ALGORAND:
+      return await verifySignatureAlgorand(userAddress, message, userSignature);
     default:
       return false;
   }
