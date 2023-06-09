@@ -23,6 +23,8 @@
   },
   "dependencies": {
     "@cardano-foundation/cardano-verify-datasignature": "^1.0.11",
-    "@paima/utils": "1.0.0"
+    "@paima/utils": "1.0.0",
+    "algosdk": "^2.3.0",
+    "tweetnacl": "^1.0.3"
   }
 }
