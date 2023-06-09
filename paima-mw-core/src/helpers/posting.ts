@@ -6,6 +6,7 @@ import {
   PaimaMiddlewareErrorCode,
 } from '../errors';
 import {
+  getAlgorandAddress,
   getCardanoAddress,
   getCardanoHexAddress,
   getEthAddress,
@@ -113,6 +114,13 @@ export async function postConciselyEncodedData(gameInput: string): Promise<Resul
         AddressType.POLKADOT,
         getPolkadotAddress(),
         getPolkadotAddress(),
+        gameInput
+      ).then(submitToBatcher);
+    case PostingMode.BATCHED_ALGORAND:
+      return await buildBatchedSubunit(
+        AddressType.ALGORAND,
+        getAlgorandAddress(),
+        getAlgorandAddress(),
         gameInput
       ).then(submitToBatcher);
     case PostingMode.AUTOMATIC:

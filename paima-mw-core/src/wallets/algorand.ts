@@ -1,8 +1,10 @@
 import { PeraWalletConnect } from '@perawallet/connect';
+import algosdk from 'algosdk';
 
 import type { UserSignature } from '@paima/utils';
+import { buildAlgorandTransaction, uint8ArrayToHexString } from '@paima/utils';
 
-import { getAlgorandAddress, setAlgorandAddress, setAlgorandApi } from '../state';
+import { getAlgorandAddress, getAlgorandApi, setAlgorandAddress, setAlgorandApi } from '../state';
 import type { Result, Wallet } from '../types';
 import { PaimaMiddlewareErrorCode, buildEndpointErrorFxn } from '../errors';
 
@@ -38,12 +40,28 @@ export async function signMessageAlgorand(
   userAddress: string,
   message: string
 ): Promise<UserSignature> {
-  throw new Error('Algorand signing NYI');
-  /*
-    await cardanoLoginAny();
-    const api = getCardanoApi();
-    const hexMessage = utf8ToHex(message).slice(2);
-    const { signature, key } = await api.signData(userAddress, hexMessage);
-    return `${signature}+${key}`;
-    */
+  const peraWallet = getAlgorandApi();
+  if (!peraWallet) {
+    throw new Error('');
+  }
+
+  const txn = buildAlgorandTransaction(userAddress, message);
+  const signerTx = {
+    txn,
+    signers: [userAddress],
+  };
+
+  const signedTxs = await peraWallet.signTransaction([[signerTx]], userAddress);
+  if (signedTxs.length !== 1) {
+    throw new Error(
+      `[signMessageAlgorand] invalid number of signatures returned: ${signedTxs.length}`
+    );
+  }
+  const signedTx = algosdk.decodeSignedTransaction(signedTxs[0]);
+  const signature = signedTx.sig;
+  if (!signature) {
+    throw new Error(`[signMessageAlgorand] signature missing in signed Tx`);
+  }
+  const hexSignature = uint8ArrayToHexString(signature);
+  return hexSignature;
 }
