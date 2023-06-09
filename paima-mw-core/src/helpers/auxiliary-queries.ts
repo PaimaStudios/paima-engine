@@ -1,3 +1,4 @@
+import { wait } from '@paima/utils';
 import { buildEndpointErrorFxn, PaimaMiddlewareErrorCode } from '../errors';
 import { getGameVersion } from '../state';
 import type { Result } from '../types';
@@ -55,25 +56,21 @@ export async function getRemoteBackendVersion(): Promise<string> {
   }
 }
 
-// Waits until awaitedBlock has been processed by the backend
+/**
+ * Waits until awaitedBlock has been processed by the backend
+ */
 export async function awaitBlock(awaitedBlock: number): Promise<void> {
   const BLOCK_DELAY = 1000;
-  let currentBlock: number;
-
-  function waitLoop(): void {
-    // eslint-disable-next-line @typescript-eslint/no-misused-promises
-    setTimeout(async () => {
-      const res = await getRawLatestProcessedBlockHeight();
-      if (res.success) {
-        currentBlock = res.result;
-      }
-      if (!res.success || currentBlock < awaitedBlock) {
-        waitLoop();
-      }
-    }, BLOCK_DELAY);
+  let currentBlock = -1;
+  while (currentBlock < awaitedBlock) {
+    const res = await getRawLatestProcessedBlockHeight();
+    if (res.success) {
+      currentBlock = res.result;
+    }
+    if (!res.success || currentBlock < awaitedBlock) {
+      await wait(BLOCK_DELAY);
+    }
   }
-
-  waitLoop();
 }
 
 export async function localRemoteVersionsCompatible(): Promise<boolean> {
