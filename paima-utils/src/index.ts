@@ -1,6 +1,8 @@
+import type { Transaction, SuggestedParams } from 'algosdk';
+import { makePaymentTxnWithSuggestedParams } from 'algosdk';
 import Web3 from 'web3';
 import type { AbiItem } from 'web3-utils';
-import pkg from 'web3-utils';
+import web3UtilsPkg from 'web3-utils';
 import paimaL2ContractBuild from './artifacts/PaimaL2Contract';
 import erc20ContractBuild from './artifacts/ERC20Contract';
 import erc721ContractBuild from './artifacts/ERC721Contract';
@@ -30,7 +32,7 @@ import {
   ChainDataExtensionDatumType,
 } from './constants';
 
-const { isAddress } = pkg;
+const { isAddress, utf8ToHex } = web3UtilsPkg;
 
 export * from './config';
 export * from './types';
@@ -216,6 +218,10 @@ export function hexStringToUint8Array(hexString: string): Uint8Array {
   return new Uint8Array(hexStringToBytes(hexString));
 }
 
+export function uint8ArrayToHexString(uint8Array: Uint8Array): string {
+  return Array.prototype.map.call(uint8Array, byte => ('0' + byte.toString(16)).slice(-2)).join('');
+}
+
 export function cutAfterFirstRejected<T>(results: PromiseSettledResult<T>[]): T[] {
   let firstRejected = results.findIndex(elem => elem.status === 'rejected');
   if (firstRejected < 0) {
@@ -254,4 +260,24 @@ export function mergeSortedArrays<T>(arr1: T[], arr2: T[], compare: (a: T, b: T)
   }
 
   return mergedArray;
+}
+
+export function buildAlgorandTransaction(userAddress: string, message: string): Transaction {
+  const hexMessage = utf8ToHex(message).slice(2);
+  const msgArray = hexStringToUint8Array(hexMessage);
+  const SUGGESTED_PARAMS: SuggestedParams = {
+    fee: 0,
+    firstRound: 10,
+    lastRound: 10,
+    genesisID: 'mainnet-v1.0',
+    genesisHash: 'wGHE2Pwdvd7S12BL5FaOP20EGYesN73ktiC1qzkkit8=',
+  };
+  return makePaymentTxnWithSuggestedParams(
+    userAddress,
+    userAddress,
+    0,
+    userAddress,
+    msgArray,
+    SUGGESTED_PARAMS
+  );
 }
