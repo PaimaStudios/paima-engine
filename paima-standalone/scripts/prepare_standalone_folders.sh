@@ -96,10 +96,15 @@ rm -rf $BATCHER_PATH/.git
 echo $DOC_PATH
 rm -rf $DOC_PATH
 git clone --depth=1 git@github.com:PaimaStudios/paima-engine-docs.git $DOC_PATH
+# Remove everything except docs/home
+find $DOC_PATH/* -not -path "$DOC_PATH/docs*" -delete
+# Move the contents of docs/home to the root of $DOC_PATH
+mv $DOC_PATH/docs/home/* $DOC_PATH
+# Remove docs directory
+rm -rf $DOC_PATH/docs
 # remove all images (to limit standalone size)
 find $DOC_PATH -type f -regextype posix-extended -regex '.*\.(png|jpg|jpeg|svg|gif|webp|bmp)' -delete
-rm  $DOC_PATH/README.md
-rm -rf $DOC_PATH/.git
+rm -rf $DOC_PATH/.git*
 
 
 # Fetch templates
