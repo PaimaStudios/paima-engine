@@ -8,4 +8,5 @@ export enum WalletMode {
   CARDANO_NAMI,
   CARDANO_ETERNL,
   POLKADOT,
+  ALGORAND_PERA,
 }

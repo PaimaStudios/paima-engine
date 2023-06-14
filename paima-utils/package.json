@@ -25,5 +25,7 @@
     "@types/node": "^17.0.25",
     "typechain": "^8.1.1"
   },
-  "dependencies": {}
+  "dependencies": {
+    "algosdk": "^2.3.0"
+  }
 }

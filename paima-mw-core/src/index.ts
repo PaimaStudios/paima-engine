@@ -26,6 +26,7 @@ import { pushLog } from './helpers/logging';
 import { initAccountGuard, sendWalletTransaction as sendEvmWalletTransaction } from './wallets/evm';
 import { signMessageCardano } from './wallets/cardano';
 import { polkadotLoginRaw, signMessagePolkadot } from './wallets/polkadot';
+import { signMessageAlgorand } from './wallets/algorand';
 
 import {
   setGameName,
@@ -98,4 +99,5 @@ export {
   getRemoteBackendVersion,
   polkadotLoginRaw,
   signMessagePolkadot,
+  signMessageAlgorand,
 };
