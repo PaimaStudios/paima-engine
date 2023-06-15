@@ -205,6 +205,9 @@ export async function retryPromise<T>(
 }
 
 function hexStringToBytes(hexString: string): number[] {
+  if (!/^[0-9a-fA-F]+$/.test(hexString)) {
+      throw new Error("Non-hex digits found in hex string");
+  }
   const bytes: number[] = [];
   if (hexString.length % 2 !== 0) {
     hexString = '0' + hexString;
