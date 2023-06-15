@@ -77,6 +77,7 @@ interface BatcherPostResponseSuccessful {
 interface BatcherPostResponseUnsuccessful {
   success: false;
   message: string;
+  code?: number;
 }
 
 export type BatcherPostResponse = BatcherPostResponseSuccessful | BatcherPostResponseUnsuccessful;

@@ -9,13 +9,17 @@ export type EndpointErrorFxn = (
   errorCode?: number
 ) => FailedResult;
 
-type PaimaErrorMessageMapping = Record<PaimaMiddlewareErrorCode, string>;
+// specific batcher error codes
+export const enum BatcherRejectionCode {
+  ADDRESS_NOT_ALLOWED = 4,
+}
 
 export const FE_ERR_OK = 0;
 export const FE_ERR_GENERIC = 1;
 export const FE_ERR_METAMASK_NOT_INSTALLED = 2;
 export const FE_ERR_SPECIFIC_WALLET_NOT_INSTALLED = 3;
 export const FE_ERR_BATCHER_REJECTED_INPUT = 4;
+export const FE_ERR_BATCHER_LIMIT_REACHED = 5;
 
 export const enum PaimaMiddlewareErrorCode {
   OK,
@@ -55,7 +59,7 @@ export const enum PaimaMiddlewareErrorCode {
   FINAL_PAIMA_GENERIC_ERROR, // only to be used as a counter
 }
 
-export const PAIMA_MIDDLEWARE_ERROR_MESSAGES: PaimaErrorMessageMapping = {
+export const PAIMA_MIDDLEWARE_ERROR_MESSAGES: Record<PaimaMiddlewareErrorCode, string> = {
   [PaimaMiddlewareErrorCode.OK]: '',
   [PaimaMiddlewareErrorCode.UNKNOWN]: 'Unknown error',
   [PaimaMiddlewareErrorCode.EVM_WALLET_NOT_INSTALLED]: 'Selected EVM wallet not installed',

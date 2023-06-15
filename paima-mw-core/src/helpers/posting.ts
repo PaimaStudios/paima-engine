@@ -1,7 +1,9 @@
 import { retrieveFee, retryPromise, wait, AddressType } from '@paima/utils';
 import type { EndpointErrorFxn } from '../errors';
 import {
+  BatcherRejectionCode,
   buildEndpointErrorFxn,
+  FE_ERR_BATCHER_LIMIT_REACHED,
   FE_ERR_BATCHER_REJECTED_INPUT,
   PaimaMiddlewareErrorCode,
 } from '../errors';
@@ -67,7 +69,11 @@ export const postConciseData = async (
   try {
     const response = await postConciselyEncodedData(data);
     if (!response.success) {
-      return errorFxn(PaimaMiddlewareErrorCode.ERROR_POSTING_TO_CHAIN, response.errorMessage);
+      return errorFxn(
+        PaimaMiddlewareErrorCode.ERROR_POSTING_TO_CHAIN,
+        response.errorMessage,
+        response.errorCode
+      );
     }
     const blockHeight = response.result;
 
@@ -183,11 +189,11 @@ async function submitToBatcher(subunit: BatchedSubunit): Promise<Result<number>>
     // TODO: proper error checking
     if (!response.success) {
       const msg = `Batcher rejected input "${body}" with response "${response.message}"`;
-      return errorFxn(
-        PaimaMiddlewareErrorCode.BATCHER_REJECTED_INPUT,
-        msg,
-        FE_ERR_BATCHER_REJECTED_INPUT
-      );
+      const feErrorCode =
+        response.code === BatcherRejectionCode.ADDRESS_NOT_ALLOWED
+          ? FE_ERR_BATCHER_LIMIT_REACHED
+          : FE_ERR_BATCHER_REJECTED_INPUT;
+      return errorFxn(PaimaMiddlewareErrorCode.BATCHER_REJECTED_INPUT, msg, feErrorCode);
     }
     inputHash = response.hash;
   } catch (err) {
@@ -223,7 +229,11 @@ async function verifyBatcherSubmission(inputHash: string): Promise<Result<number
       // TODO: proper error checking?
       if (status.status === 'rejected') {
         const msg = `Batcher rejected input with response "${status.message}"`;
-        return errorFxn(PaimaMiddlewareErrorCode.BATCHER_REJECTED_INPUT, msg);
+        return errorFxn(
+          PaimaMiddlewareErrorCode.BATCHER_REJECTED_INPUT,
+          msg,
+          FE_ERR_BATCHER_REJECTED_INPUT
+        );
       } else if (status.status === 'posted') {
         return {
           success: true,
