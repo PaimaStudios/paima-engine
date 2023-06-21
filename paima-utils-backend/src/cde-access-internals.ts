@@ -10,8 +10,10 @@ import {
   selectChainDataExtensionsByTypeAndAddress,
   cdeErc20DepositGetTotalDeposited,
   cdeErc20DepositSelectAll,
+  cdeGenericGetBlockheightData,
+  cdeGenericGetRangeData,
 } from '@paima/db';
-import type { ChainDataExtensionType, OwnedNftsResponse } from '@paima/utils';
+import type { ChainDataExtensionType, OwnedNftsResponse, GenericCdeDataUnit } from '@paima/utils';
 
 /* Functions to retrieve CDE ID: */
 
@@ -142,4 +144,35 @@ export async function internalGetDonorsAboveThreshold(
   const results = await cdeErc20DepositSelectAll.run({ cde_id: cdeId }, readonlyDBConn);
   const aboveThreshold = results.filter(res => BigInt(res.total_deposited) >= threshold);
   return aboveThreshold.map(res => res.wallet_address);
+}
+
+export async function internalGetGenericDataBlockheight(
+  readonlyDBConn: Pool,
+  cdeId: number,
+  blockHeight: number
+): Promise<GenericCdeDataUnit[]> {
+  const results = await cdeGenericGetBlockheightData.run(
+    { cde_id: cdeId, block_height: blockHeight },
+    readonlyDBConn
+  );
+  return results.map(res => ({
+    blockHeight,
+    payload: res.event_data,
+  }));
+}
+
+export async function internalGetGenericDataBlockheightRange(
+  readonlyDBConn: Pool,
+  cdeId: number,
+  fromBlock: number,
+  toBlock: number
+): Promise<GenericCdeDataUnit[]> {
+  const results = await cdeGenericGetRangeData.run(
+    { cde_id: cdeId, from_block: fromBlock, to_block: toBlock },
+    readonlyDBConn
+  );
+  return results.map(res => ({
+    blockHeight: res.block_height,
+    payload: res.event_data,
+  }));
 }
