@@ -34,8 +34,18 @@ CREATE TABLE chain_data_extensions (
   cde_name TEXT NOT NULL,
   contract_address TEXT NOT NULL,
   start_blockheight INTEGER NOT NULL,
-  scheduled_prefix TEXT,
-  deposit_address TEXT
+  scheduled_prefix TEXT
+);
+
+CREATE TABLE cde_config_erc20_deposit (
+  cde_id INTEGER PRIMARY KEY,
+  deposit_address TEXT NOT NULL
+);
+
+CREATE TABLE cde_config_generic (
+  cde_id INTEGER PRIMARY KEY,
+  event_signature TEXT NOT NULL,
+  contract_abi JSON NOT NULL
 );
 
 CREATE TABLE cde_erc20_data (
@@ -57,4 +67,12 @@ CREATE TABLE cde_erc20_deposit_data (
   wallet_address TEXT NOT NULL,
   total_deposited TEXT NOT NULL,
   PRIMARY KEY (cde_id, wallet_address)
+);
+
+CREATE TABLE cde_generic_data (
+  cde_id INTEGER NOT NULL,
+  id SERIAL,
+  block_height INTEGER NOT NULL,
+  event_data JSON NOT NULL,
+  PRIMARY KEY (cde_id, id)
 );
