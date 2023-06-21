@@ -6,7 +6,7 @@ import type { SQLUpdate } from '@paima/db';
 export default async function processErc721Datum(
   cdeDatum: CdeErc721MintDatum
 ): Promise<SQLUpdate[]> {
-  const [address, prefix] = [cdeDatum.contractAddress, cdeDatum.initializationPrefix];
+  const [address, prefix] = [cdeDatum.contractAddress, cdeDatum.scheduledPrefix];
   if (!prefix) {
     return [];
   }

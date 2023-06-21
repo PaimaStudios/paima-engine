@@ -36,7 +36,7 @@ function transferToCdeDatum(
         from: event.returnValues.from.toLowerCase(),
         value: event.returnValues.value,
       },
-      initializationPrefix: extension.initializationPrefix,
+      scheduledPrefix: extension.scheduledPrefix,
     },
   ];
 }

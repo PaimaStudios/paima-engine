@@ -53,7 +53,7 @@ function transferToMintDatum(
       mintData: '',
     },
     contractAddress: extension.contractAddress,
-    initializationPrefix: extension.initializationPrefix,
+    scheduledPrefix: extension.scheduledPrefix,
   };
 }
 
