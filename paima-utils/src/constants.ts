@@ -17,6 +17,7 @@ export const enum ChainDataExtensionType {
   ERC721 = 2,
   PaimaERC721 = 3,
   ERC20Deposit = 4,
+  Generic = 5,
 }
 
 export const enum ChainDataExtensionDatumType {
@@ -24,4 +25,5 @@ export const enum ChainDataExtensionDatumType {
   ERC20Deposit,
   ERC721Mint,
   ERC721Transfer,
+  Generic,
 }
