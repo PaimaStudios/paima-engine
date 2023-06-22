@@ -45,7 +45,7 @@ CREATE TABLE cde_config_erc20_deposit (
 CREATE TABLE cde_config_generic (
   cde_id INTEGER PRIMARY KEY,
   event_signature TEXT NOT NULL,
-  contract_abi JSON NOT NULL
+  contract_abi TEXT NOT NULL
 );
 
 CREATE TABLE cde_erc20_data (

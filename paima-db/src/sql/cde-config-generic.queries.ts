@@ -1,15 +1,13 @@
 /** Types generated for queries found in "src/sql/cde-config-generic.sql" */
 import { PreparedQuery } from '@pgtyped/query';
 
-export type Json = null | boolean | number | string | Json[] | { [key: string]: Json };
-
 /** 'GetCdeConfigGeneric' parameters type */
 export type IGetCdeConfigGenericParams = void;
 
 /** 'GetCdeConfigGeneric' return type */
 export interface IGetCdeConfigGenericResult {
   cde_id: number;
-  contract_abi: Json;
+  contract_abi: string;
   event_signature: string;
 }
 
@@ -38,7 +36,7 @@ export interface IGetSpecificCdeConfigGenericParams {
 /** 'GetSpecificCdeConfigGeneric' return type */
 export interface IGetSpecificCdeConfigGenericResult {
   cde_id: number;
-  contract_abi: Json;
+  contract_abi: string;
   event_signature: string;
 }
 
@@ -63,7 +61,7 @@ export const getSpecificCdeConfigGeneric = new PreparedQuery<IGetSpecificCdeConf
 /** 'RegisterCdeConfigGeneric' parameters type */
 export interface IRegisterCdeConfigGenericParams {
   cde_id: number;
-  contract_abi: Json;
+  contract_abi: string;
   event_signature: string;
 }
 

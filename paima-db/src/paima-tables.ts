@@ -149,7 +149,7 @@ const QUERY_CREATE_TABLE_CDE_CONFIG_GENERIC = `
 CREATE TABLE cde_config_generic (
   cde_id INTEGER PRIMARY KEY,
   event_signature TEXT NOT NULL,
-  contract_abi JSON NOT NULL
+  contract_abi TEXT NOT NULL
 );
 `;
 
@@ -159,7 +159,7 @@ const TABLE_DATA_CDE_CONFIG_GENERIC: TableData = {
   columnData: packTuples([
     ['cde_id', 'integer', 'NO', ''],
     ['event_signature', 'text', 'NO', ''],
-    ['contract_abi', 'json', 'NO', ''],
+    ['contract_abi', 'text', 'NO', ''],
   ]),
   serialColumns: [],
   creationQuery: QUERY_CREATE_TABLE_CDE_CONFIG_GENERIC,

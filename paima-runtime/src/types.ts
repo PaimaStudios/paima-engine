@@ -144,7 +144,7 @@ export interface ChainDataExtensionGeneric extends ChainDataExtensionBase {
   eventSignature: string;
   eventName: string;
   eventSignatureHash: string;
-  contractAbi: AbiItem[];
+  rawContractAbi: string;
   contract: Contract;
 }
 
