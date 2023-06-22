@@ -178,22 +178,23 @@ async function instantiateCdeGeneric(
   const eventName = eventMatch[0];
   const eventSignatureHash = web3.utils.keccak256(eventSignature);
 
-  const [rawContractAbi, parsedContractAbi] = (await loadAbi(config.abiPath)) as [
-    string,
-    AbiItem[]
-  ];
+  const [rawContractAbi, parsedContractAbi] = await loadAbi(config.abiPath);
   if (parsedContractAbi.length === 0) {
-    throw new Error(`[cde-config] Invalid ABI`);
+    throw new Error(`[cde-config] Invalid ABI file at ${config.abiPath}`);
   }
-  const contract = getAbiContract(config.contractAddress, parsedContractAbi, web3);
-
-  return {
-    ...cdeBase,
-    cdeType: ChainDataExtensionType.Generic,
-    contract,
-    eventSignature,
-    eventName,
-    eventSignatureHash,
-    rawContractAbi,
-  };
+  try {
+    const contract = getAbiContract(config.contractAddress, parsedContractAbi as AbiItem[], web3);
+    return {
+      ...cdeBase,
+      cdeType: ChainDataExtensionType.Generic,
+      contract,
+      eventSignature,
+      eventName,
+      eventSignatureHash,
+      rawContractAbi,
+    };
+  } catch (err) {
+    doLog(`[cde-config]: Invalid ABI file at ${config.abiPath}`);
+    throw err;
+  }
 }

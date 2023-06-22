@@ -50,7 +50,7 @@ export async function loadAbi(abiPath: string): Promise<[string, any[]]> {
     let abiJson = JSON.parse(abiFileData);
     if (typeof abiJson === 'object' && !!abiJson) {
       if (Object.hasOwn(abiJson as object, 'abi') && Array.isArray(abiJson.abi)) {
-        return abiJson.abi;
+        return [abiFileData, abiJson.abi];
       }
     }
   } catch (err) {
