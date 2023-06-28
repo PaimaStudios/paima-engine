@@ -83,6 +83,13 @@ export class ENV {
   static get ENABLE_DRY_RUN(): boolean {
     return process.env.ENABLE_DRY_RUN === 'true';
   }
+  static get CONCISE_SECURITY_PREFIX(): string {
+    const prefix = process.env.CONCISE_SECURITY_PREFIX || '';
+    if (prefix && prefix.match(/\|/)) {
+      throw new Error('Concise security prefix cannot contain the pipe character.');
+    }
+    return prefix;
+  }
 
   // Middleware config:
   static get BACKEND_URI(): string {
