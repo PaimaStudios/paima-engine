@@ -216,7 +216,9 @@ async function processScheduledData(
     const inputData: SubmittedData = {
       userAddress: SCHEDULED_DATA_ADDRESS,
       // security prefix is optional in scheduled data.
-      inputData: stripSecuirtyPrefix(data.input_data),
+      inputData: checkSecurityPrefix(data.input_data)
+        ? stripSecuirtyPrefix(data.input_data)
+        : data.input_data,
       inputNonce: '',
       suppliedValue: '0',
       scheduled: true,
