@@ -22,15 +22,26 @@ class PaimaFunnel {
   private extensions: ChainDataExtension[];
   private web3: Web3;
   private paimaL2Contract: PaimaL2Contract;
+  private extensionsValid: boolean;
 
-  constructor(web3: Web3, paimaL2Contract: PaimaL2Contract, extensions: ChainDataExtension[]) {
+  constructor(
+    web3: Web3,
+    paimaL2Contract: PaimaL2Contract,
+    extensions: ChainDataExtension[],
+    extensionsValid: boolean
+  ) {
     this.extensions = extensions;
     this.web3 = web3;
     this.paimaL2Contract = paimaL2Contract;
+    this.extensionsValid = extensionsValid;
   }
 
   public getExtensions = (): ChainDataExtension[] => {
     return this.extensions;
+  };
+
+  public extensionsAreValid = (): boolean => {
+    return this.extensionsValid;
   };
 
   public readData = async (
@@ -157,8 +168,8 @@ const paimaFunnelInitializer = {
     validatePaimaL2ContractAddress(paimaL2ContractAddress);
     const web3 = await initWeb3(nodeUrl);
     const paimaL2Contract = getPaimaL2Contract(paimaL2ContractAddress, web3);
-    const extensions = await loadChainDataExtensions(web3, ENV.CDE_CONFIG_PATH);
-    return new PaimaFunnel(web3, paimaL2Contract, extensions);
+    const [extensions, extensionsValid] = await loadChainDataExtensions(web3, ENV.CDE_CONFIG_PATH);
+    return new PaimaFunnel(web3, paimaL2Contract, extensions, extensionsValid);
   },
 };
 

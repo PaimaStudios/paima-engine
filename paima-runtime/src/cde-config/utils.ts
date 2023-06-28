@@ -33,7 +33,9 @@ export function requireFields(config: Record<string, any>, fieldNames: string[])
     }
   }
   if (missingFields.length > 0) {
-    throw new Error(`[cde-config] missing fields: ${missingFields.join(', ')}`);
+    throw new Error(
+      `[cde-config] missing fields for ${config.cdeName}: ${missingFields.join(', ')}`
+    );
   }
 }
 

@@ -157,6 +157,7 @@ export type ChainDataExtension =
 
 export interface ChainFunnel {
   getExtensions: () => ChainDataExtension[];
+  extensionsAreValid: () => boolean;
   readData: (blockHeight: number) => Promise<ChainData[]>;
   readPresyncData: (fromBlock: number, toBlock: number) => Promise<PresyncChainData[]>;
 }

@@ -30,16 +30,17 @@ interface CdeConfig {
 
 type CdeBase = Omit<ChainDataExtension, 'cdeType' | 'contract' | 'depositAddress'>;
 
+// Returns [extensions, extensionsValid: boolean]
 export async function loadChainDataExtensions(
   web3: Web3,
   configFilePath: string
-): Promise<ChainDataExtension[]> {
+): Promise<[ChainDataExtension[], boolean]> {
   let configFileData: string;
   try {
     configFileData = await fs.readFile(configFilePath, 'utf8');
   } catch (err) {
     doLog(`[cde-config] config file not found: ${configFilePath}, assuming no CDEs.`);
-    return [];
+    return [[], true];
   }
 
   try {
@@ -47,10 +48,10 @@ export async function loadChainDataExtensions(
     const instantiatedExtensions = await Promise.all(
       config.map(e => instantiateExtension(e, web3))
     );
-    return instantiatedExtensions;
+    return [instantiatedExtensions, true];
   } catch (err) {
-    doLog(`[cde-config] Invalid config file, assuming no CDEs. Error: ${err}`);
-    return [];
+    doLog(`[cde-config] Invalid config file: ${err}`);
+    return [[], false];
   }
 }
 
@@ -160,7 +161,7 @@ async function isPaimaErc721(cdeConfig: CdeConfig, web3: Web3): Promise<boolean>
     const erc165Contract = getErc165Contract(cdeConfig.contractAddress, web3);
     return await erc165Contract.methods.supportsInterface(interfaceId).call();
   } catch (err) {
-    doLog(`[cde-config] Error while attempting to specify ERC721 subtype: ${err}`);
+    doLog(`[cde-config] ${cdeConfig.contractAddress} is probably not PaimaERC721: ${err}`);
     return false;
   }
 }
