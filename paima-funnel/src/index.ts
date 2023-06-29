@@ -19,22 +19,12 @@ import { composeChainData, groupCdeData } from './utils.js';
 const GET_BLOCK_NUMBER_TIMEOUT = 5000;
 
 class PaimaFunnel {
-  private extensions: ChainDataExtension[];
-  private web3: Web3;
-  private paimaL2Contract: PaimaL2Contract;
-  private extensionsValid: boolean;
-
   constructor(
-    web3: Web3,
-    paimaL2Contract: PaimaL2Contract,
-    extensions: ChainDataExtension[],
-    extensionsValid: boolean
-  ) {
-    this.extensions = extensions;
-    this.web3 = web3;
-    this.paimaL2Contract = paimaL2Contract;
-    this.extensionsValid = extensionsValid;
-  }
+    private readonly web3: Web3,
+    private readonly paimaL2Contract: PaimaL2Contract,
+    private readonly extensions: ChainDataExtension[],
+    private readonly extensionsValid: boolean
+  ) {}
 
   public getExtensions = (): ChainDataExtension[] => {
     return this.extensions;
