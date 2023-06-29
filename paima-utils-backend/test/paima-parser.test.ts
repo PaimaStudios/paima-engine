@@ -121,6 +121,7 @@ describe('Test if parsed', () => {
     ['u|*0x1234|w', true],
     ['u|*0xabcd|t', true],
     ['u|*0x0000|l', true],
+    ['u|*addr_test1qqpftzcepsz6x4e|l', true],
 
     ['@u|1234|w', false],
     ['@u|*0x1234|M', false],
