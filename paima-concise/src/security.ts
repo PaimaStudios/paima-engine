@@ -1,10 +1,10 @@
 import { ENV } from '@paima/utils';
 import { separator } from './v1/consts';
 
-// For security, we add the .env CONCISE_SECURITY_PREFIX to the string.
+// For security, we add the .env CONCISE_GAME_NAME to the string.
 export const getSecurityPrefix = (): string => {
-  return ENV.CONCISE_SECURITY_PREFIX
-    ? `${separator}${ENV.CONCISE_SECURITY_PREFIX}${separator}`
+  return ENV.CONCISE_GAME_NAME
+    ? `${separator}${ENV.CONCISE_GAME_NAME}${separator}`
     : '';
 };
 
