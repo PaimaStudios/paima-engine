@@ -9,6 +9,7 @@ import { EncodingVersion } from './types.js';
 import { isHexString } from './utils.js';
 import { separator } from './v1/consts.js';
 import { toConciseValue } from './v1/utils.js';
+import { checkSecurityPrefix, stripSecuirtyPrefix } from './security.js';
 
 const initializeSpecific = (input: string, version: EncodingVersion): ConciseConsumer => {
   const { conciseValues, concisePrefix, conciseInput } = preParse(input, version);
@@ -61,6 +62,12 @@ const preParse = (input: string, version: EncodingVersion): ConciseConsumerInter
     if (!conciseInput.includes(separator)) {
       return getEmptyInternals();
     }
+
+    if (!checkSecurityPrefix(conciseInput)) {
+      // Invalid input, discard entire message.
+      return getEmptyInternals();
+    }
+    conciseInput = stripSecuirtyPrefix(conciseInput);
 
     const [inputPrefix, ...stringValues] = conciseInput.split(separator);
     const hasImplicitUser = inputPrefix.match(/^@(\w+)/);
