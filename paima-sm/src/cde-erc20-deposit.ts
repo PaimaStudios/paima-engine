@@ -25,7 +25,7 @@ export default async function processErc20Datum(
   );
 
   const numValue = BigInt(value);
-  const prefix = cdeDatum.initializationPrefix;
+  const prefix = cdeDatum.scheduledPrefix;
 
   const updateList: SQLUpdate[] = [];
   try {

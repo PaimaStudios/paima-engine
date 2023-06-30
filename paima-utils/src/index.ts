@@ -2,6 +2,7 @@ import type { Transaction, SuggestedParams } from 'algosdk';
 import { makePaymentTxnWithSuggestedParams } from 'algosdk';
 import Web3 from 'web3';
 import type { AbiItem } from 'web3-utils';
+import type { Contract, EventData } from 'web3-eth-contract';
 import web3UtilsPkg from 'web3-utils';
 import paimaL2ContractBuild from './artifacts/PaimaL2Contract';
 import erc20ContractBuild from './artifacts/ERC20Contract';
@@ -37,7 +38,7 @@ const { isAddress, utf8ToHex } = web3UtilsPkg;
 export * from './config';
 export * from './types';
 
-export type { Web3 };
+export type { Web3, Contract, AbiItem, EventData };
 export type { PaimaL2Contract };
 export type { ERC20Contract, ERC721Contract, PaimaERC721Contract, ERC165Contract };
 export {
@@ -90,53 +91,50 @@ export async function initWeb3(nodeUrl: string): Promise<Web3> {
   return web3;
 }
 
-export function getPaimaL2Contract(address?: string, web3?: Web3): PaimaL2Contract {
+export function getAbiContract(address: string, abi: AbiItem[], web3?: Web3): Contract {
   if (web3 === undefined) {
     web3 = new Web3();
   }
-  return new web3.eth.Contract(
+  return new web3.eth.Contract(abi, address);
+}
+
+export function getPaimaL2Contract(address: string, web3?: Web3): PaimaL2Contract {
+  return getAbiContract(
+    address,
     paimaL2ContractBuild.abi as AbiItem[],
-    address
+    web3
   ) as unknown as PaimaL2Contract;
 }
 
-export function getErc20Contract(address?: string, web3?: Web3): ERC20Contract {
-  if (web3 === undefined) {
-    web3 = new Web3();
-  }
-  return new web3.eth.Contract(
+export function getErc20Contract(address: string, web3?: Web3): ERC20Contract {
+  return getAbiContract(
+    address,
     erc20ContractBuild.abi as AbiItem[],
-    address
+    web3
   ) as unknown as ERC20Contract;
 }
 
-export function getErc721Contract(address?: string, web3?: Web3): ERC721Contract {
-  if (web3 === undefined) {
-    web3 = new Web3();
-  }
-  return new web3.eth.Contract(
+export function getErc721Contract(address: string, web3?: Web3): ERC721Contract {
+  return getAbiContract(
+    address,
     erc721ContractBuild.abi as AbiItem[],
-    address
+    web3
   ) as unknown as ERC721Contract;
 }
 
-export function getPaimaErc721Contract(address?: string, web3?: Web3): PaimaERC721Contract {
-  if (web3 === undefined) {
-    web3 = new Web3();
-  }
-  return new web3.eth.Contract(
+export function getPaimaErc721Contract(address: string, web3?: Web3): PaimaERC721Contract {
+  return getAbiContract(
+    address,
     paimaErc721ContractBuild.abi as AbiItem[],
-    address
+    web3
   ) as unknown as PaimaERC721Contract;
 }
 
-export function getErc165Contract(address?: string, web3?: Web3): ERC165Contract {
-  if (web3 === undefined) {
-    web3 = new Web3();
-  }
-  return new web3.eth.Contract(
+export function getErc165Contract(address: string, web3?: Web3): ERC165Contract {
+  return getAbiContract(
+    address,
     erc165ContractBuild.abi as AbiItem[],
-    address
+    web3
   ) as unknown as ERC165Contract;
 }
 
@@ -205,6 +203,9 @@ export async function retryPromise<T>(
 }
 
 function hexStringToBytes(hexString: string): number[] {
+  if (!/^[0-9a-fA-F]+$/.test(hexString)) {
+    throw new Error('Non-hex digits found in hex string');
+  }
   const bytes: number[] = [];
   if (hexString.length % 2 !== 0) {
     hexString = '0' + hexString;

@@ -89,6 +89,6 @@ function mintedToMintDatum(
       mintData: event.returnValues.initialData,
     },
     contractAddress: extension.contractAddress,
-    initializationPrefix: extension.initializationPrefix,
+    scheduledPrefix: extension.scheduledPrefix,
   };
 }

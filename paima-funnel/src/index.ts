@@ -19,18 +19,19 @@ import { composeChainData, groupCdeData } from './utils.js';
 const GET_BLOCK_NUMBER_TIMEOUT = 5000;
 
 class PaimaFunnel {
-  private extensions: ChainDataExtension[];
-  private web3: Web3;
-  private paimaL2Contract: PaimaL2Contract;
-
-  constructor(web3: Web3, paimaL2Contract: PaimaL2Contract, extensions: ChainDataExtension[]) {
-    this.extensions = extensions;
-    this.web3 = web3;
-    this.paimaL2Contract = paimaL2Contract;
-  }
+  constructor(
+    private readonly web3: Web3,
+    private readonly paimaL2Contract: PaimaL2Contract,
+    private readonly extensions: ChainDataExtension[],
+    private readonly extensionsValid: boolean
+  ) {}
 
   public getExtensions = (): ChainDataExtension[] => {
     return this.extensions;
+  };
+
+  public extensionsAreValid = (): boolean => {
+    return this.extensionsValid;
   };
 
   public readData = async (
@@ -157,8 +158,8 @@ const paimaFunnelInitializer = {
     validatePaimaL2ContractAddress(paimaL2ContractAddress);
     const web3 = await initWeb3(nodeUrl);
     const paimaL2Contract = getPaimaL2Contract(paimaL2ContractAddress, web3);
-    const extensions = await loadChainDataExtensions(web3, ENV.CDE_CONFIG_PATH);
-    return new PaimaFunnel(web3, paimaL2Contract, extensions);
+    const [extensions, extensionsValid] = await loadChainDataExtensions(web3, ENV.CDE_CONFIG_PATH);
+    return new PaimaFunnel(web3, paimaL2Contract, extensions, extensionsValid);
   },
 };
 

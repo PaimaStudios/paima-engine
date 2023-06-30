@@ -11,9 +11,17 @@ export * from './sql/nonces.queries';
 export * from './sql/historical.queries';
 export * from './sql/cde-tracking.queries';
 export * from './sql/extensions.queries';
+// pgtyped keeps regenerating the Json type, so we can't just export * or we get conflicts:
+export {
+  getCdeConfigGeneric,
+  getSpecificCdeConfigGeneric,
+  registerCdeConfigGeneric,
+} from './sql/cde-config-generic.queries';
+export * from './sql/cde-config-erc20-deposit.queries';
 export * from './sql/cde-erc20.queries';
 export * from './sql/cde-erc721.queries';
 export * from './sql/cde-erc20-deposit.queries';
+export * from './sql/cde-generic.queries';
 
 export {
   tx,

@@ -8,8 +8,10 @@ import {
   internalGetTotalDeposited,
   internalGetDonorsAboveThreshold,
   internalGetAllOwnedNfts,
+  internalGetGenericDataBlockheight,
+  internalGetGenericDataBlockheightRange,
 } from './cde-access-internals';
-import type { OwnedNftsResponse } from '@paima/utils';
+import type { OwnedNftsResponse, GenericCdeDataUnit } from '@paima/utils';
 
 /**
  * Fetch the owner of the NFT from the database
@@ -98,4 +100,31 @@ export async function findUsersWithDepositsGreaterThan(
   const cdeId = await getCdeIdByName(readonlyDBConn, cdeName);
   if (cdeId === null) return [];
   return await internalGetDonorsAboveThreshold(readonlyDBConn, cdeId, thresholdAmount);
+}
+
+/**
+ * Fetch all data objects from logs at the specified blockheight
+ */
+export async function getGenericDataBlockheight(
+  readonlyDBConn: Pool,
+  cdeName: string,
+  blockHeight: number
+): Promise<GenericCdeDataUnit[]> {
+  const cdeId = await getCdeIdByName(readonlyDBConn, cdeName);
+  if (cdeId === null) return [];
+  return await internalGetGenericDataBlockheight(readonlyDBConn, cdeId, blockHeight);
+}
+
+/**
+ * Fetch all data objects from logs in the specified blockheight range
+ */
+export async function getGenericDataBlockheightRange(
+  readonlyDBConn: Pool,
+  cdeName: string,
+  fromBlock: number,
+  toBlock: number
+): Promise<GenericCdeDataUnit[]> {
+  const cdeId = await getCdeIdByName(readonlyDBConn, cdeName);
+  if (cdeId === null) return [];
+  return await internalGetGenericDataBlockheightRange(readonlyDBConn, cdeId, fromBlock, toBlock);
 }

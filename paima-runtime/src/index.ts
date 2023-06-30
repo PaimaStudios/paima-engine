@@ -107,6 +107,12 @@ async function runInitializationProcedures(
   }
 
   // CDE config validation / storing:
+  if (!chainFunnel.extensionsAreValid()) {
+    doLog(
+      `[paima-runtime] Cannot proceed because the CDE config file invalid. Please fix your CDE config file or remove it altogether.`
+    );
+    return false;
+  }
   const smStarted =
     (await gameStateMachine.presyncStarted()) || (await gameStateMachine.syncStarted());
   const cdeResult = await validatePersistentCdeConfig(
