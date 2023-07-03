@@ -189,7 +189,9 @@ at ::= "@"
 
     // Add parameters back-into grammar
     [...uniqueParameters].forEach(w => {
-      grammar += `${w} ::= [a-zA-Z0-9+/=,_]+ \n`;
+      // ([#x00-#x7b] | [#x7d-#xff])
+      // 7c |
+      grammar += `${w} ::= ([#x00-#x7b] | [#x7d-#xffff])+ \n`;
     });
 
     this.log(`Parser Syntax: \n----------------\n${grammar}\n----------------`);

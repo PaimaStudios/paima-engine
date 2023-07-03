@@ -80,6 +80,10 @@ describe('Test if parsed', () => {
     ['j|*123456ABCDE', false],
     ['j|*123456ABCDEFG', false],
 
+    ['j|*e what\'s hid', true],
+    ['j|*den in your ', true],
+    ['j|*g… r b e​hd﻿', true],
+
     ['cs|1234', false],
     ['cs|', false],
     ['cs|1234|', false],
