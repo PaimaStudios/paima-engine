@@ -80,6 +80,10 @@ describe('Test if parsed', () => {
     ['j|*123456ABCDE', false],
     ['j|*123456ABCDEFG', false],
 
+    ["j|*e what's hid", true],
+    ['j|*den in your ', true],
+    ['j|*g… r b e​hd﻿', true],
+
     ['cs|1234', false],
     ['cs|', false],
     ['cs|1234|', false],
@@ -121,6 +125,7 @@ describe('Test if parsed', () => {
     ['u|*0x1234|w', true],
     ['u|*0xabcd|t', true],
     ['u|*0x0000|l', true],
+    ['u|*addr_test1qqpftzcepsz6x4e|l', true],
 
     ['@u|1234|w', false],
     ['@u|*0x1234|M', false],

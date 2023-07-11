@@ -109,6 +109,10 @@ export type ParserRecord<T = { input: string }> = Record<
 
 export type ParserCommands = Record<string, ParserRecord>;
 
+/**
+ * WARN - allows only a-zA-Z0-9+/=,_ characters regardless of the parser specified
+ * Also, characters |*@ are used for internal purposes
+ */
 export class PaimaParser {
   private readonly grammar: string;
   private readonly commands: ParserCommands;
@@ -185,7 +189,9 @@ at ::= "@"
 
     // Add parameters back-into grammar
     [...uniqueParameters].forEach(w => {
-      grammar += `${w} ::= [a-zA-Z0-9+/=,]+ \n`;
+      // ([#x00-#x7b] | [#x7d-#xff])
+      // 7c |
+      grammar += `${w} ::= ([#x00-#x7b] | [#x7d-#xffff])+ \n`;
     });
 
     this.log(`Parser Syntax: \n----------------\n${grammar}\n----------------`);
