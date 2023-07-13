@@ -279,7 +279,7 @@ export function buildAlgorandTransaction(userAddress: string, message: string): 
     userAddress,
     userAddress,
     0,
-    userAddress,
+    undefined,
     msgArray,
     SUGGESTED_PARAMS
   );
