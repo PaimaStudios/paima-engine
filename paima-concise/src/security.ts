@@ -3,9 +3,7 @@ import { separator } from './v1/consts';
 
 // For security, we add the .env CONCISE_GAME_NAME to the string.
 export const getSecurityPrefix = (): string => {
-  return ENV.CONCISE_GAME_NAME
-    ? `${separator}${ENV.CONCISE_GAME_NAME}${separator}`
-    : '';
+  return ENV.CONCISE_GAME_NAME ? `${separator}${ENV.CONCISE_GAME_NAME}${separator}` : '';
 };
 
 export const checkSecurityPrefix = (conciseInput: string): boolean => {
