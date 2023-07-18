@@ -28,6 +28,8 @@ import { signMessageCardano } from './wallets/cardano';
 import { polkadotLoginRaw, signMessagePolkadot } from './wallets/polkadot';
 import { signMessageAlgorand } from './wallets/algorand';
 
+import { walletToName } from './name-generation';
+
 import {
   setGameName,
   setGameVersion,
@@ -80,6 +82,7 @@ export {
   buildAbstractEndpointErrorFxn,
   PaimaMiddlewareErrorCode,
   PAIMA_MIDDLEWARE_ERROR_MESSAGES,
+  walletToName,
 };
 
 // NOT FOR USE IN PRODUCTION, just internal endpoints and helper functions for easier testing and debugging:
