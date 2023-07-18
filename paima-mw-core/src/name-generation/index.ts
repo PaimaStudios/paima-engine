@@ -7,10 +7,10 @@ import { nouns } from './nouns';
 // around 1.5% repetition with 100k users
 // around 14.45% repetition with 1M users
 /**
- * @param maxCharacters maximum number of characters in the name (default: 20). Conversion might not finish if too small number is provided.
- * @returns wallet address transformed into a pseudorandom name `Adjective Noun`
+ * @returns wallet address transformed into a pseudorandom name `Adjective Noun`. Longest possible name is 20 characters.
  */
-export const walletToName = (wallet: WalletAddress, maxCharacters = 20): string => {
+export const walletToName = (wallet: WalletAddress): string => {
+  const maxCharacters = 20;
   const prando = new Prando(wallet);
   const adjectiveLength = adjectives.length;
   const nounLength = nouns.length;
