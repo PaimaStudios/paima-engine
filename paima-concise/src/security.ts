@@ -1,23 +1,29 @@
-import { ENV } from '@paima/utils';
 import { separator } from './v1/consts';
 
-// For security, we add the .env CONCISE_GAME_NAME to the string.
-export const getSecurityPrefix = (): string => {
-  return ENV.CONCISE_GAME_NAME ? `${separator}${ENV.CONCISE_GAME_NAME}${separator}` : '';
+// For security, we add the game name to the string.
+export const getSecurityPrefix = (gameName: undefined | string): string => {
+  return gameName ? `${separator}${gameName}${separator}` : '';
 };
 
-export const checkSecurityPrefix = (conciseInput: string): boolean => {
-  const securityPrefix = getSecurityPrefix();
+export const checkSecurityPrefix = (
+  gameName: undefined | string,
+  conciseInput: string
+): boolean => {
+  const securityPrefix = getSecurityPrefix(gameName);
   if (securityPrefix) {
     return conciseInput.startsWith(securityPrefix);
   }
   return true;
 };
 
-export const stripSecuirtyPrefix = (conciseInput: string): string => {
-  const securityPrefix = getSecurityPrefix();
+export const stripSecurityPrefix = (gameName: undefined | string, conciseInput: string): string => {
+  const securityPrefix = getSecurityPrefix(gameName);
   if (securityPrefix) {
-    return conciseInput.slice(securityPrefix.length);
+    if (conciseInput.startsWith(securityPrefix)) {
+      return conciseInput.slice(securityPrefix.length);
+    } else {
+      return conciseInput;
+    }
   }
   return conciseInput;
 };

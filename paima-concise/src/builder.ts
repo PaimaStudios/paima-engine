@@ -21,7 +21,11 @@ function validateString(s: string): boolean {
   return true;
 }
 
-const initialize = (input?: InputString, version = EncodingVersion.V1): ConciseBuilder => {
+const initialize = (
+  input?: InputString,
+  gameName?: string,
+  version = EncodingVersion.V1
+): ConciseBuilder => {
   let initialConciseInput = '';
   let concisePrefix = '';
   let conciseValues: ConciseValue[] = [];
@@ -44,6 +48,7 @@ const initialize = (input?: InputString, version = EncodingVersion.V1): ConciseB
     initialConciseInput,
     concisePrefix,
     conciseValues,
+    gameName,
     setPrefix(value: string, implicitUserAddress = false): void {
       if (!value) {
         throw new Error("Can't use empty value as prefix in concise builder");
@@ -74,7 +79,7 @@ const initialize = (input?: InputString, version = EncodingVersion.V1): ConciseB
     build(): string {
       switch (version) {
         case EncodingVersion.V1:
-          return buildv1(this.concisePrefix, this.conciseValues);
+          return buildv1(this.concisePrefix, this.gameName, this.conciseValues);
         default:
           throw Error(`Concise builder initialized with unsupported encoding version: ${version}`);
       }

@@ -28,7 +28,7 @@ import Prando from '@paima/prando';
 
 import { randomnessRouter } from './randomness.js';
 import { cdeTransitionFunction, getProcessedCdeDatumCount } from './cde-processing.js';
-import { checkSecurityPrefix, stripSecuirtyPrefix } from '@paima/concise';
+import { checkSecurityPrefix, stripSecurityPrefix } from '@paima/concise';
 
 const SM: GameStateMachineInitializer = {
   initialize: (
@@ -216,8 +216,8 @@ async function processScheduledData(
     const inputData: SubmittedData = {
       userAddress: SCHEDULED_DATA_ADDRESS,
       // security prefix is optional in scheduled data.
-      inputData: checkSecurityPrefix(data.input_data)
-        ? stripSecuirtyPrefix(data.input_data)
+      inputData: checkSecurityPrefix(ENV.CONCISE_GAME_NAME, data.input_data)
+        ? stripSecurityPrefix(ENV.CONCISE_GAME_NAME, data.input_data)
         : data.input_data,
       inputNonce: '',
       suppliedValue: '0',
@@ -265,7 +265,7 @@ async function processUserInputs(
       doLog(`Skipping inputData with duplicate nonce: ${inputData}`);
       continue;
     }
-    if (!checkSecurityPrefix(inputData.inputData)) {
+    if (!checkSecurityPrefix(ENV.CONCISE_GAME_NAME, inputData.inputData)) {
       doLog(`Skipping inputData with invalid security prefix: ${inputData}`);
       continue;
     }
@@ -274,7 +274,7 @@ async function processUserInputs(
     const sqlQueries = await gameStateTransition(
       {
         ...inputData,
-        inputData: stripSecuirtyPrefix(inputData.inputData),
+        inputData: stripSecurityPrefix(ENV.CONCISE_GAME_NAME, inputData.inputData),
       },
       latestChainData.blockNumber,
       randomnessGenerator,
