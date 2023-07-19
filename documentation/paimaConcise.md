@@ -13,7 +13,7 @@ We will have a TS object called the concise builder which allows the developer t
 ```ts
 let builder = conciseBuilder.initialize();
 //or
-let builder = conciseBuilder.initialize("j|*33kasmo2|...");
+let builder = conciseBuilder.initialize('j|*33kasmo2|...');
 ```
 
 Once the builder is initialized the developer can build the input out method-by-method. We'll use a pseudocode example to create a concisely encoded catapult join lobby input.
@@ -25,8 +25,9 @@ enum ConciseEncodingVersion {
 
 // Initialize builder with a specific concise encoding version. Defaults to V1.
 // Takes an option input string if building off of a previously created concise input string.
+// gameName adds a required prefix to all inputs for a game (checked by the SM) to allow safe auto-signing
 // V1 == Uncompresed `*` `|` notation, V2 == compressed
-let builder = conciseBuilder.initialize(input?: string, version?: ConciseEncodingVersion);
+let builder = conciseBuilder.initialize(input?: string, gameName?: string, version?: ConciseEncodingVersion);
 
 // Sets the input prefix (one or more characters at the start of the input string which tags what it is).
 // Calling setPrefix() multiple times replaces the old prefix each time it is called (aka. only latest remains).
@@ -89,7 +90,7 @@ interface CValue {
 }
 
 // Initialize consumer with a string of a specific concise encoding version (defaults to V1).
-initialize(input: string, version?: ConciseEncodingVersion);
+initialize(input: string, gameName?: string, version?: ConciseEncodingVersion);
 
 // The original input string which was provided to the consumer.
 // Optionally allows the caller to ask for the initial input to be decompressed (if in V1, decompress does nothing).
