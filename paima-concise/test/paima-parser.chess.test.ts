@@ -1,5 +1,5 @@
 import { describe, expect, test } from '@jest/globals';
-import { PaimaParser } from '../src/parser/PaimaParser';
+import { PaimaParser } from '../src/PaimaParser';
 
 const myGrammar = `
 createdLobby = c|numOfRounds|roundLength|playTimePerPlayer|isHidden?|isPractice?|playerOneIsWhite?
@@ -8,7 +8,7 @@ createdLobby = c|numOfRounds|roundLength|playTimePerPlayer|isHidden?|isPractice?
 const parserCommands = {
   createdLobby: {
     numOfRounds: PaimaParser.NumberParser(3, 1000),
-    roundLength: PaimaParser.DefaultRoundLength(),
+    roundLength: PaimaParser.DefaultRoundLength(parseInt(process.env.BLOCK_TIME || '4', 0)),
     playTimePerPlayer: PaimaParser.NumberParser(1, 10000),
     isHidden: PaimaParser.TrueFalseParser(false),
     isPractice: PaimaParser.TrueFalseParser(false),

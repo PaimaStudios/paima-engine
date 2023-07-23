@@ -118,7 +118,7 @@ export class PaimaParser {
   private readonly commands: ParserCommands;
   private readonly parser: Parser;
 
-  private readonly debug = process.env.NODE_ENV === 'development';
+  private readonly debug = process?.env?.NODE_ENV === 'development';
 
   constructor(paimaLang: string, commands: ParserCommands) {
     this.grammar = this.paimaLangToBNF(paimaLang);
@@ -230,13 +230,11 @@ at ::= "@"
     };
   }
 
-  public static DefaultRoundLength(): ParserCommandExec {
+  public static DefaultRoundLength(blockTimeInSecs: number): ParserCommandExec {
     return (keyName: string, input: string): number => {
       if (input == null) throw new Error(`${keyName} must be defined`);
       const n = parseInt(input, 10);
-      // We should use ENV.BLOCK_TIME instead of process.env.BLOCK_TIME
-      // Jest is failing with js modules.
-      const BLOCKS_PER_MINUTE = 60 / parseInt(process.env.BLOCK_TIME || '4', 0);
+      const BLOCKS_PER_MINUTE = 60 / blockTimeInSecs;
       const BLOCKS_PER_DAY = BLOCKS_PER_MINUTE * 60 * 24;
       if (n < BLOCKS_PER_MINUTE) throw new Error(`${keyName} is less then ${BLOCKS_PER_MINUTE}`);
       if (n > BLOCKS_PER_DAY) throw new Error(`${keyName} is greater then ${BLOCKS_PER_DAY}`);

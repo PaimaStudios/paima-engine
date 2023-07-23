@@ -1,6 +1,6 @@
 # Paima-utils-backend
 
-Paima-utils-backend is a simple library containing helper functions for other Paima backend libraries. This distinction is to support the separation of code targetting Node.js specifically from code targetting browsers specifically from code meant for use in both.
+Paima-utils-backend is a simple library containing helper functions for other Paima backend libraries. This distinction is to support the separation of code targeting Node.js specifically from code targeting browsers specifically from code meant for use in both.
 
 ## Usage
 
