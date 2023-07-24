@@ -12,9 +12,11 @@ module.exports = {
     },
   },
   contract_config: {
+    // TODO: modify this value as specified in the docs
     owner: ""
   },
   networks: {
+    // TODO: modify the target network as required as specified in the docs
     mainnet: {
       provider: () =>
         new HDWalletProvider({

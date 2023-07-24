@@ -12,6 +12,7 @@ module.exports = {
     },
   },
   contract_config: {
+    // TODO: modify these values as specified in the docs
     owner: "",
     fee: 10n ** 14n
   },
@@ -21,6 +22,7 @@ module.exports = {
       port: 7545,
       network_id: "*",
     },
+    // TODO: modify the target network as required as specified in the docs
     testnet: {
       provider: () =>
         new HDWalletProvider({
