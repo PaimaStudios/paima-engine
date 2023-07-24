@@ -1,12 +1,12 @@
 {
   "files": [],
   "references": [
+    { "path": "./paima-prando" },
     { "path": "./paima-utils" },
     { "path": "./paima-db" },
     { "path": "./paima-utils-backend" },
     { "path": "./paima-concise" },
     { "path": "./paima-mw-core" },
-    { "path": "./paima-prando" },
     { "path": "./paima-executors" }
   ]
 }

@@ -17,6 +17,7 @@ import { gameSM } from '../sm.js';
 import { importTsoaFunction } from './import.js';
 import { doLog, ENV } from '@paima/utils';
 import { exec } from 'child_process';
+import type { Template } from './types.js';
 
 // Prompt user for input in the CLI
 export const userPrompt = (query: string): Promise<string> => {
@@ -61,7 +62,7 @@ export const argumentRouter = async (): Promise<void> => {
       break;
 
     case 'batcher':
-      await batcherCommand();
+      batcherCommand();
       break;
 
     default:
@@ -78,6 +79,7 @@ export const initCommand = async (): Promise<void> => {
   } else if (init_arg == 'template') {
     const chosenTemplate = await pickGameTemplate(process.argv[4]);
     prepareTemplate(chosenTemplate);
+    if (chosenTemplate === 'web-2.5') prepareBatcher(true);
     prepareSDK(true);
   } else {
     doLog(`Usage: paima-engine init ARG`);
@@ -87,7 +89,7 @@ export const initCommand = async (): Promise<void> => {
       `   template                   Provides an interactive interface for initializing a template.`
     );
     doLog(
-      `   template [TEMPLATE_NAME]   Initializes the template if you're familiar with the direct template name (lower case).`
+      `   template [TEMPLATE_NAME]   Initializes the template if you're familiar with the direct template name.`
     );
   }
 };
@@ -155,8 +157,8 @@ export const helpCommand = (): void => {
   doLog(`   batcher   Saves the bundled batcher project to your local filesystem.`);
 };
 
-// Batcher commant logic
-export const batcherCommand = async (): Promise<void> => {
+// Batcher command logic
+export const batcherCommand = (): void => {
   prepareBatcher();
 };
 
@@ -178,14 +180,15 @@ const startWebServer = (): Promise<void> =>
   });
 
 // Allows the user to choose the game template
-const pickGameTemplate = async (templateArg: string): Promise<string> => {
+const pickGameTemplate = async (templateArg: string): Promise<Template> => {
   let availableTemplates = getFolderNames(PACKAGED_TEMPLATES_PATH);
-  if (availableTemplates.includes(templateArg)) return templateArg;
+  if (templateArg) {
+    const selection = availableTemplates.find(template => template === templateArg.toLowerCase());
+    if (selection) return selection;
+  }
 
   // Move the "generic" template to the first position if it exists
-  availableTemplates = availableTemplates.sort((a, b) =>
-    a === 'generic' ? -1 : b === 'generic' ? 1 : 0
-  );
+  availableTemplates.sort((a, b) => (a === 'generic' ? -1 : b === 'generic' ? 1 : 0));
 
   doLog(`Please select one of the following templates (by number):`);
 
@@ -208,6 +211,9 @@ const pickGameTemplate = async (templateArg: string): Promise<string> => {
         break;
       case 'nft-lvlup':
         displayName = 'NFT LevelUp (Stateful NFTs)';
+        break;
+      case 'web-2.5':
+        displayName = 'Web 2.5 (Self-signing batcher inputs)';
         break;
       default:
         displayName = templateName;

@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { ROUTER_FILENAME, API_FILENAME } from './import';
 import { doLog } from '@paima/utils';
+import type { Template } from './types';
 
 export const PACKAGED_TEMPLATES_PATH = `${__dirname}/templates`;
 const PACKAGED_SDK_PATH = `${__dirname}/paima-sdk`;
@@ -27,12 +28,12 @@ const copy = (src: string, dest: string): void => {
  * @param directoryPath root folder to search in
  * @returns names of all direct directories in a given folder
  */
-export const getFolderNames = (directoryPath: string): string[] => {
+export const getFolderNames = (directoryPath: string): Template[] => {
   const folders = fs
     .readdirSync(directoryPath, { withFileTypes: true })
     .filter(dirent => dirent.isDirectory())
     .map(dirent => dirent.name);
-  return folders;
+  return folders as Template[];
 };
 
 /**
@@ -84,7 +85,7 @@ export const prepareBatcher = (silentMode = false): void => {
 };
 
 // Initializes a project template
-export const prepareTemplate = (folder: string): void => {
+export const prepareTemplate = (folder: Template): void => {
   const TEMPLATE_FOLDER_PATH = `${process.cwd()}/${folder}`;
   const packagedTemplatePath = `${PACKAGED_TEMPLATES_PATH}/${folder}`;
   const success = `✅ Game template initialized: ${TEMPLATE_FOLDER_PATH}`;
