@@ -87,7 +87,7 @@ import { Grammars } from 'ebnf';
 // To create the parser create a instance of the parser
 // And parse the inputs with p.start(input)
 // -------------------------------------------------
-// const p = new PaimaParser(false, paimaLang, command);
+// const p = new PaimaParser(paimaLang, command);
 // try {
 //    const output = p.start('x|helloWorld');
 //  } catch (e) {
