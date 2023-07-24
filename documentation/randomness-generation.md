@@ -2,7 +2,7 @@
 
 Randomness is an important part of many games and having a good source of randomness prevents users from abusing statistical trends to their own benefit.
 
-In our case, we are building Paima Engine to produce games as globally accesible state machines. This means they are inherently deterministic (as everyone has to replay all submitted game input to arrive at the same global state). There is no central server which we rely on who could be the trusted randomness producing source (aka. randomness oracle).
+In our case, we are building Paima Engine to produce games as globally accessible state machines. This means they are inherently deterministic (as everyone has to replay all submitted game input to arrive at the same global state). There is no central server which we rely on who could be the trusted randomness producing source (aka. randomness oracle).
 
 Thus as we move forward having a good source of randomness becomes more and more important.
 
