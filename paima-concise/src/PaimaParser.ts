@@ -87,7 +87,7 @@ import { Grammars } from 'ebnf';
 // To create the parser create a instance of the parser
 // And parse the inputs with p.start(input)
 // -------------------------------------------------
-// const p = new PaimaParser(paimaLang, command);
+// const p = new PaimaParser(false, paimaLang, command);
 // try {
 //    const output = p.start('x|helloWorld');
 //  } catch (e) {
@@ -118,12 +118,14 @@ export class PaimaParser {
   private readonly commands: ParserCommands;
   private readonly parser: Parser;
 
-  private readonly debug = process?.env?.NODE_ENV === 'development';
+  // overly simple logging API. Generally set to process.env.NODE_ENV === 'development'
+  private readonly debug: boolean;
 
-  constructor(paimaLang: string, commands: ParserCommands) {
+  constructor(paimaLang: string, commands: ParserCommands, debug: boolean = false) {
     this.grammar = this.paimaLangToBNF(paimaLang);
     this.parser = new Grammars.W3C.Parser(this.grammar);
     this.commands = commands;
+    this.debug = debug;
   }
 
   // Convert PaimaLang definition to eBNF (W3C)
