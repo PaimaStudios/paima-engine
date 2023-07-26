@@ -1,9 +1,9 @@
 import Prando from '@paima/prando';
 import type { ChainData, SubmittedData } from '@paima/runtime';
-import Crypto from 'crypto';
 import type pg from 'pg';
 import { consumer } from '@paima/concise';
 import { getBlockSeeds } from '@paima/db';
+import { hashTogether } from '@paima/utils-backend';
 
 export function randomnessRouter(n: number): typeof getSeed1 {
   if (n) return getSeed1;
@@ -52,8 +52,4 @@ async function getSeed1(latestChainData: ChainData, DBConn: pg.Pool): Promise<st
   const selectedChainData = chooseData(latestChainData.submittedData, interimSeed);
   const seed = hashTogether([...selectedChainData, latestChainData.blockHash, ...blockSeeds]);
   return seed;
-}
-
-function hashTogether(data: string[]): string {
-  return Crypto.createHash('sha256').update(data.join()).digest('base64');
 }
