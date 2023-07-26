@@ -6,6 +6,8 @@ import type {
   PresyncChainData,
   SubmittedData,
   ChainDataExtensionDatum,
+  GameStateTransitionFunction,
+  GameStateMachineInitializer,
 } from '@paima/runtime';
 import {
   tx,
@@ -23,7 +25,6 @@ import {
   markCdeBlockheightProcessed,
   getLatestProcessedCdeBlockheight,
 } from '@paima/db';
-import type { GameStateTransitionFunction, GameStateMachineInitializer } from '@paima/runtime';
 import Prando from '@paima/prando';
 
 import { randomnessRouter } from './randomness.js';
@@ -42,7 +43,8 @@ const SM: GameStateMachineInitializer = {
     return {
       latestProcessedBlockHeight: async (): Promise<number> => {
         const [b] = await getLatestProcessedBlockHeight.run(undefined, readonlyDBConn);
-        const blockHeight = b?.block_height ?? startBlockHeight ?? 0;
+        const start = ENV.EMULATED_BLOCKS ? 0 : startBlockHeight;
+        const blockHeight = b?.block_height ?? start ?? 0;
         return blockHeight;
       },
       getPresyncBlockHeight: async (): Promise<number> => {
