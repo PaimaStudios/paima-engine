@@ -18,7 +18,7 @@ export class DataMigrations {
         // Get numeric prefix
         .map(f => f.match(/^(\d+)\.sql$/)?.[1])
         // Transform to number and offset
-        .map(f => parseInt((f as string), 10))
+        .map(f => parseInt(f as string, 10))
         // Check if migraton block height is in the future
         .filter(f => f + ENV.START_BLOCKHEIGHT > startBlock);
 
