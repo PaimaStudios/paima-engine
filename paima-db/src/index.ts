@@ -22,6 +22,7 @@ export * from './sql/cde-erc20.queries';
 export * from './sql/cde-erc721.queries';
 export * from './sql/cde-erc20-deposit.queries';
 export * from './sql/cde-generic.queries';
+export * from './sql/emulated.queries';
 
 export {
   tx,
