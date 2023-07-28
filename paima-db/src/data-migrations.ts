@@ -20,13 +20,13 @@ export class DataMigrations {
         // Transform to number and offset
         .map(f => parseInt(f as string, 10))
         // Check if migraton block height is in the future
-        .filter(f => f + ENV.START_BLOCKHEIGHT > startBlock);
+        .filter(f => f + ENV.SM_START_BLOCKHEIGHT > startBlock);
 
       if (DataMigrations.pendingMigrations.length > 0) {
         DataMigrations.pendingMigrations.sort((a, b) => a - b); // sort asc
         console.log('Loaded Migrations:');
         DataMigrations.pendingMigrations.forEach(x =>
-          console.log(`${x}.sql running in ${x - (startBlock - ENV.START_BLOCKHEIGHT)} blocks`)
+          console.log(`${x}.sql running in ${x - (startBlock - ENV.SM_START_BLOCKHEIGHT)} blocks`)
         );
       }
     } catch (e) {
@@ -44,12 +44,12 @@ export class DataMigrations {
   public static hasPendingMigration(currentBlock: number): boolean {
     if (DataMigrations.pendingMigrations.length === 0) return false;
     // We need only to check the first, pendingMigrations are sorted first to last.
-    return DataMigrations.pendingMigrations[0] + ENV.START_BLOCKHEIGHT === currentBlock;
+    return DataMigrations.pendingMigrations[0] + ENV.SM_START_BLOCKHEIGHT === currentBlock;
   }
 
   public static async applyDataDBMigrations(currentBlock: number): Promise<void> {
     // check if migration within
-    if (DataMigrations.pendingMigrations[0] + ENV.START_BLOCKHEIGHT !== currentBlock) {
+    if (DataMigrations.pendingMigrations[0] + ENV.SM_START_BLOCKHEIGHT !== currentBlock) {
       throw new Error('No data migration to apply at: ' + currentBlock);
     }
     const migration = DataMigrations.pendingMigrations.shift();
