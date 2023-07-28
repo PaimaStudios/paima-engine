@@ -116,9 +116,6 @@ export class EmulatedBlocksProcessor {
       const block = this.processingQueue.shift();
       if (block) {
         mergedBlocks.push(block);
-        console.log(
-          `[funnel::ebp] processing block ${block.blockNumber} @${block.timestamp} for emulated ${blockNumber}`
-        );
       }
     }
 
