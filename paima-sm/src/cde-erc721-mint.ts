@@ -11,7 +11,7 @@ export default async function processErc721Datum(
     return [];
   }
   const { tokenId, mintData } = cdeDatum.payload;
-  const scheduledBlockHeight = Math.max(cdeDatum.blockNumber, ENV.START_BLOCKHEIGHT + 1);
+  const scheduledBlockHeight = Math.max(cdeDatum.blockNumber, ENV.SM_START_BLOCKHEIGHT + 1);
   const scheduledInputData = `${prefix}|${address}|${tokenId}|${mintData}`;
   return [createScheduledData(scheduledInputData, scheduledBlockHeight)];
 }
