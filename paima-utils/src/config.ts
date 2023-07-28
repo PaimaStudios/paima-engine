@@ -70,6 +70,9 @@ export class ENV {
   static get START_BLOCKHEIGHT(): number {
     return parseInt(process.env.START_BLOCKHEIGHT || '0', 10);
   }
+  static get SM_START_BLOCKHEIGHT(): number {
+    return this.EMULATED_BLOCKS ? 0 : ENV.START_BLOCKHEIGHT;
+  }
   static get DEFAULT_FUNNEL_GROUP_SIZE(): number {
     return parseInt(process.env.DEFAULT_FUNNEL_GROUP_SIZE || '100', 10);
   }
