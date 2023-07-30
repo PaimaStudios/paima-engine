@@ -1,4 +1,7 @@
 const privateKey = process.env.PRIVATE_KEY;
+if (privateKey == null || typeof privateKey !== "string") {
+  throw new Error("Missing ENV variable PRIVATE_KEY");
+}
 const HDWalletProvider = require("@truffle/hdwallet-provider");
 
 module.exports = {
