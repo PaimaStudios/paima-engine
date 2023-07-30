@@ -1,5 +1,5 @@
 import { describe, expect, test } from '@jest/globals';
-import { PaimaParser } from '../src/PaimaParser';
+import { PaimaParser, PaimaParserError } from '../src/PaimaParser';
 
 const myGrammar = `
   join = j|base64
@@ -47,7 +47,11 @@ describe('Test base64 commands', () => {
           }
           expect(!!value).toBe(i[1]);
         } catch (e) {
-          expect(false).toBe(i[1]);
+          if (e instanceof PaimaParserError) {
+            expect(false).toBe(i[1]);
+          } else {
+            throw e;
+          }
         }
       });
     });

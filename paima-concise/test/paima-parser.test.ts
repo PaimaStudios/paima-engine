@@ -1,5 +1,5 @@
 import { describe, expect, test } from '@jest/globals';
-import { PaimaParser } from '../src/PaimaParser';
+import { PaimaParser, PaimaParserError } from '../src/PaimaParser';
 
 const myGrammar = `
 createLobby         = c|numOfRounds|roundLength|isHidden?|isPractice?
@@ -54,7 +54,11 @@ describe('Test if parsed', () => {
           const value = !!parser.start(i[0]);
           expect(value).toBe(i[1]);
         } catch (e) {
-          expect(false).toBe(i[1]);
+          if (e instanceof PaimaParserError) {
+            expect(false).toBe(i[1]);
+          } else {
+            throw e;
+          }
         }
       });
     });
@@ -141,7 +145,7 @@ describe('Test if parsed', () => {
     ['@u|W', false],
     ['@u|M', false],
     ['@u|', false],
-    ['@u|w', false],
+    ['@u|w', true],
     ['@u|t', true],
     ['@u|l', true],
   ]);
