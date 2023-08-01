@@ -122,7 +122,7 @@ export class EmulatedBlocksProcessor {
     const blockHash = await this.calculateHash(mergedBlocks, blockNumber);
     const submittedData = mergedBlocks.map(block => block.submittedData).flat();
     const extensionDatums = emulateCde(
-      mergedBlocks.map(block => (block.extensionDatums ? block.extensionDatums : [])),
+      mergedBlocks.map(block => (block.extensionDatums ?? [])),
       blockNumber
     );
 
