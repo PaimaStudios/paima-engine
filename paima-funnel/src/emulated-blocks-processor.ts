@@ -126,15 +126,17 @@ export class EmulatedBlocksProcessor {
       blockNumber
     );
 
-    for (const block of mergedBlocks) {
-      await upsertEmulatedBlockheight.run(
-        {
+    await upsertEmulatedBlockheight.run(
+      {
+        items: mergedBlocks.map(block => ({
           deployment_chain_block_height: block.blockNumber,
           second_timestamp: block.timestamp.toString(10),
           emulated_block_height: blockNumber,
-        },
-        this.DBConn
-      );
+        })),
+      },
+      this.DBConn
+    );
+    for (const block of mergedBlocks) {
     }
 
     return {

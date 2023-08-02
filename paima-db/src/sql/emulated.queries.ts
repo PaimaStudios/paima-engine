@@ -35,9 +35,11 @@ export const emulatedSelectLatestPrior = new PreparedQuery<IEmulatedSelectLatest
 
 /** 'UpsertEmulatedBlockheight' parameters type */
 export interface IUpsertEmulatedBlockheightParams {
-  deployment_chain_block_height: number;
-  emulated_block_height: number;
-  second_timestamp: string;
+  items: readonly ({
+    deployment_chain_block_height: number | null | void,
+    second_timestamp: string | null | void,
+    emulated_block_height: number | null | void
+  })[];
 }
 
 /** 'UpsertEmulatedBlockheight' return type */
@@ -49,7 +51,7 @@ export interface IUpsertEmulatedBlockheightQuery {
   result: IUpsertEmulatedBlockheightResult;
 }
 
-const upsertEmulatedBlockheightIR: any = {"usedParamSet":{"deployment_chain_block_height":true,"second_timestamp":true,"emulated_block_height":true},"params":[{"name":"deployment_chain_block_height","required":true,"transform":{"type":"scalar"},"locs":[{"a":134,"b":164}]},{"name":"second_timestamp","required":true,"transform":{"type":"scalar"},"locs":[{"a":171,"b":188}]},{"name":"emulated_block_height","required":true,"transform":{"type":"scalar"},"locs":[{"a":195,"b":217}]}],"statement":"INSERT INTO emulated_block_heights(\n    deployment_chain_block_height,\n    second_timestamp,\n    emulated_block_height\n) VALUES (\n    :deployment_chain_block_height!,\n    :second_timestamp!,\n    :emulated_block_height!\n) ON CONFLICT (deployment_chain_block_height)\nDO UPDATE SET\ndeployment_chain_block_height = EXCLUDED.deployment_chain_block_height,\nsecond_timestamp = EXCLUDED.second_timestamp,\nemulated_block_height = EXCLUDED.emulated_block_height"};
+const upsertEmulatedBlockheightIR: any = {"usedParamSet":{"items":true},"params":[{"name":"items","required":true,"transform":{"type":"pick_array_spread","keys":[{"name":"deployment_chain_block_height","required":false},{"name":"second_timestamp","required":false},{"name":"emulated_block_height","required":false}]},"locs":[{"a":128,"b":134}]}],"statement":"INSERT INTO emulated_block_heights(\n    deployment_chain_block_height,\n    second_timestamp,\n    emulated_block_height\n) VALUES :items!\nON CONFLICT DO NOTHING"};
 
 /**
  * Query generated from SQL:
@@ -58,15 +60,8 @@ const upsertEmulatedBlockheightIR: any = {"usedParamSet":{"deployment_chain_bloc
  *     deployment_chain_block_height,
  *     second_timestamp,
  *     emulated_block_height
- * ) VALUES (
- *     :deployment_chain_block_height!,
- *     :second_timestamp!,
- *     :emulated_block_height!
- * ) ON CONFLICT (deployment_chain_block_height)
- * DO UPDATE SET
- * deployment_chain_block_height = EXCLUDED.deployment_chain_block_height,
- * second_timestamp = EXCLUDED.second_timestamp,
- * emulated_block_height = EXCLUDED.emulated_block_height
+ * ) VALUES :items!
+ * ON CONFLICT DO NOTHING
  * ```
  */
 export const upsertEmulatedBlockheight = new PreparedQuery<IUpsertEmulatedBlockheightParams,IUpsertEmulatedBlockheightResult>(upsertEmulatedBlockheightIR);
