@@ -236,9 +236,6 @@ const paimaFunnelInitializer = {
       ENV.EMULATED_BLOCKS,
       ENV.EMULATED_BLOCKS_MAX_WAIT
     );
-    if (emulatedBlocksProcessor) {
-      await emulatedBlocksProcessor.recoverStateFromDatabase();
-    }
     return new PaimaFunnel(
       web3,
       paimaL2Contract,

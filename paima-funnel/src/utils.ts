@@ -60,12 +60,15 @@ export async function initializeEmulatedBlocksProcessor(
   if (!emulatedBlocks) {
     return undefined;
   }
+
   const startBlock = await timeout(web3.eth.getBlock(startBlockHeight), DEFAULT_FUNNEL_TIMEOUT);
   const startTimestamp =
     typeof startBlock.timestamp === 'string'
       ? parseInt(startBlock.timestamp, 10)
       : startBlock.timestamp;
-  return new EmulatedBlocksProcessor(DBConn, startBlockHeight, startTimestamp, maxWait);
+  const ebp = new EmulatedBlocksProcessor(DBConn, startBlockHeight, startTimestamp, maxWait);
+  await ebp.recoverStateFromDatabase();
+  return ebp;
 }
 
 export function emulateCde(
