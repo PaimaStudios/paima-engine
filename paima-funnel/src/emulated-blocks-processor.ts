@@ -5,7 +5,7 @@ import type { ChainData } from '@paima/runtime';
 import { ENV } from '@paima/utils';
 import {
   emulatedSelectLatestPrior,
-  emulatedStoreBlockHeight,
+  upsertEmulatedBlockheight,
   getBlockHeight,
   getLatestProcessedBlockHeight,
 } from '@paima/db';
@@ -122,12 +122,12 @@ export class EmulatedBlocksProcessor {
     const blockHash = await this.calculateHash(mergedBlocks, blockNumber);
     const submittedData = mergedBlocks.map(block => block.submittedData).flat();
     const extensionDatums = emulateCde(
-      mergedBlocks.map(block => (block.extensionDatums ?? [])),
+      mergedBlocks.map(block => block.extensionDatums ?? []),
       blockNumber
     );
 
     for (const block of mergedBlocks) {
-      await emulatedStoreBlockHeight.run(
+      await upsertEmulatedBlockheight.run(
         {
           deployment_chain_block_height: block.blockNumber,
           second_timestamp: block.timestamp.toString(10),
