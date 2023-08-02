@@ -1,7 +1,7 @@
 import process from 'process';
 
 import { doLog, logError, ENV } from '@paima/utils';
-import { DataMigrations } from '@paima/db';
+import { DataMigrations, deploymentChainBlockheightToEmulated } from '@paima/db';
 import { validatePersistentCdeConfig } from './cde-config/validation';
 import type { ChainFunnel, GameStateMachine, PaimaRuntimeInitializer } from './types';
 
@@ -67,6 +67,43 @@ const paimaEngine: PaimaRuntimeInitializer = {
             .latestProcessedBlockHeight()
             .then(blockHeight => res.json({ block_height: blockHeight }))
             .catch(_error => res.status(500));
+        });
+        this.addGET('/emulated_blocks_active', (req, res): void => {
+          res.json({ emulatedBlocksActive: ENV.EMULATED_BLOCKS });
+        });
+        this.addGET('/deployment_blockheight_to_emulated', (req, res): void => {
+          const paramString = String(req.query.deploymentBlockheight);
+          const deploymentBlockheight = parseInt(paramString, 10);
+          if (isNaN(deploymentBlockheight)) {
+            res.status(400).json({
+              success: false,
+              message: 'Invalid or missing deploymentBlockheight parameter',
+            });
+          }
+
+          const DBConn = gameStateMachine.getReadonlyDbConn();
+          deploymentChainBlockheightToEmulated
+            .run({ deployment_chain_block_height: deploymentBlockheight }, DBConn)
+            .then(emulatedBlockheights => {
+              if (emulatedBlockheights.length !== 1) {
+                return res.status(200).json({
+                  success: false,
+                  message: `Supplied blockheight ${deploymentBlockheight} not found in DB`,
+                });
+              } else {
+                return res.status(200).json({
+                  success: true,
+                  emulatedBlockheight: emulatedBlockheights[0].emulated_block_height,
+                });
+              }
+            })
+            .catch(err => {
+              doLog(`Webserver error: ${err}`);
+              return res.status(500).json({
+                success: false,
+                error: 'Unable to fetch blockheights from DB',
+              });
+            });
         });
 
         setRunFlag();
