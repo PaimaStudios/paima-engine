@@ -69,7 +69,8 @@ function runDeployment() {
     echo "  1. The Nft contract (Paima ERC721)"
     echo "  2. The NativeNftSale contract (for buying NFTs with the blockchain's native currency)"
     echo "  3. The Erc20NftSale contract (for buying NFTs with pre-specified ERC20 tokens)"
-    read -p "Please enter your choice (1-3): " choice
+    echo "  4. Generic Payment contract "
+    read -p "Please enter your choice (1-4): " choice
 
     echo ""
     case $choice in
@@ -81,6 +82,9 @@ function runDeployment() {
         ;;
       3)
         deployErc20NftSale
+        ;;
+      4)
+        deployGenericPaymentSale
         ;;
       *)
         echo "Invalid choice, deploying nothing."
@@ -164,6 +168,16 @@ function deployErc20NftSale() {
         node scripts/report-deployment-erc20-sale.js
     else
         echo "Something went wrong while deploying the Erc20NftSale contract."
+    fi
+}
+
+function deployGenericPaymentSale() {
+    npx truffle migrate --f 13 --to 13 --network $TARGET_NETWORK
+    local status=$?
+    if [ $status -eq 0 ]; then
+        node scripts/report-deployment-generic-payment.js
+    else
+        echo "Something went wrong while deploying the GenericPayment contract."
     fi
 }
 
