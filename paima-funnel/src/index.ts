@@ -58,10 +58,7 @@ class PaimaFunnel {
     }
   };
 
-  public readSyncData = async (
-    blockHeight: number,
-    blockCount: number
-  ): Promise<ChainData[]> => {
+  public readSyncData = async (blockHeight: number, blockCount: number): Promise<ChainData[]> => {
     const [fromBlock, toBlock] = await this.adjustBlockHeightRange(blockHeight, blockCount);
 
     if (fromBlock < 0 || toBlock < fromBlock) {
@@ -93,7 +90,7 @@ class PaimaFunnel {
     }
 
     try {
-      blockHeight = await this.emulatedBlocksProcessor.emulatedBlockHeightToDeployment(blockHeight);
+      blockHeight = await this.emulatedBlocksProcessor.getDeploymentChainBlockHeight(blockHeight);
       // errors from the previous line should stop the entire engine -- rethrow
     } catch (err) {
       doLog(`[paima-funnel::readData] Exception occurred while calculating DC blockheight: ${err}`);

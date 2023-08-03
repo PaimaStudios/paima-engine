@@ -35,7 +35,18 @@ export class EmulatedBlocksProcessor {
     this.processingQueue = [];
   }
 
-  public emulatedBlockHeightToDeployment = async (emulatedBlockHeight: number): Promise<number> => {
+  /**
+   * Converts the supplied emulated blockheight to the expected deployment chain blockheight
+   * at which corresponding blocks could be found.
+   *
+   * The desired emulated blockheight is expected to be the successor of the latest emulated
+   * block that was output -- the alternative should only happen after restarting the game node,
+   * in which case the function relies on emulated blockheight data in the database.
+   *
+   * @param emulatedBlockHeight -- the next desired emulated blockheight
+   * @returns the deployment chain blockheight to start fetching from
+   */
+  public getDeploymentChainBlockHeight = async (emulatedBlockHeight: number): Promise<number> => {
     if (emulatedBlockHeight != this.latestEmulatedBlockNumber + 1) {
       const result = await emulatedSelectLatestPrior.run(
         { emulated_block_height: emulatedBlockHeight },
@@ -52,6 +63,13 @@ export class EmulatedBlocksProcessor {
     return this.latestFetchedBlockNumber + 1;
   };
 
+  /**
+   * Validate and prepare the next batch of deployment chain blocks for processing
+   *
+   * @param currentTimestamp -- timestamp in seconds at the time of fetching the blocks
+   * @param fetchedBlocks
+   * @param synced -- true if the game node state has caught up with the latest deployment chain state
+   */
   public feedData = async (
     currentTimestamp: number,
     fetchedBlocks: ChainData[],
@@ -93,37 +111,46 @@ export class EmulatedBlocksProcessor {
     this.latestFetchedTimestamp = parseInt(res.second_timestamp, 10);
   };
 
+  /**
+   * Process the deployment chain blocks waiting in the processing queue and return
+   * the next emulated block, if it can already be constructed.
+   *
+   * @returns the next emulated block if possible, `undefined` otherwise (if deployment chain data not yet available)
+   */
   public getNextBlock = async (): Promise<ChainData | undefined> => {
-    const blockNumber = this.latestEmulatedBlockNumber + 1;
-    const endTimestamp = calculateBoundaryTimestamp(
+    const nextBlockBlockNumber = this.latestEmulatedBlockNumber + 1;
+    const nextBlockEndTimestamp = calculateBoundaryTimestamp(
       this.startTimestamp,
       ENV.BLOCK_TIME,
-      blockNumber
+      nextBlockBlockNumber
     );
-    if (endTimestamp >= this.certaintyThreshold) {
+    if (nextBlockEndTimestamp >= this.certaintyThreshold) {
       return undefined;
     }
 
-    const timestamp = calculateBoundaryTimestamp(
+    const nextBlockTimestamp = calculateBoundaryTimestamp(
       this.startTimestamp,
       ENV.BLOCK_TIME,
-      blockNumber - 1
+      nextBlockBlockNumber - 1
     );
-    this.latestEmulatedBlockNumber = blockNumber;
+    this.latestEmulatedBlockNumber = nextBlockBlockNumber;
 
     const mergedBlocks: ChainData[] = [];
-    while (this.processingQueue.length > 0 && this.processingQueue[0].timestamp < endTimestamp) {
+    while (
+      this.processingQueue.length > 0 &&
+      this.processingQueue[0].timestamp < nextBlockEndTimestamp
+    ) {
       const block = this.processingQueue.shift();
       if (block) {
         mergedBlocks.push(block);
       }
     }
 
-    const blockHash = await this.calculateHash(mergedBlocks, blockNumber);
-    const submittedData = mergedBlocks.map(block => block.submittedData).flat();
-    const extensionDatums = emulateCde(
+    const nextBlockBlockHash = await this.calculateHash(mergedBlocks, nextBlockBlockNumber);
+    const nextBlockSubmittedData = mergedBlocks.map(block => block.submittedData).flat();
+    const nextBlockExtensionDatums = emulateCde(
       mergedBlocks.map(block => block.extensionDatums ?? []),
-      blockNumber
+      nextBlockBlockNumber
     );
 
     await upsertEmulatedBlockheight.run(
@@ -131,20 +158,18 @@ export class EmulatedBlocksProcessor {
         items: mergedBlocks.map(block => ({
           deployment_chain_block_height: block.blockNumber,
           second_timestamp: block.timestamp.toString(10),
-          emulated_block_height: blockNumber,
+          emulated_block_height: nextBlockBlockNumber,
         })),
       },
       this.DBConn
     );
-    for (const block of mergedBlocks) {
-    }
 
     return {
-      blockNumber,
-      blockHash,
-      timestamp,
-      submittedData,
-      extensionDatums,
+      blockNumber: nextBlockBlockNumber,
+      blockHash: nextBlockBlockHash,
+      timestamp: nextBlockTimestamp,
+      submittedData: nextBlockSubmittedData,
+      extensionDatums: nextBlockExtensionDatums,
     };
   };
 
