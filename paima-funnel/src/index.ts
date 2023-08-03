@@ -60,7 +60,7 @@ class PaimaFunnel {
 
   public readSyncData = async (
     blockHeight: number,
-    blockCount: number = ENV.DEFAULT_FUNNEL_GROUP_SIZE
+    blockCount: number
   ): Promise<ChainData[]> => {
     const [fromBlock, toBlock] = await this.adjustBlockHeightRange(blockHeight, blockCount);
 
@@ -79,7 +79,7 @@ class PaimaFunnel {
 
   public readEmulatedData = async (
     blockHeight: number,
-    blockCount: number = ENV.DEFAULT_FUNNEL_GROUP_SIZE
+    blockCount: number
   ): Promise<ChainData[]> => {
     if (!this.emulatedBlocksProcessor) {
       throw new Error(
