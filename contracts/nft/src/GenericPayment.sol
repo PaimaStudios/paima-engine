@@ -1,12 +1,13 @@
 pragma solidity ^0.8.13;
 
-import "./BaseState.sol";
 import "./ERC1967.sol";
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 
-contract GenericPayment is BaseState, ERC1967, Ownable {
+contract GenericPayment is ERC1967, Ownable {
+    bool public initialized;
+
     using Address for address payable;
 
     event Initialized(address indexed owner);
