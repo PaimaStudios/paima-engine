@@ -153,16 +153,15 @@ export class EmulatedBlocksProcessor {
       nextBlockBlockNumber
     );
 
-    await upsertEmulatedBlockheight.run(
-      {
-        items: mergedBlocks.map(block => ({
-          deployment_chain_block_height: block.blockNumber,
-          second_timestamp: block.timestamp.toString(10),
-          emulated_block_height: nextBlockBlockNumber,
-        })),
-      },
-      this.DBConn
-    );
+    if (mergedBlocks.length > 0) {
+      const emulatedBlockheights = mergedBlocks.map(block => ({
+        deployment_chain_block_height: block.blockNumber,
+        second_timestamp: block.timestamp.toString(10),
+        emulated_block_height: nextBlockBlockNumber,
+      }));
+      const params = { items: emulatedBlockheights };
+      await upsertEmulatedBlockheight.run(params, this.DBConn);
+    }
 
     return {
       blockNumber: nextBlockBlockNumber,
