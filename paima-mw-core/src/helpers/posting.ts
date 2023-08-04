@@ -167,12 +167,12 @@ async function postString(
       );
       return {
         success: true,
-        result: emulatedBlockHeight
+        result: emulatedBlockHeight,
       };
     } else {
       return {
         success: true,
-        result: deploymentChainBlockHeight
+        result: deploymentChainBlockHeight,
       };
     }
   } catch (err) {

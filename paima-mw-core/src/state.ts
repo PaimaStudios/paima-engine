@@ -89,8 +89,12 @@ export const setBackendUri = (newUri: URI): URI => (backendUri = newUri);
 export const getBackendUri = (): URI => backendUri;
 export const getBatcherUri = (): URI => batcherUri;
 
-export const setEmulatedBlocksActive = (): void => { emulatedBlocksActive = true };
-export const setEmulatedBlocksInactive = (): void => { emulatedBlocksActive = false };
+export const setEmulatedBlocksActive = (): void => {
+  emulatedBlocksActive = true;
+};
+export const setEmulatedBlocksInactive = (): void => {
+  emulatedBlocksActive = false;
+};
 export const getEmulatedBlocksActive = (): boolean => emulatedBlocksActive;
 
 export const setGameVersion = (newGameVersion: VersionString): VersionString =>

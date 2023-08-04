@@ -1,9 +1,17 @@
 import { buildEndpointErrorFxn, PaimaMiddlewareErrorCode } from '../errors';
-import { emulatedBlocksActiveOnBackend, localRemoteVersionsCompatible } from '../helpers/auxiliary-queries';
+import {
+  emulatedBlocksActiveOnBackend,
+  localRemoteVersionsCompatible,
+} from '../helpers/auxiliary-queries';
 import { checkCardanoWalletStatus } from '../wallets/cardano';
 import { checkEthWalletStatus } from '../wallets/evm';
 import { specificWalletLogin, stringToWalletMode } from '../wallets/wallets';
-import { getPostingMode, PostingMode, setEmulatedBlocksActive, setEmulatedBlocksInactive } from '../state';
+import {
+  getPostingMode,
+  PostingMode,
+  setEmulatedBlocksActive,
+  setEmulatedBlocksInactive,
+} from '../state';
 import type { Result, OldResult, Wallet } from '../types';
 
 /**

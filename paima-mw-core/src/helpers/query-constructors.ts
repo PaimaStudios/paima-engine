@@ -50,13 +50,12 @@ export function backendQueryEmulatedBlocksActive(): string {
   const endpoint = 'emulated_blocks_active';
   const options = {};
   return buildBackendQuery(endpoint, options);
-
 }
 
 export function backendQueryDeploymentBlockheightToEmulated(deploymentBlockheight: number): string {
   const endpoint = 'deployment_blockheight_to_emulated';
   const options = {
-    deploymentBlockheight
+    deploymentBlockheight,
   };
   return buildBackendQuery(endpoint, options);
 }
