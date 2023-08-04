@@ -77,7 +77,7 @@ const paimaEngine: PaimaRuntimeInitializer = {
           if (isNaN(deploymentBlockheight)) {
             res.status(400).json({
               success: false,
-              message: 'Invalid or missing deploymentBlockheight parameter',
+              errorMessage: 'Invalid or missing deploymentBlockheight parameter',
             });
           }
 
@@ -88,12 +88,12 @@ const paimaEngine: PaimaRuntimeInitializer = {
               if (emulatedBlockheights.length !== 1) {
                 return res.status(200).json({
                   success: false,
-                  message: `Supplied blockheight ${deploymentBlockheight} not found in DB`,
+                  errorMessage: `Supplied blockheight ${deploymentBlockheight} not found in DB`,
                 });
               } else {
                 return res.status(200).json({
                   success: true,
-                  emulatedBlockheight: emulatedBlockheights[0].emulated_block_height,
+                  result: emulatedBlockheights[0].emulated_block_height,
                 });
               }
             })
@@ -101,7 +101,7 @@ const paimaEngine: PaimaRuntimeInitializer = {
               doLog(`Webserver error: ${err}`);
               return res.status(500).json({
                 success: false,
-                error: 'Unable to fetch blockheights from DB',
+                errorMessage: 'Unable to fetch blockheights from DB',
               });
             });
         });
