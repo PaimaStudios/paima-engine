@@ -16,10 +16,6 @@ export function batchedToJsonString(b: BatchedSubunit): string {
   });
 }
 
-export function batchedToString(b: BatchedSubunit): string {
-  return [b.userAddress, b.userSignature, b.gameInput, b.millisecondTimestamp].join('/');
-}
-
 function selectSignFunction(addressType: AddressType): SignFunction {
   switch (addressType) {
     case AddressType.EVM:
