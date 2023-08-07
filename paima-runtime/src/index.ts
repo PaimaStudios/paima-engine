@@ -1,7 +1,7 @@
 import process from 'process';
 
 import { doLog, logError, ENV } from '@paima/utils';
-import { DataMigrations, deploymentChainBlockheightToEmulated } from '@paima/db';
+import { DataMigrations, deploymentChainBlockheightToEmulated, getGameInput } from '@paima/db';
 import { validatePersistentCdeConfig } from './cde-config/validation';
 import type { ChainFunnel, GameStateMachine, PaimaRuntimeInitializer } from './types';
 
@@ -72,38 +72,125 @@ const paimaEngine: PaimaRuntimeInitializer = {
           res.json({ emulatedBlocksActive: ENV.EMULATED_BLOCKS });
         });
         this.addGET('/deployment_blockheight_to_emulated', (req, res): void => {
-          const paramString = String(req.query.deploymentBlockheight);
-          const deploymentBlockheight = parseInt(paramString, 10);
-          if (isNaN(deploymentBlockheight)) {
-            res.status(400).json({
+          try {
+            const paramString = String(req.query.deploymentBlockheight);
+            const deploymentBlockheight = parseInt(paramString, 10);
+            if (isNaN(deploymentBlockheight)) {
+              res.status(400).json({
+                success: false,
+                errorMessage: 'Invalid or missing deploymentBlockheight parameter',
+              });
+            }
+
+            const DBConn = gameStateMachine.getReadonlyDbConn();
+            deploymentChainBlockheightToEmulated
+              .run({ deployment_chain_block_height: deploymentBlockheight }, DBConn)
+              .then(emulatedBlockheights => {
+                if (emulatedBlockheights.length !== 1) {
+                  return res.status(200).json({
+                    success: false,
+                    errorMessage: `Supplied blockheight ${deploymentBlockheight} not found in DB`,
+                  });
+                } else {
+                  return res.status(200).json({
+                    success: true,
+                    result: emulatedBlockheights[0].emulated_block_height,
+                  });
+                }
+              })
+              .catch(err => {
+                doLog(`Webserver error:`);
+                logError(err);
+                return res.status(500).json({
+                  success: false,
+                  errorMessage: 'Unable to fetch blockheights from DB',
+                });
+              });
+          } catch (err) {
+            doLog(`Unexpected webserver error:`);
+            logError(err);
+            res.status(500).json({
               success: false,
-              errorMessage: 'Invalid or missing deploymentBlockheight parameter',
+              errorMessage: 'Unknown error, please contact game node administrator',
             });
           }
+        });
+        this.addGET('/confirm_input_acceptance', (req, res): void => {
+          try {
+            if (!ENV.STORE_HISTORICAL_GAME_INPUTS) {
+              res.status(500).json({
+                success: false,
+                errorMessage: 'Game input storing turned off in the game node',
+              });
+              return;
+            }
 
-          const DBConn = gameStateMachine.getReadonlyDbConn();
-          deploymentChainBlockheightToEmulated
-            .run({ deployment_chain_block_height: deploymentBlockheight }, DBConn)
-            .then(emulatedBlockheights => {
-              if (emulatedBlockheights.length !== 1) {
-                return res.status(200).json({
-                  success: false,
-                  errorMessage: `Supplied blockheight ${deploymentBlockheight} not found in DB`,
-                });
-              } else {
+            const gameInput = String(req.query.gameInput);
+            const userAddress = String(req.query.userAddress);
+            const blockHeightString = String(req.query.blockHeight);
+            const blockHeight = parseInt(blockHeightString, 10);
+
+            if (!userAddress) {
+              res.status(400).json({
+                success: false,
+                errorMessage: 'Query missing userAddress',
+              });
+              return;
+            }
+            if (!blockHeight) {
+              res.status(400).json({
+                success: false,
+                errorMessage: 'Query missing blockHeight',
+              });
+              return;
+            }
+            if (!gameInput) {
+              res.status(400).json({
+                success: false,
+                errorMessage: 'Query missing gameInput',
+              });
+              return;
+            }
+
+            const DBConn = gameStateMachine.getReadonlyDbConn();
+            getGameInput
+              .run(
+                {
+                  user_address: userAddress,
+                  block_height: blockHeight,
+                },
+                DBConn
+              )
+              .then(results => {
+                for (const row of results) {
+                  if (row.input_data === gameInput) {
+                    return res.status(200).json({
+                      success: true,
+                      result: true,
+                    });
+                  }
+                }
                 return res.status(200).json({
                   success: true,
-                  result: emulatedBlockheights[0].emulated_block_height,
+                  result: false,
                 });
-              }
-            })
-            .catch(err => {
-              doLog(`Webserver error: ${err}`);
-              return res.status(500).json({
-                success: false,
-                errorMessage: 'Unable to fetch blockheights from DB',
+              })
+              .catch(err => {
+                doLog(`Webserver error:`);
+                logError(err);
+                return res.status(500).json({
+                  success: false,
+                  errorMessage: 'Unable to fetch game inputs from the DB',
+                });
               });
+          } catch (err) {
+            doLog(`Unexpected webserver error:`);
+            logError(err);
+            res.status(500).json({
+              success: false,
+              errorMessage: 'Unknown error, please contact game node administrator',
             });
+          }
         });
 
         setRunFlag();
