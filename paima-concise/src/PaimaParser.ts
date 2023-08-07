@@ -132,7 +132,7 @@ export class PaimaParser {
     paimaLang: string,
     commands: ParserCommands,
     options?: {
-      debug?: boolean
+      debug?: boolean;
     }
   ) {
     this.grammar = this.paimaLangToBNF(paimaLang);

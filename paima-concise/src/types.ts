@@ -16,7 +16,7 @@ export type ConciseBuilderInitializer = {
   initialize: (
     input?: InputString,
     options?: {
-      version?: EncodingVersion
+      version?: EncodingVersion;
     }
   ) => ConciseBuilder;
 };
@@ -37,14 +37,11 @@ export type ConciseBuilder = {
 };
 
 export type ConciseConsumerInitializer = {
-  initializeSpecific: (
-    input: InputString,
-    version: EncodingVersion
-  ) => ConciseConsumer;
+  initializeSpecific: (input: InputString, version: EncodingVersion) => ConciseConsumer;
   initialize: (
     input: InputString,
     options?: {
-      version?: EncodingVersion
+      version?: EncodingVersion;
     }
   ) => ConciseConsumer;
 };

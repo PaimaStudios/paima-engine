@@ -1,7 +1,13 @@
 import type Web3 from 'web3';
 import web3UtilsPkg from 'web3-utils';
 
-import { AddressType, doLog, ENV, getReadNamespaces, INNER_BATCH_DIVIDER, OUTER_BATCH_DIVIDER } from '@paima/utils';
+import {
+  AddressType,
+  doLog,
+  getReadNamespaces,
+  INNER_BATCH_DIVIDER,
+  OUTER_BATCH_DIVIDER,
+} from '@paima/utils';
 import type { SubmittedData } from '@paima/runtime';
 import type { PaimaGameInteraction } from '@paima/utils/src/contract-types/PaimaL2Contract';
 
@@ -137,7 +143,7 @@ async function processBatchedSubunit(
     userSignature,
     inputData,
     millisecondTimestamp,
-    blockHeight,
+    blockHeight
   );
 
   const secondTimestamp = parseInt(millisecondTimestamp, 10) / 1000;
@@ -186,7 +192,7 @@ async function validateSubunitSignature(
       default:
         return false;
     }
-  }
+  };
   for (const namespace of namespaces) {
     const message: string = namespace + inputData + millisecondTimestamp;
     if (await trySign(message)) {

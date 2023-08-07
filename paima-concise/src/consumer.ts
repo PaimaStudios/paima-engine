@@ -9,10 +9,7 @@ import { isHexString } from './utils.js';
 import { separator } from './v1/consts.js';
 import { toConciseValue } from './v1/utils.js';
 
-const initializeSpecific: ConciseConsumerInitializer['initializeSpecific'] = (
-  input,
-  version
-) => {
+const initializeSpecific: ConciseConsumerInitializer['initializeSpecific'] = (input, version) => {
   const { conciseValues, concisePrefix, conciseInput } = preParse(input, version);
 
   return {
@@ -49,10 +46,7 @@ const initializeSpecific: ConciseConsumerInitializer['initializeSpecific'] = (
   };
 };
 
-const preParse = (
-  input: string,
-  version: EncodingVersion
-): ConciseConsumerInternals => {
+const preParse = (input: string, version: EncodingVersion): ConciseConsumerInternals => {
   let conciseValues: ConciseValue[] = [];
   let concisePrefix = '';
   let conciseInput = '';
@@ -98,10 +92,7 @@ const getEmptyInternals = (): ConciseConsumerInternals => {
 /*
  * Selects encoding version based on the format of the input string
  */
-const initialize: ConciseConsumerInitializer['initialize'] = (
-  input,
-  options
-) => {
+const initialize: ConciseConsumerInitializer['initialize'] = (input, options) => {
   if (options?.version) {
     return initializeSpecific(input, options?.version);
   } else if (input.match(/^[a-z]+\|/)) {
