@@ -98,20 +98,13 @@ class PaimaFunnel {
     }
     try {
       const currentTimestamp = Math.floor(Date.now() / 1000);
-      console.log(`[funnel::readEmulatedData] fetching ${blockHeight}, ${blockCount}`);
       const fetchedData = await this.readSyncData(blockHeight, blockCount);
       const synced =
         fetchedData.length > 0
           ? fetchedData[fetchedData.length - 1].blockNumber >= this.latestAvailableBlockNumber
           : true;
-      console.log(
-        `[funnel::readEmulatedData] feeding @${currentTimestamp}, synced: ${synced}, data length: ${fetchedData.length}`
-      );
       await this.emulatedBlocksProcessor.feedData(currentTimestamp, fetchedData, synced);
       const nextBlock = await this.emulatedBlocksProcessor.getNextBlock();
-      if (nextBlock) {
-        console.log(`[funnel::readEmulatedData] gotBlock #${nextBlock.blockNumber}`);
-      }
       return nextBlock ? [nextBlock] : [];
     } catch (err) {
       doLog(`[paima-funnel::readData] Exception occurred while reading blocks: ${err}`);
