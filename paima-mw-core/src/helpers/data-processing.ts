@@ -1,4 +1,4 @@
-import { AddressType } from '@paima/utils';
+import { AddressType, ENV, getWriteNamespace } from '@paima/utils';
 
 import type { BatchedSubunit, SignFunction } from '../types';
 import { signMessageCardano } from '../wallets/cardano';
@@ -43,7 +43,7 @@ export async function buildBatchedSubunit(
 ): Promise<BatchedSubunit> {
   const signFunction = selectSignFunction(addressType);
   const millisecondTimestamp: string = new Date().getTime().toString(10);
-  const message: string = gameInput + millisecondTimestamp;
+  const message: string = (await getWriteNamespace()) + gameInput + millisecondTimestamp;
   const userSignature = await signFunction(signingAddress, message);
   return {
     addressType,

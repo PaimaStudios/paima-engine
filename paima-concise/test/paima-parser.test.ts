@@ -9,7 +9,7 @@ moves               = s|*lobbyID|roundNumber|move_rps
 zombieScheduledData = z|*lobbyID
 userScheduledData   = u|*user|result
 userAlt             = @u|result
-
+generic             = g|json
 `;
 
 const parserCommands = {
@@ -43,6 +43,9 @@ const parserCommands = {
     renameCommand: 'scheduledData',
     result: PaimaParser.RegexParser(/^[w|t|l]$/),
   },
+  generic: {
+    json: PaimaParser.NCharsParser(0, 99999999)
+  }
 };
 
 describe('Test if parsed', () => {
@@ -148,5 +151,7 @@ describe('Test if parsed', () => {
     ['@u|w', true],
     ['@u|t', true],
     ['@u|l', true],
+
+    ['g|{"0":"4700000000000000000","1":"0x54dc4C0E0fa8887ABA529E4EfEf00b243D762a80","2":"pack","amount":"4700000000000000000","payer":"0x54dc4C0E0fa8887ABA529E4EfEf00b243D762a80","message":"pack"}', true],
   ]);
 });

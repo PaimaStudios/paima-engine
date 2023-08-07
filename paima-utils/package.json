@@ -17,7 +17,8 @@
     "prebuild": "npm run generate-types",
     "build": "tsc",
     "generate-types": "npx typechain --target=web3-v1 'src/artifacts/*.json' --out-dir src/contract-types",
-    "lint": "prettier --write '**/*.ts'"
+    "lint": "prettier --write '**/*.ts'",
+    "test": "jest --runInBand"
   },
   "devDependencies": {
     "@typechain/web3-v1": "^6.0.2",
@@ -26,6 +27,8 @@
     "typechain": "^8.1.1"
   },
   "dependencies": {
-    "algosdk": "^2.3.0"
+    "@sinclair/typebox": "^0.30.4",
+    "algosdk": "^2.3.0",
+    "yaml": "^2.3.1"
   }
 }

@@ -105,7 +105,7 @@ class PaimaFunnel {
         return ERR_RESULT;
       }
     } catch (err) {
-      doLog(`[paima-funnel] Exception occured while getting latest block number: ${err}`);
+      doLog(`[paima-funnel] Exception occurred while getting latest block number: ${err}`);
       return ERR_RESULT;
     }
   };

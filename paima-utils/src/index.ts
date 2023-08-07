@@ -37,6 +37,7 @@ const { isAddress, utf8ToHex } = web3UtilsPkg;
 
 export * from './config';
 export * from './types';
+export * from './security/parse';
 
 export type { Web3, Contract, AbiItem, EventData };
 export type { PaimaL2Contract };

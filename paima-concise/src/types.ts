@@ -13,13 +13,17 @@ export type ConciseValue = {
 };
 
 export type ConciseBuilderInitializer = {
-  initialize: (input?: InputString, gameName?: string, version?: EncodingVersion) => ConciseBuilder;
+  initialize: (
+    input?: InputString,
+    options?: {
+      version?: EncodingVersion
+    }
+  ) => ConciseBuilder;
 };
 export type ConciseBuilder = {
   initialConciseInput: string;
   concisePrefix: string;
   conciseValues: ConciseValue[];
-  gameName: string | undefined;
 
   setPrefix: (prefix: UTF8String, implicitUserAddress?: boolean) => void;
   addValue: (value: ConciseValue) => void;
@@ -35,10 +39,14 @@ export type ConciseBuilder = {
 export type ConciseConsumerInitializer = {
   initializeSpecific: (
     input: InputString,
-    gameName: undefined | string,
     version: EncodingVersion
   ) => ConciseConsumer;
-  initialize: (input: InputString, gameName?: string, version?: EncodingVersion) => ConciseConsumer;
+  initialize: (
+    input: InputString,
+    options?: {
+      version?: EncodingVersion
+    }
+  ) => ConciseConsumer;
 };
 export type ConciseConsumer = {
   conciseInput: string;

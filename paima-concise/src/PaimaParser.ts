@@ -124,7 +124,6 @@ export class PaimaParser {
   private readonly grammar: string;
   private readonly commands: ParserCommands;
   private readonly parser: Parser;
-  private readonly gameName: undefined | string;
 
   // overly simple logging API. Generally set to process.env.NODE_ENV === 'development'
   private readonly debug: boolean;
@@ -132,14 +131,14 @@ export class PaimaParser {
   constructor(
     paimaLang: string,
     commands: ParserCommands,
-    gameName?: string,
-    debug: boolean = false
+    options?: {
+      debug?: boolean
+    }
   ) {
-    this.gameName = gameName;
     this.grammar = this.paimaLangToBNF(paimaLang);
     this.parser = new Grammars.W3C.Parser(this.grammar);
     this.commands = commands;
-    this.debug = debug;
+    this.debug = options?.debug ?? false;
   }
 
   // Convert PaimaLang definition to eBNF (W3C)
@@ -168,9 +167,6 @@ export class PaimaParser {
         } else {
           commandLiterals[parts[0]] = `"${literal}"`;
         }
-        if (this.gameName != null) {
-          commandLiterals[parts[0]] = `gameName ` + commandLiterals[parts[0]];
-        }
         commandParameters[parts[0]] = c;
       });
 
@@ -181,6 +177,10 @@ export class PaimaParser {
       grammar += `${key} ::= ${commandLiterals[key]} pipe ${commandParameters[key]
         .map(parameter => {
           // Check for asterisks and optional question marks
+          // we need to strip these special characters for the left-hand-side of its definition
+          // ex: `a = b?` becomes
+          // a = b?
+          // b = ... (note: no question mark)
           if (parameter.match(/\*/)) {
             const partNoAsterisk = parameter.replace(/\*/, '');
             uniqueParameters.add(partNoAsterisk);
@@ -204,11 +204,6 @@ asterisk  ::= "*"
 pipe ::= "|" 
 at ::= "@"
 `;
-    if (this.gameName != null) {
-      grammar += `
-gameName ::= "|${this.gameName}|"
-`;
-    }
 
     // Add parameters back-into grammar
     [...uniqueParameters].forEach(w => {
