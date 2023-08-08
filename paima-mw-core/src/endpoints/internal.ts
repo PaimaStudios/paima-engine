@@ -12,10 +12,13 @@ import {
   setBatchedCardanoMode,
   setBatchedEthMode,
   setBatchedPolkadotMode,
+  setEmulatedBlocksActive,
+  setEmulatedBlocksInactive,
   setUnbatchedMode,
 } from '../state';
 import type { PostingInfo, PostingModeSwitchResult, Result, Wallet } from '../types';
 import { specificWalletLogin, stringToWalletMode } from '../wallets/wallets';
+import { emulatedBlocksActiveOnBackend } from '../helpers/auxiliary-queries';
 
 export async function userWalletLoginWithoutChecks(
   loginType: string,
@@ -44,6 +47,17 @@ export async function automaticWalletLogin(privateKey: string): Promise<Result<W
   const errorFxn = buildEndpointErrorFxn('automaticWalletLogin');
   try {
     await connectTruffleWallet(privateKey);
+
+    try {
+      if (await emulatedBlocksActiveOnBackend()) {
+        setEmulatedBlocksActive();
+      } else {
+        setEmulatedBlocksInactive();
+      }
+    } catch (err) {
+      return errorFxn(PaimaMiddlewareErrorCode.ERROR_QUERYING_BACKEND_ENDPOINT, err);
+    }
+
     return {
       success: true,
       result: {
