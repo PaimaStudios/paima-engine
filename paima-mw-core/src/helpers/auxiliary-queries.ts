@@ -5,6 +5,8 @@ import type { Result } from '../types';
 import { pushLog } from './logging';
 import {
   backendQueryBackendVersion,
+  backendQueryDeploymentBlockheightToEmulated,
+  backendQueryEmulatedBlocksActive,
   backendQueryLatestProcessedBlockHeight,
 } from './query-constructors';
 
@@ -87,5 +89,56 @@ export async function localRemoteVersionsCompatible(): Promise<boolean> {
     return false;
   } else {
     return true;
+  }
+}
+
+export async function emulatedBlocksActiveOnBackend(): Promise<boolean> {
+  const errorFxn = buildEndpointErrorFxn('emulatedBlocksActiveOnBackend');
+
+  let res: Response;
+  try {
+    const query = backendQueryEmulatedBlocksActive();
+    res = await fetch(query);
+  } catch (err) {
+    errorFxn(PaimaMiddlewareErrorCode.ERROR_QUERYING_BACKEND_ENDPOINT, err);
+    throw err;
+  }
+
+  try {
+    const emulatedBlocksResult = (await res.json()) as { emulatedBlocksActive: boolean };
+    return emulatedBlocksResult.emulatedBlocksActive;
+  } catch (err) {
+    errorFxn(PaimaMiddlewareErrorCode.INVALID_RESPONSE_FROM_BACKEND, err);
+    throw err;
+  }
+}
+
+export async function deploymentChainBlockHeightToEmulated(
+  deploymentBlockheight: number
+): Promise<number> {
+  const errorFxn = buildEndpointErrorFxn('deploymentChainBlockHeightToEmulated');
+
+  let res: Response;
+  try {
+    const query = backendQueryDeploymentBlockheightToEmulated(deploymentBlockheight);
+    res = await fetch(query);
+  } catch (err) {
+    errorFxn(PaimaMiddlewareErrorCode.ERROR_QUERYING_BACKEND_ENDPOINT, err);
+    throw err;
+  }
+
+  try {
+    const conversionResult = (await res.json()) as Result<number>;
+    if (!conversionResult.success) {
+      errorFxn(
+        PaimaMiddlewareErrorCode.ERROR_QUERYING_BACKEND_ENDPOINT,
+        conversionResult.errorMessage
+      );
+      throw new Error(`Error converting blockheight: ${conversionResult.errorMessage}`);
+    }
+    return conversionResult.result;
+  } catch (err) {
+    errorFxn(PaimaMiddlewareErrorCode.INVALID_RESPONSE_FROM_BACKEND, err);
+    throw err;
   }
 }
