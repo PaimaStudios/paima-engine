@@ -67,7 +67,6 @@ export async function initializeEmulatedBlocksProcessor(
       ? parseInt(startBlock.timestamp, 10)
       : startBlock.timestamp;
   const ebp = new EmulatedBlocksProcessor(DBConn, startBlockHeight, startTimestamp, maxWait);
-  await ebp.recoverStateFromDatabase();
   return ebp;
 }
 

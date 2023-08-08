@@ -136,6 +136,13 @@ class PaimaFunnel {
     }
   };
 
+  public recoverState = async (): Promise<void> => {
+    const ebp = this.emulatedBlocksProcessor;
+    if (ebp) {
+      await ebp.recoverStateFromDatabase();
+    }
+  };
+
   // Will return [-1, -2] if the range is determined to be empty.
   // It should be enough to check that fromBlock >= 0,
   // but this will also fail a fromBlock <= toBlock check.

@@ -251,6 +251,8 @@ async function runInitializationProcedures(
     return false;
   }
 
+  await chainFunnel.recoverState();
+
   // Load data migrations
   const lastBlockHeightAtLaunch = await gameStateMachine.latestProcessedBlockHeight();
 
