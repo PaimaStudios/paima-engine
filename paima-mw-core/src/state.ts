@@ -61,6 +61,8 @@ const deployment: Deployment = ENV.DEPLOYMENT as Deployment;
 
 let postingMode: PostingMode = PostingMode.UNBATCHED;
 
+let emulatedBlocksActive: boolean = false;
+
 let ethAddress: ETHAddress = '';
 let evmApi: EvmApi = undefined;
 let evmActiveWallet: string = '';
@@ -86,6 +88,14 @@ let algorandApi: AlgorandApi = undefined;
 export const setBackendUri = (newUri: URI): URI => (backendUri = newUri);
 export const getBackendUri = (): URI => backendUri;
 export const getBatcherUri = (): URI => batcherUri;
+
+export const setEmulatedBlocksActive = (): void => {
+  emulatedBlocksActive = true;
+};
+export const setEmulatedBlocksInactive = (): void => {
+  emulatedBlocksActive = false;
+};
+export const getEmulatedBlocksActive = (): boolean => emulatedBlocksActive;
 
 export const setGameVersion = (newGameVersion: VersionString): VersionString =>
   (gameVersion = newGameVersion);
