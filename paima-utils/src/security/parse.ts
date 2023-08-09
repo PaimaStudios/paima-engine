@@ -81,7 +81,6 @@ export async function getReadNamespaces(blockHeight: number): Promise<string[]> 
     prefix === 'CONTRACT_ADDRESS' ? ENV.CONTRACT_ADDRESS : prefix
   );
   return adjusted;
-
 }
 export async function getWriteNamespace(): Promise<string> {
   const namespace = ENV.SECURITY_NAMESPACE;
