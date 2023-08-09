@@ -1,7 +1,7 @@
 import type Web3 from 'web3';
 import type { Pool } from 'pg';
 
-import { DEFAULT_FUNNEL_TIMEOUT, timeout } from '@paima/utils';
+import { DEFAULT_FUNNEL_TIMEOUT, doLog, logError, timeout } from '@paima/utils';
 import type { ChainData, ChainDataExtensionDatum, PresyncChainData } from '@paima/runtime';
 
 import { EmulatedBlocksProcessor } from './emulated-blocks-processor';
@@ -61,13 +61,21 @@ export async function initializeEmulatedBlocksProcessor(
     return undefined;
   }
 
-  const startBlock = await timeout(web3.eth.getBlock(startBlockHeight), DEFAULT_FUNNEL_TIMEOUT);
-  const startTimestamp =
-    typeof startBlock.timestamp === 'string'
-      ? parseInt(startBlock.timestamp, 10)
-      : startBlock.timestamp;
-  const ebp = new EmulatedBlocksProcessor(DBConn, startBlockHeight, startTimestamp, maxWait);
-  return ebp;
+  try {
+    const startBlock = await timeout(web3.eth.getBlock(startBlockHeight), DEFAULT_FUNNEL_TIMEOUT);
+    const startTimestamp =
+      typeof startBlock.timestamp === 'string'
+        ? parseInt(startBlock.timestamp, 10)
+        : startBlock.timestamp;
+    const ebp = new EmulatedBlocksProcessor(DBConn, startBlockHeight, startTimestamp, maxWait);
+    return ebp;
+  } catch (err) {
+    doLog(
+      '[paima-funnel] Unable to initialize emulated blocks processor -- presumably start block does not exist:'
+    );
+    logError(err);
+    throw new Error('[paima-funnel] Unable to initialize emulated blocks processor');
+  }
 }
 
 export function emulateCde(
