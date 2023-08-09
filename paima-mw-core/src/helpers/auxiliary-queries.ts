@@ -118,27 +118,12 @@ export async function deploymentChainBlockHeightToEmulated(
 ): Promise<number> {
   const errorFxn = buildEndpointErrorFxn('deploymentChainBlockHeightToEmulated');
 
-  let res: Response;
-  try {
-    const query = backendQueryDeploymentBlockheightToEmulated(deploymentBlockheight);
-    res = await fetch(query);
-  } catch (err) {
-    errorFxn(PaimaMiddlewareErrorCode.ERROR_QUERYING_BACKEND_ENDPOINT, err);
-    throw err;
-  }
+  const query = backendQueryDeploymentBlockheightToEmulated(deploymentBlockheight);
+  const res = await fetch(query);
 
-  try {
-    const conversionResult = (await res.json()) as Result<number>;
-    if (!conversionResult.success) {
-      errorFxn(
-        PaimaMiddlewareErrorCode.ERROR_QUERYING_BACKEND_ENDPOINT,
-        conversionResult.errorMessage
-      );
-      throw new Error(`Error converting blockheight: ${conversionResult.errorMessage}`);
-    }
-    return conversionResult.result;
-  } catch (err) {
-    errorFxn(PaimaMiddlewareErrorCode.INVALID_RESPONSE_FROM_BACKEND, err);
-    throw err;
+  const conversionResult = (await res.json()) as Result<number>;
+  if (!conversionResult.success) {
+    throw new Error(`Error converting blockheight: ${conversionResult.errorMessage}`);
   }
+  return conversionResult.result;
 }
