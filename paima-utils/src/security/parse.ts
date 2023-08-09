@@ -2,7 +2,7 @@ import type { Static } from '@sinclair/typebox';
 import { Type } from '@sinclair/typebox';
 import { Value } from '@sinclair/typebox/value';
 import YAML from 'yaml';
-import { promises as fs } from 'fs';
+import * as fs from 'fs/promises';
 import { ENV } from '../config';
 
 const BlockSettings = Type.Object({
@@ -65,38 +65,32 @@ async function getEntryFromFile(
   return highestEntry?.prefix;
 }
 export async function getReadNamespaces(blockHeight: number): Promise<string[]> {
-  const namespace = process.env.SECURITY_NAMESPACE;
-  if (namespace != null && namespace !== '') {
-    const entry =
-      namespace.endsWith('.yml') || namespace.endsWith('.yaml')
-        ? await getEntryFromFile(namespace, blockHeight)
-        : [namespace];
+  const namespace = ENV.SECURITY_NAMESPACE;
 
-    // default if no entry matches
-    if (entry == null) {
-      return [ENV.CONTRACT_ADDRESS];
-    }
-    // replace any placeholder with their proper value
-    const adjusted = entry.map(prefix =>
-      prefix === 'CONTRACT_ADDRESS' ? ENV.CONTRACT_ADDRESS : prefix
-    );
-    return adjusted;
-  } else {
+  const entry =
+    namespace.endsWith('.yml') || namespace.endsWith('.yaml')
+      ? await getEntryFromFile(namespace, blockHeight)
+      : [namespace];
+
+  // default if no entry matches
+  if (entry == null) {
     return [ENV.CONTRACT_ADDRESS];
   }
+  // replace any placeholder with their proper value
+  const adjusted = entry.map(prefix =>
+    prefix === 'CONTRACT_ADDRESS' ? ENV.CONTRACT_ADDRESS : prefix
+  );
+  return adjusted;
+
 }
 export async function getWriteNamespace(): Promise<string> {
-  const namespace = process.env.SECURITY_NAMESPACE;
-  if (namespace != null && namespace !== '') {
-    const entry =
-      namespace.endsWith('.yml') || namespace.endsWith('.yaml')
-        ? await (async (): Promise<string> => {
-            const config = await loadAndValidateYAML(namespace);
-            return config.namespace.write;
-          })()
-        : namespace;
-    return entry === 'CONTRACT_ADDRESS' ? ENV.CONTRACT_ADDRESS : entry;
-  } else {
-    return ENV.CONTRACT_ADDRESS;
-  }
+  const namespace = ENV.SECURITY_NAMESPACE;
+  const entry =
+    namespace.endsWith('.yml') || namespace.endsWith('.yaml')
+      ? await (async (): Promise<string> => {
+          const config = await loadAndValidateYAML(namespace);
+          return config.namespace.write;
+        })()
+      : namespace;
+  return entry === 'CONTRACT_ADDRESS' ? ENV.CONTRACT_ADDRESS : entry;
 }

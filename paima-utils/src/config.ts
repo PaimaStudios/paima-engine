@@ -44,6 +44,11 @@ export class ENV {
     return process.env.DEPLOYMENT || '';
   }
 
+  // Security
+  static get SECURITY_NAMESPACE(): string {
+    return process.env.SECURITY_NAMESPACE || 'CONTRACT_ADDRESS';
+  }
+
   // PaimaL2Contract:
   static get CONTRACT_ADDRESS(): string {
     return process.env.CONTRACT_ADDRESS || process.env.STORAGE_ADDRESS || '';
