@@ -1,5 +1,5 @@
 import { describe, expect, test } from '@jest/globals';
-import { PaimaParser } from '../src/PaimaParser';
+import { PaimaParser, PaimaParserError } from '../src/PaimaParser';
 
 const myGrammar = `
   arrayCommand = a|array?
@@ -34,7 +34,11 @@ describe('Test Array Commands', () => {
           value = parser.start(testCase);
           expect(!!value).toBe(isParseable);
         } catch (e) {
-          expect(false).toBe(isParseable);
+          if (e instanceof PaimaParserError) {
+            expect(false).toBe(isParseable);
+          } else {
+            throw e;
+          }
         }
         if (referenceParse) {
           expect(value).toStrictEqual(referenceParse);

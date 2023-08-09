@@ -1,11 +1,6 @@
 import web3 from 'web3-utils';
 
-import type {
-  ConciseBuilder,
-  ConciseBuilderInitializer,
-  ConciseValue,
-  InputString,
-} from './types.js';
+import type { ConciseBuilderInitializer, ConciseValue } from './types.js';
 import { EncodingVersion } from './types.js';
 import { isHexString } from './utils.js';
 import buildv1 from './v1/builder.js';
@@ -21,14 +16,11 @@ function validateString(s: string): boolean {
   return true;
 }
 
-const initialize = (
-  input?: InputString,
-  gameName?: string,
-  version = EncodingVersion.V1
-): ConciseBuilder => {
+const initialize: ConciseBuilderInitializer['initialize'] = (input, options) => {
   let initialConciseInput = '';
   let concisePrefix = '';
   let conciseValues: ConciseValue[] = [];
+  const version = options?.version ?? EncodingVersion.V1;
 
   if (input && version === EncodingVersion.V1) {
     initialConciseInput = isHexString(input) ? web3.hexToUtf8(input) : input;
@@ -48,7 +40,6 @@ const initialize = (
     initialConciseInput,
     concisePrefix,
     conciseValues,
-    gameName,
     setPrefix(value: string, implicitUserAddress = false): void {
       if (!value) {
         throw new Error("Can't use empty value as prefix in concise builder");
@@ -79,7 +70,7 @@ const initialize = (
     build(): string {
       switch (version) {
         case EncodingVersion.V1:
-          return buildv1(this.concisePrefix, this.gameName, this.conciseValues);
+          return buildv1(this.concisePrefix, this.conciseValues);
         default:
           throw Error(`Concise builder initialized with unsupported encoding version: ${version}`);
       }

@@ -1,5 +1,5 @@
 import { describe, expect, test } from '@jest/globals';
-import { PaimaParser } from '../src/PaimaParser';
+import { PaimaParser, PaimaParserError } from '../src/PaimaParser';
 
 const myGrammar = `
   join = @j|
@@ -19,7 +19,11 @@ describe('Test single commands', () => {
           expect(!!value).toBe(i[1]);
           expect(value.command).toBe('join');
         } catch (e) {
-          expect(false).toBe(i[1]);
+          if (e instanceof PaimaParserError) {
+            expect(false).toBe(i[1]);
+          } else {
+            throw e;
+          }
         }
       });
     });
@@ -29,7 +33,7 @@ describe('Test single commands', () => {
     ['j|T', false],
     ['j|', false],
     ['j', false],
-    ['@j|T', false],
+    ['@j|T', true],
     ['@j|', true],
     ['@j', false],
   ]);

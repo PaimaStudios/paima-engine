@@ -1,6 +1,5 @@
 import web3 from 'web3-utils';
 import type {
-  ConciseConsumer,
   ConciseConsumerInitializer,
   ConciseConsumerInternals,
   ConciseValue,
@@ -9,14 +8,9 @@ import { EncodingVersion } from './types.js';
 import { isHexString } from './utils.js';
 import { separator } from './v1/consts.js';
 import { toConciseValue } from './v1/utils.js';
-import { checkSecurityPrefix, stripSecurityPrefix } from './security.js';
 
-const initializeSpecific = (
-  input: string,
-  gameName: undefined | string,
-  version: EncodingVersion
-): ConciseConsumer => {
-  const { conciseValues, concisePrefix, conciseInput } = preParse(input, gameName, version);
+const initializeSpecific: ConciseConsumerInitializer['initializeSpecific'] = (input, version) => {
+  const { conciseValues, concisePrefix, conciseInput } = preParse(input, version);
 
   return {
     conciseInput,
@@ -52,11 +46,7 @@ const initializeSpecific = (
   };
 };
 
-const preParse = (
-  input: string,
-  gameName: undefined | string,
-  version: EncodingVersion
-): ConciseConsumerInternals => {
+const preParse = (input: string, version: EncodingVersion): ConciseConsumerInternals => {
   let conciseValues: ConciseValue[] = [];
   let concisePrefix = '';
   let conciseInput = '';
@@ -70,12 +60,6 @@ const preParse = (
     if (!conciseInput.includes(separator)) {
       return getEmptyInternals();
     }
-
-    if (!checkSecurityPrefix(gameName, conciseInput)) {
-      // Invalid input, discard entire message.
-      return getEmptyInternals();
-    }
-    conciseInput = stripSecurityPrefix(gameName, conciseInput);
 
     const [inputPrefix, ...stringValues] = conciseInput.split(separator);
     const hasImplicitUser = inputPrefix.match(/^@(\w+)/);
@@ -108,17 +92,13 @@ const getEmptyInternals = (): ConciseConsumerInternals => {
 /*
  * Selects encoding version based on the format of the input string
  */
-const initialize = (
-  input: string,
-  gameName: undefined | string,
-  version?: EncodingVersion
-): ConciseConsumer => {
-  if (version) {
-    return initializeSpecific(input, gameName, version);
+const initialize: ConciseConsumerInitializer['initialize'] = (input, options) => {
+  if (options?.version) {
+    return initializeSpecific(input, options?.version);
   } else if (input.match(/^[a-z]+\|/)) {
-    return initializeSpecific(input, gameName, EncodingVersion.V1);
+    return initializeSpecific(input, EncodingVersion.V1);
   }
-  return initializeSpecific(input, gameName, EncodingVersion.EMPTY);
+  return initializeSpecific(input, EncodingVersion.EMPTY);
 };
 
 export const consumer: ConciseConsumerInitializer = { initialize, initializeSpecific };

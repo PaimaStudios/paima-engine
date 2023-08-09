@@ -1,7 +1,13 @@
 import type Web3 from 'web3';
 import web3UtilsPkg from 'web3-utils';
 
-import { AddressType, doLog, INNER_BATCH_DIVIDER, OUTER_BATCH_DIVIDER } from '@paima/utils';
+import {
+  AddressType,
+  doLog,
+  getReadNamespaces,
+  INNER_BATCH_DIVIDER,
+  OUTER_BATCH_DIVIDER,
+} from '@paima/utils';
 import type { SubmittedData } from '@paima/runtime';
 import type { PaimaGameInteraction } from '@paima/utils/src/contract-types/PaimaL2Contract';
 
@@ -91,7 +97,7 @@ async function processDataUnit(
       const validatedSubUnits = await Promise.all(
         elems
           .slice(1, afterLastIndex)
-          .map(elem => processBatchedSubunit(web3, elem, subunitValue, blockTimestamp))
+          .map(elem => processBatchedSubunit(web3, elem, subunitValue, blockHeight, blockTimestamp))
       );
       return validatedSubUnits.filter(item => item.validated).map(unpackValidatedData);
     } else {
@@ -108,6 +114,7 @@ async function processBatchedSubunit(
   web3: Web3,
   input: string,
   suppliedValue: string,
+  blockHeight: number,
   blockTimestamp: number
 ): Promise<ValidatedSubmittedData> {
   const INVALID_INPUT: ValidatedSubmittedData = {
@@ -135,7 +142,8 @@ async function processBatchedSubunit(
     userAddress,
     userSignature,
     inputData,
-    millisecondTimestamp
+    millisecondTimestamp,
+    blockHeight
   );
 
   const secondTimestamp = parseInt(millisecondTimestamp, 10) / 1000;
@@ -166,21 +174,32 @@ async function validateSubunitSignature(
   userAddress: string,
   userSignature: string,
   inputData: string,
-  millisecondTimestamp: string
+  millisecondTimestamp: string,
+  blockHeight: number
 ): Promise<boolean> {
-  const message: string = inputData + millisecondTimestamp;
-  switch (addressType) {
-    case AddressType.EVM:
-      return verifySignatureEthereum(web3, message, userAddress, userSignature);
-    case AddressType.CARDANO:
-      return await verifySignatureCardano(userAddress, message, userSignature);
-    case AddressType.POLKADOT:
-      return await verifySignaturePolkadot(userAddress, message, userSignature);
-    case AddressType.ALGORAND:
-      return await verifySignatureAlgorand(userAddress, message, userSignature);
-    default:
-      return false;
+  const namespaces = await getReadNamespaces(blockHeight);
+
+  const trySign = async (message: string): Promise<boolean> => {
+    switch (addressType) {
+      case AddressType.EVM:
+        return verifySignatureEthereum(web3, message, userAddress, userSignature);
+      case AddressType.CARDANO:
+        return await verifySignatureCardano(userAddress, message, userSignature);
+      case AddressType.POLKADOT:
+        return await verifySignaturePolkadot(userAddress, message, userSignature);
+      case AddressType.ALGORAND:
+        return await verifySignatureAlgorand(userAddress, message, userSignature);
+      default:
+        return false;
+    }
+  };
+  for (const namespace of namespaces) {
+    const message: string = namespace + inputData + millisecondTimestamp;
+    if (await trySign(message)) {
+      return true;
+    }
   }
+  return false;
 }
 
 function unpackValidatedData(validatedData: ValidatedSubmittedData): SubmittedData {

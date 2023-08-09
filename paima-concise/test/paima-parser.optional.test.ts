@@ -1,5 +1,5 @@
 import { describe, expect, test } from '@jest/globals';
-import { PaimaParser } from '../src/PaimaParser';
+import { PaimaParser, PaimaParserError } from '../src/PaimaParser';
 
 const myGrammar = `
   join = j|x|number?|number_?
@@ -24,7 +24,11 @@ describe('Test optional commands', () => {
           expect(value.args.number_).toBe(i[3]);
           expect(!!value).toBe(i[1]);
         } catch (e) {
-          expect(false).toBe(i[1]);
+          if (e instanceof PaimaParserError) {
+            expect(false).toBe(i[1]);
+          } else {
+            throw e;
+          }
         }
       });
     });

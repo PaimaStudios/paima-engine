@@ -78,7 +78,7 @@ import { Grammars } from 'ebnf';
 //   },
 //   sample: {
 //     sampleParam: (key: string, input: string) => {
-//        if (!input) throw new Error(`${key} input must be defined`);
+//        if (!input) throw new PaimaParserError(`${key} input must be defined`);
 //        return input.split('').reverse().join(''); // reverse strings
 //     }
 //   },
@@ -109,6 +109,13 @@ export type ParserRecord<T = { input: string }> = Record<
 
 export type ParserCommands = Record<string, ParserRecord>;
 
+export class PaimaParserError extends Error {
+  constructor(message?: string) {
+    super(message);
+    this.name = 'PaimaParserError';
+  }
+}
+
 /**
  * WARN - allows only a-zA-Z0-9+/=,_ characters regardless of the parser specified
  * Also, characters |*@ are used for internal purposes
@@ -121,11 +128,17 @@ export class PaimaParser {
   // overly simple logging API. Generally set to process.env.NODE_ENV === 'development'
   private readonly debug: boolean;
 
-  constructor(paimaLang: string, commands: ParserCommands, debug: boolean = false) {
+  constructor(
+    paimaLang: string,
+    commands: ParserCommands,
+    options?: {
+      debug?: boolean;
+    }
+  ) {
     this.grammar = this.paimaLangToBNF(paimaLang);
     this.parser = new Grammars.W3C.Parser(this.grammar);
     this.commands = commands;
-    this.debug = debug;
+    this.debug = options?.debug ?? false;
   }
 
   // Convert PaimaLang definition to eBNF (W3C)
@@ -137,17 +150,17 @@ export class PaimaParser {
      * Extract commands, parameters and literals
      * a = b|c|d , e = f|g into { a: [c,d], e: [g] } and { a: b, e: f }
      */
-    let grammar = paimaLang
+    paimaLang
       .split('\n')
       .map(x => x.trim())
       .filter(x => x)
-      .map(x => {
+      .forEach(x => {
         // myCommandName = s|custom|named|parameters
         const parts = x.split('=').map(x => x.trim());
-        if (parts.length !== 2) throw new Error('Incorrect parser format');
+        if (parts.length !== 2) throw new PaimaParserError('Incorrect parser format');
         const c = parts[1].split('|').filter(x => !!x); // filter when pipe is at end e.g., "j|"
         const literal = c.shift();
-        if (!literal) throw new Error('Missing literal');
+        if (!literal) throw new PaimaParserError('Missing literal');
         const hasUserAt = literal.match(/^@(\w+)/);
         if (hasUserAt) {
           commandLiterals[parts[0]] = `at "${hasUserAt[1]}"`;
@@ -155,16 +168,19 @@ export class PaimaParser {
           commandLiterals[parts[0]] = `"${literal}"`;
         }
         commandParameters[parts[0]] = c;
-      })
-      .join('');
+      });
 
     // keep track of unique parameters.
     const uniqueParameters: Set<string> = new Set();
-    grammar = `syntax ::= ${Object.keys(commandParameters).join(' | ')}\n`;
+    let grammar = `syntax ::= ${Object.keys(commandParameters).join(' | ')}\n`;
     Object.keys(commandParameters).forEach(key => {
       grammar += `${key} ::= ${commandLiterals[key]} pipe ${commandParameters[key]
         .map(parameter => {
           // Check for asterisks and optional question marks
+          // we need to strip these special characters for the left-hand-side of its definition
+          // ex: `a = b?` becomes
+          // a = b?
+          // b = ... (note: no question mark)
           if (parameter.match(/\*/)) {
             const partNoAsterisk = parameter.replace(/\*/, '');
             uniqueParameters.add(partNoAsterisk);
@@ -192,12 +208,16 @@ at ::= "@"
     // Add parameters back-into grammar
     [...uniqueParameters].forEach(w => {
       // ([#x00-#x7b] | [#x7d-#xff])
-      // 7c |
+      // skip 7c which is ASCII for |
       grammar += `${w} ::= ([#x00-#x7b] | [#x7d-#xffff])+ \n`;
     });
 
     this.log(`Parser Syntax: \n----------------\n${grammar}\n----------------`);
     return grammar;
+  }
+
+  public getGrammar(): string {
+    return this.grammar;
   }
 
   public static OptionalParser(
@@ -226,50 +246,55 @@ at ::= "@"
     return (keyName: string, input: string): boolean => {
       const hasDefault = typeof defaultValue === 'boolean';
       if (input == null && hasDefault) return defaultValue;
-      if (input == null && !hasDefault) throw new Error(`${keyName} must be T or F`);
+      if (input == null && !hasDefault) throw new PaimaParserError(`${keyName} must be T or F`);
       if (input === 'T' || input === 'F') return input === 'T';
-      throw new Error(`${keyName} must be T or F`);
+      throw new PaimaParserError(`${keyName} must be T or F`);
     };
   }
 
   public static DefaultRoundLength(blockTimeInSecs: number): ParserCommandExec {
     return (keyName: string, input: string): number => {
-      if (input == null) throw new Error(`${keyName} must be defined`);
+      if (input == null) throw new PaimaParserError(`${keyName} must be defined`);
       const n = parseInt(input, 10);
       const BLOCKS_PER_MINUTE = 60 / blockTimeInSecs;
       const BLOCKS_PER_DAY = BLOCKS_PER_MINUTE * 60 * 24;
-      if (n < BLOCKS_PER_MINUTE) throw new Error(`${keyName} is less then ${BLOCKS_PER_MINUTE}`);
-      if (n > BLOCKS_PER_DAY) throw new Error(`${keyName} is greater then ${BLOCKS_PER_DAY}`);
+      if (n < BLOCKS_PER_MINUTE)
+        throw new PaimaParserError(`${keyName} is less then ${BLOCKS_PER_MINUTE}`);
+      if (n > BLOCKS_PER_DAY)
+        throw new PaimaParserError(`${keyName} is greater then ${BLOCKS_PER_DAY}`);
       return n;
     };
   }
 
   public static NumberParser(min?: number, max?: number): ParserCommandExec {
     return (keyName: string, input: string): number => {
-      if (input == null) throw new Error(`${keyName} must be defined`);
+      if (input == null) throw new PaimaParserError(`${keyName} must be defined`);
       const n = parseInt(input, 10);
-      if (isNaN(n)) throw new Error(`${keyName} not a number`);
-      if (min != undefined && n < min) throw new Error(`${keyName} must be greater than ${min}`);
-      if (max != undefined && n > max) throw new Error(`${keyName} must be less than ${max}`);
+      if (isNaN(n)) throw new PaimaParserError(`${keyName} not a number`);
+      if (min != undefined && n < min)
+        throw new PaimaParserError(`${keyName} must be greater than ${min}`);
+      if (max != undefined && n > max)
+        throw new PaimaParserError(`${keyName} must be less than ${max}`);
       return n;
     };
   }
 
   public static NCharsParser(minChars: number, maxChars: number): ParserCommandExec {
     return (keyName: string, input: string): string => {
-      if (input == null) throw new Error(`${keyName} must be defined`);
+      if (input == null) throw new PaimaParserError(`${keyName} must be defined`);
       if (input.length < minChars)
-        throw new Error(`${keyName} must have more chars than ${minChars}`);
+        throw new PaimaParserError(`${keyName} must have more chars than ${minChars}`);
       if (input.length > maxChars)
-        throw new Error(`${keyName} must have less chars than ${maxChars}`);
+        throw new PaimaParserError(`${keyName} must have less chars than ${maxChars}`);
       return input;
     };
   }
 
   public static RegexParser(regex: RegExp): ParserCommandExec {
     return (keyName: string, input: string): string => {
-      if (input == null) throw new Error(`${keyName} must be defined`);
-      if (!input.match(regex)) throw new Error(`${keyName}: must match ${String(regex)}`);
+      if (input == null) throw new PaimaParserError(`${keyName} must be defined`);
+      if (!input.match(regex))
+        throw new PaimaParserError(`${keyName}: must match ${String(regex)}`);
       return input;
     };
   }
@@ -287,9 +312,9 @@ at ::= "@"
     transform?: (value: string) => string
   ): ParserCommandExec {
     return (keyName: string, input: string): string => {
-      if (input == null) throw new Error(`${keyName} must be defined`);
+      if (input == null) throw new PaimaParserError(`${keyName} must be defined`);
       if (!values.includes(input)) {
-        throw new Error(`${input} not found in provided list of possible values`);
+        throw new PaimaParserError(`${input} not found in provided list of possible values`);
       }
       return transform ? transform(input) : input;
     };
@@ -310,7 +335,7 @@ at ::= "@"
 
     if (!parseTree) {
       this.log(`Error parsing ${sentence}`);
-      throw new Error('Cannot parse: ' + sentence);
+      throw new PaimaParserError('Cannot parse: ' + sentence);
     }
 
     const getFromTree = (type: string, ast: IToken): string =>
