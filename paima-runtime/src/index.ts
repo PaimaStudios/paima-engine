@@ -280,7 +280,8 @@ async function startSafeRuntime(
         pollingRate,
         ENV.DEFAULT_PRESYNC_STEP_SIZE,
         ENV.START_BLOCKHEIGHT,
-        stopBlockHeight
+        stopBlockHeight,
+        ENV.EMULATED_BLOCKS
       );
     } catch (err) {
       doLog('[paima-runtime] An error has been propagated all the way up to the runtime.');

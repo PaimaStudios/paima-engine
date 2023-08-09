@@ -21,7 +21,8 @@ export async function startRuntime(
   pollingRate: number,
   presyncStepSize: number,
   startBlockHeight: number,
-  stopBlockHeight: number | null
+  stopBlockHeight: number | null,
+  emulatedBlocks: boolean
 ): Promise<void> {
   const pollingPeriod = pollingRate * 1000;
 
@@ -32,7 +33,7 @@ export async function startRuntime(
     pollingPeriod,
     presyncStepSize,
     startBlockHeight,
-    stopBlockHeight
+    emulatedBlocks ? null : stopBlockHeight
   );
 
   // Main sync:
