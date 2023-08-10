@@ -142,6 +142,11 @@ export class EmulatedBlocksProcessor {
     ) {
       const block = this.processingQueue.shift();
       if (block) {
+        if (block.timestamp < nextBlockTimestamp || block.timestamp >= nextBlockEndTimestamp) {
+          throw new Error(
+            `[funnel] DC block #${block.blockNumber} with timestamp ${block.timestamp} found out of order (EB timestamp ${nextBlockTimestamp}). Please resync your game node from the latest snapshot.`
+          );
+        }
         mergedBlocks.push(block);
       }
     }
