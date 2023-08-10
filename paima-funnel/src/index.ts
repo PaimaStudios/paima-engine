@@ -104,10 +104,17 @@ class PaimaFunnel {
           ? fetchedData[fetchedData.length - 1].blockNumber >= this.latestAvailableBlockNumber
           : true;
       await this.emulatedBlocksProcessor.feedData(currentTimestamp, fetchedData, synced);
-      const nextBlock = await this.emulatedBlocksProcessor.getNextBlock();
-      return nextBlock ? [nextBlock] : [];
     } catch (err) {
       doLog(`[paima-funnel::readData] Exception occurred while reading blocks: ${err}`);
+      return [];
+    }
+
+    try {
+      const nextBlock = await this.emulatedBlocksProcessor.getNextBlock();
+      // errors from the above could mean invalid state, but also simply DB error
+      return nextBlock ? [nextBlock] : [];
+    } catch (err) {
+      doLog(`[paima-funnel::readData] Exception occurred while building next block: ${err}`);
       return [];
     }
   };
