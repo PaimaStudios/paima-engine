@@ -43,6 +43,4 @@ contract GenericPayment is ERC1967, Ownable {
     function upgradeContract(address _newContract) external onlyOwner {
         _setImplementation(_newContract);
     }
-
-    receive() external payable {}
 }
