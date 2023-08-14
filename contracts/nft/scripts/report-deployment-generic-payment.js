@@ -5,7 +5,7 @@ const { reportAddresses } = utils;
 function main() {
     const network = process.env.TARGET_NETWORK;
     console.log();
-    reportAddresses(network, ["GenericPayment"]);
+    reportAddresses(network, ["GenericPayment", "GenericPaymentProxy"]);
     console.log();
 }
 
