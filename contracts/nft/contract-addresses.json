@@ -6,6 +6,7 @@
     "Erc20NftSale": "",
     "Proxy": "",
     "GenericPayment": "",
+    "GenericPaymentProxy": "",
     "NftDeploymentBlockHeight": 12235825
   },
   "mainnet": {
@@ -14,6 +15,7 @@
     "NativeProxy": "",
     "Erc20NftSale": "",
     "Proxy": "",
-    "GenericPayment": ""
+    "GenericPayment": "",
+    "GenericPaymentProxy": ""
   }
 }
