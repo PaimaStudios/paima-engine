@@ -20,12 +20,9 @@ const Config = Type.Object({
 
 let securityNamespaceConfig: undefined | Static<typeof Config>;
 
-async function loadAndValidateYAML(filePath: string): Promise<Static<typeof Config>> {
+async function loadAndValidateYAML(fileContent: string): Promise<Static<typeof Config>> {
   if (securityNamespaceConfig != null) return securityNamespaceConfig;
   try {
-    // Read the YAML file
-    const fileContent = await fs.readFile(filePath, 'utf-8');
-
     // Parse the YAML content into an object
     const yamlObject = YAML.parse(fileContent);
 
@@ -49,7 +46,10 @@ async function getEntryFromFile(
   namespace: string,
   blockHeight: number
 ): Promise<undefined | string[]> {
-  const config = await loadAndValidateYAML(namespace);
+  const fileContent = process.env.SECURITY_NAMESPACE_ROUTER
+    ? (JSON.parse(process.env.SECURITY_NAMESPACE_ROUTER) as string)
+    : await fs.readFile(namespace, 'utf-8');
+  const config = await loadAndValidateYAML(fileContent);
   let highestEntry: Static<typeof BlockSettings> | null = null;
   for (const entry of config.namespace.read) {
     if (
