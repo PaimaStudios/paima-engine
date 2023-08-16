@@ -1,0 +1,374 @@
+# SCHEDULE 1: PAIMA ENGINE LICENSE AGREEMENT
+
+**_Paima™ Engine End User License Agreement_**
+
+This Paima Engine End User License Agreement (the **_“Agreement_**”) applies to your use of Paima Engine, Paima’s web3 gaming engine that supports stateful NFTs. Paima Engine can be used for a wide range of applications, including video games; web3 protocols; and much more.
+
+This Agreement is a legal document detailing your rights and obligations related to using Paima’s proprietary computer software program known as Paima Engine and any updates or upgrades to the program made available by Paima (the “**_Licensed Technology_**”). By downloading or using the Licensed Technology, you are agreeing to be bound by the terms of this Agreement, and this Agreement will be effective upon the first of those events to occur. If you do not or cannot agree to the terms of this Agreement, do not use the Licensed Technology. When we say, “**_you,” “your_**” or “**_yourself_**”, we mean you as an individual or the legal entity exercising rights under this Agreement through you. When we say “**_Paima_**_,_**_” “we_**” or “**_us_**_,” we are referring to the Paima Studios Ltd._
+
+PLEASE READ THIS AGREEMENT CAREFULLY. IN SECTION 15 BELOW, IT INCLUDES A MANDATORY ARBITRATION AGREEMENT AND CLASS ACTION WAIVER WHICH (WITH LIMITED EXCEPTIONS) REQUIRE ANY DISPUTES BETWEEN US TO BE RESOLVED THROUGH INDIVIDUAL ARBITRATION RATHER THAN BY A JUDGE OR JURY IN COURT. YOU ARE ALSO AGREEING TO CONTRACTUAL TERMS THAT WILL LIMIT SOME OF YOUR LEGAL RIGHTS, INCLUDING A DISCLAIMER OF WARRANTY, AN EXCLUSION OF CERTAIN KINDS OF DAMAGES, AND A LIMITATION OF LIABILITY.
+
+**_Table of Contents_**
+
+1. _Definitions_
+2. _What Technology Paima Is Licensing to You_
+3. _How You Can Use the Licensed Technology_
+4. _How You Can Share Products You’ve Made with the Licensed Technology_
+5. _How You Can Share the Licensed Technology When It Isn’t Part of a Product_
+6. _Other Restrictions on Your Use of the Licensed Technology_
+7. _Who Owns What_
+8. _The Agreement Between You and Paima_
+9. _Who are You?_
+10. _Who is Paima?_
+11. _Privacy_
+12. _Disclaimers_
+13. _Limitation of Liability_
+14. _Indemnification_
+15. _Governing Law and Jurisdiction_
+16. _No Class Actions_
+17. _Miscellaneous_
+
+**Royalty Addendum**
+
+&nbsp;&nbsp;&nbsp;&nbsp;_A1. What Products Require Royalty Payments to Paima_ \
+&nbsp;&nbsp;&nbsp;&nbsp;_A2. Prerequisites for Distributing a Product Requiring Royalty Payments_ \
+&nbsp;&nbsp;&nbsp;&nbsp;_A3. What is the Royalty Rate?_\
+&nbsp;&nbsp;&nbsp;&nbsp;_A4. How the Royalty Payment Is Calculated_ \
+&nbsp;&nbsp;&nbsp;&nbsp;_A5. Additional Examples_ \
+&nbsp;&nbsp;&nbsp;&nbsp;_A6. Reporting and Making Your Royalty Payments_ \
+&nbsp;&nbsp;&nbsp;&nbsp;_A7. Other Obligations You Have_
+
+## 1. Definitions
+
+“**_Distribute_**” means, with respect to a Product, to provide or otherwise make a copy of the Product available publicly or to any other person or entity or make the Product’s functionality available on a network.
+
+**_“Engine Code_**” means the Source Code (as defined below) and Engine Executable Code, including any future versions made available to you by us under this Agreement.
+
+**_“Engine Executable Code_**” means the binary executable code of Paima Engine, including any future versions made available to you by us under this Agreement.
+
+“**_Engine SDK Code_**” means the libraries, modules, scripts, or other code made available by us either through running the Engine Executable Code, or made available online by Paima Studios, which is used to build software that integrates with the Engine Executable Code.
+
+“**_Examples_**” means the code, artwork, templates, or other content made available by us either through running the Engine Executable Code, or made available online by Paima Studios.
+
+“**_Source Code_**” means the human readable form of a software program, including all modules it contains, plus any associated interface definition files, scripts used to control compilation, and installation of an executable.
+
+“**_Starter Content_**” means the code, artwork, or other content made available by us and installed to your computer when you install Paima Engine, excluding Examples.
+
+## 2. What Technology Paima Is Licensing to You
+
+The Licensed Technology licensed to you under this Agreement includes the Paima Engine Executable Code, Engine SDK code and related content that is copied to your computer when you execute the executable code. This includes Paima Engine Executable Code, SDK Code, and Examples.  The Licensed Technology includes any modified version of any of the foregoing that you make under the License.
+
+Licensed Technology does not include any items, assets, content, or other materials that we may make available to you in other ways (the “**_Content_**”), even if that Content can be used with Paima Engine. For example, assets you may download from Paima Engine Marketplace are not Licensed Technology and are not licensed to you under the terms of this Agreement. In particular, Licensed Technology does not include any NFTs.
+
+## 3. How You Can Use the Licensed Technology
+
+Paima grants you a non-exclusive, non-transferable, non-sublicensable license to privately use, reproduce, display, perform, and modify the Licensed Technology in accordance with the terms of this Agreement (the “**_License_**”). This means that as long as you are not violating this Agreement or applicable law, you can privately use the Licensed Technology however you want. If you want to share the Licensed Technology or anything you make with it, Sections 4 and 5 below address when and how you can do that.
+
+## 4. How You Can Share Products You’ve Made with the Licensed Technology
+
+If you develop products, services, or any other projects that (i) are made using any Licensed Technology or (ii) combine any Licensed Technology with any other software or content (collectively “**_Products_**”), you may only Distribute those Products as expressly permitted in this Section 4. Any Product that you Distribute that incorporates Licensed Technology must incorporate the Licensed Technology only in object code and only as an inseparable part of the Product.
+
+### a. Royalty-Free Distribution
+
+#### i. Non-Engine Products (e.g., Rendered Video Files)
+
+You will not owe us any royalty payments for Distributing Products that (i) do not include or use any Engine Executable Code, (ii) do not require or use any Engine SDK Code to run and (iii) do not include Starter Content or Examples in source format (“**_Non-Engine Products_**”) to any person or entity.
+
+This means, for example, you will not owe us royalties for Distributing rendered video files (e.g., broadcast or streamed video files, cartoons, movies, or images) created using the Engine SDK Code or Executable Code (even if the video files include Starter Content).
+
+Please note that certain assets that we make available under separate agreement are available for use only with Paima Engine.
+
+#### ii. Games without Revenue
+
+You will not owe us any royalty payments for Distributing Products to any person or entity if the Products do not generate revenue -- i.e., no revenue is attributable to, arises from or relates to any Product access, including features and functionality within the Product, or to any in-Product benefits.
+
+### b. Royalty Bearing Distribution
+
+You may make other Distributions of Products, but unless described in Section 4(a), all Distributions of a Product will be subject to the terms of the attached Royalty Addendum.
+
+### c. Use by End Users, Publishers, and Distributors
+
+When you Distribute a Product, you may permit end users to use, reproduce, display and publicly perform the Licensed Technology, solely (1) as incorporated in the Product in object code as an inseparable part of the Product, (2) to the extent necessary for end users to make permitted uses of the Product, and (3) pursuant to an end user license agreement that explicitly disclaims any representations, warranties, conditions, and liabilities related to the Licensed Technology. You may not permit your end users to incorporate any Licensed Technology into their own products, services, or other projects. You may, however, permit your publishers and distributors to market and Distribute a Product on your behalf, but only to the extent that you are permitted to make such Distribution yourself under this Section 4, and such Distribution will be subject to the terms of this Agreement.
+
+## 5. How You Can Share the Licensed Technology When It Isn’t Part of a Product
+
+You may only Distribute Licensed Technology (including as modified by you) outside of a Product as expressly permitted by this Section 5.
+
+### a. Sharing of Engine Executable Code and SDK Code
+
+#### i. Sharing Engine Code with Another Licensee
+
+You may Distribute the Source Code for the Engine SDK Code (including as modified by you) in Source Code or object code to a third party who is separately licensed by us to use the same version of the Engine Code that you are Distributing.
+
+#### ii. Sharing Engine Code for Public Discussion
+
+You are permitted to post snippets of Engine SDK Code, up to 30 lines of code in length, online in public forums for the sole purpose of discussing the content of the snippet or Distribute such snippets in connection with supporting patches and plug-ins for the Licensed Technology, so long as it is not for the purpose of enabling third parties without a license to the Engine Code to use or modify any Engine Code or to aggregate, recombine, or reconstruct any larger portion of the Engine Code.
+
+### b. Sharing Examples
+
+You may distribute Examples (including those modified by you) in source code to any third party, provided they do not contain Engine SDK Code or Engine Executable Code. Distribution is permitted if they include no more than 30 lines of Engine SDK Code; however, no Engine Executable Code is ever allowed.
+
+## 6. Other Restrictions on Your Use of the Licensed Technology
+
+### a. Non-Compatible Licenses
+
+You may not, and may not permit others to, combine, Distribute, or otherwise use the Licensed Technology with any code or other content which is covered by a license that would directly or indirectly require that all or part of the Licensed Technology be governed under any terms other than those of this Agreement (those licenses, the “**_Non-Compatible Licenses_**”). This means, for example, that you may not combine the Licensed Technology with code or content that is licensed under any of the following licenses: GNU General Public License (GPL), Lesser GPL (LGPL) (unless you are merely dynamically linking a shared library), or Creative Commons Attribution-ShareAlike License.
+
+### b. General Restrictions
+
+You must ensure that your activities with the Licensed Technology do not:
+
+● violate any applicable law or regulation; \
+● result in the Licensed Technology being rented or leased; \
+● misappropriate any of our other products or services; \
+● support a claim by you or any third party that the Licensed Technology infringes a patent; \
+● result in a sale or grant of a security interest in any Licensed Technology; or \
+● result in a Distribution of a Product or the Licensed Technology in any manner other than as permitted by Sections 4 and 5.
+
+## 7. Who Owns What
+
+As between you and us, you own all rights, other than rights in the Licensed Technology, in the Products you develop under this Agreement, and we own all title, ownership rights, and intellectual property rights in the Licensed Technology.
+
+All rights granted to you under this Agreement are granted by the License only and not by sale, and all of those rights are limited by and subject to the terms of this Agreement. No license or other right in any Paima technology or intellectual property rights other than the Licensed Technology is granted under this Agreement, and no license or other rights will be created under this Agreement by implication, estoppel, or otherwise. Any attempted sublicense that is not consistent with the terms of this Agreement will be null and void.
+
+### a. Proprietary Notices and Attribution
+
+You agree to retain the copyright, trademark, and other proprietary notices and disclaimers of Paima as they appear in the Licensed Technology.
+
+If a Product you develop under this Agreement has credits, you must place the following notices in the credits (replacing xxxx with the current year):
+
+“\[Product name] uses Paima™ Engine. Paima™ is a trademark or registered trademark of Paima Studios Ltd.”
+
+**“_Paima™ Engine, Copyright 2022 – 2023, Paima Studios Ltd. All rights reserved.”_**
+
+**_No other license or right is granted under this Agreement in the trademarks, service marks, trade names, and logos associated with Paima, Paima’s games and other intellectual property, including Paima Engine (the “Paima Trademarks_**”). All use of the Paima Trademarks will inure to the sole benefit of Paima. You agree not to engage in any activity that could tarnish, dilute, or affect the validity or enforceability of the Paima Trademarks or cause consumer confusion or diminish any goodwill relating to any Paima Trademarks.
+
+If you wish to make further use of the Paima Trademarks, please go to Paimastudios.com/branding for more information.
+
+### b. Third Party Software
+
+The Licensed Technology incorporates and is bundled with code developed by third parties (the “**_Third Party Software_**”) that may be subject to additional or alternative license terms. If Third Party Software is incorporated in the Licensed Technology and is subject to additional license terms, those terms or other attribution requirements can be found included with each engine version. This Third Party Software is not itself Licensed Technology and is instead licensed to you directly by its authors under the license terms provided with each given piece of software.
+
+By entering into this Agreement and using Third Party Software, you are accepting the terms of those additional or alternative licenses. In the case of additional license terms, the additional license terms will take precedence over any inconsistencies with the terms of this License with regard to the Third Party Software licensed under those additional license terms. You agree that the owners of the Third Party Software are intended third party beneficiaries to this Agreement in relation to your uses of Third Party Software.
+
+### c. Feedback and Contributions
+
+You grant Paima a right to freely use and disclose any feedback or suggestions that you provide to us regarding the Licensed Technology (the “**_Feedback_**”). You acknowledge that we may use any Feedback, including any ideas contained in Feedback, for any purpose, commercial or otherwise, without acknowledgment or compensation to you, including to develop, copy, publish, modify, or improve the Licensed Technology in our sole discretion. You understand that we may treat Feedback as non-confidential.
+
+You grant Paima a non-exclusive, fully-paid, irrevocable, transferable, sublicensable license to reproduce, distribute, publicly perform, publicly display, make, use, have made, sell, offer to sell, import, modify and make derivative works based on, and otherwise exploit any Contributions for all current and future methods and forms of exploitation in any country. “**_Contributions_**” means any information or content, including software or code, that (a) you make available to Paima via submissions to forums, wiki, Paima’s GitHub repository, or other source code repository under our control and that are based upon or incorporate the Licensed Technology or (b) that you provide to Paima and explicitly designate in writing as a Contribution.
+
+You represent and warrant that you have sufficient rights in any Feedback or Contribution that you provide to Paima to grant Paima and other affected parties the rights described above. This includes but is not limited to intellectual property rights and other proprietary or personal rights. If any rights to be licensed under this Section 7(c) may not be licensed under applicable law (such as moral and other personal rights), you hereby waive and agree not to assert any of those rights.
+
+## 8. The Agreement Between You and Paima
+
+### a. Amendments
+
+If we make changes to this Agreement, you are not required to accept the amended Agreement, and this Agreement will continue to govern your use of any Licensed Technology you already have access to.
+
+However, if we make changes to this Agreement, you will not be allowed to access certain Paima services or download the Licensed Technology unless you have accepted the amended Agreement. If we make changes, we will provide you with notice, such as by sending an email or giving you notice when you next log into a Paima service.
+
+### c. Notice
+
+Where this Agreement calls for notice from us, including written notice, we may provide notice to you through the Paima services or by any email address that you’ve provided to us. Our notices, when provided to you through the Paima services, will be effective when you access the Paima services, and when sent to you by email, will be effective when they are sent.
+
+## 9. Who are You?
+
+### a. You
+
+If you use the Licensed Technology on behalf of another person or entity, (i) all references to “**_you_**” throughout this Agreement will include, and this Agreement will be binding on, that person or entity, (ii) you represent that you are authorized to accept this Agreement on that person’s or entity’s behalf, and (iii) in the event you violate this Agreement, that person or entity agrees to be responsible to us.
+
+### b. Eligibility for This Agreement
+
+If you are under the age of legal majority where you live or otherwise require the consent of a parent or legal guardian to enter into this Agreement under applicable law, you may use the Licensed Technology only under the supervision of a parent or legal guardian who also agrees to be bound by this Agreement.
+
+You are not eligible to enter into this Agreement and may not download or use the Licensed Technology if you are, or are acting on behalf of any person or entity that is (i) on the Specially Designated Nationals and Blocked Persons List or other similar lists maintained by any U.S. government entity pursuant to economic sanctions laws or (ii) located in, organized in, or ordinarily resident in any country or territory that is subject to a U.S. embargo, in each case unless your use of the Licensed Content is authorized by U.S. law.
+
+### c. Paima Account
+
+In order to access and download the Licensed Technology, you may first set up an account with us, which will be governed by Paima’s Terms of Service (https://paimastudios.com/terms-of-service) and provide you with a portal to download the latest version.
+
+The License (as defined in Section 3) permits use of the Licensed Technology only by individuals who have accessed it by using a valid user account (“**_Users_**”). If you are an individual, you are the User. If you are a legal entity, the individual employees or agents exercising your rights under this Agreement are Users. When exercising a legal entity’s rights under this Agreement, Users are not required to accept this Agreement as individuals. The User may store the Licensed Technology on any of the User’s computers, but the Licensed Technology cannot be shared with others except as part of a permitted Distribution of Licensed Technology as described in Sections 4 and 5.
+
+### d. Use by Educational Institutions
+
+As an exception to the above requirement that only a User may use the Licensed Technology, if you are an educational institution, like a school or a library, you may store Licensed Technology on any of your computers, and you may allow all users of those computers to use the Licensed Technology under the License on those computers. However, those users are not authorized under your License to Distribute the Licensed Technology (including as incorporated in a Product). For that, they must obtain a License of their own.
+
+## 10. Who is Paima?
+
+Paima Studios Ltd.
+
+## 11. Privacy
+
+Your privacy is important to us. Please review our Privacy Policy (https\://paimastudios.com/privacy-policy). It describes how we collect, use, and share information when you use the Paima services that link to this Privacy Policy.
+
+## 12. Disclaimers
+
+Nothing in this Agreement will prejudice any statutory rights that you have that may not be waived. Some countries, states, provinces or other jurisdictions do not allow the exclusion of certain warranties or the limitation of liability as stated in this and the next sections, so the below terms may not fully apply to you. In those jurisdictions, the exclusions and limitations below apply only to the extent permitted by the applicable laws of such jurisdictions.
+
+THE LICENSED TECHNOLOGY, INCLUDING ALL INFORMATION, CONTENT, MATERIALS, CODE, AND SOFTWARE, ARE PROVIDED BY PAIMA ON AN “AS IS” AND “AS AVAILABLE” BASIS. PAIMA AND ITS AFFILIATES, LICENSORS AND SERVICE PROVIDERS (THE “**_PAIMA PARTIES_**”) MAKE NO REPRESENTATIONS OR WARRANTIES OF ANY KIND, EXPRESS OR IMPLIED, REGARDING THE LICENSED TECHNOLOGY. YOUR USE OF THE LICENSED TECHNOLOGY IS AT YOUR SOLE RISK. TO THE FULL EXTENT PERMISSIBLE BY APPLICABLE LAW, THE PAIMA PARTIES DISCLAIM ALL WARRANTIES, EXPRESS OR IMPLIED, INCLUDING IMPLIED OR STATUTORY WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND NONINFRINGEMENT. THE PAIMA PARTIES DO NOT WARRANT THAT THE LICENSED TECHNOLOGY IS FREE OF VIRUSES OR OTHER HARMFUL COMPONENTS. THE PARTIES ACKNOWLEDGE AND AGREE THAT THE FOREGOING WARRANTY DISCLAIMERS WERE AN ESSENTIAL ELEMENT IN SETTING CONSIDERATION UNDER THIS AGREEMENT.
+
+## 13. Limitation of Liability
+
+TO THE FULL EXTENT PERMITTED BY APPLICABLE LAW, THE PAIMA PARTIES, WILL NOT BE LIABLE FOR ANY LOSS OF PROFITS OR ANY INDIRECT, INCIDENTAL, PUNITIVE, SPECIAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF OR IN CONNECTION WITH THIS AGREEMENT. FURTHER, TO THE FULL EXTENT PERMITTED BY APPLICABLE LAW, THE PAIMA PARTIES’ AGGREGATE LIABILITY ARISING OUT OF OR IN CONNECTION WITH THIS AGREEMENT WILL NOT EXCEED THE GREATER OF $1,000 AND THE TOTAL AMOUNTS YOU HAVE PAID (IF ANY) TO PAIMA UNDER THIS AGREEMENT DURING THE TWELVE (12) MONTHS IMMEDIATELY PRECEDING THE EVENTS GIVING RISE TO SUCH LIABILITY. SEEKING DAMAGES AS LIMITED BY THIS SECTION 13 SHALL BE YOUR SOLE AND EXCLUSIVE REMEDY FOR ANY ACT OR OMISSION OF THE PAIMA PARTIES. THE PARTIES ACKNOWLEDGE AND AGREE THAT THESE LIMITATIONS OF LIABILITY AND EXCLUSIONS OF POTENTIAL DAMAGES WERE AN ESSENTIAL ELEMENT IN SETTING CONSIDERATION UNDER THIS AGREEMENT.
+
+## 14. Indemnification
+
+This section only applies to the extent allowed by the applicable laws of your jurisdiction. If the applicable laws of your jurisdiction do not allow you to enter into the indemnification obligation below, then you assume, to the extent permitted by the applicable laws of your jurisdiction, all liabilities, damages, judgements, awards, losses, costs, expenses, and fees (including reasonable attorney and expert witness fees) that are the stated subject matter of the indemnification obligation below.
+
+You agree to indemnify and hold harmless the Paima Parties from and against all liabilities, damages, judgments, awards, losses, costs, expenses, and fees (including reasonable attorney and expert witness fees) arising out of or in connection with any third-party claims, demands, or actions (i) that, if true, would involve a breach by you of this Agreement (including, without limitation, any distribution or sublicensing of the Licensed Technology in violation of this Agreement), or (ii) related to your Products or your exercise of the License (except to the extent the third party is alleging your authorized use of unmodified Licensed Technology originally provided to you by Paima under this Agreement infringes any patent, trademark, or copyright).
+
+## 15. Dispute Resolution; Arbitration
+
+- **Dispute Resolution. Please read the following arbitration provisions in this Section 15 (“Arbitration Agreement”) carefully. It requires you to arbitrate disputes with Paima and limits the manner in which you can seek relief from us.**
+
+- Applicability of Arbitration Agreement. You agree that any dispute, controversy, or claim arising in any way from your access or use of the Service, any products sold or distributed through the Service, or these Terms (“**Dispute**”), will be resolved by binding arbitration, rather than in court, including threshold questions of the arbitrability of such dispute, controversy, or claim except that you or Paima may seek injunctive or equitable relief in a court of proper jurisdiction if the claim relates to intellectual property infringement or other misuse of intellectual property rights.
+
+- Dispute resolution process. You and Paima both agree to engage in good-faith efforts to resolve Disputes prior to either party initiating an arbitration. You must initiate this dispute resolution process by sending a letter describing the nature of your claim and desired resolution (“**_Dispute Notice_**”) (when sent to Paima, you must send the Dispute Notice to: Paima Studios Ltd., Attn: Legal Department, Paima Studios, Floor 4, Banco Popular Building, Road Town, Tortola VG1110, British Virgin Islands). No later than 15 days after the receiving party receives the Dispute Notice, both parties must meet and confer personally, by telephone, or by videoconference (hereinafter “**_Conference_**”) to discuss the Dispute and attempt in good faith to reach a mutually beneficial outcome that avoids the expenses of further proceedings. If you are represented by counsel, your counsel may participate in the Conference as well, but you agree to fully participate in the Conference. Likewise, if Paima is represented by counsel, its counsel may participate in the Conference as well, but Paima agrees to have a company representative fully participate in the Conference. The statute of limitations and any filing fee deadlines shall be tolled while the parties engage in the informal dispute resolution process and Conference required by this paragraph. If the parties do not reach agreement to resolve the Dispute within thirty (30) days after the receiving party receives the Dispute Notice, either party may commence arbitration, file an action in small claims court, or file a claim for injunctive or equitable relief in a court of proper jurisdiction for matters relating to intellectual property infringement, if the claims qualify.
+
+- The arbitration will be administered by the International Chamber of Commerce (ICC). The location of the arbitration will be in the British Virgin Islands (“**_BVI_**”), unless you choose to have the arbitration conducted by telephone or videoconference so that the arbitration is reasonably convenient to you. Any judgment on the award rendered by the arbitrator may be entered in any court of competent jurisdiction.
+
+- Authority of Arbitrator. The arbitrator shall have exclusive authority to (a) determine the scope and enforceability of this Arbitration Agreement and (b) resolve any Dispute related to the interpretation, applicability, enforceability, or formation of this Arbitration Agreement. The arbitrator shall issue a written award and statement of decision describing the essential findings and conclusions on which the award is based, including the calculation of any damages awarded. The arbitrator can award on an individual basis the same damages and relief as a court and must follow this Agreement as a court would; provided, however, the arbitrator will not have the power to award punitive damages, treble damages, or any other damages which are not compensatory, even if permitted under any applicable law.
+
+- Waiver of Jury Trial. YOU AND PAIMA HEREBY WAIVE ANY CONSTITUTIONAL AND STATUTORY RIGHTS TO HAVE A JURY TRIAL.
+
+- Waiver of Class Actions and Class Arbitrations. ALL CLAIMS AND DISPUTES WITHIN THE SCOPE OF THIS ARBITRATION AGREEMENT MUST BE ARBITRATED ON AN INDIVIDUAL BASIS AND NOT ON A REPRESENTATIVE OR COLLECTIVE CLASS BASIS. Accordingly, under the arbitration procedures outlined in this section, an arbitrator shall not combine or consolidate more than one party’s claims without the written consent of all affected parties to an arbitration proceeding. Without limiting the generality of the foregoing, you and Paima agree that no Dispute shall proceed by way of class arbitration without the written consent of all affected parties. The arbitrator may award injunctive relief only in favor of the individual party seeking relief and only to the extent necessary to provide relief warranted by that party’s individual claim. If a court decides that applicable law precludes enforcement of any of this paragraph’s limitations as to a particular claim for relief, then that claim (and only that claim) must be severed from the arbitration and may be brought in court as provided in Section 16. If any court or arbitrator determines that the class action waiver set forth in this paragraph is void or unenforceable for any reason or that an arbitration can proceed on a class basis, then this entire Arbitration Agreement shall be deemed null and void in its entirety and the parties shall be deemed to have not agreed to arbitrate Disputes.
+
+- Confidentiality. The parties agree that the arbitration shall be kept confidential. The existence of the arbitration, any nonpublic information provided in the arbitration, and any submissions, orders or awards made in the arbitration (together, the “Confidential Information”) shall not be disclosed to any non-party except the tribunal, the administrator of the arbitration, the parties, their counsel, experts, witnesses, accountants and auditors, insurers and reinsurers, and any other person necessary to the conduct of the arbitration. Notwithstanding the foregoing, a party may disclose Confidential Information to the extent that disclosure may be required to fulfill a legal duty, protect or pursue a legal right, or enforce or challenge an award in bona fide legal proceedings.
+
+- Survival of Agreement. This Arbitration Agreement will survive the termination of your relationship with Paima, and any termination or expiration of this Agreement.
+
+## 16. Governing Law and Alternate Venue
+
+This Agreement shall be governed by the laws of the British Virgin Islands (without regard to conflict of law rules or principles of the British Virgin Islands, or any other jurisdiction that would cause the application of the laws of any other jurisdiction). For any dispute, controversy, or claim between the parties that is not subject to arbitration as set forth in Section 15, other than proceedings seeking injunctive or equitable relief if the claim relates to intellectual property infringement or other misuse of intellectual property rights, the parties agree that the courts in the British Virgin Islands (BVI) will be the exclusive forums for brining any action, and that neither party may challenge this choice of forum on procedural grounds; and to that end, each party waives, to the fullest extent permitted by law, any objection which it may now or later have to the laying of venue of any legal action or proceeding arising out of this Agreement brought in such courts.
+
+## 17. Miscellaneous
+
+### a. Support
+
+Paima does not have any support obligations with respect to the Licensed Technology under this Agreement. Without limiting the foregoing, Paima does not have any obligation to make new versions of the Licensed Technology available, or to continue to make available for access or download any versions of the Licensed Technology.
+
+### b. U.S. Government Matters; Export Control
+
+The Licensed Technology is a “Commercial Item” (as defined at 48 C.F.R. §2.101), consisting of “Commercial Computer Software” and “Commercial Computer Software Documentation” (as used in 48 C.F.R. §12.212 or 48 C.F.R. §227.7202, as applicable). The Licensed Technology will only be licensed to U.S. Government end users as Commercial Items and with only those rights as are granted to other licensees under this Agreement.
+
+You agree that you will not export or re-export, directly or indirectly, the Service, or other information or materials provided by Paima hereunder, to any country for which any relevant jurisdiction requires any export license or other governmental approval at the time of export without first obtaining such license or approval. In particular, but without limitation, the Service may not be exported or re-exported (a) into any U.K. or U.S.A. embargoed countries, or (b) to anyone listed on any U.K. or U.S.A. Government list of prohibited or restricted parties, including the U.K. Sanctions List, the HM Treasury Sanction List, the U.S. Treasury Department’s list of Specially Designated Nationals or the U.S. Department of Commerce Denied Person’s List or Entity List. By using the Service, you represent and warrant that you are not located in any such country or on any such list. You are responsible for and hereby agree to comply at your sole expense with all applicable export laws and regulations.
+
+### c. No Assignment
+
+You may not assign your rights or obligations under this Agreement, including any rights to use the Licensed Technology. Any attempted assignment in violation of the foregoing will be void. We may assign this Agreement, in whole or in part, with or without notice to you.
+
+### d. Relationship of the Parties
+
+The relationship between you and Paima will be that of independent signatories, and nothing in this Agreement will be construed to constitute either party an agent of the other party. Without limiting the foregoing, neither party will have authority to act for or to bind the other party in any way, including to make representations or warranties or to execute agreements on behalf of the other party. This Agreement will not be construed to create an association, joint venture, or partnership between the parties or to impose any partnership obligation or liability upon any party.
+
+### e. Language
+
+To the fullest extent permitted by applicable law, the controlling language for this Agreement is English. It is the express wish of the parties that this Agreement and all related documents have been drawn up in English. Any translation has been provided for your convenience.
+
+### f. No Waiver; Severability
+
+Any act by Paima to exercise, or failure or delay in exercise of, any of its rights under this Agreement, at law or in equity will not be deemed a waiver of those or any other rights or remedies available in contract, at law or in equity. Unless otherwise stated in this Agreement, if any term of this Agreement is held by a court or tribunal of competent jurisdiction to be unenforceable, the term will be enforced to the maximum extent permissible and the remaining terms of this Agreement will remain in full force and effect. You agree that this Agreement does not confer any rights or remedies on any person other than the parties to this Agreement, except as expressly stated. Paima’s obligations are subject to existing laws and legal process, and Paima may comply with law enforcement or regulatory requests or requirements despite any contrary term in this Agreement.
+
+### g. Survival
+
+Upon conclusion of this Agreement, all fees and royalties due to Paima will become immediately due and payable and all rights and remedies of Paima will survive.
+
+### h. Entire Agreement
+
+This Agreement and any document or information referred to in this Agreement constitute the entire agreement between you and Paima relating to the subject matter covered by this Agreement. All other communications, proposals, and representations with respect to the subject matter covered by this Agreement are excluded.
+
+## Royalty Addendum
+
+Before you Distribute a Product under Section 4(b) of the Agreement (a “**_Royalty Product_**”) or generate advances or other revenue for a Royalty Product prior to its Distribution, you must comply with the following terms of this Royalty Addendum.
+
+### A1. What Products Require Royalty Payments to Paima
+
+This addendum only applies to advances or other revenue generated in connection with Royalty Products. As a reminder, as further specified in Section 4(a) of the Agreement, this means the following terms of this addendum generally does not apply to (and no royalty payments are due for):
+
+- a. Distributions of Non-Engine Products;
+- b. Distributions of Products within your company group; and
+- c. Distributions of Products to clients who hired you to develop the Products for them;
+
+### A2. Prerequisites for Distributing a Product Requiring Royalty Payments
+
+Before you Distribute a Royalty Product that will generate revenue, you must give Paima notice of your intended Distribution as early as reasonably possible. Likewise, if you plan on beginning to generate revenue from a Royalty Product that you have already Distributed, you must give notice to Paima as early as reasonably possible before the Royalty Product is used to generate revenue. You must give Paima the notice required under this section by sending an email to <clients@paimastudios.com>, including quarterly updates on the generated revenue. Quarterly updates are required even if your Royalty Product does not generate revenue over the minimum threshold as specified in Section 5(b).
+
+### A3. What is the Royalty Rate?
+
+You agree to pay Paima a royalty equal to  7% of all Royalty Revenue (as defined in the next section), regardless of whether that revenue is received by you or any other person or entity.
+
+### A4. How the Royalty Payment Is Calculated
+
+Royalty payments are calculated by multiplying the royalty rate of 7% by the Royalty Revenue. “**_Royalty Revenue_**” means all worldwide gross revenue attributable to each Royalty Product minus any allowed exclusions.
+
+### a. Worldwide Gross Revenue
+
+Worldwide gross revenue includes all revenue directly generated by your Royalty Product, regardless of who receives the revenue and regardless of whether you Distribute your Royalty Product to end users directly, self-publish via the App Store or any similar store, or work with a publisher or distributor. Royalty Revenue includes gross revenue:
+
+- i. resulting from any and all sales of a Royalty Product to end users through any and all media, including but not limited to digital and retail;
+
+- ii. resulting from any and all in-app purchases, downloadable content, microtransactions, subscriptions, sale, transfer, or exchange of user-generated content for use with a Royalty Product, or redemption of virtual currency which directly affects the operation of the Royalty Product, whether redeemed within the Royalty Product or externally;
+
+- iii. from any Kickstarter or other crowdfunding campaign which is directly associated with Royalty Product access or in-Royalty Product benefit (e.g., in a multi-tiered campaign, if an amount is established in an early tier solely for Royalty Product access, your royalty obligation will apply to that amount for each backer with the same access, but not on additional amounts in higher tiers based on ancillary benefits);
+
+- iv. from in-app advertising and affiliate programs;
+
+- v. from any advance payments for a Royalty Product (from a publisher or otherwise);
+
+- vi. received in connection with a Royalty Product’s inclusion in a streaming, subscription, or other game-delivery service (e.g., Apple Arcade, Microsoft GamePass, or any similar or successor services), including without limitation development funds and bonuses; and
+
+- vii. received in any other form actually attributable to a Royalty Product (unless excluded below).
+
+To be clear, Royalty Revenue includes all revenues from NFTs created, sold, or Distributed which interact or interface with your Royalty Product or Paima Engine. Furthermore this also includes all payments from players, users or other entities submitting user inputs to smart contracts that the Royalty Product uses in combination with the Licensed Technology.
+
+### b. Allowed Exclusions
+
+However, some gross revenue is excluded from the calculation of Royalty Revenue.
+
+Quarterly exclusion: You will not owe us any royalty payments for calendar quarters in which you don’t reach a certain threshold. The following is excluded from the calculation of Royalty Revenue:
+
+#### i. revenue attributable to a Royalty Product from a calendar quarter during which the gross revenue for such Royalty Product is less than $10,000.
+
+The following simplified examples illustrate how quarterly exclusions work.
+
+- Your Royalty Product generates $9,000 in the first calendar quarter and $9,000 in the second calendar quarter. You will not owe any royalties for either quarter. \
+- Your Royalty Product generates $9,000 in the first calendar quarter and $10,100 in the second calendar quarter. You will not owe any royalties for the first quarter and, unless another exclusion applies, you will owe $707 ($10,100 x .07) in royalties for the second quarter.
+
+Other exclusions: The following are also excluded from the calculation of Royalty Revenue:
+
+- i. revenue from a Royalty Product which is Distributed (whether by you or any other third party) only to third parties who are separately licensed by us to use Paima Engine is excluded from Royalty Revenue;
+- ii. revenue from ancillary products that are not software and that do not contain embedded information (such as QR codes) that affects the operation of the Royalty Product (e.g., comic books, soundtracks, apparel);
+- iii. cash prizes given with awards earned for the Royalty Product;
+- iv revenue from donations for a Product which are not tied to Royalty Product access or in-Royalty Product benefits;
+- v. funding you receive from Paima through the Paima Ultrasuperduper Grants program; and
+- vi. revenue from a Royalty Product that is used, displayed, and performed solely at a physical location under your control or the control of your authorized distributors and that is not otherwise Distributed to users, such as interactive amusement park rides, coin-op arcades, or location-based VR experiences, which use the Licensed Technology.
+
+Additional exclusions:  Paima may, on a case-by-case basis, offer additional exclusions for Royalty Revenue.  Such exclusions will be documented in a separate agreement by and between the parties.
+
+### A5. Additional Examples
+
+The following additional simplified examples illustrate how royalty payments are calculated.
+
+- You charge $10 for your Royalty Product on the App Store. When you distribute a copy, Apple may only pay you $7 (having deducted 30% as a distribution fee). However, your Royalty Revenue would be $10 and your royalty payment to Paima would be $0.70 (7% of $10).
+
+- Your Royalty Product generates $9,000 in the first calendar quarter and $9,000 in the second calendar quarter. You will not owe any royalties for either quarter. The $9,000 from first quarter and the $9,000 from the second quarter fall under the quarterly exclusion in Section 5(b)(i) of the Royalty Addendum.
+
+- You charge $10 for a user to purchase or mint an NFT which can be used with your Royalty Product. The blockchain transaction fee is covered by the user to pay the block producers, so your Royalty Revenue would be $10, and your royalty payment to Paima would be $0.70 (7% of $10).
+
+### A6. Reporting and Making Your Royalty Payments
+
+Within 45 days after the end of each calendar quarter in which you earn Royalty Revenue, you must report the Royalty Revenue to Paima on a per Product basis and pay Paima 7% of the Royalty Revenue. Additional information on royalty reporting and payment can be found at Paimastudios.com/developers/royalty. Questions regarding royalty reporting and payment can be sent to <clients@paimastudios.com>.
+
+Paima reserves the right to charge a 7% late fee (or the highest percentage allowed by applicable law if that is lower) per calendar quarter (compounding), for any amounts unpaid after the required due date.
+
+Except to the extent required by applicable law, all payments, fees and royalties are non-refundable under all circumstances.
+
+### A7. Other Obligations You Have
+
+#### a. Taxes
+
+You are responsible for all taxes on all payments required to be made by you under this Agreement (other than taxes that Paima is obligated to pay on its income, which are Paima’s responsibility). If you are required by a government agency to reduce your payment to Paima for any reason, you are required to provide sufficient documentation to Paima supporting the withholding.
+
+#### b. Records and Audits
+
+You agree to keep accurate books and records related to your development, manufacture, Distribution, and sale of Royalty Products and related revenue. Paima may conduct reasonable audits of those books and records. Audits will be conducted during business hours on reasonable prior notice to you. Paima will bear the costs of audits unless the results show a shortfall in payments in excess of 7% during the period audited, in which case you will be responsible for the cost of the audit and our late fees.
