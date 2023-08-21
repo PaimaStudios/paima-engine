@@ -34,7 +34,7 @@ process.on('exit', code => {
 const paimaEngine: PaimaRuntimeInitializer = {
   initialize(chainFunnel, gameStateMachine, gameBackendVersion) {
     return {
-      pollingRate: 4,
+      pollingRate: ENV.BLOCK_TIME,
       addEndpoints(tsoaFunction): void {
         tsoaFunction(server);
       },
