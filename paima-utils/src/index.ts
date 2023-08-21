@@ -226,6 +226,10 @@ export function uint8ArrayToHexString(uint8Array: Uint8Array): string {
   return Array.prototype.map.call(uint8Array, byte => ('0' + byte.toString(16)).slice(-2)).join('');
 }
 
+/**
+ * Removes all promises after the first failure in a list
+ * Note: if all promises failed, this will just be an empty list (and not an error)
+ */
 export function cutAfterFirstRejected<T>(results: PromiseSettledResult<T>[]): T[] {
   let firstRejected = results.findIndex(elem => elem.status === 'rejected');
   if (firstRejected < 0) {

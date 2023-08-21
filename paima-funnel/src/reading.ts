@@ -67,7 +67,15 @@ async function getMultipleBlockData(
     blockPromises.push(getBlockData(web3, i));
   }
   const blockResults = await Promise.allSettled(blockPromises);
-  return cutAfterFirstRejected(blockResults);
+  const truncatedList = cutAfterFirstRejected(blockResults);
+
+  // return the first rejection if all rejections failed
+  // this is to fast-fail if all requests failed
+  // which matches the behavior of `getBaseChainDataSingle`
+  if (truncatedList.length === 0 && blockPromises.length > 0) {
+    return (blockResults[0] as PromiseRejectedResult).reason;
+  }
+  return truncatedList;
 }
 
 async function getPaimaEvents(

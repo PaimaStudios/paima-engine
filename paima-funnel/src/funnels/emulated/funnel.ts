@@ -127,6 +127,8 @@ export class EmulatedBlocksFunnel extends BaseFunnel implements ChainFunnel {
     // increase the lower-bound slowly as time passes, and skip forward if we see a new block
     // Note: we only take maxWait into account if we've already fully synced the chain
     //       otherwise, currentTimestamp would always be too high for historical blocks
+    // Note: this only runs AFTER the underlying funnel has successfully completed
+    //       that means timestampLowerBound does not change if the underlying funnel threw an error (such as an RPC error)
     const awaitedThreshold = currentTimestamp - this.maxWait;
     this.emulatedState.timestampLowerBound = synced
       ? Math.max(latestTimestamp, awaitedThreshold)
@@ -198,7 +200,7 @@ export class EmulatedBlocksFunnel extends BaseFunnel implements ChainFunnel {
     ) {
       const block = this.processingQueue.shift();
       if (block) {
-        if (block.timestamp < nextBlockStartTimestamp || block.timestamp >= nextBlockEndTimestamp) {
+        if (block.timestamp < nextBlockStartTimestamp) {
           throw new Error(
             `[funnel] DC block #${block.blockNumber} with timestamp ${block.timestamp} found out of order (EB timestamp ${nextBlockStartTimestamp}). Please resync your game node from the latest snapshot.`
           );
@@ -233,10 +235,17 @@ export class EmulatedBlocksFunnel extends BaseFunnel implements ChainFunnel {
     };
   };
 
+  /**
+   * Check that all blocks are:
+   * 1. In correct timestamp order
+   * 2. In correct block number order
+   */
   private validateFetchedBlocks = (fetchedBlocks: ChainData[]): void => {
     let latestTimestamp = this.dcState.latestFetchedTimestamp;
     let latestBlockNumber = this.dcState.latestFetchedBlockNumber;
     for (const block of fetchedBlocks) {
+      // note: don't check for timestamp equality
+      //       as some chains like Arbitrum have multiple blocks with the same timestamp
       if (block.timestamp < latestTimestamp) {
         throw new Error(`Unexpected timestamp ${block.timestamp} in block ${block.blockNumber}`);
       }
