@@ -41,7 +41,7 @@ export async function getBaseChainDataSingle(
   const submittedData = await extractSubmittedData(web3, events, blockData.timestamp);
   return {
     ...blockData,
-    submittedData,
+    submittedData, // merge in the data
   };
 }
 
@@ -53,7 +53,7 @@ async function getBlockData(web3: Web3, blockNumber: number): Promise<ChainData>
     timestamp: timestamp,
     blockHash: block.hash,
     blockNumber: block.number,
-    submittedData: [],
+    submittedData: [], // this will be merged in after
   };
 }
 

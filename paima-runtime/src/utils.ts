@@ -42,8 +42,9 @@ export async function acquireLatestBlockHeight(
         logError(err);
       }
       wasDown = true;
+    } finally {
+      await delay(waitPeriod);
     }
-    await delay(waitPeriod);
   }
   exitIfStopped(run);
   return -1;

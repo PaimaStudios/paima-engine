@@ -19,7 +19,7 @@ export class DataMigrations {
         .map(f => f.match(/^(\d+)\.sql$/)?.[1])
         // Transform to number and offset
         .map(f => parseInt(f as string, 10))
-        // Check if migraton block height is in the future
+        // Check if migration block height is in the future
         .filter(f => f + ENV.SM_START_BLOCKHEIGHT > startBlock);
 
       if (DataMigrations.pendingMigrations.length > 0) {

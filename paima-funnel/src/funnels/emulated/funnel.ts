@@ -1,8 +1,8 @@
 import type { Pool } from 'pg';
 
 import Prando from '@paima/prando';
-import type { ChainData } from '@paima/runtime';
-import { ENV } from '@paima/utils';
+import type { ChainData, ChainFunnel } from '@paima/runtime';
+import { ENV, doLog } from '@paima/utils';
 import {
   emulatedSelectLatestPrior,
   upsertEmulatedBlockheight,
@@ -12,55 +12,93 @@ import {
 import { hashTogether } from '@paima/utils-backend';
 
 import { calculateBoundaryTimestamp, emulateCde } from './utils';
+import { BaseFunnel } from '../BaseFunnel';
+import type { FunnelSharedData } from '../BaseFunnel';
 
-// NOTE: the funnel assumes that all ChainData coming out of it are successfully processed by the SM and won't need to be fetched again
-
-export class EmulatedBlocksProcessor {
-  private latestEmulatedBlockNumber: number;
-  private latestFetchedBlockNumber: number;
-  private latestFetchedTimestamp: number;
-  private certaintyThreshold: number;
+export class EmulatedBlocksFunnel extends BaseFunnel implements ChainFunnel {
+  private dcState: {
+    /** Block number of the underlying DC */
+    latestFetchedBlockNumber: number;
+    /** Timestamp of the latest block of the underlying DC */
+    latestFetchedTimestamp: number;
+  };
+  private emulatedState: {
+    /** Block height (not timestamp) representing the latest emulated block */
+    latestEmulatedBlockNumber: number;
+    /** The lower bound of any timestamp the funnel will accept */
+    timestampLowerBound: number;
+  };
+  /** Blocks queued to be added into the current batch */
   private processingQueue: ChainData[];
 
   constructor(
+    private readonly baseFunnel: ChainFunnel,
+    sharedData: FunnelSharedData,
     private readonly DBConn: Pool,
     private readonly startBlockHeight: number,
     private readonly startTimestamp: number,
+    /** Max amount of time (in seconds) to wait to close a time interval and create an emulated block */
     private readonly maxWait: number
   ) {
-    this.latestEmulatedBlockNumber = 0;
-    this.latestFetchedBlockNumber = startBlockHeight - 1;
-    this.latestFetchedTimestamp = startTimestamp;
-    this.certaintyThreshold = startTimestamp - 1;
+    super(sharedData);
+    this.dcState = {
+      latestFetchedBlockNumber: startBlockHeight - 1,
+      latestFetchedTimestamp: startTimestamp,
+    };
+    this.emulatedState = {
+      latestEmulatedBlockNumber: 0,
+      // theoretically, any value <= startTimestamp should work
+      timestampLowerBound: startTimestamp - 1,
+    };
     this.processingQueue = [];
   }
 
   /**
-   * Converts the supplied emulated blockheight to the expected deployment chain blockheight
-   * at which corresponding blocks could be found.
-   *
-   * The desired emulated blockheight is expected to be the successor of the latest emulated
-   * block that was output -- the alternative should only happen after restarting the game node,
-   * in which case the function relies on emulated blockheight data in the database.
-   *
-   * @param emulatedBlockHeight -- the next desired emulated blockheight
-   * @returns the deployment chain blockheight to start fetching from
+   * Recall: for emulated blocks, this is called with blockHeight 1 for the initial sync
    */
-  public getDeploymentChainBlockHeight = async (emulatedBlockHeight: number): Promise<number> => {
-    if (emulatedBlockHeight != this.latestEmulatedBlockNumber + 1) {
-      const result = await emulatedSelectLatestPrior.run(
-        { emulated_block_height: emulatedBlockHeight },
-        this.DBConn
+  public override readData = async (blockHeight: number): Promise<ChainData[]> => {
+    // EmulatedBlocksFunnel only supports syncing blocks sequentially (no arbitrary reads)
+    if (blockHeight != this.emulatedState.latestEmulatedBlockNumber + 1) {
+      throw new Error(
+        `[EBP] Unexpected EBH ${blockHeight} after latest ${this.emulatedState.latestEmulatedBlockNumber} with no data in DB to fall back on`
       );
-      if (result.length === 0) {
-        throw new Error(
-          `[EBP] Unexpected EBH ${emulatedBlockHeight} after latest ${this.latestEmulatedBlockNumber} with no data in DB to fall back on`
-        );
-      }
-      return result[0].deployment_chain_block_height + 1;
     }
 
-    return this.latestFetchedBlockNumber + 1;
+    // 1) Check if time interval is complete. If yes, return the emulated block
+    const nextBlock = await this.getNextBlock();
+    if (nextBlock) {
+      return [nextBlock];
+    }
+
+    // 2) If time interval is not complete, queue any new DC block that might have been made
+    try {
+      const currentTimestamp = Math.floor(Date.now() / 1000);
+      const fetchedData = await this.baseFunnel.readData(this.dcState.latestFetchedBlockNumber + 1);
+
+      // check if the chunk we read matches the latest block known by the RPC endpoint
+      // or if there are no blocks left to fetch as we're already at the tip
+      const synced =
+        fetchedData.length > 0
+          ? fetchedData[fetchedData.length - 1].blockNumber >=
+            this.sharedData.latestAvailableBlockNumber
+          : true;
+
+      await this.feedData(currentTimestamp, fetchedData, synced);
+    } catch (err) {
+      doLog(`[paima-funnel::readData] Exception occurred while reading blocks: ${err}`);
+      return [];
+    }
+
+    // 3) See if syncing the DC chains allows us to close out this emulated block
+    //    This happens if we find a DC block whose timestamp occurs after the end of this range
+    try {
+      const nextBlock = await this.getNextBlock();
+      // errors from the above could mean invalid state, but also simply DB error
+      return nextBlock ? [nextBlock] : [];
+    } catch (err) {
+      doLog(`[paima-funnel::readData] Exception occurred while building next block: ${err}`);
+      return [];
+    }
   };
 
   /**
@@ -80,18 +118,24 @@ export class EmulatedBlocksProcessor {
       this.processingQueue.push(...fetchedBlocks);
 
       const latestBlock = fetchedBlocks[fetchedBlocks.length - 1];
-      this.latestFetchedBlockNumber = latestBlock.blockNumber;
-      this.latestFetchedTimestamp = latestBlock.timestamp;
+      this.dcState.latestFetchedBlockNumber = latestBlock.blockNumber;
+      this.dcState.latestFetchedTimestamp = latestBlock.timestamp;
     }
 
-    const latestTimestamp = this.latestFetchedTimestamp;
+    const latestTimestamp = this.dcState.latestFetchedTimestamp;
+
+    // increase the lower-bound slowly as time passes, and skip forward if we see a new block
+    // Note: we only take maxWait into account if we've already fully synced the chain
+    //       otherwise, currentTimestamp would always be too high for historical blocks
     const awaitedThreshold = currentTimestamp - this.maxWait;
-    this.certaintyThreshold = synced
+    this.emulatedState.timestampLowerBound = synced
       ? Math.max(latestTimestamp, awaitedThreshold)
       : latestTimestamp;
   };
 
-  public recoverStateFromDatabase = async (): Promise<void> => {
+  public override recoverState = async (): Promise<void> => {
+    await this.baseFunnel.recoverState();
+    await super.recoverState();
     const [b] = await getLatestProcessedBlockHeight.run(undefined, this.DBConn);
     if (!b) {
       return;
@@ -106,9 +150,14 @@ export class EmulatedBlocksProcessor {
       throw new Error(`[funnel] Invalid DB state to recover emulated block state!`);
     }
 
-    this.latestEmulatedBlockNumber = res.emulated_block_height;
-    this.latestFetchedBlockNumber = res.deployment_chain_block_height;
-    this.latestFetchedTimestamp = parseInt(res.second_timestamp, 10);
+    this.dcState = {
+      latestFetchedBlockNumber: res.deployment_chain_block_height,
+      latestFetchedTimestamp: parseInt(res.second_timestamp, 10),
+    };
+    this.emulatedState = {
+      latestEmulatedBlockNumber: res.emulated_block_height,
+      timestampLowerBound: this.dcState.latestFetchedTimestamp,
+    };
   };
 
   /**
@@ -118,23 +167,30 @@ export class EmulatedBlocksProcessor {
    * @returns the next emulated block if possible, `undefined` otherwise (if deployment chain data not yet available)
    */
   public getNextBlock = async (): Promise<ChainData | undefined> => {
-    const nextBlockBlockNumber = this.latestEmulatedBlockNumber + 1;
+    const nextBlockBlockNumber = this.emulatedState.latestEmulatedBlockNumber + 1;
     const nextBlockEndTimestamp = calculateBoundaryTimestamp(
       this.startTimestamp,
       ENV.BLOCK_TIME,
       nextBlockBlockNumber
     );
-    if (nextBlockEndTimestamp >= this.certaintyThreshold) {
+    // this will be false in two cases:
+    // 1. timestampLowerBound gets updated by a new block that is after nextBlockEndTimestamp
+    //    so we know for sure there won't be a new block for this interval
+    // 2. (currentTimestamp - this.maxWait) has exceeded the end of the interval
+    //    so we assume no other block will come in
+    if (nextBlockEndTimestamp >= this.emulatedState.timestampLowerBound) {
       return undefined;
     }
 
-    const nextBlockTimestamp = calculateBoundaryTimestamp(
+    const nextBlockStartTimestamp = calculateBoundaryTimestamp(
       this.startTimestamp,
       ENV.BLOCK_TIME,
       nextBlockBlockNumber - 1
     );
-    this.latestEmulatedBlockNumber = nextBlockBlockNumber;
+    this.emulatedState.latestEmulatedBlockNumber = nextBlockBlockNumber;
 
+    // we only want to pop off the queue the entries that correspond for the next ChainData
+    // for the rest, we leave them in the queue to be fetched in the next readData call
     const mergedBlocks: ChainData[] = [];
     while (
       this.processingQueue.length > 0 &&
@@ -142,9 +198,9 @@ export class EmulatedBlocksProcessor {
     ) {
       const block = this.processingQueue.shift();
       if (block) {
-        if (block.timestamp < nextBlockTimestamp || block.timestamp >= nextBlockEndTimestamp) {
+        if (block.timestamp < nextBlockStartTimestamp || block.timestamp >= nextBlockEndTimestamp) {
           throw new Error(
-            `[funnel] DC block #${block.blockNumber} with timestamp ${block.timestamp} found out of order (EB timestamp ${nextBlockTimestamp}). Please resync your game node from the latest snapshot.`
+            `[funnel] DC block #${block.blockNumber} with timestamp ${block.timestamp} found out of order (EB timestamp ${nextBlockStartTimestamp}). Please resync your game node from the latest snapshot.`
           );
         }
         mergedBlocks.push(block);
@@ -171,15 +227,15 @@ export class EmulatedBlocksProcessor {
     return {
       blockNumber: nextBlockBlockNumber,
       blockHash: nextBlockBlockHash,
-      timestamp: nextBlockTimestamp,
+      timestamp: nextBlockEndTimestamp,
       submittedData: nextBlockSubmittedData,
       extensionDatums: nextBlockExtensionDatums,
     };
   };
 
   private validateFetchedBlocks = (fetchedBlocks: ChainData[]): void => {
-    let latestTimestamp = this.latestFetchedTimestamp;
-    let latestBlockNumber = this.latestFetchedBlockNumber;
+    let latestTimestamp = this.dcState.latestFetchedTimestamp;
+    let latestBlockNumber = this.dcState.latestFetchedBlockNumber;
     for (const block of fetchedBlocks) {
       if (block.timestamp < latestTimestamp) {
         throw new Error(`Unexpected timestamp ${block.timestamp} in block ${block.blockNumber}`);
