@@ -47,7 +47,7 @@ export class EmulatedBlocksFunnel extends BaseFunnel implements ChainFunnel {
     };
     this.emulatedState = {
       latestEmulatedBlockNumber: 0,
-      // theoretically, any value <= startTimestamp should work
+      // picked so that getNextBlock does not execute until startTimestamp passes
       timestampLowerBound: startTimestamp - 1,
     };
     this.processingQueue = [];

@@ -141,7 +141,7 @@ export function getErc165Contract(address: string, web3?: Web3): ERC165Contract 
 
 export function validatePaimaL2ContractAddress(address: string): void {
   if (!isAddress(address)) {
-    throw new Error('Invalid storage address supplied');
+    throw new Error(`Invalid storage address supplied. Found: ${address}`);
   }
 }
 
