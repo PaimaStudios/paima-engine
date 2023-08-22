@@ -37,5 +37,6 @@ The `Paima Contract` is deployed on-chain which allows users to submit game inpu
 
 Paima Engine is a TypeScript monorepo implemented with npm (not Yarn nor Lerna) workspaces. The `package.json` file at the root indicates all the common dependencies (mostly devDependencies like TypeScript, ESLint etc.), and the root `tsconfig.json` indicates the common TypeScript configuration. Every package has also its own `package.json` and `tsconfig.json` files indicating their particular configuration.
 
-To build you must simply run `npm install` at the root folder, which will generate a single, common `node_modules` folder with all the combined dependencies of all packages. Individual package folders do not have a `node_modules` folder, all dependencies are installed at the root.
-Once the dependencies have been installed, run `npm run build` to compile the TypeScript files into JavaScript. That's all.
+1. `npm install` (generate the common `node_modules` folder with all the combined dependencies of all packages)
+1. `npm run build` (to see if the build succeeds)
+1. `npm run release` (for production builds)
