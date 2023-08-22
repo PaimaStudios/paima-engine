@@ -17,24 +17,28 @@ export type FunnelSharedData = {
  * Base funnel that implements the bare-bones required functionality of the Paima Funnel
  */
 export class BaseFunnel implements ChainFunnel {
-  constructor(protected sharedData: FunnelSharedData) {}
+  constructor(protected sharedData: FunnelSharedData) {
+    // TODO: replace once TS5 decorators are better supported
+    this.getExtensions.bind(this);
+    this.extensionsAreValid.bind(this);
+    this.readData.bind(this);
+    this.readPresyncData.bind(this);
+    this.recoverState.bind(this);
+  }
 
-  public getExtensions = (): ChainDataExtension[] => {
+  public getExtensions(): ChainDataExtension[] {
     return this.sharedData.extensions;
-  };
+  }
 
-  public extensionsAreValid = (): boolean => {
+  public extensionsAreValid(): boolean {
     return this.sharedData.extensionsValid;
-  };
+  }
 
-  public readData = async (_blockHeight: number): Promise<ChainData[]> => {
+  public async readData(_blockHeight: number): Promise<ChainData[]> {
     return [];
-  };
+  }
 
-  public readPresyncData = async (
-    fromBlock: number,
-    toBlock: number
-  ): Promise<PresyncChainData[]> => {
+  public async readPresyncData(fromBlock: number, toBlock: number): Promise<PresyncChainData[]> {
     try {
       toBlock = Math.min(toBlock, ENV.START_BLOCKHEIGHT);
       fromBlock = Math.max(fromBlock, 0);
@@ -53,7 +57,7 @@ export class BaseFunnel implements ChainFunnel {
       doLog(`[paima-funnel::readPresyncData] Exception occurred while reading blocks: ${err}`);
       return [];
     }
-  };
+  }
 
-  public recoverState = async (): Promise<void> => {};
+  public async recoverState(): Promise<void> {}
 }

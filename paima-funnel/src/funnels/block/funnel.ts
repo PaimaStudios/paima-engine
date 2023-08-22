@@ -4,11 +4,22 @@ import { getBaseChainDataMulti, getBaseChainDataSingle } from '../../reading';
 import { getUngroupedCdeData } from '../../cde/reading';
 import { composeChainData, groupCdeData } from '../../utils';
 import { BaseFunnel } from '../BaseFunnel';
+import type { FunnelSharedData } from '../BaseFunnel';
 
 const GET_BLOCK_NUMBER_TIMEOUT = 5000;
 
 export class BlockFunnel extends BaseFunnel implements ChainFunnel {
-  public override readData = async (blockHeight: number): Promise<ChainData[]> => {
+  constructor(sharedData: FunnelSharedData) {
+    super(sharedData);
+    // TODO: replace once TS5 decorators are better supported
+    this.getExtensions.bind(this);
+    this.extensionsAreValid.bind(this);
+    this.readData.bind(this);
+    this.readPresyncData.bind(this);
+    this.recoverState.bind(this);
+  }
+
+  public override async readData(blockHeight: number): Promise<ChainData[]> {
     const [fromBlock, toBlock] = await this.adjustBlockHeightRange(
       blockHeight,
       ENV.DEFAULT_FUNNEL_GROUP_SIZE
@@ -25,7 +36,7 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
       doLog(`#${fromBlock}-${toBlock}`);
       return await this.internalReadDataMulti(fromBlock, toBlock);
     }
-  };
+  }
 
   /**
    * Will return [-1, -2] if the range is determined to be empty.

@@ -51,12 +51,18 @@ export class EmulatedBlocksFunnel extends BaseFunnel implements ChainFunnel {
       timestampLowerBound: startTimestamp - 1,
     };
     this.processingQueue = [];
+    // TODO: replace once TS5 decorators are better supported
+    this.getExtensions.bind(this);
+    this.extensionsAreValid.bind(this);
+    this.readData.bind(this);
+    this.readPresyncData.bind(this);
+    this.recoverState.bind(this);
   }
 
   /**
    * Recall: for emulated blocks, this is called with blockHeight 1 for the initial sync
    */
-  public override readData = async (blockHeight: number): Promise<ChainData[]> => {
+  public override async readData(blockHeight: number): Promise<ChainData[]> {
     // EmulatedBlocksFunnel only supports syncing blocks sequentially (no arbitrary reads)
     if (blockHeight != this.emulatedState.latestEmulatedBlockNumber + 1) {
       throw new Error(
@@ -99,7 +105,7 @@ export class EmulatedBlocksFunnel extends BaseFunnel implements ChainFunnel {
       doLog(`[paima-funnel::readData] Exception occurred while building next block: ${err}`);
       return [];
     }
-  };
+  }
 
   /**
    * Validate and prepare the next batch of deployment chain blocks for processing
@@ -108,7 +114,7 @@ export class EmulatedBlocksFunnel extends BaseFunnel implements ChainFunnel {
    * @param fetchedBlocks
    * @param synced -- true if the game node state has caught up with the latest deployment chain state
    */
-  public feedData = async (
+  private feedData = async (
     currentTimestamp: number,
     fetchedBlocks: ChainData[],
     synced: boolean
@@ -135,7 +141,7 @@ export class EmulatedBlocksFunnel extends BaseFunnel implements ChainFunnel {
       : latestTimestamp;
   };
 
-  public override recoverState = async (): Promise<void> => {
+  public override async recoverState(): Promise<void> {
     await this.baseFunnel.recoverState();
     await super.recoverState();
     const [b] = await getLatestProcessedBlockHeight.run(undefined, this.DBConn);
@@ -160,7 +166,7 @@ export class EmulatedBlocksFunnel extends BaseFunnel implements ChainFunnel {
       latestEmulatedBlockNumber: res.emulated_block_height,
       timestampLowerBound: this.dcState.latestFetchedTimestamp,
     };
-  };
+  }
 
   /**
    * Process the deployment chain blocks waiting in the processing queue and return
@@ -168,7 +174,7 @@ export class EmulatedBlocksFunnel extends BaseFunnel implements ChainFunnel {
    *
    * @returns the next emulated block if possible, `undefined` otherwise (if deployment chain data not yet available)
    */
-  public getNextBlock = async (): Promise<ChainData | undefined> => {
+  private getNextBlock = async (): Promise<ChainData | undefined> => {
     const nextBlockBlockNumber = this.emulatedState.latestEmulatedBlockNumber + 1;
     const nextBlockEndTimestamp = calculateBoundaryTimestamp(
       this.startTimestamp,
