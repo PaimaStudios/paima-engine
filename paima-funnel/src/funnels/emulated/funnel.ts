@@ -6,14 +6,29 @@ import { ENV, doLog } from '@paima/utils';
 import {
   emulatedSelectLatestPrior,
   upsertEmulatedBlockheight,
-  getBlockHeight,
+  getBlockHeights,
   getLatestProcessedBlockHeight,
 } from '@paima/db';
+import type { IGetBlockHeightsResult } from '@paima/db';
 import { hashTogether } from '@paima/utils-backend';
 
 import { calculateBoundaryTimestamp, emulateCde } from './utils';
 import { BaseFunnel } from '../BaseFunnel';
 import type { FunnelSharedData } from '../BaseFunnel';
+
+/**
+ * For hash calculation of empty blocks to work,
+ * all of the prior emulated blocks must have already been processed by SM
+ * Notably, their corresponding seeds must have been calculated and stored in the DB.
+ *
+ * To still be able to process things in parallel, we provide a batch option
+ * but note the batching will affect:
+ * - which how old the blocks that feed into the hash will be
+ * - the hash of the blocks (aka changing this batch size is a hardfork for games
+ *
+ * Based on my my machine, batch of `100` is about 10~20% faster than batch of `1`.
+ */
+const MAX_BATCH_SIZE = 100;
 
 export class EmulatedBlocksFunnel extends BaseFunnel implements ChainFunnel {
   private dcState: {
@@ -71,9 +86,12 @@ export class EmulatedBlocksFunnel extends BaseFunnel implements ChainFunnel {
     }
 
     // 1) Check if time interval is complete. If yes, return the emulated block
-    const nextBlock = await this.getNextBlock();
-    if (nextBlock) {
-      return [nextBlock];
+    //    Do this in batch to speed up the initial sync
+    {
+      const completedBlocks = await this.getNextBlockBatch(blockHeight);
+      if (completedBlocks.length > 0) {
+        return completedBlocks;
+      }
     }
 
     // 2) If time interval is not complete, queue any new DC block that might have been made
@@ -97,14 +115,7 @@ export class EmulatedBlocksFunnel extends BaseFunnel implements ChainFunnel {
 
     // 3) See if syncing the DC chains allows us to close out this emulated block
     //    This happens if we find a DC block whose timestamp occurs after the end of this range
-    try {
-      const nextBlock = await this.getNextBlock();
-      // errors from the above could mean invalid state, but also simply DB error
-      return nextBlock ? [nextBlock] : [];
-    } catch (err) {
-      doLog(`[paima-funnel::readData] Exception occurred while building next block: ${err}`);
-      return [];
-    }
+    return await this.getNextBlockBatch(blockHeight);
   }
 
   /**
@@ -163,9 +174,30 @@ export class EmulatedBlocksFunnel extends BaseFunnel implements ChainFunnel {
       latestFetchedTimestamp: parseInt(res.second_timestamp, 10),
     };
     this.emulatedState = {
-      latestEmulatedBlockNumber: res.emulated_block_height,
+      latestEmulatedBlockNumber: b.block_height,
       timestampLowerBound: this.dcState.latestFetchedTimestamp,
     };
+  }
+
+  private async getNextBlockBatch(blockHeight: number): Promise<ChainData[]> {
+    const completedBlocks: ChainData[] = [];
+    let nextBlock: ChainData | undefined = undefined;
+
+    // we treat the genesis block as a special case
+    // since we want to ensure there is at least always the genesis block in the DB before we add more blocks
+    const scanSize = blockHeight === 1 ? 1 : MAX_BATCH_SIZE;
+    for (let i = 0; i < scanSize; i++) {
+      try {
+        nextBlock = await this.getNextBlock();
+        // errors from the above could mean invalid state, but also simply DB error
+        if (nextBlock == null) break;
+        completedBlocks.push(nextBlock);
+      } catch (err) {
+        doLog(`[paima-funnel::readData] Exception occurred while building next block: ${err}`);
+        return [];
+      }
+    }
+    return completedBlocks;
   }
 
   /**
@@ -199,6 +231,9 @@ export class EmulatedBlocksFunnel extends BaseFunnel implements ChainFunnel {
 
     // we only want to pop off the queue the entries that correspond for the next ChainData
     // for the rest, we leave them in the queue to be fetched in the next readData call
+    if (this.processingQueue.length === 0) {
+    } else if (this.processingQueue[0].timestamp >= nextBlockEndTimestamp) {
+    }
     const mergedBlocks: ChainData[] = [];
     while (
       this.processingQueue.length > 0 &&
@@ -222,6 +257,7 @@ export class EmulatedBlocksFunnel extends BaseFunnel implements ChainFunnel {
       nextBlockBlockNumber
     );
 
+    // if this emulated block contains multiple blocks in the underlying chain
     if (mergedBlocks.length > 0) {
       const emulatedBlockheights = mergedBlocks.map(block => ({
         deployment_chain_block_height: block.blockNumber,
@@ -273,36 +309,38 @@ export class EmulatedBlocksFunnel extends BaseFunnel implements ChainFunnel {
       return hashTogether(mergedBlocks.map(b => b.blockHash));
     }
 
-    // No blocks on deployment chain, backup hash calculation:
-
-    // NOTE: for the following to work, all of the prior emulated blocks must have already been processed by SM
-    // -- in particular, their corresponding seeds must have been calculated and stored in the DB.
-    // For this reason, the emulated blocks processor is designed to return one block at a time.
-
     if (blockNumber <= 1) {
       throw new Error(`No blocks or prior seeds, unable to generate block hash!`);
     }
-    const [prevSeed] = await getBlockHeight.run({ block_height: blockNumber - 1 }, this.DBConn);
-    if (!prevSeed) {
-      throw new Error(`Unable to get seed for blockheight ${blockNumber - 1}`);
+    const baseSeedHeight = Math.max(1, blockNumber - MAX_BATCH_SIZE);
+    const baseSeedBlock: IGetBlockHeightsResult | undefined = (
+      await getBlockHeights.run({ block_heights: [baseSeedHeight] }, this.DBConn)
+    )[0];
+    if (!baseSeedBlock.seed) {
+      throw new Error(
+        `Error during ${blockNumber}: Unable to get seed for blockheight ${baseSeedHeight}`
+      );
     }
-    const prandoSeed = hashTogether([blockNumber.toString(10), prevSeed.seed]);
+    const prandoSeed = hashTogether([blockNumber.toString(10), baseSeedBlock.seed]);
     const rng = new Prando(prandoSeed);
 
-    const [latestBlock] = await getLatestProcessedBlockHeight.run(undefined, this.DBConn);
-    if (!latestBlock) {
-      throw new Error(`Unable to retrieve the latest block to generate block hash!`);
+    const heights = new Set<number>();
+    const NUM_SEEDS = 20;
+    for (let i = 0; i < NUM_SEEDS; i++) {
+      const upperRange = Math.max(1, blockNumber - MAX_BATCH_SIZE);
+      heights.add(rng.nextInt(1, upperRange));
     }
-    const maxBlockHeight = latestBlock.block_height;
-    const randomPriorHashes: string[] = [];
-    for (let i = 0; i < 20; i++) {
-      const blockHeight = rng.nextInt(1, maxBlockHeight);
-      const [b] = await getBlockHeight.run({ block_height: blockHeight }, this.DBConn);
-      if (!b) {
-        throw new Error(`Unable to get seed for blockheight ${blockHeight}`);
-      }
-      randomPriorHashes.push(b.seed);
+    const randomPriorHashes = await getBlockHeights.run(
+      { block_heights: Array.from(heights) },
+      this.DBConn
+    );
+    if (randomPriorHashes.length !== heights.size) {
+      throw new Error(
+        `Error during ${blockNumber}: Unable to get random seed for blockheight ${JSON.stringify(
+          randomPriorHashes
+        )}`
+      );
     }
-    return hashTogether(randomPriorHashes);
+    return hashTogether([blockNumber.toString(10), ...randomPriorHashes.map(block => block.seed)]);
   };
 }
