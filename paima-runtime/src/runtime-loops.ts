@@ -3,7 +3,13 @@ import process from 'process';
 import { doLog, logError, delay } from '@paima/utils';
 import { DataMigrations } from '@paima/db';
 import { getEarliestStartBlockheight } from './cde-config/utils';
-import type { ChainData, ChainFunnel, GameStateMachine } from './types';
+import type {
+  ChainData,
+  ChainDataExtension,
+  ChainFunnel,
+  GameStateMachine,
+  IFunnelFactory,
+} from './types';
 
 import { run } from './run-flag';
 import { snapshotIfTime } from './snapshots.js';
@@ -17,7 +23,7 @@ import { cleanNoncesIfTime } from './nonce-gc';
 // the runtime to continuously retry syncing the same block, and failing each time.
 export async function startRuntime(
   gameStateMachine: GameStateMachine,
-  chainFunnel: ChainFunnel,
+  funnelFactory: IFunnelFactory,
   pollingRate: number,
   presyncStepSize: number,
   startBlockHeight: number,
@@ -26,9 +32,13 @@ export async function startRuntime(
 ): Promise<void> {
   const pollingPeriod = pollingRate * 1000;
 
+  // TODO: this should be a transaction and not a general connection
+  const chainFunnel = await funnelFactory.generateFunnel(gameStateMachine.getReadWriteDbConn());
+
   // Presync:
   await runPresync(
     gameStateMachine,
+    funnelFactory.getExtensions(),
     chainFunnel,
     pollingPeriod,
     presyncStepSize,
@@ -37,13 +47,20 @@ export async function startRuntime(
   );
 
   // Main sync:
-  await runSync(gameStateMachine, chainFunnel, pollingPeriod, stopBlockHeight);
+  await runSync(
+    gameStateMachine,
+    chainFunnel,
+    funnelFactory.clearCache,
+    pollingPeriod,
+    stopBlockHeight
+  );
 
   process.exit(0);
 }
 
 async function runPresync(
   gameStateMachine: GameStateMachine,
+  CDEs: ChainDataExtension[],
   chainFunnel: ChainFunnel,
   pollingPeriod: number,
   stepSize: number,
@@ -55,7 +72,7 @@ async function runPresync(
     : startBlockHeight;
   let presyncBlockHeight = await getPresyncStartBlockheight(
     gameStateMachine,
-    chainFunnel,
+    CDEs,
     startBlockHeight,
     maximumPresyncBlockheight
   );
@@ -92,11 +109,11 @@ async function runPresync(
 
 async function getPresyncStartBlockheight(
   gameStateMachine: GameStateMachine,
-  chainFunnel: ChainFunnel,
+  CDEs: ChainDataExtension[],
   startBlockHeight: number,
   maximumPresyncBlockheight: number
 ): Promise<number> {
-  const earliestCdeSbh = getEarliestStartBlockheight(chainFunnel.getExtensions());
+  const earliestCdeSbh = getEarliestStartBlockheight(CDEs);
   const freshPresyncStart = earliestCdeSbh >= 0 ? earliestCdeSbh : maximumPresyncBlockheight + 1;
   const latestSyncBlockheight = await gameStateMachine.latestProcessedBlockHeight();
 
@@ -139,6 +156,7 @@ async function runPresyncRound(
 async function runSync(
   gameStateMachine: GameStateMachine,
   chainFunnel: ChainFunnel,
+  clearFunnelCache: () => void,
   pollingPeriod: number,
   stopBlockHeight: number | null
 ): Promise<void> {
@@ -180,6 +198,8 @@ async function runSync(
     } catch (err) {
       doLog('[paima-runtime] Uncaught error propagated to runtime while processing chain data:');
       logError(err);
+      // delete any cache entires as they may have been partially applied before the crash
+      clearFunnelCache();
       continue;
     }
   }

@@ -156,11 +156,16 @@ export type ChainDataExtension =
   | ChainDataExtensionGeneric;
 
 export interface ChainFunnel {
-  getExtensions: () => ChainDataExtension[];
-  extensionsAreValid: () => boolean;
-  recoverState: () => Promise<void>;
   readData: (blockHeight: number) => Promise<ChainData[]>;
   readPresyncData: (fromBlock: number, toBlock: number) => Promise<PresyncChainData[]>;
+}
+
+export interface IFunnelFactory {
+  getExtensions: () => ChainDataExtension[];
+  extensionsAreValid: () => boolean;
+  clearCache: () => void;
+
+  generateFunnel(DBConn: Pool): Promise<ChainFunnel>;
 }
 
 export interface PaimaRuntime {
@@ -208,7 +213,7 @@ export interface GameStateMachine {
 
 export interface PaimaRuntimeInitializer {
   initialize: (
-    chainFunnel: ChainFunnel,
+    funnelFactory: IFunnelFactory,
     gameStateMachine: GameStateMachine,
     gameBackendVersion: VersionString
   ) => PaimaRuntime;

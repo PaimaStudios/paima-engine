@@ -3,7 +3,7 @@ import process from 'process';
 import { doLog, logError, ENV } from '@paima/utils';
 import { DataMigrations, deploymentChainBlockheightToEmulated, getGameInput } from '@paima/db';
 import { validatePersistentCdeConfig } from './cde-config/validation';
-import type { ChainFunnel, GameStateMachine, PaimaRuntimeInitializer } from './types';
+import type { GameStateMachine, IFunnelFactory, PaimaRuntimeInitializer } from './types';
 
 import { run, setRunFlag, clearRunFlag } from './run-flag';
 import { server, startServer } from './server.js';
@@ -32,7 +32,7 @@ process.on('exit', code => {
 });
 
 const paimaEngine: PaimaRuntimeInitializer = {
-  initialize(chainFunnel, gameStateMachine, gameBackendVersion) {
+  initialize(funnelFactory, gameStateMachine, gameBackendVersion) {
     return {
       pollingRate: ENV.POLLING_RATE,
       addEndpoints(tsoaFunction): void {
@@ -196,7 +196,7 @@ const paimaEngine: PaimaRuntimeInitializer = {
         setRunFlag();
 
         // run all initializations needed before starting the runtime loop
-        if (!(await runInitializationProcedures(gameStateMachine, chainFunnel))) {
+        if (!(await runInitializationProcedures(gameStateMachine, funnelFactory))) {
           doLog(`[paima-runtime] Aborting starting game node due to initialization issues.`);
           return;
         }
@@ -207,7 +207,12 @@ const paimaEngine: PaimaRuntimeInitializer = {
         if (serverOnlyMode) {
           doLog(`Running in webserver-only mode. No new blocks/game inputs will be synced.`);
         } else {
-          await startSafeRuntime(gameStateMachine, chainFunnel, this.pollingRate, stopBlockHeight);
+          await startSafeRuntime(
+            gameStateMachine,
+            funnelFactory,
+            this.pollingRate,
+            stopBlockHeight
+          );
         }
       },
     };
@@ -216,9 +221,9 @@ const paimaEngine: PaimaRuntimeInitializer = {
 
 async function runInitializationProcedures(
   gameStateMachine: GameStateMachine,
-  chainFunnel: ChainFunnel
+  funnelFactory: IFunnelFactory
 ): Promise<boolean> {
-  // Initialize snaphots directory:
+  // Initialize snapshots directory:
   await initSnapshots();
 
   // DB initialization:
@@ -231,7 +236,7 @@ async function runInitializationProcedures(
   }
 
   // CDE config validation / storing:
-  if (!chainFunnel.extensionsAreValid()) {
+  if (!funnelFactory.extensionsAreValid()) {
     doLog(
       `[paima-runtime] Cannot proceed because the CDE config file invalid. Please fix your CDE config file or remove it altogether.`
     );
@@ -240,7 +245,7 @@ async function runInitializationProcedures(
   const smStarted =
     (await gameStateMachine.presyncStarted()) || (await gameStateMachine.syncStarted());
   const cdeResult = await validatePersistentCdeConfig(
-    chainFunnel.getExtensions(),
+    funnelFactory.getExtensions(),
     gameStateMachine.getReadWriteDbConn(),
     smStarted
   );
@@ -250,8 +255,6 @@ async function runInitializationProcedures(
     );
     return false;
   }
-
-  await chainFunnel.recoverState();
 
   // Load data migrations
   const lastBlockHeightAtLaunch = await gameStateMachine.latestProcessedBlockHeight();
@@ -267,7 +270,7 @@ async function runInitializationProcedures(
 // Of note, current implementation will continue to restart the runtime no matter what the issue is at hand.
 async function startSafeRuntime(
   gameStateMachine: GameStateMachine,
-  chainFunnel: ChainFunnel,
+  funnelFactory: IFunnelFactory,
   pollingRate: number,
   stopBlockHeight: number | null
 ): Promise<void> {
@@ -276,7 +279,7 @@ async function startSafeRuntime(
     try {
       await startRuntime(
         gameStateMachine,
-        chainFunnel,
+        funnelFactory,
         pollingRate,
         ENV.DEFAULT_PRESYNC_STEP_SIZE,
         ENV.START_BLOCKHEIGHT,

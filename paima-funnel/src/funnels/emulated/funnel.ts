@@ -1,7 +1,7 @@
 import type { Pool } from 'pg';
 
 import Prando from '@paima/prando';
-import type { ChainData, ChainFunnel } from '@paima/runtime';
+import type { ChainData, ChainFunnel, PresyncChainData } from '@paima/runtime';
 import { ENV, doLog } from '@paima/utils';
 import {
   emulatedSelectLatestPrior,
@@ -12,9 +12,13 @@ import {
 import type { IGetBlockHeightsResult } from '@paima/db';
 import { hashTogether } from '@paima/utils-backend';
 
-import { calculateBoundaryTimestamp, emulateCde } from './utils';
+import { calculateBoundaryTimestamp, emulateCde, timestampToBlockNumber } from './utils';
 import { BaseFunnel } from '../BaseFunnel';
 import type { FunnelSharedData } from '../BaseFunnel';
+
+// TODO: use DB txs for funnels
+import { tx } from '@paima/db';
+import { QueuedBlockCacheEntry, RpcCacheEntry, RpcRequestState } from '../FunnelCache';
 
 /**
  * For hash calculation of empty blocks to work,
@@ -30,48 +34,37 @@ import type { FunnelSharedData } from '../BaseFunnel';
  */
 const MAX_BATCH_SIZE = 100;
 
-export class EmulatedBlocksFunnel extends BaseFunnel implements ChainFunnel {
-  private dcState: {
-    /** Block number of the underlying DC */
-    latestFetchedBlockNumber: number;
-    /** Timestamp of the latest block of the underlying DC */
-    latestFetchedTimestamp: number;
-  };
-  private emulatedState: {
-    /** Block height (not timestamp) representing the latest emulated block */
-    latestEmulatedBlockNumber: number;
-    /** The lower bound of any timestamp the funnel will accept */
-    timestampLowerBound: number;
-  };
-  /** Blocks queued to be added into the current batch */
-  private processingQueue: ChainData[];
-
-  constructor(
-    private readonly baseFunnel: ChainFunnel,
+type CtorData = {
+  /** Timestamp of the block where the game should start syncing */
+  readonly startTimestamp: number;
+  /** Max amount of time (in seconds) to wait to close a time interval and create an emulated block */
+  readonly maxWait: number;
+  readonly DBConn: Pool;
+  readonly baseFunnel: ChainFunnel;
+};
+export class EmulatedBlocksFunnel extends BaseFunnel {
+  protected constructor(
     sharedData: FunnelSharedData,
-    private readonly DBConn: Pool,
-    private readonly startBlockHeight: number,
-    private readonly startTimestamp: number,
-    /** Max amount of time (in seconds) to wait to close a time interval and create an emulated block */
-    private readonly maxWait: number
+    private readonly ctorData: CtorData,
+    private dcState: {
+      /** Block number of the underlying DC */
+      latestFetchedBlockNumber: number;
+      /** Timestamp of the latest block of the underlying DC */
+      latestFetchedTimestamp: number;
+    },
+    private emulatedState: {
+      /** Block height (not timestamp) representing the latest emulated block */
+      latestEmulatedBlockNumber: number;
+      /** The lower bound of any timestamp the funnel will accept */
+      timestampLowerBound: number;
+    },
+    /** Blocks queued to be added into the current batch */
+    private readonly processingQueue: ChainData[]
   ) {
     super(sharedData);
-    this.dcState = {
-      latestFetchedBlockNumber: startBlockHeight - 1,
-      latestFetchedTimestamp: startTimestamp,
-    };
-    this.emulatedState = {
-      latestEmulatedBlockNumber: 0,
-      // picked so that getNextBlock does not execute until startTimestamp passes
-      timestampLowerBound: startTimestamp - 1,
-    };
-    this.processingQueue = [];
     // TODO: replace once TS5 decorators are better supported
-    this.getExtensions.bind(this);
-    this.extensionsAreValid.bind(this);
     this.readData.bind(this);
     this.readPresyncData.bind(this);
-    this.recoverState.bind(this);
   }
 
   /**
@@ -90,6 +83,7 @@ export class EmulatedBlocksFunnel extends BaseFunnel implements ChainFunnel {
     {
       const completedBlocks = await this.getNextBlockBatch(blockHeight);
       if (completedBlocks.length > 0) {
+        this.logRange(completedBlocks);
         return completedBlocks;
       }
     }
@@ -97,25 +91,72 @@ export class EmulatedBlocksFunnel extends BaseFunnel implements ChainFunnel {
     // 2) If time interval is not complete, queue any new DC block that might have been made
     try {
       const currentTimestamp = Math.floor(Date.now() / 1000);
-      const fetchedData = await this.baseFunnel.readData(this.dcState.latestFetchedBlockNumber + 1);
+      const fetchedData = await this.ctorData.baseFunnel.readData(
+        this.dcState.latestFetchedBlockNumber + 1
+      );
+
+      const latestAvailableBlockNumber = this.sharedData.cacheManager.cacheEntries[
+        RpcCacheEntry.SYMBOL
+      ]?.getState(ENV.CHAIN_ID);
+      if (
+        latestAvailableBlockNumber == null ||
+        latestAvailableBlockNumber.state === RpcRequestState.NotRequested
+      )
+        throw new Error(`latestAvailableBlockNumber missing from cache for ${ENV.CHAIN_ID}`);
 
       // check if the chunk we read matches the latest block known by the RPC endpoint
       // or if there are no blocks left to fetch as we're already at the tip
       const synced =
         fetchedData.length > 0
-          ? fetchedData[fetchedData.length - 1].blockNumber >=
-            this.sharedData.latestAvailableBlockNumber
+          ? fetchedData[fetchedData.length - 1].blockNumber >= latestAvailableBlockNumber.result
           : true;
 
       await this.feedData(currentTimestamp, fetchedData, synced);
     } catch (err) {
       doLog(`[paima-funnel::readData] Exception occurred while reading blocks: ${err}`);
-      return [];
+      throw err;
     }
 
     // 3) See if syncing the DC chains allows us to close out this emulated block
     //    This happens if we find a DC block whose timestamp occurs after the end of this range
-    return await this.getNextBlockBatch(blockHeight);
+    const blocks = await this.getNextBlockBatch(blockHeight);
+    this.logRange(blocks);
+    return blocks;
+  }
+
+  logRange = (blocks: ChainData[]): void => {
+    if (blocks.length === 1) {
+      doLog(`Emulated funnel ${ENV.CHAIN_ID}: ${blocks[0].timestamp}`);
+    } else {
+      doLog(
+        `Emulated funnel ${ENV.CHAIN_ID}: ${blocks[0].timestamp}-${
+          blocks[blocks.length - 1].timestamp
+        }`
+      );
+    }
+  };
+
+  public override async readPresyncData(
+    fromBlock: number,
+    toBlock: number
+  ): Promise<PresyncChainData[]> {
+    // map base funnel data to the right timestamp range
+    const baseData = await this.ctorData.baseFunnel.readPresyncData(fromBlock, toBlock);
+    return baseData.map(data => {
+      const timestamp = calculateBoundaryTimestamp(
+        this.ctorData.startTimestamp,
+        ENV.BLOCK_TIME,
+        data.blockNumber
+      );
+      return {
+        ...data,
+        blockNumber: timestampToBlockNumber(
+          this.ctorData.startTimestamp,
+          ENV.BLOCK_TIME,
+          timestamp
+        ),
+      };
+    });
   }
 
   /**
@@ -146,37 +187,77 @@ export class EmulatedBlocksFunnel extends BaseFunnel implements ChainFunnel {
     //       otherwise, currentTimestamp would always be too high for historical blocks
     // Note: this only runs AFTER the underlying funnel has successfully completed
     //       that means timestampLowerBound does not change if the underlying funnel threw an error (such as an RPC error)
-    const awaitedThreshold = currentTimestamp - this.maxWait;
+    const awaitedThreshold = currentTimestamp - this.ctorData.maxWait;
     this.emulatedState.timestampLowerBound = synced
       ? Math.max(latestTimestamp, awaitedThreshold)
       : latestTimestamp;
   };
 
-  public override async recoverState(): Promise<void> {
-    await this.baseFunnel.recoverState();
-    await super.recoverState();
-    const [b] = await getLatestProcessedBlockHeight.run(undefined, this.DBConn);
+  public static async recoverState(
+    sharedData: FunnelSharedData,
+    ctorData: CtorData,
+    startBlockHeight: number
+  ): Promise<EmulatedBlocksFunnel> {
+    // default values
+    let dcState = {
+      latestFetchedBlockNumber: startBlockHeight - 1,
+      latestFetchedTimestamp: ctorData.startTimestamp,
+    };
+    let emulatedState = {
+      latestEmulatedBlockNumber: 0,
+      // picked so that getNextBlock does not execute until startTimestamp passes
+      timestampLowerBound: ctorData.startTimestamp - 1,
+    };
+
+    // get processing queue from cache
+    const processingQueue = ((): ChainData[] => {
+      const result =
+        sharedData.cacheManager.cacheEntries[QueuedBlockCacheEntry.SYMBOL]?.processingQueue;
+      if (result != null) {
+        return result;
+      }
+      const newEntry = new QueuedBlockCacheEntry();
+      sharedData.cacheManager.cacheEntries[QueuedBlockCacheEntry.SYMBOL] = newEntry;
+      return newEntry.processingQueue;
+    })();
+
+    const [b] = await getLatestProcessedBlockHeight.run(undefined, ctorData.DBConn);
     if (!b) {
-      return;
+      return new EmulatedBlocksFunnel(
+        sharedData,
+        ctorData,
+        dcState,
+        emulatedState,
+        processingQueue
+      );
     }
 
     const blockHeight = b.block_height;
     const [res] = await emulatedSelectLatestPrior.run(
       { emulated_block_height: blockHeight },
-      this.DBConn
+      ctorData.DBConn
     );
     if (!res) {
       throw new Error(`[funnel] Invalid DB state to recover emulated block state!`);
     }
 
-    this.dcState = {
-      latestFetchedBlockNumber: res.deployment_chain_block_height,
-      latestFetchedTimestamp: parseInt(res.second_timestamp, 10),
+    dcState = {
+      latestFetchedBlockNumber: Math.max(
+        res.deployment_chain_block_height,
+        processingQueue[processingQueue.length - 1]?.blockNumber ?? 0
+      ),
+      latestFetchedTimestamp: Math.max(
+        parseInt(res.second_timestamp, 10),
+        processingQueue[processingQueue.length - 1]?.timestamp ?? 0
+      ),
     };
-    this.emulatedState = {
+    emulatedState = {
       latestEmulatedBlockNumber: b.block_height,
-      timestampLowerBound: this.dcState.latestFetchedTimestamp,
+      // assumed not synced to tip for now. This will be corrected in readData if needed
+      timestampLowerBound: dcState.latestFetchedTimestamp,
     };
+
+    return new EmulatedBlocksFunnel(sharedData, ctorData, dcState, emulatedState, processingQueue);
   }
 
   private async getNextBlockBatch(blockHeight: number): Promise<ChainData[]> {
@@ -194,7 +275,7 @@ export class EmulatedBlocksFunnel extends BaseFunnel implements ChainFunnel {
         completedBlocks.push(nextBlock);
       } catch (err) {
         doLog(`[paima-funnel::readData] Exception occurred while building next block: ${err}`);
-        return [];
+        throw err;
       }
     }
     return completedBlocks;
@@ -209,7 +290,7 @@ export class EmulatedBlocksFunnel extends BaseFunnel implements ChainFunnel {
   private getNextBlock = async (): Promise<ChainData | undefined> => {
     const nextBlockBlockNumber = this.emulatedState.latestEmulatedBlockNumber + 1;
     const nextBlockEndTimestamp = calculateBoundaryTimestamp(
-      this.startTimestamp,
+      this.ctorData.startTimestamp,
       ENV.BLOCK_TIME,
       nextBlockBlockNumber
     );
@@ -223,7 +304,7 @@ export class EmulatedBlocksFunnel extends BaseFunnel implements ChainFunnel {
     }
 
     const nextBlockStartTimestamp = calculateBoundaryTimestamp(
-      this.startTimestamp,
+      this.ctorData.startTimestamp,
       ENV.BLOCK_TIME,
       nextBlockBlockNumber - 1
     );
@@ -265,7 +346,7 @@ export class EmulatedBlocksFunnel extends BaseFunnel implements ChainFunnel {
         emulated_block_height: nextBlockBlockNumber,
       }));
       const params = { items: emulatedBlockheights };
-      await upsertEmulatedBlockheight.run(params, this.DBConn);
+      await upsertEmulatedBlockheight.run(params, this.ctorData.DBConn);
     }
 
     return {
@@ -314,7 +395,7 @@ export class EmulatedBlocksFunnel extends BaseFunnel implements ChainFunnel {
     }
     const baseSeedHeight = Math.max(1, blockNumber - MAX_BATCH_SIZE);
     const baseSeedBlock: IGetBlockHeightsResult | undefined = (
-      await getBlockHeights.run({ block_heights: [baseSeedHeight] }, this.DBConn)
+      await getBlockHeights.run({ block_heights: [baseSeedHeight] }, this.ctorData.DBConn)
     )[0];
     if (!baseSeedBlock.seed) {
       throw new Error(
@@ -332,7 +413,7 @@ export class EmulatedBlocksFunnel extends BaseFunnel implements ChainFunnel {
     }
     const randomPriorHashes = await getBlockHeights.run(
       { block_heights: Array.from(heights) },
-      this.DBConn
+      this.ctorData.DBConn
     );
     if (randomPriorHashes.length !== heights.size) {
       throw new Error(

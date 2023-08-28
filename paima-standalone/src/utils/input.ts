@@ -10,9 +10,8 @@ import {
   PACKAGED_TEMPLATES_PATH,
   getPaimaEngineVersion,
 } from './file.js';
-import paimaFunnel from '@paima/funnel';
+import { FunnelFactory } from '@paima/funnel';
 import paimaRuntime from '@paima/runtime';
-import type { ChainFunnel } from '@paima/runtime';
 import { gameSM } from '../sm.js';
 import { importTsoaFunction } from './import.js';
 import { doLog, ENV } from '@paima/utils';
@@ -110,12 +109,8 @@ export const runPaimaEngine = async (): Promise<void> => {
     doLog(`Using RPC: ${ENV.CHAIN_URI}`);
     doLog(`Targeting Smart Contact: ${ENV.CONTRACT_ADDRESS}`);
     const stateMachine = gameSM();
-    const chainFunnel: ChainFunnel = await paimaFunnel.initialize(
-      ENV.CHAIN_URI,
-      ENV.CONTRACT_ADDRESS,
-      stateMachine.getReadWriteDbConn()
-    );
-    const engine = paimaRuntime.initialize(chainFunnel, stateMachine, ENV.GAME_NODE_VERSION);
+    const funnelFactory = await FunnelFactory.initialize(ENV.CHAIN_URI, ENV.CONTRACT_ADDRESS);
+    const engine = paimaRuntime.initialize(funnelFactory, stateMachine, ENV.GAME_NODE_VERSION);
     const registerEndpoints = importTsoaFunction();
 
     engine.setPollingRate(ENV.POLLING_RATE);

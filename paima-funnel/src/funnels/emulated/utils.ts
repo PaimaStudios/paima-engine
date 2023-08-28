@@ -27,13 +27,15 @@ export async function wrapToEmulatedBlocksFunnel(
       typeof startBlock.timestamp === 'string'
         ? parseInt(startBlock.timestamp, 10)
         : startBlock.timestamp;
-    const ebp = new EmulatedBlocksFunnel(
-      chainFunnel,
+    const ebp = await EmulatedBlocksFunnel.recoverState(
       sharedData,
-      DBConn,
-      startBlockHeight,
-      startTimestamp,
-      maxWait
+      {
+        DBConn,
+        startTimestamp,
+        maxWait,
+        baseFunnel: chainFunnel,
+      },
+      startBlockHeight
     );
     return ebp;
   } catch (err) {
@@ -65,4 +67,12 @@ export function calculateBoundaryTimestamp(
   blockNumber: number
 ): number {
   return startTimestamp + Math.floor(blockTime * blockNumber);
+}
+
+export function timestampToBlockNumber(
+  startTimestamp: number,
+  blockTime: number,
+  timestamp: number
+): number {
+  return Math.floor((timestamp - startTimestamp) / blockTime);
 }

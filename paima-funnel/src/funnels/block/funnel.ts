@@ -1,22 +1,20 @@
 import { ENV, doLog, timeout } from '@paima/utils';
-import type { ChainData, ChainFunnel } from '@paima/runtime';
+import type { ChainData, ChainFunnel, PresyncChainData } from '@paima/runtime';
 import { getBaseChainDataMulti, getBaseChainDataSingle } from '../../reading';
 import { getUngroupedCdeData } from '../../cde/reading';
 import { composeChainData, groupCdeData } from '../../utils';
 import { BaseFunnel } from '../BaseFunnel';
 import type { FunnelSharedData } from '../BaseFunnel';
+import { RpcCacheEntry, RpcRequestState } from '../FunnelCache';
 
 const GET_BLOCK_NUMBER_TIMEOUT = 5000;
 
 export class BlockFunnel extends BaseFunnel implements ChainFunnel {
-  constructor(sharedData: FunnelSharedData) {
+  protected constructor(sharedData: FunnelSharedData) {
     super(sharedData);
     // TODO: replace once TS5 decorators are better supported
-    this.getExtensions.bind(this);
-    this.extensionsAreValid.bind(this);
     this.readData.bind(this);
     this.readPresyncData.bind(this);
-    this.recoverState.bind(this);
   }
 
   public override async readData(blockHeight: number): Promise<ChainData[]> {
@@ -30,10 +28,10 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
     }
 
     if (toBlock === fromBlock) {
-      doLog(`#${toBlock}`);
+      doLog(`Block funnel ${ENV.CHAIN_ID}: #${toBlock}`);
       return await this.internalReadDataSingle(fromBlock);
     } else {
-      doLog(`#${fromBlock}-${toBlock}`);
+      doLog(`Block funnel ${ENV.CHAIN_ID}: #${fromBlock}-${toBlock}`);
       return await this.internalReadDataMulti(fromBlock, toBlock);
     }
   }
@@ -49,15 +47,15 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
   ): Promise<[number, number]> => {
     const ERR_RESULT: [number, number] = [-1, -2];
 
-    const latestBlock: number = await timeout(
-      this.sharedData.web3.eth.getBlockNumber(),
-      GET_BLOCK_NUMBER_TIMEOUT
-    );
-
-    this.sharedData.latestAvailableBlockNumber = latestBlock;
+    const latestBlockQueryState = this.sharedData.cacheManager.cacheEntries[
+      RpcCacheEntry.SYMBOL
+    ]?.getState(ENV.CHAIN_ID);
+    if (latestBlockQueryState?.state !== RpcRequestState.HasResult) {
+      throw new Error(`[funnel] latest block cache entry not found`);
+    }
 
     const fromBlock = Math.max(0, firstBlockHeight);
-    const toBlock = Math.min(latestBlock, firstBlockHeight + blockCount - 1);
+    const toBlock = Math.min(latestBlockQueryState.result, firstBlockHeight + blockCount - 1);
 
     if (fromBlock <= toBlock) {
       return [fromBlock, toBlock];
@@ -117,4 +115,50 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
       throw err;
     }
   };
+
+  public override async readPresyncData(
+    fromBlock: number,
+    toBlock: number
+  ): Promise<PresyncChainData[]> {
+    try {
+      toBlock = Math.min(toBlock, ENV.START_BLOCKHEIGHT);
+      fromBlock = Math.max(fromBlock, 0);
+      if (fromBlock > toBlock) {
+        return [];
+      }
+
+      const ungroupedCdeData = await getUngroupedCdeData(
+        this.sharedData.web3,
+        this.sharedData.extensions,
+        fromBlock,
+        toBlock
+      );
+      return groupCdeData(fromBlock, toBlock, ungroupedCdeData);
+    } catch (err) {
+      doLog(`[paima-funnel::readPresyncData] Exception occurred while reading blocks: ${err}`);
+      throw err;
+    }
+  }
+
+  public static async recoverState(sharedData: FunnelSharedData): Promise<BlockFunnel> {
+    // we always write to this cache instead of reading from it
+    // as other funnels used may want to read from this cached data
+
+    const latestBlock: number = await timeout(
+      sharedData.web3.eth.getBlockNumber(),
+      GET_BLOCK_NUMBER_TIMEOUT
+    );
+    const cacheEntry = ((): RpcCacheEntry => {
+      const entry = sharedData.cacheManager.cacheEntries[RpcCacheEntry.SYMBOL];
+      if (entry != null) return entry;
+
+      const newEntry = new RpcCacheEntry();
+      sharedData.cacheManager.cacheEntries[RpcCacheEntry.SYMBOL] = newEntry;
+      return newEntry;
+    })();
+
+    cacheEntry.updateState(ENV.CHAIN_ID, latestBlock);
+
+    return new BlockFunnel(sharedData);
+  }
 }
