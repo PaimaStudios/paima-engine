@@ -1,7 +1,7 @@
 import process from 'process';
 
 import { doLog, logError, delay } from '@paima/utils';
-import { DataMigrations } from '@paima/db';
+import { tx, DataMigrations } from '@paima/db';
 import { getEarliestStartBlockheight } from './cde-config/utils';
 import type {
   ChainData,
@@ -15,6 +15,7 @@ import { run } from './run-flag';
 import { snapshotIfTime } from './snapshots.js';
 import { acquireLatestBlockHeight, exitIfStopped, loopIfStopBlockReached } from './utils';
 import { cleanNoncesIfTime } from './nonce-gc';
+import type { PoolClient } from 'pg';
 
 // The core logic of paima runtime which polls the funnel and processes the resulting chain data using the game's state machine.
 // Of note, the runtime is designed to continue running/attempting to process the next required block no matter what errors propagate upwards.
@@ -32,14 +33,10 @@ export async function startRuntime(
 ): Promise<void> {
   const pollingPeriod = pollingRate * 1000;
 
-  // TODO: this should be a transaction and not a general connection
-  const chainFunnel = await funnelFactory.generateFunnel(gameStateMachine.getReadWriteDbConn());
-
   // Presync:
   await runPresync(
     gameStateMachine,
-    funnelFactory.getExtensions(),
-    chainFunnel,
+    funnelFactory,
     pollingPeriod,
     presyncStepSize,
     startBlockHeight,
@@ -47,21 +44,14 @@ export async function startRuntime(
   );
 
   // Main sync:
-  await runSync(
-    gameStateMachine,
-    chainFunnel,
-    funnelFactory.clearCache,
-    pollingPeriod,
-    stopBlockHeight
-  );
+  await runSync(gameStateMachine, funnelFactory, pollingPeriod, stopBlockHeight);
 
   process.exit(0);
 }
 
 async function runPresync(
   gameStateMachine: GameStateMachine,
-  CDEs: ChainDataExtension[],
-  chainFunnel: ChainFunnel,
+  funnelFactory: IFunnelFactory,
   pollingPeriod: number,
   stepSize: number,
   startBlockHeight: number,
@@ -72,7 +62,7 @@ async function runPresync(
     : startBlockHeight;
   let presyncBlockHeight = await getPresyncStartBlockheight(
     gameStateMachine,
-    CDEs,
+    funnelFactory.getExtensions(),
     startBlockHeight,
     maximumPresyncBlockheight
   );
@@ -95,13 +85,17 @@ async function runPresync(
       doLog(`p${presyncBlockHeight}`);
     }
 
-    presyncBlockHeight = await runPresyncRound(
-      gameStateMachine,
-      chainFunnel,
-      pollingPeriod,
-      presyncBlockHeight,
-      upper
-    );
+    // eslint-disable-next-line @typescript-eslint/no-loop-func
+    presyncBlockHeight = await tx<number>(gameStateMachine.getReadWriteDbConn(), async dbTx => {
+      const chainFunnel = await funnelFactory.generateFunnel(dbTx);
+      return await runPresyncRound(
+        gameStateMachine,
+        chainFunnel,
+        pollingPeriod,
+        presyncBlockHeight,
+        upper
+      );
+    });
   }
   await loopIfStopBlockReached(presyncBlockHeight, stopBlockHeight);
   doLog(`[paima-runtime] Presync finished at ${presyncBlockHeight}`);
@@ -148,15 +142,14 @@ async function runPresyncRound(
     unit => unit.extensionDatums.length > 0
   );
   for (const presyncData of filteredPresyncDataList) {
-    await gameStateMachine.presyncProcess(presyncData);
+    await gameStateMachine.presyncProcess(chainFunnel.getDbTx(), presyncData);
   }
   return toBlock + 1;
 }
 
 async function runSync(
   gameStateMachine: GameStateMachine,
-  chainFunnel: ChainFunnel,
-  clearFunnelCache: () => void,
+  funnelFactory: IFunnelFactory,
   pollingPeriod: number,
   stopBlockHeight: number | null
 ): Promise<void> {
@@ -166,7 +159,8 @@ async function runSync(
     );
   }
   while (run) {
-    // Initializing the latest read block height and snapshotting
+    // Initializing the latest read block height and snapshoting
+    // do not use a DB transaction, as we need to generate a snapshot
     const latestProcessedBlockHeight = await getSyncRoundStart(
       gameStateMachine,
       pollingPeriod,
@@ -177,10 +171,13 @@ async function runSync(
     }
 
     // Fetching new chain data via the funnel
-    const latestChainDataList = await getSyncRoundData(
-      chainFunnel,
-      pollingPeriod,
-      latestProcessedBlockHeight
+    // note: this is done in a separate SQL transaction from actually applying the data
+    const latestChainDataList = await tx<ChainData[]>(
+      gameStateMachine.getReadWriteDbConn(),
+      async dbTx => {
+        const chainFunnel = await funnelFactory.generateFunnel(dbTx);
+        return await getSyncRoundData(chainFunnel, pollingPeriod, latestProcessedBlockHeight);
+      }
     );
     if (latestChainDataList.length === 0) {
       continue;
@@ -199,8 +196,8 @@ async function runSync(
       doLog('[paima-runtime] Uncaught error propagated to runtime while processing chain data:');
       logError(err);
       // delete any cache entires as they may have been partially applied before the crash
-      clearFunnelCache();
-      continue;
+      funnelFactory.clearCache();
+      return;
     }
   }
 }
@@ -246,7 +243,7 @@ async function getSyncRoundData(
   } catch (err) {
     doLog('[paima-runtime] Error received from the funnel:');
     logError(err);
-    return [];
+    throw err;
   }
 }
 
@@ -259,15 +256,22 @@ async function processSyncBlockData(
   // Checking if should safely close in between processing blocks
   exitIfStopped(run);
 
-  // Before processing -- sanity check of block height:
-  if (!(await blockPreProcess(gameStateMachine, chainData.blockNumber, pollingPeriod))) {
-    return false;
-  }
+  // note: every state machine update is its own SQL transaction
+  // this is to ensure things like shutting down and taking snapshots properly sees SM updats
+  const success = await tx<boolean>(gameStateMachine.getReadWriteDbConn(), async dbTx => {
+    // Before processing -- sanity check of block height:
+    if (!(await blockPreProcess(dbTx, gameStateMachine, chainData.blockNumber, pollingPeriod))) {
+      return false;
+    }
 
-  // Processing proper -- data migrations and passing chain data to SM
-  if (!(await blockCoreProcess(gameStateMachine, chainData))) {
-    return false;
-  }
+    // Processing proper -- data migrations and passing chain data to SM
+    if (!(await blockCoreProcess(dbTx, gameStateMachine, chainData))) {
+      return false;
+    }
+
+    return true;
+  });
+  if (!success) return false;
 
   // After processing -- checking
   if (!(await blockPostProcess(gameStateMachine, chainData.blockNumber, stopBlockHeight))) {
@@ -278,12 +282,17 @@ async function processSyncBlockData(
 }
 
 async function blockPreProcess(
+  dbTx: PoolClient,
   gameStateMachine: GameStateMachine,
   blockNumber: number,
   pollingPeriod: number
 ): Promise<boolean> {
   try {
-    const latestReadBlockHeight = await acquireLatestBlockHeight(gameStateMachine, pollingPeriod);
+    const latestReadBlockHeight = await acquireLatestBlockHeight(
+      gameStateMachine,
+      pollingPeriod,
+      dbTx
+    );
     if (blockNumber !== latestReadBlockHeight + 1) {
       doLog(`[paima-runtime] Block number ${blockNumber} encountered out of order!`);
       return false;
@@ -298,14 +307,15 @@ async function blockPreProcess(
 }
 
 async function blockCoreProcess(
+  dbTx: PoolClient,
   gameStateMachine: GameStateMachine,
   chainData: ChainData
 ): Promise<boolean> {
   try {
     if (DataMigrations.hasPendingMigration(chainData.blockNumber)) {
-      await DataMigrations.applyDataDBMigrations(chainData.blockNumber);
+      await DataMigrations.applyDataDBMigrations(dbTx, chainData.blockNumber);
     }
-    await gameStateMachine.process(chainData);
+    await gameStateMachine.process(dbTx, chainData);
     exitIfStopped(run);
   } catch (err) {
     doLog(`[paima-runtime] Error occurred while SM processing of block ${chainData.blockNumber}:`);

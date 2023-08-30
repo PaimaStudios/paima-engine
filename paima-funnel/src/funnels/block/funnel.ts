@@ -6,15 +6,17 @@ import { composeChainData, groupCdeData } from '../../utils';
 import { BaseFunnel } from '../BaseFunnel';
 import type { FunnelSharedData } from '../BaseFunnel';
 import { RpcCacheEntry, RpcRequestState } from '../FunnelCache';
+import type { PoolClient } from 'pg';
 
 const GET_BLOCK_NUMBER_TIMEOUT = 5000;
 
 export class BlockFunnel extends BaseFunnel implements ChainFunnel {
-  protected constructor(sharedData: FunnelSharedData) {
-    super(sharedData);
+  protected constructor(sharedData: FunnelSharedData, dbTx: PoolClient) {
+    super(sharedData, dbTx);
     // TODO: replace once TS5 decorators are better supported
     this.readData.bind(this);
     this.readPresyncData.bind(this);
+    this.getDbTx.bind(this);
   }
 
   public override async readData(blockHeight: number): Promise<ChainData[]> {
@@ -140,7 +142,10 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
     }
   }
 
-  public static async recoverState(sharedData: FunnelSharedData): Promise<BlockFunnel> {
+  public static async recoverState(
+    sharedData: FunnelSharedData,
+    dbTx: PoolClient
+  ): Promise<BlockFunnel> {
     // we always write to this cache instead of reading from it
     // as other funnels used may want to read from this cached data
 
@@ -159,6 +164,6 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
 
     cacheEntry.updateState(ENV.CHAIN_ID, latestBlock);
 
-    return new BlockFunnel(sharedData);
+    return new BlockFunnel(sharedData, dbTx);
   }
 }

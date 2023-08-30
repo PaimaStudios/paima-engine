@@ -1,10 +1,9 @@
 /* eslint-disable no-console */
 import { ENV } from '@paima/utils';
 import { readdir, readFile } from 'fs/promises';
-import type { Pool } from 'pg';
+import type { PoolClient } from 'pg';
 
 export class DataMigrations {
-  private static pool: Pool;
   protected static pendingMigrations: number[] = [];
   private static readonly migrationPath = `${process.cwd()}/packaged/migrations/`;
 
@@ -37,17 +36,13 @@ export class DataMigrations {
     return DataMigrations.pendingMigrations.length;
   }
 
-  public static setDBConnection(pool: Pool): void {
-    DataMigrations.pool = pool;
-  }
-
   public static hasPendingMigration(currentBlock: number): boolean {
     if (DataMigrations.pendingMigrations.length === 0) return false;
     // We need only to check the first, pendingMigrations are sorted first to last.
     return DataMigrations.pendingMigrations[0] + ENV.SM_START_BLOCKHEIGHT === currentBlock;
   }
 
-  public static async applyDataDBMigrations(currentBlock: number): Promise<void> {
+  public static async applyDataDBMigrations(dbTx: PoolClient, currentBlock: number): Promise<void> {
     // check if migration within
     if (DataMigrations.pendingMigrations[0] + ENV.SM_START_BLOCKHEIGHT !== currentBlock) {
       throw new Error('No data migration to apply at: ' + currentBlock);
@@ -55,7 +50,7 @@ export class DataMigrations {
     const migration = DataMigrations.pendingMigrations.shift();
     console.log(`Applying Data Migration ${migration}.sql`);
     const sqlQueries = await readFile(`${this.migrationPath}/${migration}.sql`, 'utf-8');
-    await DataMigrations.pool.query(sqlQueries);
+    await dbTx.query(sqlQueries);
     return;
   }
 }

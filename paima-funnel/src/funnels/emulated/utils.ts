@@ -1,4 +1,4 @@
-import type { Pool } from 'pg';
+import type { PoolClient } from 'pg';
 
 import type { ChainDataExtensionDatum, ChainFunnel } from '@paima/runtime';
 import { EmulatedBlocksFunnel } from './funnel';
@@ -8,7 +8,7 @@ import type { FunnelSharedData } from '../BaseFunnel';
 export async function wrapToEmulatedBlocksFunnel(
   chainFunnel: ChainFunnel,
   sharedData: FunnelSharedData,
-  DBConn: Pool,
+  dbTx: PoolClient,
   startBlockHeight: number,
   emulatedBlocks: boolean,
   maxWait: number
@@ -30,18 +30,16 @@ export async function wrapToEmulatedBlocksFunnel(
     const ebp = await EmulatedBlocksFunnel.recoverState(
       sharedData,
       {
-        DBConn,
         startTimestamp,
         maxWait,
         baseFunnel: chainFunnel,
       },
+      dbTx,
       startBlockHeight
     );
     return ebp;
   } catch (err) {
-    doLog(
-      '[paima-funnel] Unable to initialize emulated blocks processor -- presumably start block does not exist:'
-    );
+    doLog('[paima-funnel] Unable to initialize emulated blocks processor:');
     logError(err);
     throw new Error('[paima-funnel] Unable to initialize emulated blocks processor');
   }

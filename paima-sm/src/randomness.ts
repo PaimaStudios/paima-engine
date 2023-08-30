@@ -46,7 +46,7 @@ function chooseData(submittedData: SubmittedData[], seed: string): string[] {
 /*
  * Basic randomness generation protocol which hashes together previous seeds and randomly selected chain data
  */
-async function getSeed1(latestChainData: ChainData, DBConn: pg.Pool): Promise<string> {
+async function getSeed1(latestChainData: ChainData, DBConn: pg.PoolClient): Promise<string> {
   const blockSeeds = (await getBlockSeeds.run(undefined, DBConn)).map(result => result.seed);
   const interimSeed = hashTogether([latestChainData.blockHash, ...blockSeeds]);
   const selectedChainData = chooseData(latestChainData.submittedData, interimSeed);

@@ -258,10 +258,7 @@ async function runInitializationProcedures(
 
   // Load data migrations
   const lastBlockHeightAtLaunch = await gameStateMachine.latestProcessedBlockHeight();
-
-  if ((await DataMigrations.loadDataMigrations(lastBlockHeightAtLaunch)) > 0) {
-    DataMigrations.setDBConnection(gameStateMachine.getReadWriteDbConn());
-  }
+  await DataMigrations.loadDataMigrations(lastBlockHeightAtLaunch);
 
   return true;
 }
