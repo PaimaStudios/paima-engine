@@ -21,6 +21,9 @@
         "USDC": "0x63D403E115213A66fE41a8605FFB1af8ab481593"
       },
       "owner": ""
+    },
+    "GenericPayment": {
+      "owner": ""
     }
   },
   "mainnet": {
@@ -44,6 +47,9 @@
         "USDT": "",
         "USDC": ""
       },
+      "owner": ""
+    },
+    "GenericPayment": {
       "owner": ""
     }
   }
