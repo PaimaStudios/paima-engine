@@ -1,0 +1,17 @@
+{
+  "name": "@paima-batcher/db",
+  "version": "0.1.0",
+  "description": "",
+  "main": "build/index.js",
+  "type": "module",
+  "types": "build/index.d.ts",
+  "scripts": {
+    "generate": "pgtyped -w -c pgtypedconfig.json"
+  },
+  "dependencies": {
+    "@pgtyped/query": "^1.0.0"
+  },
+  "devDependencies": {
+    "@pgtyped/cli": "^1.0.0"
+  }
+}

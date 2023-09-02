@@ -4,10 +4,13 @@ export type ErrorCode = number;
 export type ErrorMessageFxn = (errorCode: ErrorCode) => string;
 export type ErrorMessageMapping = Record<ErrorCode, string>;
 
+// TOOD: remove?
 export type ETHAddress = string;
 export type CardanoAddress = string;
 export type PolkadotAddress = string;
 export type AlgorandAddress = string;
+
+// eslint-disable-next-line @typescript-eslint/no-duplicate-type-constituents -- the overlapping types is on purpose for readability
 export type WalletAddress = ETHAddress | CardanoAddress | PolkadotAddress | AlgorandAddress;
 
 export type ContractAddress = ETHAddress;

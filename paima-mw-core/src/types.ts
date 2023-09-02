@@ -1,5 +1,3 @@
-import type { MetaMaskInpageProvider } from '@metamask/providers';
-import type { PeraWalletConnect } from '@perawallet/connect';
 import type {
   AddressType,
   Hash,
@@ -36,12 +34,6 @@ interface PostingModeSwitchSuccessfulResult extends PostingInfo {
 }
 
 export type SignFunction = (userAddress: WalletAddress, message: string) => Promise<UserSignature>;
-
-export type CardanoApi = any;
-export type EvmApi = MetaMaskInpageProvider | undefined;
-export type AlgorandApi = PeraWalletConnect | undefined;
-
-export type PolkadotSignFxn = any;
 
 export interface SuccessfulResultMessage {
   success: true;

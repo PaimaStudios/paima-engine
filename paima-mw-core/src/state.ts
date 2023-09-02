@@ -13,15 +13,9 @@ import { ENV } from '@paima/utils';
 import { initWeb3 } from '@paima/utils';
 
 import { PaimaMiddlewareErrorCode, paimaErrorMessageFxn } from './errors';
-import type {
-  AlgorandApi,
-  CardanoApi,
-  EvmApi,
-  PolkadotSignFxn,
-  PostingInfo,
-  PostingModeString,
-} from './types';
+import type { PostingInfo, PostingModeString } from './types';
 import type { HDWalletProvider } from './wallets/truffle';
+import type { AlgorandApi, CardanoApi, EvmApi, PolkadotSignFxn } from '@paima/crypto';
 
 export const enum PostingMode {
   UNBATCHED,
@@ -158,13 +152,6 @@ export const setPolkadotSignFxn = (fxn: PolkadotSignFxn): PolkadotSignFxn =>
 export const getPolkadotSignFxn = (): PolkadotSignFxn => polkadotSignFxn;
 
 export const polkadotConnected = (): boolean => !!polkadotSignFxn;
-
-export const setAlgorandAddress = (addr: AlgorandAddress): AlgorandAddress =>
-  (algorandAddress = addr);
-export const getAlgorandAddress = (): AlgorandAddress => algorandAddress;
-export const setAlgorandApi = (api: AlgorandApi): AlgorandApi => (algorandApi = api);
-export const getAlgorandApi = (): AlgorandApi => algorandApi;
-export const algorandConnected = (): boolean => !!algorandApi;
 
 export const setTruffleAddress = (addr: ETHAddress): ETHAddress => (truffleAddress = addr);
 export const getTruffleAddress = (): ETHAddress => truffleAddress;

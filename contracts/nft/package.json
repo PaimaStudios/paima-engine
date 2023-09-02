@@ -24,7 +24,7 @@
     "dotenv": "^16.0.1"
   },
   "devDependencies": {
-    "@truffle/hdwallet-provider": "^2.0.8",
+    "@truffle/hdwallet-provider": "^2.1.7",
     "@types/mocha": "^9.1.1",
     "truffle": "^5.5.20",
     "ts-node": "^10.8.1",

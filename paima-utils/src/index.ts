@@ -1,5 +1,3 @@
-import type { Transaction, SuggestedParams } from 'algosdk';
-import { makePaymentTxnWithSuggestedParams } from 'algosdk';
 import Web3 from 'web3';
 import type { AbiItem } from 'web3-utils';
 import type { Contract, EventData } from 'web3-eth-contract';
@@ -33,7 +31,7 @@ import {
   ChainDataExtensionDatumType,
 } from './constants';
 
-const { isAddress, utf8ToHex } = web3UtilsPkg;
+const { isAddress } = web3UtilsPkg;
 
 export * from './config';
 export * from './types';
@@ -268,24 +266,4 @@ export function mergeSortedArrays<T>(arr1: T[], arr2: T[], compare: (a: T, b: T)
   }
 
   return mergedArray;
-}
-
-export function buildAlgorandTransaction(userAddress: string, message: string): Transaction {
-  const hexMessage = utf8ToHex(message).slice(2);
-  const msgArray = hexStringToUint8Array(hexMessage);
-  const SUGGESTED_PARAMS: SuggestedParams = {
-    fee: 0,
-    firstRound: 10,
-    lastRound: 10,
-    genesisID: 'mainnet-v1.0',
-    genesisHash: 'wGHE2Pwdvd7S12BL5FaOP20EGYesN73ktiC1qzkkit8=',
-  };
-  return makePaymentTxnWithSuggestedParams(
-    userAddress,
-    userAddress,
-    0,
-    undefined,
-    msgArray,
-    SUGGESTED_PARAMS
-  );
 }

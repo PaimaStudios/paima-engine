@@ -5,6 +5,7 @@ export enum EncodingVersion {
 
 export type HexString = string;
 export type UTF8String = string;
+// eslint-disable-next-line @typescript-eslint/no-duplicate-type-constituents -- the overlapping types is on purpose for readability
 export type InputString = HexString | UTF8String;
 
 export type ConciseValue = {

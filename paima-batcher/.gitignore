@@ -1,0 +1,8 @@
+node_modules
+*.tsbuildinfo
+**/build
+*.log
+
+.env
+.env.production
+.env.development

@@ -16,7 +16,7 @@
       "@openzeppelin/contracts": "^4.6.0"
   },
   "devDependencies": {
-    "@truffle/hdwallet-provider": "^2.0.8",
+    "@truffle/hdwallet-provider": "^2.1.7",
     "@types/chai": "^4.3.1",
     "@types/mocha": "^9.1.0",
     "@types/node": "^17.0.25",

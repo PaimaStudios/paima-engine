@@ -10,11 +10,7 @@ import {
 } from '@paima/utils';
 import type { SubmittedData } from '@paima/runtime';
 import type { PaimaGameInteraction } from '@paima/utils/src/contract-types/PaimaL2Contract';
-
-import verifySignatureEthereum from './verification/ethereum.js';
-import verifySignatureCardano from './verification/cardano.js';
-import verifySignaturePolkadot from './verification/polkadot.js';
-import verifySignatureAlgorand from './verification/algorand.js';
+import { CryptoManager } from '@paima/crypto';
 
 const { toBN, sha3, hexToUtf8 } = web3UtilsPkg;
 
@@ -182,13 +178,13 @@ async function validateSubunitSignature(
   const trySign = async (message: string): Promise<boolean> => {
     switch (addressType) {
       case AddressType.EVM:
-        return verifySignatureEthereum(web3, message, userAddress, userSignature);
+        return await CryptoManager.Evm(web3).verifySignature(userAddress, message, userSignature);
       case AddressType.CARDANO:
-        return await verifySignatureCardano(userAddress, message, userSignature);
+        return await CryptoManager.Cardano().verifySignature(userAddress, message, userSignature);
       case AddressType.POLKADOT:
-        return await verifySignaturePolkadot(userAddress, message, userSignature);
+        return await CryptoManager.Polkadot().verifySignature(userAddress, message, userSignature);
       case AddressType.ALGORAND:
-        return await verifySignatureAlgorand(userAddress, message, userSignature);
+        return await CryptoManager.Algorand().verifySignature(userAddress, message, userSignature);
       default:
         return false;
     }

@@ -1,0 +1,16 @@
+{
+  "name": "@paima-batcher/address-validator",
+  "version": "0.1.0",
+  "description": "",
+  "main": "build/index.js",
+  "type": "module",
+  "types": "build/index.d.ts",
+  "dependencies": {
+    "@paima/crypto": "file:../paima-crypto",
+    "pg": "^8.7.3",
+    "web3": "1.10.1"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.6.5"
+  }
+}

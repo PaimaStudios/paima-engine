@@ -23,11 +23,12 @@ import {
   setEvmActiveWallet,
   setEvmApi,
 } from '../state';
-import type { EvmApi, OldResult, Result, Wallet } from '../types';
+import type { OldResult, Result, Wallet } from '../types';
 import { pushLog } from '../helpers/logging';
 import { updateFee } from '../helpers/posting';
 
 import { WalletMode } from './wallet-modes';
+import type { EvmApi } from '@paima/crypto';
 
 /**
  * NOTE: https://eips.ethereum.org/EIPS/eip-5749

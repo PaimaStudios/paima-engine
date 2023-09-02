@@ -33,6 +33,7 @@
     "@truffle/hdwallet-provider": "^2.1.7",
     "algosdk": "^2.3.0",
     "bech32": "^2.0.0",
-    "@paima/prando": "1.0.0"
+    "@paima/prando": "1.0.0",
+    "@paima/crypto": "1.0.0"
   }
 }

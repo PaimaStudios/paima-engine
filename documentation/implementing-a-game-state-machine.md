@@ -12,7 +12,7 @@ These are the types of games which thrive based on the design of Paima Engine an
 - Using async functionality
 - Using threading with non-deterministic results
 - Using a randomness function which obtains its own source seed/entropy
-- Using anything which relies on data/environment variables from the user's browser/system, or otherwise which is non determinstiic.
+- Using anything which relies on data/environment variables from the user's browser/system, or otherwise which is non deterministic.
 
 This is a requirement of PaimaSM, otherwise non-determinism will allow for desyncs to occur. This would mean that upon replaying any given state transition of the global game state, a new state would be arrived at and thus destroying the ability for anyone to bootstrap to the latest global game state trustlessly from the on-chain data.
 

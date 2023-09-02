@@ -1,0 +1,33 @@
+{
+  "name": "@paima/batcher",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "lint": "npm run prettier && npm run eslint",
+    "cilint": "npm run cprettier && npm run eslint",
+    "cprettier": "prettier --check '**/*.{ts,tsx}'",
+    "eslint": "eslint '**/*.{ts,tsx}'",
+    "prettier": "prettier --write '**/*.{ts,tsx}'",
+    "build": "npx tsc --build tsconfig.build.json",
+    "dev": "DOTENV_CONFIG_PATH=./.env.development node --require dotenv/config ./runtime/build/index.js",
+    "prod": "node ./runtime/build/index.js",
+    "start": "export ENV_FILE=\"../.env.${NODE_ENV:-production}\"; echo \"ENV FILE: $ENV_FILE\"; docker compose --env-file $ENV_FILE build && docker compose --env-file $ENV_FILE up",
+    "stop": "export ENV_FILE=\"../.env.${NODE_ENV:-production}\"; docker compose --env-file $ENV_FILE down -v"
+  },
+  "workspaces": [
+    "./address-validator",
+    "./batched-transaction-poster",
+    "./db",
+    "./game-input-validator",
+    "./runtime",
+    "./utils",
+    "./webserver"
+  ],
+  "dependencies": {
+    "axios": "^1.4.0",
+    "dotenv": "^16.0.3"
+  },
+  "devDependencies": {
+    "typescript": "^4.9.4"
+  }
+}

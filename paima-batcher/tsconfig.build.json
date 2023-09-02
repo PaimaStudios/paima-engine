@@ -1,0 +1,12 @@
+{
+  "files": [],
+  "references": [
+    { "path": "./db" },
+    { "path": "./utils" },
+    { "path": "./address-validator" },
+    { "path": "./game-input-validator" },
+    { "path": "./batched-transaction-poster" },
+    { "path": "./webserver" },
+    { "path": "./runtime" }
+  ]
+}
