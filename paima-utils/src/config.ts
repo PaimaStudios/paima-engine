@@ -43,6 +43,12 @@ export class ENV {
   static get DEPLOYMENT(): string {
     return process.env.DEPLOYMENT || '';
   }
+  static get EMULATED_BLOCKS(): boolean {
+    return process.env.EMULATED_BLOCKS === 'true';
+  }
+  static get EMULATED_BLOCKS_MAX_WAIT(): number {
+    return parseFloat(process.env.EMULATED_BLOCKS_MAX_WAIT || `${ENV.BLOCK_TIME * 2.5}`);
+  }
 
   // Security
   static get SECURITY_NAMESPACE(): string {
@@ -63,6 +69,9 @@ export class ENV {
   }
   static get START_BLOCKHEIGHT(): number {
     return parseInt(process.env.START_BLOCKHEIGHT || '0', 10);
+  }
+  static get SM_START_BLOCKHEIGHT(): number {
+    return this.EMULATED_BLOCKS ? 0 : ENV.START_BLOCKHEIGHT;
   }
   static get DEFAULT_FUNNEL_GROUP_SIZE(): number {
     return parseInt(process.env.DEFAULT_FUNNEL_GROUP_SIZE || '100', 10);

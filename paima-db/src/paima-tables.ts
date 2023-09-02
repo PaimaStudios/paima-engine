@@ -251,6 +251,26 @@ const TABLE_DATA_CDE_GENERIC_DATA: TableData = {
   creationQuery: QUERY_CREATE_TABLE_CDE_GENERIC_DATA,
 };
 
+const QUERY_CREATE_TABLE_EMULATED = `
+CREATE TABLE emulated_block_heights (
+  deployment_chain_block_height INTEGER PRIMARY KEY,
+  second_timestamp TEXT NOT NULL,
+  emulated_block_height INTEGER NOT NULL
+);
+`;
+
+const TABLE_DATA_EMULATED: TableData = {
+  tableName: 'emulated_block_heights',
+  primaryKeyColumns: ['deployment_chain_block_height'],
+  columnData: packTuples([
+    ['deployment_chain_block_height', 'integer', 'NO', ''],
+    ['second_timestamp', 'text', 'NO', ''],
+    ['emulated_block_height', 'integer', 'NO', ''],
+  ]),
+  serialColumns: [],
+  creationQuery: QUERY_CREATE_TABLE_EMULATED,
+};
+
 export const TABLES: TableData[] = [
   TABLE_DATA_BLOCKHEIGHTS,
   TABLE_DATA_NONCES,
@@ -264,4 +284,5 @@ export const TABLES: TableData[] = [
   TABLE_DATA_CDE_ERC721,
   TABLE_DATA_CDE_ERC20_DEPOSIT,
   TABLE_DATA_CDE_GENERIC_DATA,
+  TABLE_DATA_EMULATED,
 ];

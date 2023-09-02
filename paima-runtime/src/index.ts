@@ -1,9 +1,9 @@
 import process from 'process';
 
 import { doLog, logError, ENV } from '@paima/utils';
-import { DataMigrations } from '@paima/db';
+import { DataMigrations, deploymentChainBlockheightToEmulated, getGameInput } from '@paima/db';
 import { validatePersistentCdeConfig } from './cde-config/validation';
-import type { ChainFunnel, GameStateMachine, PaimaRuntimeInitializer } from './types';
+import type { GameStateMachine, IFunnelFactory, PaimaRuntimeInitializer } from './types';
 
 import { run, setRunFlag, clearRunFlag } from './run-flag';
 import { server, startServer } from './server.js';
@@ -32,9 +32,9 @@ process.on('exit', code => {
 });
 
 const paimaEngine: PaimaRuntimeInitializer = {
-  initialize(chainFunnel, gameStateMachine, gameBackendVersion) {
+  initialize(funnelFactory, gameStateMachine, gameBackendVersion) {
     return {
-      pollingRate: 4,
+      pollingRate: ENV.POLLING_RATE,
       addEndpoints(tsoaFunction): void {
         tsoaFunction(server);
       },
@@ -68,11 +68,135 @@ const paimaEngine: PaimaRuntimeInitializer = {
             .then(blockHeight => res.json({ block_height: blockHeight }))
             .catch(_error => res.status(500));
         });
+        this.addGET('/emulated_blocks_active', (req, res): void => {
+          res.json({ emulatedBlocksActive: ENV.EMULATED_BLOCKS });
+        });
+        this.addGET('/deployment_blockheight_to_emulated', (req, res): void => {
+          try {
+            const paramString = String(req.query.deploymentBlockheight);
+            const deploymentBlockheight = parseInt(paramString, 10);
+            if (isNaN(deploymentBlockheight)) {
+              res.status(400).json({
+                success: false,
+                errorMessage: 'Invalid or missing deploymentBlockheight parameter',
+              });
+            }
+
+            const DBConn = gameStateMachine.getReadonlyDbConn();
+            deploymentChainBlockheightToEmulated
+              .run({ deployment_chain_block_height: deploymentBlockheight }, DBConn)
+              .then(emulatedBlockheights => {
+                if (emulatedBlockheights.length !== 1) {
+                  return res.status(200).json({
+                    success: false,
+                    errorMessage: `Supplied blockheight ${deploymentBlockheight} not found in DB`,
+                  });
+                } else {
+                  return res.status(200).json({
+                    success: true,
+                    result: emulatedBlockheights[0].emulated_block_height,
+                  });
+                }
+              })
+              .catch(err => {
+                doLog(`Webserver error:`);
+                logError(err);
+                return res.status(500).json({
+                  success: false,
+                  errorMessage: 'Unable to fetch blockheights from DB',
+                });
+              });
+          } catch (err) {
+            doLog(`Unexpected webserver error:`);
+            logError(err);
+            res.status(500).json({
+              success: false,
+              errorMessage: 'Unknown error, please contact game node administrator',
+            });
+          }
+        });
+        this.addGET('/confirm_input_acceptance', (req, res): void => {
+          try {
+            if (!ENV.STORE_HISTORICAL_GAME_INPUTS) {
+              res.status(500).json({
+                success: false,
+                errorMessage: 'Game input storing turned off in the game node',
+              });
+              return;
+            }
+
+            const gameInput = String(req.query.gameInput);
+            const userAddress = String(req.query.userAddress);
+            const blockHeightString = String(req.query.blockHeight);
+            const blockHeight = parseInt(blockHeightString, 10);
+
+            if (!userAddress) {
+              res.status(400).json({
+                success: false,
+                errorMessage: 'Query missing userAddress',
+              });
+              return;
+            }
+            if (!blockHeight) {
+              res.status(400).json({
+                success: false,
+                errorMessage: 'Query missing blockHeight',
+              });
+              return;
+            }
+            if (!gameInput) {
+              res.status(400).json({
+                success: false,
+                errorMessage: 'Query missing gameInput',
+              });
+              return;
+            }
+
+            const DBConn = gameStateMachine.getReadonlyDbConn();
+            getGameInput
+              .run(
+                {
+                  user_address: userAddress,
+                  block_height: blockHeight,
+                },
+                DBConn
+              )
+              .then(results => {
+                for (const row of results) {
+                  if (row.input_data === gameInput) {
+                    return res.status(200).json({
+                      success: true,
+                      result: true,
+                    });
+                  }
+                }
+                return res.status(200).json({
+                  success: true,
+                  result: false,
+                });
+              })
+              .catch(err => {
+                doLog(`Webserver error:`);
+                logError(err);
+                return res.status(500).json({
+                  success: false,
+                  errorMessage: 'Unable to fetch game inputs from the DB',
+                });
+              });
+          } catch (err) {
+            doLog(`Unexpected webserver error:`);
+            logError(err);
+            res.status(500).json({
+              success: false,
+              errorMessage: 'Unknown error, please contact game node administrator',
+            });
+          }
+        });
 
         setRunFlag();
 
         // run all initializations needed before starting the runtime loop
-        if (!(await runInitializationProcedures(gameStateMachine, chainFunnel))) {
+        if (!(await runInitializationProcedures(gameStateMachine, funnelFactory))) {
           doLog(`[paima-runtime] Aborting starting game node due to initialization issues.`);
           return;
         }
@@ -83,7 +207,12 @@ const paimaEngine: PaimaRuntimeInitializer = {
         if (serverOnlyMode) {
           doLog(`Running in webserver-only mode. No new blocks/game inputs will be synced.`);
         } else {
-          await startSafeRuntime(gameStateMachine, chainFunnel, this.pollingRate, stopBlockHeight);
+          await startSafeRuntime(
+            gameStateMachine,
+            funnelFactory,
+            this.pollingRate,
+            stopBlockHeight
+          );
         }
       },
     };
@@ -92,9 +221,9 @@ const paimaEngine: PaimaRuntimeInitializer = {
 
 async function runInitializationProcedures(
   gameStateMachine: GameStateMachine,
-  chainFunnel: ChainFunnel
+  funnelFactory: IFunnelFactory
 ): Promise<boolean> {
-  // Initialize snaphots directory:
+  // Initialize snapshots directory:
   await initSnapshots();
 
   // DB initialization:
@@ -107,7 +236,7 @@ async function runInitializationProcedures(
   }
 
   // CDE config validation / storing:
-  if (!chainFunnel.extensionsAreValid()) {
+  if (!funnelFactory.extensionsAreValid()) {
     doLog(
       `[paima-runtime] Cannot proceed because the CDE config file invalid. Please fix your CDE config file or remove it altogether.`
     );
@@ -116,7 +245,7 @@ async function runInitializationProcedures(
   const smStarted =
     (await gameStateMachine.presyncStarted()) || (await gameStateMachine.syncStarted());
   const cdeResult = await validatePersistentCdeConfig(
-    chainFunnel.getExtensions(),
+    funnelFactory.getExtensions(),
     gameStateMachine.getReadWriteDbConn(),
     smStarted
   );
@@ -129,10 +258,7 @@ async function runInitializationProcedures(
 
   // Load data migrations
   const lastBlockHeightAtLaunch = await gameStateMachine.latestProcessedBlockHeight();
-
-  if ((await DataMigrations.loadDataMigrations(lastBlockHeightAtLaunch)) > 0) {
-    DataMigrations.setDBConnection(gameStateMachine.getReadWriteDbConn());
-  }
+  await DataMigrations.loadDataMigrations(lastBlockHeightAtLaunch);
 
   return true;
 }
@@ -141,7 +267,7 @@ async function runInitializationProcedures(
 // Of note, current implementation will continue to restart the runtime no matter what the issue is at hand.
 async function startSafeRuntime(
   gameStateMachine: GameStateMachine,
-  chainFunnel: ChainFunnel,
+  funnelFactory: IFunnelFactory,
   pollingRate: number,
   stopBlockHeight: number | null
 ): Promise<void> {
@@ -150,11 +276,12 @@ async function startSafeRuntime(
     try {
       await startRuntime(
         gameStateMachine,
-        chainFunnel,
+        funnelFactory,
         pollingRate,
         ENV.DEFAULT_PRESYNC_STEP_SIZE,
         ENV.START_BLOCKHEIGHT,
-        stopBlockHeight
+        stopBlockHeight,
+        ENV.EMULATED_BLOCKS
       );
     } catch (err) {
       doLog('[paima-runtime] An error has been propagated all the way up to the runtime.');

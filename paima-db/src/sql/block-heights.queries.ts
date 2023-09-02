@@ -59,34 +59,35 @@ const getBlockSeedsIR: any = {"usedParamSet":{},"params":[],"statement":"SELECT 
 export const getBlockSeeds = new PreparedQuery<IGetBlockSeedsParams,IGetBlockSeedsResult>(getBlockSeedsIR);
 
 
-/** 'GetBlockHeight' parameters type */
-export interface IGetBlockHeightParams {
-  block_height: number | null | void;
+/** 'GetBlockHeights' parameters type */
+export interface IGetBlockHeightsParams {
+  block_heights: readonly (number)[];
 }
 
-/** 'GetBlockHeight' return type */
-export interface IGetBlockHeightResult {
+/** 'GetBlockHeights' return type */
+export interface IGetBlockHeightsResult {
   block_height: number;
   done: boolean;
   seed: string;
 }
 
-/** 'GetBlockHeight' query type */
-export interface IGetBlockHeightQuery {
-  params: IGetBlockHeightParams;
-  result: IGetBlockHeightResult;
+/** 'GetBlockHeights' query type */
+export interface IGetBlockHeightsQuery {
+  params: IGetBlockHeightsParams;
+  result: IGetBlockHeightsResult;
 }
 
-const getBlockHeightIR: any = {"usedParamSet":{"block_height":true},"params":[{"name":"block_height","required":false,"transform":{"type":"scalar"},"locs":[{"a":50,"b":62}]}],"statement":"SELECT * FROM block_heights \nWHERE block_height = :block_height"};
+const getBlockHeightsIR: any = {"usedParamSet":{"block_heights":true},"params":[{"name":"block_heights","required":true,"transform":{"type":"array_spread"},"locs":[{"a":51,"b":65}]}],"statement":"SELECT * FROM block_heights \nWHERE block_height IN :block_heights!\nORDER BY block_height ASC"};
 
 /**
  * Query generated from SQL:
  * ```
  * SELECT * FROM block_heights 
- * WHERE block_height = :block_height
+ * WHERE block_height IN :block_heights!
+ * ORDER BY block_height ASC
  * ```
  */
-export const getBlockHeight = new PreparedQuery<IGetBlockHeightParams,IGetBlockHeightResult>(getBlockHeightIR);
+export const getBlockHeights = new PreparedQuery<IGetBlockHeightsParams,IGetBlockHeightsResult>(getBlockHeightsIR);
 
 
 /** 'SaveLastBlockHeight' parameters type */

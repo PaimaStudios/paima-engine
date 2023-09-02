@@ -2,6 +2,7 @@ import { doLog, logError, delay } from '@paima/utils';
 import type { GameStateMachine } from './types';
 
 import { run } from './run-flag';
+import type { PoolClient } from 'pg';
 
 export async function loopIfStopBlockReached(
   latestReadBlockHeight: number,
@@ -24,12 +25,13 @@ export function exitIfStopped(run: boolean): void {
 
 export async function acquireLatestBlockHeight(
   sm: GameStateMachine,
-  waitPeriod: number
+  waitPeriod: number,
+  dbTx?: PoolClient
 ): Promise<number> {
   let wasDown = false;
   while (run) {
     try {
-      const latestReadBlockHeight = await sm.latestProcessedBlockHeight();
+      const latestReadBlockHeight = await sm.latestProcessedBlockHeight(dbTx);
       if (wasDown) {
         doLog('[paima-runtime] Block height re-acquired successfully.');
       }
@@ -42,8 +44,8 @@ export async function acquireLatestBlockHeight(
         logError(err);
       }
       wasDown = true;
+      await delay(waitPeriod);
     }
-    await delay(waitPeriod);
   }
   exitIfStopped(run);
   return -1;

@@ -1,5 +1,5 @@
 import { doLog } from '@paima/utils';
-import type { Pool } from 'pg';
+import type { PoolClient } from 'pg';
 
 import type { ColumnData, TableData } from './table-types';
 
@@ -12,12 +12,12 @@ SELECT * FROM information_schema.constraint_column_usage
 WHERE table_name = $1 AND column_name = $2 AND constraint_name = $3
 `;
 
-export async function tableExists(pool: Pool, tableName: string): Promise<boolean> {
+export async function tableExists(pool: PoolClient, tableName: string): Promise<boolean> {
   const res = await pool.query(QUERY_TABLE_EXISTENCE, [tableName]);
   return res.rows.length > 0;
 }
 
-export async function tableIsValid(pool: Pool, table: TableData): Promise<boolean> {
+export async function tableIsValid(pool: PoolClient, table: TableData): Promise<boolean> {
   const { tableName, primaryKeyColumns, columnData, serialColumns } = table;
 
   for (const primaryKeyColumn of primaryKeyColumns) {
@@ -41,11 +41,12 @@ export async function tableIsValid(pool: Pool, table: TableData): Promise<boolea
   return true;
 }
 
-export async function createTable(pool: Pool, table: TableData): Promise<boolean> {
+export async function createTable(pool: PoolClient, table: TableData): Promise<boolean> {
   try {
-    await pool.query(`DROP TABLE ${table.tableName}`);
+    await pool.query(`DROP TABLE IF EXISTS ${table.tableName}`);
   } catch (err) {
-    // pass -- we don't care about errors while deleting as long as creation goes through fine
+    doLog(`[database-validation] Error while dropping table: ${err}`);
+    return false;
   }
 
   try {
@@ -58,14 +59,18 @@ export async function createTable(pool: Pool, table: TableData): Promise<boolean
   return true;
 }
 
-async function checkTablePkey(pool: Pool, tableName: string, columnName: string): Promise<boolean> {
+async function checkTablePkey(
+  pool: PoolClient,
+  tableName: string,
+  columnName: string
+): Promise<boolean> {
   const pkeyConstraint = `${tableName}_pkey`;
   const res = await pool.query(QUERY_TABLE_CONSTRAINTS, [tableName, columnName, pkeyConstraint]);
   return res.rows.length > 0;
 }
 
 async function tableColumnSerial(
-  pool: Pool,
+  pool: PoolClient,
   tableName: string,
   columnName: string
 ): Promise<boolean> {
@@ -75,7 +80,7 @@ async function tableColumnSerial(
 }
 
 async function checkAllTableColumns(
-  pool: Pool,
+  pool: PoolClient,
   tableName: string,
   columnData: ColumnData[]
 ): Promise<boolean> {
@@ -85,7 +90,7 @@ async function checkAllTableColumns(
 }
 
 async function checkTableColumn(
-  pool: Pool,
+  pool: PoolClient,
   tableName: string,
   column: ColumnData
 ): Promise<boolean> {

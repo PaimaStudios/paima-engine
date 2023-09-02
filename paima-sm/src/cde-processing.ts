@@ -1,4 +1,4 @@
-import type { Pool } from 'pg';
+import type { PoolClient } from 'pg';
 
 import { ChainDataExtensionDatumType } from '@paima/utils';
 import type { ChainDataExtensionDatum } from '@paima/runtime';
@@ -12,7 +12,7 @@ import type { SQLUpdate } from '@paima/db';
 import { getSpecificCdeBlockheight } from '@paima/db';
 
 export async function cdeTransitionFunction(
-  readonlyDBConn: Pool,
+  readonlyDBConn: PoolClient,
   cdeDatum: ChainDataExtensionDatum
 ): Promise<SQLUpdate[]> {
   switch (cdeDatum.cdeDatumType) {
@@ -32,7 +32,7 @@ export async function cdeTransitionFunction(
 }
 
 export async function getProcessedCdeDatumCount(
-  readonlyDBConn: Pool,
+  readonlyDBConn: PoolClient,
   blockHeight: number
 ): Promise<number> {
   const cdeStatus = await getSpecificCdeBlockheight.run(

@@ -76,3 +76,9 @@ CREATE TABLE cde_generic_data (
   event_data JSON NOT NULL,
   PRIMARY KEY (cde_id, id)
 );
+
+CREATE TABLE emulated_block_heights (
+  deployment_chain_block_height INTEGER PRIMARY KEY,
+  second_timestamp TEXT NOT NULL,
+  emulated_block_height INTEGER NOT NULL
+);

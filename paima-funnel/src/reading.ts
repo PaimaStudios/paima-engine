@@ -1,4 +1,5 @@
 import type Web3 from 'web3';
+import type { BlockTransactionString } from 'web3-eth';
 
 import { timeout, cutAfterFirstRejected, DEFAULT_FUNNEL_TIMEOUT } from '@paima/utils';
 import type { PaimaL2Contract } from '@paima/utils';
@@ -41,19 +42,23 @@ export async function getBaseChainDataSingle(
   const submittedData = await extractSubmittedData(web3, events, blockData.timestamp);
   return {
     ...blockData,
-    submittedData,
+    submittedData, // merge in the data
   };
 }
 
 async function getBlockData(web3: Web3, blockNumber: number): Promise<ChainData> {
   const block = await timeout(web3.eth.getBlock(blockNumber), DEFAULT_FUNNEL_TIMEOUT);
+  return blockDataToChainData(block);
+}
+
+function blockDataToChainData(block: BlockTransactionString): ChainData {
   const timestamp =
     typeof block.timestamp === 'string' ? parseInt(block.timestamp, 10) : block.timestamp;
   return {
     timestamp: timestamp,
     blockHash: block.hash,
     blockNumber: block.number,
-    submittedData: [],
+    submittedData: [], // this will be merged in after
   };
 }
 
@@ -62,12 +67,34 @@ async function getMultipleBlockData(
   fromBlock: number,
   toBlock: number
 ): Promise<ChainData[]> {
-  const blockPromises: Promise<ChainData>[] = [];
-  for (let i = fromBlock; i <= toBlock; i++) {
-    blockPromises.push(getBlockData(web3, i));
-  }
+  const batch = new web3.BatchRequest();
+
+  const blockRange = Array.from({ length: toBlock - fromBlock + 1 }, (_, i) => i + fromBlock);
+  const blockPromises = blockRange.map(blockNumber => {
+    return new Promise<ChainData>((resolve, reject) => {
+      batch.add(
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore: web3-eth v1 is missing this in its type definitions
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+        web3.eth.getBlock.request(blockNumber, (error, result: BlockTransactionString) => {
+          if (error) reject(error);
+          else resolve(blockDataToChainData(result));
+        })
+      );
+    });
+  });
+
+  batch.execute(); // this isn't async in web3 v1. It is async in v4 though
   const blockResults = await Promise.allSettled(blockPromises);
-  return cutAfterFirstRejected(blockResults);
+  const truncatedList = cutAfterFirstRejected(blockResults);
+
+  // return the first rejection if all rejections failed
+  // this is to fast-fail if all requests failed
+  // which matches the behavior of `getBaseChainDataSingle`
+  if (truncatedList.length === 0 && blockPromises.length > 0) {
+    return (blockResults[0] as PromiseRejectedResult).reason;
+  }
+  return truncatedList;
 }
 
 async function getPaimaEvents(

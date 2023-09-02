@@ -11,6 +11,7 @@ import {
   getAlgorandAddress,
   getCardanoAddress,
   getCardanoHexAddress,
+  getEmulatedBlocksActive,
   getEthAddress,
   getPolkadotAddress,
   getPostingMode,
@@ -35,6 +36,7 @@ import { sendWalletTransaction as sendEvmWalletTransaction } from '../wallets/ev
 import { sendWalletTransaction as sendTruffleWalletTransaction } from '../wallets/truffle';
 import { postDataToEndpoint } from './general';
 import { pushLog } from './logging';
+import { deploymentChainBlockHeightToEmulated } from './auxiliary-queries';
 
 const BATCHER_WAIT_PERIOD = 500;
 const BATCHER_RETRIES = 50;
@@ -42,6 +44,9 @@ const BATCHER_RETRIES = 50;
 const TX_VERIFICATION_RETRY_DELAY = 1000;
 const TX_VERIFICATION_DELAY = 1000;
 const TX_VERIFICATION_RETRY_COUNT = 8;
+
+const EMULATED_CONVERSION_RETRY_DELAY = 1000;
+const EMULATED_CONVERSION_RETRY_COUNT = 8;
 
 type PostFxn = (tx: Record<string, any>) => Promise<string>;
 
@@ -149,24 +154,37 @@ async function postString(
 
   try {
     const txHash = await sendWalletTransaction(tx);
-    return await retryPromise(
+    const deploymentChainBlockHeight = await retryPromise(
       () => verifyTx(txHash, TX_VERIFICATION_DELAY),
       TX_VERIFICATION_RETRY_DELAY,
       TX_VERIFICATION_RETRY_COUNT
     );
+    if (getEmulatedBlocksActive()) {
+      const emulatedBlockHeight = await retryPromise(
+        () => deploymentChainBlockHeightToEmulated(deploymentChainBlockHeight),
+        EMULATED_CONVERSION_RETRY_DELAY,
+        EMULATED_CONVERSION_RETRY_COUNT
+      );
+      return {
+        success: true,
+        result: emulatedBlockHeight,
+      };
+    } else {
+      return {
+        success: true,
+        result: deploymentChainBlockHeight,
+      };
+    }
   } catch (err) {
     return errorFxn(PaimaMiddlewareErrorCode.ERROR_POSTING_TO_CHAIN, err);
   }
 }
 
 // Verifies that the transaction took place and returns its block number on success
-async function verifyTx(txHash: string, msTimeout: number): Promise<Result<number>> {
+async function verifyTx(txHash: string, msTimeout: number): Promise<number> {
   const [_, web3] = await Promise.all([wait(msTimeout), getWeb3()]);
   const receipt = await web3.eth.getTransactionReceipt(txHash);
-  return {
-    success: true,
-    result: receipt.blockNumber,
-  };
+  return receipt.blockNumber;
 }
 
 async function submitToBatcher(subunit: BatchedSubunit): Promise<Result<number>> {

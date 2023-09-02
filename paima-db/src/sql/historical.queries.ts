@@ -29,3 +29,36 @@ const storeGameInputIR: any = {"usedParamSet":{"block_height":true,"user_address
 export const storeGameInput = new PreparedQuery<IStoreGameInputParams,IStoreGameInputResult>(storeGameInputIR);
 
 
+/** 'GetGameInput' parameters type */
+export interface IGetGameInputParams {
+  block_height: number;
+  user_address: string;
+}
+
+/** 'GetGameInput' return type */
+export interface IGetGameInputResult {
+  block_height: number;
+  id: number;
+  input_data: string;
+  user_address: string;
+}
+
+/** 'GetGameInput' query type */
+export interface IGetGameInputQuery {
+  params: IGetGameInputParams;
+  result: IGetGameInputResult;
+}
+
+const getGameInputIR: any = {"usedParamSet":{"block_height":true,"user_address":true},"params":[{"name":"block_height","required":true,"transform":{"type":"scalar"},"locs":[{"a":58,"b":71}]},{"name":"user_address","required":true,"transform":{"type":"scalar"},"locs":[{"a":92,"b":105}]}],"statement":"SELECT * FROM historical_game_inputs\nWHERE block_height = :block_height!\nAND user_address = :user_address!"};
+
+/**
+ * Query generated from SQL:
+ * ```
+ * SELECT * FROM historical_game_inputs
+ * WHERE block_height = :block_height!
+ * AND user_address = :user_address!
+ * ```
+ */
+export const getGameInput = new PreparedQuery<IGetGameInputParams,IGetGameInputResult>(getGameInputIR);
+
+

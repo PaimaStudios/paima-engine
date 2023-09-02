@@ -1,5 +1,5 @@
 import { doLog } from '@paima/utils';
-import type { Pool } from 'pg';
+import type { PoolClient } from 'pg';
 import { TABLES } from './paima-tables';
 import { createTable, tableExists, tableIsValid } from './postgres-metadata';
 import type { TableData } from './table-types';
@@ -10,7 +10,10 @@ Alternatively, set FORCE_INVALID_PAIMA_DB_TABLE_DELETION="true" in your .env
 config file to force the runtime to automatically delete and re-create these
 tables. This might delete some of your data, so use at your own risk!`;
 
-export async function initializePaimaTables(pool: Pool, force: boolean = false): Promise<boolean> {
+export async function initializePaimaTables(
+  pool: PoolClient,
+  force: boolean = false
+): Promise<boolean> {
   const invalidTables: string[] = [];
   let noIssues: boolean = true;
 
@@ -38,7 +41,7 @@ export async function initializePaimaTables(pool: Pool, force: boolean = false):
   return noIssues;
 }
 
-async function processTable(pool: Pool, table: TableData, force: boolean): Promise<boolean> {
+async function processTable(pool: PoolClient, table: TableData, force: boolean): Promise<boolean> {
   const exists = await tableExists(pool, table.tableName);
   const isValid = exists && (await tableIsValid(pool, table));
 

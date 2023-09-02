@@ -1,4 +1,4 @@
-import type { Pool, PoolConfig } from 'pg';
+import type { Pool, PoolClient, PoolConfig } from 'pg';
 import type { Express, RequestHandler } from 'express';
 
 import type { SQLUpdate } from '@paima/db';
@@ -156,10 +156,17 @@ export type ChainDataExtension =
   | ChainDataExtensionGeneric;
 
 export interface ChainFunnel {
-  getExtensions: () => ChainDataExtension[];
-  extensionsAreValid: () => boolean;
   readData: (blockHeight: number) => Promise<ChainData[]>;
   readPresyncData: (fromBlock: number, toBlock: number) => Promise<PresyncChainData[]>;
+  getDbTx(): PoolClient;
+}
+
+export interface IFunnelFactory {
+  getExtensions: () => ChainDataExtension[];
+  extensionsAreValid: () => boolean;
+  clearCache: () => void;
+
+  generateFunnel(dbTx: PoolClient): Promise<ChainFunnel>;
 }
 
 export interface PaimaRuntime {
@@ -179,7 +186,7 @@ export type GameStateTransitionFunction = (
   inputData: SubmittedData,
   blockHeight: number,
   randomnessGenerator: any,
-  DBConn: Pool
+  DBConn: PoolClient
 ) => Promise<SQLUpdate[]>;
 
 export interface GameStateMachineInitializer {
@@ -195,19 +202,19 @@ export interface GameStateMachine {
   initializeDatabase: (force: boolean) => Promise<boolean>;
   presyncStarted: () => Promise<boolean>;
   syncStarted: () => Promise<boolean>;
-  latestProcessedBlockHeight: () => Promise<number>;
-  getPresyncBlockHeight: () => Promise<number>;
+  latestProcessedBlockHeight: (dbTx?: PoolClient | Pool) => Promise<number>;
+  getPresyncBlockHeight: (dbTx?: PoolClient | Pool) => Promise<number>;
   getReadonlyDbConn: () => Pool;
   getReadWriteDbConn: () => Pool;
-  process: (chainData: ChainData) => Promise<void>;
-  presyncProcess: (latestCdeData: PresyncChainData) => Promise<void>;
+  process: (dbTx: PoolClient, chainData: ChainData) => Promise<void>;
+  presyncProcess: (dbTx: PoolClient, latestCdeData: PresyncChainData) => Promise<void>;
   markPresyncMilestone: (blockHeight: number) => Promise<void>;
   dryRun: (gameInput: string, userAddress: string) => Promise<boolean>;
 }
 
 export interface PaimaRuntimeInitializer {
   initialize: (
-    chainFunnel: ChainFunnel,
+    funnelFactory: IFunnelFactory,
     gameStateMachine: GameStateMachine,
     gameBackendVersion: VersionString
   ) => PaimaRuntime;

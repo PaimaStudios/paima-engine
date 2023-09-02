@@ -1,4 +1,4 @@
-import { numberToHex, utf8ToHex } from 'web3-utils';
+import web3UtilsPkg from 'web3-utils';
 
 import {
   DEFAULT_GAS_PRICE,
@@ -8,6 +8,8 @@ import {
 import type { PaimaL2Contract } from '@paima/utils';
 import type { TransactionTemplate } from '@paima/utils';
 import { getFee, getStorageAddress } from '../state';
+
+const { numberToHex, utf8ToHex } = web3UtilsPkg;
 
 function getTxTemplate<T extends keyof PaimaL2Contract['methods']>(
   storageAddress: string,

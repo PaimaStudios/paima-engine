@@ -11,7 +11,7 @@ export default async function processDatum(cdeDatum: CdeGenericDatum): Promise<S
   const payload = cdeDatum.payload;
   const prefix = cdeDatum.scheduledPrefix;
 
-  const scheduledBlockHeight = Math.max(cdeDatum.blockNumber, ENV.START_BLOCKHEIGHT + 1);
+  const scheduledBlockHeight = Math.max(cdeDatum.blockNumber, ENV.SM_START_BLOCKHEIGHT + 1);
   const stringifiedPayload = JSON.stringify(payload);
   const scheduledInputData = `${prefix}|${stringifiedPayload}`;
 

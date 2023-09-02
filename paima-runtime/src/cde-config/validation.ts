@@ -1,8 +1,9 @@
-import type { Pool } from 'pg';
+import type { PoolClient, Pool } from 'pg';
 
 import { ChainDataExtensionType, doLog } from '@paima/utils';
 import type { IGetChainDataExtensionsResult } from '@paima/db';
 import {
+  tx,
   getChainDataExtensions,
   getSpecificCdeConfigGeneric,
   getSpecificCdeConfigErc20Deposit,
@@ -26,7 +27,7 @@ export async function validatePersistentCdeConfig(
       return false;
     }
     // Else if it hasn't started syncing yet, store the yaml config
-    return await storeCdeConfig(config, DBConn);
+    return await tx<boolean>(DBConn, async dbTx => await storeCdeConfig(config, dbTx));
   }
 
   // If the configs aren't equal in length
@@ -97,7 +98,7 @@ async function validateSingleExtensionConfig(
   return true;
 }
 
-async function storeCdeConfig(config: ChainDataExtension[], DBConn: Pool): Promise<boolean> {
+async function storeCdeConfig(config: ChainDataExtension[], DBConn: PoolClient): Promise<boolean> {
   try {
     for (const cde of config) {
       await registerChainDataExtension.run(
