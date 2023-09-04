@@ -1,8 +1,8 @@
 import type { RequestHandler } from 'express';
 import type BatchedTransactionPoster from '@paima-batcher/batched-transaction-poster';
 import type GameInputValidator from '@paima-batcher/game-input-validator';
-import type { Web3 } from '@paima-batcher/utils';
 import type { Pool } from 'pg';
+import type { TruffleEvmProvider } from '../../../paima-providers/build';
 
 export interface BatcherRuntimeInitializer {
   initialize: (pool: Pool) => BatcherRuntime;
@@ -14,7 +14,6 @@ export interface BatcherRuntime {
   run: (
     gameInputValidator: GameInputValidator,
     BatchedTransactionPoster: BatchedTransactionPoster,
-    walletWeb3: Web3,
-    accountAddress: string
+    truffleProvider: TruffleEvmProvider
   ) => Promise<void>;
 }

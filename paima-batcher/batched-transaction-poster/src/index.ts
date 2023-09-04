@@ -1,4 +1,3 @@
-import type Web3 from 'web3';
 import type { Pool } from 'pg';
 import type { Contract } from 'web3-eth-contract';
 
@@ -6,41 +5,42 @@ import { getValidatedInputs, updateStatePosted, deleteValidatedInput } from '@pa
 import {
   keepRunning,
   wait,
-  hashInput,
-  packInput,
   getStorageContract,
   ENV,
-  OUTER_DIVIDER,
   gameInputValidatorClosed,
   webserverClosed,
 } from '@paima-batcher/utils';
-import type { UserInput } from '@paima-batcher/utils';
+import type { TruffleEvmProvider } from '@paima/providers';
 
 import { estimateGasLimit } from './gas-limit.js';
+import {
+  packInput,
+  type BatchedSubunit,
+  OUTER_BATCH_DIVIDER,
+  hashInput,
+  buildBatchData,
+} from '@paima/concise';
 
 class BatchedTransactionPoster {
-  private web3: Web3;
+  private truffleProvider: TruffleEvmProvider;
   private contractAddress: string;
-  private posterAddress: string;
   private maxSize: number;
   private pool: Pool;
   private fee: string;
   private storage: Contract;
 
   constructor(
-    walletWeb3: Web3,
+    truffleProvider: TruffleEvmProvider,
     contractAddress: string,
-    posterAddress: string,
     maxSize: number,
     pool: Pool
   ) {
-    this.web3 = walletWeb3;
+    this.truffleProvider = truffleProvider;
     this.contractAddress = contractAddress;
-    this.posterAddress = posterAddress;
     this.maxSize = maxSize;
     this.pool = pool;
     this.fee = ENV.DEFAULT_FEE;
-    this.storage = getStorageContract(this.web3, this.contractAddress);
+    this.storage = getStorageContract(truffleProvider.web3, this.contractAddress);
   }
 
   public initialize = async (): Promise<void> => {
@@ -48,7 +48,7 @@ class BatchedTransactionPoster {
       this.fee = await this.storage.methods.fee().call();
     } catch (err) {
       console.log(
-        '[batched-transaction-poster] Error while retreiving fee, reverting to default:',
+        '[batched-transaction-poster] Error while retrieving fee, reverting to default:',
         err
       );
       this.fee = ENV.DEFAULT_FEE;
@@ -66,7 +66,7 @@ class BatchedTransactionPoster {
           await wait(periodMs);
         }
       } catch (err) {
-        console.log('[BatchedTransactionPoster::run] error occured:', err);
+        console.log('[BatchedTransactionPoster::run] error occurred:', err);
         if (!keepRunning) {
           break;
         }
@@ -82,20 +82,20 @@ class BatchedTransactionPoster {
     }
   };
 
-  public updateWeb3 = (newWeb3: Web3): void => {
-    this.web3 = newWeb3;
+  public updateWeb3 = (newTruffleProvider: TruffleEvmProvider): void => {
+    this.truffleProvider = newTruffleProvider;
   };
 
   private postMessage = async (msg: string): Promise<[number, string]> => {
-    const hexMsg = this.web3.utils.utf8ToHex(msg);
+    const hexMsg = this.truffleProvider.web3.utils.utf8ToHex(msg);
     const tx = {
       data: this.storage.methods.paimaSubmitGameInput(hexMsg).encodeABI(),
       to: this.contractAddress,
-      from: this.posterAddress,
-      value: this.web3.utils.numberToHex(this.fee),
+      from: this.truffleProvider.getAddress(),
+      value: this.truffleProvider.web3.utils.numberToHex(this.fee),
       gas: estimateGasLimit(msg.length),
     };
-    return await this.web3.eth
+    return await this.truffleProvider.web3.eth
       .sendTransaction(tx)
       .then(receipt => [receipt.blockNumber, receipt.transactionHash]);
   };
@@ -135,9 +135,6 @@ class BatchedTransactionPoster {
   };
 
   private buildBatchedTransaction = async (hashes: string[], ids: number[]): Promise<string> => {
-    let batchedTransaction = 'B';
-    let remainingSpace = this.maxSize - 1;
-
     const validatedInputs = await getValidatedInputs.run(undefined, this.pool);
 
     if (!keepRunning) {
@@ -148,34 +145,22 @@ class BatchedTransactionPoster {
       return '';
     }
 
-    for (let input of validatedInputs) {
-      try {
-        const userInput: UserInput = {
-          addressType: input.address_type,
-          userAddress: input.user_address,
-          gameInput: input.game_input,
-          userSignature: input.user_signature,
-          millisecondTimestamp: input.millisecond_timestamp,
-        };
-        const packed = packInput(userInput);
-        if (packed.length + 1 > remainingSpace) {
-          break;
-        }
-
-        batchedTransaction += OUTER_DIVIDER;
-        batchedTransaction += packed;
-        remainingSpace -= packed.length + 1;
-        hashes.push(hashInput(userInput));
-        ids.push(input.id);
-      } catch (err) {
-        console.log('[batched-transaction-poster] Error while batching input:', err);
-      }
-      if (!keepRunning) {
-        return '';
-      }
+    const batchData = buildBatchData(
+      this.maxSize,
+      validatedInputs.map(dbInput => ({
+        addressType: dbInput.address_type,
+        userAddress: dbInput.user_address,
+        gameInput: dbInput.game_input,
+        userSignature: dbInput.user_signature,
+        millisecondTimestamp: dbInput.millisecond_timestamp,
+      }))
+    );
+    for (let i = 0; i < batchData.selectedInputs.length; i++) {
+      hashes.push(hashInput(batchData.selectedInputs[i]));
+      ids.push(validatedInputs[i].id);
     }
 
-    return batchedTransaction;
+    return batchData.data;
   };
 
   private updatePostedStates = async (

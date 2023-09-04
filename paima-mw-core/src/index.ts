@@ -23,11 +23,6 @@ import { postConciselyEncodedData, postConciseData } from './helpers/posting';
 import { buildQuery, buildBackendQuery } from './helpers/query-constructors';
 import { pushLog } from './helpers/logging';
 
-import { initAccountGuard, sendWalletTransaction as sendEvmWalletTransaction } from './wallets/evm';
-import { signMessageCardano } from './wallets/cardano';
-import { polkadotLoginRaw, signMessagePolkadot } from './wallets/polkadot';
-import { signMessageAlgorand } from './wallets/algorand';
-
 import { walletToName } from './name-generation';
 
 import {
@@ -52,7 +47,6 @@ export async function initMiddlewareCore(
 ): Promise<void> {
   setGameName(gameName);
   setGameVersion(gameVersion);
-  await initAccountGuard();
 }
 
 const paimaEndpoints = {
@@ -97,10 +91,5 @@ export {
   userWalletLoginWithoutChecks,
   automaticWalletLogin,
   updateBackendUri,
-  sendEvmWalletTransaction,
-  signMessageCardano,
   getRemoteBackendVersion,
-  polkadotLoginRaw,
-  signMessagePolkadot,
-  signMessageAlgorand,
 };

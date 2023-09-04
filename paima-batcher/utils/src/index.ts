@@ -2,20 +2,16 @@ import Web3 from 'web3';
 import type { Contract } from 'web3-eth-contract';
 import type { AbiItem } from 'web3-utils';
 import HDWalletProvider from '@truffle/hdwallet-provider';
+import type { TruffleEvmProvider } from '@paima/providers';
+import { TruffleConnector } from '@paima/providers';
 
-import type { UserInput } from './types.js';
 import { GenericRejectionCode } from './types.js';
-import { AddressType, INNER_DIVIDER } from './constants.js';
 
 import storageBuild from './artifacts/Storage.js';
-
-import web3Utils from 'web3-utils';
-
-const { sha3, utf8ToHex } = web3Utils;
+import { AddressType } from '@paima/utils';
 
 export * from './config.js';
 export * from './config-validation.js';
-export * from './constants.js';
 export * from './types.js';
 export * from './version.js';
 
@@ -68,22 +64,6 @@ export const SUPPORTED_CHAIN_NAMES: string[] = [
 
 const POLLING_INTERVAL = 10000;
 
-const hashFxn = (s: string): string => sha3(s) || '0x0';
-
-export function hashInput(input: UserInput): string {
-  return hashFxn(input.userAddress + input.gameInput + input.millisecondTimestamp);
-}
-
-export function packInput(input: UserInput): string {
-  return [
-    input.addressType.toString(10),
-    input.userAddress,
-    input.userSignature,
-    input.gameInput,
-    input.millisecondTimestamp,
-  ].join(INNER_DIVIDER);
-}
-
 export function addressTypeName(addressType: AddressType): string {
   switch (addressType) {
     case AddressType.EVM:
@@ -103,12 +83,12 @@ export async function getAndConfirmWeb3(
   nodeUrl: string,
   privateKey: string,
   retryPeriodMs: number
-): Promise<Web3> {
+): Promise<TruffleEvmProvider> {
   while (true) {
     try {
-      const [web3, _] = await getWalletWeb3AndAddress(nodeUrl, privateKey);
-      await web3.eth.getBlockNumber();
-      return web3;
+      const truffleProvider = await getWalletWeb3AndAddress(nodeUrl, privateKey);
+      await truffleProvider.web3.eth.getBlockNumber();
+      return truffleProvider;
     } catch (err) {
       console.log('Unable to reinitialize web3:', err);
       console.log(`Retrying in ${retryPeriodMs} ms...`);
@@ -120,7 +100,7 @@ export async function getAndConfirmWeb3(
 export async function getWalletWeb3AndAddress(
   nodeUrl: string,
   privateKey: string
-): Promise<[Web3, string]> {
+): Promise<TruffleEvmProvider> {
   // retyping to any seems to be needed because initialize is private
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const origInit = (HDWalletProvider.prototype as any).initialize;
@@ -154,11 +134,8 @@ export async function getWalletWeb3AndAddress(
   (wallet.engine as any).on('error', (err: any) => {
     console.log('Web3ProviderEngine error', err);
   });
-  // The <any> below seems to be required as there seems to be some type mismatch
-  // since a newer version of HDWalletProvider / Web3
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any
-  const web3 = new Web3(<any>wallet);
-  return [web3, wallet.getAddress()];
+
+  return await TruffleConnector.instance().connectExternal(wallet);
 }
 
 export async function getWeb3(nodeUrl: string): Promise<Web3> {
@@ -169,16 +146,6 @@ export async function getWeb3(nodeUrl: string): Promise<Web3> {
     throw new Error(`Error connecting to node at ${nodeUrl}:\n${e}`);
   }
   return web3;
-}
-
-export async function signMessage(
-  walletWeb3: Web3,
-  signingAddress: string,
-  message: string
-): Promise<string> {
-  const hexMessage = utf8ToHex(message);
-  const signature = await walletWeb3.eth.personal.sign(hexMessage, signingAddress, '');
-  return signature;
 }
 
 export function getStorageContract(web3: Web3, address: string): Contract {

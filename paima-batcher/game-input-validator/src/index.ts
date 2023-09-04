@@ -5,8 +5,7 @@ import {
   unsetGameInputValidatorClosed,
   wait,
 } from '@paima-batcher/utils';
-import type { GameInputValidatorCore, UserInput } from '@paima-batcher/utils';
-import { hashInput } from '@paima-batcher/utils';
+import type { GameInputValidatorCore } from '@paima-batcher/utils';
 import {
   getUnvalidatedInputs,
   deleteUnvalidatedInput,
@@ -20,6 +19,8 @@ import { keepRunning } from '@paima-batcher/utils';
 import { EmptyInputValidatorCoreInitializator } from './empty-validator.js';
 import { getErrors } from './errors.js';
 import { DefaultInputValidatorCoreInitializator } from './default-validator.js';
+import type { BatchedSubunit } from '@paima/crypto';
+import { hashInput } from '@paima/concise';
 
 class GameInputValidator {
   private core: GameInputValidatorCore;
@@ -36,7 +37,7 @@ class GameInputValidator {
       try {
         await Promise.all([this.validationRound(), wait(periodMs)]);
       } catch (err) {
-        console.log('[GameInputValidator::run] error occured:', err);
+        console.log('[GameInputValidator::run] error occurred:', err);
         if (!keepRunning) {
           break;
         }
@@ -57,7 +58,7 @@ class GameInputValidator {
 
     console.log('[game-input-validator] Validation result:', validationResult);
 
-    const userInput: UserInput = {
+    const userInput: BatchedSubunit = {
       addressType: input.address_type,
       userAddress: input.user_address,
       gameInput: input.game_input,

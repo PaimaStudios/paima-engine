@@ -1,8 +1,7 @@
 import Web3 from 'web3';
 import type { Pool } from 'pg';
 
-import type { UserInput } from '@paima-batcher/utils';
-import { AddressType, addressTypeName, GenericRejectionCode, ENV } from '@paima-batcher/utils';
+import { addressTypeName, GenericRejectionCode, ENV } from '@paima-batcher/utils';
 import type { ErrorCode } from '@paima-batcher/utils';
 import {
   getUserTrackingEntry,
@@ -13,7 +12,9 @@ import {
 } from '@paima-batcher/db';
 
 import { isSameDay, isSameMinute } from './date-utils.js';
-import { CryptoManager } from '@paima/crypto';
+import type { BatchedSubunit } from '@paima/crypto';
+import { CryptoManager, createMessageForBatcher } from '@paima/crypto';
+import { AddressType } from '@paima/utils';
 
 class PaimaAddressValidator {
   private web3: Web3 | undefined;
@@ -30,7 +31,7 @@ class PaimaAddressValidator {
     this.web3 = await getWeb3(this.nodeUrl);
   };
 
-  public validateUserInput = async (input: UserInput): Promise<ErrorCode> => {
+  public validateUserInput = async (input: BatchedSubunit): Promise<ErrorCode> => {
     // Determine address type:
     const addressType = input.addressType;
     console.log(`[address-validator] Processing ${addressTypeName(addressType)} address...`);
@@ -79,10 +80,14 @@ class PaimaAddressValidator {
   };
 
   private verifySignature = async (
-    input: UserInput,
+    input: BatchedSubunit,
     addressType: AddressType
   ): Promise<boolean> => {
-    const message: string = ENV.SECURITY_NAMESPACE + input.gameInput + input.millisecondTimestamp;
+    const message: string = createMessageForBatcher(
+      ENV.SECURITY_NAMESPACE,
+      input.gameInput,
+      input.millisecondTimestamp
+    );
 
     switch (addressType) {
       case AddressType.EVM:

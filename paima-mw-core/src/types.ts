@@ -1,18 +1,4 @@
-import type {
-  AddressType,
-  Hash,
-  WalletAddress,
-  UserSignature,
-  InputDataString,
-} from '@paima/utils';
-
-export interface BatchedSubunit {
-  addressType: AddressType;
-  userAddress: WalletAddress;
-  userSignature: UserSignature;
-  gameInput: InputDataString;
-  millisecondTimestamp: string;
-}
+import type { Hash, WalletAddress, UserSignature } from '@paima/utils';
 
 export interface PostingInfo {
   address: WalletAddress;

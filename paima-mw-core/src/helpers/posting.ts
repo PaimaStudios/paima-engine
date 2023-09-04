@@ -8,21 +8,14 @@ import {
   PaimaMiddlewareErrorCode,
 } from '../errors';
 import {
-  getAlgorandAddress,
-  getCardanoAddress,
-  getCardanoHexAddress,
   getEmulatedBlocksActive,
-  getEthAddress,
-  getPolkadotAddress,
   getPostingMode,
   getStorageAddress,
-  getTruffleAddress,
   getWeb3,
   PostingMode,
   setFee,
 } from '../state';
 import type {
-  BatchedSubunit,
   BatcherPostResponse,
   BatcherTrackResponse,
   FailedResult,
@@ -32,11 +25,17 @@ import type {
 import { batchedToJsonString, buildBatchedSubunit } from './data-processing';
 import { buildDirectTx } from './transaction-building';
 import { batcherQuerySubmitUserInput, batcherQueryTrackUserInput } from './query-constructors';
-import { sendWalletTransaction as sendEvmWalletTransaction } from '../wallets/evm';
-import { sendWalletTransaction as sendTruffleWalletTransaction } from '../wallets/truffle';
 import { postDataToEndpoint } from './general';
 import { pushLog } from './logging';
 import { deploymentChainBlockHeightToEmulated } from './auxiliary-queries';
+import {
+  TruffleConnector,
+  AlgorandConnector,
+  CardanoConnector,
+  EvmConnector,
+  PolkadotConnector,
+} from '@paima/providers';
+import type { BatchedSubunit } from '@paima/concise';
 
 const BATCHER_WAIT_PERIOD = 500;
 const BATCHER_RETRIES = 50;
@@ -105,37 +104,45 @@ export async function postConciselyEncodedData(gameInput: string): Promise<Resul
 
   switch (postingMode) {
     case PostingMode.UNBATCHED:
-      return await postString(sendEvmWalletTransaction, getEthAddress(), gameInput);
+      return await postString(
+        EvmConnector.instance().getOrThrowProvider().sendTransaction,
+        EvmConnector.instance().getOrThrowProvider().getAddress(),
+        gameInput
+      );
     case PostingMode.BATCHED_ETH:
       return await buildBatchedSubunit(
         AddressType.EVM,
-        getEthAddress(),
-        getEthAddress(),
+        EvmConnector.instance().getOrThrowProvider().getAddress(),
+        EvmConnector.instance().getOrThrowProvider().getAddress(),
         gameInput
       ).then(submitToBatcher);
     case PostingMode.BATCHED_CARDANO:
       return await buildBatchedSubunit(
         AddressType.CARDANO,
-        getCardanoAddress(),
-        getCardanoHexAddress(),
+        CardanoConnector.instance().getOrThrowProvider().getAddress(),
+        CardanoConnector.instance().getOrThrowProvider().address.bech32,
         gameInput
       ).then(submitToBatcher);
     case PostingMode.BATCHED_POLKADOT:
       return await buildBatchedSubunit(
         AddressType.POLKADOT,
-        getPolkadotAddress(),
-        getPolkadotAddress(),
+        PolkadotConnector.instance().getOrThrowProvider().getAddress(),
+        PolkadotConnector.instance().getOrThrowProvider().getAddress(),
         gameInput
       ).then(submitToBatcher);
     case PostingMode.BATCHED_ALGORAND:
       return await buildBatchedSubunit(
         AddressType.ALGORAND,
-        getAlgorandAddress(),
-        getAlgorandAddress(),
+        AlgorandConnector.instance().getOrThrowProvider().getAddress(),
+        AlgorandConnector.instance().getOrThrowProvider().getAddress(),
         gameInput
       ).then(submitToBatcher);
     case PostingMode.AUTOMATIC:
-      return await postString(sendTruffleWalletTransaction, getTruffleAddress(), gameInput);
+      return await postString(
+        TruffleConnector.instance().getOrThrowProvider().sendTransaction,
+        TruffleConnector.instance().getOrThrowProvider().getAddress(),
+        gameInput
+      );
     default:
       return errorFxn(
         PaimaMiddlewareErrorCode.INTERNAL_INVALID_POSTING_MODE,

@@ -10,14 +10,6 @@ export class ENV {
     return process.env.STORAGE_CONTRACT_ADDRESS || '';
   }
 
-  static get SECURITY_NAMESPACE(): string {
-    const namespace = process.env.SECURITY_NAMESPACE ?? ENV.STORAGE_CONTRACT_ADDRESS;
-    if (namespace && namespace.match(/\|/)) {
-      throw new Error('Concise security namespace cannot contain the pipe character.');
-    }
-    return namespace;
-  }
-
   static get DEFAULT_FEE(): string {
     return process.env.DEFAULT_FEE || '';
   }

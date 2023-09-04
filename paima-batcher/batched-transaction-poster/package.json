@@ -9,7 +9,8 @@
     "@types/pg": "^8.6.5"
   },
   "dependencies": {
+    "@paima/concise": "file:../paima-concise",
     "pg": "^8.7.3",
-    "web3": "^1.10.1"
+    "web3": "1.10.0"
   }
 }

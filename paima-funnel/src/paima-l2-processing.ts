@@ -1,18 +1,18 @@
 import type Web3 from 'web3';
 import web3UtilsPkg from 'web3-utils';
 
-import {
-  AddressType,
-  doLog,
-  getReadNamespaces,
-  INNER_BATCH_DIVIDER,
-  OUTER_BATCH_DIVIDER,
-} from '@paima/utils';
+import { AddressType, doLog, getReadNamespaces } from '@paima/utils';
 import type { SubmittedData } from '@paima/runtime';
 import type { PaimaGameInteraction } from '@paima/utils/src/contract-types/PaimaL2Contract';
 import { CryptoManager } from '@paima/crypto';
+import {
+  INNER_BATCH_DIVIDER,
+  OUTER_BATCH_DIVIDER,
+  createBatchNonce,
+  createMessageForBatcher,
+} from '@paima/concise';
 
-const { toBN, sha3, hexToUtf8 } = web3UtilsPkg;
+const { toBN, hexToUtf8 } = web3UtilsPkg;
 
 interface ValidatedSubmittedData extends SubmittedData {
   validated: boolean;
@@ -143,12 +143,11 @@ async function processBatchedSubunit(
   );
 
   const secondTimestamp = parseInt(millisecondTimestamp, 10) / 1000;
-  const timestampValidated = validateSubunitTimestamp(secondTimestamp, blockTimestamp); // TODO
+  const timestampValidated = validateSubunitTimestamp(secondTimestamp, blockTimestamp);
 
   const validated = signatureValidated && timestampValidated;
 
-  const hashInput = millisecondTimestamp + userAddress + inputData;
-  const inputNonce = createNonce(hashInput);
+  const inputNonce = createBatchNonce(millisecondTimestamp, userAddress, inputData);
 
   return {
     inputData,
@@ -190,7 +189,7 @@ async function validateSubunitSignature(
     }
   };
   for (const namespace of namespaces) {
-    const message: string = namespace + inputData + millisecondTimestamp;
+    const message: string = createMessageForBatcher(namespace, inputData, millisecondTimestamp);
     if (await trySign(message)) {
       return true;
     }
@@ -203,13 +202,4 @@ function unpackValidatedData(validatedData: ValidatedSubmittedData): SubmittedDa
   const o = validatedData as any;
   delete o.validated;
   return o as SubmittedData;
-}
-
-function createNonce(nonceInput: string): string {
-  let nonce = sha3(nonceInput);
-  if (!nonce) {
-    doLog(`[funnel] WARNING: failure generating nonce from: ${nonceInput}`);
-    nonce = '';
-  }
-  return nonce;
 }

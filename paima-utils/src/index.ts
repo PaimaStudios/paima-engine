@@ -24,8 +24,6 @@ import type {
 } from './types';
 import {
   AddressType,
-  INNER_BATCH_DIVIDER,
-  OUTER_BATCH_DIVIDER,
   DEFAULT_FUNNEL_TIMEOUT,
   ChainDataExtensionType,
   ChainDataExtensionDatumType,
@@ -50,8 +48,6 @@ export {
   ChainDataExtensionType,
   ChainDataExtensionDatumType,
   InputDataString,
-  INNER_BATCH_DIVIDER,
-  OUTER_BATCH_DIVIDER,
   DEFAULT_FUNNEL_TIMEOUT,
   logError,
   doLog,

@@ -6,14 +6,6 @@ export interface GameInputValidatorCore {
   validate: (gameInput: string, userAddress: string) => Promise<ErrorCode>;
 }
 
-export interface UserInput {
-  addressType: number;
-  userAddress: string;
-  gameInput: string;
-  userSignature: string;
-  millisecondTimestamp: string;
-}
-
 export const enum GenericRejectionCode {
   OK = 0,
   UNSUPPORTED_ADDRESS_TYPE = 1,

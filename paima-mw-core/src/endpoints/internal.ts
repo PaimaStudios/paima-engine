@@ -1,12 +1,10 @@
 import type { URI } from '@paima/utils';
 import { buildEndpointErrorFxn, PaimaMiddlewareErrorCode } from '../errors';
-import { cardanoLoginAny } from '../wallets/cardano';
-import { connectWallet as connectTruffleWallet } from '../wallets/truffle';
 import {
   getActiveAddress,
-  getCardanoAddress,
+  getChainUri,
+  getGameName,
   getPostingInfo,
-  getTruffleAddress,
   setAutomaticMode,
   setBackendUri,
   setBatchedCardanoMode,
@@ -19,6 +17,8 @@ import {
 import type { PostingInfo, PostingModeSwitchResult, Result, Wallet } from '../types';
 import { specificWalletLogin, stringToWalletMode } from '../wallets/wallets';
 import { emulatedBlocksActiveOnBackend } from '../helpers/auxiliary-queries';
+import { CardanoConnector, TruffleConnector } from '@paima/providers';
+import HDWalletProvider from '@truffle/hdwallet-provider';
 
 export async function userWalletLoginWithoutChecks(
   loginType: string,
@@ -31,11 +31,14 @@ export async function userWalletLoginWithoutChecks(
 export async function cardanoWalletLoginEndpoint(): Promise<Result<Wallet>> {
   const errorFxn = buildEndpointErrorFxn('cardanoWalletLoginEndpoint');
   try {
-    await cardanoLoginAny();
+    const provider = await CardanoConnector.instance().connectSimple({
+      gameName: getGameName(),
+      gameChainId: undefined,
+    });
     return {
       success: true,
       result: {
-        walletAddress: getCardanoAddress(),
+        walletAddress: provider.getAddress(),
       },
     };
   } catch (err) {
@@ -46,7 +49,12 @@ export async function cardanoWalletLoginEndpoint(): Promise<Result<Wallet>> {
 export async function automaticWalletLogin(privateKey: string): Promise<Result<Wallet>> {
   const errorFxn = buildEndpointErrorFxn('automaticWalletLogin');
   try {
-    await connectTruffleWallet(privateKey);
+    const provider = await TruffleConnector.instance().connectExternal(
+      new HDWalletProvider({
+        privateKeys: [privateKey],
+        providerOrUrl: getChainUri(),
+      })
+    );
 
     try {
       if (await emulatedBlocksActiveOnBackend()) {
@@ -61,7 +69,7 @@ export async function automaticWalletLogin(privateKey: string): Promise<Result<W
     return {
       success: true,
       result: {
-        walletAddress: getTruffleAddress(),
+        walletAddress: provider.getAddress(),
       },
     };
   } catch (err) {

@@ -1,10 +1,13 @@
-import { AddressType, ENV, getWriteNamespace } from '@paima/utils';
+import { AddressType, getWriteNamespace } from '@paima/utils';
 
-import type { BatchedSubunit, SignFunction } from '../types';
-import { signMessageCardano } from '../wallets/cardano';
-import { signMessageEth } from '../wallets/evm';
-import { signMessagePolkadot } from '../wallets/polkadot';
-import { signMessageAlgorand } from '../wallets/algorand';
+import type { SignFunction } from '../types';
+import {
+  AlgorandConnector,
+  CardanoConnector,
+  EvmConnector,
+  PolkadotConnector,
+} from '@paima/providers';
+import { createMessageForBatcher, type BatchedSubunit } from '@paima/concise';
 
 export function batchedToJsonString(b: BatchedSubunit): string {
   return JSON.stringify({
@@ -19,13 +22,13 @@ export function batchedToJsonString(b: BatchedSubunit): string {
 function selectSignFunction(addressType: AddressType): SignFunction {
   switch (addressType) {
     case AddressType.EVM:
-      return signMessageEth;
+      return EvmConnector.instance().getOrThrowProvider().signMessage;
     case AddressType.CARDANO:
-      return signMessageCardano;
+      return CardanoConnector.instance().getOrThrowProvider().signMessage;
     case AddressType.POLKADOT:
-      return signMessagePolkadot;
+      return PolkadotConnector.instance().getOrThrowProvider().signMessage;
     case AddressType.ALGORAND:
-      return signMessageAlgorand;
+      return AlgorandConnector.instance().getOrThrowProvider().signMessage;
     default:
       throw new Error(`[selectSignFunction] invalid address type: ${addressType}`);
   }
@@ -39,7 +42,11 @@ export async function buildBatchedSubunit(
 ): Promise<BatchedSubunit> {
   const signFunction = selectSignFunction(addressType);
   const millisecondTimestamp: string = new Date().getTime().toString(10);
-  const message: string = (await getWriteNamespace()) + gameInput + millisecondTimestamp;
+  const message: string = createMessageForBatcher(
+    await getWriteNamespace(),
+    gameInput,
+    millisecondTimestamp
+  );
   const userSignature = await signFunction(signingAddress, message);
   return {
     addressType,

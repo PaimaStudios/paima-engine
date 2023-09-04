@@ -6,9 +6,6 @@ export const enum AddressType {
   ALGORAND = 4,
 }
 
-export const OUTER_BATCH_DIVIDER: string = '\x02';
-export const INNER_BATCH_DIVIDER: string = '\x03';
-
 export const DEFAULT_FUNNEL_TIMEOUT = 5000;
 
 export const enum ChainDataExtensionType {

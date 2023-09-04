@@ -1,51 +1,18 @@
-import web3UtilsPkg from 'web3-utils';
-
-import type { UserSignature } from '@paima/utils';
-import { hexStringToUint8Array } from '@paima/utils';
-
 import type { OldResult, Result, Wallet } from '../types';
-import {
-  cardanoConnected,
-  getCardanoActiveWallet,
-  getCardanoAddress,
-  getCardanoApi,
-  setCardanoActiveWallet,
-  setCardanoAddress,
-  setCardanoApi,
-  setCardanoHexAddress,
-} from '../state';
 import {
   buildEndpointErrorFxn,
   PaimaMiddlewareErrorCode,
   FE_ERR_SPECIFIC_WALLET_NOT_INSTALLED,
 } from '../errors';
 import { WalletMode } from './wallet-modes';
-
-const SUPPORTED_WALLET_IDS = ['nami', 'nufi', 'flint', 'eternl'];
-
-export async function cardanoLoginSpecific(walletId: string): Promise<void> {
-  if (getCardanoActiveWallet() === walletId) {
-    return;
-  }
-
-  if (!SUPPORTED_WALLET_IDS.includes(walletId)) {
-    throw new Error(`[cardanoLoginSpecific] Cardano wallet "${walletId}" not supported`);
-  }
-  const api = await (window as any).cardano[walletId].enable();
-  setCardanoApi(api);
-  const hexAddress = await pickCardanoAddress(api);
-  const prefix = pickBech32Prefix(hexAddress);
-  const words = bech32.toWords(hexStringToUint8Array(hexAddress));
-  const userAddress = bech32.encode(prefix, words, 200);
-  setCardanoAddress(userAddress);
-  setCardanoHexAddress(hexAddress);
-  setCardanoActiveWallet(walletId);
-}
+import { CardanoConnector, UnsupportedWallet, WalletNotFound } from '@paima/providers';
+import { getGameName } from '../state';
 
 export async function checkCardanoWalletStatus(): Promise<OldResult> {
   const errorFxn = buildEndpointErrorFxn('checkCardanoWalletStatus');
 
-  if (getCardanoAddress() === '') {
+  const currentAddress = CardanoConnector.instance().getProvider()?.getAddress();
+  if (currentAddress == null || currentAddress === '') {
     return errorFxn(PaimaMiddlewareErrorCode.NO_ADDRESS_SELECTED);
   }
 
@@ -79,27 +46,30 @@ export async function cardanoLoginWrapper(walletMode: WalletMode): Promise<Resul
   }
 
   console.log(`[cardanoLoginWrapper] Attempting to log into ${walletName}`);
-
-  if (typeof (window as any).cardano === 'undefined') {
-    return errorFxn(
-      PaimaMiddlewareErrorCode.CARDANO_WALLET_NOT_INSTALLED,
-      undefined,
-      FE_ERR_SPECIFIC_WALLET_NOT_INSTALLED
-    );
-  }
-
   try {
-    await cardanoLoginSpecific(walletName);
+    const provider = await CardanoConnector.instance().connectNamed(
+      {
+        gameName: getGameName(),
+        gameChainId: undefined,
+      },
+      walletName
+    );
+    return {
+      success: true,
+      result: {
+        walletAddress: provider.getAddress().toLocaleLowerCase(),
+      },
+    };
   } catch (err) {
+    if (err instanceof WalletNotFound || err instanceof UnsupportedWallet) {
+      return errorFxn(
+        PaimaMiddlewareErrorCode.CARDANO_WALLET_NOT_INSTALLED,
+        undefined,
+        FE_ERR_SPECIFIC_WALLET_NOT_INSTALLED
+      );
+    }
     console.log(`[cardanoLoginWrapper] Error while logging into wallet ${walletName}`);
     return errorFxn(PaimaMiddlewareErrorCode.CARDANO_LOGIN, err);
     // TODO: improve error differentiation
   }
-
-  return {
-    success: true,
-    result: {
-      walletAddress: getCardanoAddress().toLocaleLowerCase(),
-    },
-  };
 }

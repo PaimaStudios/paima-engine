@@ -8,19 +8,26 @@ export type ActiveConnection<T> = {
   api: T;
 };
 
+export type GameInfo = {
+  gameName: string;
+  /** undefined is for when we don't care which network we connect to */
+  gameChainId: string | undefined;
+};
+
 export interface IConnector<T> {
   /** connect while letting Paima pick all the connection logic for you */
-  connectSimple(): Promise<void>;
+  connectSimple(gameInfo: GameInfo): Promise<IProvider<T>>;
   /** connect to an explicit API that Paima supports */
-  connectNamed(name: string): Promise<void>;
+  connectNamed(gameInfo: GameInfo, name: string): Promise<IProvider<T>>;
   /** connect to an API that you've initialized yourself externally */
-  connectExternal(conn: ActiveConnection<T>): Promise<void>;
+  connectExternal(gameInfo: GameInfo, conn: ActiveConnection<T>): Promise<IProvider<T>>;
 
   getProvider(): undefined | IProvider<T>;
+  getOrThrowProvider(): IProvider<T>;
   isConnected(): boolean;
 }
 export interface IProvider<T> {
   getConnection(): ActiveConnection<T>;
-  signMessage(userAddress: string, message: string): Promise<UserSignature>;
+  signMessage(message: string): Promise<UserSignature>;
   getAddress(): string;
 }

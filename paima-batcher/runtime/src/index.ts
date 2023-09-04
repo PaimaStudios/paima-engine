@@ -8,7 +8,7 @@ import GameInputValidator, {
   getErrors,
 } from '@paima-batcher/game-input-validator';
 
-import type { Web3 } from '@paima-batcher/utils';
+import type { TruffleEvmProvider } from '@paima/providers';
 import {
   ENV,
   getWalletWeb3AndAddress,
@@ -93,14 +93,13 @@ const BatcherRuntime: BatcherRuntimeInitializer = {
       async run(
         gameInputValidator: GameInputValidator,
         batchedTransactionPoster: BatchedTransactionPoster,
-        walletWeb3: Web3,
-        accountAddress: string
+        truffleProivder: TruffleEvmProvider
       ): Promise<void> {
         // pass endpoints to web server and run
 
         // do not await on these as they may run forever
         void Promise.all([
-          startServer(pool, errorCodeToMessage, walletWeb3, accountAddress),
+          startServer(pool, errorCodeToMessage, truffleProivder),
           gameInputValidator.run(ENV.GAME_INPUT_VALIDATOR_PERIOD),
           batchedTransactionPoster.run(ENV.BATCHED_TRANSACTION_POSTER_PERIOD),
         ]);
@@ -138,19 +137,18 @@ async function main(): Promise<void> {
   }
 
   const pool = initializePool();
-  const [walletWeb3, accountAddress] = await getWalletWeb3AndAddress(ENV.CHAIN_URI, privateKey);
+  const truffleProvider = await getWalletWeb3AndAddress(ENV.CHAIN_URI, privateKey);
 
   console.log('Chain URI:              ', ENV.CHAIN_URI);
   console.log('Validation type:        ', ENV.GAME_INPUT_VALIDATION_TYPE);
   console.log('PaimaL2Contract address:', ENV.STORAGE_CONTRACT_ADDRESS);
-  console.log('Batcher account address:', accountAddress);
+  console.log('Batcher account address:', truffleProvider.getAddress());
 
   const gameInputValidatorCore = await getValidatorCore(ENV.GAME_INPUT_VALIDATION_TYPE);
   const gameInputValidator = new GameInputValidator(gameInputValidatorCore, pool);
   const batchedTransactionPoster = new BatchedTransactionPoster(
-    walletWeb3,
+    truffleProvider,
     ENV.STORAGE_CONTRACT_ADDRESS,
-    accountAddress,
     ENV.BATCHED_MESSAGE_SIZE_LIMIT,
     pool
   );
@@ -160,7 +158,7 @@ async function main(): Promise<void> {
   const runtime = BatcherRuntime.initialize(pool);
 
   requestStart();
-  await runtime.run(gameInputValidator, batchedTransactionPoster, walletWeb3, accountAddress);
+  await runtime.run(gameInputValidator, batchedTransactionPoster, truffleProvider);
 }
 
 void main();

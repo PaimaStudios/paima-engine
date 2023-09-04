@@ -6,9 +6,10 @@
   "type": "module",
   "types": "build/index.d.ts",
   "dependencies": {
-    "@truffle/hdwallet-provider": "^2.1.7",
-    "web3": "^1.10.1",
-    "web3-eth-contract": "^1.10.1",
-    "web3-utils": "^1.10.1"
+    "@paima/providers": "file:../paima-providers",
+    "@truffle/hdwallet-provider": "^2.1.14",
+    "web3": "1.10.0",
+    "web3-eth-contract": "1.10.0",
+    "web3-utils": "1.10.0"
   }
 }

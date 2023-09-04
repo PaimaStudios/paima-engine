@@ -1,21 +1,15 @@
-import type {
-  AlgorandAddress,
-  CardanoAddress,
-  ContractAddress,
-  Deployment,
-  ETHAddress,
-  PolkadotAddress,
-  URI,
-  VersionString,
-  Web3,
-} from '@paima/utils';
+import type { ContractAddress, Deployment, URI, VersionString, Web3 } from '@paima/utils';
 import { ENV } from '@paima/utils';
 import { initWeb3 } from '@paima/utils';
 
 import { PaimaMiddlewareErrorCode, paimaErrorMessageFxn } from './errors';
 import type { PostingInfo, PostingModeString } from './types';
-import type { HDWalletProvider } from './wallets/truffle';
-import type { AlgorandApi, CardanoApi, EvmApi, PolkadotSignFxn } from '@paima/crypto';
+import {
+  AlgorandConnector,
+  CardanoConnector,
+  EvmConnector,
+  PolkadotConnector,
+} from '@paima/providers';
 
 export const enum PostingMode {
   UNBATCHED,
@@ -57,27 +51,8 @@ let postingMode: PostingMode = PostingMode.UNBATCHED;
 
 let emulatedBlocksActive: boolean = false;
 
-let ethAddress: ETHAddress = '';
-let evmApi: EvmApi = undefined;
-let evmActiveWallet: string = '';
-
-let truffleAddress: ETHAddress = '';
-let truffleProvider: HDWalletProvider | undefined = undefined;
-let truffleWeb3: Web3 | undefined = undefined;
-
 let web3: Web3 | undefined = undefined;
 let fee: string = ENV.DEFAULT_FEE;
-
-let cardanoAddress: CardanoAddress = '';
-let cardanoHexAddress: CardanoAddress = '';
-let cardanoApi: CardanoApi = undefined;
-let cardanoActiveWallet: string = '';
-
-let polkadotAddress: PolkadotAddress = '';
-let polkadotSignFxn: PolkadotSignFxn = undefined;
-
-let algorandAddress: AlgorandAddress = '';
-let algorandApi: AlgorandApi = undefined;
 
 export const setBackendUri = (newUri: URI): URI => (backendUri = newUri);
 export const getBackendUri = (): URI => backendUri;
@@ -121,50 +96,6 @@ export const setBatchedAlgorandMode = (): PostingMode =>
   setPostingMode(PostingMode.BATCHED_ALGORAND);
 export const setAutomaticMode = (): PostingMode => setPostingMode(PostingMode.AUTOMATIC);
 
-export const setEthAddress = (addr: ETHAddress): ETHAddress => (ethAddress = addr);
-export const getEthAddress = (): ETHAddress => ethAddress;
-export const ethConnected = (): boolean => ethAddress !== '';
-export const setEvmApi = (api: EvmApi): EvmApi => (evmApi = api);
-export const getEvmApi = (): EvmApi => evmApi;
-export const setEvmActiveWallet = (newWallet: string): string => (evmActiveWallet = newWallet);
-export const getEvmActiveWallet = (): string => evmActiveWallet;
-
-export const setCardanoAddress = (addr: CardanoAddress): CardanoAddress => (cardanoAddress = addr);
-export const getCardanoAddress = (): CardanoAddress => cardanoAddress;
-export const setCardanoHexAddress = (addr: CardanoAddress): CardanoAddress =>
-  (cardanoHexAddress = addr);
-export const getCardanoHexAddress = (): CardanoAddress => cardanoHexAddress;
-export const cardanoConnected = (): boolean => cardanoActiveWallet !== '';
-
-export const setCardanoApi = (api: CardanoApi): CardanoApi => (cardanoApi = api);
-export const getCardanoApi = (): CardanoApi => cardanoApi;
-
-export const setCardanoActiveWallet = (newWallet: string): string =>
-  (cardanoActiveWallet = newWallet);
-export const getCardanoActiveWallet = (): string => cardanoActiveWallet;
-
-export const setPolkadotAddress = (addr: PolkadotAddress): PolkadotAddress =>
-  (polkadotAddress = addr);
-export const getPolkadotAddress = (): PolkadotAddress => polkadotAddress;
-
-export const setPolkadotSignFxn = (fxn: PolkadotSignFxn): PolkadotSignFxn =>
-  (polkadotSignFxn = fxn);
-export const getPolkadotSignFxn = (): PolkadotSignFxn => polkadotSignFxn;
-
-export const polkadotConnected = (): boolean => !!polkadotSignFxn;
-
-export const setTruffleAddress = (addr: ETHAddress): ETHAddress => (truffleAddress = addr);
-export const getTruffleAddress = (): ETHAddress => truffleAddress;
-export const truffleConnected = (): boolean =>
-  truffleAddress !== '' && truffleProvider !== undefined && truffleWeb3 !== undefined;
-
-export const setTruffleProvider = (provider: HDWalletProvider): HDWalletProvider =>
-  (truffleProvider = provider);
-export const getTruffleProvider = (): HDWalletProvider | undefined => truffleProvider;
-
-export const setTruffleWeb3 = (w3: Web3): Web3 => (truffleWeb3 = w3);
-export const getTruffleWeb3 = (): Web3 | undefined => truffleWeb3;
-
 export const setFee = (newFee: string): string => (fee = newFee);
 export const getFee = (): string => fee;
 
@@ -179,15 +110,15 @@ export const getActiveAddress = (): string => {
   switch (postingMode) {
     case PostingMode.UNBATCHED:
     case PostingMode.BATCHED_ETH:
-      return ethAddress;
+      return EvmConnector.instance().getOrThrowProvider().getAddress();
     case PostingMode.BATCHED_CARDANO:
-      return cardanoAddress;
+      return CardanoConnector.instance().getOrThrowProvider().getAddress();
     case PostingMode.BATCHED_POLKADOT:
-      return polkadotAddress;
+      return PolkadotConnector.instance().getOrThrowProvider().getAddress();
     case PostingMode.AUTOMATIC:
-      return truffleAddress;
+      return EvmConnector.instance().getOrThrowProvider().getAddress();
     case PostingMode.BATCHED_ALGORAND:
-      return algorandAddress;
+      return AlgorandConnector.instance().getOrThrowProvider().getAddress();
     default:
       const errorCode = PaimaMiddlewareErrorCode.INTERNAL_INVALID_POSTING_MODE;
       const errorMessage = `${paimaErrorMessageFxn(errorCode)}: ${postingMode}`;

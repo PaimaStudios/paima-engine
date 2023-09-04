@@ -12,17 +12,13 @@ import {
   insertUnvalidatedInput,
   insertValidatedInput,
 } from '@paima-batcher/db';
-import type { Web3 } from '@paima-batcher/utils';
-import { signMessage } from '@paima-batcher/utils';
-import {
-  AddressType,
-  ENV,
-  hashInput,
-  keepRunning,
-  setWebserverClosed,
-  unsetWebserverClosed,
-} from '@paima-batcher/utils';
+import { ENV, keepRunning, setWebserverClosed, unsetWebserverClosed } from '@paima-batcher/utils';
 import type { ErrorMessageFxn } from '@paima-batcher/utils';
+import type { TruffleEvmProvider } from '@paima/providers';
+import type { BatchedSubunit } from '@paima/crypto';
+import { createMessageForBatcher } from '@paima/crypto';
+import { AddressType } from '@paima/utils';
+import { hashInput } from '@paima/concise';
 
 const port = ENV.BATCHER_PORT;
 
@@ -107,8 +103,7 @@ TODO: This will be fixed in express v5 when it comes out
 async function initializeServer(
   pool: Pool,
   errorCodeToMessage: ErrorMessageFxn,
-  walletWeb3: Web3,
-  accountAddress: string
+  truffleProvider: TruffleEvmProvider
 ): Promise<void> {
   const addressValidator = new AddressValidator(ENV.CHAIN_URI, pool);
   await addressValidator.initialize();
@@ -227,14 +222,17 @@ async function initializeServer(
         }
 
         const addressType = AddressType.EVM;
-        const userAddress = accountAddress;
 
-        const message: string = ENV.SECURITY_NAMESPACE + gameInput + millisecondTimestamp;
-        const userSignature = await signMessage(walletWeb3, accountAddress, message);
+        const message: string = createMessageForBatcher(
+          ENV.SECURITY_NAMESPACE,
+          gameInput,
+          millisecondTimestamp
+        );
+        const userSignature = await truffleProvider.signMessage(message);
 
-        const input = {
+        const input: BatchedSubunit = {
           addressType,
-          userAddress,
+          userAddress: truffleProvider.getAddress(),
           gameInput,
           millisecondTimestamp,
           userSignature,
@@ -273,7 +271,7 @@ async function initializeServer(
           await insertValidatedInput.run(
             {
               address_type: addressType,
-              user_address: userAddress,
+              user_address: truffleProvider.getAddress(),
               game_input: gameInput,
               millisecond_timestamp: millisecondTimestamp,
               user_signature: userSignature,
@@ -335,7 +333,7 @@ async function initializeServer(
           req.body.timestamp || '',
           req.body.user_signature || '',
         ];
-        const input = {
+        const input: BatchedSubunit = {
           addressType,
           userAddress,
           gameInput,
@@ -431,11 +429,10 @@ async function initializeServer(
 async function startServer(
   _pool: Pool,
   errorCodeToMessage: ErrorMessageFxn,
-  walletWeb3: Web3,
-  accountAddress: string
+  truffleProvider: TruffleEvmProvider
 ): Promise<void> {
   pool = _pool;
-  await initializeServer(pool, errorCodeToMessage, walletWeb3, accountAddress);
+  await initializeServer(pool, errorCodeToMessage, truffleProvider);
   setWebserverClosed();
   server.listen(port, () => {
     console.log(`server started at http://localhost:${port}`);
