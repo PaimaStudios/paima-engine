@@ -87,6 +87,7 @@ export async function getAndConfirmWeb3(
   while (true) {
     try {
       const truffleProvider = await getWalletWeb3AndAddress(nodeUrl, privateKey);
+      // just test the connection worked
       await truffleProvider.web3.eth.getBlockNumber();
       return truffleProvider;
     } catch (err) {

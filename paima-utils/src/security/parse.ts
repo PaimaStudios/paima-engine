@@ -18,9 +18,22 @@ const Config = Type.Object({
   namespace: ReadWrite,
 });
 
+/** Cache for file content so we don't have to re-read it from disk constantly */
 let securityNamespaceConfig: undefined | Static<typeof Config>;
 
-async function loadAndValidateYAML(fileContent: string): Promise<Static<typeof Config>> {
+async function loadAndValidateYAML(filename: string): Promise<Static<typeof Config>> {
+  if (securityNamespaceConfig != null) return securityNamespaceConfig;
+
+  // this ENV var is used to help with compilation of Paima for browser environments
+  // since they can't access fs.readFile,
+  //       we instead (at compile time) read the file
+  //       and put the file content inside SECURITY_NAMESPACE_ROUTER
+  const fileContent = process.env.SECURITY_NAMESPACE_ROUTER
+    ? (JSON.parse(process.env.SECURITY_NAMESPACE_ROUTER) as string)
+    : await fs.readFile(filename, 'utf-8');
+  return await parseAndValidateYAML(fileContent);
+}
+async function parseAndValidateYAML(fileContent: string): Promise<Static<typeof Config>> {
   if (securityNamespaceConfig != null) return securityNamespaceConfig;
   try {
     // Parse the YAML content into an object
@@ -46,10 +59,7 @@ async function getEntryFromFile(
   namespace: string,
   blockHeight: number
 ): Promise<undefined | string[]> {
-  const fileContent = process.env.SECURITY_NAMESPACE_ROUTER
-    ? (JSON.parse(process.env.SECURITY_NAMESPACE_ROUTER) as string)
-    : await fs.readFile(namespace, 'utf-8');
-  const config = await loadAndValidateYAML(fileContent);
+  const config = await loadAndValidateYAML(namespace);
   let highestEntry: Static<typeof BlockSettings> | null = null;
   for (const entry of config.namespace.read) {
     if (
@@ -82,6 +92,11 @@ export async function getReadNamespaces(blockHeight: number): Promise<string[]> 
   );
   return adjusted;
 }
+
+/**
+ * Which namespace to use when creating transactions
+ * Note: new transactions are always made using the same constant namespace
+ */
 export async function getWriteNamespace(): Promise<string> {
   const namespace = ENV.SECURITY_NAMESPACE;
   const entry =

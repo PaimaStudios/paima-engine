@@ -8,9 +8,10 @@ import { CryptoManager } from '@paima/crypto';
 import {
   INNER_BATCH_DIVIDER,
   OUTER_BATCH_DIVIDER,
-  createBatchNonce,
   createMessageForBatcher,
+  extractBatches,
 } from '@paima/concise';
+import { sha3 } from 'web3-utils';
 
 const { toBN, hexToUtf8 } = web3UtilsPkg;
 
@@ -40,7 +41,7 @@ async function eventMapper(
     {
       userAddress: e.returnValues.userAddress,
       inputData: decodedData,
-      inputNonce: '',
+      inputNonce: '', // placeholder that will be filled later
       suppliedValue: e.returnValues.value,
       scheduled: false,
     },
@@ -71,8 +72,7 @@ async function processDataUnit(
   try {
     if (!unit.inputData.includes(OUTER_BATCH_DIVIDER)) {
       // Directly submitted input, prepare nonce and return:
-      const hashInput = blockHeight.toString(10) + unit.userAddress + unit.inputData;
-      const inputNonce = createNonce(hashInput);
+      const inputNonce = createUnbatchedNonce(blockHeight, unit.userAddress, unit.inputData);
       return [
         {
           ...unit,
@@ -81,25 +81,16 @@ async function processDataUnit(
       ];
     }
 
-    const hasClosingDivider = unit.inputData[unit.inputData.length - 1] === OUTER_BATCH_DIVIDER;
-    const elems = unit.inputData.split(OUTER_BATCH_DIVIDER);
-    const afterLastIndex = elems.length - (hasClosingDivider ? 1 : 0);
+    const subunits = extractBatches(unit.inputData);
+    if (subunits.length === 0) return [];
 
-    const prefix = elems[0];
-    const subunitCount = elems.length - 1;
-    const subunitValue = toBN(unit.suppliedValue).div(toBN(subunitCount)).toString(10);
-
-    if (prefix === 'B') {
-      const validatedSubUnits = await Promise.all(
-        elems
-          .slice(1, afterLastIndex)
-          .map(elem => processBatchedSubunit(web3, elem, subunitValue, blockHeight, blockTimestamp))
-      );
-      return validatedSubUnits.filter(item => item.validated).map(unpackValidatedData);
-    } else {
-      // Encountered unknown type of ~-separated input
-      return [];
-    }
+    const subunitValue = toBN(unit.suppliedValue).div(toBN(subunits.length)).toString(10);
+    const validatedSubUnits = await Promise.all(
+      subunits.map(elem =>
+        processBatchedSubunit(web3, elem, subunitValue, blockHeight, blockTimestamp)
+      )
+    );
+    return validatedSubUnits.filter(item => item.validated).map(unpackValidatedData);
   } catch (err) {
     doLog(`[funnel::processDataUnit] error: ${err}`);
     return [];
@@ -174,7 +165,7 @@ async function validateSubunitSignature(
 ): Promise<boolean> {
   const namespaces = await getReadNamespaces(blockHeight);
 
-  const trySign = async (message: string): Promise<boolean> => {
+  const tryVerifySig = async (message: string): Promise<boolean> => {
     switch (addressType) {
       case AddressType.EVM:
         return await CryptoManager.Evm(web3).verifySignature(userAddress, message, userSignature);
@@ -190,7 +181,7 @@ async function validateSubunitSignature(
   };
   for (const namespace of namespaces) {
     const message: string = createMessageForBatcher(namespace, inputData, millisecondTimestamp);
-    if (await trySign(message)) {
+    if (await tryVerifySig(message)) {
       return true;
     }
   }
@@ -203,3 +194,20 @@ function unpackValidatedData(validatedData: ValidatedSubmittedData): SubmittedDa
   delete o.validated;
   return o as SubmittedData;
 }
+
+export function createBatchNonce(
+  millisecondTimestamp: string,
+  userAddress: string,
+  inputData: string
+): string {
+  return hashFxn(millisecondTimestamp + userAddress + inputData);
+}
+export function createUnbatchedNonce(
+  blockHeight: number,
+  userAddress: string,
+  inputData: string
+): string {
+  return hashFxn(blockHeight.toString(10) + userAddress + inputData);
+}
+
+const hashFxn = (s: string): string => sha3(s) || '0x0';

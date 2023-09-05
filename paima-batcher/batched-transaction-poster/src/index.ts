@@ -13,13 +13,7 @@ import {
 import type { TruffleEvmProvider } from '@paima/providers';
 
 import { estimateGasLimit } from './gas-limit.js';
-import {
-  packInput,
-  type BatchedSubunit,
-  OUTER_BATCH_DIVIDER,
-  hashInput,
-  buildBatchData,
-} from '@paima/concise';
+import { hashBatchSubunit, buildBatchData } from '@paima/concise';
 
 class BatchedTransactionPoster {
   private truffleProvider: TruffleEvmProvider;
@@ -156,7 +150,7 @@ class BatchedTransactionPoster {
       }))
     );
     for (let i = 0; i < batchData.selectedInputs.length; i++) {
-      hashes.push(hashInput(batchData.selectedInputs[i]));
+      hashes.push(hashBatchSubunit(batchData.selectedInputs[i]));
       ids.push(validatedInputs[i].id);
     }
 

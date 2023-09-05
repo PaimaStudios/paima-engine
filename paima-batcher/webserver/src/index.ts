@@ -17,8 +17,8 @@ import type { ErrorMessageFxn } from '@paima-batcher/utils';
 import type { TruffleEvmProvider } from '@paima/providers';
 import type { BatchedSubunit } from '@paima/crypto';
 import { createMessageForBatcher } from '@paima/crypto';
-import { AddressType } from '@paima/utils';
-import { hashInput } from '@paima/concise';
+import { AddressType, getWriteNamespace } from '@paima/utils';
+import { hashBatchSubunit } from '@paima/concise';
 
 const port = ENV.BATCHER_PORT;
 
@@ -224,7 +224,7 @@ async function initializeServer(
         const addressType = AddressType.EVM;
 
         const message: string = createMessageForBatcher(
-          ENV.SECURITY_NAMESPACE,
+          await getWriteNamespace(),
           gameInput,
           millisecondTimestamp
         );
@@ -237,7 +237,7 @@ async function initializeServer(
           millisecondTimestamp,
           userSignature,
         };
-        const hash = hashInput(input);
+        const hash = hashBatchSubunit(input);
 
         if (!keepRunning) {
           res.status(500).json({
@@ -340,7 +340,7 @@ async function initializeServer(
           millisecondTimestamp,
           userSignature,
         };
-        const hash = hashInput(input);
+        const hash = hashBatchSubunit(input);
 
         if (!keepRunning) {
           res.status(500).json({
@@ -368,7 +368,9 @@ async function initializeServer(
           return;
         }
 
-        const validity = await addressValidator.validateUserInput(input);
+        // TODO: cache this so we don't end up querying it too often
+        const blockHeight = await truffleProvider.web3.eth.getBlockNumber();
+        const validity = await addressValidator.validateUserInput(input, blockHeight);
 
         if (!keepRunning) {
           res.status(500).json({

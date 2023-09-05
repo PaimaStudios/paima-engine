@@ -1,5 +1,5 @@
 import type { AddressType, WalletAddress, UserSignature, InputDataString } from '@paima/utils';
-import { sha3 } from 'web3-utils';
+import { sha3, toBN } from 'web3-utils';
 
 export const OUTER_BATCH_DIVIDER: string = '\x02';
 export const INNER_BATCH_DIVIDER: string = '\x03';
@@ -29,22 +29,11 @@ export function createMessageForBatcher(
  *       It wasn't needed for the message since that gets signed by the public key
  *       So it contains the address indirectly
  */
-export function hashInput(input: BatchedSubunit): string {
+export function hashBatchSubunit(input: BatchedSubunit): string {
   return hashFxn(input.userAddress + input.gameInput + input.millisecondTimestamp);
 }
 
 const hashFxn = (s: string): string => sha3(s) || '0x0';
-
-/**
- * Nonce for the submittedData representing this batch
- */
-export function createBatchNonce(
-  millisecondTimestamp: string,
-  userAddress: string,
-  inputData: string
-): string {
-  return hashFxn(millisecondTimestamp + userAddress + inputData);
-}
 
 export function packInput(input: BatchedSubunit): string {
   return [
@@ -90,4 +79,18 @@ export function buildBatchData(
   }
 
   return { selectedInputs, data: batchedTransaction };
+}
+
+export function extractBatches(inputData: string): string[] {
+  const hasClosingDivider = inputData[inputData.length - 1] === OUTER_BATCH_DIVIDER;
+  const elems = inputData.split(OUTER_BATCH_DIVIDER);
+  const afterLastIndex = elems.length - (hasClosingDivider ? 1 : 0);
+
+  const prefix = elems[0];
+
+  if (prefix !== BATCH_PREFIX) {
+    return [];
+  }
+
+  return elems.slice(1, afterLastIndex);
 }

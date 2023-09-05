@@ -14,7 +14,7 @@ import {
 import { isSameDay, isSameMinute } from './date-utils.js';
 import type { BatchedSubunit } from '@paima/crypto';
 import { CryptoManager, createMessageForBatcher } from '@paima/crypto';
-import { AddressType } from '@paima/utils';
+import { AddressType, getReadNamespaces } from '@paima/utils';
 
 class PaimaAddressValidator {
   private web3: Web3 | undefined;
@@ -31,7 +31,7 @@ class PaimaAddressValidator {
     this.web3 = await getWeb3(this.nodeUrl);
   };
 
-  public validateUserInput = async (input: BatchedSubunit): Promise<ErrorCode> => {
+  public validateUserInput = async (input: BatchedSubunit, height: number): Promise<ErrorCode> => {
     // Determine address type:
     const addressType = input.addressType;
     console.log(`[address-validator] Processing ${addressTypeName(addressType)} address...`);
@@ -44,7 +44,7 @@ class PaimaAddressValidator {
     }
 
     // Does the input match the supplied signature?
-    const signatureValid = await this.verifySignature(input, addressType);
+    const signatureValid = await this.verifySignature(input, addressType, height);
     if (!signatureValid) {
       console.log('[address-validator] Invalid signature!');
       return GenericRejectionCode.INVALID_SIGNATURE;
@@ -79,47 +79,58 @@ class PaimaAddressValidator {
     }
   };
 
+  // TODO: this function is a duplicate of validateSubunitSignature
   private verifySignature = async (
     input: BatchedSubunit,
-    addressType: AddressType
+    addressType: AddressType,
+    height: number
   ): Promise<boolean> => {
-    const message: string = createMessageForBatcher(
-      ENV.SECURITY_NAMESPACE,
-      input.gameInput,
-      input.millisecondTimestamp
-    );
+    const namespaces = await getReadNamespaces(height);
 
-    switch (addressType) {
-      case AddressType.EVM:
-        if (!this.web3) {
-          throw new Error('[PaimaAddressValidator::verifySignature] web3 not initialized!');
-        }
-        return await CryptoManager.Evm(this.web3).verifySignature(
-          message,
-          input.userAddress,
-          input.userSignature
-        );
-      case AddressType.CARDANO:
-        return await CryptoManager.Cardano().verifySignature(
-          input.userAddress,
-          message,
-          input.userSignature
-        );
-      case AddressType.POLKADOT:
-        return await CryptoManager.Polkadot().verifySignature(
-          input.userAddress,
-          message,
-          input.userSignature
-        );
-      case AddressType.ALGORAND:
-        return await CryptoManager.Algorand().verifySignature(
-          input.userAddress,
-          message,
-          input.userSignature
-        );
-      default:
-        return false;
+    const tryVerifySig = async (message: string): Promise<boolean> => {
+      switch (addressType) {
+        case AddressType.EVM:
+          if (!this.web3) {
+            throw new Error('[PaimaAddressValidator::verifySignature] web3 not initialized!');
+          }
+          return await CryptoManager.Evm(this.web3).verifySignature(
+            message,
+            input.userAddress,
+            input.userSignature
+          );
+        case AddressType.CARDANO:
+          return await CryptoManager.Cardano().verifySignature(
+            input.userAddress,
+            message,
+            input.userSignature
+          );
+        case AddressType.POLKADOT:
+          return await CryptoManager.Polkadot().verifySignature(
+            input.userAddress,
+            message,
+            input.userSignature
+          );
+        case AddressType.ALGORAND:
+          return await CryptoManager.Algorand().verifySignature(
+            input.userAddress,
+            message,
+            input.userSignature
+          );
+        default:
+          return false;
+      }
+    };
+    for (const namespace of namespaces) {
+      const message: string = createMessageForBatcher(
+        namespace,
+        input.gameInput,
+        input.millisecondTimestamp
+      );
+      if (await tryVerifySig(message)) {
+        return true;
+      }
     }
+    return false;
   };
 
   private authenticateUserAddress = async (userAddress: string): Promise<boolean> => {
