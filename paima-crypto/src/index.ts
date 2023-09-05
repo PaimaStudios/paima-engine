@@ -4,10 +4,6 @@ import { EvmCrypto } from './evm';
 import { PolkadotCrypto } from './polkadot';
 import type Web3 from 'web3';
 export { AlgorandCrypto, CardanoCrypto, EvmCrypto, PolkadotCrypto };
-export * from './batcher';
-
-// todo: when we upgrade to ts5, switch to export type *
-export type { BatchedSubunit } from './batcher';
 
 export class CryptoManager {
   // TODO: these should be dynamically imported

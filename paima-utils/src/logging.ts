@@ -1,4 +1,4 @@
-import Flatted from 'flatted';
+import { stringify } from 'flatted';
 import * as fsa from './fs_access/fsa.js';
 
 export function logError(error: unknown): void {
@@ -19,7 +19,7 @@ export function doLog(...s: unknown[]): void {
       fsa.appendToFile(`${str.name}: ${str.message}\nStack: ${str.stack}`);
     } else {
       try {
-        fsa.appendToFile(Flatted.stringify(str));
+        fsa.appendToFile(stringify(str));
       } catch (e) {
         // should not happen, but maybe there is some type that fails for some reason
       }
