@@ -19,7 +19,7 @@ import { keepRunning } from '@paima-batcher/utils';
 import { EmptyInputValidatorCoreInitializator } from './empty-validator.js';
 import { getErrors } from './errors.js';
 import { DefaultInputValidatorCoreInitializator } from './default-validator.js';
-import type { BatchedSubunit } from '@paima/crypto';
+import type { BatchedSubunit } from '@paima/concise';
 import { hashBatchSubunit } from '@paima/concise';
 
 class GameInputValidator {

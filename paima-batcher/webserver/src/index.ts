@@ -15,8 +15,8 @@ import {
 import { ENV, keepRunning, setWebserverClosed, unsetWebserverClosed } from '@paima-batcher/utils';
 import type { ErrorMessageFxn } from '@paima-batcher/utils';
 import type { TruffleEvmProvider } from '@paima/providers';
-import type { BatchedSubunit } from '@paima/crypto';
-import { createMessageForBatcher } from '@paima/crypto';
+import type { BatchedSubunit } from '@paima/concise';
+import { createMessageForBatcher } from '@paima/concise';
 import { AddressType, getWriteNamespace } from '@paima/utils';
 import { hashBatchSubunit } from '@paima/concise';
 

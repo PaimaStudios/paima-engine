@@ -12,8 +12,9 @@ import {
 } from '@paima-batcher/db';
 
 import { isSameDay, isSameMinute } from './date-utils.js';
-import type { BatchedSubunit } from '@paima/crypto';
-import { CryptoManager, createMessageForBatcher } from '@paima/crypto';
+import type { BatchedSubunit } from '@paima/concise';
+import { CryptoManager } from '@paima/crypto';
+import { createMessageForBatcher } from '@paima/concise';
 import { AddressType, getReadNamespaces } from '@paima/utils';
 
 class PaimaAddressValidator {
