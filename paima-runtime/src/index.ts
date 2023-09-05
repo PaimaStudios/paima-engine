@@ -14,6 +14,7 @@ export * from './cde-config/loading';
 export * from './cde-config/validation';
 export * from './cde-config/utils';
 export * from './types';
+export { TimeoutError } from './utils';
 
 process.on('SIGINT', () => {
   if (!run) process.exit(0);

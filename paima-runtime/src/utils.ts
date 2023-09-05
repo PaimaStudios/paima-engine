@@ -50,3 +50,10 @@ export async function acquireLatestBlockHeight(
   exitIfStopped(run);
   return -1;
 }
+
+export class TimeoutError extends Error {
+  constructor(message: string, public readonly timeout: number) {
+    super(message);
+    this.name = 'TimeoutError';
+  }
+}

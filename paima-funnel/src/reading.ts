@@ -1,9 +1,9 @@
 import type Web3 from 'web3';
 import type { BlockTransactionString } from 'web3-eth';
 
-import { timeout, cutAfterFirstRejected, DEFAULT_FUNNEL_TIMEOUT } from '@paima/utils';
+import { timeout, cutAfterFirstRejected, DEFAULT_FUNNEL_TIMEOUT, doLog, delay } from '@paima/utils';
 import type { PaimaL2Contract } from '@paima/utils';
-import type { ChainData } from '@paima/runtime';
+import { TimeoutError, type ChainData } from '@paima/runtime';
 import type { PaimaGameInteraction } from '@paima/utils/src/contract-types/PaimaL2Contract';
 
 import { extractSubmittedData } from './paima-l2-processing.js';
@@ -91,8 +91,21 @@ async function getMultipleBlockData(
   // return the first rejection if all rejections failed
   // this is to fast-fail if all requests failed
   // which matches the behavior of `getBaseChainDataSingle`
-  if (truncatedList.length === 0 && blockPromises.length > 0) {
-    return (blockResults[0] as PromiseRejectedResult).reason;
+  if (truncatedList.length === 0 && blockResults.length > 0) {
+    doLog(`[funnel] all block requests failed`);
+    const reason = (blockResults[0] as PromiseRejectedResult).reason;
+    if (reason instanceof Error && reason.message === 'Invalid JSON RPC response: {}') {
+      // this error often happens on Aribtrum's RPC endpoint. It seems to maybe be a bug in handling batched requests
+      // where rate limit errors for batch requests instead just get converted to {}
+      // that then maybe throws an error due to https://github.com/web3/web3.js/blob/1.x/packages/web3-core-requestmanager/src/index.js#L207
+      const timeout = 60 * 1000; // 1 minute - the time of Arbitrum's rate limit. Not sure if other chains might have a different limit time
+      throw new TimeoutError(
+        '[funnel] Public RPC Rate Limit Hit, limit will reset in 60 seconds',
+        timeout
+      );
+    }
+    // Promise.allSettled returns Error objects so we have to rethrow promises that failed
+    throw (blockResults[0] as PromiseRejectedResult).reason;
   }
   return truncatedList;
 }
@@ -102,7 +115,7 @@ async function getPaimaEvents(
   fromBlock: number,
   toBlock: number
 ): Promise<PaimaGameInteraction[]> {
-  // TOOD: typechain is missing the proper type generation for getPastEvents
+  // TODO: typechain is missing the proper type generation for getPastEvents
   // https://github.com/dethcrypto/TypeChain/issues/767
   return (await timeout(
     paimaL2Contract.getPastEvents('PaimaGameInteraction', {

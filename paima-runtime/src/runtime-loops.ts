@@ -13,7 +13,12 @@ import type {
 
 import { run } from './run-flag';
 import { snapshotIfTime } from './snapshots.js';
-import { acquireLatestBlockHeight, exitIfStopped, loopIfStopBlockReached } from './utils';
+import {
+  TimeoutError,
+  acquireLatestBlockHeight,
+  exitIfStopped,
+  loopIfStopBlockReached,
+} from './utils';
 import { cleanNoncesIfTime } from './nonce-gc';
 import type { PoolClient } from 'pg';
 
@@ -159,7 +164,7 @@ async function runSync(
     );
   }
   while (run) {
-    // Initializing the latest read block height and snapshoting
+    // Initializing the latest read block height and snapshotting
     // do not use a DB transaction, as we need to generate a snapshot
     const latestProcessedBlockHeight = await getSyncRoundStart(
       gameStateMachine,
@@ -170,16 +175,31 @@ async function runSync(
       continue;
     }
 
-    // Fetching new chain data via the funnel
-    // note: this is done in a separate SQL transaction from actually applying the data
-    const latestChainDataList = await tx<ChainData[]>(
-      gameStateMachine.getReadWriteDbConn(),
-      async dbTx => {
-        const chainFunnel = await funnelFactory.generateFunnel(dbTx);
-        return await getSyncRoundData(chainFunnel, pollingPeriod, latestProcessedBlockHeight);
+    const latestChainDataList: ChainData[] = [];
+    try {
+      // Fetching new chain data via the funnel
+      // note: this is done in a separate SQL transaction from actually applying the data
+      latestChainDataList.push(
+        ...(await tx<ChainData[]>(gameStateMachine.getReadWriteDbConn(), async dbTx => {
+          const chainFunnel = await funnelFactory.generateFunnel(dbTx);
+          return await getSyncRoundData(chainFunnel, pollingPeriod, latestProcessedBlockHeight);
+        }))
+      );
+      if (latestChainDataList.length === 0) {
+        continue;
       }
-    );
-    if (latestChainDataList.length === 0) {
+    } catch (err) {
+      doLog('[paima-runtime] Funnel failure:');
+      logError(err);
+      // delete any cache entires as they may have been partially applied before the crash
+      funnelFactory.clearCache();
+      // delay before retrying to avoid getting rate limited by any remote call in a funnel
+      if (err instanceof TimeoutError) {
+        await delay(err.timeout);
+      } else {
+        await delay(2000);
+      }
+
       continue;
     }
 
@@ -197,7 +217,7 @@ async function runSync(
       logError(err);
       // delete any cache entires as they may have been partially applied before the crash
       funnelFactory.clearCache();
-      return;
+      continue;
     }
   }
 }
