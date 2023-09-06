@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@paima/concise": "file:../paima-concise",
+    "@paima/providers": "file:../paima-providers",
     "pg": "^8.7.3",
     "web3": "1.10.0"
   }

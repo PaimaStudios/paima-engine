@@ -12,6 +12,8 @@
   },
   "devDependencies": {
     "@paima/concise": "file:../paima-concise",
+    "@paima/providers": "file:../paima-providers",
+    "@paima/utils": "file:../paima-utils",
     "@types/cors": "^2.8.12",
     "@types/express": "^4.17.13",
     "@types/node": "^17.0.31",

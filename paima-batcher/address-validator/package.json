@@ -7,6 +7,8 @@
   "types": "build/index.d.ts",
   "dependencies": {
     "@paima/crypto": "file:../paima-crypto",
+    "@paima/concise": "file:../paima-concise",
+    "@paima/utils": "file:../paima-utils",
     "pg": "^8.7.3",
     "web3": "1.10.0"
   },

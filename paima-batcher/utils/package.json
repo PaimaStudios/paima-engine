@@ -7,6 +7,7 @@
   "types": "build/index.d.ts",
   "dependencies": {
     "@paima/providers": "file:../paima-providers",
+    "@paima/utils": "file:../paima-utils",
     "@truffle/hdwallet-provider": "^2.1.14",
     "web3": "1.10.0",
     "web3-eth-contract": "1.10.0",

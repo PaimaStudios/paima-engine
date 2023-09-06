@@ -2,7 +2,7 @@ import type { RequestHandler } from 'express';
 import type BatchedTransactionPoster from '@paima-batcher/batched-transaction-poster';
 import type GameInputValidator from '@paima-batcher/game-input-validator';
 import type { Pool } from 'pg';
-import type { TruffleEvmProvider } from '../../../paima-providers/build';
+import type { TruffleEvmProvider } from '@paima/providers';
 
 export interface BatcherRuntimeInitializer {
   initialize: (pool: Pool) => BatcherRuntime;
