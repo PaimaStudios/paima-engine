@@ -11,14 +11,12 @@
     "build:sdk": "npx tsc --build --clean tsconfig.lib.json && npx tsc --build tsconfig.lib.json",
     "build:standalone": "npm run build && npm run build:binary -w paima-standalone",
     "build:dev-standalone": "npm run install-binaries -w paima-standalone && npm run build:dev-binary -w paima-standalone",
-    "release": "npm ci && npm run build && npm run prepare:standalone && npm run build:standalone && npm run patch-standalone-dev && npm run build:dev-standalone && npm run unpatch-standalone-dev",
+    "release": "npm ci && npm run build && npm run prepare:standalone && npm run build:standalone && npm run build:dev-standalone",
     "standalone": "npm run prepare:standalone && npm run build:standalone",
     "cprettier": "prettier --check '**/*.{ts,tsx}'",
     "eslint": "eslint '**/*.{ts,tsx}' --ignore-path .eslintignore",
     "prettier": "prettier --write '**/*.{ts,tsx}'",
-    "prepare": "husky install && npm run prepare --workspaces --if-present",
-    "patch-standalone-dev": "./paima-standalone/scripts/sed.sh patch",
-    "unpatch-standalone-dev": "./paima-standalone/scripts/sed.sh unpatch"
+    "prepare": "husky install && npm run prepare --workspaces --if-present"
   },
   "workspaces": [
     "./paima-utils",

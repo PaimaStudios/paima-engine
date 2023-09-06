@@ -6,9 +6,9 @@
   "type": "module",
   "types": "build/index.d.ts",
   "dependencies": {
-    "@paima/crypto": "file:../paima-crypto",
-    "@paima/concise": "file:../paima-concise",
-    "@paima/utils": "file:../paima-utils",
+    "@paima/crypto": "file:../../engine/paima-crypto",
+    "@paima/concise": "file:../../engine/paima-concise",
+    "@paima/utils": "file:../../engine/paima-utils",
     "pg": "^8.7.3",
     "web3": "1.10.0"
   },

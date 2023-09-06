@@ -1,6 +1,7 @@
 {
   "name": "@standalone/paima-engine",
   "author": "Paima Studios",
+  "license": "See license file",
   "version": "1.0.0",
   "description": "Paima Engine standalone, aka executable binary wrapper around the engine core.",
   "main": "build/index.js",
@@ -29,7 +30,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "node ./esbuildconfig.cjs",
     "build:binary": "npm run build && pkg packaged/engineCorePacked.js --options \"experimental-specifier-resolution=node,no-warnings\" --config package.json",
-    "install-binaries": "./scripts/unpack.sh",
+    "install-binaries": "../../scripts/unpack.sh",
     "build:dev-binary": "npm run build:dev-binary-macos && npm run build:dev-binary-linux",
     "build:dev-binary-macos": "npm run build && pkg-dev packaged/engineCorePacked.js --output packaged/@standalone/dev-paima-engine-macos -t node18-macos-x64 -b --options \"inspect,experimental-specifier-resolution=node,no-warnings\" --config package.json",
     "build:dev-binary-linux": "npm run build && pkg-dev packaged/engineCorePacked.js --output packaged/@standalone/dev-paima-engine-linux -t node18-linux-x64 -b --options \"inspect,experimental-specifier-resolution=node,no-warnings\" --config package.json"

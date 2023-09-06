@@ -11,9 +11,9 @@
     "pg": "^8.7.3"
   },
   "devDependencies": {
-    "@paima/concise": "file:../paima-concise",
-    "@paima/providers": "file:../paima-providers",
-    "@paima/utils": "file:../paima-utils",
+    "@paima/concise": "file:../../engine/paima-concise",
+    "@paima/providers": "file:../../engine/paima-providers",
+    "@paima/utils": "file:../../engine/paima-utils",
     "@types/cors": "^2.8.12",
     "@types/express": "^4.17.13",
     "@types/node": "^17.0.31",

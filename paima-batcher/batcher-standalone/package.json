@@ -2,6 +2,7 @@
   "name": "@standalone/paima-batcher",
   "author": "Paima Studios",
   "version": "1.0.0",
+  "license": "MIT",
   "description": "Paima Engine batcher standalone, aka executable binary wrapper around the Paima Engine batcher.",
   "main": "build/index.js",
   "types": "build/index.d.ts",
@@ -25,7 +26,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "node ./esbuildconfig.cjs",
     "build:binary": "npm run build && pkg packaged/batcherCorePacked.js --options \"experimental-specifier-resolution=node,no-warnings\" --config package.json && ./scripts/post_build.sh",
-    "install-binaries": "./scripts/unpack.sh",
+    "install-binaries": "../../scripts/unpack.sh",
     "build:dev-binary": "npm run build:dev-binary-macos && npm run build:dev-binary-linux",
     "build:dev-binary-macos": "npm run build && pkg-dev packaged/batcherCorePacked.js --output packaged/@standalone/dev-paima-batcher-macos -t node18-macos-x64 -b --options \"inspect,experimental-specifier-resolution=node,no-warnings\" --config package.json",
     "build:dev-binary-linux": "npm run build && pkg-dev packaged/batcherCorePacked.js --output packaged/@standalone/dev-paima-batcher-linux -t node18-linux-x64 -b --options \"inspect,experimental-specifier-resolution=node,no-warnings\" --config package.json"

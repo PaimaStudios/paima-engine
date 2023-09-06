@@ -2,8 +2,9 @@ import { stringify } from 'flatted';
 import * as fsa from './fs_access/fsa.js';
 
 export function logError(error: unknown): void {
-  const s = `***ERROR***\n${error}\n***`;
-  doLog(s);
+  doLog(`***ERROR***`);
+  doLog(error);
+  doLog(`***`);
 }
 
 // TODO: probably we want to unify this with pushLog

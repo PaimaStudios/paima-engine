@@ -1,11 +1,14 @@
 #!/bin/bash
 
+# Install the required pkg-dev-prebuilts and cache it on the user's machine
+
 # uncompress linux/macos 18.15.0 debug node builds
 FILE=$HOME/.pkg-cache/v3.4/built-v18.15.0-linux-x64
 if test -f "$FILE"; then
     echo "binary $FILE exists, skipping instalation."
 else
 
+  # build was split into chunks of 10MBs
   curl -LJO https://raw.githubusercontent.com/PaimaStudios/pkg-dev-prebuilts/main/dev-pkg-builtaa
   curl -LJO https://raw.githubusercontent.com/PaimaStudios/pkg-dev-prebuilts/main/dev-pkg-builtab
   curl -LJO https://raw.githubusercontent.com/PaimaStudios/pkg-dev-prebuilts/main/dev-pkg-builtac
@@ -19,7 +22,7 @@ else
 
   mkdir -p $HOME/.pkg-cache/v3.4/
 
-  rm debug-builds.tar.gz dev-pkg-builta*
+  rm debug-builds.tar.g z dev-pkg-builta*
 
   mv built-v18.15.0-* $HOME/.pkg-cache/v3.4/
 fi
