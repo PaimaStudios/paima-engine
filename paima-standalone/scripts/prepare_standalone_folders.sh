@@ -101,10 +101,18 @@ git clean -Xdf contracts/nft
 cp -r contracts/nft $CONTRACT_PATH/nft
 
 # Prepare batcher:
-component="batcher"
+component="paima-batcher"
+echo $BATCHER_PATH
 rm -rf $BATCHER_PATH
-git clone --depth=1 git@github.com:PaimaStudios/paima-batcher.git $BATCHER_PATH
-rm -rf $BATCHER_PATH/.git
+mkdir -p $BATCHER_PATH
+# find all files that aren't gitignored and copy them over
+git ls-files --cached --others --exclude-standard -z $component | xargs -0 -I {} rsync -R {} $BATCHER_PATH
+# move child folders (including hidden folders) to parent, and supress "resource busy" error caused trying to move the hidden folder `..`
+mv $BATCHER_PATH/$component/* $BATCHER_PATH/$component/.* $BATCHER_PATH 2>&1 | grep -v 'Device or resource busy'
+rmdir $BATCHER_PATH/$component
+# update relative paths to point to the SDK
+sed -i 's|file:../paima|file:../paima-sdk/paima|g' $BATCHER_PATH/package-lock.json
+find $BATCHER_PATH -name 'package.json' | grep -v 'node_modules/' | xargs sed -i 's|file:../paima|file:../paima-sdk/paima|g'
 
 # Fetch documentation
 echo $DOC_PATH
