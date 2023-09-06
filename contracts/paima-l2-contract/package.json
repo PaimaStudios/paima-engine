@@ -8,7 +8,6 @@
     "/build"
   ],
   "scripts": {
-    "build": "tsc",
     "lint": "prettier --write '**/*.sol'",
     "test": "forge test"
   },

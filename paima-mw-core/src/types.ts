@@ -19,7 +19,7 @@ interface PostingModeSwitchSuccessfulResult extends PostingInfo {
   success: true;
 }
 
-export type SignFunction = (userAddress: WalletAddress, message: string) => Promise<UserSignature>;
+export type SignFunction = (message: string) => Promise<UserSignature>;
 
 export interface SuccessfulResultMessage {
   success: true;

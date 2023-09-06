@@ -47,7 +47,7 @@ class PaimaAddressValidator {
     // Does the input match the supplied signature?
     const signatureValid = await this.verifySignature(input, addressType, height);
     if (!signatureValid) {
-      console.log('[address-validator] Invalid signature!');
+      console.log(`[address-validator] Invalid signature!\n${JSON.stringify(input)}`);
       return GenericRejectionCode.INVALID_SIGNATURE;
     }
 
@@ -95,8 +95,8 @@ class PaimaAddressValidator {
             throw new Error('[PaimaAddressValidator::verifySignature] web3 not initialized!');
           }
           return await CryptoManager.Evm(this.web3).verifySignature(
-            message,
             input.userAddress,
+            message,
             input.userSignature
           );
         case AddressType.CARDANO:

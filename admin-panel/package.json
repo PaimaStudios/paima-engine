@@ -12,7 +12,7 @@
   "dependencies": {
     "@esbuild-plugins/node-globals-polyfill": "^0.1.1",
     "@esbuild-plugins/node-modules-polyfill": "^0.1.4",
-    "@metamask/providers": "^9.0.0",
+    "@metamask/providers": "^10.2.1",
     "paima-utils": "file:../../paima-engine/paima-utils",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",

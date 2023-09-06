@@ -47,7 +47,7 @@ export async function buildBatchedSubunit(
     gameInput,
     millisecondTimestamp
   );
-  const userSignature = await signFunction(signingAddress, message);
+  const userSignature = await signFunction(message);
   return {
     addressType,
     userAddress,
