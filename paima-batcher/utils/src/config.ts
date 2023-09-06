@@ -1,4 +1,7 @@
 import { GameInputValidatorCoreType } from './types';
+import { config } from 'dotenv';
+// Load environment variables
+config({ path: `${process.cwd()}/.env.${process.env.NODE_ENV || 'development'}` });
 
 export class ENV {
   // Blockchain:
