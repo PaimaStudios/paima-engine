@@ -92,27 +92,19 @@ paima="paima-l2-contract"
 echo $CONTRACT_PATH
 rm -rf $CONTRACT_PATH
 mkdir -p $CONTRACT_PATH/$paima/src
-cp -r contracts/$paima/src $CONTRACT_PATH/$paima
-cp contracts/$paima/contract-addresses.json $CONTRACT_PATH/$paima
-cp contracts/$paima/package.json $CONTRACT_PATH/$paima
-cp contracts/$paima/package-lock.json $CONTRACT_PATH/$paima
-cp contracts/$paima/truffle-config.js $CONTRACT_PATH/$paima
-git clean -Xdf contracts/nft
-cp -r contracts/nft $CONTRACT_PATH/nft
+cp -r ../contracts/$paima/src $CONTRACT_PATH/$paima
+cp ../contracts/$paima/contract-addresses.json $CONTRACT_PATH/$paima
+cp ../contracts/$paima/package.json $CONTRACT_PATH/$paima
+cp ../contracts/$paima/package-lock.json $CONTRACT_PATH/$paima
+cp ../contracts/$paima/truffle-config.js $CONTRACT_PATH/$paima
+git clean -Xdf ../contracts/nft
+cp -r ../contracts/nft $CONTRACT_PATH/nft
 
 # Prepare batcher:
 component="paima-batcher"
 echo $BATCHER_PATH
 rm -rf $BATCHER_PATH
-mkdir -p $BATCHER_PATH
-# find all files that aren't gitignored and copy them over
-git ls-files --cached --others --exclude-standard -z $component | xargs -0 -I {} rsync -R {} $BATCHER_PATH
-# move child folders (including hidden folders) to parent, and supress "resource busy" error caused trying to move the hidden folder `..`
-mv $BATCHER_PATH/$component/* $BATCHER_PATH/$component/.* $BATCHER_PATH 2>&1 | grep -v 'Device or resource busy'
-rmdir $BATCHER_PATH/$component
-# update relative paths to point to the SDK
-sed -i 's|file:../paima|file:../paima-sdk/paima|g' $BATCHER_PATH/package-lock.json
-find $BATCHER_PATH -name 'package.json' | grep -v 'node_modules/' | xargs sed -i 's|file:../paima|file:../paima-sdk/paima|g'
+cp -r ../batcher/batcher-standalone/packaged/@standalone/batcher $BATCHER_PATH
 
 # Fetch documentation
 echo $DOC_PATH

@@ -1,4 +1,4 @@
 **/*.queries.ts
 **/*.d.ts
 contract-types/
-
+packaged/

@@ -20,7 +20,11 @@ export interface IGetChainDataExtensionsQuery {
   result: IGetChainDataExtensionsResult;
 }
 
-const getChainDataExtensionsIR: any = {"usedParamSet":{},"params":[],"statement":"SELECT * FROM chain_data_extensions"};
+const getChainDataExtensionsIR: any = {
+  usedParamSet: {},
+  params: [],
+  statement: 'SELECT * FROM chain_data_extensions',
+};
 
 /**
  * Query generated from SQL:
@@ -28,8 +32,10 @@ const getChainDataExtensionsIR: any = {"usedParamSet":{},"params":[],"statement"
  * SELECT * FROM chain_data_extensions
  * ```
  */
-export const getChainDataExtensions = new PreparedQuery<IGetChainDataExtensionsParams,IGetChainDataExtensionsResult>(getChainDataExtensionsIR);
-
+export const getChainDataExtensions = new PreparedQuery<
+  IGetChainDataExtensionsParams,
+  IGetChainDataExtensionsResult
+>(getChainDataExtensionsIR);
 
 /** 'GetSpecificChainDataExtension' parameters type */
 export interface IGetSpecificChainDataExtensionParams {
@@ -52,7 +58,13 @@ export interface IGetSpecificChainDataExtensionQuery {
   result: IGetSpecificChainDataExtensionResult;
 }
 
-const getSpecificChainDataExtensionIR: any = {"usedParamSet":{"cde_id":true},"params":[{"name":"cde_id","required":false,"transform":{"type":"scalar"},"locs":[{"a":51,"b":57}]}],"statement":"SELECT * FROM chain_data_extensions\nWHERE cde_id = :cde_id"};
+const getSpecificChainDataExtensionIR: any = {
+  usedParamSet: { cde_id: true },
+  params: [
+    { name: 'cde_id', required: false, transform: { type: 'scalar' }, locs: [{ a: 51, b: 57 }] },
+  ],
+  statement: 'SELECT * FROM chain_data_extensions\nWHERE cde_id = :cde_id',
+};
 
 /**
  * Query generated from SQL:
@@ -61,8 +73,10 @@ const getSpecificChainDataExtensionIR: any = {"usedParamSet":{"cde_id":true},"pa
  * WHERE cde_id = :cde_id
  * ```
  */
-export const getSpecificChainDataExtension = new PreparedQuery<IGetSpecificChainDataExtensionParams,IGetSpecificChainDataExtensionResult>(getSpecificChainDataExtensionIR);
-
+export const getSpecificChainDataExtension = new PreparedQuery<
+  IGetSpecificChainDataExtensionParams,
+  IGetSpecificChainDataExtensionResult
+>(getSpecificChainDataExtensionIR);
 
 /** 'SelectChainDataExtensionsByName' parameters type */
 export interface ISelectChainDataExtensionsByNameParams {
@@ -85,7 +99,13 @@ export interface ISelectChainDataExtensionsByNameQuery {
   result: ISelectChainDataExtensionsByNameResult;
 }
 
-const selectChainDataExtensionsByNameIR: any = {"usedParamSet":{"cde_name":true},"params":[{"name":"cde_name","required":true,"transform":{"type":"scalar"},"locs":[{"a":53,"b":62}]}],"statement":"SELECT * FROM chain_data_extensions\nWHERE cde_name = :cde_name!"};
+const selectChainDataExtensionsByNameIR: any = {
+  usedParamSet: { cde_name: true },
+  params: [
+    { name: 'cde_name', required: true, transform: { type: 'scalar' }, locs: [{ a: 53, b: 62 }] },
+  ],
+  statement: 'SELECT * FROM chain_data_extensions\nWHERE cde_name = :cde_name!',
+};
 
 /**
  * Query generated from SQL:
@@ -94,8 +114,10 @@ const selectChainDataExtensionsByNameIR: any = {"usedParamSet":{"cde_name":true}
  * WHERE cde_name = :cde_name!
  * ```
  */
-export const selectChainDataExtensionsByName = new PreparedQuery<ISelectChainDataExtensionsByNameParams,ISelectChainDataExtensionsByNameResult>(selectChainDataExtensionsByNameIR);
-
+export const selectChainDataExtensionsByName = new PreparedQuery<
+  ISelectChainDataExtensionsByNameParams,
+  ISelectChainDataExtensionsByNameResult
+>(selectChainDataExtensionsByNameIR);
 
 /** 'SelectChainDataExtensionsByTypeAndAddress' parameters type */
 export interface ISelectChainDataExtensionsByTypeAndAddressParams {
@@ -119,7 +141,20 @@ export interface ISelectChainDataExtensionsByTypeAndAddressQuery {
   result: ISelectChainDataExtensionsByTypeAndAddressResult;
 }
 
-const selectChainDataExtensionsByTypeAndAddressIR: any = {"usedParamSet":{"cde_type":true,"contract_address":true},"params":[{"name":"cde_type","required":true,"transform":{"type":"scalar"},"locs":[{"a":53,"b":62}]},{"name":"contract_address","required":true,"transform":{"type":"scalar"},"locs":[{"a":87,"b":104}]}],"statement":"SELECT * FROM chain_data_extensions\nWHERE cde_type = :cde_type!\nAND contract_address = :contract_address!"};
+const selectChainDataExtensionsByTypeAndAddressIR: any = {
+  usedParamSet: { cde_type: true, contract_address: true },
+  params: [
+    { name: 'cde_type', required: true, transform: { type: 'scalar' }, locs: [{ a: 53, b: 62 }] },
+    {
+      name: 'contract_address',
+      required: true,
+      transform: { type: 'scalar' },
+      locs: [{ a: 87, b: 104 }],
+    },
+  ],
+  statement:
+    'SELECT * FROM chain_data_extensions\nWHERE cde_type = :cde_type!\nAND contract_address = :contract_address!',
+};
 
 /**
  * Query generated from SQL:
@@ -129,8 +164,10 @@ const selectChainDataExtensionsByTypeAndAddressIR: any = {"usedParamSet":{"cde_t
  * AND contract_address = :contract_address!
  * ```
  */
-export const selectChainDataExtensionsByTypeAndAddress = new PreparedQuery<ISelectChainDataExtensionsByTypeAndAddressParams,ISelectChainDataExtensionsByTypeAndAddressResult>(selectChainDataExtensionsByTypeAndAddressIR);
-
+export const selectChainDataExtensionsByTypeAndAddress = new PreparedQuery<
+  ISelectChainDataExtensionsByTypeAndAddressParams,
+  ISelectChainDataExtensionsByTypeAndAddressResult
+>(selectChainDataExtensionsByTypeAndAddressIR);
 
 /** 'SelectChainDataExtensionsByAddress' parameters type */
 export interface ISelectChainDataExtensionsByAddressParams {
@@ -153,7 +190,18 @@ export interface ISelectChainDataExtensionsByAddressQuery {
   result: ISelectChainDataExtensionsByAddressResult;
 }
 
-const selectChainDataExtensionsByAddressIR: any = {"usedParamSet":{"contract_address":true},"params":[{"name":"contract_address","required":true,"transform":{"type":"scalar"},"locs":[{"a":61,"b":78}]}],"statement":"SELECT * FROM chain_data_extensions\nWHERE contract_address = :contract_address!"};
+const selectChainDataExtensionsByAddressIR: any = {
+  usedParamSet: { contract_address: true },
+  params: [
+    {
+      name: 'contract_address',
+      required: true,
+      transform: { type: 'scalar' },
+      locs: [{ a: 61, b: 78 }],
+    },
+  ],
+  statement: 'SELECT * FROM chain_data_extensions\nWHERE contract_address = :contract_address!',
+};
 
 /**
  * Query generated from SQL:
@@ -162,8 +210,10 @@ const selectChainDataExtensionsByAddressIR: any = {"usedParamSet":{"contract_add
  * WHERE contract_address = :contract_address!
  * ```
  */
-export const selectChainDataExtensionsByAddress = new PreparedQuery<ISelectChainDataExtensionsByAddressParams,ISelectChainDataExtensionsByAddressResult>(selectChainDataExtensionsByAddressIR);
-
+export const selectChainDataExtensionsByAddress = new PreparedQuery<
+  ISelectChainDataExtensionsByAddressParams,
+  ISelectChainDataExtensionsByAddressResult
+>(selectChainDataExtensionsByAddressIR);
 
 /** 'RegisterChainDataExtension' parameters type */
 export interface IRegisterChainDataExtensionParams {
@@ -184,7 +234,41 @@ export interface IRegisterChainDataExtensionQuery {
   result: IRegisterChainDataExtensionResult;
 }
 
-const registerChainDataExtensionIR: any = {"usedParamSet":{"cde_id":true,"cde_type":true,"cde_name":true,"contract_address":true,"start_blockheight":true,"scheduled_prefix":true},"params":[{"name":"cde_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":156,"b":163}]},{"name":"cde_type","required":true,"transform":{"type":"scalar"},"locs":[{"a":170,"b":179}]},{"name":"cde_name","required":true,"transform":{"type":"scalar"},"locs":[{"a":186,"b":195}]},{"name":"contract_address","required":true,"transform":{"type":"scalar"},"locs":[{"a":202,"b":219}]},{"name":"start_blockheight","required":true,"transform":{"type":"scalar"},"locs":[{"a":226,"b":244}]},{"name":"scheduled_prefix","required":false,"transform":{"type":"scalar"},"locs":[{"a":251,"b":267}]}],"statement":"INSERT INTO chain_data_extensions(\n    cde_id,\n    cde_type,\n    cde_name,\n    contract_address,\n    start_blockheight,\n    scheduled_prefix\n) VALUES (\n    :cde_id!,\n    :cde_type!,\n    :cde_name!,\n    :contract_address!,\n    :start_blockheight!,\n    :scheduled_prefix\n)"};
+const registerChainDataExtensionIR: any = {
+  usedParamSet: {
+    cde_id: true,
+    cde_type: true,
+    cde_name: true,
+    contract_address: true,
+    start_blockheight: true,
+    scheduled_prefix: true,
+  },
+  params: [
+    { name: 'cde_id', required: true, transform: { type: 'scalar' }, locs: [{ a: 156, b: 163 }] },
+    { name: 'cde_type', required: true, transform: { type: 'scalar' }, locs: [{ a: 170, b: 179 }] },
+    { name: 'cde_name', required: true, transform: { type: 'scalar' }, locs: [{ a: 186, b: 195 }] },
+    {
+      name: 'contract_address',
+      required: true,
+      transform: { type: 'scalar' },
+      locs: [{ a: 202, b: 219 }],
+    },
+    {
+      name: 'start_blockheight',
+      required: true,
+      transform: { type: 'scalar' },
+      locs: [{ a: 226, b: 244 }],
+    },
+    {
+      name: 'scheduled_prefix',
+      required: false,
+      transform: { type: 'scalar' },
+      locs: [{ a: 251, b: 267 }],
+    },
+  ],
+  statement:
+    'INSERT INTO chain_data_extensions(\n    cde_id,\n    cde_type,\n    cde_name,\n    contract_address,\n    start_blockheight,\n    scheduled_prefix\n) VALUES (\n    :cde_id!,\n    :cde_type!,\n    :cde_name!,\n    :contract_address!,\n    :start_blockheight!,\n    :scheduled_prefix\n)',
+};
 
 /**
  * Query generated from SQL:
@@ -206,6 +290,7 @@ const registerChainDataExtensionIR: any = {"usedParamSet":{"cde_id":true,"cde_ty
  * )
  * ```
  */
-export const registerChainDataExtension = new PreparedQuery<IRegisterChainDataExtensionParams,IRegisterChainDataExtensionResult>(registerChainDataExtensionIR);
-
-
+export const registerChainDataExtension = new PreparedQuery<
+  IRegisterChainDataExtensionParams,
+  IRegisterChainDataExtensionResult
+>(registerChainDataExtensionIR);

@@ -16,7 +16,11 @@ export interface IGetCdeConfigErc20DepositQuery {
   result: IGetCdeConfigErc20DepositResult;
 }
 
-const getCdeConfigErc20DepositIR: any = {"usedParamSet":{},"params":[],"statement":"SELECT * FROM cde_config_erc20_deposit"};
+const getCdeConfigErc20DepositIR: any = {
+  usedParamSet: {},
+  params: [],
+  statement: 'SELECT * FROM cde_config_erc20_deposit',
+};
 
 /**
  * Query generated from SQL:
@@ -24,8 +28,10 @@ const getCdeConfigErc20DepositIR: any = {"usedParamSet":{},"params":[],"statemen
  * SELECT * FROM cde_config_erc20_deposit
  * ```
  */
-export const getCdeConfigErc20Deposit = new PreparedQuery<IGetCdeConfigErc20DepositParams,IGetCdeConfigErc20DepositResult>(getCdeConfigErc20DepositIR);
-
+export const getCdeConfigErc20Deposit = new PreparedQuery<
+  IGetCdeConfigErc20DepositParams,
+  IGetCdeConfigErc20DepositResult
+>(getCdeConfigErc20DepositIR);
 
 /** 'GetSpecificCdeConfigErc20Deposit' parameters type */
 export interface IGetSpecificCdeConfigErc20DepositParams {
@@ -44,7 +50,13 @@ export interface IGetSpecificCdeConfigErc20DepositQuery {
   result: IGetSpecificCdeConfigErc20DepositResult;
 }
 
-const getSpecificCdeConfigErc20DepositIR: any = {"usedParamSet":{"cde_id":true},"params":[{"name":"cde_id","required":false,"transform":{"type":"scalar"},"locs":[{"a":54,"b":60}]}],"statement":"SELECT * FROM cde_config_erc20_deposit\nWHERE cde_id = :cde_id"};
+const getSpecificCdeConfigErc20DepositIR: any = {
+  usedParamSet: { cde_id: true },
+  params: [
+    { name: 'cde_id', required: false, transform: { type: 'scalar' }, locs: [{ a: 54, b: 60 }] },
+  ],
+  statement: 'SELECT * FROM cde_config_erc20_deposit\nWHERE cde_id = :cde_id',
+};
 
 /**
  * Query generated from SQL:
@@ -53,8 +65,10 @@ const getSpecificCdeConfigErc20DepositIR: any = {"usedParamSet":{"cde_id":true},
  * WHERE cde_id = :cde_id
  * ```
  */
-export const getSpecificCdeConfigErc20Deposit = new PreparedQuery<IGetSpecificCdeConfigErc20DepositParams,IGetSpecificCdeConfigErc20DepositResult>(getSpecificCdeConfigErc20DepositIR);
-
+export const getSpecificCdeConfigErc20Deposit = new PreparedQuery<
+  IGetSpecificCdeConfigErc20DepositParams,
+  IGetSpecificCdeConfigErc20DepositResult
+>(getSpecificCdeConfigErc20DepositIR);
 
 /** 'RegisterCdeConfigErc20Deposit' parameters type */
 export interface IRegisterCdeConfigErc20DepositParams {
@@ -71,7 +85,20 @@ export interface IRegisterCdeConfigErc20DepositQuery {
   result: IRegisterCdeConfigErc20DepositResult;
 }
 
-const registerCdeConfigErc20DepositIR: any = {"usedParamSet":{"cde_id":true,"deposit_address":true},"params":[{"name":"cde_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":85,"b":92}]},{"name":"deposit_address","required":true,"transform":{"type":"scalar"},"locs":[{"a":99,"b":115}]}],"statement":"INSERT INTO cde_config_erc20_deposit(\n    cde_id,\n    deposit_address\n) VALUES (\n    :cde_id!,\n    :deposit_address!\n)"};
+const registerCdeConfigErc20DepositIR: any = {
+  usedParamSet: { cde_id: true, deposit_address: true },
+  params: [
+    { name: 'cde_id', required: true, transform: { type: 'scalar' }, locs: [{ a: 85, b: 92 }] },
+    {
+      name: 'deposit_address',
+      required: true,
+      transform: { type: 'scalar' },
+      locs: [{ a: 99, b: 115 }],
+    },
+  ],
+  statement:
+    'INSERT INTO cde_config_erc20_deposit(\n    cde_id,\n    deposit_address\n) VALUES (\n    :cde_id!,\n    :deposit_address!\n)',
+};
 
 /**
  * Query generated from SQL:
@@ -85,6 +112,7 @@ const registerCdeConfigErc20DepositIR: any = {"usedParamSet":{"cde_id":true,"dep
  * )
  * ```
  */
-export const registerCdeConfigErc20Deposit = new PreparedQuery<IRegisterCdeConfigErc20DepositParams,IRegisterCdeConfigErc20DepositResult>(registerCdeConfigErc20DepositIR);
-
-
+export const registerCdeConfigErc20Deposit = new PreparedQuery<
+  IRegisterCdeConfigErc20DepositParams,
+  IRegisterCdeConfigErc20DepositResult
+>(registerCdeConfigErc20DepositIR);

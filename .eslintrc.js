@@ -12,6 +12,7 @@ module.exports = {
     '@typescript-eslint/no-unsafe-return': 'off',
     '@typescript-eslint/require-await': 'off',
     '@typescript-eslint/no-unsafe-call': 'off',
+    '@typescript-eslint/no-explicit-any': 'warn',
     '@typescript-eslint/restrict-template-expressions': 'off',
     '@typescript-eslint/no-unsafe-member-access': 'off',
     '@typescript-eslint/unbound-method': 'off',
@@ -155,13 +156,4 @@ module.exports = {
     '*.d.ts',
     '*.queries.ts'
   ],
-  parserOptions: {
-    project: './tsconfig.json',
-    ecmaVersion: 'es2019',
-    sourceType: 'module',
-    tsconfigRootDir: __dirname,
-    ecmaFeatures: {
-      legacyDecorators: true,
-    },
-  },
 };

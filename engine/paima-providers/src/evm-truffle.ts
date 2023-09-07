@@ -22,7 +22,7 @@ export class TruffleConnector {
   }
 
   connectExternal = async (conn: HDWalletProvider): Promise<TruffleEvmProvider> => {
-    this.provider = await TruffleEvmProvider.init(conn);
+    this.provider = TruffleEvmProvider.init(conn);
     return this.provider;
   };
   getProvider = (): undefined | TruffleEvmProvider => {

@@ -19,7 +19,19 @@ export interface IEmulatedSelectLatestPriorQuery {
   result: IEmulatedSelectLatestPriorResult;
 }
 
-const emulatedSelectLatestPriorIR: any = {"usedParamSet":{"emulated_block_height":true},"params":[{"name":"emulated_block_height","required":true,"transform":{"type":"scalar"},"locs":[{"a":68,"b":90}]}],"statement":"SELECT * FROM emulated_block_heights\nWHERE emulated_block_height <= :emulated_block_height!\nORDER BY deployment_chain_block_height DESC\nLIMIT 1"};
+const emulatedSelectLatestPriorIR: any = {
+  usedParamSet: { emulated_block_height: true },
+  params: [
+    {
+      name: 'emulated_block_height',
+      required: true,
+      transform: { type: 'scalar' },
+      locs: [{ a: 68, b: 90 }],
+    },
+  ],
+  statement:
+    'SELECT * FROM emulated_block_heights\nWHERE emulated_block_height <= :emulated_block_height!\nORDER BY deployment_chain_block_height DESC\nLIMIT 1',
+};
 
 /**
  * Query generated from SQL:
@@ -30,16 +42,18 @@ const emulatedSelectLatestPriorIR: any = {"usedParamSet":{"emulated_block_height
  * LIMIT 1
  * ```
  */
-export const emulatedSelectLatestPrior = new PreparedQuery<IEmulatedSelectLatestPriorParams,IEmulatedSelectLatestPriorResult>(emulatedSelectLatestPriorIR);
-
+export const emulatedSelectLatestPrior = new PreparedQuery<
+  IEmulatedSelectLatestPriorParams,
+  IEmulatedSelectLatestPriorResult
+>(emulatedSelectLatestPriorIR);
 
 /** 'UpsertEmulatedBlockheight' parameters type */
 export interface IUpsertEmulatedBlockheightParams {
-  items: readonly ({
-    deployment_chain_block_height: number | null | void,
-    second_timestamp: string | null | void,
-    emulated_block_height: number | null | void
-  })[];
+  items: readonly {
+    deployment_chain_block_height: number | null | void;
+    second_timestamp: string | null | void;
+    emulated_block_height: number | null | void;
+  }[];
 }
 
 /** 'UpsertEmulatedBlockheight' return type */
@@ -51,7 +65,26 @@ export interface IUpsertEmulatedBlockheightQuery {
   result: IUpsertEmulatedBlockheightResult;
 }
 
-const upsertEmulatedBlockheightIR: any = {"usedParamSet":{"items":true},"params":[{"name":"items","required":true,"transform":{"type":"pick_array_spread","keys":[{"name":"deployment_chain_block_height","required":false},{"name":"second_timestamp","required":false},{"name":"emulated_block_height","required":false}]},"locs":[{"a":128,"b":134}]}],"statement":"INSERT INTO emulated_block_heights(\n    deployment_chain_block_height,\n    second_timestamp,\n    emulated_block_height\n) VALUES :items!\nON CONFLICT DO NOTHING"};
+const upsertEmulatedBlockheightIR: any = {
+  usedParamSet: { items: true },
+  params: [
+    {
+      name: 'items',
+      required: true,
+      transform: {
+        type: 'pick_array_spread',
+        keys: [
+          { name: 'deployment_chain_block_height', required: false },
+          { name: 'second_timestamp', required: false },
+          { name: 'emulated_block_height', required: false },
+        ],
+      },
+      locs: [{ a: 128, b: 134 }],
+    },
+  ],
+  statement:
+    'INSERT INTO emulated_block_heights(\n    deployment_chain_block_height,\n    second_timestamp,\n    emulated_block_height\n) VALUES :items!\nON CONFLICT DO NOTHING',
+};
 
 /**
  * Query generated from SQL:
@@ -64,8 +97,10 @@ const upsertEmulatedBlockheightIR: any = {"usedParamSet":{"items":true},"params"
  * ON CONFLICT DO NOTHING
  * ```
  */
-export const upsertEmulatedBlockheight = new PreparedQuery<IUpsertEmulatedBlockheightParams,IUpsertEmulatedBlockheightResult>(upsertEmulatedBlockheightIR);
-
+export const upsertEmulatedBlockheight = new PreparedQuery<
+  IUpsertEmulatedBlockheightParams,
+  IUpsertEmulatedBlockheightResult
+>(upsertEmulatedBlockheightIR);
 
 /** 'DeploymentChainBlockheightToEmulated' parameters type */
 export interface IDeploymentChainBlockheightToEmulatedParams {
@@ -83,7 +118,19 @@ export interface IDeploymentChainBlockheightToEmulatedQuery {
   result: IDeploymentChainBlockheightToEmulatedResult;
 }
 
-const deploymentChainBlockheightToEmulatedIR: any = {"usedParamSet":{"deployment_chain_block_height":true},"params":[{"name":"deployment_chain_block_height","required":true,"transform":{"type":"scalar"},"locs":[{"a":95,"b":125}]}],"statement":"SELECT emulated_block_height FROM emulated_block_heights\nWHERE deployment_chain_block_height = :deployment_chain_block_height!"};
+const deploymentChainBlockheightToEmulatedIR: any = {
+  usedParamSet: { deployment_chain_block_height: true },
+  params: [
+    {
+      name: 'deployment_chain_block_height',
+      required: true,
+      transform: { type: 'scalar' },
+      locs: [{ a: 95, b: 125 }],
+    },
+  ],
+  statement:
+    'SELECT emulated_block_height FROM emulated_block_heights\nWHERE deployment_chain_block_height = :deployment_chain_block_height!',
+};
 
 /**
  * Query generated from SQL:
@@ -92,8 +139,10 @@ const deploymentChainBlockheightToEmulatedIR: any = {"usedParamSet":{"deployment
  * WHERE deployment_chain_block_height = :deployment_chain_block_height!
  * ```
  */
-export const deploymentChainBlockheightToEmulated = new PreparedQuery<IDeploymentChainBlockheightToEmulatedParams,IDeploymentChainBlockheightToEmulatedResult>(deploymentChainBlockheightToEmulatedIR);
-
+export const deploymentChainBlockheightToEmulated = new PreparedQuery<
+  IDeploymentChainBlockheightToEmulatedParams,
+  IDeploymentChainBlockheightToEmulatedResult
+>(deploymentChainBlockheightToEmulatedIR);
 
 /** 'EmulatedBlockheightToDeploymentChain' parameters type */
 export interface IEmulatedBlockheightToDeploymentChainParams {
@@ -111,7 +160,19 @@ export interface IEmulatedBlockheightToDeploymentChainQuery {
   result: IEmulatedBlockheightToDeploymentChainResult;
 }
 
-const emulatedBlockheightToDeploymentChainIR: any = {"usedParamSet":{"emulated_block_height":true},"params":[{"name":"emulated_block_height","required":true,"transform":{"type":"scalar"},"locs":[{"a":95,"b":117}]}],"statement":"SELECT deployment_chain_block_height FROM emulated_block_heights\nWHERE emulated_block_height = :emulated_block_height!"};
+const emulatedBlockheightToDeploymentChainIR: any = {
+  usedParamSet: { emulated_block_height: true },
+  params: [
+    {
+      name: 'emulated_block_height',
+      required: true,
+      transform: { type: 'scalar' },
+      locs: [{ a: 95, b: 117 }],
+    },
+  ],
+  statement:
+    'SELECT deployment_chain_block_height FROM emulated_block_heights\nWHERE emulated_block_height = :emulated_block_height!',
+};
 
 /**
  * Query generated from SQL:
@@ -120,6 +181,7 @@ const emulatedBlockheightToDeploymentChainIR: any = {"usedParamSet":{"emulated_b
  * WHERE emulated_block_height = :emulated_block_height!
  * ```
  */
-export const emulatedBlockheightToDeploymentChain = new PreparedQuery<IEmulatedBlockheightToDeploymentChainParams,IEmulatedBlockheightToDeploymentChainResult>(emulatedBlockheightToDeploymentChainIR);
-
-
+export const emulatedBlockheightToDeploymentChain = new PreparedQuery<
+  IEmulatedBlockheightToDeploymentChainParams,
+  IEmulatedBlockheightToDeploymentChainResult
+>(emulatedBlockheightToDeploymentChainIR);

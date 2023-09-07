@@ -38,7 +38,7 @@ export interface SubmittedData {
   suppliedValue: string;
   scheduled: boolean;
   dryRun?: boolean;
-}
+};
 export type SubmittedChainData = SubmittedData;
 
 export interface OwnedNftsResponse {

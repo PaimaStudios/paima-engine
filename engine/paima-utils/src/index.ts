@@ -193,6 +193,7 @@ export async function retryPromise<T>(
   } else if (typeof failure === 'string') {
     throw new Error(failure);
   } else {
+    // eslint-disable-next-line @typescript-eslint/no-throw-literal -- we just rethrow whatever was given
     throw failure;
   }
 }

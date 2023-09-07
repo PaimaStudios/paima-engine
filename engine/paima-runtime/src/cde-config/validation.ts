@@ -54,6 +54,7 @@ async function validateSingleExtensionConfig(
   DBConn: Pool
 ): Promise<boolean> {
   if (
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
     persistent.cde_type !== cde.cdeType ||
     persistent.cde_name !== cde.cdeName ||
     persistent.contract_address !== cde.contractAddress ||

@@ -15,7 +15,10 @@ export type FunnelSharedData = {
  * Base funnel that implements the bare-bones required functionality of the Paima Funnel
  */
 export class BaseFunnel implements ChainFunnel {
-  protected constructor(protected sharedData: FunnelSharedData, protected dbTx: PoolClient) {
+  protected constructor(
+    protected sharedData: FunnelSharedData,
+    protected dbTx: PoolClient
+  ) {
     // TODO: replace once TS5 decorators are better supported
     this.readData.bind(this);
     this.readPresyncData.bind(this);

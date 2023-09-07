@@ -61,6 +61,8 @@ type ChainDataExtensionPayload =
   | CdeDatumErc721MintPayload
   | CdeDatumErc721TransferPayload
   | CdeDatumErc20DepositPayload
+  // TODO: better type definition to avoid this issue
+  // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
   | CdeDatumGenericPayload;
 
 interface CdeDatumBase {

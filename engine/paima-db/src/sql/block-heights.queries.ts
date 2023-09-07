@@ -17,7 +17,11 @@ export interface IGetLatestProcessedBlockHeightQuery {
   result: IGetLatestProcessedBlockHeightResult;
 }
 
-const getLatestProcessedBlockHeightIR: any = {"usedParamSet":{},"params":[],"statement":"SELECT * FROM block_heights\nWHERE done IS TRUE\nORDER BY block_height DESC\nLIMIT 1"};
+const getLatestProcessedBlockHeightIR: any = {
+  usedParamSet: {},
+  params: [],
+  statement: 'SELECT * FROM block_heights\nWHERE done IS TRUE\nORDER BY block_height DESC\nLIMIT 1',
+};
 
 /**
  * Query generated from SQL:
@@ -28,8 +32,10 @@ const getLatestProcessedBlockHeightIR: any = {"usedParamSet":{},"params":[],"sta
  * LIMIT 1
  * ```
  */
-export const getLatestProcessedBlockHeight = new PreparedQuery<IGetLatestProcessedBlockHeightParams,IGetLatestProcessedBlockHeightResult>(getLatestProcessedBlockHeightIR);
-
+export const getLatestProcessedBlockHeight = new PreparedQuery<
+  IGetLatestProcessedBlockHeightParams,
+  IGetLatestProcessedBlockHeightResult
+>(getLatestProcessedBlockHeightIR);
 
 /** 'GetBlockSeeds' parameters type */
 export type IGetBlockSeedsParams = void;
@@ -45,7 +51,12 @@ export interface IGetBlockSeedsQuery {
   result: IGetBlockSeedsResult;
 }
 
-const getBlockSeedsIR: any = {"usedParamSet":{},"params":[],"statement":"SELECT seed FROM block_heights\nWHERE done IS TRUE\nORDER BY block_height DESC\nLIMIT 25"};
+const getBlockSeedsIR: any = {
+  usedParamSet: {},
+  params: [],
+  statement:
+    'SELECT seed FROM block_heights\nWHERE done IS TRUE\nORDER BY block_height DESC\nLIMIT 25',
+};
 
 /**
  * Query generated from SQL:
@@ -56,12 +67,13 @@ const getBlockSeedsIR: any = {"usedParamSet":{},"params":[],"statement":"SELECT 
  * LIMIT 25
  * ```
  */
-export const getBlockSeeds = new PreparedQuery<IGetBlockSeedsParams,IGetBlockSeedsResult>(getBlockSeedsIR);
-
+export const getBlockSeeds = new PreparedQuery<IGetBlockSeedsParams, IGetBlockSeedsResult>(
+  getBlockSeedsIR
+);
 
 /** 'GetBlockHeights' parameters type */
 export interface IGetBlockHeightsParams {
-  block_heights: readonly (number)[];
+  block_heights: readonly number[];
 }
 
 /** 'GetBlockHeights' return type */
@@ -77,18 +89,31 @@ export interface IGetBlockHeightsQuery {
   result: IGetBlockHeightsResult;
 }
 
-const getBlockHeightsIR: any = {"usedParamSet":{"block_heights":true},"params":[{"name":"block_heights","required":true,"transform":{"type":"array_spread"},"locs":[{"a":51,"b":65}]}],"statement":"SELECT * FROM block_heights \nWHERE block_height IN :block_heights!\nORDER BY block_height ASC"};
+const getBlockHeightsIR: any = {
+  usedParamSet: { block_heights: true },
+  params: [
+    {
+      name: 'block_heights',
+      required: true,
+      transform: { type: 'array_spread' },
+      locs: [{ a: 51, b: 65 }],
+    },
+  ],
+  statement:
+    'SELECT * FROM block_heights \nWHERE block_height IN :block_heights!\nORDER BY block_height ASC',
+};
 
 /**
  * Query generated from SQL:
  * ```
- * SELECT * FROM block_heights 
+ * SELECT * FROM block_heights
  * WHERE block_height IN :block_heights!
  * ORDER BY block_height ASC
  * ```
  */
-export const getBlockHeights = new PreparedQuery<IGetBlockHeightsParams,IGetBlockHeightsResult>(getBlockHeightsIR);
-
+export const getBlockHeights = new PreparedQuery<IGetBlockHeightsParams, IGetBlockHeightsResult>(
+  getBlockHeightsIR
+);
 
 /** 'SaveLastBlockHeight' parameters type */
 export interface ISaveLastBlockHeightParams {
@@ -105,7 +130,20 @@ export interface ISaveLastBlockHeightQuery {
   result: ISaveLastBlockHeightResult;
 }
 
-const saveLastBlockHeightIR: any = {"usedParamSet":{"block_height":true,"seed":true},"params":[{"name":"block_height","required":true,"transform":{"type":"scalar"},"locs":[{"a":60,"b":73}]},{"name":"seed","required":true,"transform":{"type":"scalar"},"locs":[{"a":76,"b":81}]}],"statement":"INSERT INTO block_heights(block_height, seed, done)\nVALUES (:block_height!, :seed!, FALSE)\nON CONFLICT (block_height)\nDO UPDATE SET\nblock_height = EXCLUDED.block_height,\nseed = EXCLUDED.seed,\ndone = EXCLUDED.done"};
+const saveLastBlockHeightIR: any = {
+  usedParamSet: { block_height: true, seed: true },
+  params: [
+    {
+      name: 'block_height',
+      required: true,
+      transform: { type: 'scalar' },
+      locs: [{ a: 60, b: 73 }],
+    },
+    { name: 'seed', required: true, transform: { type: 'scalar' }, locs: [{ a: 76, b: 81 }] },
+  ],
+  statement:
+    'INSERT INTO block_heights(block_height, seed, done)\nVALUES (:block_height!, :seed!, FALSE)\nON CONFLICT (block_height)\nDO UPDATE SET\nblock_height = EXCLUDED.block_height,\nseed = EXCLUDED.seed,\ndone = EXCLUDED.done',
+};
 
 /**
  * Query generated from SQL:
@@ -119,8 +157,10 @@ const saveLastBlockHeightIR: any = {"usedParamSet":{"block_height":true,"seed":t
  * done = EXCLUDED.done
  * ```
  */
-export const saveLastBlockHeight = new PreparedQuery<ISaveLastBlockHeightParams,ISaveLastBlockHeightResult>(saveLastBlockHeightIR);
-
+export const saveLastBlockHeight = new PreparedQuery<
+  ISaveLastBlockHeightParams,
+  ISaveLastBlockHeightResult
+>(saveLastBlockHeightIR);
 
 /** 'BlockHeightDone' parameters type */
 export interface IBlockHeightDoneParams {
@@ -136,7 +176,18 @@ export interface IBlockHeightDoneQuery {
   result: IBlockHeightDoneResult;
 }
 
-const blockHeightDoneIR: any = {"usedParamSet":{"block_height":true},"params":[{"name":"block_height","required":true,"transform":{"type":"scalar"},"locs":[{"a":58,"b":71}]}],"statement":"UPDATE block_heights\nSET\ndone = true\nWHERE block_height = :block_height!"};
+const blockHeightDoneIR: any = {
+  usedParamSet: { block_height: true },
+  params: [
+    {
+      name: 'block_height',
+      required: true,
+      transform: { type: 'scalar' },
+      locs: [{ a: 58, b: 71 }],
+    },
+  ],
+  statement: 'UPDATE block_heights\nSET\ndone = true\nWHERE block_height = :block_height!',
+};
 
 /**
  * Query generated from SQL:
@@ -147,6 +198,6 @@ const blockHeightDoneIR: any = {"usedParamSet":{"block_height":true},"params":[{
  * WHERE block_height = :block_height!
  * ```
  */
-export const blockHeightDone = new PreparedQuery<IBlockHeightDoneParams,IBlockHeightDoneResult>(blockHeightDoneIR);
-
-
+export const blockHeightDone = new PreparedQuery<IBlockHeightDoneParams, IBlockHeightDoneResult>(
+  blockHeightDoneIR
+);

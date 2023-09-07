@@ -1,3 +1,6 @@
+# Assets bundled into executable - meant to be used in standalone context so issues in paima-engine repository are irrelevant (eg. missing node_modules)
+**/packaged
+
 node_modules
 **/dist
 **/build

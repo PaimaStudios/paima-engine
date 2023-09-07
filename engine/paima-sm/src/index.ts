@@ -261,12 +261,12 @@ async function processUserInputs(
   for (const inputData of latestChainData.submittedData) {
     // Check nonce is valid
     if (inputData.inputNonce === '') {
-      doLog(`Skipping inputData with invalid empty nonce: ${inputData}`);
+      doLog(`Skipping inputData with invalid empty nonce: ${JSON.stringify(inputData)}`);
       continue;
     }
     const nonceData = await findNonce.run({ nonce: inputData.inputNonce }, DBConn);
     if (nonceData.length > 0) {
-      doLog(`Skipping inputData with duplicate nonce: ${inputData}`);
+      doLog(`Skipping inputData with duplicate nonce: ${JSON.stringify(inputData)}`);
       continue;
     }
 
