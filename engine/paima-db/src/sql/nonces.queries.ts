@@ -18,13 +18,7 @@ export interface IFindNonceQuery {
   result: IFindNonceResult;
 }
 
-const findNonceIR: any = {
-  usedParamSet: { nonce: true },
-  params: [
-    { name: 'nonce', required: false, transform: { type: 'scalar' }, locs: [{ a: 35, b: 40 }] },
-  ],
-  statement: 'SELECT * FROM nonces\nWHERE nonce = :nonce',
-};
+const findNonceIR: any = {"usedParamSet":{"nonce":true},"params":[{"name":"nonce","required":false,"transform":{"type":"scalar"},"locs":[{"a":35,"b":40}]}],"statement":"SELECT * FROM nonces\nWHERE nonce = :nonce"};
 
 /**
  * Query generated from SQL:
@@ -33,7 +27,8 @@ const findNonceIR: any = {
  * WHERE nonce = :nonce
  * ```
  */
-export const findNonce = new PreparedQuery<IFindNonceParams, IFindNonceResult>(findNonceIR);
+export const findNonce = new PreparedQuery<IFindNonceParams,IFindNonceResult>(findNonceIR);
+
 
 /** 'DeleteNonces' parameters type */
 export interface IDeleteNoncesParams {
@@ -49,18 +44,7 @@ export interface IDeleteNoncesQuery {
   result: IDeleteNoncesResult;
 }
 
-const deleteNoncesIR: any = {
-  usedParamSet: { limit_block_height: true },
-  params: [
-    {
-      name: 'limit_block_height',
-      required: true,
-      transform: { type: 'scalar' },
-      locs: [{ a: 41, b: 60 }],
-    },
-  ],
-  statement: 'DELETE FROM nonces\nWHERE block_height <= :limit_block_height!',
-};
+const deleteNoncesIR: any = {"usedParamSet":{"limit_block_height":true},"params":[{"name":"limit_block_height","required":true,"transform":{"type":"scalar"},"locs":[{"a":41,"b":60}]}],"statement":"DELETE FROM nonces\nWHERE block_height <= :limit_block_height!"};
 
 /**
  * Query generated from SQL:
@@ -69,9 +53,8 @@ const deleteNoncesIR: any = {
  * WHERE block_height <= :limit_block_height!
  * ```
  */
-export const deleteNonces = new PreparedQuery<IDeleteNoncesParams, IDeleteNoncesResult>(
-  deleteNoncesIR
-);
+export const deleteNonces = new PreparedQuery<IDeleteNoncesParams,IDeleteNoncesResult>(deleteNoncesIR);
+
 
 /** 'InsertNonce' parameters type */
 export interface IInsertNonceParams {
@@ -88,19 +71,7 @@ export interface IInsertNonceQuery {
   result: IInsertNonceResult;
 }
 
-const insertNonceIR: any = {
-  usedParamSet: { nonce: true, block_height: true },
-  params: [
-    { name: 'nonce', required: true, transform: { type: 'scalar' }, locs: [{ a: 48, b: 54 }] },
-    {
-      name: 'block_height',
-      required: true,
-      transform: { type: 'scalar' },
-      locs: [{ a: 57, b: 70 }],
-    },
-  ],
-  statement: 'INSERT INTO nonces(nonce, block_height)\nVALUES (:nonce!, :block_height!)',
-};
+const insertNonceIR: any = {"usedParamSet":{"nonce":true,"block_height":true},"params":[{"name":"nonce","required":true,"transform":{"type":"scalar"},"locs":[{"a":48,"b":54}]},{"name":"block_height","required":true,"transform":{"type":"scalar"},"locs":[{"a":57,"b":70}]}],"statement":"INSERT INTO nonces(nonce, block_height)\nVALUES (:nonce!, :block_height!)"};
 
 /**
  * Query generated from SQL:
@@ -109,4 +80,6 @@ const insertNonceIR: any = {
  * VALUES (:nonce!, :block_height!)
  * ```
  */
-export const insertNonce = new PreparedQuery<IInsertNonceParams, IInsertNonceResult>(insertNonceIR);
+export const insertNonce = new PreparedQuery<IInsertNonceParams,IInsertNonceResult>(insertNonceIR);
+
+

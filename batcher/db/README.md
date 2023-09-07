@@ -4,9 +4,6 @@ A module facilitating interaction with the Batcher database
 
 ## Usage
 
-Currently the library is in development, unpublished, and to be
-imported and used locally.
-
 After making any changes to the queries in `src/sql/*.sql`, to make them actually reflect in the typescript code, you need to run the following:
 
 ```

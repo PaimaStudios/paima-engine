@@ -16,20 +16,7 @@ export interface INewScheduledDataQuery {
   result: INewScheduledDataResult;
 }
 
-const newScheduledDataIR: any = {
-  usedParamSet: { block_height: true, input_data: true },
-  params: [
-    {
-      name: 'block_height',
-      required: true,
-      transform: { type: 'scalar' },
-      locs: [{ a: 61, b: 74 }],
-    },
-    { name: 'input_data', required: true, transform: { type: 'scalar' }, locs: [{ a: 77, b: 88 }] },
-  ],
-  statement:
-    'INSERT INTO scheduled_data(block_height, input_data)\nVALUES (:block_height!, :input_data!)',
-};
+const newScheduledDataIR: any = {"usedParamSet":{"block_height":true,"input_data":true},"params":[{"name":"block_height","required":true,"transform":{"type":"scalar"},"locs":[{"a":61,"b":74}]},{"name":"input_data","required":true,"transform":{"type":"scalar"},"locs":[{"a":77,"b":88}]}],"statement":"INSERT INTO scheduled_data(block_height, input_data)\nVALUES (:block_height!, :input_data!)"};
 
 /**
  * Query generated from SQL:
@@ -38,9 +25,8 @@ const newScheduledDataIR: any = {
  * VALUES (:block_height!, :input_data!)
  * ```
  */
-export const newScheduledData = new PreparedQuery<INewScheduledDataParams, INewScheduledDataResult>(
-  newScheduledDataIR
-);
+export const newScheduledData = new PreparedQuery<INewScheduledDataParams,INewScheduledDataResult>(newScheduledDataIR);
+
 
 /** 'GetScheduledDataByBlockHeight' parameters type */
 export interface IGetScheduledDataByBlockHeightParams {
@@ -60,18 +46,7 @@ export interface IGetScheduledDataByBlockHeightQuery {
   result: IGetScheduledDataByBlockHeightResult;
 }
 
-const getScheduledDataByBlockHeightIR: any = {
-  usedParamSet: { block_height: true },
-  params: [
-    {
-      name: 'block_height',
-      required: true,
-      transform: { type: 'scalar' },
-      locs: [{ a: 50, b: 63 }],
-    },
-  ],
-  statement: 'SELECT * from scheduled_data\nWHERE block_height = :block_height!\nORDER BY id ASC',
-};
+const getScheduledDataByBlockHeightIR: any = {"usedParamSet":{"block_height":true},"params":[{"name":"block_height","required":true,"transform":{"type":"scalar"},"locs":[{"a":50,"b":63}]}],"statement":"SELECT * from scheduled_data\nWHERE block_height = :block_height!\nORDER BY id ASC"};
 
 /**
  * Query generated from SQL:
@@ -81,10 +56,8 @@ const getScheduledDataByBlockHeightIR: any = {
  * ORDER BY id ASC
  * ```
  */
-export const getScheduledDataByBlockHeight = new PreparedQuery<
-  IGetScheduledDataByBlockHeightParams,
-  IGetScheduledDataByBlockHeightResult
->(getScheduledDataByBlockHeightIR);
+export const getScheduledDataByBlockHeight = new PreparedQuery<IGetScheduledDataByBlockHeightParams,IGetScheduledDataByBlockHeightResult>(getScheduledDataByBlockHeightIR);
+
 
 /** 'RemoveScheduledData' parameters type */
 export interface IRemoveScheduledDataParams {
@@ -101,20 +74,7 @@ export interface IRemoveScheduledDataQuery {
   result: IRemoveScheduledDataResult;
 }
 
-const removeScheduledDataIR: any = {
-  usedParamSet: { block_height: true, input_data: true },
-  params: [
-    {
-      name: 'block_height',
-      required: true,
-      transform: { type: 'scalar' },
-      locs: [{ a: 48, b: 61 }],
-    },
-    { name: 'input_data', required: true, transform: { type: 'scalar' }, locs: [{ a: 80, b: 91 }] },
-  ],
-  statement:
-    'DELETE FROM scheduled_data\nWHERE block_height = :block_height!\nAND input_data = :input_data!',
-};
+const removeScheduledDataIR: any = {"usedParamSet":{"block_height":true,"input_data":true},"params":[{"name":"block_height","required":true,"transform":{"type":"scalar"},"locs":[{"a":48,"b":61}]},{"name":"input_data","required":true,"transform":{"type":"scalar"},"locs":[{"a":80,"b":91}]}],"statement":"DELETE FROM scheduled_data\nWHERE block_height = :block_height!\nAND input_data = :input_data!"};
 
 /**
  * Query generated from SQL:
@@ -124,10 +84,8 @@ const removeScheduledDataIR: any = {
  * AND input_data = :input_data!
  * ```
  */
-export const removeScheduledData = new PreparedQuery<
-  IRemoveScheduledDataParams,
-  IRemoveScheduledDataResult
->(removeScheduledDataIR);
+export const removeScheduledData = new PreparedQuery<IRemoveScheduledDataParams,IRemoveScheduledDataResult>(removeScheduledDataIR);
+
 
 /** 'RemoveAllScheduledDataByInputData' parameters type */
 export interface IRemoveAllScheduledDataByInputDataParams {
@@ -143,13 +101,7 @@ export interface IRemoveAllScheduledDataByInputDataQuery {
   result: IRemoveAllScheduledDataByInputDataResult;
 }
 
-const removeAllScheduledDataByInputDataIR: any = {
-  usedParamSet: { input_data: true },
-  params: [
-    { name: 'input_data', required: true, transform: { type: 'scalar' }, locs: [{ a: 46, b: 57 }] },
-  ],
-  statement: 'DELETE FROM scheduled_data\nWHERE input_data = :input_data!',
-};
+const removeAllScheduledDataByInputDataIR: any = {"usedParamSet":{"input_data":true},"params":[{"name":"input_data","required":true,"transform":{"type":"scalar"},"locs":[{"a":46,"b":57}]}],"statement":"DELETE FROM scheduled_data\nWHERE input_data = :input_data!"};
 
 /**
  * Query generated from SQL:
@@ -158,10 +110,8 @@ const removeAllScheduledDataByInputDataIR: any = {
  * WHERE input_data = :input_data!
  * ```
  */
-export const removeAllScheduledDataByInputData = new PreparedQuery<
-  IRemoveAllScheduledDataByInputDataParams,
-  IRemoveAllScheduledDataByInputDataResult
->(removeAllScheduledDataByInputDataIR);
+export const removeAllScheduledDataByInputData = new PreparedQuery<IRemoveAllScheduledDataByInputDataParams,IRemoveAllScheduledDataByInputDataResult>(removeAllScheduledDataByInputDataIR);
+
 
 /** 'DeleteScheduled' parameters type */
 export interface IDeleteScheduledParams {
@@ -177,11 +127,7 @@ export interface IDeleteScheduledQuery {
   result: IDeleteScheduledResult;
 }
 
-const deleteScheduledIR: any = {
-  usedParamSet: { id: true },
-  params: [{ name: 'id', required: true, transform: { type: 'scalar' }, locs: [{ a: 38, b: 41 }] }],
-  statement: 'DELETE FROM scheduled_data\nWHERE id = :id!',
-};
+const deleteScheduledIR: any = {"usedParamSet":{"id":true},"params":[{"name":"id","required":true,"transform":{"type":"scalar"},"locs":[{"a":38,"b":41}]}],"statement":"DELETE FROM scheduled_data\nWHERE id = :id!"};
 
 /**
  * Query generated from SQL:
@@ -190,6 +136,6 @@ const deleteScheduledIR: any = {
  * WHERE id = :id!
  * ```
  */
-export const deleteScheduled = new PreparedQuery<IDeleteScheduledParams, IDeleteScheduledResult>(
-  deleteScheduledIR
-);
+export const deleteScheduled = new PreparedQuery<IDeleteScheduledParams,IDeleteScheduledResult>(deleteScheduledIR);
+
+
