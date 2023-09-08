@@ -151,6 +151,19 @@ export async function postConciselyEncodedData(gameInput: string): Promise<Resul
   }
 }
 
+async function getAdjustedHeight(deploymentChainBlockHeight: number): Promise<number> {
+  if (getEmulatedBlocksActive()) {
+    const emulatedBlockHeight = await retryPromise(
+      () => deploymentChainBlockHeightToEmulated(deploymentChainBlockHeight),
+      EMULATED_CONVERSION_RETRY_DELAY,
+      EMULATED_CONVERSION_RETRY_COUNT
+    );
+    return emulatedBlockHeight;
+  } else {
+    return deploymentChainBlockHeight;
+  }
+}
+
 async function postString(
   sendWalletTransaction: PostFxn,
   userAddress: string,
@@ -166,22 +179,10 @@ async function postString(
       TX_VERIFICATION_RETRY_DELAY,
       TX_VERIFICATION_RETRY_COUNT
     );
-    if (getEmulatedBlocksActive()) {
-      const emulatedBlockHeight = await retryPromise(
-        () => deploymentChainBlockHeightToEmulated(deploymentChainBlockHeight),
-        EMULATED_CONVERSION_RETRY_DELAY,
-        EMULATED_CONVERSION_RETRY_COUNT
-      );
-      return {
-        success: true,
-        result: emulatedBlockHeight,
-      };
-    } else {
-      return {
-        success: true,
-        result: deploymentChainBlockHeight,
-      };
-    }
+    return {
+      success: true,
+      result: await getAdjustedHeight(deploymentChainBlockHeight),
+    };
   } catch (err) {
     return errorFxn(PaimaMiddlewareErrorCode.ERROR_POSTING_TO_CHAIN, err);
   }
@@ -262,7 +263,7 @@ async function verifyBatcherSubmission(inputHash: string): Promise<Result<number
       } else if (status.status === 'posted') {
         return {
           success: true,
-          result: status.block_height,
+          result: await getAdjustedHeight(status.block_height),
         };
       }
     } catch (err) {
