@@ -125,6 +125,7 @@ class BatchedTransactionPoster {
         transactionHash = postedMessage[1];
       } catch (postError) {
         await this.rejectPostedStates(hashes);
+        await this.deletePostedInputs(ids);
         return ids.length;
       }
 
