@@ -1,0 +1,26 @@
+{
+  "transforms": [
+    {
+      "mode": "sql",
+      "include": "**/*.sql",
+      "emitTemplate": "{{dir}}/{{name}}.queries.ts"
+    },
+    {
+      "mode": "ts",
+      "include": "**/*.ts",
+      "emitTemplate": "{{dir}}/{{name}}.types.ts"
+    }
+  ],
+  "srcDir": "./src/",
+  "failOnError": false,
+  "camelCaseColumnNames": false,
+  "db": {
+    "dbName": "paima_catapult_batcher",
+    "user": "paima",
+    "password": "pi",
+    "host": "localhost",
+    "port": 5432,
+    "ssl": false,
+    "dbUrl": "postgres://paima:pi@localhost/paima_catapult_batcher"
+  }
+}

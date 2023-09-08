@@ -1,61 +1,27 @@
 {
-  "name": "@paima/engine",
-  "version": "0.6.0",
+  "name": "@paima/root",
+  "version": "0.0.0",
   "private": true,
   "scripts": {
-    "lint": "npm run prettier && npm run eslint",
-    "cilint": "npm run cprettier && npm run eslint",
-    "prebuild": "npm run prebuild --workspaces --if-present",
-    "build": "npx tsc --build tsconfig.build.json",
-    "prepare:standalone": "sh paima-standalone/scripts/prepare_standalone_folders.sh",
-    "build:sdk": "npx tsc --build --clean tsconfig.lib.json && npx tsc --build tsconfig.lib.json",
-    "build:standalone": "npm run build && npm run build:binary -w paima-standalone",
-    "build:dev-standalone": "npm run install-binaries -w paima-standalone && npm run build:dev-binary -w paima-standalone",
-    "release": "npm ci && npm run build && npm run prepare:standalone && npm run build:standalone && npm run patch-standalone-dev && npm run build:dev-standalone && npm run unpatch-standalone-dev",
-    "standalone": "npm run prepare:standalone && npm run build:standalone",
-    "cprettier": "prettier --check '**/*.{ts,tsx}'",
-    "eslint": "eslint '**/*.{ts,tsx}' --ignore-path .eslintignore",
-    "prettier": "prettier --write '**/*.{ts,tsx}'",
-    "prepare": "husky install && npm run prepare --workspaces --if-present",
-    "patch-standalone-dev": "./paima-standalone/scripts/sed.sh patch",
-    "unpatch-standalone-dev": "./paima-standalone/scripts/sed.sh unpatch"
+    "prepare": "husky install",
+    "cilint": "./scripts/runNpm.sh 'run cilint'",
+    "build": "./scripts/runNpm.sh 'run build'",
+    "postinstall": "./scripts/runNpm.sh install",
+    "release": "npm install && npm run build && ./scripts/runNpm.sh 'run release' batcher && ./scripts/runNpm.sh 'run release' engine"
   },
-  "workspaces": [
-    "./paima-utils",
-    "./paima-utils-backend",
-    "./paima-concise",
-    "./paima-prando",
-    "./paima-executors",
-    "./paima-mw-core",
-    "./paima-db",
-    "./paima-funnel",
-    "./paima-sm",
-    "./paima-runtime",
-    "./paima-standalone"
-  ],
   "devDependencies": {
-    "@types/eslint": "^8.4.10",
     "@types/eslint-plugin-prettier": "^3.1.0",
-    "@types/node": "^18.11.18",
-    "@types/pg": "^8.6.5",
-    "@types/prettier": "^2.7.1",
-    "@typescript-eslint/eslint-plugin": "^5.43.0",
-    "@typescript-eslint/parser": "^5.3.0",
-    "eslint": "^8.27.0",
-    "eslint-config-airbnb-typescript": "^17.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.5.0",
+    "@typescript-eslint/parser": "^6.5.0",
+    "eslint-config-airbnb-typescript": "^17.1.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-import": "^2.26.0",
     "eslint-plugin-prettier": "^4.2.1",
     "eslint-plugin-promise": "^6.1.1",
     "eslint-plugin-react": "^7.31.10",
     "eslint-plugin-react-hooks": "^4.6.0",
-    "husky": "^8.0.2",
-    "prettier": "^2.7.1",
-    "typescript": "^4.8.4"
+    "husky": "^8.0.3"
   },
   "dependencies": {
-    "pg": "^8.8.0",
-    "pg-tx": "^1.0.1",
-    "web3": "1.10.1"
   }
 }

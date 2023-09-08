@@ -14,7 +14,7 @@ export function getTxTemplate<T extends keyof PaimaL2Contract['methods']>(
   ...data: Parameters<PaimaL2Contract['methods'][T]>
 ): TransactionTemplate {
   validatePaimaL2ContractAddress(storageAddress);
-  const storage = getPaimaL2Contract();
+  const storage = getPaimaL2Contract(storageAddress);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unnecessary-type-assertion
   const txData = (storage.methods[methodName] as any)(...data).encodeABI();
   return {

@@ -1,0 +1,52 @@
+{
+  "name": "@paima/engine",
+  "version": "0.6.0",
+  "private": true,
+  "scripts": {
+    "lint": "npm run prettier && npm run eslint",
+    "cilint": "npm run cprettier && npm run eslint",
+    "prebuild": "npm run prebuild --workspaces --if-present",
+    "build": "npx tsc --build tsconfig.build.json",
+    "prepare:standalone": "sh paima-standalone/scripts/prepare_standalone_folders.sh",
+    "build:sdk": "npx tsc --build --clean tsconfig.lib.json && npx tsc --build tsconfig.lib.json",
+    "build:standalone": "npm run build && npm run build:binary -w paima-standalone",
+    "build:dev-standalone": "npm run install-binaries -w paima-standalone && npm run build:dev-binary -w paima-standalone",
+    "release": "npm run prepare:standalone && npm run build:standalone && npm run build:dev-standalone",
+    "standalone": "npm run prepare:standalone && npm run build:standalone",
+    "cprettier": "prettier --ignore-path ../.prettierignore --check '**/*.{ts,tsx}'",
+    "eslint": "eslint '**/*.{ts,tsx}' --ignore-path ../.eslintignore",
+    "prettier": "prettier --ignore-path ../.prettierignore --write '**/*.{ts,tsx}'"
+  },
+  "workspaces": [
+    "./paima-utils",
+    "./paima-utils-backend",
+    "./paima-crypto",
+    "./paima-providers",
+    "./paima-concise",
+    "./paima-prando",
+    "./paima-executors",
+    "./paima-mw-core",
+    "./paima-db",
+    "./paima-funnel",
+    "./paima-sm",
+    "./paima-runtime",
+    "./paima-standalone"
+  ],
+  "devDependencies": {
+    "@types/eslint": "^8.4.10",
+    "@types/node": "^18.11.18",
+    "@types/pg": "^8.6.5",
+    "@types/prettier": "^3.0.0",
+    "eslint": "^8.27.0",
+    "prettier": "^3.0.3",
+    "typescript": "^4.8.4"
+  },
+  "dependencies": {
+    "pg": "^8.8.0",
+    "pg-tx": "^1.0.1",
+    "web3": "1.10.0"
+  },
+  "overrides": {
+    "web3-eth-contract": "1.10.0"
+  }
+}

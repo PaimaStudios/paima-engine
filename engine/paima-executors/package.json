@@ -1,0 +1,25 @@
+{
+  "name": "paima-executors",
+  "version": "1.0.0",
+  "description": "",
+  "main": "build/index.js",
+  "files": [
+    "/build"
+  ],
+  "type": "module",
+  "types": "build/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "prettier --write '**/*.ts'"
+  },
+  "author": "",
+  "devDependencies": {
+    "typescript": "^4.7.4",
+    "prettier": "^2.7.1",
+    "prettier-plugin-organize-imports": "^2.3.4"
+  },
+  "dependencies": {
+    "@paima/prando": "1.0.0"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "name": "@paima-batcher/batched-transaction-poster",
+  "version": "0.1.0",
+  "description": "",
+  "main": "build/index.js",
+  "type": "module",
+  "types": "build/index.d.ts",
+  "devDependencies": {
+    "@types/pg": "^8.6.5"
+  },
+  "dependencies": {
+    "@paima/concise": "file:../../engine/paima-concise",
+    "@paima/providers": "file:../../engine/paima-providers",
+    "pg": "^8.7.3",
+    "web3": "1.10.0"
+  }
+}

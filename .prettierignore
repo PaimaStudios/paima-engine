@@ -1,5 +1,4 @@
 **/*.queries.ts
 **/*.d.ts
 contract-types/
-
-paima-standalone/packaged
+packaged/

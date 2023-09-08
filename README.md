@@ -4,6 +4,9 @@
 <p align="center">
  Paima is a Web3 Engine optimized for games, gamification and autonomous worlds that allows building web3 applications in just days.
 </p>
+<p align="center">
+<a href="https://docs.paimastudios.com">Documentation</a>
+</p>
 
 ## Background
 
