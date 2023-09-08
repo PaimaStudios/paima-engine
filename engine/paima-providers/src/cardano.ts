@@ -38,7 +38,9 @@ export class CardanoConnector implements IConnector<CardanoApi> {
     if (this.provider != null) {
       return this.provider;
     }
-    const cardanoApi: Record<string, { name?: string }> = (window as any).cardano;
+    const cardanoApi: Record<string, { name?: string; enable?: () => Promise<CardanoApi> }> = (
+      window as any
+    ).cardano;
     if (cardanoApi == null) {
       throw new WalletNotFound(`[cardano] no wallet detected`);
     }
@@ -49,7 +51,7 @@ export class CardanoConnector implements IConnector<CardanoApi> {
       return await this.connectNamed(gameInfo, 'flint');
     }
     for (const key of pontentialWallets) {
-      if (cardanoApi[key]?.name == null) {
+      if (cardanoApi[key]?.name == null || cardanoApi[key]?.enable == null) {
         continue;
       }
       return await this.connectNamed(gameInfo, key);

@@ -19,6 +19,8 @@ export function stringToWalletMode(loginType: string): WalletMode {
       return WalletMode.METAMASK;
     case 'evm-flint':
       return WalletMode.EVM_FLINT;
+    case 'cardano':
+      return WalletMode.CARDANO;
     case 'flint':
       return WalletMode.CARDANO_FLINT;
     case 'nufi':
@@ -51,6 +53,7 @@ export async function specificWalletLogin(
         setUnbatchedMode();
       }
       return await evmLoginWrapper(walletMode);
+    case WalletMode.CARDANO:
     case WalletMode.CARDANO_FLINT:
     case WalletMode.CARDANO_NUFI:
     case WalletMode.CARDANO_NAMI:

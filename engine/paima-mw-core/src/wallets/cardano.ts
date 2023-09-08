@@ -40,20 +40,26 @@ export async function cardanoLoginWrapper(walletMode: WalletMode): Promise<Resul
   const errorFxn = buildEndpointErrorFxn('cardanoLoginWrapper');
   console.log('[cardanoLoginWrapper] window.cardano:', (window as any).cardano);
 
-  const walletName = cardanoWalletModeToName(walletMode);
-  if (!walletName) {
-    return errorFxn(PaimaMiddlewareErrorCode.CARDANO_WALLET_NOT_INSTALLED);
+  let specificWalletName: string | undefined = undefined;
+  if (walletMode !== WalletMode.CARDANO) {
+    console.log(`[cardanoLoginWrapper] Attempting to log into ${specificWalletName}`);
+    specificWalletName = cardanoWalletModeToName(walletMode);
+    if (!specificWalletName) {
+      return errorFxn(PaimaMiddlewareErrorCode.CARDANO_WALLET_NOT_INSTALLED);
+    }
+  } else {
+    console.log(`[cardanoLoginWrapper] Attempting to log into any Cardano wallet`);
   }
 
-  console.log(`[cardanoLoginWrapper] Attempting to log into ${walletName}`);
   try {
-    const provider = await CardanoConnector.instance().connectNamed(
-      {
-        gameName: getGameName(),
-        gameChainId: undefined,
-      },
-      walletName
-    );
+    const gameInfo = {
+      gameName: getGameName(),
+      gameChainId: undefined,
+    };
+    const provider =
+      specificWalletName == null
+        ? await CardanoConnector.instance().connectSimple(gameInfo)
+        : await CardanoConnector.instance().connectNamed(gameInfo, specificWalletName);
     return {
       success: true,
       result: {
@@ -68,7 +74,9 @@ export async function cardanoLoginWrapper(walletMode: WalletMode): Promise<Resul
         FE_ERR_SPECIFIC_WALLET_NOT_INSTALLED
       );
     }
-    console.log(`[cardanoLoginWrapper] Error while logging into wallet ${walletName}`);
+    console.log(
+      `[cardanoLoginWrapper] Error while logging into wallet ${specificWalletName ?? 'Cardano'}`
+    );
     return errorFxn(PaimaMiddlewareErrorCode.CARDANO_LOGIN, err);
     // TODO: improve error differentiation
   }
