@@ -1,4 +1,5 @@
 PACKAGED_PATH="./paima-standalone/packaged"
+rm -rf $PACKAGED_PATH
 mkdir -p $PACKAGED_PATH
 
 SDK_PATH="$PACKAGED_PATH/paima-sdk"

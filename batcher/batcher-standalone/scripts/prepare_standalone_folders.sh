@@ -1,4 +1,5 @@
 PACKAGED_PATH="./batcher-standalone/packaged"
+rm -rf $PACKAGED_PATH
 mkdir -p $PACKAGED_PATH
 
 BATCHER_PATH="$PACKAGED_PATH/paima-batcher"
