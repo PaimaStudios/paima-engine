@@ -21,6 +21,14 @@ export class ENV {
     return process.env.BATCHER_PRIVATE_KEY || '';
   }
 
+  static get MAX_BASE_GAS(): number {
+    return process.env.MAX_BASE_GAS ? parseInt(process.env.MAX_BASE_GAS, 10) : 50000;
+  }
+
+  static get MAX_GAS_PER_BYTE(): number {
+    return process.env.MAX_GAS_PER_BYTE ? parseInt(process.env.MAX_GAS_PER_BYTE, 10) : 32;
+  }
+
   // Webserver:
   static get BATCHER_PORT(): number {
     return parseInt(process.env.BATCHER_PORT || '0', 10);
