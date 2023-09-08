@@ -45,8 +45,8 @@ jobs:
         if: ${{ matrix.node!='16' }}
         shell: bash -e -l {0}
         run: |
-          sh wipe.sh
-          npm i --package-lock --no-audit
+          sh wipe.sh keep-package-lock
+          npm i --no-audit
       -
         name: Build workspace
         shell: bash -e -l {0}
