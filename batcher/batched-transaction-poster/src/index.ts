@@ -1,7 +1,12 @@
 import type { Pool } from 'pg';
 import type { Contract } from 'web3-eth-contract';
 
-import { getValidatedInputs, updateStatePosted, deleteValidatedInput } from '@paima-batcher/db';
+import {
+  getValidatedInputs,
+  updateStatePosted,
+  deleteValidatedInput,
+  updateStateRejected,
+} from '@paima-batcher/db';
 import {
   keepRunning,
   wait,
@@ -112,7 +117,17 @@ class BatchedTransactionPoster {
         return 0;
       }
 
-      const [blockHeight, transactionHash] = await this.postMessage(batchedTransaction);
+      let blockHeight: number;
+      let transactionHash: string;
+      try {
+        const postedMessage = await this.postMessage(batchedTransaction);
+        blockHeight = postedMessage[0];
+        transactionHash = postedMessage[1];
+      } catch (postError) {
+        await this.rejectPostedStates(hashes);
+        await this.deletePostedInputs(ids);
+        return ids.length;
+      }
 
       await this.updatePostedStates(hashes, blockHeight, transactionHash);
       await this.deletePostedInputs(ids);
@@ -121,7 +136,11 @@ class BatchedTransactionPoster {
         return 0;
       }
     } catch (err) {
-      console.log('[batched-transaction-poster] Error while posting batched input:', err);
+      console.log(
+        `[batched-transaction-poster] Failed to clear failed transaction. DB may be in an invalid state. Shutting down the batcher. Error:`,
+        err
+      );
+      process.exit(1);
       return -1;
     }
 
@@ -177,6 +196,27 @@ class BatchedTransactionPoster {
           "[batched-transaction-poster] Error while updating posted inputs' states:",
           err
         );
+        throw err;
+      }
+    }
+  };
+
+  private rejectPostedStates = async (hashes: string[]): Promise<void> => {
+    for (let hash of hashes) {
+      try {
+        await updateStateRejected.run(
+          {
+            input_hash: hash,
+            // TODO: proper error codes for this
+            rejection_code: 1,
+          },
+          this.pool
+        );
+      } catch (err) {
+        console.log(
+          "[batched-transaction-poster] Error while updating posted inputs' states:",
+          err
+        );
       }
     }
   };
@@ -187,6 +227,7 @@ class BatchedTransactionPoster {
         await deleteValidatedInput.run({ id: id }, this.pool);
       } catch (err) {
         console.log('[batched-transaction-poster] Error while deleting processed inputs:', err);
+        throw err;
       }
     }
   };
