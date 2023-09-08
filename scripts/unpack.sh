@@ -22,7 +22,7 @@ else
 
   mkdir -p $HOME/.pkg-cache/v3.4/
 
-  rm debug-builds.tar.g z dev-pkg-builta*
+  rm debug-builds.tar.gz dev-pkg-builta*
 
   mv built-v18.15.0-* $HOME/.pkg-cache/v3.4/
 fi
