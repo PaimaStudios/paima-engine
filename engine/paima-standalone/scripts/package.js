@@ -44,7 +44,7 @@ async function packageApp() {
       ...['packaged/engineCorePacked.js'],
       ...['--options', baseOptions.join(',')],
       ...['--config', getTmpFile()],
-      ...['--debug'], // use to see package content
+      // ...['--debug'], // use to see package content
     ];
     if (isDebug) {
       args.push(...['--output', `packaged/@standalone/dev-paima-engine-${compilationTarget}`]);
