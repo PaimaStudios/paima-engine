@@ -7,7 +7,7 @@
     "cilint": "./scripts/runNpm.sh 'run cilint'",
     "build": "./scripts/runNpm.sh 'run build'",
     "postinstall": "./scripts/runNpm.sh install",
-    "release": "npm install && npm run build && ./scripts/runNpm.sh 'run release' batcher && ./scripts/runNpm.sh 'run release' engine"
+    "release": "npm install && npm run build && ./scripts/runNpm.sh 'run release' batcher && ./scripts/runNpm.sh 'run release' engine && cp -r ./engine/paima-standalone/packaged/@standalone ./bin"
   },
   "devDependencies": {
     "@types/eslint-plugin-prettier": "^3.1.0",

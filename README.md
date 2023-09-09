@@ -42,4 +42,4 @@ Paima Engine is a TypeScript monorepo implemented with npm (not Yarn nor Lerna) 
 
 1. `npm install` (generate the common `node_modules` folder with all the combined dependencies of all packages)
 1. `npm run build` (to see if the build succeeds)
-1. `npm run release` (for production builds)
+1. `npm run release` (for production builds. see `bin` folder for build result)
