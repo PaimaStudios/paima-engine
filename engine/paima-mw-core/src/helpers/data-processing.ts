@@ -37,7 +37,6 @@ function selectSignFunction(addressType: AddressType): SignFunction {
 export async function buildBatchedSubunit(
   addressType: AddressType,
   userAddress: string,
-  signingAddress: string,
   gameInput: string
 ): Promise<BatchedSubunit> {
   const signFunction = selectSignFunction(addressType);

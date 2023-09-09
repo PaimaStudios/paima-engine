@@ -113,27 +113,23 @@ export async function postConciselyEncodedData(gameInput: string): Promise<Resul
       return await buildBatchedSubunit(
         AddressType.EVM,
         EvmConnector.instance().getOrThrowProvider().getAddress(),
-        EvmConnector.instance().getOrThrowProvider().getAddress(),
         gameInput
       ).then(submitToBatcher);
     case PostingMode.BATCHED_CARDANO:
       return await buildBatchedSubunit(
         AddressType.CARDANO,
         CardanoConnector.instance().getOrThrowProvider().getAddress(),
-        CardanoConnector.instance().getOrThrowProvider().address.bech32,
         gameInput
       ).then(submitToBatcher);
     case PostingMode.BATCHED_POLKADOT:
       return await buildBatchedSubunit(
         AddressType.POLKADOT,
         PolkadotConnector.instance().getOrThrowProvider().getAddress(),
-        PolkadotConnector.instance().getOrThrowProvider().getAddress(),
         gameInput
       ).then(submitToBatcher);
     case PostingMode.BATCHED_ALGORAND:
       return await buildBatchedSubunit(
         AddressType.ALGORAND,
-        AlgorandConnector.instance().getOrThrowProvider().getAddress(),
         AlgorandConnector.instance().getOrThrowProvider().getAddress(),
         gameInput
       ).then(submitToBatcher);
