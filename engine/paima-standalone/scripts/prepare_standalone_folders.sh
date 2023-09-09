@@ -1,6 +1,6 @@
 PACKAGED_PATH="./paima-standalone/packaged"
 rm -rf $PACKAGED_PATH
-mkdir -p $PACKAGED_PATH
+mkdir -p $PACKAGED_PATH/@standalone
 
 SDK_PATH="$PACKAGED_PATH/paima-sdk"
 CONTRACT_PATH="$PACKAGED_PATH/contracts"
@@ -106,6 +106,9 @@ component="paima-batcher"
 echo $BATCHER_PATH
 rm -rf $BATCHER_PATH
 cp -r ../batcher/batcher-standalone/packaged/@standalone/batcher $BATCHER_PATH
+echo $BATCHER_PATH-bin
+rm -rf $BATCHER_PATH-bin
+cp -r ../batcher/batcher-standalone/packaged/@standalone/batcher-bin $BATCHER_PATH-bin
 
 # Fetch documentation
 echo $DOC_PATH

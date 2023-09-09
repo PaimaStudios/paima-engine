@@ -10,32 +10,34 @@
   "files": [
     "/build"
   ],
-  "bin": "packaged/engineCorePacked.js",
+  "bin": "./engineCorePacked.js",
   "pkg": {
     "scripts": [],
     "assets": [
-      "packaged/paima-sdk/**/*",
-      "packaged/templates/**/*",
-      "packaged/contracts/**/*",
-      "packaged/batcher/**/*",
-      "packaged/documentation/**/*"
+      "./paima-sdk/**/*",
+      "./templates/**/*",
+      "./contracts/**/*",
+      "./batcher/**/*",
+      "./documentation/**/*"
     ],
     "targets": [
       "node18-linux-x64",
       "node18-macos-x64"
-    ],
-    "outputPath": "packaged"
+    ]
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "node ./esbuildconfig.cjs",
-    "build:binary": "npm run build && pkg packaged/engineCorePacked.js --options \"experimental-specifier-resolution=node,no-warnings\" --config package.json",
+    "build:prod-binary": "npm run build:prod-binary-macos && npm run build:prod-binary-linux",
+    "build:prod-binary-macos": "npm run build && ts-node ./scripts/package macos && mv ./packaged/tmp/@standalone/paima-engine-macos ./packaged/@standalone/",
+    "build:prod-binary-linux": "npm run build && ts-node ./scripts/package linux && mv ./packaged/tmp/@standalone/paima-engine-linux ./packaged/@standalone/",
     "install-binaries": "../../scripts/unpack.sh",
     "build:dev-binary": "npm run build:dev-binary-macos && npm run build:dev-binary-linux",
-    "build:dev-binary-macos": "npm run build && pkg-dev packaged/engineCorePacked.js --output packaged/@standalone/dev-paima-engine-macos -t node18-macos-x64 -b --options \"inspect,experimental-specifier-resolution=node,no-warnings\" --config package.json",
-    "build:dev-binary-linux": "npm run build && pkg-dev packaged/engineCorePacked.js --output packaged/@standalone/dev-paima-engine-linux -t node18-linux-x64 -b --options \"inspect,experimental-specifier-resolution=node,no-warnings\" --config package.json"
+    "build:dev-binary-macos": "npm run build && ts-node ./scripts/package macos --debug",
+    "build:dev-binary-linux": "npm run build && ts-node ./scripts/package linux --debug"
   },
   "devDependencies": {
+    "ts-node": "^10.8.1",
     "cross-env": "^7.0.3",
     "dotenv": "^16.0.3",
     "esbuild": "^0.17.4",

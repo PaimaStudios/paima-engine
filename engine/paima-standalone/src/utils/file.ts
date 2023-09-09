@@ -7,6 +7,7 @@ import type { Template } from './types';
 export const PACKAGED_TEMPLATES_PATH = `${__dirname}/templates`;
 const PACKAGED_SDK_PATH = `${__dirname}/paima-sdk`;
 const PACKAGED_BATCHER_PATH = `${__dirname}/batcher`;
+const PACKAGED_BATCHER_BIN_PATH = `${__dirname}/batcher-bin`;
 
 const copy = (src: string, dest: string): void => {
   const list = fs.readdirSync(src);
@@ -53,13 +54,15 @@ export const copyDirSync = (src: string, dest: string): void => {
 
 // Copies a folder from internal to the user's filesystem
 export const prepareFolder = (
-  internalPath: string,
+  internalPaths: string[],
   externalPath: string,
   successMessage: string,
   failureMessage: string
 ): void => {
   if (!fs.existsSync(externalPath)) {
-    copyDirSync(internalPath, externalPath);
+    for (const internalPath of internalPaths) {
+      copyDirSync(internalPath, externalPath);
+    }
     doLog(successMessage);
   } else {
     doLog(failureMessage);
@@ -72,7 +75,7 @@ export const prepareSDK = (silentMode = false): void => {
   const success = '✅ SDK Initialized.';
   const failure = silentMode ? '' : `Existing SDK Found: ${SDK_FOLDER_PATH}.`;
 
-  prepareFolder(PACKAGED_SDK_PATH, SDK_FOLDER_PATH, success, failure);
+  prepareFolder([PACKAGED_SDK_PATH], SDK_FOLDER_PATH, success, failure);
 };
 
 // Initializes the batcher in the same folder as the executable
@@ -81,7 +84,12 @@ export const prepareBatcher = (silentMode = false): void => {
   const success = '✅ Batcher Initialized.';
   const failure = silentMode ? '' : `Existing Batcher Found: ${BATCHER_FOLDER_PATH}.`;
 
-  prepareFolder(PACKAGED_BATCHER_PATH, BATCHER_FOLDER_PATH, success, failure);
+  prepareFolder(
+    [PACKAGED_BATCHER_PATH, PACKAGED_BATCHER_BIN_PATH],
+    BATCHER_FOLDER_PATH,
+    success,
+    failure
+  );
 };
 
 // Initializes a project template
@@ -91,7 +99,7 @@ export const prepareTemplate = (folder: Template): void => {
   const success = `✅ Game template initialized: ${TEMPLATE_FOLDER_PATH}`;
   const failure = `Game template ${TEMPLATE_FOLDER_PATH} already exists.`;
 
-  prepareFolder(packagedTemplatePath, TEMPLATE_FOLDER_PATH, success, failure);
+  prepareFolder([packagedTemplatePath], TEMPLATE_FOLDER_PATH, success, failure);
 };
 
 // Copies the available contracts into the same folder as the executable
@@ -101,7 +109,7 @@ export const prepareContract = (): void => {
   const success = `✅ Available Contracts Have Been Copied To ${FOLDER_PATH}.`;
   const failure = `Existing Contracts Folder Found: ${FOLDER_PATH}.`;
 
-  prepareFolder(packagedPath, FOLDER_PATH, success, failure);
+  prepareFolder([packagedPath], FOLDER_PATH, success, failure);
 };
 
 // Copies the documentation into the same folder as the executable
@@ -111,7 +119,7 @@ export const prepareDocumentation = (): void => {
   const success = `✅ Documentation Has Been Copied To ${FOLDER_PATH}.`;
   const failure = `Documentation Already Exists: ${FOLDER_PATH}.`;
 
-  prepareFolder(packagedPath, FOLDER_PATH, success, failure);
+  prepareFolder([packagedPath], FOLDER_PATH, success, failure);
 };
 
 // Checks that the user packed their game code and it is available for Paima Engine to use to run
