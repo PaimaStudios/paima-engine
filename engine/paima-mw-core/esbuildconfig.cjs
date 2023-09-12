@@ -1,8 +1,6 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 const esbuild = require('esbuild');
-const g = require('@esbuild-plugins/node-globals-polyfill');
-const m = require('@esbuild-plugins/node-modules-polyfill');
-const modules = m.NodeModulesPolyfillPlugin();
+const { polyfillNode } = require('esbuild-plugin-polyfill-node');
 
 const define = { global: 'window' };
 
@@ -21,12 +19,6 @@ if (
   throw new Error('Please ensure you have filled out your .env file');
 }
 
-const global = g.NodeGlobalsPolyfillPlugin({
-  process: true,
-  buffer: true,
-  define: { 'process.env.var': '"hello"' }, // inject will override define, to keep env vars you must also pass define here https://github.com/evanw/esbuild/issues/660
-});
-
 const config = {
   entryPoints: ['build/index.js'],
   bundle: true,
@@ -34,7 +26,7 @@ const config = {
   globalName: 'middleware',
   define,
   outfile: 'web/middleware.js',
-  plugins: [global, modules],
+  plugins: [polyfillNode({})],
   external: ['pg-native'],
 };
 
