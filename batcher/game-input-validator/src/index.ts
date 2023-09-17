@@ -1,10 +1,6 @@
 import type { Pool } from 'pg';
 
-import {
-  setGameInputValidatorClosed,
-  unsetGameInputValidatorClosed,
-  wait,
-} from '@paima-batcher/utils';
+import { setGameInputValidatorClosed, unsetGameInputValidatorClosed } from '@paima-batcher/utils';
 import type { GameInputValidatorCore } from '@paima-batcher/utils';
 import {
   getUnvalidatedInputs,
@@ -21,6 +17,7 @@ import { getErrors } from './errors.js';
 import { DefaultInputValidatorCoreInitializator } from './default-validator.js';
 import type { BatchedSubunit } from '@paima/concise';
 import { hashBatchSubunit } from '@paima/concise';
+import { wait } from '@paima/utils';
 
 class GameInputValidator {
   private core: GameInputValidatorCore;

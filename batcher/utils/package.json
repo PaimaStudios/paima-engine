@@ -9,8 +9,6 @@
     "@paima/providers": "file:../../engine/paima-providers",
     "@paima/utils": "file:../../engine/paima-utils",
     "@truffle/hdwallet-provider": "^2.1.14",
-    "web3": "1.10.0",
-    "web3-eth-contract": "1.10.0",
-    "web3-utils": "1.10.0"
+    "web3": "1.10.0"
   }
 }

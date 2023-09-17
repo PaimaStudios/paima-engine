@@ -1,4 +1,4 @@
-import Web3 from 'web3';
+import type Web3 from 'web3';
 import type { Pool } from 'pg';
 
 import { addressTypeName, GenericRejectionCode, ENV } from '@paima-batcher/utils';
@@ -15,7 +15,7 @@ import { isSameDay, isSameMinute } from './date-utils.js';
 import type { BatchedSubunit } from '@paima/concise';
 import { CryptoManager } from '@paima/crypto';
 import { createMessageForBatcher } from '@paima/concise';
-import { AddressType, getReadNamespaces } from '@paima/utils';
+import { initWeb3, AddressType, getReadNamespaces } from '@paima/utils';
 
 class PaimaAddressValidator {
   private web3: Web3 | undefined;
@@ -29,7 +29,7 @@ class PaimaAddressValidator {
   }
 
   public initialize = async (): Promise<void> => {
-    this.web3 = await getWeb3(this.nodeUrl);
+    this.web3 = await initWeb3(this.nodeUrl);
   };
 
   public validateUserInput = async (input: BatchedSubunit, height: number): Promise<ErrorCode> => {
@@ -201,16 +201,6 @@ class PaimaAddressValidator {
   ): boolean {
     return inputsMinute < ENV.MAX_USER_INPUTS_PER_MINUTE && inputsDay < ENV.MAX_USER_INPUTS_PER_DAY;
   }
-}
-
-async function getWeb3(nodeUrl: string): Promise<Web3> {
-  const web3 = new Web3(nodeUrl);
-  try {
-    await web3.eth.getNodeInfo();
-  } catch (e) {
-    throw new Error(`Error connecting to node at ${nodeUrl}:\n${e}`);
-  }
-  return web3;
 }
 
 export default PaimaAddressValidator;

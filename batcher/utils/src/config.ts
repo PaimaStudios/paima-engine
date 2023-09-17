@@ -1,16 +1,20 @@
 import { GameInputValidatorCoreType } from './types';
 import { config } from 'dotenv';
+import { ENV as ENGINE_ENV } from '@paima/utils';
+
 // Load environment variables
 config({ path: `${process.cwd()}/.env.${process.env.NODE_ENV || 'development'}` });
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export class ENV {
   // Blockchain:
   static get CHAIN_URI(): string {
-    return process.env.CHAIN_URI || '';
+    return ENGINE_ENV.CHAIN_URI;
   }
 
-  static get STORAGE_CONTRACT_ADDRESS(): string {
-    return process.env.STORAGE_CONTRACT_ADDRESS || '';
+  static get CONTRACT_ADDRESS(): string {
+    // STORAGE_CONTRACT_ADDRESS is the deprecated name
+    return process.env.STORAGE_CONTRACT_ADDRESS || ENGINE_ENV.CONTRACT_ADDRESS;
   }
 
   static get DEFAULT_FEE(): string {

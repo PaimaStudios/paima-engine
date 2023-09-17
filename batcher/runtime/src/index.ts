@@ -141,14 +141,14 @@ async function main(): Promise<void> {
 
   console.log('Chain URI:              ', ENV.CHAIN_URI);
   console.log('Validation type:        ', ENV.GAME_INPUT_VALIDATION_TYPE);
-  console.log('PaimaL2Contract address:', ENV.STORAGE_CONTRACT_ADDRESS);
+  console.log('PaimaL2Contract address:', ENV.CONTRACT_ADDRESS);
   console.log('Batcher account address:', truffleProvider.getAddress());
 
   const gameInputValidatorCore = await getValidatorCore(ENV.GAME_INPUT_VALIDATION_TYPE);
   const gameInputValidator = new GameInputValidator(gameInputValidatorCore, pool);
   const batchedTransactionPoster = new BatchedTransactionPoster(
     truffleProvider,
-    ENV.STORAGE_CONTRACT_ADDRESS,
+    ENV.CONTRACT_ADDRESS,
     ENV.BATCHED_MESSAGE_SIZE_LIMIT,
     pool
   );

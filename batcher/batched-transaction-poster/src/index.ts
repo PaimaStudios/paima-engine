@@ -1,5 +1,4 @@
 import type { Pool } from 'pg';
-import type { Contract } from 'web3-eth-contract';
 
 import {
   getValidatedInputs,
@@ -7,18 +6,13 @@ import {
   deleteValidatedInput,
   updateStateRejected,
 } from '@paima-batcher/db';
-import {
-  keepRunning,
-  wait,
-  getStorageContract,
-  ENV,
-  gameInputValidatorClosed,
-  webserverClosed,
-} from '@paima-batcher/utils';
+import { keepRunning, ENV, gameInputValidatorClosed, webserverClosed } from '@paima-batcher/utils';
 import type { TruffleEvmProvider } from '@paima/providers';
 
 import { estimateGasLimit } from './gas-limit.js';
 import { hashBatchSubunit, buildBatchData } from '@paima/concise';
+import { getPaimaL2Contract, wait } from '@paima/utils';
+import type { PaimaL2Contract } from '@paima/utils';
 
 class BatchedTransactionPoster {
   private truffleProvider: TruffleEvmProvider;
@@ -26,7 +20,7 @@ class BatchedTransactionPoster {
   private maxSize: number;
   private pool: Pool;
   private fee: string;
-  private storage: Contract;
+  private storage: PaimaL2Contract;
 
   constructor(
     truffleProvider: TruffleEvmProvider,
@@ -39,7 +33,7 @@ class BatchedTransactionPoster {
     this.maxSize = maxSize;
     this.pool = pool;
     this.fee = ENV.DEFAULT_FEE;
-    this.storage = getStorageContract(truffleProvider.web3, this.contractAddress);
+    this.storage = getPaimaL2Contract(this.contractAddress, truffleProvider.web3);
   }
 
   public initialize = async (): Promise<void> => {

@@ -1,14 +1,11 @@
-import Web3 from 'web3';
-import type { Contract } from 'web3-eth-contract';
-import type { AbiItem } from 'web3-utils';
+import type Web3 from 'web3';
 import HDWalletProvider from '@truffle/hdwallet-provider';
 import type { TruffleEvmProvider } from '@paima/providers';
 import { TruffleConnector } from '@paima/providers';
 
 import { GenericRejectionCode } from './types.js';
 
-import storageBuild from './artifacts/Storage.js';
-import { AddressType } from '@paima/utils';
+import { AddressType, wait } from '@paima/utils';
 
 export * from './config.js';
 export * from './config-validation.js';
@@ -138,41 +135,3 @@ export async function getWalletWeb3AndAddress(
 
   return await TruffleConnector.instance().connectExternal(wallet);
 }
-
-export async function getWeb3(nodeUrl: string): Promise<Web3> {
-  const web3 = new Web3(nodeUrl);
-  try {
-    await web3.eth.getNodeInfo();
-  } catch (e) {
-    throw new Error(`Error connecting to node at ${nodeUrl}:\n${e}`);
-  }
-  return web3;
-}
-
-export function getStorageContract(web3: Web3, address: string): Contract {
-  return new web3.eth.Contract(storageBuild.abi as AbiItem[], address);
-}
-
-function hexStringToBytes(hexString: string): number[] {
-  if (!/^[0-9a-fA-F]+$/.test(hexString)) {
-    throw new Error('Non-hex digits found in hex string');
-  }
-  const bytes: number[] = [];
-  if (hexString.length % 2 !== 0) {
-    hexString = '0' + hexString;
-  }
-  for (let c = 0; c < hexString.length; c += 2) {
-    const nextByte = hexString.slice(c, c + 2);
-    bytes.push(parseInt(nextByte, 16));
-  }
-  return bytes;
-}
-
-export function hexStringToUint8Array(hexString: string): Uint8Array {
-  return new Uint8Array(hexStringToBytes(hexString));
-}
-
-export const wait = async (ms: number): Promise<void> =>
-  await new Promise<void>(resolve => {
-    setTimeout(() => resolve(), ms);
-  });
