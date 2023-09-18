@@ -29,6 +29,7 @@
     "./paima-prando",
     "./paima-executors",
     "./paima-mw-core",
+    "./paima-build-utils",
     "./paima-db",
     "./paima-funnel",
     "./paima-sm",

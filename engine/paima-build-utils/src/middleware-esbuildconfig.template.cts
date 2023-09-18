@@ -1,8 +1,9 @@
-/* eslint-disable @typescript-eslint/explicit-function-return-type */
-/* eslint-disable @typescript-eslint/no-var-requires */
-const { polyfillNode } = require('esbuild-plugin-polyfill-node');
+import { polyfillNode } from 'esbuild-plugin-polyfill-node';
+import type esbuild from 'esbuild';
+import { dtsPlugin } from 'esbuild-plugin-d.ts';
+import fs from 'fs';
 
-const define = { global: 'window' };
+const define: Record<string, string> = { global: 'window' as const };
 // To replace process.env calls in middleware with variable values during build time
 for (const variable in process.env) {
   define[`process.env.${variable}`] = JSON.stringify(process.env[variable]);
@@ -12,8 +13,7 @@ if (process.env.SECURITY_NAMESPACE) {
   const namespace = process.env.SECURITY_NAMESPACE;
   if (namespace.endsWith('.yml') || namespace.endsWith('.yaml')) {
     const fileContent = fs.readFileSync(`../${namespace}`, 'utf-8');
-    define[`process.env.SECURITY_NAMESPACE_ROUTER`] =
-      JSON.stringify(fileContent);
+    define[`process.env.SECURITY_NAMESPACE_ROUTER`] = JSON.stringify(fileContent);
   }
 }
 
@@ -27,19 +27,17 @@ if (
   throw new Error('Please ensure you have filled out your .env file');
 
 // mock out fs as we can't use it in browser builds
-/** @type esbuild.Plugin */
-const fsaReplace = {
+const fsaReplace: esbuild.Plugin = {
   name: 'fsa-replace',
   setup(build) {
-    build.onResolve({ filter: /fsa\.js/ }, (args) => {
+    build.onResolve({ filter: /fsa\.js/ }, args => {
       const mockFile = args.path.replace('fsa.js', 'fsa_empty.js');
       return { path: `${args.resolveDir}/${mockFile}`, namespace: args.namespace };
     });
-  }
+  },
 };
 
-const { dtsPlugin } = require('esbuild-plugin-d.ts');
-const config = {
+const config: esbuild.BuildOptions = {
   // JS output from previous compilation step used here instead of index.ts to have more control over the TS build process
   entryPoints: ['build/index.js'],
   bundle: true,
@@ -50,4 +48,4 @@ const config = {
   external: ['pg-native'],
 };
 
-module.exports = config;
+export default config;
