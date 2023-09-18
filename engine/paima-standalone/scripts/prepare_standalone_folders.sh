@@ -68,6 +68,7 @@ echo $SDK_PATH/$module
 mkdir $SDK_PATH/$module
 mkdir $SDK_PATH/$module/web
 cp -a $module/build/. $SDK_PATH/$module/build/
+cp -r $module/scripts $SDK_PATH/$module/scripts
 cp $module/README.md $SDK_PATH/$module/README.md
 cp $module/package.json $SDK_PATH/$module/package.json
 cp $module/web/index.html $SDK_PATH/$module/web/index.html

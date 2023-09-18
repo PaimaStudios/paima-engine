@@ -1,10 +1,8 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 /* eslint-disable @typescript-eslint/no-var-requires */
-const esbuild = require('esbuild');
 const { polyfillNode } = require('esbuild-plugin-polyfill-node');
 
 const define = { global: 'window' };
-
 // To replace process.env calls in middleware with variable values during build time
 for (const variable in process.env) {
   define[`process.env.${variable}`] = JSON.stringify(process.env[variable]);
@@ -25,10 +23,10 @@ if (
   !process.env.CHAIN_URI ||
   !process.env.CHAIN_ID ||
   !process.env.BACKEND_URI
-) {
+)
   throw new Error('Please ensure you have filled out your .env file');
-}
 
+// mock out fs as we can't use it in browser builds
 /** @type esbuild.Plugin */
 const fsaReplace = {
   name: 'fsa-replace',
@@ -40,21 +38,16 @@ const fsaReplace = {
   }
 };
 
+const { dtsPlugin } = require('esbuild-plugin-d.ts');
 const config = {
+  // JS output from previous compilation step used here instead of index.ts to have more control over the TS build process
   entryPoints: ['build/index.js'],
   bundle: true,
-
-  // we use iife so that it's easy to import from the index.html for the debug website
-  format: 'iife',
-  globalName: 'middleware',
-
+  format: 'esm',
   define,
-  outfile: 'web/middleware.js',
-  plugins: [polyfillNode({}), fsaReplace],
+  outfile: 'packaged/middleware.js',
+  plugins: [polyfillNode({}), dtsPlugin(), fsaReplace],
   external: ['pg-native'],
 };
 
-esbuild.build(config)
-  .then(c => console.log('Done:', c))
-  .catch(e => console.log('Error:', e));
-
+module.exports = config;

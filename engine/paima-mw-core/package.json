@@ -6,8 +6,12 @@
   "main": "build/index.js",
   "types": "build/index.d.ts",
   "files": [
-    "/build"
+    "/build",
+    "/scripts"
   ],
+  "bin": {
+    "paima-build-middleware": "./scripts/esbuild.sh"
+  },
   "scripts": {
     "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1",
