@@ -37,7 +37,7 @@ const fsaReplace: esbuild.Plugin = {
   },
 };
 
-const config: esbuild.BuildOptions = {
+export const config: esbuild.BuildOptions = {
   // JS output from previous compilation step used here instead of index.ts to have more control over the TS build process
   entryPoints: ['build/index.js'],
   bundle: true,
@@ -47,5 +47,3 @@ const config: esbuild.BuildOptions = {
   plugins: [polyfillNode({}), dtsPlugin(), fsaReplace],
   external: ['pg-native'],
 };
-
-export default config;
