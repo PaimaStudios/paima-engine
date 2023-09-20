@@ -2,6 +2,9 @@
   "name": "@paima/engine",
   "version": "0.6.0",
   "private": true,
+  "bin": {
+    "paima-build-middleware": "./node_modules/paima-build-middleware.sh"
+  },
   "scripts": {
     "lint": "npm run prettier && npm run eslint",
     "cilint": "npm run cprettier && npm run eslint",
@@ -26,6 +29,7 @@
     "./paima-prando",
     "./paima-executors",
     "./paima-mw-core",
+    "./paima-build-utils",
     "./paima-db",
     "./paima-funnel",
     "./paima-sm",

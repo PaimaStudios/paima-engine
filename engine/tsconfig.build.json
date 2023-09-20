@@ -10,6 +10,7 @@
     { "path": "./paima-concise" },
     { "path": "./paima-executors" },
     { "path": "./paima-mw-core" },
+    { "path": "./paima-build-utils" },
     { "path": "./paima-runtime" },
     { "path": "./paima-funnel" },
     { "path": "./paima-sm" },

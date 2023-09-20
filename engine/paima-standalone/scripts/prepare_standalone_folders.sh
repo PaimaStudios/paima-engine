@@ -13,7 +13,7 @@ rm -rf $SDK_PATH
 mkdir $SDK_PATH
 npm run build:sdk
 
-# SDK_MODULES=( "paima-concise" "paima-db" "paima-executors" "paima-mw-core" "paima-prando" "paima-utils" "paima-crypto" "paima-providers" )
+# SDK_MODULES=( "paima-concise" "paima-db" "paima-executors" "paima-mw-core" "paima-build-utils" "paima-prando" "paima-utils" "paima-crypto" "paima-providers" )
 
 # Prepare SDK modules
 module="paima-concise"
@@ -73,6 +73,14 @@ cp $module/package.json $SDK_PATH/$module/package.json
 cp $module/web/index.html $SDK_PATH/$module/web/index.html
 cp -r $module/web/TemplateData $SDK_PATH/$module/web/TemplateData
 cp $module/esbuildconfig.cjs $SDK_PATH/$module/esbuildconfig.cjs
+
+module="paima-build-utils"
+echo $SDK_PATH/$module
+mkdir $SDK_PATH/$module
+cp -a $module/build/. $SDK_PATH/$module/build/
+cp -a $module/scripts/. $SDK_PATH/$module/scripts/
+cp $module/README.md $SDK_PATH/$module/README.md
+cp $module/package.json $SDK_PATH/$module/package.json
 
 module="paima-db"
 echo $SDK_PATH/$module

@@ -9,6 +9,7 @@
     { "path": "./paima-utils-backend" },
     { "path": "./paima-concise" },
     { "path": "./paima-mw-core" },
+    { "path": "./paima-build-utils" },
     { "path": "./paima-executors" }
   ]
 }

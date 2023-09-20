@@ -22,10 +22,15 @@ Of note, `Paima Engine Core` refers to all of the following modules:
 While `Paima Engine SDK` refers to these modules:
 
 - `Paima Executors` (The library which enables building `RoundExecutor`s and `MatchExecutor`s)
-- `Paima Tx` (The library which aids in building transactions)
+- `Paima Middleware Core` (The library which aids connecting frontends to Paima logic)
 - `Paima Utils` (The Library which holds auxillary functions between the other modules)
+- `Paima Utils Backend` (Utils which are purely for backend (and may not work in a browser environment))
+- `Paima Build Utils` (Helps build the Paima components used user projects)
 - `Paima Prando` (Custom fork of a deterministic pseudo-RNG generator library)
 - `Paima Concise` (The library which enables building and parsing concise encoding)
+- `Paima Crypto` (Has utility functions for all cryptography and blockchains Paima supports)
+- `Paima Providers` (Handles connection to wallet standards for all blockchains Paima supports)
+- `Paima DB` (Handles utility functions to handling the Paima database)
 
 Then we also have a `Paima Engine Standalone` which is a module that utilizes `Paima Engine Core` to provide easy to use and secure way of creating new games by the public. This is achieved by creating an executable with the bundled core that has two main responsibilities:
 
