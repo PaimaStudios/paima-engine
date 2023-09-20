@@ -1,5 +1,5 @@
 import type { AddressType, WalletAddress, UserSignature, InputDataString } from '@paima/utils';
-import { sha3, toBN } from 'web3-utils';
+import { sha3 } from 'web3-utils';
 
 export const OUTER_BATCH_DIVIDER: string = '\x02';
 export const INNER_BATCH_DIVIDER: string = '\x03';

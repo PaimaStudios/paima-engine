@@ -1,5 +1,5 @@
 /** Types generated for queries found in "src/sql/cde-generic.sql" */
-import { PreparedQuery } from '@pgtyped/query';
+import { PreparedQuery } from '@pgtyped/runtime';
 
 export type Json = null | boolean | number | string | Json[] | { [key: string]: Json };
 

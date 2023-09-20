@@ -1,5 +1,5 @@
 /** Types generated for queries found in "src/sql/cde-erc20-deposit.sql" */
-import { PreparedQuery } from '@pgtyped/query';
+import { PreparedQuery } from '@pgtyped/runtime';
 
 /** 'CdeErc20DepositGetTotalDeposited' parameters type */
 export interface ICdeErc20DepositGetTotalDepositedParams {

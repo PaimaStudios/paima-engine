@@ -20,10 +20,10 @@
     "lint": "prettier --write '**/*.ts'"
   },
   "devDependencies": {
-    "@pgtyped/cli": "^1.0.2",
+    "@pgtyped/cli": "^2.2.1",
     "@types/node": "^17.0.25"
   },
   "dependencies": {
-    "@pgtyped/query": "1.0.1"
+    "@pgtyped/runtime": "2.1.0"
   }
 }

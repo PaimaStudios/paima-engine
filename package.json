@@ -21,6 +21,5 @@
     "eslint-plugin-react": "^7.31.10",
     "eslint-plugin-react-hooks": "^4.6.0",
     "husky": "^8.0.3"
-  },
-  "dependencies": {}
+  }
 }

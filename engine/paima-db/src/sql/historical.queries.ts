@@ -1,5 +1,5 @@
 /** Types generated for queries found in "src/sql/historical.sql" */
-import { PreparedQuery } from '@pgtyped/query';
+import { PreparedQuery } from '@pgtyped/runtime';
 
 /** 'StoreGameInput' parameters type */
 export interface IStoreGameInputParams {

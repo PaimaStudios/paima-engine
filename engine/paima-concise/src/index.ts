@@ -3,4 +3,4 @@ export { consumer } from './consumer.js';
 export * from './PaimaParser';
 export * from './types';
 export * from './batcher';
-export type { BatchedSubunit } from './batcher';
+export type * from './batcher';

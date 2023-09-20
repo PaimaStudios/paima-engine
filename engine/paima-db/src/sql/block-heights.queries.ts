@@ -1,5 +1,5 @@
 /** Types generated for queries found in "src/sql/block-heights.sql" */
-import { PreparedQuery } from '@pgtyped/query';
+import { PreparedQuery } from '@pgtyped/runtime';
 
 /** 'GetLatestProcessedBlockHeight' parameters type */
 export type IGetLatestProcessedBlockHeightParams = void;

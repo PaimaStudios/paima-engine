@@ -1,6 +1,5 @@
 import { polyfillNode } from 'esbuild-plugin-polyfill-node';
 import type esbuild from 'esbuild';
-import { dtsPlugin } from 'esbuild-plugin-d.ts';
 import fs from 'fs';
 
 const define: Record<string, string> = { global: 'window' as const };
@@ -39,11 +38,12 @@ const fsaReplace: esbuild.Plugin = {
 
 export const config: esbuild.BuildOptions = {
   // JS output from previous compilation step used here instead of index.ts to have more control over the TS build process
+  // however, that means type definitions will be lost until this is implemented: https://github.com/evanw/esbuild/issues/95#issuecomment-1559710310
   entryPoints: ['build/index.js'],
   bundle: true,
   format: 'esm',
   define,
   outfile: 'packaged/middleware.js',
-  plugins: [polyfillNode({}), dtsPlugin(), fsaReplace],
+  plugins: [polyfillNode({}), fsaReplace],
   external: ['pg-native'],
 };
