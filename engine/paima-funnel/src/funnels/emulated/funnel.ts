@@ -98,10 +98,7 @@ export class EmulatedBlocksFunnel extends BaseFunnel {
         const latestAvailableBlockNumber = this.sharedData.cacheManager.cacheEntries[
           RpcCacheEntry.SYMBOL
         ]?.getState(ENV.CHAIN_ID);
-        if (
-          latestAvailableBlockNumber == null ||
-          latestAvailableBlockNumber.state === RpcRequestState.NotRequested
-        )
+        if (latestAvailableBlockNumber?.state !== RpcRequestState.HasResult)
           throw new Error(`latestAvailableBlockNumber missing from cache for ${ENV.CHAIN_ID}`);
 
         // check if the chunk we read matches the latest block known by the RPC endpoint
@@ -334,9 +331,6 @@ export class EmulatedBlocksFunnel extends BaseFunnel {
 
     // we only want to pop off the queue the entries that correspond for the next ChainData
     // for the rest, we leave them in the queue to be fetched in the next readData call
-    if (this.processingQueue.length === 0) {
-    } else if (this.processingQueue[0].timestamp >= nextBlockEndTimestamp) {
-    }
     const mergedBlocks: ChainData[] = [];
     while (
       this.processingQueue.length > 0 &&

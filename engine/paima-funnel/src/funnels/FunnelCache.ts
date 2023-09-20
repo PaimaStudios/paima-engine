@@ -16,8 +16,10 @@ export class FunnelCacheManager {
   public cacheEntries: CacheMapType = {};
 
   public clear(): void {
-    for (const entry of Object.values<FunnelCacheEntry>(this.cacheEntries)) {
-      entry.clear();
+    for (const entry of Object.getOwnPropertySymbols(this.cacheEntries) as Array<
+      keyof CacheMapType
+    >) {
+      this.cacheEntries[entry]?.clear();
     }
   }
 }
