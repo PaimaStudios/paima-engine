@@ -48,8 +48,12 @@ async function switchChain(): Promise<boolean> {
               decimals: getChainCurrencyDecimals(),
             },
             rpcUrls: [getChainUri()],
-            blockExplorerUrls: [getChainExplorerUri()],
+            // blockExplorerUrls: Chain not added with empty string.
+            blockExplorerUrls: getChainExplorerUri() ? [getChainExplorerUri()] : undefined,
           });
+        await EvmConnector.instance()
+          .getOrThrowProvider()
+          .switchChain(hexChainId);
         return await verifyWalletChain();
       } catch (addError) {
         errorFxn(PaimaMiddlewareErrorCode.ERROR_ADDING_CHAIN, addError);

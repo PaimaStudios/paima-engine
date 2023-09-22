@@ -17,7 +17,7 @@ export class ENV {
     return process.env.CHAIN_URI || '';
   }
   static get CHAIN_NAME(): string {
-    return process.env.CHAIN_NAME || '';
+    return process.env.CHAIN_NAME || 'UNKNOWN_CHAIN_NAME';
   }
   static get CHAIN_ID(): number {
     return parseInt(process.env.CHAIN_ID || '0', 10);
@@ -26,10 +26,10 @@ export class ENV {
     return process.env.CHAIN_EXPLORER_URI || '';
   }
   static get CHAIN_CURRENCY_NAME(): string {
-    return process.env.CHAIN_CURRENCY_NAME || '';
+    return process.env.CHAIN_CURRENCY_NAME || 'UNKNOWN_CURRENCY_NAME';
   }
   static get CHAIN_CURRENCY_SYMBOL(): string {
-    return process.env.CHAIN_CURRENCY_SYMBOL || '';
+    return process.env.CHAIN_CURRENCY_SYMBOL || 'NONAME';
   }
   static get CHAIN_CURRENCY_DECIMALS(): number {
     return parseInt(process.env.CHAIN_CURRENCY_DECIMALS || '0', 10);

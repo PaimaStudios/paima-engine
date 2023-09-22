@@ -161,17 +161,19 @@ export class EvmProvider implements IProvider<EvmApi> {
       const walletChain = await this.conn.api.request({ method: 'eth_chainId' });
       return parseInt(walletChain as string, 16) === parseInt(this.gameInfo.gameChainId, 16);
     } catch (e: any) {
-      throw new ProviderApiError(`[verifyWalletChain] error: ${e?.message}`);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      throw new ProviderApiError(`[verifyWalletChain] error: ${e?.message}`, e?.code);
     }
   };
   addChain = async (newChain: AddEthereumChainParameter): Promise<void> => {
     try {
       await this.conn.api.request({
-        method: 'eth_chainId',
+        method: 'wallet_addEthereumChain',
         params: [newChain],
       });
     } catch (e: any) {
-      throw new ProviderApiError(`[addChain] error: ${e?.message}`);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      throw new ProviderApiError(`[addChain] error: ${e?.message}`, e?.code);
     }
   };
   switchChain = async (hexChainId: string): Promise<void> => {
@@ -181,7 +183,8 @@ export class EvmProvider implements IProvider<EvmApi> {
         params: [{ chainId: hexChainId }],
       });
     } catch (e: any) {
-      throw new ProviderApiError(`[switchChain] error: ${e?.message}`);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      throw new ProviderApiError(`[switchChain] error: ${e?.message}`, e?.code);
     }
   };
   sendTransaction = async (tx: Record<string, any>): Promise<string> => {
@@ -192,14 +195,15 @@ export class EvmProvider implements IProvider<EvmApi> {
         params: [tx],
       });
       if (typeof hash !== 'string') {
-        console.log('[sendWalletTransaction] invalid signature:', hash);
+        console.log('[sendTransaction] invalid signature:', hash);
         throw new ProviderApiError(
-          `[sendWalletTransaction] Received "hash" of type ${typeof hash}`
+          `[sendTransaction] Received "hash" of type ${typeof hash}`
         );
       }
       return hash;
     } catch (e: any) {
-      throw new ProviderApiError(`[switchChain] error: ${e?.message}`);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      throw new ProviderApiError(`[sendTransaction] error: ${e?.message}`, e?.code);
     }
   };
 }
