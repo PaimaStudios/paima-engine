@@ -17,8 +17,13 @@ export class ProviderNotInitialized extends Error {
   }
 }
 export class ProviderApiError extends Error {
-  constructor(message?: string) {
+  public code: number | undefined;
+
+  constructor(message?: string, code?: number) {
     super(message);
     this.name = 'ProviderApiError';
+    if (code) {
+      this.code = code;
+    }
   }
 }

@@ -48,7 +48,8 @@ async function switchChain(): Promise<boolean> {
               decimals: getChainCurrencyDecimals(),
             },
             rpcUrls: [getChainUri()],
-            blockExplorerUrls: [getChainExplorerUri()],
+            // blockExplorerUrls: Chain not added with empty string.
+            blockExplorerUrls: getChainExplorerUri() ? [getChainExplorerUri()] : undefined,
           });
         return await verifyWalletChain();
       } catch (addError) {
