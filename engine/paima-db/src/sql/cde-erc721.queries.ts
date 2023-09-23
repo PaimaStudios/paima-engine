@@ -1,5 +1,5 @@
 /** Types generated for queries found in "src/sql/cde-erc721.sql" */
-import { PreparedQuery } from '@pgtyped/query';
+import { PreparedQuery } from '@pgtyped/runtime';
 
 /** 'CdeErc721GetOwner' parameters type */
 export interface ICdeErc721GetOwnerParams {

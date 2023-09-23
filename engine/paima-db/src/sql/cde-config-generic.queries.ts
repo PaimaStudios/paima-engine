@@ -1,5 +1,5 @@
 /** Types generated for queries found in "src/sql/cde-config-generic.sql" */
-import { PreparedQuery } from '@pgtyped/query';
+import { PreparedQuery } from '@pgtyped/runtime';
 
 /** 'GetCdeConfigGeneric' parameters type */
 export type IGetCdeConfigGenericParams = void;
@@ -30,7 +30,7 @@ export const getCdeConfigGeneric = new PreparedQuery<IGetCdeConfigGenericParams,
 
 /** 'GetSpecificCdeConfigGeneric' parameters type */
 export interface IGetSpecificCdeConfigGenericParams {
-  cde_id: number | null | void;
+  cde_id?: number | null | void;
 }
 
 /** 'GetSpecificCdeConfigGeneric' return type */

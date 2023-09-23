@@ -1,5 +1,5 @@
 /** Types generated for queries found in "src/sql/cde-config-erc20-deposit.sql" */
-import { PreparedQuery } from '@pgtyped/query';
+import { PreparedQuery } from '@pgtyped/runtime';
 
 /** 'GetCdeConfigErc20Deposit' parameters type */
 export type IGetCdeConfigErc20DepositParams = void;
@@ -29,7 +29,7 @@ export const getCdeConfigErc20Deposit = new PreparedQuery<IGetCdeConfigErc20Depo
 
 /** 'GetSpecificCdeConfigErc20Deposit' parameters type */
 export interface IGetSpecificCdeConfigErc20DepositParams {
-  cde_id: number | null | void;
+  cde_id?: number | null | void;
 }
 
 /** 'GetSpecificCdeConfigErc20Deposit' return type */

@@ -1,5 +1,5 @@
 /** Types generated for queries found in "src/sql/emulated.sql" */
-import { PreparedQuery } from '@pgtyped/query';
+import { PreparedQuery } from '@pgtyped/runtime';
 
 /** 'EmulatedSelectLatestPrior' parameters type */
 export interface IEmulatedSelectLatestPriorParams {

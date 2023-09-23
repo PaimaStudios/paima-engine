@@ -1,5 +1,5 @@
 /** Types generated for queries found in "src/sql/extensions.sql" */
-import { PreparedQuery } from '@pgtyped/query';
+import { PreparedQuery } from '@pgtyped/runtime';
 
 /** 'GetChainDataExtensions' parameters type */
 export type IGetChainDataExtensionsParams = void;
@@ -33,7 +33,7 @@ export const getChainDataExtensions = new PreparedQuery<IGetChainDataExtensionsP
 
 /** 'GetSpecificChainDataExtension' parameters type */
 export interface IGetSpecificChainDataExtensionParams {
-  cde_id: number | null | void;
+  cde_id?: number | null | void;
 }
 
 /** 'GetSpecificChainDataExtension' return type */
@@ -171,7 +171,7 @@ export interface IRegisterChainDataExtensionParams {
   cde_name: string;
   cde_type: number;
   contract_address: string;
-  scheduled_prefix: string | null | void;
+  scheduled_prefix?: string | null | void;
   start_blockheight: number;
 }
 

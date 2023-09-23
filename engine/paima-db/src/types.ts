@@ -1,3 +1,3 @@
-import type { PreparedQuery } from '@pgtyped/query';
+import type { PreparedQuery } from '@pgtyped/runtime';
 
 export type SQLUpdate = [PreparedQuery<any, any>, any];

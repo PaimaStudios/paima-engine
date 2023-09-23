@@ -1,9 +1,9 @@
 /** Types generated for queries found in "src/sql/nonces.sql" */
-import { PreparedQuery } from '@pgtyped/query';
+import { PreparedQuery } from '@pgtyped/runtime';
 
 /** 'FindNonce' parameters type */
 export interface IFindNonceParams {
-  nonce: string | null | void;
+  nonce?: string | null | void;
 }
 
 /** 'FindNonce' return type */

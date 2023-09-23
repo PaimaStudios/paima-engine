@@ -1,10 +1,10 @@
 /** Types generated for queries found in "src/sql/cde-tracking.sql" */
-import { PreparedQuery } from '@pgtyped/query';
+import { PreparedQuery } from '@pgtyped/runtime';
 
 /** 'MarkCdeDatumProcessed' parameters type */
 export interface IMarkCdeDatumProcessedParams {
   block_height: number;
-  datum_count: number | null | void;
+  datum_count?: number | null | void;
 }
 
 /** 'MarkCdeDatumProcessed' return type */

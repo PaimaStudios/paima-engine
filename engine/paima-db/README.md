@@ -2,11 +2,6 @@
 
 Paima-db is a simple package containing database-related code used by `paima-engine`-powered game nodes.
 
-## Usage
-
-Currently the library is in development, unpublished, and to be
-imported and used locally.
-
 ## Migrations
 
 (Not to be confused with Data Migrations implemented in `src/data-migrations.ts`)
@@ -17,20 +12,4 @@ Specific game databases do not need to contain these tables, as they will be cre
 
 ## Development
 
-Install dependencies:
-
-```
-npm i
-```
-
-To test:
-
-```
-npm run test
-```
-
-Lint:
-
-```
-npm run lint
-```
+To re-generate the queries, you will need a database running with the same connection info as [the config](./pgtypedconfig.json) and then run `npm run compile`.

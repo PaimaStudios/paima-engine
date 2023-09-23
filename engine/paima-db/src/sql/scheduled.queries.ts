@@ -1,5 +1,5 @@
 /** Types generated for queries found in "src/sql/scheduled.sql" */
-import { PreparedQuery } from '@pgtyped/query';
+import { PreparedQuery } from '@pgtyped/runtime';
 
 /** 'NewScheduledData' parameters type */
 export interface INewScheduledDataParams {

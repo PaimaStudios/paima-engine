@@ -6,12 +6,12 @@
   "type": "module",
   "types": "build/index.d.ts",
   "scripts": {
-    "generate": "pgtyped -w -c pgtypedconfig.json"
+    "generate": "npx pgtyped -w -c pgtypedconfig.json"
   },
   "dependencies": {
-    "@pgtyped/query": "^1.0.0"
+    "@pgtyped/runtime": "2.1.0"
   },
   "devDependencies": {
-    "@pgtyped/cli": "^1.0.0"
+    "@pgtyped/cli": "^2.2.1"
   }
 }

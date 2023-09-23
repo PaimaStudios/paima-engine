@@ -1,5 +1,5 @@
 /** Types generated for queries found in "src/sql/queries.sql" */
-import { PreparedQuery } from '@pgtyped/query';
+import { PreparedQuery } from '@pgtyped/runtime';
 
 export type input_state = 'accepted' | 'posted' | 'rejected' | 'validating';
 
@@ -21,49 +21,7 @@ export interface IInsertUnvalidatedInputQuery {
   result: IInsertUnvalidatedInputResult;
 }
 
-const insertUnvalidatedInputIR: any = {
-  usedParamSet: {
-    address_type: true,
-    user_address: true,
-    game_input: true,
-    millisecond_timestamp: true,
-    user_signature: true,
-  },
-  params: [
-    {
-      name: 'address_type',
-      required: true,
-      transform: { type: 'scalar' },
-      locs: [{ a: 138, b: 151 }],
-    },
-    {
-      name: 'user_address',
-      required: true,
-      transform: { type: 'scalar' },
-      locs: [{ a: 156, b: 169 }],
-    },
-    {
-      name: 'game_input',
-      required: true,
-      transform: { type: 'scalar' },
-      locs: [{ a: 174, b: 185 }],
-    },
-    {
-      name: 'millisecond_timestamp',
-      required: true,
-      transform: { type: 'scalar' },
-      locs: [{ a: 190, b: 212 }],
-    },
-    {
-      name: 'user_signature',
-      required: true,
-      transform: { type: 'scalar' },
-      locs: [{ a: 217, b: 232 }],
-    },
-  ],
-  statement:
-    'INSERT INTO unvalidated_game_inputs(\n  address_type,\n  user_address,\n  game_input,\n  millisecond_timestamp,\n  user_signature\n) VALUES (\n  :address_type!,\n  :user_address!,\n  :game_input!,\n  :millisecond_timestamp!,\n  :user_signature!\n)',
-};
+const insertUnvalidatedInputIR: any = {"usedParamSet":{"address_type":true,"user_address":true,"game_input":true,"millisecond_timestamp":true,"user_signature":true},"params":[{"name":"address_type","required":true,"transform":{"type":"scalar"},"locs":[{"a":138,"b":151}]},{"name":"user_address","required":true,"transform":{"type":"scalar"},"locs":[{"a":156,"b":169}]},{"name":"game_input","required":true,"transform":{"type":"scalar"},"locs":[{"a":174,"b":185}]},{"name":"millisecond_timestamp","required":true,"transform":{"type":"scalar"},"locs":[{"a":190,"b":212}]},{"name":"user_signature","required":true,"transform":{"type":"scalar"},"locs":[{"a":217,"b":232}]}],"statement":"INSERT INTO unvalidated_game_inputs(\n  address_type,\n  user_address,\n  game_input,\n  millisecond_timestamp,\n  user_signature\n) VALUES (\n  :address_type!,\n  :user_address!,\n  :game_input!,\n  :millisecond_timestamp!,\n  :user_signature!\n)"};
 
 /**
  * Query generated from SQL:
@@ -83,10 +41,8 @@ const insertUnvalidatedInputIR: any = {
  * )
  * ```
  */
-export const insertUnvalidatedInput = new PreparedQuery<
-  IInsertUnvalidatedInputParams,
-  IInsertUnvalidatedInputResult
->(insertUnvalidatedInputIR);
+export const insertUnvalidatedInput = new PreparedQuery<IInsertUnvalidatedInputParams,IInsertUnvalidatedInputResult>(insertUnvalidatedInputIR);
+
 
 /** 'InsertValidatedInput' parameters type */
 export interface IInsertValidatedInputParams {
@@ -106,49 +62,7 @@ export interface IInsertValidatedInputQuery {
   result: IInsertValidatedInputResult;
 }
 
-const insertValidatedInputIR: any = {
-  usedParamSet: {
-    address_type: true,
-    user_address: true,
-    game_input: true,
-    millisecond_timestamp: true,
-    user_signature: true,
-  },
-  params: [
-    {
-      name: 'address_type',
-      required: true,
-      transform: { type: 'scalar' },
-      locs: [{ a: 136, b: 149 }],
-    },
-    {
-      name: 'user_address',
-      required: true,
-      transform: { type: 'scalar' },
-      locs: [{ a: 154, b: 167 }],
-    },
-    {
-      name: 'game_input',
-      required: true,
-      transform: { type: 'scalar' },
-      locs: [{ a: 172, b: 183 }],
-    },
-    {
-      name: 'millisecond_timestamp',
-      required: true,
-      transform: { type: 'scalar' },
-      locs: [{ a: 188, b: 210 }],
-    },
-    {
-      name: 'user_signature',
-      required: true,
-      transform: { type: 'scalar' },
-      locs: [{ a: 215, b: 230 }],
-    },
-  ],
-  statement:
-    'INSERT INTO validated_game_inputs(\n  address_type,\n  user_address,\n  game_input,\n  millisecond_timestamp,\n  user_signature\n) VALUES (\n  :address_type!,\n  :user_address!,\n  :game_input!,\n  :millisecond_timestamp!,\n  :user_signature!\n)',
-};
+const insertValidatedInputIR: any = {"usedParamSet":{"address_type":true,"user_address":true,"game_input":true,"millisecond_timestamp":true,"user_signature":true},"params":[{"name":"address_type","required":true,"transform":{"type":"scalar"},"locs":[{"a":136,"b":149}]},{"name":"user_address","required":true,"transform":{"type":"scalar"},"locs":[{"a":154,"b":167}]},{"name":"game_input","required":true,"transform":{"type":"scalar"},"locs":[{"a":172,"b":183}]},{"name":"millisecond_timestamp","required":true,"transform":{"type":"scalar"},"locs":[{"a":188,"b":210}]},{"name":"user_signature","required":true,"transform":{"type":"scalar"},"locs":[{"a":215,"b":230}]}],"statement":"INSERT INTO validated_game_inputs(\n  address_type,\n  user_address,\n  game_input,\n  millisecond_timestamp,\n  user_signature\n) VALUES (\n  :address_type!,\n  :user_address!,\n  :game_input!,\n  :millisecond_timestamp!,\n  :user_signature!\n)"};
 
 /**
  * Query generated from SQL:
@@ -168,10 +82,8 @@ const insertValidatedInputIR: any = {
  * )
  * ```
  */
-export const insertValidatedInput = new PreparedQuery<
-  IInsertValidatedInputParams,
-  IInsertValidatedInputResult
->(insertValidatedInputIR);
+export const insertValidatedInput = new PreparedQuery<IInsertValidatedInputParams,IInsertValidatedInputResult>(insertValidatedInputIR);
+
 
 /** 'GetUnvalidatedInputs' parameters type */
 export type IGetUnvalidatedInputsParams = void;
@@ -192,11 +104,7 @@ export interface IGetUnvalidatedInputsQuery {
   result: IGetUnvalidatedInputsResult;
 }
 
-const getUnvalidatedInputsIR: any = {
-  usedParamSet: {},
-  params: [],
-  statement: 'SELECT * FROM unvalidated_game_inputs',
-};
+const getUnvalidatedInputsIR: any = {"usedParamSet":{},"params":[],"statement":"SELECT * FROM unvalidated_game_inputs"};
 
 /**
  * Query generated from SQL:
@@ -204,10 +112,8 @@ const getUnvalidatedInputsIR: any = {
  * SELECT * FROM unvalidated_game_inputs
  * ```
  */
-export const getUnvalidatedInputs = new PreparedQuery<
-  IGetUnvalidatedInputsParams,
-  IGetUnvalidatedInputsResult
->(getUnvalidatedInputsIR);
+export const getUnvalidatedInputs = new PreparedQuery<IGetUnvalidatedInputsParams,IGetUnvalidatedInputsResult>(getUnvalidatedInputsIR);
+
 
 /** 'ValidateInput' parameters type */
 export interface IValidateInputParams {
@@ -223,12 +129,7 @@ export interface IValidateInputQuery {
   result: IValidateInputResult;
 }
 
-const validateInputIR: any = {
-  usedParamSet: { id: true },
-  params: [{ name: 'id', required: true, transform: { type: 'scalar' }, locs: [{ a: 60, b: 63 }] }],
-  statement:
-    'WITH res AS (DELETE FROM unvalidated_game_inputs WHERE id = :id! RETURNING address_type, user_address, game_input, millisecond_timestamp, user_signature)\n    INSERT INTO validated_game_inputs (address_type, user_address, game_input, millisecond_timestamp, user_signature) SELECT * FROM res',
-};
+const validateInputIR: any = {"usedParamSet":{"id":true},"params":[{"name":"id","required":true,"transform":{"type":"scalar"},"locs":[{"a":60,"b":63}]}],"statement":"WITH res AS (DELETE FROM unvalidated_game_inputs WHERE id = :id! RETURNING address_type, user_address, game_input, millisecond_timestamp, user_signature)\n    INSERT INTO validated_game_inputs (address_type, user_address, game_input, millisecond_timestamp, user_signature) SELECT * FROM res"};
 
 /**
  * Query generated from SQL:
@@ -237,9 +138,8 @@ const validateInputIR: any = {
  *     INSERT INTO validated_game_inputs (address_type, user_address, game_input, millisecond_timestamp, user_signature) SELECT * FROM res
  * ```
  */
-export const validateInput = new PreparedQuery<IValidateInputParams, IValidateInputResult>(
-  validateInputIR
-);
+export const validateInput = new PreparedQuery<IValidateInputParams,IValidateInputResult>(validateInputIR);
+
 
 /** 'DeleteUnvalidatedInput' parameters type */
 export interface IDeleteUnvalidatedInputParams {
@@ -255,11 +155,7 @@ export interface IDeleteUnvalidatedInputQuery {
   result: IDeleteUnvalidatedInputResult;
 }
 
-const deleteUnvalidatedInputIR: any = {
-  usedParamSet: { id: true },
-  params: [{ name: 'id', required: true, transform: { type: 'scalar' }, locs: [{ a: 47, b: 50 }] }],
-  statement: 'DELETE FROM unvalidated_game_inputs\nWHERE id = :id!',
-};
+const deleteUnvalidatedInputIR: any = {"usedParamSet":{"id":true},"params":[{"name":"id","required":true,"transform":{"type":"scalar"},"locs":[{"a":47,"b":50}]}],"statement":"DELETE FROM unvalidated_game_inputs\nWHERE id = :id!"};
 
 /**
  * Query generated from SQL:
@@ -268,10 +164,8 @@ const deleteUnvalidatedInputIR: any = {
  * WHERE id = :id!
  * ```
  */
-export const deleteUnvalidatedInput = new PreparedQuery<
-  IDeleteUnvalidatedInputParams,
-  IDeleteUnvalidatedInputResult
->(deleteUnvalidatedInputIR);
+export const deleteUnvalidatedInput = new PreparedQuery<IDeleteUnvalidatedInputParams,IDeleteUnvalidatedInputResult>(deleteUnvalidatedInputIR);
+
 
 /** 'InsertStateValidating' parameters type */
 export interface IInsertStateValidatingParams {
@@ -287,14 +181,7 @@ export interface IInsertStateValidatingQuery {
   result: IInsertStateValidatingResult;
 }
 
-const insertStateValidatingIR: any = {
-  usedParamSet: { input_hash: true },
-  params: [
-    { name: 'input_hash', required: true, transform: { type: 'scalar' }, locs: [{ a: 87, b: 98 }] },
-  ],
-  statement:
-    "INSERT INTO input_states(\n  input_hash,\n  current_state,\n  rejection_code\n) VALUES (\n  :input_hash!,\n  'validating',\n  0\n)",
-};
+const insertStateValidatingIR: any = {"usedParamSet":{"input_hash":true},"params":[{"name":"input_hash","required":true,"transform":{"type":"scalar"},"locs":[{"a":87,"b":98}]}],"statement":"INSERT INTO input_states(\n  input_hash,\n  current_state,\n  rejection_code\n) VALUES (\n  :input_hash!,\n  'validating',\n  0\n)"};
 
 /**
  * Query generated from SQL:
@@ -310,10 +197,8 @@ const insertStateValidatingIR: any = {
  * )
  * ```
  */
-export const insertStateValidating = new PreparedQuery<
-  IInsertStateValidatingParams,
-  IInsertStateValidatingResult
->(insertStateValidatingIR);
+export const insertStateValidating = new PreparedQuery<IInsertStateValidatingParams,IInsertStateValidatingResult>(insertStateValidatingIR);
+
 
 /** 'InsertStateRejected' parameters type */
 export interface IInsertStateRejectedParams {
@@ -330,20 +215,7 @@ export interface IInsertStateRejectedQuery {
   result: IInsertStateRejectedResult;
 }
 
-const insertStateRejectedIR: any = {
-  usedParamSet: { input_hash: true, rejection_code: true },
-  params: [
-    { name: 'input_hash', required: true, transform: { type: 'scalar' }, locs: [{ a: 87, b: 98 }] },
-    {
-      name: 'rejection_code',
-      required: true,
-      transform: { type: 'scalar' },
-      locs: [{ a: 117, b: 132 }],
-    },
-  ],
-  statement:
-    "INSERT INTO input_states(\n  input_hash,\n  current_state,\n  rejection_code\n) VALUES (\n  :input_hash!,\n  'rejected',\n  :rejection_code!\n)",
-};
+const insertStateRejectedIR: any = {"usedParamSet":{"input_hash":true,"rejection_code":true},"params":[{"name":"input_hash","required":true,"transform":{"type":"scalar"},"locs":[{"a":87,"b":98}]},{"name":"rejection_code","required":true,"transform":{"type":"scalar"},"locs":[{"a":117,"b":132}]}],"statement":"INSERT INTO input_states(\n  input_hash,\n  current_state,\n  rejection_code\n) VALUES (\n  :input_hash!,\n  'rejected',\n  :rejection_code!\n)"};
 
 /**
  * Query generated from SQL:
@@ -359,10 +231,8 @@ const insertStateRejectedIR: any = {
  * )
  * ```
  */
-export const insertStateRejected = new PreparedQuery<
-  IInsertStateRejectedParams,
-  IInsertStateRejectedResult
->(insertStateRejectedIR);
+export const insertStateRejected = new PreparedQuery<IInsertStateRejectedParams,IInsertStateRejectedResult>(insertStateRejectedIR);
+
 
 /** 'InsertStateAccepted' parameters type */
 export interface IInsertStateAcceptedParams {
@@ -378,14 +248,7 @@ export interface IInsertStateAcceptedQuery {
   result: IInsertStateAcceptedResult;
 }
 
-const insertStateAcceptedIR: any = {
-  usedParamSet: { input_hash: true },
-  params: [
-    { name: 'input_hash', required: true, transform: { type: 'scalar' }, locs: [{ a: 87, b: 98 }] },
-  ],
-  statement:
-    "INSERT INTO input_states(\n  input_hash,\n  current_state,\n  rejection_code\n) VALUES (\n  :input_hash!,\n  'accepted',\n  0\n)",
-};
+const insertStateAcceptedIR: any = {"usedParamSet":{"input_hash":true},"params":[{"name":"input_hash","required":true,"transform":{"type":"scalar"},"locs":[{"a":87,"b":98}]}],"statement":"INSERT INTO input_states(\n  input_hash,\n  current_state,\n  rejection_code\n) VALUES (\n  :input_hash!,\n  'accepted',\n  0\n)"};
 
 /**
  * Query generated from SQL:
@@ -401,10 +264,8 @@ const insertStateAcceptedIR: any = {
  * )
  * ```
  */
-export const insertStateAccepted = new PreparedQuery<
-  IInsertStateAcceptedParams,
-  IInsertStateAcceptedResult
->(insertStateAcceptedIR);
+export const insertStateAccepted = new PreparedQuery<IInsertStateAcceptedParams,IInsertStateAcceptedResult>(insertStateAcceptedIR);
+
 
 /** 'UpdateStateAccepted' parameters type */
 export interface IUpdateStateAcceptedParams {
@@ -420,14 +281,7 @@ export interface IUpdateStateAcceptedQuery {
   result: IUpdateStateAcceptedResult;
 }
 
-const updateStateAcceptedIR: any = {
-  usedParamSet: { input_hash: true },
-  params: [
-    { name: 'input_hash', required: true, transform: { type: 'scalar' }, locs: [{ a: 74, b: 85 }] },
-  ],
-  statement:
-    "UPDATE input_states\nSET\n    current_state = 'accepted'\nWHERE input_hash = :input_hash!",
-};
+const updateStateAcceptedIR: any = {"usedParamSet":{"input_hash":true},"params":[{"name":"input_hash","required":true,"transform":{"type":"scalar"},"locs":[{"a":74,"b":85}]}],"statement":"UPDATE input_states\nSET\n    current_state = 'accepted'\nWHERE input_hash = :input_hash!"};
 
 /**
  * Query generated from SQL:
@@ -438,10 +292,8 @@ const updateStateAcceptedIR: any = {
  * WHERE input_hash = :input_hash!
  * ```
  */
-export const updateStateAccepted = new PreparedQuery<
-  IUpdateStateAcceptedParams,
-  IUpdateStateAcceptedResult
->(updateStateAcceptedIR);
+export const updateStateAccepted = new PreparedQuery<IUpdateStateAcceptedParams,IUpdateStateAcceptedResult>(updateStateAcceptedIR);
+
 
 /** 'UpdateStateRejected' parameters type */
 export interface IUpdateStateRejectedParams {
@@ -458,25 +310,7 @@ export interface IUpdateStateRejectedQuery {
   result: IUpdateStateRejectedResult;
 }
 
-const updateStateRejectedIR: any = {
-  usedParamSet: { rejection_code: true, input_hash: true },
-  params: [
-    {
-      name: 'rejection_code',
-      required: true,
-      transform: { type: 'scalar' },
-      locs: [{ a: 77, b: 92 }],
-    },
-    {
-      name: 'input_hash',
-      required: true,
-      transform: { type: 'scalar' },
-      locs: [{ a: 113, b: 124 }],
-    },
-  ],
-  statement:
-    "UPDATE input_states\nSET\n    current_state = 'rejected',\n    rejection_code = :rejection_code!\nWHERE input_hash = :input_hash!",
-};
+const updateStateRejectedIR: any = {"usedParamSet":{"rejection_code":true,"input_hash":true},"params":[{"name":"rejection_code","required":true,"transform":{"type":"scalar"},"locs":[{"a":77,"b":92}]},{"name":"input_hash","required":true,"transform":{"type":"scalar"},"locs":[{"a":113,"b":124}]}],"statement":"UPDATE input_states\nSET\n    current_state = 'rejected',\n    rejection_code = :rejection_code!\nWHERE input_hash = :input_hash!"};
 
 /**
  * Query generated from SQL:
@@ -488,16 +322,14 @@ const updateStateRejectedIR: any = {
  * WHERE input_hash = :input_hash!
  * ```
  */
-export const updateStateRejected = new PreparedQuery<
-  IUpdateStateRejectedParams,
-  IUpdateStateRejectedResult
->(updateStateRejectedIR);
+export const updateStateRejected = new PreparedQuery<IUpdateStateRejectedParams,IUpdateStateRejectedResult>(updateStateRejectedIR);
+
 
 /** 'UpdateStatePosted' parameters type */
 export interface IUpdateStatePostedParams {
   block_height: number;
   input_hash: string;
-  transaction_hash: string | null | void;
+  transaction_hash?: string | null | void;
 }
 
 /** 'UpdateStatePosted' return type */
@@ -509,31 +341,7 @@ export interface IUpdateStatePostedQuery {
   result: IUpdateStatePostedResult;
 }
 
-const updateStatePostedIR: any = {
-  usedParamSet: { block_height: true, transaction_hash: true, input_hash: true },
-  params: [
-    {
-      name: 'block_height',
-      required: true,
-      transform: { type: 'scalar' },
-      locs: [{ a: 73, b: 86 }],
-    },
-    {
-      name: 'transaction_hash',
-      required: false,
-      transform: { type: 'scalar' },
-      locs: [{ a: 112, b: 128 }],
-    },
-    {
-      name: 'input_hash',
-      required: true,
-      transform: { type: 'scalar' },
-      locs: [{ a: 149, b: 160 }],
-    },
-  ],
-  statement:
-    "UPDATE input_states\nSET\n    current_state = 'posted',\n    block_height = :block_height!,\n    transaction_hash = :transaction_hash\nWHERE input_hash = :input_hash!",
-};
+const updateStatePostedIR: any = {"usedParamSet":{"block_height":true,"transaction_hash":true,"input_hash":true},"params":[{"name":"block_height","required":true,"transform":{"type":"scalar"},"locs":[{"a":73,"b":86}]},{"name":"transaction_hash","required":false,"transform":{"type":"scalar"},"locs":[{"a":112,"b":128}]},{"name":"input_hash","required":true,"transform":{"type":"scalar"},"locs":[{"a":149,"b":160}]}],"statement":"UPDATE input_states\nSET\n    current_state = 'posted',\n    block_height = :block_height!,\n    transaction_hash = :transaction_hash\nWHERE input_hash = :input_hash!"};
 
 /**
  * Query generated from SQL:
@@ -546,10 +354,8 @@ const updateStatePostedIR: any = {
  * WHERE input_hash = :input_hash!
  * ```
  */
-export const updateStatePosted = new PreparedQuery<
-  IUpdateStatePostedParams,
-  IUpdateStatePostedResult
->(updateStatePostedIR);
+export const updateStatePosted = new PreparedQuery<IUpdateStatePostedParams,IUpdateStatePostedResult>(updateStatePostedIR);
+
 
 /** 'GetInputState' parameters type */
 export interface IGetInputStateParams {
@@ -571,13 +377,7 @@ export interface IGetInputStateQuery {
   result: IGetInputStateResult;
 }
 
-const getInputStateIR: any = {
-  usedParamSet: { input_hash: true },
-  params: [
-    { name: 'input_hash', required: true, transform: { type: 'scalar' }, locs: [{ a: 46, b: 57 }] },
-  ],
-  statement: 'SELECT * FROM input_states\nWHERE input_hash = :input_hash!',
-};
+const getInputStateIR: any = {"usedParamSet":{"input_hash":true},"params":[{"name":"input_hash","required":true,"transform":{"type":"scalar"},"locs":[{"a":46,"b":57}]}],"statement":"SELECT * FROM input_states\nWHERE input_hash = :input_hash!"};
 
 /**
  * Query generated from SQL:
@@ -586,9 +386,8 @@ const getInputStateIR: any = {
  * WHERE input_hash = :input_hash!
  * ```
  */
-export const getInputState = new PreparedQuery<IGetInputStateParams, IGetInputStateResult>(
-  getInputStateIR
-);
+export const getInputState = new PreparedQuery<IGetInputStateParams,IGetInputStateResult>(getInputStateIR);
+
 
 /** 'GetValidatedInputs' parameters type */
 export type IGetValidatedInputsParams = void;
@@ -609,11 +408,7 @@ export interface IGetValidatedInputsQuery {
   result: IGetValidatedInputsResult;
 }
 
-const getValidatedInputsIR: any = {
-  usedParamSet: {},
-  params: [],
-  statement: 'SELECT * FROM validated_game_inputs',
-};
+const getValidatedInputsIR: any = {"usedParamSet":{},"params":[],"statement":"SELECT * FROM validated_game_inputs"};
 
 /**
  * Query generated from SQL:
@@ -621,10 +416,8 @@ const getValidatedInputsIR: any = {
  * SELECT * FROM validated_game_inputs
  * ```
  */
-export const getValidatedInputs = new PreparedQuery<
-  IGetValidatedInputsParams,
-  IGetValidatedInputsResult
->(getValidatedInputsIR);
+export const getValidatedInputs = new PreparedQuery<IGetValidatedInputsParams,IGetValidatedInputsResult>(getValidatedInputsIR);
+
 
 /** 'DeleteValidatedInput' parameters type */
 export interface IDeleteValidatedInputParams {
@@ -640,11 +433,7 @@ export interface IDeleteValidatedInputQuery {
   result: IDeleteValidatedInputResult;
 }
 
-const deleteValidatedInputIR: any = {
-  usedParamSet: { id: true },
-  params: [{ name: 'id', required: true, transform: { type: 'scalar' }, locs: [{ a: 45, b: 48 }] }],
-  statement: 'DELETE FROM validated_game_inputs\nWHERE id = :id!',
-};
+const deleteValidatedInputIR: any = {"usedParamSet":{"id":true},"params":[{"name":"id","required":true,"transform":{"type":"scalar"},"locs":[{"a":45,"b":48}]}],"statement":"DELETE FROM validated_game_inputs\nWHERE id = :id!"};
 
 /**
  * Query generated from SQL:
@@ -653,10 +442,8 @@ const deleteValidatedInputIR: any = {
  * WHERE id = :id!
  * ```
  */
-export const deleteValidatedInput = new PreparedQuery<
-  IDeleteValidatedInputParams,
-  IDeleteValidatedInputResult
->(deleteValidatedInputIR);
+export const deleteValidatedInput = new PreparedQuery<IDeleteValidatedInputParams,IDeleteValidatedInputResult>(deleteValidatedInputIR);
+
 
 /** 'GetUserTrackingEntry' parameters type */
 export interface IGetUserTrackingEntryParams {
@@ -678,18 +465,7 @@ export interface IGetUserTrackingEntryQuery {
   result: IGetUserTrackingEntryResult;
 }
 
-const getUserTrackingEntryIR: any = {
-  usedParamSet: { user_address: true },
-  params: [
-    {
-      name: 'user_address',
-      required: true,
-      transform: { type: 'scalar' },
-      locs: [{ a: 49, b: 62 }],
-    },
-  ],
-  statement: 'SELECT * FROM user_tracking\nWHERE user_address = :user_address!',
-};
+const getUserTrackingEntryIR: any = {"usedParamSet":{"user_address":true},"params":[{"name":"user_address","required":true,"transform":{"type":"scalar"},"locs":[{"a":49,"b":62}]}],"statement":"SELECT * FROM user_tracking\nWHERE user_address = :user_address!"};
 
 /**
  * Query generated from SQL:
@@ -698,14 +474,12 @@ const getUserTrackingEntryIR: any = {
  * WHERE user_address = :user_address!
  * ```
  */
-export const getUserTrackingEntry = new PreparedQuery<
-  IGetUserTrackingEntryParams,
-  IGetUserTrackingEntryResult
->(getUserTrackingEntryIR);
+export const getUserTrackingEntry = new PreparedQuery<IGetUserTrackingEntryParams,IGetUserTrackingEntryResult>(getUserTrackingEntryIR);
+
 
 /** 'AddUserTrackingEntry' parameters type */
 export interface IAddUserTrackingEntryParams {
-  current_timestamp: Date;
+  current_timestamp: Date | string;
   user_address: string;
 }
 
@@ -718,25 +492,7 @@ export interface IAddUserTrackingEntryQuery {
   result: IAddUserTrackingEntryResult;
 }
 
-const addUserTrackingEntryIR: any = {
-  usedParamSet: { user_address: true, current_timestamp: true },
-  params: [
-    {
-      name: 'user_address',
-      required: true,
-      transform: { type: 'scalar' },
-      locs: [{ a: 122, b: 135 }],
-    },
-    {
-      name: 'current_timestamp',
-      required: true,
-      transform: { type: 'scalar' },
-      locs: [{ a: 140, b: 158 }],
-    },
-  ],
-  statement:
-    'INSERT INTO user_tracking(\n  user_address,\n  latest_timestamp,\n  inputs_minute,\n  inputs_day,\n  inputs_total\n) VALUES (\n  :user_address!,\n  :current_timestamp!,\n  1,\n  1,\n  1\n)',
-};
+const addUserTrackingEntryIR: any = {"usedParamSet":{"user_address":true,"current_timestamp":true},"params":[{"name":"user_address","required":true,"transform":{"type":"scalar"},"locs":[{"a":122,"b":135}]},{"name":"current_timestamp","required":true,"transform":{"type":"scalar"},"locs":[{"a":140,"b":158}]}],"statement":"INSERT INTO user_tracking(\n  user_address,\n  latest_timestamp,\n  inputs_minute,\n  inputs_day,\n  inputs_total\n) VALUES (\n  :user_address!,\n  :current_timestamp!,\n  1,\n  1,\n  1\n)"};
 
 /**
  * Query generated from SQL:
@@ -756,14 +512,12 @@ const addUserTrackingEntryIR: any = {
  * )
  * ```
  */
-export const addUserTrackingEntry = new PreparedQuery<
-  IAddUserTrackingEntryParams,
-  IAddUserTrackingEntryResult
->(addUserTrackingEntryIR);
+export const addUserTrackingEntry = new PreparedQuery<IAddUserTrackingEntryParams,IAddUserTrackingEntryResult>(addUserTrackingEntryIR);
+
 
 /** 'IncrementUserTrackingSameMinute' parameters type */
 export interface IIncrementUserTrackingSameMinuteParams {
-  current_timestamp: Date;
+  current_timestamp: Date | string;
   user_address: string;
 }
 
@@ -776,25 +530,7 @@ export interface IIncrementUserTrackingSameMinuteQuery {
   result: IIncrementUserTrackingSameMinuteResult;
 }
 
-const incrementUserTrackingSameMinuteIR: any = {
-  usedParamSet: { current_timestamp: true, user_address: true },
-  params: [
-    {
-      name: 'current_timestamp',
-      required: true,
-      transform: { type: 'scalar' },
-      locs: [{ a: 48, b: 66 }],
-    },
-    {
-      name: 'user_address',
-      required: true,
-      transform: { type: 'scalar' },
-      locs: [{ a: 198, b: 211 }],
-    },
-  ],
-  statement:
-    'UPDATE user_tracking\nSET\n    latest_timestamp = :current_timestamp!,\n    inputs_minute = inputs_minute + 1,\n    inputs_day = inputs_day + 1,\n    inputs_total = inputs_total + 1\nWHERE user_address = :user_address!',
-};
+const incrementUserTrackingSameMinuteIR: any = {"usedParamSet":{"current_timestamp":true,"user_address":true},"params":[{"name":"current_timestamp","required":true,"transform":{"type":"scalar"},"locs":[{"a":48,"b":66}]},{"name":"user_address","required":true,"transform":{"type":"scalar"},"locs":[{"a":198,"b":211}]}],"statement":"UPDATE user_tracking\nSET\n    latest_timestamp = :current_timestamp!,\n    inputs_minute = inputs_minute + 1,\n    inputs_day = inputs_day + 1,\n    inputs_total = inputs_total + 1\nWHERE user_address = :user_address!"};
 
 /**
  * Query generated from SQL:
@@ -808,14 +544,12 @@ const incrementUserTrackingSameMinuteIR: any = {
  * WHERE user_address = :user_address!
  * ```
  */
-export const incrementUserTrackingSameMinute = new PreparedQuery<
-  IIncrementUserTrackingSameMinuteParams,
-  IIncrementUserTrackingSameMinuteResult
->(incrementUserTrackingSameMinuteIR);
+export const incrementUserTrackingSameMinute = new PreparedQuery<IIncrementUserTrackingSameMinuteParams,IIncrementUserTrackingSameMinuteResult>(incrementUserTrackingSameMinuteIR);
+
 
 /** 'IncrementUserTrackingSameDay' parameters type */
 export interface IIncrementUserTrackingSameDayParams {
-  current_timestamp: Date;
+  current_timestamp: Date | string;
   user_address: string;
 }
 
@@ -828,25 +562,7 @@ export interface IIncrementUserTrackingSameDayQuery {
   result: IIncrementUserTrackingSameDayResult;
 }
 
-const incrementUserTrackingSameDayIR: any = {
-  usedParamSet: { current_timestamp: true, user_address: true },
-  params: [
-    {
-      name: 'current_timestamp',
-      required: true,
-      transform: { type: 'scalar' },
-      locs: [{ a: 48, b: 66 }],
-    },
-    {
-      name: 'user_address',
-      required: true,
-      transform: { type: 'scalar' },
-      locs: [{ a: 182, b: 195 }],
-    },
-  ],
-  statement:
-    'UPDATE user_tracking\nSET\n    latest_timestamp = :current_timestamp!,\n    inputs_minute = 1,\n    inputs_day = inputs_day + 1,\n    inputs_total = inputs_total + 1\nWHERE user_address = :user_address!',
-};
+const incrementUserTrackingSameDayIR: any = {"usedParamSet":{"current_timestamp":true,"user_address":true},"params":[{"name":"current_timestamp","required":true,"transform":{"type":"scalar"},"locs":[{"a":48,"b":66}]},{"name":"user_address","required":true,"transform":{"type":"scalar"},"locs":[{"a":182,"b":195}]}],"statement":"UPDATE user_tracking\nSET\n    latest_timestamp = :current_timestamp!,\n    inputs_minute = 1,\n    inputs_day = inputs_day + 1,\n    inputs_total = inputs_total + 1\nWHERE user_address = :user_address!"};
 
 /**
  * Query generated from SQL:
@@ -860,14 +576,12 @@ const incrementUserTrackingSameDayIR: any = {
  * WHERE user_address = :user_address!
  * ```
  */
-export const incrementUserTrackingSameDay = new PreparedQuery<
-  IIncrementUserTrackingSameDayParams,
-  IIncrementUserTrackingSameDayResult
->(incrementUserTrackingSameDayIR);
+export const incrementUserTrackingSameDay = new PreparedQuery<IIncrementUserTrackingSameDayParams,IIncrementUserTrackingSameDayResult>(incrementUserTrackingSameDayIR);
+
 
 /** 'IncrementUserTrackingAnotherDay' parameters type */
 export interface IIncrementUserTrackingAnotherDayParams {
-  current_timestamp: Date;
+  current_timestamp: Date | string;
   user_address: string;
 }
 
@@ -880,25 +594,7 @@ export interface IIncrementUserTrackingAnotherDayQuery {
   result: IIncrementUserTrackingAnotherDayResult;
 }
 
-const incrementUserTrackingAnotherDayIR: any = {
-  usedParamSet: { current_timestamp: true, user_address: true },
-  params: [
-    {
-      name: 'current_timestamp',
-      required: true,
-      transform: { type: 'scalar' },
-      locs: [{ a: 48, b: 66 }],
-    },
-    {
-      name: 'user_address',
-      required: true,
-      transform: { type: 'scalar' },
-      locs: [{ a: 169, b: 182 }],
-    },
-  ],
-  statement:
-    'UPDATE user_tracking\nSET\n    latest_timestamp = :current_timestamp!,\n    inputs_minute = 1,\n    inputs_day = 1,\n    inputs_total = inputs_total + 1\nWHERE user_address = :user_address!',
-};
+const incrementUserTrackingAnotherDayIR: any = {"usedParamSet":{"current_timestamp":true,"user_address":true},"params":[{"name":"current_timestamp","required":true,"transform":{"type":"scalar"},"locs":[{"a":48,"b":66}]},{"name":"user_address","required":true,"transform":{"type":"scalar"},"locs":[{"a":169,"b":182}]}],"statement":"UPDATE user_tracking\nSET\n    latest_timestamp = :current_timestamp!,\n    inputs_minute = 1,\n    inputs_day = 1,\n    inputs_total = inputs_total + 1\nWHERE user_address = :user_address!"};
 
 /**
  * Query generated from SQL:
@@ -912,7 +608,6 @@ const incrementUserTrackingAnotherDayIR: any = {
  * WHERE user_address = :user_address!
  * ```
  */
-export const incrementUserTrackingAnotherDay = new PreparedQuery<
-  IIncrementUserTrackingAnotherDayParams,
-  IIncrementUserTrackingAnotherDayResult
->(incrementUserTrackingAnotherDayIR);
+export const incrementUserTrackingAnotherDay = new PreparedQuery<IIncrementUserTrackingAnotherDayParams,IIncrementUserTrackingAnotherDayResult>(incrementUserTrackingAnotherDayIR);
+
+
