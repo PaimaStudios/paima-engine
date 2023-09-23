@@ -277,7 +277,7 @@ async function processSyncBlockData(
   exitIfStopped(run);
 
   // note: every state machine update is its own SQL transaction
-  // this is to ensure things like shutting down and taking snapshots properly sees SM updats
+  // this is to ensure things like shutting down and taking snapshots properly sees SM updates
   const success = await tx<boolean>(gameStateMachine.getReadWriteDbConn(), async dbTx => {
     // Before processing -- sanity check of block height:
     if (!(await blockPreProcess(dbTx, gameStateMachine, chainData.blockNumber, pollingPeriod))) {
