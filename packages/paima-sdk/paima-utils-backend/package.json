@@ -19,11 +19,11 @@
     "lint": "prettier --write '**/*.ts'"
   },
   "devDependencies": {
-    "@types/node": "^17.0.25",
-    "ts-jest": "^29.0.5"
+    "@types/node": "^18.17.1",
+    "ts-jest": "^29.1.1"
   },
   "dependencies": {
-    "yaml": "^2.2.1",
+    "yaml": "^2.3.1",
     "@paima/db": "1.1.0",
     "@paima/utils": "1.1.0"
   }

@@ -23,7 +23,7 @@
   "devDependencies": {
     "@typechain/web3-v1": "^6.0.2",
     "@types/express": "^4.17.13",
-    "@types/node": "^17.0.25",
+    "@types/node": "^18.17.1",
     "typechain": "^8.1.1"
   },
   "dependencies": {

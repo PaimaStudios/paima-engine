@@ -21,7 +21,7 @@
   },
   "devDependencies": {
     "@pgtyped/cli": "^2.2.1",
-    "@types/node": "^17.0.25"
+    "@types/node": "^18.17.1"
   },
   "dependencies": {
     "pg": "^8.7.3",
