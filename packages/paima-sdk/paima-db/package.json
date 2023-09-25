@@ -1,6 +1,6 @@
 {
   "name": "@paima/db",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Library for Paima database interaction",
   "main": "build/index.js",
   "type": "module",
@@ -26,6 +26,7 @@
   "dependencies": {
     "pg": "^8.7.3",
     "pg-tx": "^1.0.1",
-    "@pgtyped/runtime": "2.1.0"
+    "@pgtyped/runtime": "2.1.0",
+    "@paima/utils": "1.1.0"
   }
 }

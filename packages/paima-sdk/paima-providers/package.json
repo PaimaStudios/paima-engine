@@ -1,6 +1,6 @@
 {
   "name": "@paima/providers",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Library for dApp connection for blockchains supported by Paima",
   "main": "build/index.js",
   "type": "module",
@@ -18,8 +18,7 @@
     "lint": "prettier --write '**/*.ts'",
     "test": "jest --runInBand"
   },
-  "devDependencies": {
-  },
+  "devDependencies": {},
   "dependencies": {
     "@metamask/providers": "^10.2.1",
     "@perawallet/connect": "^1.2.3",
@@ -27,6 +26,8 @@
     "@truffle/hdwallet-provider": "^2.1.15",
     "bech32": "^2.0.0",
     "web3": "1.10.0",
-    "web3-utils": "1.10.0"
+    "web3-utils": "1.10.0",
+    "@paima/crypto": "1.1.0",
+    "@paima/utils": "1.1.0"
   }
 }

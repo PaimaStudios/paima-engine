@@ -1,9 +1,11 @@
 {
   "name": "@paima/prando",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Fork of Prando for generating randomness for Paima Engine",
   "main": "build/index.js",
-  "files": ["/build"],
+  "files": [
+    "/build"
+  ],
   "type": "module",
   "types": "build/index.d.ts",
   "scripts": {

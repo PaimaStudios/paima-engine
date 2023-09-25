@@ -10,6 +10,7 @@
     "eslint": "eslint '**/*.{ts,tsx}' --ignore-path ./.eslintignore",
     "prettier": "prettier --ignore-path ./.prettierignore --write '**/*.{ts,tsx}'",
     "prebuild": "npx nx run-many -t prebuild",
+    "prepublish": "ts-node -P ./tsconfig.base.json ./scripts/check-implicit-dependencies.ts && sh ./scripts/bump-version.sh",
     "build": "npx nx run-many -t build",
     "release": "npm install && npm run build && npm run release -w @standalone/paima-batcher && npm run release -w @standalone/paima-engine && cp -r ./packages/engine/paima-standalone/packaged/@standalone/* ./bin"
   },
@@ -38,6 +39,5 @@
   },
   "workspaces": [
     "./packages/*/*"
-  ],
-  "dependencies": {}
+  ]
 }

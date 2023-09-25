@@ -1,12 +1,21 @@
 {
   "name": "@paima/sdk",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "scripts": {
     "build": "npx tsc --build tsconfig.json"
   },
-  "devDependencies": {
-  },
+  "devDependencies": {},
   "dependencies": {
+    "@paima/build-utils": "1.1.0",
+    "@paima/concise": "1.1.0",
+    "@paima/crypto": "1.1.0",
+    "@paima/db": "1.1.0",
+    "@paima/executors": "1.1.0",
+    "@paima/mw-core": "1.1.0",
+    "@paima/prando": "1.1.0",
+    "@paima/providers": "1.1.0",
+    "@paima/utils-backend": "1.1.0",
+    "@paima/utils": "1.1.0"
   }
 }

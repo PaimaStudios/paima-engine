@@ -7,12 +7,24 @@
       }
     }
   },
+  "targetDefaults": {
+    "build": {
+      "dependsOn": ["^build"]
+    }
+  },
   "affected": {
     "defaultBase": "master"
   },
   "pluginsConfig": {
     "@nx/js": {
       "analyzeSourceFiles": true
+    }
+  },
+  "release": {
+    "groups": {
+      "paima-sdk": {
+        "projects": ["directory:packages/paima-sdk/*"]
+      }
     }
   }
 }
