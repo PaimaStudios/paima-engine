@@ -1,0 +1,15 @@
+{
+  "name": "@paima/batcher-transaction-poster",
+  "version": "0.1.0",
+  "description": "",
+  "main": "build/index.js",
+  "type": "module",
+  "types": "build/index.d.ts",
+  "devDependencies": {
+    "@types/pg": "^8.6.5"
+  },
+  "dependencies": {
+    "@paima/sdk": "1.0.0",
+    "pg": "^8.7.3"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "name": "@paima/sdk",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "npx tsc --build tsconfig.json"
+  },
+  "devDependencies": {
+  },
+  "dependencies": {
+  }
+}

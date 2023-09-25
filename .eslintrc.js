@@ -1,4 +1,13 @@
 module.exports = {
+  parserOptions: {
+    project: './packages/*/*/tsconfig.json',
+    ecmaVersion: 'es2019',
+    sourceType: 'module',
+    tsconfigRootDir: __dirname,
+    ecmaFeatures: {
+      legacyDecorators: true,
+    },
+  },
   extends: [
     'airbnb-typescript',
     'plugin:@typescript-eslint/recommended',

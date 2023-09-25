@@ -4,10 +4,14 @@
   "private": true,
   "scripts": {
     "prepare": "husky install",
-    "cilint": "./scripts/runNpm.sh 'run cilint'",
-    "build": "./scripts/runNpm.sh 'run build'",
-    "postinstall": "./scripts/runNpm.sh install",
-    "release": "npm install && npm run build && ./scripts/runNpm.sh 'run release' batcher && ./scripts/runNpm.sh 'run release' engine && cp -r ./engine/paima-standalone/packaged/@standalone/* ./bin"
+    "lint": "npm run prettier && npm run eslint",
+    "cilint": "npm run cprettier && npm run eslint",
+    "cprettier": "prettier --ignore-path ./.prettierignore --check '**/*.{ts,tsx}'",
+    "eslint": "eslint '**/*.{ts,tsx}' --ignore-path ./.eslintignore",
+    "prettier": "prettier --ignore-path ./.prettierignore --write '**/*.{ts,tsx}'",
+    "prebuild": "npx nx run-many -t prebuild",
+    "build": "npx nx run-many -t build",
+    "release": "npm install && npm run build && npm run release -w @standalone/paima-batcher && npm run release -w @standalone/paima-engine && cp -r ./packages/engine/paima-standalone/packaged/@standalone/* ./bin"
   },
   "devDependencies": {
     "@types/eslint-plugin-prettier": "^3.1.0",
@@ -20,6 +24,14 @@
     "eslint-plugin-promise": "^6.1.1",
     "eslint-plugin-react": "^7.31.10",
     "eslint-plugin-react-hooks": "^4.6.0",
-    "husky": "^8.0.3"
-  }
+    "husky": "^8.0.3",
+    "nx": "16.9.0",
+    "nx-cloud": "latest"
+  },
+  "overrides": {
+    "web3-eth-contract": "1.10.0"
+  },
+  "workspaces": [
+    "./packages/*/*"
+  ]
 }
