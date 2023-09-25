@@ -14,7 +14,7 @@
   },
   "author": "Paima Studios",
   "peerDependencies": {
-    "esbuild": "^0.17.14",
+    "esbuild": "^0.19.3",
     "esbuild-plugin-polyfill-node": "^0.3.0"
   }
 }

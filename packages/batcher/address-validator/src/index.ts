@@ -13,7 +13,7 @@ import {
 
 import { isSameDay, isSameMinute } from './date-utils.js';
 import type { BatchedSubunit } from '@paima/concise';
-import { CryptoManager } from '@paima/sdk';
+import { CryptoManager } from '@paima/crypto';
 import { createMessageForBatcher } from '@paima/concise';
 import { initWeb3, AddressType, getReadNamespaces } from '@paima/utils';
 

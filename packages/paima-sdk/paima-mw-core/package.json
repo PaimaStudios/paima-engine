@@ -18,7 +18,7 @@
   "author": "",
   "devDependencies": {
     "dotenv": "^16.0.3",
-    "esbuild": "^0.17.14",
+    "esbuild": "^0.19.3",
     "esbuild-plugin-polyfill-node": "^0.3.0",
     "prettier": "^3.0.3",
     "prettier-plugin-organize-imports": "^3.2.3",
@@ -26,10 +26,6 @@
   },
   "dependencies": {
     "@metamask/providers": "^10.2.1",
-    "@paima/concise": "1.0.0",
-    "@paima/crypto": "1.0.0",
-    "@paima/prando": "1.0.0",
-    "@paima/providers": "1.0.0",
     "@perawallet/connect": "^1.2.3",
     "@polkadot/extension-dapp": "^0.44.9",
     "@truffle/hdwallet-provider": "^2.1.15",

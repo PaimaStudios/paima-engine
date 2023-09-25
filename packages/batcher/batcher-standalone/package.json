@@ -27,7 +27,7 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "node ./esbuildconfig.cjs",
+    "build": "npm run build:deps && node ./esbuildconfig.cjs",
     "build:binary": "npm run build && pkg packaged/batcherCorePacked.js --options \"experimental-specifier-resolution=node,no-warnings\" --config package.json && ./scripts/post_build.sh",
     "install-binaries": "../../../scripts/unpack.sh",
     "build:dev-binary": "npm run build:dev-binary-macos && npm run build:dev-binary-linux && ./scripts/post_build.sh",
@@ -42,7 +42,7 @@
   "devDependencies": {
     "cross-env": "^7.0.3",
     "dotenv": "^16.0.3",
-    "esbuild": "^0.17.4",
+    "esbuild": "^0.19.3",
     "pkg": "^5.8.1",
     "pkg-dev": "github:paimaStudios/pkg#main"
   }

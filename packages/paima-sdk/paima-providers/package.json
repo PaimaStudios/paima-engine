@@ -21,8 +21,6 @@
   "devDependencies": {
   },
   "dependencies": {
-    "@paima/utils": "1.0.0",
-    "@paima/crypto": "1.0.0",
     "@metamask/providers": "^10.2.1",
     "@perawallet/connect": "^1.2.3",
     "@polkadot/extension-dapp": "^0.44.9",

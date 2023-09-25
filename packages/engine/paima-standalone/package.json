@@ -7,9 +7,6 @@
   "main": "build/index.js",
   "types": "build/index.d.ts",
   "type": "module",
-  "nx": {
-    "implicitDependencies": ["@paima/runtime"]
-  },
   "files": [
     "/build"
   ],
@@ -30,7 +27,7 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "node ./esbuildconfig.cjs",
+    "build": "npm run build:deps && node ./esbuildconfig.cjs",
     "build:prod-binary": "npm run build:prod-binary-macos && npm run build:prod-binary-linux",
     "build:prod-binary-macos": "npm run build && ts-node ./scripts/package macos && mv ./packaged/tmp/@standalone/paima-engine-macos ./packaged/@standalone/",
     "build:prod-binary-linux": "npm run build && ts-node ./scripts/package linux && mv ./packaged/tmp/@standalone/paima-engine-linux ./packaged/@standalone/",
@@ -38,7 +35,7 @@
     "build:dev-binary": "npm run build:dev-binary-macos && npm run build:dev-binary-linux",
     "build:dev-binary-macos": "npm run build && ts-node ./scripts/package macos --debug",
     "build:dev-binary-linux": "npm run build && ts-node ./scripts/package linux --debug",
-    "build:deps": "npx tsc --build tsconfig.build.json",
+    "build:deps": "npx tsc --build tsconfig.json",
     "prepare:standalone": "sh ./scripts/prepare_standalone_folders.sh",
     "build:standalone": "npm run build:deps && npm run build:prod-binary",
     "build:dev-standalone": "npm run install-binaries && npm run build:dev-binary",
@@ -49,7 +46,7 @@
     "ts-node": "^10.8.1",
     "cross-env": "^7.0.3",
     "dotenv": "^16.0.3",
-    "esbuild": "^0.17.4",
+    "esbuild": "^0.19.3",
     "pkg": "^5.8.1",
     "pkg-dev": "github:paimaStudios/pkg#main"
   }

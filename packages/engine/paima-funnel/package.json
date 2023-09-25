@@ -20,6 +20,5 @@
     "typescript": "^5.2.2"
   },
   "dependencies": {
-    "@paima/sdk": "1.0.0"
   }
 }

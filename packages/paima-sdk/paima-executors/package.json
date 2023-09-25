@@ -20,6 +20,5 @@
     "prettier-plugin-organize-imports": "^2.3.4"
   },
   "dependencies": {
-    "@paima/prando": "1.0.0"
   }
 }

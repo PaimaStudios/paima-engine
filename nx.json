@@ -9,5 +9,10 @@
   },
   "affected": {
     "defaultBase": "master"
+  },
+  "pluginsConfig": {
+    "@nx/js": {
+      "analyzeSourceFiles": true
+    }
   }
 }

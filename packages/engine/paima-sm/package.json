@@ -9,10 +9,10 @@
     "/build"
   ],
   "scripts": {
+    "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
   "dependencies": {
-    "@paima/sdk": "1.0.0"
   }
 }

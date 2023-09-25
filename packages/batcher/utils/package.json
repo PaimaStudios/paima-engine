@@ -5,8 +5,10 @@
   "main": "build/index.js",
   "type": "module",
   "types": "build/index.d.ts",
+  "scripts": {
+    "build": "tsc"
+  },
   "dependencies": {
-    "@paima/sdk": "1.0.0",
     "@truffle/hdwallet-provider": "^2.1.15",
     "web3": "1.10.0"
   }
