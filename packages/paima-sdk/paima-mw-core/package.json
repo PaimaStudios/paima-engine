@@ -2,12 +2,24 @@
   "name": "@paima/mw-core",
   "version": "1.1.0",
   "description": "Middleware core to be reused among all Paima games",
-  "type": "module",
   "main": "build/index.js",
   "types": "build/index.d.ts",
+  "type": "module",
+  "export": {
+    ".": {
+      "types": "./build/index.d.ts"
+    }
+  },
   "files": [
     "/build"
   ],
+  "author": "Paima Studios",
+  "license": "See license file",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PaimaStudios/paima-engine.git"
+  },
+  "homepage": "https://docs.paimastudios.com",
   "scripts": {
     "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -15,7 +27,6 @@
     "build:standalone-web-ui": "NODE_ENV=${NODE_ENV:=development} DOTENV_CONFIG_PATH=\"../../.env.$NODE_ENV\" node --require dotenv/config ./esbuildconfig.cjs",
     "start:standalone-web-ui": "npx http-server ./web -o --port 9123"
   },
-  "author": "",
   "devDependencies": {
     "dotenv": "^16.0.3",
     "esbuild": "^0.19.3",

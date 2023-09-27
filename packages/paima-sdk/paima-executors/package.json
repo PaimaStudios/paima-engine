@@ -1,19 +1,30 @@
 {
   "name": "@paima/executors",
   "version": "1.1.0",
-  "description": "",
+  "description": "Utility functions for different kinds of executors in Paima",
   "main": "build/index.js",
+  "types": "build/index.d.ts",
+  "type": "module",
+  "export": {
+    ".": {
+      "types": "./build/index.d.ts"
+    }
+  },
   "files": [
     "/build"
   ],
-  "type": "module",
-  "types": "build/index.d.ts",
+  "author": "Paima Studios",
+  "license": "See license file",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PaimaStudios/paima-engine.git"
+  },
+  "homepage": "https://docs.paimastudios.com",
   "scripts": {
     "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "prettier --write '**/*.ts'"
   },
-  "author": "",
   "devDependencies": {
     "typescript": "^5.2.2",
     "prettier": "^3.0.3",

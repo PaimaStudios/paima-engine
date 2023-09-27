@@ -16,8 +16,8 @@
     "arrowParens": "avoid"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "Paima Studios",
+  "license": "MIT",
   "dependencies": {
     "@openzeppelin/contracts": "^4.6.0",
     "@openzeppelin/contracts-upgradeable": "^4.6.0",

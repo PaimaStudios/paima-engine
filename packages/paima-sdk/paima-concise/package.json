@@ -13,11 +13,17 @@
   "files": [
     "/build"
   ],
+  "author": "Paima Studios",
+  "license": "See license file",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PaimaStudios/paima-engine.git"
+  },
+  "homepage": "https://docs.paimastudios.com",
   "scripts": {
     "test": "jest",
     "build": "tsc --build tsconfig.build.json"
   },
-  "author": "",
   "dependencies": {
     "ebnf": "^1.9.0",
     "web3-utils": "1.10.0"

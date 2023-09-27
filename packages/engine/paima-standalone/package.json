@@ -31,7 +31,7 @@
     "build:prod-binary": "npm run build:prod-binary-macos && npm run build:prod-binary-linux",
     "build:prod-binary-macos": "npm run build && ts-node ./scripts/package macos && mv ./packaged/tmp/@standalone/paima-engine-macos ./packaged/@standalone/",
     "build:prod-binary-linux": "npm run build && ts-node ./scripts/package linux && mv ./packaged/tmp/@standalone/paima-engine-linux ./packaged/@standalone/",
-    "install-binaries": "../../../scripts/unpack.sh",
+    "install-binaries": "../../../scripts/tools/unpack.sh",
     "build:dev-binary": "npm run build:dev-binary-macos && npm run build:dev-binary-linux",
     "build:dev-binary-macos": "npm run build && ts-node ./scripts/package macos --debug",
     "build:dev-binary-linux": "npm run build && ts-node ./scripts/package linux --debug",

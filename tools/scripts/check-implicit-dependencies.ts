@@ -1,5 +1,12 @@
 const { createProjectGraphAsync } = require('@nx/workspace/src/core/project-graph');
 
+/**
+ * NPM requires us that all packages properly references each other in package.json
+ * This is hard to enforce manually locally,
+ *     because npm workspaces have a feature that makes you don't need to specify local packages in package.json
+ * So this script checks that any library package that depends on another properly lists its dependencies
+ */
+
 type Dep = { target: string };
 type PackageJson = {
   version: string;
@@ -29,7 +36,7 @@ async function main() {
 
   const packageContent: Record<string, PackageJson> = {};
   for (const pkg of ownPkgs) {
-    const pkgJson = require(`../${graph.nodes[pkg].data.root}/package.json`);
+    const pkgJson = require(`../../${graph.nodes[pkg].data.root}/package.json`);
     packageContent[pkg] = pkgJson;
   }
   for (const pkg of ownPkgs) {

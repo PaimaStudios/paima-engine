@@ -6,13 +6,19 @@
     "/build",
     "/scripts"
   ],
+  "author": "Paima Studios",
+  "license": "See license file",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PaimaStudios/paima-engine.git"
+  },
+  "homepage": "https://docs.paimastudios.com",
   "scripts": {
     "build": "tsc"
   },
   "bin": {
     "paima-build-middleware": "./scripts/esbuild.sh"
   },
-  "author": "Paima Studios",
   "peerDependencies": {
     "esbuild": "^0.19.3",
     "esbuild-plugin-polyfill-node": "^0.3.0"

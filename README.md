@@ -45,6 +45,8 @@ The `Paima Contract` is deployed on-chain which allows users to submit game inpu
 
 Paima Engine is a TypeScript monorepo implemented with npm (not Yarn nor Lerna) workspaces. The `package.json` file at the root indicates all the common dependencies (mostly devDependencies like TypeScript, ESLint etc.), and the root `tsconfig.json` indicates the common TypeScript configuration. Every package has also its own `package.json` and `tsconfig.json` files indicating their particular configuration.
 
+1. Setup an ssh agent so you don't have to enter your Git ssh key every time (`eval "$(ssh-agent -s)"` followed by `ssh-add ~/.ssh/your_github_key`)
 1. `npm install` (generate the common `node_modules` folder with all the combined dependencies of all packages)
 1. `npm run build` (to see if the build succeeds)
-1. `npm run release` (for production builds. see `bin` folder for build result)
+1. (executable) `npm run release:bin` (for production builds. see `bin` folder for build result)
+1. (libraries) `npm run release:lib`

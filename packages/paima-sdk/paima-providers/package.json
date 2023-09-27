@@ -13,6 +13,13 @@
   "files": [
     "/build"
   ],
+  "author": "Paima Studios",
+  "license": "See license file",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PaimaStudios/paima-engine.git"
+  },
+  "homepage": "https://docs.paimastudios.com",
   "scripts": {
     "build": "tsc --build tsconfig.build.json",
     "lint": "prettier --write '**/*.ts'",

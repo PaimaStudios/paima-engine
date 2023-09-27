@@ -29,7 +29,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "npm run build:deps && node ./esbuildconfig.cjs",
     "build:binary": "npm run build && pkg packaged/batcherCorePacked.js --options \"experimental-specifier-resolution=node,no-warnings\" --config package.json && ./scripts/post_build.sh",
-    "install-binaries": "../../../scripts/unpack.sh",
+    "install-binaries": "../../../scripts/tools/unpack.sh",
     "build:dev-binary": "npm run build:dev-binary-macos && npm run build:dev-binary-linux && ./scripts/post_build.sh",
     "build:dev-binary-macos": "npm run build && pkg-dev packaged/batcherCorePacked.js --output packaged/@standalone/dev-paima-batcher-macos -t node18-macos-x64 -b --options \"inspect,experimental-specifier-resolution=node,no-warnings\" --config package.json",
     "build:dev-binary-linux": "npm run build && pkg-dev packaged/batcherCorePacked.js --output packaged/@standalone/dev-paima-batcher-linux -t node18-linux-x64 -b --options \"inspect,experimental-specifier-resolution=node,no-warnings\" --config package.json",
