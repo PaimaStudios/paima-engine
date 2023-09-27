@@ -6,6 +6,7 @@
   "type": "module",
   "types": "build/index.d.ts",
   "scripts": {
+    "lint:eslint": "eslint .",
     "build": "tsc",
     "dev": "DOTENV_CONFIG_PATH=../.env.development node --require dotenv/config ./build/index.js",
     "prod": "node ./build/index.js"

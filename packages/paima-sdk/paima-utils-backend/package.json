@@ -21,9 +21,9 @@
   },
   "homepage": "https://docs.paimastudios.com",
   "scripts": {
+    "lint:eslint": "eslint .",
     "build": "tsc",
-    "test": "jest",
-    "lint": "prettier --write '**/*.ts'"
+    "test": "jest"
   },
   "devDependencies": {
     "@types/node": "^18.17.1",

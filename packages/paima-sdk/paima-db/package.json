@@ -21,10 +21,9 @@
   },
   "homepage": "https://docs.paimastudios.com",
   "scripts": {
+    "lint:eslint": "eslint .",
     "compile": "npx pgtyped -w -c pgtypedconfig.json",
-    "build": "tsc",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "lint": "prettier --write '**/*.ts'"
+    "build": "tsc"
   },
   "devDependencies": {
     "@pgtyped/cli": "^2.2.1",

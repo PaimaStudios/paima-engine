@@ -10,10 +10,7 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 contract GenericPaymentProxy is ERC1967 {
     /// @dev this is normally not needed as runtime bytecode is deployed in
     /// genesis file and implementation storage slot defined there too
-    constructor(
-        address implementation,
-        address owner
-    ) {
+    constructor(address implementation, address owner) {
         _assertCorrectImplementationSlot();
         _setImplementation(implementation);
 

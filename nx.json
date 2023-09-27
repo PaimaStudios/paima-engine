@@ -3,7 +3,7 @@
     "default": {
       "runner": "nx/tasks-runners/default",
       "options": {
-        "cacheableOperations": ["cilint", "cprettier", "build"]
+        "cacheableOperations": ["cilint", "cprettier", "build", "lint:eslint"]
       }
     }
   },

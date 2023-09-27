@@ -21,10 +21,10 @@
   },
   "homepage": "https://docs.paimastudios.com",
   "scripts": {
+    "lint:eslint": "eslint .",
     "prebuild": "npm run generate-types",
     "build": "tsc --build tsconfig.build.json",
     "generate-types": "npx typechain --target=web3-v1 'src/artifacts/*.json' --out-dir src/contract-types",
-    "lint": "prettier --write '**/*.ts'",
     "test": "jest --runInBand"
   },
   "devDependencies": {

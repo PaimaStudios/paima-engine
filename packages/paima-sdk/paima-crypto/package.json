@@ -21,8 +21,8 @@
   },
   "homepage": "https://docs.paimastudios.com",
   "scripts": {
+    "lint:eslint": "eslint .",
     "build": "tsc --build tsconfig.build.json",
-    "lint": "prettier --write '**/*.ts'",
     "test": "jest --runInBand"
   },
   "devDependencies": {},

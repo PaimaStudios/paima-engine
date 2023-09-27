@@ -21,9 +21,8 @@
   },
   "homepage": "https://docs.paimastudios.com",
   "scripts": {
+    "lint:eslint": "eslint .",
     "build": "tsc",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "lint": "prettier --write '**/*.ts'",
     "build:standalone-web-ui": "NODE_ENV=${NODE_ENV:=development} DOTENV_CONFIG_PATH=\"../../.env.$NODE_ENV\" node --require dotenv/config ./esbuildconfig.cjs",
     "start:standalone-web-ui": "npx http-server ./web -o --port 9123"
   },
@@ -31,8 +30,6 @@
     "dotenv": "^16.0.3",
     "esbuild": "^0.19.3",
     "esbuild-plugin-polyfill-node": "^0.3.0",
-    "prettier": "^3.0.3",
-    "prettier-plugin-organize-imports": "^3.2.3",
     "typescript": "^5.2.2"
   },
   "dependencies": {

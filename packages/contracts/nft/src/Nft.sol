@@ -10,7 +10,7 @@ contract Nft is ERC165, ERC721, Ownable {
     uint256 public totalSupply;
     uint256 public maxSupply;
     string public baseExtension;
-    
+
     mapping(address => bool) public minters;
 
     modifier canMint() {
@@ -60,13 +60,18 @@ contract Nft is ERC165, ERC721, Ownable {
         transferOwnership(owner);
     }
 
-    function supportsInterface(bytes4 interfaceID) public pure override(ERC165, ERC721) returns (bool) {
+    function supportsInterface(
+        bytes4 interfaceID
+    ) public pure override(ERC165, ERC721) returns (bool) {
         return
-          interfaceID == this.supportsInterface.selector || // ERC165
-          interfaceID == this.mint.selector; // ERC721 Paima-extended
+            interfaceID == this.supportsInterface.selector || // ERC165
+            interfaceID == this.mint.selector; // ERC721 Paima-extended
     }
 
-    function mint(address _to, string memory initialData) external canMint returns (uint256) {
+    function mint(
+        address _to,
+        string memory initialData
+    ) external canMint returns (uint256) {
         require(maxSupply > totalSupply, "Nft: max supply reached");
         require(_to != address(0), "Nft: zero receiver address");
 
@@ -80,11 +85,9 @@ contract Nft is ERC165, ERC721, Ownable {
         return tokenId;
     }
 
-    function burn(uint256 _tokenId)
-        external
-        onlyExistingTokenId(_tokenId)
-        onlyTokenOwner(_tokenId)
-    {
+    function burn(
+        uint256 _tokenId
+    ) external onlyExistingTokenId(_tokenId) onlyTokenOwner(_tokenId) {
         totalSupply--;
         _burn(_tokenId);
     }
@@ -107,12 +110,9 @@ contract Nft is ERC165, ERC721, Ownable {
         return baseURI;
     }
 
-    function tokenURI(uint256 tokenId)
-        public
-        view
-        override
-        returns (string memory)
-    {
+    function tokenURI(
+        uint256 tokenId
+    ) public view override returns (string memory) {
         string memory URI = super.tokenURI(tokenId);
         return string(abi.encodePacked(URI, baseExtension));
     }
@@ -123,10 +123,9 @@ contract Nft is ERC165, ERC721, Ownable {
         emit SetBaseURI(oldURI, _URI);
     }
 
-    function setBaseExtension(string memory _newBaseExtension)
-        public
-        onlyOwner
-    {
+    function setBaseExtension(
+        string memory _newBaseExtension
+    ) public onlyOwner {
         baseExtension = _newBaseExtension;
     }
 

@@ -32,6 +32,7 @@ module.exports = [
     },
   },
   {
+    files: ['**/*.{ts,tsx,cts}'],
     languageOptions: {
       parser: typescriptEslintParser,
       parserOptions: {
@@ -44,6 +45,7 @@ module.exports = [
     },
   },
   {
+    files: ['**/*.{ts,tsx,cts}'],
     rules: {
       '@typescript-eslint/no-unsafe-assignment': 'off',
       '@typescript-eslint/no-unsafe-return': 'off',
@@ -170,6 +172,9 @@ module.exports = [
   },
   {
     ignores: [
+      // this is a bit overly aggressive, since all we really want to do is turnoff typescript rules for non-ts files
+      // but we can't do this until typescript-eslint updates to flat config (https://github.com/typescript-eslint/typescript-eslint/pull/6836)
+      '**/*.{js,cjs}',
       'eslint.config.js',
       'packages/admin-panel/**',
       'tools',

@@ -15,6 +15,7 @@
   "homepage": "https://docs.paimastudios.com",
   "keywords": ["autonomous worlds", "focg", "onchain game", "paima"],
   "scripts": {
+    "lint:eslint": "eslint .",
     "build": "npx tsc --build tsconfig.json"
   },
   "devDependencies": {},

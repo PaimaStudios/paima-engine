@@ -12,11 +12,7 @@ contract GenericPayment is ERC1967, Ownable {
 
     event Initialized(address indexed owner);
 
-    event Pay(
-        uint256 amount,
-        address payer,
-        string message
-    );
+    event Pay(uint256 amount, address payer, string message);
 
     function initialize(address owner) public {
         require(!initialized, "Contract already initialized");
@@ -27,9 +23,7 @@ contract GenericPayment is ERC1967, Ownable {
         emit Initialized(owner);
     }
 
-    function pay(
-        string memory message
-    ) external payable {
+    function pay(string memory message) external payable {
         emit Pay(msg.value, msg.sender, message);
     }
 

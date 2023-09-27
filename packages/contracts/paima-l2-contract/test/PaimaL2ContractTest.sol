@@ -16,7 +16,7 @@ contract PaimaL2ContractTest is CTest {
   address account1 = 0x766FCe3d50d795Fe6DcB1020AB58bccddd5C5c77;
   address account2 = 0x078D888E40faAe0f32594342c85940AF3949E666;
 
-  uint256 constant MAX_INT = 2**256 - 1;
+  uint256 constant MAX_INT = 2 ** 256 - 1;
   uint256 constant FEE = 1e16;
 
   function setUp() public {

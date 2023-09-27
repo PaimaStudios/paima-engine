@@ -9,8 +9,8 @@
     "/build"
   ],
   "scripts": {
-    "build": "tsc",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "lint:eslint": "eslint .",
+    "build": "tsc"
   },
   "author": "Paima Studios",
   "dependencies": {
