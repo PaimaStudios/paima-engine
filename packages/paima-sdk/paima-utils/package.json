@@ -10,6 +10,15 @@
       "types": "./build/index.d.ts"
     }
   },
+  "nx": {
+    "targets": {
+      "prebuild": {
+        "outputs": [
+          "{projectRoot}/src/contract-types"
+        ]
+      }
+    }
+  },
   "files": [
     "/build"
   ],
