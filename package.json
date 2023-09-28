@@ -12,7 +12,7 @@
     "prebuild": "npx nx run-many -t prebuild",
     "build": "npx nx run-many -t build",
     "release:lib": "sh ./tools/scripts/bump-version.sh && npx nx release publish -g paima-sdk -d",
-    "release:bin": "npm install && npm run build && npm run release -w @standalone/paima-batcher && npm run release -w @standalone/paima-engine && cp -r ./packages/engine/paima-standalone/packaged/@standalone/* ./bin"
+    "release:bin": "npx nx run-many -t release && cp -r ./packages/engine/paima-standalone/packaged/@standalone/* ./bin"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^2.1.2",

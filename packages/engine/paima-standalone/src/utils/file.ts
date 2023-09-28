@@ -1,11 +1,10 @@
+import { doLog } from '@paima/utils';
 import fs from 'fs';
 import path from 'path';
-import { ROUTER_FILENAME, API_FILENAME } from './import';
-import { doLog } from '@paima/utils';
+import { API_FILENAME, ROUTER_FILENAME } from './import';
 import type { Template } from './types';
 
 export const PACKAGED_TEMPLATES_PATH = `${__dirname}/templates`;
-const PACKAGED_SDK_PATH = `${__dirname}/paima-sdk`;
 const PACKAGED_BATCHER_PATH = `${__dirname}/batcher`;
 const PACKAGED_BATCHER_BIN_PATH = `${__dirname}/batcher-bin`;
 
@@ -69,15 +68,6 @@ export const prepareFolder = (
   }
 };
 
-// Initializes the SDK in the same folder as the executable
-export const prepareSDK = (silentMode = false): void => {
-  const SDK_FOLDER_PATH = `${process.cwd()}/paima-sdk`;
-  const success = '✅ SDK Initialized.';
-  const failure = silentMode ? '' : `Existing SDK Found: ${SDK_FOLDER_PATH}.`;
-
-  prepareFolder([PACKAGED_SDK_PATH], SDK_FOLDER_PATH, success, failure);
-};
-
 // Initializes the batcher in the same folder as the executable
 export const prepareBatcher = (silentMode = false): void => {
   const BATCHER_FOLDER_PATH = `${process.cwd()}/batcher`;
@@ -130,7 +120,7 @@ export const checkForPackedGameCode = (): boolean => {
 };
 
 export const getPaimaEngineVersion = (): string => {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const { version } = require(`${PACKAGED_SDK_PATH}/package.json`);
+  const rawData = fs.readFileSync(path.join(__dirname, 'metadata.json'), 'utf-8');
+  const { version } = JSON.parse(rawData);
   return version;
 };

@@ -3,6 +3,7 @@
 import pkg from 'pkg';
 import devPkg from 'pkg-dev';
 import fs from 'fs';
+import pkgJson from '../package.json' assert { type: 'json' };
 
 console.log('Package script start');
 console.log(process.argv);
@@ -65,5 +66,12 @@ async function packageApp() {
   }
 }
 
-void packageApp();
+async function generateMetadata() {
+  const metadata = {
+    version: pkgJson.version
+  };
+  fs.writeFileSync(getTmpFolder() + 'metadata.json', JSON.stringify(metadata, null, 2));
+}
 
+void packageApp();
+void generateMetadata();

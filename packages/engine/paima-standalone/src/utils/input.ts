@@ -1,21 +1,20 @@
-import { createInterface } from 'readline';
-import {
-  prepareSDK,
-  prepareTemplate,
-  prepareBatcher,
-  checkForPackedGameCode,
-  prepareContract,
-  prepareDocumentation,
-  getFolderNames,
-  PACKAGED_TEMPLATES_PATH,
-  getPaimaEngineVersion,
-} from './file.js';
 import { FunnelFactory } from '@paima/funnel';
 import paimaRuntime from '@paima/runtime';
-import { gameSM } from '../sm.js';
-import { importTsoaFunction } from './import.js';
-import { doLog, ENV } from '@paima/utils';
+import { ENV, doLog } from '@paima/utils';
 import { exec } from 'child_process';
+import { createInterface } from 'readline';
+import { gameSM } from '../sm.js';
+import {
+  PACKAGED_TEMPLATES_PATH,
+  checkForPackedGameCode,
+  getFolderNames,
+  getPaimaEngineVersion,
+  prepareBatcher,
+  prepareContract,
+  prepareDocumentation,
+  prepareTemplate,
+} from './file.js';
+import { importTsoaFunction } from './import.js';
 import type { Template } from './types.js';
 
 // Prompt user for input in the CLI
@@ -73,17 +72,13 @@ export const argumentRouter = async (): Promise<void> => {
 export const initCommand = async (): Promise<void> => {
   const init_arg = process.argv[3];
 
-  if (init_arg == 'sdk') {
-    prepareSDK();
-  } else if (init_arg == 'template') {
+  if (init_arg == 'template') {
     const chosenTemplate = await pickGameTemplate(process.argv[4]);
     prepareTemplate(chosenTemplate);
     if (chosenTemplate === 'web-2.5') prepareBatcher(true);
-    prepareSDK(true);
   } else {
     doLog(`Usage: paima-engine init ARG`);
     doLog(`Valid Arguments:`);
-    doLog(`   sdk                        Initializes the SDK by itself.`);
     doLog(
       `   template                   Provides an interactive interface for initializing a template.`
     );

@@ -8,7 +8,6 @@
     "/build"
   ],
   "scripts": {
-    "lint": "prettier --write '**/*.sol'",
     "test": "forge test"
   },
   "dependencies": {
