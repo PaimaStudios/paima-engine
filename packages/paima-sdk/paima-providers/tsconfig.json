@@ -1,0 +1,12 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "noEmit": true,
+  },
+  "include": ["test/**/*", "src/**/*"],
+  "references": [
+    { "path": "../utils/tsconfig.build.json" },
+    { "path": "../crypto/tsconfig.build.json" }
+  ]
+}

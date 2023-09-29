@@ -12,5 +12,6 @@
   },
   "[json][jsonc][json5]": {
     "editor.formatOnSave": true
-  }
+  },
+  "eslint.experimental.useFlatConfig": true,
 }

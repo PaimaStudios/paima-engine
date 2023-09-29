@@ -1,0 +1,38 @@
+{
+  "name": "@paima/db",
+  "version": "1.1.0",
+  "description": "Library for Paima database interaction",
+  "main": "build/index.js",
+  "type": "module",
+  "types": "build/index.d.ts",
+  "export": {
+    ".": {
+      "types": "./build/index.d.ts"
+    }
+  },
+  "files": [
+    "/build"
+  ],
+  "author": "Paima Studios",
+  "license": "See license file",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PaimaStudios/paima-engine.git"
+  },
+  "homepage": "https://docs.paimastudios.com",
+  "scripts": {
+    "lint:eslint": "eslint .",
+    "compile": "npx pgtyped -w -c pgtypedconfig.json",
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "@pgtyped/cli": "^2.2.1",
+    "@types/node": "^18.17.1"
+  },
+  "dependencies": {
+    "pg": "^8.7.3",
+    "pg-tx": "^1.0.1",
+    "@pgtyped/runtime": "2.1.0",
+    "@paima/utils": "1.1.0"
+  }
+}

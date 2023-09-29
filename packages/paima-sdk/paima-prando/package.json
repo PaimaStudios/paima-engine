@@ -1,0 +1,30 @@
+{
+  "name": "@paima/prando",
+  "version": "1.1.0",
+  "description": "Fork of Prando for generating randomness for Paima Engine",
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
+  "type": "module",
+  "export": {
+    ".": {
+      "types": "./build/index.d.ts"
+    }
+  },
+  "files": [
+    "/build"
+  ],
+  "author": "Paima Studios",
+  "license": "See license file",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PaimaStudios/paima-engine.git"
+  },
+  "homepage": "https://docs.paimastudios.com",
+  "scripts": {
+    "lint:eslint": "eslint .",
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "typescript": "^5.2.2"
+  }
+}

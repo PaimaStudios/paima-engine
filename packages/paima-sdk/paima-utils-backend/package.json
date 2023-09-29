@@ -1,0 +1,37 @@
+{
+  "name": "@paima/utils-backend",
+  "version": "1.1.0",
+  "description": "Library for Paima helper functions for use in backend",
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
+  "type": "module",
+  "export": {
+    ".": {
+      "types": "./build/index.d.ts"
+    }
+  },
+  "files": [
+    "/build"
+  ],
+  "author": "Paima Studios",
+  "license": "See license file",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PaimaStudios/paima-engine.git"
+  },
+  "homepage": "https://docs.paimastudios.com",
+  "scripts": {
+    "lint:eslint": "eslint .",
+    "build": "tsc",
+    "test": "jest"
+  },
+  "devDependencies": {
+    "@types/node": "^18.17.1",
+    "ts-jest": "^29.1.1"
+  },
+  "dependencies": {
+    "yaml": "^2.3.1",
+    "@paima/db": "1.1.0",
+    "@paima/utils": "1.1.0"
+  }
+}

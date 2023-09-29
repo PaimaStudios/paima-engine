@@ -1,0 +1,27 @@
+{
+  "name": "@paima/build-utils",
+  "version": "1.1.0",
+  "description": "Util functions to build Paima projects for various platforms",
+  "files": [
+    "/build",
+    "/scripts"
+  ],
+  "author": "Paima Studios",
+  "license": "See license file",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PaimaStudios/paima-engine.git"
+  },
+  "homepage": "https://docs.paimastudios.com",
+  "scripts": {
+    "lint:eslint": "eslint .",
+    "build": "tsc"
+  },
+  "bin": {
+    "paima-build-middleware": "./scripts/esbuild.sh"
+  },
+  "peerDependencies": {
+    "esbuild": "^0.19.3",
+    "esbuild-plugin-polyfill-node": "^0.3.0"
+  }
+}

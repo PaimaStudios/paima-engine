@@ -1,0 +1,47 @@
+{
+  "name": "@paima/mw-core",
+  "version": "1.1.0",
+  "description": "Middleware core to be reused among all Paima games",
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
+  "type": "module",
+  "export": {
+    ".": {
+      "types": "./build/index.d.ts"
+    }
+  },
+  "files": [
+    "/build"
+  ],
+  "author": "Paima Studios",
+  "license": "See license file",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PaimaStudios/paima-engine.git"
+  },
+  "homepage": "https://docs.paimastudios.com",
+  "scripts": {
+    "lint:eslint": "eslint .",
+    "build": "tsc",
+    "build:standalone-web-ui": "NODE_ENV=${NODE_ENV:=development} DOTENV_CONFIG_PATH=\"../../.env.$NODE_ENV\" node --require dotenv/config ./esbuildconfig.cjs",
+    "start:standalone-web-ui": "npx http-server ./web -o --port 9123"
+  },
+  "devDependencies": {
+    "dotenv": "^16.0.3",
+    "esbuild": "^0.19.3",
+    "esbuild-plugin-polyfill-node": "^0.3.0",
+    "typescript": "^5.2.2"
+  },
+  "dependencies": {
+    "@metamask/providers": "^10.2.1",
+    "@perawallet/connect": "^1.2.3",
+    "@polkadot/extension-dapp": "^0.44.9",
+    "@truffle/hdwallet-provider": "^2.1.15",
+    "algosdk": "^2.3.0",
+    "bech32": "^2.0.0",
+    "@paima/utils": "1.1.0",
+    "@paima/providers": "1.1.0",
+    "@paima/concise": "1.1.0",
+    "@paima/prando": "1.1.0"
+  }
+}

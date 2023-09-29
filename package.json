@@ -4,22 +4,47 @@
   "private": true,
   "scripts": {
     "prepare": "husky install",
-    "cilint": "./scripts/runNpm.sh 'run cilint'",
-    "build": "./scripts/runNpm.sh 'run build'",
-    "postinstall": "./scripts/runNpm.sh install",
-    "release": "npm install && npm run build && ./scripts/runNpm.sh 'run release' batcher && ./scripts/runNpm.sh 'run release' engine && cp -r ./engine/paima-standalone/packaged/@standalone/* ./bin"
+    "lint:versions": "ts-node -P ./tsconfig.base.json ./tools/scripts/check-implicit-dependencies.ts && syncpack list-mismatches",
+    "lint": "npm run prettier && npx nx affected --target=lint:eslint && npm run lint:versions",
+    "cilint": "npm run cprettier && npx nx affected --target=lint:eslint && npm run lint:versions",
+    "cprettier": "prettier --plugin=prettier-plugin-solidity --ignore-path ./.prettierignore --check '**/*.{sol,ts,tsx}'",
+    "prettier": "prettier --plugin=prettier-plugin-solidity --ignore-path ./.prettierignore --write '**/*.{sol,ts,tsx}'",
+    "prebuild": "npx nx run-many -t prebuild",
+    "build": "npx nx run-many -t build",
+    "release:lib": "sh ./tools/scripts/bump-version.sh && npx nx release publish -g paima-sdk -d",
+    "release:bin": "npx nx run-many -t release && cp -r ./packages/engine/paima-standalone/packaged/@standalone/* ./bin"
   },
   "devDependencies": {
-    "@types/eslint-plugin-prettier": "^3.1.0",
-    "@typescript-eslint/eslint-plugin": "^6.5.0",
-    "@typescript-eslint/parser": "^6.5.0",
+    "@eslint/eslintrc": "^2.1.2",
+    "@eslint/js": "~8.50.0",
+    "@nx/esbuild": "16.9.1",
+    "@nx/js": "^16.9.1",
+    "@nx/linter": "^16.9.1",
+    "@types/eslint-plugin-prettier": "^3.1.1",
+    "@types/node": "^18.17.1",
+    "@typescript-eslint/eslint-plugin": "^6.7.3",
+    "@typescript-eslint/parser": "^6.7.3",
+    "esbuild": "^0.19.3",
     "eslint-config-airbnb-typescript": "^17.1.0",
-    "eslint-config-prettier": "^8.5.0",
-    "eslint-plugin-import": "^2.26.0",
-    "eslint-plugin-prettier": "^4.2.1",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-import": "^2.28.1",
+    "eslint-plugin-prettier": "^5.0.0",
     "eslint-plugin-promise": "^6.1.1",
-    "eslint-plugin-react": "^7.31.10",
+    "eslint-plugin-react": "^7.33.2",
     "eslint-plugin-react-hooks": "^4.6.0",
-    "husky": "^8.0.3"
-  }
+    "husky": "^8.0.3",
+    "json5": "^2.2.3",
+    "nx": "16.9.1",
+    "prettier": "^3.0.3",
+    "prettier-plugin-organize-imports": "^3.2.3",
+    "prettier-plugin-solidity": "^1.1.3",
+    "syncpack": "^11.2.1",
+    "typescript": "^5.2.2"
+  },
+  "overrides": {
+    "web3-eth-contract": "1.10.0"
+  },
+  "workspaces": [
+    "./packages/*/*"
+  ]
 }

@@ -1,0 +1,32 @@
+{
+  "name": "nft-sale",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib",
+    "test": "test"
+  },
+  "scripts": {
+    "compile": "npx truffle compile",
+    "prettier": "prettier --write '**/*.{sol,js,ts}'"
+  },
+  "prettier": {
+    "tabWidth": 4,
+    "arrowParens": "avoid"
+  },
+  "keywords": [],
+  "author": "Paima Studios",
+  "license": "MIT",
+  "dependencies": {
+    "@openzeppelin/contracts": "^4.6.0",
+    "@openzeppelin/contracts-upgradeable": "^4.6.0",
+    "dotenv": "^16.0.3"
+  },
+  "devDependencies": {
+    "@truffle/hdwallet-provider": "^2.1.15",
+    "@types/mocha": "^9.1.1",
+    "truffle": "^5.11.5",
+    "ts-node": "^10.8.1"
+  }
+}

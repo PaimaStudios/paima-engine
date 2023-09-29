@@ -1,0 +1,64 @@
+{
+  "name": "@standalone/paima-engine",
+  "author": "Paima Studios",
+  "license": "See license file",
+  "version": "1.0.0",
+  "description": "Paima Engine standalone, aka executable binary wrapper around the engine core.",
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
+  "type": "module",
+  "nx": {
+    "targets": {
+      "release": {
+        "dependsOn": ["build", "^release"],
+        "outputs": [
+          "{projectRoot}/packaged"
+        ]
+      }
+    },
+    "implicitDependencies": ["@standalone/paima-batcher"]
+  },
+  "files": [
+    "/build"
+  ],
+  "bin": "./engineCorePacked.js",
+  "pkg": {
+    "scripts": [],
+    "assets": [
+      "./metadata.json",
+      "./templates/**/*",
+      "./contracts/**/*",
+      "./batcher/**/*",
+      "./documentation/**/*"
+    ],
+    "targets": [
+      "node18-linux-x64",
+      "node18-macos-x64"
+    ]
+  },
+  "scripts": {
+    "lint:eslint": "eslint .",
+    "build": "npx tsc --build tsconfig.json",
+    "pack": "node ./esbuildconfig.cjs",
+    "build:prod-binary": "npm run build:prod-binary-macos && npm run build:prod-binary-linux",
+    "build:prod-binary-macos": "npm run pack && ts-node ./scripts/package macos && mv ./packaged/tmp/@standalone/paima-engine-macos ./packaged/@standalone/",
+    "build:prod-binary-linux": "npm run pack && ts-node ./scripts/package linux && mv ./packaged/tmp/@standalone/paima-engine-linux ./packaged/@standalone/",
+    "install-binaries": "../../../tools/scripts/unpack.sh",
+    "build:dev-binary": "npm run build:dev-binary-macos && npm run build:dev-binary-linux",
+    "build:dev-binary-macos": "npm run pack && ts-node ./scripts/package macos --debug",
+    "build:dev-binary-linux": "npm run pack && ts-node ./scripts/package linux --debug",
+    "prepare:standalone": "sh ./scripts/prepare_standalone_folders.sh",
+    "build:standalone": "npm run build:prod-binary",
+    "build:dev-standalone": "npm run install-binaries && npm run build:dev-binary",
+    "release": "npm run prepare:standalone && npm run build:standalone && npm run build:dev-standalone",
+    "standalone": "npm run prepare:standalone && npm run build:standalone"
+  },
+  "devDependencies": {
+    "ts-node": "^10.8.1",
+    "cross-env": "^7.0.3",
+    "dotenv": "^16.0.3",
+    "esbuild": "^0.19.3",
+    "pkg": "^5.8.1",
+    "pkg-dev": "github:paimaStudios/pkg#main"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "name": "@paima/funnel",
+  "version": "1.0.0",
+  "description": "Blockchain Data fetching library for Paima Engine",
+  "type": "module",
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
+  "files": [
+    "/build"
+  ],
+  "scripts": {
+    "lint:eslint": "eslint .",
+    "build": "tsc"
+  },
+  "author": "Paima Studios",
+  "devDependencies": {
+    "typescript": "^5.2.2"
+  },
+  "dependencies": {
+  }
+}

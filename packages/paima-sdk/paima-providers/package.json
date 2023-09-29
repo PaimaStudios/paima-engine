@@ -1,0 +1,40 @@
+{
+  "name": "@paima/providers",
+  "version": "1.1.0",
+  "description": "Library for dApp connection for blockchains supported by Paima",
+  "main": "build/index.js",
+  "type": "module",
+  "types": "build/index.d.ts",
+  "export": {
+    ".": {
+      "types": "./build/index.d.ts"
+    }
+  },
+  "files": [
+    "/build"
+  ],
+  "author": "Paima Studios",
+  "license": "See license file",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PaimaStudios/paima-engine.git"
+  },
+  "homepage": "https://docs.paimastudios.com",
+  "scripts": {
+    "lint:eslint": "eslint .",
+    "build": "tsc --build tsconfig.build.json",
+    "test": "jest --runInBand"
+  },
+  "devDependencies": {},
+  "dependencies": {
+    "@metamask/providers": "^10.2.1",
+    "@perawallet/connect": "^1.2.3",
+    "@polkadot/extension-dapp": "^0.44.9",
+    "@truffle/hdwallet-provider": "^2.1.15",
+    "bech32": "^2.0.0",
+    "web3": "1.10.0",
+    "web3-utils": "1.10.0",
+    "@paima/crypto": "1.1.0",
+    "@paima/utils": "1.1.0"
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "name": "@paima/sdk",
+  "version": "1.1.0",
+  "description": "SDK for Paima Engine",
+  "type": "module",
+  "files": [
+    "/build"
+  ],
+  "author": "Paima Studios",
+  "license": "See license file",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PaimaStudios/paima-engine.git"
+  },
+  "homepage": "https://docs.paimastudios.com",
+  "keywords": ["autonomous worlds", "focg", "onchain game", "paima"],
+  "scripts": {
+    "lint:eslint": "eslint .",
+    "build": "npx tsc --build tsconfig.json"
+  },
+  "devDependencies": {},
+  "dependencies": {
+    "@paima/build-utils": "1.1.0",
+    "@paima/concise": "1.1.0",
+    "@paima/crypto": "1.1.0",
+    "@paima/db": "1.1.0",
+    "@paima/executors": "1.1.0",
+    "@paima/mw-core": "1.1.0",
+    "@paima/prando": "1.1.0",
+    "@paima/providers": "1.1.0",
+    "@paima/utils-backend": "1.1.0",
+    "@paima/utils": "1.1.0"
+  }
+}
