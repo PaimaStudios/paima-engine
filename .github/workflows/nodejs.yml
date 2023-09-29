@@ -2,23 +2,23 @@ name: NodeJS Continuous Health Check
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
     paths-ignore:
-      - "documentation/**"
-      - "README.md"
-      - "errors.log"
+      - 'documentation/**'
+      - 'README.md'
+      - 'errors.log'
   pull_request:
-    branches: [ master ]
+    branches: [master]
     paths-ignore:
-      - "documentation/**"
-      - "README.md"
-      - "errors.log"
+      - 'documentation/**'
+      - 'README.md'
+      - 'errors.log'
 
 jobs:
   node_ci:
     runs-on: ${{ matrix.os }}
     env:
-      NODE_CACHE: "npm"
+      NODE_CACHE: 'npm'
 
     strategy:
       fail-fast: false
@@ -27,12 +27,13 @@ jobs:
         node: [18]
 
     steps:
-      -
-        name: Check out repository
+      - name: Check out repository
         if: ${{ github.event_name == 'push' || github.event_name == 'pull_request' }}
         uses: actions/checkout@v3
-      -
-        name: Setup node env
+        with:
+          # We need to fetch all branches and commits so that Nx affected has a base to compare against.
+          fetch-depth: 0
+      - name: Setup node env
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node }}
@@ -40,17 +41,12 @@ jobs:
           registry-url: https://registry.npmjs.org
           # cache: ${{ env.NODE_CACHE }}
           # cache-dependency-path: ${{ matrix.dir }}/package-lock.json
-      -
-        name: Cleanup for node > 16
-        if: ${{ matrix.node!='16' }}
-        shell: bash -e -l {0}
-        run: |
-          sh wipe.sh keep-package-lock
-          npm i --no-audit
-      -
-        name: Build workspace
-        shell: bash -e -l {0}
-        run: |
-          npm ci --prefer-offline --no-audit
-          npm run --if-present build
-          npm run --if-present cilint
+      - uses: nrwl/nx-set-shas@v3
+      - name: Install deps
+        run: npm ci --prefer-offline --no-audit
+      - name: Lint affected
+        run: npm run lint
+      - name: Test affected
+        run: npx nx affected -t test
+      - name: Build affected
+        run: npm run build
