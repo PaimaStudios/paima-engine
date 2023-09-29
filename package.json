@@ -5,14 +5,14 @@
   "scripts": {
     "prepare": "husky install",
     "lint:versions": "ts-node -P ./tsconfig.base.json ./tools/scripts/check-implicit-dependencies.ts && syncpack list-mismatches",
-    "lint": "npm run prettier && npx nx affected --target=lint:eslint && npm run lint:versions",
-    "cilint": "npm run cprettier && npx nx affected --target=lint:eslint && npm run lint:versions",
+    "lint": "npm run prettier && npx nx affected --target=lint:eslint --parallel=${PARALLEL:-3} && npm run lint:versions",
+    "cilint": "npm run cprettier && npx nx affected --target=lint:eslint --parallel=${PARALLEL:-3} && npm run lint:versions",
     "cprettier": "prettier --plugin=prettier-plugin-solidity --ignore-path ./.prettierignore --check '**/*.{sol,ts,tsx}'",
     "prettier": "prettier --plugin=prettier-plugin-solidity --ignore-path ./.prettierignore --write '**/*.{sol,ts,tsx}'",
-    "prebuild": "npx nx run-many -t prebuild",
-    "build": "npx nx run-many -t build",
+    "prebuild": "npx nx run-many --parallel=${PARALLEL:-3} -t prebuild",
+    "build": "npx nx run-many --parallel=${PARALLEL:-3} -t build",
     "release:lib": "sh ./tools/scripts/bump-version.sh && npx nx release publish -g paima-sdk -d",
-    "release:bin": "npx nx run-many -t release && cp -r ./packages/engine/paima-standalone/packaged/@standalone/* ./bin"
+    "release:bin": "npx nx run-many --parallel=${PARALLEL:-3} -t release && cp -r ./packages/engine/paima-standalone/packaged/@standalone/* ./bin"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^2.1.2",

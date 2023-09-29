@@ -19,6 +19,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       NODE_CACHE: 'npm'
+      PARALLEL: 1
 
     strategy:
       fail-fast: false
@@ -39,8 +40,7 @@ jobs:
           node-version: ${{ matrix.node }}
           check-latest: false
           registry-url: https://registry.npmjs.org
-          # cache: ${{ env.NODE_CACHE }}
-          # cache-dependency-path: ${{ matrix.dir }}/package-lock.json
+          cache: ${{ env.NODE_CACHE }}
       - uses: nrwl/nx-set-shas@v3
         with:
           main-branch-name: 'master'
