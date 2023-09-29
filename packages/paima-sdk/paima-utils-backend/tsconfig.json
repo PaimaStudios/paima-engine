@@ -6,5 +6,8 @@
     "resolveJsonModule": true
   },
   "include": ["src/**/*"],
-  "references": [{ "path": "../utils" }, { "path": "../db" }]
+  "references": [
+    { "path": "../utils/tsconfig.build.json" },
+    { "path": "../db" }
+  ]
 }

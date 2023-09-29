@@ -4,5 +4,14 @@
     "rootDir": "src",
     "outDir": "build"
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*"],
+  "references": [
+    { "path": "../../paima-sdk/paima-utils/tsconfig.build.json" },
+    { "path": "../paima-runtime" },
+    { "path": "../../paima-sdk/paima-prando" },
+    { "path": "../../paima-sdk/paima-db" },
+    { "path": "../../paima-sdk/paima-utils-backend" },
+    { "path": "../../paima-sdk/paima-crypto/tsconfig.build.json" },
+    { "path": "../../paima-sdk/paima-concise/tsconfig.build.json" },
+  ]
 }

@@ -5,5 +5,12 @@
     "outDir": "build",
     "resolveJsonModule": true
   },
-  "include": ["src/**/*", "src/**/*.json"]
+  "include": ["src/**/*", "src/**/*.json"],
+  "references": [
+    { "path": "../../batcher/batcher-standalone/tsconfig.build.json" },
+    { "path": "../paima-runtime" },
+    { "path": "../paima-sm" },
+    { "path": "../../paima-sdk/paima-utils/tsconfig.build.json" },
+    { "path": "../paima-funnel" },
+  ]
 }

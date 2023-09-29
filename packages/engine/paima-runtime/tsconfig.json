@@ -4,5 +4,9 @@
     "rootDir": "src",
     "outDir": "build"
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*"],
+  "references": [
+    { "path": "../../paima-sdk/paima-utils/tsconfig.build.json" },
+    { "path": "../../paima-sdk/paima-db" },
+  ]
 }

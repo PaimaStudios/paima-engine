@@ -9,6 +9,7 @@
     { "path": "../webserver/" },
     { "path": "../game-input-validator/" },
     { "path": "../utils" },
-    { "path": "../batcher-transaction-poster" }
+    { "path": "../batcher-transaction-poster" },
+    { "path": "../../paima-sdk/paima-providers/tsconfig.build.json" },
   ]
 }
