@@ -42,6 +42,8 @@ jobs:
           # cache: ${{ env.NODE_CACHE }}
           # cache-dependency-path: ${{ matrix.dir }}/package-lock.json
       - uses: nrwl/nx-set-shas@v3
+        with:
+          main-branch-name: 'master'
       - name: Install deps
         run: npm ci --prefer-offline --no-audit
       - name: Lint affected
