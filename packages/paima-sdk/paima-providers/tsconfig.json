@@ -6,7 +6,7 @@
   },
   "include": ["test/**/*", "src/**/*"],
   "references": [
-    { "path": "../utils/tsconfig.build.json" },
-    { "path": "../crypto/tsconfig.build.json" }
+    { "path": "../paima-crypto/tsconfig.build.json" },
+    { "path": "../paima-utils/tsconfig.build.json" },
   ]
 }
