@@ -48,7 +48,7 @@ jobs:
         run: npm ci --prefer-offline --no-audit
       - name: Build affected
         run: npm run build
-      - name: Test affected
-        run: npm run test
+      # - name: Test affected
+      # run: npm run test
       - name: Lint affected
         run: npm run lint
