@@ -46,9 +46,9 @@ jobs:
           main-branch-name: 'master'
       - name: Install deps
         run: npm ci --prefer-offline --no-audit
-      - name: Lint affected
-        run: npm run lint
       - name: Test affected
         run: npx nx affected -t test
       - name: Build affected
         run: npm run build
+      - name: Lint affected
+        run: npm run lint

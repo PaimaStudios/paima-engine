@@ -136,13 +136,10 @@ async function main() {
         dep,
       }));
 
-      // console.log(`=== ${pkg} ===`);
-      // console.log(depAndPaths);
-
       const extra: string[] = []; // references that aren't necessary
       const wrongPath: { pkg: string; path: string }[] = [];
 
-      // allow require to support trailing commas (used in tsconfig.json)
+      // json5 to support trailing commas (used in tsconfig.json)
       const jsonString = fs.readFileSync(`./${ownRoot}/tsconfig.json`, 'utf-8');
       const tsconfigJson = JSON5.parse(jsonString);
       for (const ref of tsconfigJson['references'] ?? []) {
@@ -151,12 +148,10 @@ async function main() {
         const indexOfMatch = depAndPaths.findIndex(depthAndPath =>
           depthAndPath.path.endsWith(folder)
         );
-        // console.log(folder, indexOfMatch);
         if (indexOfMatch === -1) {
           extra.push(folder);
         } else {
           const fileRef = getFilenameFromPath(path);
-          // console.log(fileRef, pkg, hasBuildConfig[depAndPaths[indexOfMatch].dep]);
           if (hasBuildConfig[depAndPaths[indexOfMatch].dep]) {
             if (fileRef !== 'tsconfig.build.json') {
               wrongPath.push({ pkg, path: path });
@@ -207,7 +202,44 @@ async function main() {
     }
   }
 
+  // 4) Check tsconfig paths
+  {
+    // json5 to support trailing commas (used in tsconfig.json)
+    const jsonString = fs.readFileSync(`./tsconfig.base.json`, 'utf-8');
+    const tsconfigJson = JSON5.parse(jsonString);
+
+    const tsconfigPaths = new Set<string>(Object.keys(tsconfigJson.compilerOptions.paths));
+    const expectedPkgs = new Set(ownPkgs.map(pkg => `${pkg}/*`));
+
+    const extraPaths = setDifference(tsconfigPaths, expectedPkgs);
+    const missingPaths = setDifference(expectedPkgs, tsconfigPaths);
+
+    if (extraPaths.size > 0 || missingPaths.size > 0) {
+      hasError = true;
+      console.error(`Root ${purpleText(`$./tsconfig.base.json`)} has incorrect "paths"`);
+    }
+    if (extraPaths.size > 0) {
+      for (const path of extraPaths) {
+        console.error(redText(`"${path}": ${tsconfigJson.compilerOptions.paths[path]}`));
+      }
+    }
+    if (missingPaths.size > 0) {
+      for (const path of missingPaths) {
+        const pkgName = path.substring(0, path.length - 2); // strip the trailing /*
+        console.error(greenText(`"${path}": ["./${graph.nodes[pkgName].data.root}/*"],`));
+      }
+    }
+  }
+
   process.exit(hasError ? 1 : 0);
+}
+
+function setDifference<T>(setA: Set<T>, setB: Set<T>): Set<T> {
+  const difference = new Set(setA);
+  for (const elem of setB) {
+    difference.delete(elem);
+  }
+  return difference;
 }
 
 /**

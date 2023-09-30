@@ -9,6 +9,9 @@
     }
   },
   "targetDefaults": {
+    "lint:eslint": {
+      "dependsOn": ["build", "^build"]
+    },
     "build": {
       "dependsOn": ["^build"]
     },
