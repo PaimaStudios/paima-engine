@@ -4,14 +4,13 @@ export default {
   preset: 'ts-jest/presets/default-esm',
   testEnvironment: 'node',
   transform: {
-    '^.+\\.(t)s$': ['ts-jest', { useESM: true, }],
-    '^.+\\.(j)s$': 'babel-jest',
+    '^.+\\.[tj]sx?$': ['ts-jest', { useESM: true, }],
   },
   transformIgnorePatterns: [
     '<rootDir>/node_modules/',
   ],
   moduleNameMapper: {
-    '^(\\.\\.?\\/.+)\\.jsx?$': '$1'
+    '^(\\.{1,2}/.*)\\.js$': '$1',
   },
   modulePathIgnorePatterns: ['<rootDir>/build/'],
 };

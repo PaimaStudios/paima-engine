@@ -202,7 +202,7 @@ async function main() {
     }
   }
 
-  // 4) Check tsconfig paths
+  // 4) Check tsconfig paths (needed because of https://github.com/nrwl/nx/issues/19391)
   {
     // json5 to support trailing commas (used in tsconfig.json)
     const jsonString = fs.readFileSync(`./tsconfig.base.json`, 'utf-8');
