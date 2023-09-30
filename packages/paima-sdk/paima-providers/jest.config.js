@@ -1,10 +1,10 @@
 /** @type {import('@ts-jest/dist/types').InitialOptionsTsJest} */
 export default {
   verbose: true,
-  preset: 'ts-jest/presets/default-esm',
+  extensionsToTreatAsEsm: ['.ts'],
   testEnvironment: 'node',
   transform: {
-    '^.+\\.[tj]sx?$': ['ts-jest', { useESM: true, }],
+    '^.+\\.tsx?$': ['ts-jest', { useESM: true, }],
   },
   transformIgnorePatterns: [
     '<rootDir>/node_modules/',
