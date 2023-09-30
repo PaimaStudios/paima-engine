@@ -12,6 +12,7 @@
     "prettier": "prettier --plugin=prettier-plugin-solidity --ignore-path ./.prettierignore --write '**/*.{sol,ts,tsx}'",
     "prebuild": "npx nx run-many --parallel=${PARALLEL:-3} -t prebuild",
     "build": "npm run lint:configs && npx nx run-many --parallel=${PARALLEL:-3} -t build",
+    "test": "npm run lint:configs && npx nx run-many --parallel=${PARALLEL:-3} -t test",
     "release:lib": "npm run lint:configs && sh ./tools/scripts/bump-version.sh && npx nx release publish -g paima-sdk -d",
     "release:bin": "npm run lint:configs && npx nx run-many --parallel=${PARALLEL:-3} -t release && cp -r ./packages/engine/paima-standalone/packaged/@standalone/* ./bin"
   },

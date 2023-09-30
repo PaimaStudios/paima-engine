@@ -22,8 +22,7 @@
   "homepage": "https://docs.paimastudios.com",
   "scripts": {
     "lint:eslint": "eslint .",
-    "build": "tsc",
-    "test": "jest"
+    "build": "tsc"
   },
   "devDependencies": {
     "@types/node": "^18.17.1",

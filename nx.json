@@ -12,6 +12,9 @@
     "lint:eslint": {
       "dependsOn": ["build", "^build"]
     },
+    "test": {
+      "dependsOn": ["^build"]
+    },
     "build": {
       "dependsOn": ["^build"]
     },
