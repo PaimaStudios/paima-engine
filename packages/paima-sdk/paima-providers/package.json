@@ -1,6 +1,9 @@
 {
   "name": "@paima/providers",
   "version": "1.1.0",
+  "publishConfig": {
+    "access": "public"
+  },
   "description": "Library for dApp connection for blockchains supported by Paima",
   "main": "build/index.js",
   "type": "module",

@@ -1,6 +1,9 @@
 {
   "name": "@paima/crypto",
   "version": "1.1.0",
+  "publishConfig": {
+    "access": "public"
+  },
   "description": "Library for cryptography of blockchains supported by Paima",
   "main": "build/index.js",
   "type": "module",

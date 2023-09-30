@@ -1,6 +1,9 @@
 {
   "name": "@paima/utils-backend",
   "version": "1.1.0",
+  "publishConfig": {
+    "access": "public"
+  },
   "description": "Library for Paima helper functions for use in backend",
   "main": "build/index.js",
   "types": "build/index.d.ts",

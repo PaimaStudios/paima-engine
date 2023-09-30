@@ -1,6 +1,9 @@
 {
   "name": "@paima/concise",
   "version": "1.1.0",
+  "publishConfig": {
+    "access": "public"
+  },
   "description": "Util library for concise encoding of game inputs",
   "main": "build/index.js",
   "types": "build/index.d.ts",

@@ -1,6 +1,9 @@
 {
   "name": "@paima/mw-core",
   "version": "1.1.0",
+  "publishConfig": {
+    "access": "public"
+  },
   "description": "Middleware core to be reused among all Paima games",
   "main": "build/index.js",
   "types": "build/index.d.ts",

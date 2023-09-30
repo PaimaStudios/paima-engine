@@ -1,6 +1,9 @@
 {
   "name": "@paima/executors",
   "version": "1.1.0",
+  "publishConfig": {
+    "access": "public"
+  },
   "description": "Utility functions for different kinds of executors in Paima",
   "main": "build/index.js",
   "types": "build/index.d.ts",

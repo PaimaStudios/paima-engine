@@ -1,6 +1,9 @@
 {
   "name": "@paima/sdk",
   "version": "1.1.0",
+  "publishConfig": {
+    "access": "public"
+  },
   "description": "SDK for Paima Engine",
   "type": "module",
   "files": [
@@ -13,7 +16,12 @@
     "url": "git+https://github.com/PaimaStudios/paima-engine.git"
   },
   "homepage": "https://docs.paimastudios.com",
-  "keywords": ["autonomous worlds", "focg", "onchain game", "paima"],
+  "keywords": [
+    "autonomous worlds",
+    "focg",
+    "onchain game",
+    "paima"
+  ],
   "scripts": {
     "lint:eslint": "eslint .",
     "build": "npx tsc --build tsconfig.json"
