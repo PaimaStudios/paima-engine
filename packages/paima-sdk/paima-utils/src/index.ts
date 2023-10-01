@@ -7,21 +7,9 @@ import erc20ContractBuild from './artifacts/ERC20Contract';
 import erc721ContractBuild from './artifacts/ERC721Contract';
 import paimaErc721ContractBuild from './artifacts/PaimaERC721Contract';
 import erc165ContractBuild from './artifacts/ERC165Contract';
-import type { PaimaL2Contract } from './contract-types/PaimaL2Contract';
-import type { ERC20Contract } from './contract-types/ERC20Contract';
-import type { ERC721Contract } from './contract-types/ERC721Contract';
-import type { PaimaERC721Contract } from './contract-types/PaimaERC721Contract';
-import type { ERC165Contract } from './contract-types/ERC165Contract';
+import type * as Contracts from './contract-types';
 import { doLog, logError } from './logging.js';
-import type {
-  Deployment,
-  ErrorCode,
-  ErrorMessageFxn,
-  ErrorMessageMapping,
-  ETHAddress,
-  TransactionTemplate,
-  InputDataString,
-} from './types';
+import type { Deployment, ErrorCode, ErrorMessageFxn, ErrorMessageMapping } from './types';
 import {
   AddressType,
   DEFAULT_FUNNEL_TIMEOUT,
@@ -33,21 +21,15 @@ const { isAddress } = web3UtilsPkg;
 
 export * from './config';
 export * from './types';
+export type * from './types';
 export * from './security/parse';
+export type * from './contract-types';
 
 export type { Web3, Contract, AbiItem, EventData };
-export type { PaimaL2Contract };
-export type { ERC20Contract, ERC721Contract, PaimaERC721Contract, ERC165Contract };
 export {
-  ETHAddress,
-  ErrorCode,
-  ErrorMessageFxn,
-  ErrorMessageMapping,
-  TransactionTemplate,
   AddressType,
   ChainDataExtensionType,
   ChainDataExtensionDatumType,
-  InputDataString,
   DEFAULT_FUNNEL_TIMEOUT,
   logError,
   doLog,
@@ -93,44 +75,47 @@ export function getAbiContract(address: string, abi: AbiItem[], web3?: Web3): Co
   return new web3.eth.Contract(abi, address);
 }
 
-export function getPaimaL2Contract(address: string, web3?: Web3): PaimaL2Contract {
+export function getPaimaL2Contract(address: string, web3?: Web3): Contracts.PaimaL2Contract {
   return getAbiContract(
     address,
     paimaL2ContractBuild.abi as AbiItem[],
     web3
-  ) as unknown as PaimaL2Contract;
+  ) as unknown as Contracts.PaimaL2Contract;
 }
 
-export function getErc20Contract(address: string, web3?: Web3): ERC20Contract {
+export function getErc20Contract(address: string, web3?: Web3): Contracts.ERC20Contract {
   return getAbiContract(
     address,
     erc20ContractBuild.abi as AbiItem[],
     web3
-  ) as unknown as ERC20Contract;
+  ) as unknown as Contracts.ERC20Contract;
 }
 
-export function getErc721Contract(address: string, web3?: Web3): ERC721Contract {
+export function getErc721Contract(address: string, web3?: Web3): Contracts.ERC721Contract {
   return getAbiContract(
     address,
     erc721ContractBuild.abi as AbiItem[],
     web3
-  ) as unknown as ERC721Contract;
+  ) as unknown as Contracts.ERC721Contract;
 }
 
-export function getPaimaErc721Contract(address: string, web3?: Web3): PaimaERC721Contract {
+export function getPaimaErc721Contract(
+  address: string,
+  web3?: Web3
+): Contracts.PaimaERC721Contract {
   return getAbiContract(
     address,
     paimaErc721ContractBuild.abi as AbiItem[],
     web3
-  ) as unknown as PaimaERC721Contract;
+  ) as unknown as Contracts.PaimaERC721Contract;
 }
 
-export function getErc165Contract(address: string, web3?: Web3): ERC165Contract {
+export function getErc165Contract(address: string, web3?: Web3): Contracts.ERC165Contract {
   return getAbiContract(
     address,
     erc165ContractBuild.abi as AbiItem[],
     web3
-  ) as unknown as ERC165Contract;
+  ) as unknown as Contracts.ERC165Contract;
 }
 
 export function validatePaimaL2ContractAddress(address: string): void {

@@ -55,8 +55,10 @@ const paimaEndpoints = {
   ...utilityEndpoints,
 };
 
+export type * from './errors';
 // Only for use in game-specific middleware:
 export * from './types';
+export type * from './types';
 export {
   paimaEndpoints,
   getBlockNumber,

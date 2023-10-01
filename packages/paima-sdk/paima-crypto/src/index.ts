@@ -4,6 +4,7 @@ import { EvmCrypto } from './evm';
 import { PolkadotCrypto } from './polkadot';
 import type Web3 from 'web3';
 export { AlgorandCrypto, CardanoCrypto, EvmCrypto, PolkadotCrypto };
+export type * from './IVerify';
 
 export class CryptoManager {
   // TODO: these should be dynamically imported

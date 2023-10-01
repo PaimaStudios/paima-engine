@@ -1,6 +1,7 @@
 export type * from './algorand';
 export type * from './cardano';
 export type * from './evm';
+export type * from './evm-truffle';
 export type * from './polkadot';
 export type * from './IProvider';
 export * from './algorand';

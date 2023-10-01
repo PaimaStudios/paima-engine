@@ -96,8 +96,8 @@ import { Grammars } from 'ebnf';
 // -------------------------------------------------
 //  will output: { command: sample, args : { sampleParam: 'helloWorld' } }
 //
-type ParserValues = string | boolean | number | null;
-type ParserCommandExec = (keyName: string, input: string) => ParserValues | ParserValues[];
+export type ParserValues = string | boolean | number | null;
+export type ParserCommandExec = (keyName: string, input: string) => ParserValues | ParserValues[];
 
 type InputKeys<T> = keyof Omit<T, 'input'>;
 export type ParserRecord<T = { input: string }> = Record<

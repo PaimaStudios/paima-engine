@@ -5,7 +5,7 @@ import type { EvmAddress } from './evm';
 import { ProviderNotInitialized } from './errors';
 import { utf8ToHex } from 'web3-utils';
 
-type TruffleApi = HDWalletProvider;
+export type TruffleApi = HDWalletProvider;
 
 export const DEFAULT_GAS_LIMIT = 100000;
 

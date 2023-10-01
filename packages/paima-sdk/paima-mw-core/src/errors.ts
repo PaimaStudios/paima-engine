@@ -21,45 +21,50 @@ export const FE_ERR_SPECIFIC_WALLET_NOT_INSTALLED = 3;
 export const FE_ERR_BATCHER_REJECTED_INPUT = 4;
 export const FE_ERR_BATCHER_LIMIT_REACHED = 5;
 
-export const enum PaimaMiddlewareErrorCode {
-  OK,
-  UNKNOWN,
+// We don't use enum here as we need these to be constants (an enums (even `const enum`) are not constants when exported with `preserveConstEnums` from a library
+export const PaimaMiddlewareErrorCode = {
+  OK: 0,
+  UNKNOWN: 1,
   // Account related:
-  EVM_WALLET_NOT_INSTALLED,
-  EVM_LOGIN,
-  EVM_WRONG_CHAIN,
-  EVM_CHAIN_SWITCH,
-  EVM_CHAIN_VERIFICATION,
-  NO_ADDRESS_SELECTED,
-  BACKEND_VERSION_INCOMPATIBLE,
-  ERROR_UPDATING_FEE,
-  WALLET_NOT_CONNECTED,
-  ERROR_SWITCHING_TO_CHAIN,
-  ERROR_ADDING_CHAIN,
-  WALLET_NOT_SUPPORTED,
-  CARDANO_WALLET_NOT_INSTALLED,
-  CARDANO_LOGIN,
-  POLKADOT_WALLET_NOT_INSTALLED,
-  POLKADOT_LOGIN,
-  ALGORAND_LOGIN,
-  TRUFFLE_LOGIN,
+  EVM_WALLET_NOT_INSTALLED: 1_000,
+  EVM_LOGIN: 1_001,
+  EVM_WRONG_CHAIN: 1_002,
+  EVM_CHAIN_SWITCH: 1_003,
+  EVM_CHAIN_VERIFICATION: 1_004,
+  NO_ADDRESS_SELECTED: 1_005,
+  BACKEND_VERSION_INCOMPATIBLE: 1_006,
+  ERROR_UPDATING_FEE: 1_007,
+  WALLET_NOT_CONNECTED: 1_008,
+  ERROR_SWITCHING_TO_CHAIN: 1_009,
+  ERROR_ADDING_CHAIN: 1_010,
+  WALLET_NOT_SUPPORTED: 1_011,
+  CARDANO_WALLET_NOT_INSTALLED: 1_012,
+  CARDANO_LOGIN: 1_013,
+  POLKADOT_WALLET_NOT_INSTALLED: 1_014,
+  POLKADOT_LOGIN: 1_015,
+  ALGORAND_LOGIN: 1_016,
+  TRUFFLE_LOGIN: 1_017,
   // Input posting related:
-  ERROR_POSTING_TO_CHAIN,
-  ERROR_POSTING_TO_BATCHER,
-  BATCHER_REJECTED_INPUT,
-  INVALID_RESPONSE_FROM_BATCHER,
-  FAILURE_VERIFYING_BATCHER_ACCEPTANCE,
+  ERROR_POSTING_TO_CHAIN: 2_000,
+  ERROR_POSTING_TO_BATCHER: 2_001,
+  BATCHER_REJECTED_INPUT: 2_002,
+  INVALID_RESPONSE_FROM_BATCHER: 2_003,
+  FAILURE_VERIFYING_BATCHER_ACCEPTANCE: 2_004,
   // Query endpoint related:
-  ERROR_QUERYING_BACKEND_ENDPOINT,
-  ERROR_QUERYING_BATCHER_ENDPOINT,
-  INVALID_RESPONSE_FROM_BACKEND,
+  ERROR_QUERYING_BACKEND_ENDPOINT: 3_000,
+  ERROR_QUERYING_BATCHER_ENDPOINT: 3_001,
+  INVALID_RESPONSE_FROM_BACKEND: 3_002,
   // Internal, should never occur:
-  INTERNAL_INVALID_DEPLOYMENT,
-  INTERNAL_INVALID_POSTING_MODE,
-  FINAL_PAIMA_GENERIC_ERROR, // only to be used as a counter
-}
+  INTERNAL_INVALID_DEPLOYMENT: 4_000,
+  INTERNAL_INVALID_POSTING_MODE: 4_000,
+  // only to be used as a starting point for user-defined error codes
+  FINAL_PAIMA_GENERIC_ERROR: 1_000_000,
+} as const;
 
-export const PAIMA_MIDDLEWARE_ERROR_MESSAGES: Record<PaimaMiddlewareErrorCode, string> = {
+export const PAIMA_MIDDLEWARE_ERROR_MESSAGES: Record<
+  (typeof PaimaMiddlewareErrorCode)[keyof typeof PaimaMiddlewareErrorCode],
+  string
+> = {
   [PaimaMiddlewareErrorCode.OK]: '',
   [PaimaMiddlewareErrorCode.UNKNOWN]: 'Unknown error',
   [PaimaMiddlewareErrorCode.EVM_WALLET_NOT_INSTALLED]: 'Selected EVM wallet not installed',
@@ -115,18 +120,18 @@ export function buildAbstractEndpointErrorFxn(
 ): EndpointErrorFxn {
   return function (errorDescription: ErrorCode | string, err?: any, errorCode?: number) {
     let msg: string = '';
-    let errorOccured: boolean = false;
+    let errorOccurred: boolean = false;
 
     if (typeof errorDescription === 'string') {
       msg = errorDescription;
-      errorOccured = msg !== '';
+      errorOccurred = msg !== '';
     } else {
       const errorCode = errorDescription;
-      errorOccured = errorCode !== 0;
+      errorOccurred = errorCode !== 0;
       msg = errorMessageFxn(errorCode);
     }
 
-    if (errorOccured) {
+    if (errorOccurred) {
       pushLog(`[${endpointName}] ${msg}`);
     }
     if (err) {

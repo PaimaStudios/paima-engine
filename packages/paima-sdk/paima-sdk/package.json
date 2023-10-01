@@ -1,17 +1,11 @@
 {
   "name": "@paima/sdk",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "publishConfig": {
     "access": "public"
   },
   "description": "SDK for Paima Engine",
   "type": "module",
-  "exports": {
-    "./*": "./build/*"
-  },
-  "files": [
-    "/build"
-  ],
   "author": "Paima Studios",
   "license": "See license file",
   "repository": {
@@ -27,19 +21,20 @@
   ],
   "scripts": {
     "lint:eslint": "eslint .",
-    "build": "npx tsc --build tsconfig.json"
+    "build:copy": "cp package.json ./build/ && cp README.md ./build/",
+    "build": "npx tsc --build tsconfig.json && npm run build:copy"
   },
   "devDependencies": {},
   "dependencies": {
-    "@paima/build-utils": "1.1.1",
-    "@paima/concise": "1.1.1",
-    "@paima/crypto": "1.1.1",
-    "@paima/db": "1.1.1",
-    "@paima/executors": "1.1.1",
-    "@paima/mw-core": "1.1.1",
-    "@paima/prando": "1.1.1",
-    "@paima/providers": "1.1.1",
-    "@paima/utils-backend": "1.1.1",
-    "@paima/utils": "1.1.1"
+    "@paima/build-utils": "1.1.2",
+    "@paima/concise": "1.1.2",
+    "@paima/crypto": "1.1.2",
+    "@paima/db": "1.1.2",
+    "@paima/executors": "1.1.2",
+    "@paima/mw-core": "1.1.2",
+    "@paima/prando": "1.1.2",
+    "@paima/providers": "1.1.2",
+    "@paima/utils-backend": "1.1.2",
+    "@paima/utils": "1.1.2"
   }
 }
