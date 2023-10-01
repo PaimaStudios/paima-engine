@@ -41,6 +41,12 @@ Then we also have a `Paima Engine Standalone` which is a module that utilizes `P
 
 The `Paima Contract` is deployed on-chain which allows users to submit game input via transactions. Game input is a properly encoded piece of data which is then read and funneled by `Paima Funnel` to the game's state machine (implemented via `Paima SM`). When consumed by the game's state transition function, if the game input is valid then it is used to transition the global game state from state A to state B.
 
+To install Paima SDK for games, run the following command
+
+```bash
+npm install @paima/sdk
+```
+
 ## How to Build
 
 Paima Engine is a TypeScript monorepo implemented with npm (not Yarn nor Lerna) workspaces. The `package.json` file at the root indicates all the common dependencies (mostly devDependencies like TypeScript, ESLint etc.), and the root `tsconfig.json` indicates the common TypeScript configuration. Every package has also its own `package.json` and `tsconfig.json` files indicating their particular configuration.

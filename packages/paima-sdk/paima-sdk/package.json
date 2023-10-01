@@ -1,11 +1,14 @@
 {
   "name": "@paima/sdk",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "publishConfig": {
     "access": "public"
   },
   "description": "SDK for Paima Engine",
   "type": "module",
+  "exports": {
+    "./*": "./build/*"
+  },
   "files": [
     "/build"
   ],
@@ -28,15 +31,15 @@
   },
   "devDependencies": {},
   "dependencies": {
-    "@paima/build-utils": "1.1.0",
-    "@paima/concise": "1.1.0",
-    "@paima/crypto": "1.1.0",
-    "@paima/db": "1.1.0",
-    "@paima/executors": "1.1.0",
-    "@paima/mw-core": "1.1.0",
-    "@paima/prando": "1.1.0",
-    "@paima/providers": "1.1.0",
-    "@paima/utils-backend": "1.1.0",
-    "@paima/utils": "1.1.0"
+    "@paima/build-utils": "1.1.1",
+    "@paima/concise": "1.1.1",
+    "@paima/crypto": "1.1.1",
+    "@paima/db": "1.1.1",
+    "@paima/executors": "1.1.1",
+    "@paima/mw-core": "1.1.1",
+    "@paima/prando": "1.1.1",
+    "@paima/providers": "1.1.1",
+    "@paima/utils-backend": "1.1.1",
+    "@paima/utils": "1.1.1"
   }
 }

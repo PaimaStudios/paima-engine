@@ -1,6 +1,6 @@
 {
   "name": "@paima/db",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "publishConfig": {
     "access": "public"
   },
@@ -8,11 +8,6 @@
   "main": "build/index.js",
   "type": "module",
   "types": "build/index.d.ts",
-  "export": {
-    ".": {
-      "types": "./build/index.d.ts"
-    }
-  },
   "files": [
     "/build"
   ],
@@ -36,6 +31,6 @@
     "pg": "^8.7.3",
     "pg-tx": "^1.0.1",
     "@pgtyped/runtime": "2.1.0",
-    "@paima/utils": "1.1.0"
+    "@paima/utils": "1.1.1"
   }
 }

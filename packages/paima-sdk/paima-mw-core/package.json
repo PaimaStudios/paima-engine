@@ -1,6 +1,6 @@
 {
   "name": "@paima/mw-core",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "publishConfig": {
     "access": "public"
   },
@@ -8,11 +8,6 @@
   "main": "build/index.js",
   "types": "build/index.d.ts",
   "type": "module",
-  "export": {
-    ".": {
-      "types": "./build/index.d.ts"
-    }
-  },
   "files": [
     "/build"
   ],
@@ -42,9 +37,9 @@
     "@truffle/hdwallet-provider": "^2.1.15",
     "algosdk": "^2.3.0",
     "bech32": "^2.0.0",
-    "@paima/utils": "1.1.0",
-    "@paima/providers": "1.1.0",
-    "@paima/concise": "1.1.0",
-    "@paima/prando": "1.1.0"
+    "@paima/utils": "1.1.1",
+    "@paima/providers": "1.1.1",
+    "@paima/concise": "1.1.1",
+    "@paima/prando": "1.1.1"
   }
 }

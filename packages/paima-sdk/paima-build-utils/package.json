@@ -1,10 +1,13 @@
 {
   "name": "@paima/build-utils",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "publishConfig": {
     "access": "public"
   },
   "description": "Util functions to build Paima projects for various platforms",
+  "exports": {
+    "./*": "./build/*"
+  },
   "files": [
     "/build",
     "/scripts"

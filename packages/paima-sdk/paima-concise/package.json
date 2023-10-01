@@ -1,6 +1,6 @@
 {
   "name": "@paima/concise",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "publishConfig": {
     "access": "public"
   },
@@ -8,11 +8,6 @@
   "main": "build/index.js",
   "types": "build/index.d.ts",
   "type": "module",
-  "export": {
-    ".": {
-      "types": "./build/index.d.ts"
-    }
-  },
   "files": [
     "/build"
   ],
@@ -34,6 +29,6 @@
   },
   "devDependencies": {
     "@types/node": "^18.17.1",
-    "@paima/utils": "1.1.0"
+    "@paima/utils": "1.1.1"
   }
 }

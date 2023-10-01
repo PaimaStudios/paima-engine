@@ -1,5 +1,8 @@
-# Paima build utils
+# Paima Build Utils
 
 A common place to store utility scripts to help build Paima projects on various platforms
 
-We store these in Paima itself instead of inside user codebases, as this is much easier than having to tell all users to have to change their build configuration every time there is a breaking change.
+These are provided as part of Paima itself to avoid the need for projects depending on Paima to update their build scripts for every internal change in Paima engine
+
+You can find the full docs for Paima [here](https://docs.paimastudios.com/). \
+**Note**: We generally recommend using [@paima/sdk](https://www.npmjs.com/package/@paima/sdk) instead of this SDK to get all Paima features as a single package.

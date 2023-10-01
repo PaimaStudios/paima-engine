@@ -1,28 +1,6 @@
-# Paima-utils
+# Paima Utils
 
-Paima-utils is a simple library containing helper functions for other Paima libraries.
+A simple library containing helper functions for other Paima libraries.
 
-## Usage
-
-Currently the library is in development, unpublished, and to be
-imported and used locally.
-
-## Development
-
-Install dependencies:
-
-```
-npm i
-```
-
-To test:
-
-```
-npm run test
-```
-
-Lint:
-
-```
-npm run lint
-```
+You can find the full docs for Paima [here](https://docs.paimastudios.com/). \
+**Note**: We generally recommend using [@paima/sdk](https://www.npmjs.com/package/@paima/sdk) instead of this SDK to get all Paima features as a single package.

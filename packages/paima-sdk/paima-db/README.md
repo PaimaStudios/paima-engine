@@ -1,6 +1,9 @@
-# Paima-db
+# Paima DB
 
-Paima-db is a simple package containing database-related code used by `paima-engine`-powered game nodes.
+A simple package containing database-related code used by `paima-engine`-powered game nodes.
+
+You can find the full docs for Paima [here](https://docs.paimastudios.com/). \
+**Note**: We generally recommend using [@paima/sdk](https://www.npmjs.com/package/@paima/sdk) instead of this SDK to get all Paima features as a single package.
 
 ## Migrations
 

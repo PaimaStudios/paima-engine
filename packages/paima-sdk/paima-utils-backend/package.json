@@ -1,6 +1,6 @@
 {
   "name": "@paima/utils-backend",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "publishConfig": {
     "access": "public"
   },
@@ -8,11 +8,6 @@
   "main": "build/index.js",
   "types": "build/index.d.ts",
   "type": "module",
-  "export": {
-    ".": {
-      "types": "./build/index.d.ts"
-    }
-  },
   "files": [
     "/build"
   ],
@@ -32,7 +27,7 @@
   },
   "dependencies": {
     "yaml": "^2.3.1",
-    "@paima/db": "1.1.0",
-    "@paima/utils": "1.1.0"
+    "@paima/db": "1.1.1",
+    "@paima/utils": "1.1.1"
   }
 }
