@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Install the required pkg-dev-prebuilts and cache it on the user's machine
 
