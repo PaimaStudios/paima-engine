@@ -8,6 +8,11 @@
 <a href="https://docs.paimastudios.com">Documentation</a>
 </p>
 
+## Get started
+
+1. Download the Paima Engine binary from the [release page](https://github.com/PaimaStudios/paima-engine/releases/)
+2. Follow the guide at https://docs.paimastudios.com/
+
 ## Background
 
 Paima is a framework for creating app-specific layer 2s (L2s) as sovereign rollups. That is to say: apps publish transactions to a blockchain for ordering and data availability, but uses its own code to determine the correct app state.
