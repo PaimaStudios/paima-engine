@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 npx nx reset # note: has to run before node_modules deletion
 find packages -maxdepth 3 -name 'tsconfig.tsbuildinfo' -type f -exec rm -f {} +
