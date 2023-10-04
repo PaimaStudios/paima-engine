@@ -1,4 +1,4 @@
-PACKAGED_PATH="./paima-standalone/packaged"
+PACKAGED_PATH="./packaged"
 rm -rf $PACKAGED_PATH
 mkdir -p $PACKAGED_PATH/@standalone
 
