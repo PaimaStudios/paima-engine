@@ -1,9 +1,3 @@
-import {
-  web3Accounts,
-  web3Enable,
-  web3FromAddress,
-  web3FromSource,
-} from '@polkadot/extension-dapp';
 import type { ActiveConnection, GameInfo, IConnector, IProvider, UserSignature } from './IProvider';
 import {
   ProviderApiError,
@@ -32,6 +26,7 @@ export class PolkadotConnector implements IConnector<PolkadotApi> {
     if (this.provider != null) {
       return this.provider;
     }
+    const { web3Accounts, web3Enable, web3FromAddress } = await import('@polkadot/extension-dapp');
     const extensions = await web3Enable(gameInfo.gameName);
     if (extensions.length === 0) {
       throw new WalletNotFound(`[polkadot] no extension detected`);
@@ -60,6 +55,8 @@ export class PolkadotConnector implements IConnector<PolkadotApi> {
     if (this.provider?.getConnection().metadata?.name === name) {
       return this.provider;
     }
+
+    const { web3Enable, web3FromSource } = await import('@polkadot/extension-dapp');
 
     await web3Enable(gameInfo.gameName);
     try {

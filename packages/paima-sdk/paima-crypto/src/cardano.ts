@@ -1,4 +1,3 @@
-import verifyCardanoDataSignature from '@cardano-foundation/cardano-verify-datasignature';
 import { doLog } from '@paima/utils';
 import type { IVerify } from './IVerify';
 
@@ -17,6 +16,9 @@ export class CardanoCrypto implements IVerify {
       if (!signature || !key || remainder.length > 0) {
         return false;
       }
+      const { default: verifyCardanoDataSignature } = await import(
+        '@cardano-foundation/cardano-verify-datasignature'
+      );
       return verifyCardanoDataSignature(signature, key, message, userAddress);
     } catch (err) {
       doLog('[address-validator] error verifying cardano signature:', err);
