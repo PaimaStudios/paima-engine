@@ -1,5 +1,3 @@
-import { cryptoWaitReady, decodeAddress, signatureVerify } from '@polkadot/util-crypto';
-import { u8aToHex } from '@polkadot/util';
 import { doLog } from '@paima/utils';
 import type { IVerify } from './IVerify';
 
@@ -14,6 +12,10 @@ export class PolkadotCrypto implements IVerify {
     signature: string
   ): Promise<boolean> => {
     try {
+      const { cryptoWaitReady, decodeAddress, signatureVerify } = await import(
+        '@polkadot/util-crypto'
+      );
+      const { u8aToHex } = await import('@polkadot/util');
       await cryptoWaitReady();
       const publicKey = decodeAddress(userAddress);
       const hexPublicKey = u8aToHex(publicKey);

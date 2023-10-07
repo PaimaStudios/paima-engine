@@ -1,4 +1,4 @@
-import { PeraWalletConnect } from '@perawallet/connect';
+import type { PeraWalletConnect } from '@perawallet/connect';
 import type { ActiveConnection, GameInfo, IConnector, IProvider, UserSignature } from './IProvider';
 import { CryptoManager } from '@paima/crypto';
 import { uint8ArrayToHexString } from '@paima/utils';
@@ -44,6 +44,7 @@ export class AlgorandConnector implements IConnector<AlgorandApi> {
     if (name !== SupportedAlgorandWallets.PERA) {
       throw new UnsupportedWallet(`AlgorandProvider: unknown connection type ${name}`);
     }
+    const { PeraWalletConnect } = await import('@perawallet/connect');
     const peraWallet = new PeraWalletConnect();
     return await this.connectExternal(gameInfo, {
       metadata: {
@@ -89,7 +90,7 @@ export class AlgorandProvider implements IProvider<AlgorandApi> {
     return this.address;
   };
   signMessage = async (message: string): Promise<UserSignature> => {
-    const txn = CryptoManager.Algorand().buildAlgorandTransaction(this.getAddress(), message);
+    const txn = await CryptoManager.Algorand().buildAlgorandTransaction(this.getAddress(), message);
     const signerTx = {
       txn,
       signers: [this.getAddress()],
@@ -101,7 +102,7 @@ export class AlgorandProvider implements IProvider<AlgorandApi> {
         `[signMessageAlgorand] invalid number of signatures returned: ${signedTxs.length}`
       );
     }
-    const signedTx = CryptoManager.Algorand().decodeSignedTransaction(signedTxs[0]);
+    const signedTx = await CryptoManager.Algorand().decodeSignedTransaction(signedTxs[0]);
     const signature = signedTx.sig;
     if (!signature) {
       throw new ProviderApiError(`[signMessageAlgorand] signature missing in signed Tx`);
