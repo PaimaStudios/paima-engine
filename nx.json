@@ -13,7 +13,8 @@
       "dependsOn": ["build", "^build"]
     },
     "test": {
-      "dependsOn": ["^build"]
+      "dependsOn": ["^build"],
+      "inputs": ["default", "^default", "{workspaceRoot}/jest.preset.js"]
     },
     "build": {
       "dependsOn": ["^build"]

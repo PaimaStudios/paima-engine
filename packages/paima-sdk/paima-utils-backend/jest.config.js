@@ -1,5 +1,6 @@
-/** @type {import('ts-jest').JestConfigWithTsJest} */
+/** @type {import('@ts-jest/dist/types').InitialOptionsTsJest} */
 export default {
-  preset: 'ts-jest',
-  testEnvironment: 'node',
+  displayName: '@paima/utils-backend',
+  preset: '../../../jest.preset.js',
+  coverageDirectory: '../../../coverage/packages/engine/paima-utils-backend',
 };
