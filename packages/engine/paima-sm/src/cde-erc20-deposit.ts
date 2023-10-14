@@ -1,7 +1,7 @@
 import type { PoolClient } from 'pg';
 
 import { doLog, ENV } from '@paima/utils';
-import type { CdeErc20DepositDatum } from '@paima/runtime';
+import type { TCdeErc20DepositDatum } from '@paima/runtime';
 import type { SQLUpdate } from '@paima/db';
 import {
   createScheduledData,
@@ -12,7 +12,7 @@ import {
 
 export default async function processErc20Datum(
   readonlyDBConn: PoolClient,
-  cdeDatum: CdeErc20DepositDatum
+  cdeDatum: TCdeErc20DepositDatum
 ): Promise<SQLUpdate[]> {
   const cdeId = cdeDatum.cdeId;
   const { from, value } = cdeDatum.payload;

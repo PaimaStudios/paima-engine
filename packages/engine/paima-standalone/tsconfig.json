@@ -8,7 +8,7 @@
   "include": ["src/**/*", "src/**/*.json"],
   "references": [
     { "path": "../../batcher/batcher-standalone/tsconfig.build.json" },
-    { "path": "../paima-runtime" },
+    { "path": "../paima-runtime/tsconfig.build.json" },
     { "path": "../paima-sm" },
     { "path": "../../paima-sdk/paima-utils/tsconfig.build.json" },
     { "path": "../paima-funnel" },

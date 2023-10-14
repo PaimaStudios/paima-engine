@@ -53,13 +53,18 @@ async function validateSingleExtensionConfig(
   persistent: IGetChainDataExtensionsResult,
   DBConn: Pool
 ): Promise<boolean> {
+  const scheduledPrefixCheck =
+    'scheduledPrefix' in cde
+      ? persistent.scheduled_prefix !== cde.scheduledPrefix
+      : persistent.scheduled_prefix == null;
+
   if (
     // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
     persistent.cde_type !== cde.cdeType ||
-    persistent.cde_name !== cde.cdeName ||
+    persistent.cde_name !== cde.name ||
     persistent.contract_address !== cde.contractAddress ||
     persistent.start_blockheight !== cde.startBlockHeight ||
-    persistent.scheduled_prefix !== cde.scheduledPrefix
+    scheduledPrefixCheck
   ) {
     return false;
   }
@@ -106,10 +111,10 @@ async function storeCdeConfig(config: ChainDataExtension[], DBConn: PoolClient):
         {
           cde_id: cde.cdeId,
           cde_type: cde.cdeType,
-          cde_name: cde.cdeName,
+          cde_name: cde.name,
           contract_address: cde.contractAddress,
           start_blockheight: cde.startBlockHeight,
-          scheduled_prefix: cde.scheduledPrefix,
+          scheduled_prefix: 'scheduledPrefix' in cde ? cde.scheduledPrefix : '',
         },
         DBConn
       );

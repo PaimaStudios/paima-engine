@@ -12,6 +12,7 @@ export default async function getCdeData(
   // https://github.com/dethcrypto/TypeChain/issues/767
   const events = (await timeout(
     extension.contract.getPastEvents('Transfer', {
+      filter: { to: extension.depositAddress.toLocaleLowerCase() },
       fromBlock: fromBlock,
       toBlock: toBlock,
     }),
@@ -24,7 +25,7 @@ function transferToCdeDatum(
   event: Transfer,
   extension: ChainDataExtensionErc20Deposit
 ): ChainDataExtensionDatum[] {
-  if (event.returnValues.to.toLowerCase() !== extension.depositAddress) {
+  if (event.returnValues.to !== extension.depositAddress.toLowerCase()) {
     return [];
   }
   return [

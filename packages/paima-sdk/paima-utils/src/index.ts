@@ -7,6 +7,7 @@ import erc20ContractBuild from './artifacts/ERC20Contract';
 import erc721ContractBuild from './artifacts/ERC721Contract';
 import paimaErc721ContractBuild from './artifacts/PaimaERC721Contract';
 import erc165ContractBuild from './artifacts/ERC165Contract';
+import erc6551RegistryContractBuild from './artifacts/ERC6551RegistryContract';
 import type * as Contracts from './contract-types';
 import { doLog, logError } from './logging.js';
 import type { Deployment, ErrorCode, ErrorMessageFxn, ErrorMessageMapping } from './types';
@@ -116,6 +117,17 @@ export function getErc165Contract(address: string, web3?: Web3): Contracts.ERC16
     erc165ContractBuild.abi as AbiItem[],
     web3
   ) as unknown as Contracts.ERC165Contract;
+}
+
+export function getErc6551RegistryContract(
+  address: string,
+  web3?: Web3
+): Contracts.ERC6551RegistryContract {
+  return getAbiContract(
+    address,
+    erc6551RegistryContractBuild.abi as AbiItem[],
+    web3
+  ) as unknown as Contracts.ERC6551RegistryContract;
 }
 
 export function validatePaimaL2ContractAddress(address: string): void {

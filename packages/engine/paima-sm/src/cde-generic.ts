@@ -1,11 +1,9 @@
-import type { Pool } from 'pg';
-
-import { doLog, ENV } from '@paima/utils';
-import type { CdeGenericDatum } from '@paima/runtime';
+import { ENV } from '@paima/utils';
+import type { TCdeGenericDatum } from '@paima/runtime';
 import { createScheduledData, cdeGenericInsertData } from '@paima/db';
 import type { SQLUpdate } from '@paima/db';
 
-export default async function processDatum(cdeDatum: CdeGenericDatum): Promise<SQLUpdate[]> {
+export default async function processDatum(cdeDatum: TCdeGenericDatum): Promise<SQLUpdate[]> {
   const cdeId = cdeDatum.cdeId;
   const blockHeight = cdeDatum.blockNumber;
   const payload = cdeDatum.payload;

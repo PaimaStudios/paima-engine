@@ -1,6 +1,6 @@
 import { ChainDataExtensionDatumType, timeout } from '@paima/utils';
 import type {
-  CdeErc20TransferDatum,
+  TCdeErc20TransferDatum,
   ChainDataExtensionDatum,
   ChainDataExtensionErc20,
 } from '@paima/runtime';
@@ -24,7 +24,7 @@ export default async function getCdeData(
   return events.map((e: Transfer) => transferToCdeDatum(e, extension.cdeId));
 }
 
-function transferToCdeDatum(event: Transfer, cdeId: number): CdeErc20TransferDatum {
+function transferToCdeDatum(event: Transfer, cdeId: number): TCdeErc20TransferDatum {
   return {
     cdeId: cdeId,
     cdeDatumType: ChainDataExtensionDatumType.ERC20Transfer,

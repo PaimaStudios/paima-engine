@@ -1,0 +1,26 @@
+extensions:
+  - name: 'Foo'
+    type: 'erc20-deposit'
+    contractAddress: '0xFE...10'
+    startBlockHeight: 4567123
+    scheduledPrefix: 'dp'
+    depositAddress: '0xAB...CD'
+
+  - name: 'Bar'
+    type: 'erc20'
+    contractAddress: '0xFE...11'
+    startBlockHeight: 4567123
+
+  - name: 'My NFT Contract'
+    type: 'erc721'
+    contractAddress: '0x01...EF'
+    startBlockHeight: 7654321
+    scheduledPrefix: 'newnft'
+
+  - name: 'My Custom Contract'
+    type: 'generic'
+    contractAddress: '0xDC...BA'
+    startBlockHeight: 11223344
+    abiPath: './abis/MyCustomContract.json'
+    eventSignature: 'MyEvent(address,uint256)'
+    scheduledPrefix: 'cst'
