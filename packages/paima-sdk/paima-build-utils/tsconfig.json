@@ -1,0 +1,4 @@
+{
+  // need this just because a lot of tools depend on the existence of a tsconfig.json
+  "extends": "./tsconfig.base.json"
+}
