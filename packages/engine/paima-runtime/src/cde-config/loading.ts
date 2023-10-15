@@ -124,7 +124,6 @@ function checkOrError<T extends TSchema>(
   }
 
   const decoded = Value.Decode(structure, config);
-  console.log(decoded);
   return decoded;
 }
 
