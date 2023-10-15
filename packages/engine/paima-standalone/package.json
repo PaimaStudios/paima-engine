@@ -54,7 +54,7 @@
     "standalone": "npm run prepare:standalone && npm run build:standalone"
   },
   "devDependencies": {
-    "ts-node": "^10.8.1",
+    "ts-node": "^10.9.1",
     "cross-env": "^7.0.3",
     "dotenv": "^16.0.3",
     "esbuild": "^0.19.3",

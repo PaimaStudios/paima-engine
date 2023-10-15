@@ -32,7 +32,7 @@ module.exports = [
     },
   },
   {
-    files: ['**/*.{ts,tsx,cts}'],
+    files: ['**/*.{ts,tsx,cts,mts}'],
     languageOptions: {
       parser: typescriptEslintParser,
       parserOptions: {
@@ -45,7 +45,7 @@ module.exports = [
     },
   },
   {
-    files: ['**/*.{ts,tsx,cts}'],
+    files: ['**/*.{ts,tsx,cts,mts}'],
     rules: {
       '@typescript-eslint/no-unsafe-assignment': 'off',
       '@typescript-eslint/no-unsafe-return': 'off',

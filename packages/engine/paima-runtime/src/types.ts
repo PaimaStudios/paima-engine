@@ -2,8 +2,7 @@ import type { Pool, PoolClient, PoolConfig } from 'pg';
 import type { Express, RequestHandler } from 'express';
 
 import type { SQLUpdate } from '@paima/db';
-import { ChainDataExtensionDatumType } from '@paima/utils';
-import type { ChainDataExtensionType } from '@paima/utils';
+import type { ChainDataExtensionDatumType, ChainDataExtensionType } from '@paima/utils';
 import type {
   Contract,
   ERC20Contract,
