@@ -1,8 +1,8 @@
 import * as fs from 'fs/promises';
 import YAML from 'yaml';
 import type Web3 from 'web3';
-import type { Static } from '@sinclair/typebox';
-import { Value } from '@sinclair/typebox/value';
+import type { Static, TSchema } from '@sinclair/typebox';
+import { Value, ValueErrorType } from '@sinclair/typebox/value';
 
 import type { AbiItem } from '@paima/utils';
 import {
@@ -22,18 +22,28 @@ import type {
   TChainDataExtensionErc721Config,
   TChainDataExtensionGenericConfig,
 } from '../types';
-import { CdeConfig, CdeEntryTypeName } from '../types';
+import {
+  CdeBaseConfig,
+  CdeEntryTypeName,
+  ChainDataExtensionErc20Config,
+  ChainDataExtensionErc20DepositConfig,
+  ChainDataExtensionErc6551RegistryConfig,
+  ChainDataExtensionErc721Config,
+  ChainDataExtensionGenericConfig,
+} from '../types';
+import type { CdeConfig } from '../types';
 import { loadAbi } from './utils';
 import assertNever from 'assert-never';
 
 /** Default registry address specified in ERC6551 */
-const ERC6551_REGISTRY_DEFAULT = '0x02101dfB77FDE026414827Fdc604ddAF224F0921';
+const ERC6551_REGISTRY_DEFAULT = '0x02101dfB77FDE026414827Fdc604ddAF224F0921'.toLowerCase();
 
-// Returns [extensions, extensionsValid: boolean]
+type ValidationResult = [config: ChainDataExtension[], validated: boolean];
+
 export async function loadChainDataExtensions(
   web3: Web3,
   configFilePath: string
-): Promise<[ChainDataExtension[], boolean]> {
+): Promise<ValidationResult> {
   let configFileData: string;
   try {
     configFileData = await fs.readFile(configFilePath, 'utf8');
@@ -55,18 +65,65 @@ export async function loadChainDataExtensions(
 }
 
 // Validate the overall structure of the config file and extract the relevant data
-function parseCdeConfigFile(configFileData: string): Static<typeof CdeConfig> {
+export function parseCdeConfigFile(configFileData: string): Static<typeof CdeConfig> {
   // Parse the YAML content into an object
   const configObject = YAML.parse(configFileData);
 
   // Validate the YAML object against the schema
-  const validationResult = Value.Check(CdeConfig, configObject);
+  const baseConfig = checkOrError(undefined, CdeBaseConfig, configObject);
 
-  if (!validationResult) {
-    throw new Error(`[cde-config] extensions field missing or invalid`);
+  const checkedConfig = baseConfig.extensions.map(entry => {
+    switch (entry.type) {
+      case CdeEntryTypeName.ERC20:
+        return checkOrError(entry.name, ChainDataExtensionErc20Config, entry);
+      case CdeEntryTypeName.ERC721:
+        return checkOrError(entry.name, ChainDataExtensionErc721Config, entry);
+      case CdeEntryTypeName.ERC20Deposit:
+        return checkOrError(entry.name, ChainDataExtensionErc20DepositConfig, entry);
+      case CdeEntryTypeName.Generic:
+        return checkOrError(entry.name, ChainDataExtensionGenericConfig, entry);
+      case CdeEntryTypeName.ERC6551Registry:
+        return checkOrError(entry.name, ChainDataExtensionErc6551RegistryConfig, entry);
+      default:
+        assertNever(entry.type);
+    }
+  });
+
+  return { extensions: checkedConfig };
+}
+
+function checkOrError<T extends TSchema>(
+  name: undefined | string,
+  structure: T,
+  config: unknown
+): Static<T> {
+  // 1) Check if there are any errors since Value.Decode doesn't give error messages
+  {
+    const skippableErrors: ValueErrorType[] = [ValueErrorType.Intersect, ValueErrorType.Union];
+
+    const errors = Array.from(Value.Errors(structure, config));
+    for (const error of errors) {
+      // there are many useless errors in this library
+      // ex: 1st error: "foo" should be "bar" in struct Foo
+      //     2nd error: struct Foo is invalid inside struct Config
+      //     in this case, the 2nd error is useless as we only care about the 1st error
+      // However, we always want to show the error if for some reason it's the only error
+      if (errors.length !== 1 && skippableErrors.find(val => val === error.type) != null) continue;
+      console.error({
+        name: name ?? 'Configuration root',
+        path: error.path,
+        valueProvided: error.value,
+        message: error.message,
+      });
+    }
+    if (errors.length > 1) {
+      throw new Error(`[cde-config] extensions field missing or invalid. See above for error.`);
+    }
   }
 
-  return configObject;
+  const decoded = Value.Decode(structure, config);
+  console.log(decoded);
+  return decoded;
 }
 
 // Do type-specific initialization and construct contract objects
@@ -143,7 +200,7 @@ async function instantiateCdeGeneric(
   web3: Web3
 ): Promise<ChainDataExtensionGeneric> {
   const eventSignature = config.eventSignature;
-  const eventMatch = eventSignature.match(/^[A-Za-z0-9_]+/);
+  const eventMatch = eventSignature.match(/^[A-Za-z0-9_]+/); // ex: MyEvent(address,uint256) → "MyEvent"
   if (!eventMatch) {
     throw new Error('[cde-config] Event signature invalid!');
   }

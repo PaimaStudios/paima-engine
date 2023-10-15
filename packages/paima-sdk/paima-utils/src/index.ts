@@ -2,28 +2,28 @@ import Web3 from 'web3';
 import type { AbiItem } from 'web3-utils';
 import type { Contract, EventData } from 'web3-eth-contract';
 import web3UtilsPkg from 'web3-utils';
-import paimaL2ContractBuild from './artifacts/PaimaL2Contract';
-import erc20ContractBuild from './artifacts/ERC20Contract';
-import erc721ContractBuild from './artifacts/ERC721Contract';
-import paimaErc721ContractBuild from './artifacts/PaimaERC721Contract';
-import erc165ContractBuild from './artifacts/ERC165Contract';
-import erc6551RegistryContractBuild from './artifacts/ERC6551RegistryContract';
+import paimaL2ContractBuild from './artifacts/PaimaL2Contract.js';
+import erc20ContractBuild from './artifacts/ERC20Contract.js';
+import erc721ContractBuild from './artifacts/ERC721Contract.js';
+import paimaErc721ContractBuild from './artifacts/PaimaERC721Contract.js';
+import erc165ContractBuild from './artifacts/ERC165Contract.js';
+import erc6551RegistryContractBuild from './artifacts/ERC6551RegistryContract.js';
 import type * as Contracts from './contract-types';
 import { doLog, logError } from './logging.js';
-import type { Deployment, ErrorCode, ErrorMessageFxn, ErrorMessageMapping } from './types';
+import type { Deployment, ErrorCode, ErrorMessageFxn, ErrorMessageMapping } from './types.js';
 import {
   AddressType,
   DEFAULT_FUNNEL_TIMEOUT,
   ChainDataExtensionType,
   ChainDataExtensionDatumType,
-} from './constants';
+} from './constants.js';
 
 const { isAddress } = web3UtilsPkg;
 
-export * from './config';
-export * from './types';
-export type * from './types';
-export * from './security/parse';
+export * from './config.js';
+export * from './types.js';
+export type * from './types.js';
+export * from './security/parse.js';
 export type * from './contract-types';
 
 export type { Web3, Contract, AbiItem, EventData };

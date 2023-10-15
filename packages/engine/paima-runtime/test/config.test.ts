@@ -1,13 +1,12 @@
 import { describe, expect, test } from '@jest/globals';
-import Web3 from 'web3';
-import { loadChainDataExtensions } from '../src/cde-config/loading.js';
+import { parseCdeConfigFile } from '../src/cde-config/loading.js';
+import * as fs from 'fs/promises';
 
 // TODO: test if addresses get converted to lowercase properly
 
-describe('Test if parsed', () => {
-  test(`placeholder`, async () => {
-    const web3 = new Web3();
-    await loadChainDataExtensions(web3, './example.yml');
-    expect(false).toEqual(false);
+describe('Test parsing CDE config files', () => {
+  test(`parse CDE configs`, async () => {
+    const configFileData = await fs.readFile('./test/example.yml', 'utf8');
+    expect(() => parseCdeConfigFile(configFileData)).not.toThrow();
   });
 });

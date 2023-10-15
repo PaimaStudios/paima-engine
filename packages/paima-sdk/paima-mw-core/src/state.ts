@@ -10,6 +10,7 @@ import {
   EvmConnector,
   PolkadotConnector,
 } from '@paima/providers';
+import assertNever from 'assert-never';
 
 export const enum PostingMode {
   UNBATCHED,
@@ -120,6 +121,7 @@ export const getActiveAddress = (): string => {
     case PostingMode.BATCHED_ALGORAND:
       return AlgorandConnector.instance().getOrThrowProvider().getAddress();
     default:
+      assertNever(postingMode, true);
       const errorCode = PaimaMiddlewareErrorCode.INTERNAL_INVALID_POSTING_MODE;
       const errorMessage = `${paimaErrorMessageFxn(errorCode)}: ${postingMode}`;
       throw new Error(errorMessage);

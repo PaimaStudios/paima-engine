@@ -25,7 +25,7 @@ function transferToCdeDatum(
   event: Transfer,
   extension: ChainDataExtensionErc20Deposit
 ): ChainDataExtensionDatum[] {
-  if (event.returnValues.to !== extension.depositAddress.toLowerCase()) {
+  if (event.returnValues.to.toLowerCase() !== extension.depositAddress) {
     return [];
   }
   return [

@@ -36,6 +36,7 @@ import {
   PolkadotConnector,
 } from '@paima/providers';
 import type { BatchedSubunit } from '@paima/concise';
+import assertNever from 'assert-never';
 
 const BATCHER_WAIT_PERIOD = 500;
 const BATCHER_RETRIES = 50;
@@ -140,6 +141,7 @@ export async function postConciselyEncodedData(gameInput: string): Promise<Resul
         gameInput
       );
     default:
+      assertNever(postingMode, true);
       return errorFxn(
         PaimaMiddlewareErrorCode.INTERNAL_INVALID_POSTING_MODE,
         `Invalid posting mode: ${postingMode}`

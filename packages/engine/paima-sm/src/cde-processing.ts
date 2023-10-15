@@ -10,6 +10,7 @@ import processErc20DepositDatum from './cde-erc20-deposit';
 import processGenericDatum from './cde-generic';
 import type { SQLUpdate } from '@paima/db';
 import { getSpecificCdeBlockheight } from '@paima/db';
+import assertNever from 'assert-never';
 
 export async function cdeTransitionFunction(
   readonlyDBConn: PoolClient,
@@ -27,7 +28,7 @@ export async function cdeTransitionFunction(
     case ChainDataExtensionDatumType.Generic:
       return await processGenericDatum(cdeDatum);
     default:
-      throw new Error(`[paima-sm] Unknown type on CDE datum: ${cdeDatum}`);
+      assertNever(cdeDatum.cdeDatumType);
   }
 }
 

@@ -1,25 +1,25 @@
 extensions:
-  - name: 'Foo'
+  - name: 'ERC20 Deposit'
     type: 'erc20-deposit'
-    contractAddress: '0xFE...10'
+    contractAddress: '0xc7d688cb053c19ad5ee4f48c348958880537835f'
     startBlockHeight: 4567123
     scheduledPrefix: 'dp'
-    depositAddress: '0xAB...CD'
+    depositAddress: '0xc7d688cb053c19ad5ee4f48c348958880537835f'
 
-  - name: 'Bar'
+  - name: 'My ERC20 Contract'
     type: 'erc20'
-    contractAddress: '0xFE...11'
+    contractAddress: '0xc7d688cb053c19ad5ee4f48c348958880537835f'
     startBlockHeight: 4567123
 
   - name: 'My NFT Contract'
     type: 'erc721'
-    contractAddress: '0x01...EF'
+    contractAddress: '0xc7d688cb053c19ad5ee4f48c348958880537835f'
     startBlockHeight: 7654321
     scheduledPrefix: 'newnft'
 
   - name: 'My Custom Contract'
     type: 'generic'
-    contractAddress: '0xDC...BA'
+    contractAddress: '0xc7d688cb053c19ad5ee4f48c348958880537835f'
     startBlockHeight: 11223344
     abiPath: './abis/MyCustomContract.json'
     eventSignature: 'MyEvent(address,uint256)'

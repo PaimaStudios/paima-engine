@@ -24,6 +24,7 @@ async function checkWalletStatus(): Promise<OldResult> {
       return await checkEthWalletStatus();
     case PostingMode.BATCHED_CARDANO:
       return await checkCardanoWalletStatus();
+    // TODO: what about the other currency types?
     default:
       return {
         success: true,

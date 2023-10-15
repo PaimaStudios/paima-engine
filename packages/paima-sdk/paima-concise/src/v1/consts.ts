@@ -1,4 +1,4 @@
-import { INNER_BATCH_DIVIDER, OUTER_BATCH_DIVIDER } from '../batcher';
+import { INNER_BATCH_DIVIDER, OUTER_BATCH_DIVIDER } from '../batcher.js';
 
 export const separator = '|';
 export const stateIdentifier = '*';

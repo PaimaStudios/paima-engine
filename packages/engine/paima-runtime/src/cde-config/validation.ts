@@ -12,6 +12,7 @@ import {
 } from '@paima/db';
 
 import type { ChainDataExtension } from '../types';
+import assertNever from 'assert-never';
 
 export async function validatePersistentCdeConfig(
   config: ChainDataExtension[],
@@ -99,6 +100,7 @@ async function validateSingleExtensionConfig(
     case ChainDataExtensionType.ERC721:
     case ChainDataExtensionType.PaimaERC721:
     default:
+      assertNever(cde.type);
     // no extra validation necessary for the remaining types
   }
   return true;
@@ -134,6 +136,8 @@ async function storeCdeConfig(config: ChainDataExtension[], DBConn: PoolClient):
         case ChainDataExtensionType.ERC20:
         case ChainDataExtensionType.ERC721:
         case ChainDataExtensionType.PaimaERC721:
+        default:
+          assertNever(cde.type);
         // no special configuration needed for these CDE types
       }
     }

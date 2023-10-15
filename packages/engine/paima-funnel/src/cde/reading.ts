@@ -8,6 +8,7 @@ import getCdeErc721Data from './erc721';
 import getCdePaimaErc721Data from './paimaErc721';
 import getCdeErc20DepositData from './erc20Deposit';
 import getCdeGenericData from './generic';
+import assertNever from 'assert-never';
 
 export async function getUngroupedCdeData(
   web3: Web3,
@@ -46,6 +47,6 @@ async function getSpecificCdeData(
     case ChainDataExtensionType.Generic:
       return await getCdeGenericData(extension, fromBlock, toBlock);
     default:
-      throw new Error('[funnel] Invalid CDE type!');
+      assertNever(extension.cdeType);
   }
 }

@@ -14,7 +14,12 @@
     },
     "test": {
       "dependsOn": ["^build"],
-      "inputs": ["default", "^default", "{workspaceRoot}/jest.preset.js"]
+      "inputs": ["default", "^default", "{workspaceRoot}/jest.preset.js"],
+      "executor": "@nx/jest:jest",
+      "options": {
+        "jestConfig": "{projectRoot}/jest.config.js",
+        "passWithNoTests": true
+      }
     },
     "build": {
       "dependsOn": ["^build"]
