@@ -32,20 +32,9 @@ CREATE TABLE chain_data_extensions (
   cde_id INTEGER PRIMARY KEY,
   cde_type INTEGER NOT NULL,
   cde_name TEXT NOT NULL,
-  contract_address TEXT NOT NULL,
+  cde_hash integer NOT NULL,
   start_blockheight INTEGER NOT NULL,
   scheduled_prefix TEXT
-);
-
-CREATE TABLE cde_config_erc20_deposit (
-  cde_id INTEGER PRIMARY KEY,
-  deposit_address TEXT NOT NULL
-);
-
-CREATE TABLE cde_config_generic (
-  cde_id INTEGER PRIMARY KEY,
-  event_signature TEXT NOT NULL,
-  contract_abi TEXT NOT NULL
 );
 
 CREATE TABLE cde_erc20_data (
@@ -76,6 +65,19 @@ CREATE TABLE cde_generic_data (
   event_data JSON NOT NULL,
   PRIMARY KEY (cde_id, id)
 );
+
+CREATE TABLE cde_erc6551_registry_data (
+  cde_id INTEGER NOT NULL,
+  block_height INTEGER NOT NULL,
+  account_created TEXT NOT NULL,
+  implementation TEXT NOT NULL,
+  token_contract TEXT NOT NULL,
+  token_id TEXT NOT NULL,
+  chain_id TEXT NOT NULL,
+  salt TEXT NOT NULL,
+  PRIMARY KEY (cde_id, account_created)
+);
+
 
 CREATE TABLE emulated_block_heights (
   deployment_chain_block_height INTEGER PRIMARY KEY,

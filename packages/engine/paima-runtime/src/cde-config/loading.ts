@@ -34,6 +34,8 @@ import {
 import type { CdeConfig } from '../types';
 import { loadAbi } from './utils';
 import assertNever from 'assert-never';
+import fnv from 'fnv-plus';
+import stableStringify from 'json-stable-stringify';
 
 /** Default registry address specified in ERC6551 */
 const ERC6551_REGISTRY_DEFAULT = '0x02101dfB77FDE026414827Fdc604ddAF224F0921'.toLowerCase();
@@ -126,6 +128,10 @@ function checkOrError<T extends TSchema>(
   return decoded;
 }
 
+function hashConfig(config: any): number {
+  return fnv.fast1a32(stableStringify(config));
+}
+
 // Do type-specific initialization and construct contract objects
 async function instantiateExtension(
   config: Static<typeof CdeConfig>['extensions'][0],
@@ -137,6 +143,7 @@ async function instantiateExtension(
       return {
         ...config,
         cdeId: index,
+        hash: hashConfig(config),
         cdeType: ChainDataExtensionType.ERC20,
         contract: getErc20Contract(config.contractAddress, web3),
       };
@@ -145,6 +152,7 @@ async function instantiateExtension(
         return {
           ...config,
           cdeId: index,
+          hash: hashConfig(config),
           cdeType: ChainDataExtensionType.PaimaERC721,
           contract: getPaimaErc721Contract(config.contractAddress, web3),
         };
@@ -152,6 +160,7 @@ async function instantiateExtension(
         return {
           ...config,
           cdeId: index,
+          hash: hashConfig(config),
           cdeType: ChainDataExtensionType.ERC721,
           contract: getErc721Contract(config.contractAddress, web3),
         };
@@ -160,6 +169,7 @@ async function instantiateExtension(
       return {
         ...config,
         cdeId: index,
+        hash: hashConfig(config),
         cdeType: ChainDataExtensionType.ERC20Deposit,
         contract: getErc20Contract(config.contractAddress, web3),
       };
@@ -170,6 +180,7 @@ async function instantiateExtension(
       return {
         ...config,
         cdeId: index,
+        hash: hashConfig(config),
         cdeType: ChainDataExtensionType.ERC6551Registry,
         contractAddress,
         contract: getErc6551RegistryContract(contractAddress, web3),
@@ -217,6 +228,7 @@ async function instantiateCdeGeneric(
     return {
       ...rest,
       cdeId: index,
+      hash: hashConfig(config),
       cdeType: ChainDataExtensionType.Generic,
       contract,
       eventSignature,

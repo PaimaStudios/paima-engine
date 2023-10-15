@@ -1,10 +1,10 @@
 import { ENV } from '@paima/utils';
-import type { TCdeErc721MintDatum } from '@paima/runtime';
+import type { CdeErc721MintDatum } from '@paima/runtime';
 import { createScheduledData } from '@paima/db';
 import type { SQLUpdate } from '@paima/db';
 
 export default async function processErc721Datum(
-  cdeDatum: TCdeErc721MintDatum
+  cdeDatum: CdeErc721MintDatum
 ): Promise<SQLUpdate[]> {
   const [address, prefix] = [cdeDatum.contractAddress, cdeDatum.scheduledPrefix];
   if (!prefix) {

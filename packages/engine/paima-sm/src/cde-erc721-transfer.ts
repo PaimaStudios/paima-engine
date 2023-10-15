@@ -1,13 +1,13 @@
 import type { PoolClient } from 'pg';
 
 import { doLog } from '@paima/utils';
-import type { TCdeErc721TransferDatum } from '@paima/runtime';
+import type { CdeErc721TransferDatum } from '@paima/runtime';
 import { cdeErc721GetOwner, cdeErc721InsertOwner, cdeErc721UpdateOwner } from '@paima/db';
 import type { SQLUpdate } from '@paima/db';
 
 export default async function processErc721Datum(
   readonlyDBConn: PoolClient,
-  cdeDatum: TCdeErc721TransferDatum
+  cdeDatum: CdeErc721TransferDatum
 ): Promise<SQLUpdate[]> {
   const cdeId = cdeDatum.cdeId;
   const { to, tokenId } = cdeDatum.payload;

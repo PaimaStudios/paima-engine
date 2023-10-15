@@ -61,7 +61,7 @@ type CdeDatumGenericPayload = any;
 interface CdeDatumErc6551RegistryPayload {
   accountCreated: string; // address
   implementation: string; // address
-  chainId: string; // address
+  chainId: string; // uint256
   tokenContract: string; // address
   tokenId: string; // uint256
   salt: string; // uint256
@@ -144,6 +144,7 @@ const ChainDataExtensionConfigBase = Type.Object({
 });
 interface ChainDataExtensionBase {
   cdeId: number;
+  hash: number; // hash of the CDE config that created this type
 }
 
 export const ChainDataExtensionErc20Config = Type.Intersect([
