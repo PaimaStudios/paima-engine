@@ -1,7 +1,7 @@
 import { ChainDataExtensionDatumType, DEFAULT_FUNNEL_TIMEOUT, timeout } from '@paima/utils';
 import type {
-  TCdeErc721MintDatum,
-  TCdeErc721TransferDatum,
+  CdeErc721MintDatum,
+  CdeErc721TransferDatum,
   ChainDataExtensionDatum,
   ChainDataExtensionErc721,
 } from '@paima/runtime';
@@ -27,7 +27,7 @@ export default async function getCdeData(
 function transferToTransferDatum(
   event: Transfer,
   extension: ChainDataExtensionErc721
-): TCdeErc721TransferDatum {
+): CdeErc721TransferDatum {
   return {
     cdeId: extension.cdeId,
     cdeDatumType: ChainDataExtensionDatumType.ERC721Transfer,
@@ -43,7 +43,7 @@ function transferToTransferDatum(
 function transferToMintDatum(
   event: Transfer,
   extension: ChainDataExtensionErc721
-): TCdeErc721MintDatum {
+): CdeErc721MintDatum {
   return {
     cdeId: extension.cdeId,
     cdeDatumType: ChainDataExtensionDatumType.ERC721Mint,

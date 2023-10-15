@@ -1,6 +1,6 @@
 import { ChainDataExtensionDatumType, DEFAULT_FUNNEL_TIMEOUT, timeout } from '@paima/utils';
 import type {
-  TCdeErc6551RegisterDatum,
+  CdeErc6551RegistryDatum,
   ChainDataExtensionDatum,
   ChainDataExtensionErc6551Registry,
 } from '@paima/runtime';
@@ -37,13 +37,13 @@ export default async function getCdeData(
 function toDatum(
   event: AccountCreated,
   extension: ChainDataExtensionErc6551Registry
-): TCdeErc6551RegisterDatum {
+): CdeErc6551RegistryDatum {
   return {
     cdeId: extension.cdeId,
     cdeDatumType: ChainDataExtensionDatumType.ERC6551Registry,
     blockNumber: event.blockNumber,
     payload: {
-      account: event.returnValues.account,
+      accountCreated: event.returnValues.account,
       implementation: event.returnValues.implementation,
       chainId: event.returnValues.chainId,
       tokenContract: event.returnValues.tokenContract,

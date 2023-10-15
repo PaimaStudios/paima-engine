@@ -5,8 +5,8 @@ import {
   timeout,
 } from '@paima/utils';
 import type {
-  TCdeErc721MintDatum,
-  TCdeErc721TransferDatum,
+  CdeErc721MintDatum,
+  CdeErc721TransferDatum,
   ChainDataExtensionDatum,
   ChainDataExtensionPaimaErc721,
 } from '@paima/runtime';
@@ -63,7 +63,7 @@ async function fetchMintedEvents(
 function transferToTransferDatum(
   event: Transfer,
   extension: ChainDataExtensionPaimaErc721
-): TCdeErc721TransferDatum {
+): CdeErc721TransferDatum {
   return {
     cdeId: extension.cdeId,
     cdeDatumType: ChainDataExtensionDatumType.ERC721Transfer,
@@ -79,7 +79,7 @@ function transferToTransferDatum(
 function mintedToMintDatum(
   event: Minted,
   extension: ChainDataExtensionPaimaErc721
-): TCdeErc721MintDatum {
+): CdeErc721MintDatum {
   return {
     cdeId: extension.cdeId,
     cdeDatumType: ChainDataExtensionDatumType.ERC721Mint,

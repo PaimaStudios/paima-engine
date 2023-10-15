@@ -24,3 +24,7 @@ extensions:
     abiPath: './abis/MyCustomContract.json'
     eventSignature: 'MyEvent(address,uint256)'
     scheduledPrefix: 'cst'
+
+- name: 'ERC6551 Registration'
+    type: 'erc6551-registry'
+    startBlockHeight: 7654321

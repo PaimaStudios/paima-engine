@@ -1,7 +1,7 @@
 import type { EventData } from '@paima/utils';
 import { ChainDataExtensionDatumType, DEFAULT_FUNNEL_TIMEOUT, timeout } from '@paima/utils';
 import type {
-  TCdeGenericDatum,
+  CdeGenericDatum,
   ChainDataExtensionDatum,
   ChainDataExtensionGeneric,
 } from '@paima/runtime';
@@ -26,7 +26,7 @@ export default async function getCdeData(
   return events.map(e => eventToCdeDatum(e, extension));
 }
 
-function eventToCdeDatum(event: EventData, extension: ChainDataExtensionGeneric): TCdeGenericDatum {
+function eventToCdeDatum(event: EventData, extension: ChainDataExtensionGeneric): CdeGenericDatum {
   return {
     cdeId: extension.cdeId,
     cdeDatumType: ChainDataExtensionDatumType.Generic,

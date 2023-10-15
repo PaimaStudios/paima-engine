@@ -58,6 +58,15 @@ interface CdeDatumErc20DepositPayload {
 
 type CdeDatumGenericPayload = any;
 
+interface CdeDatumErc6551RegistryPayload {
+  accountCreated: string; // address
+  implementation: string; // address
+  chainId: string; // address
+  tokenContract: string; // address
+  tokenId: string; // uint256
+  salt: string; // uint256
+}
+
 type ChainDataExtensionPayload =
   | CdeDatumErc20TransferPayload
   | CdeDatumErc721MintPayload
@@ -65,7 +74,8 @@ type ChainDataExtensionPayload =
   | CdeDatumErc20DepositPayload
   // TODO: better type definition to avoid this issue
   // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
-  | CdeDatumGenericPayload;
+  | CdeDatumGenericPayload
+  | CdeDatumErc6551RegistryPayload;
 
 interface CdeDatumBase {
   cdeId: number;
@@ -103,12 +113,18 @@ export interface CdeGenericDatum extends CdeDatumBase {
   scheduledPrefix: string;
 }
 
+export interface CdeErc6551RegistryDatum extends CdeDatumBase {
+  cdeDatumType: ChainDataExtensionDatumType.ERC6551Registry;
+  payload: CdeDatumErc6551RegistryPayload;
+}
+
 export type ChainDataExtensionDatum =
   | CdeErc20TransferDatum
   | CdeErc721MintDatum
   | CdeErc721TransferDatum
   | CdeErc20DepositDatum
-  | CdeGenericDatum;
+  | CdeGenericDatum
+  | CdeErc6551RegistryDatum;
 
 export enum CdeEntryTypeName {
   Generic = 'generic',
@@ -215,7 +231,6 @@ export const ChainDataExtensionErc6551RegistryConfig = Type.Intersect([
 export type ChainDataExtensionErc6551Registry = ChainDataExtensionBase &
   Static<typeof ChainDataExtensionErc6551RegistryConfig> & {
     cdeType: ChainDataExtensionType.ERC6551Registry;
-    contractAddress: string;
     contract: ERC6551RegistryContract;
   };
 
