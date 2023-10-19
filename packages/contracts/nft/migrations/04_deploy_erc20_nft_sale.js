@@ -27,7 +27,10 @@ module.exports = async function (deployer, network, accounts) {
 
   const currenciesArray = [];
   for (const key in currencies) {
-      currenciesArray.push(currencies[key]);
+      // filter out default "" values
+      if (currencies[key].length > 0) {
+        currenciesArray.push(currencies[key]);
+      }
   }
 
   await deployer.deploy(proxy, nftSaleAddress, currenciesArray, owner, nftAddress, price.toString(10));

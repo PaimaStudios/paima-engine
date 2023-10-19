@@ -9,9 +9,9 @@ function main() {
 function getTargetNetwork() {
     if [ -z ${TARGET_NETWORK+x} ]; then
         echo ""
-        echo "Which network would you like to deploy to?"
-        echo "  1. Milkomeda C1 Mainnet"
-        echo "  2. Milkomeda C1 Testnet"
+        echo "Which network from your truffle config would you like to deploy to??"
+        echo "  1. Mainnet"
+        echo "  2. Testnet"
         read -p "Please enter your choice (1-2): " choice
 
         case $choice in
@@ -22,7 +22,7 @@ function getTargetNetwork() {
             TARGET_NETWORK="testnet"
             ;;
           *)
-            echo "Invalid choice! Defaulting to Milkomeda C1 Testnet."
+            echo "Invalid choice! Defaulting to Testnet."
             TARGET_NETWORK="testnet"
             ;;
         esac
