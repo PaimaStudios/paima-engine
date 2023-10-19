@@ -76,6 +76,9 @@ export class EvmConnector implements IConnector<EvmApi> {
     gameInfo: GameInfo,
     conn: ActiveConnection<EvmApi>
   ): Promise<EvmProvider> => {
+    if (this.provider?.getConnection().metadata?.name === conn.metadata.name) {
+      return this.provider;
+    }
     this.provider = await EvmProvider.init(gameInfo, conn);
 
     // Update the selected Eth address if the user changes after logging in.

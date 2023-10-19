@@ -7,6 +7,7 @@ import { checkCardanoWalletStatus } from '../wallets/cardano';
 import { checkEthWalletStatus } from '../wallets/evm';
 import { specificWalletLogin, stringToWalletMode } from '../wallets/wallets';
 import {
+  getEmulatedBlocksActive,
   getPostingMode,
   PostingMode,
   setEmulatedBlocksActive,
@@ -59,14 +60,16 @@ async function userWalletLogin(
     return errorFxn(PaimaMiddlewareErrorCode.ERROR_QUERYING_BACKEND_ENDPOINT, err);
   }
 
-  try {
-    if (await emulatedBlocksActiveOnBackend()) {
-      setEmulatedBlocksActive();
-    } else {
-      setEmulatedBlocksInactive();
+  if (getEmulatedBlocksActive() == null) {
+    try {
+      if (await emulatedBlocksActiveOnBackend()) {
+        setEmulatedBlocksActive();
+      } else {
+        setEmulatedBlocksInactive();
+      }
+    } catch (err) {
+      return errorFxn(PaimaMiddlewareErrorCode.ERROR_QUERYING_BACKEND_ENDPOINT, err);
     }
-  } catch (err) {
-    return errorFxn(PaimaMiddlewareErrorCode.ERROR_QUERYING_BACKEND_ENDPOINT, err);
   }
 
   return {

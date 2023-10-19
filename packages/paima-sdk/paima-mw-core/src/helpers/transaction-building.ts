@@ -2,6 +2,7 @@ import web3UtilsPkg from 'web3-utils';
 
 import {
   DEFAULT_GAS_PRICE,
+  ENV,
   getPaimaL2Contract,
   validatePaimaL2ContractAddress,
 } from '@paima/utils';
@@ -34,10 +35,11 @@ export function buildDirectTx(
 ): Record<string, any> {
   const hexData = utf8ToHex(dataUtf8);
   const txTemplate = getTxTemplate(getStorageAddress(), methodName, hexData);
+
   const tx = {
     ...txTemplate,
     from: userAddress,
-    value: numberToHex(getFee()),
+    value: numberToHex(getFee()?.fee ?? ENV.DEFAULT_FEE),
   };
 
   return tx;

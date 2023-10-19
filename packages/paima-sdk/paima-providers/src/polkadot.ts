@@ -48,6 +48,9 @@ export class PolkadotConnector implements IConnector<PolkadotApi> {
     gameInfo: GameInfo,
     conn: ActiveConnection<PolkadotApi>
   ): Promise<PolkadotProvider> => {
+    if (this.provider?.getConnection().metadata?.name === conn.metadata.name) {
+      return this.provider;
+    }
     this.provider = await PolkadotProvider.init(gameInfo, conn);
     return this.provider;
   };

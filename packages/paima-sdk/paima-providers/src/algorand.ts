@@ -33,6 +33,9 @@ export class AlgorandConnector implements IConnector<AlgorandApi> {
     gameInfo: GameInfo,
     conn: ActiveConnection<AlgorandApi>
   ): Promise<AlgorandProvider> => {
+    if (this.provider?.getConnection().metadata?.name === conn.metadata.name) {
+      return this.provider;
+    }
     this.provider = await AlgorandProvider.init(gameInfo, conn);
     return this.provider;
   };
