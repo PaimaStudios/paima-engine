@@ -14,10 +14,13 @@ import {
   getPaimaErc721Contract,
   getAbiContract,
   getErc6551RegistryContract,
+  getOldErc6551RegistryContract,
+  ERC6551_REGISTRY_DEFAULT,
 } from '@paima/utils';
 
 import type {
   ChainDataExtension,
+  ChainDataExtensionErc6551Registry,
   ChainDataExtensionGeneric,
   TChainDataExtensionErc721Config,
   TChainDataExtensionGenericConfig,
@@ -36,9 +39,6 @@ import { loadAbi } from './utils';
 import assertNever from 'assert-never';
 import fnv from 'fnv-plus';
 import stableStringify from 'json-stable-stringify';
-
-/** Default registry address specified in ERC6551 */
-const ERC6551_REGISTRY_DEFAULT = '0x02101dfB77FDE026414827Fdc604ddAF224F0921'.toLowerCase();
 
 type ValidationResult = [config: ChainDataExtension[], validated: boolean];
 
@@ -128,7 +128,10 @@ function checkOrError<T extends TSchema>(
 }
 
 function hashConfig(config: any): number {
-  return fnv.fast1a32(stableStringify(config));
+  // fnv returns an unsigned int, but postgres doesn't support unsigned ints
+  const unsignedInt = fnv.fast1a32(stableStringify(config));
+  // map unsigned into signed in. Obviously this isn't lossless, but it's still good enough for collision avoidance
+  return Math.floor(unsignedInt / 2);
 }
 
 // Do type-specific initialization and construct contract objects
@@ -175,21 +178,27 @@ async function instantiateExtension(
     case CdeEntryTypeName.Generic:
       return await instantiateCdeGeneric(config, index, web3);
     case CdeEntryTypeName.ERC6551Registry:
-      const contractAddress = config.contractAddress ?? ERC6551_REGISTRY_DEFAULT;
+      const contractAddress = config.contractAddress ?? ERC6551_REGISTRY_DEFAULT.New;
       return {
         ...config,
         cdeId: index,
         hash: hashConfig(config),
         cdeType: ChainDataExtensionType.ERC6551Registry,
         contractAddress,
-        contract: getErc6551RegistryContract(contractAddress, web3),
+        contract: ((): ChainDataExtensionErc6551Registry['contract'] => {
+          if (contractAddress === ERC6551_REGISTRY_DEFAULT.Old) {
+            return getOldErc6551RegistryContract(contractAddress, web3);
+          }
+          // assume everything else is using the new contract
+          return getErc6551RegistryContract(contractAddress, web3);
+        })(),
       };
     default:
       assertNever(config);
   }
 }
 
-async function isPaimaErc721(
+export async function isPaimaErc721(
   cdeConfig: TChainDataExtensionErc721Config,
   web3: Web3
 ): Promise<boolean> {

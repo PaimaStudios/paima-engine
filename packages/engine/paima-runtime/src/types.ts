@@ -2,8 +2,9 @@ import type { Pool, PoolClient, PoolConfig } from 'pg';
 import type { Express, RequestHandler } from 'express';
 
 import type { SQLUpdate } from '@paima/db';
-import type { ChainDataExtensionDatumType, ChainDataExtensionType } from '@paima/utils';
 import type {
+  ChainDataExtensionDatumType,
+  ChainDataExtensionType,
   Contract,
   ERC20Contract,
   ERC721Contract,
@@ -11,6 +12,7 @@ import type {
   SubmittedChainData,
   SubmittedData,
   PaimaERC721Contract,
+  OldERC6551RegistryContract,
   ERC6551RegistryContract,
 } from '@paima/utils';
 import { Type } from '@sinclair/typebox';
@@ -231,7 +233,7 @@ export const ChainDataExtensionErc6551RegistryConfig = Type.Intersect([
 export type ChainDataExtensionErc6551Registry = ChainDataExtensionBase &
   Static<typeof ChainDataExtensionErc6551RegistryConfig> & {
     cdeType: ChainDataExtensionType.ERC6551Registry;
-    contract: ERC6551RegistryContract;
+    contract: ERC6551RegistryContract | OldERC6551RegistryContract;
   };
 
 export const CdeConfig = Type.Object({

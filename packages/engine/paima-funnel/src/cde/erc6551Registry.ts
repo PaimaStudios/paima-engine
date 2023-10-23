@@ -1,4 +1,9 @@
-import { ChainDataExtensionDatumType, DEFAULT_FUNNEL_TIMEOUT, timeout } from '@paima/utils';
+import {
+  ChainDataExtensionDatumType,
+  DEFAULT_FUNNEL_TIMEOUT,
+  ERC6551_REGISTRY_DEFAULT,
+  timeout,
+} from '@paima/utils';
 import type {
   CdeErc6551RegistryDatum,
   ChainDataExtensionDatum,
@@ -12,11 +17,16 @@ export default async function getCdeData(
   toBlock: number
 ): Promise<ChainDataExtensionDatum[]> {
   const { implementation, tokenContract, tokenId } = extension;
-  const filter = {
-    ...(implementation !== null && implementation !== undefined ? { implementation } : {}),
-    ...(tokenContract !== null && tokenContract !== undefined ? { tokenContract } : {}),
-    ...(tokenId !== null && tokenId !== undefined ? { tokenId } : {}),
-  };
+
+  // old ERC6551 did not have any indexed fields
+  const filter =
+    extension.contractAddress === ERC6551_REGISTRY_DEFAULT.Old
+      ? {}
+      : {
+          ...(implementation != null ? { implementation } : {}),
+          ...(tokenContract != null ? { tokenContract } : {}),
+          ...(tokenId != null ? { tokenId } : {}),
+        };
   // TOOD: typechain is missing the proper type generation for getPastEvents
   // https://github.com/dethcrypto/TypeChain/issues/767
   const events = (await timeout(
@@ -29,9 +39,30 @@ export default async function getCdeData(
   )) as unknown as AccountCreated[];
 
   // salt is not an indexed field, so we have to run the filter after the fact
-  const filteredEvents =
-    extension.salt == null ? events : events.filter(e => e.returnValues.salt === extension.salt);
-  return filteredEvents.map((e: AccountCreated) => toDatum(e, extension)).flat();
+  const filteredEvents = ((): AccountCreated[] => {
+    let withFilter =
+      extension.salt == null ? events : events.filter(e => e.returnValues.salt === extension.salt);
+
+    // new ERC6551 uses indexed fields, so we can just return early
+    if (extension.contractAddress !== ERC6551_REGISTRY_DEFAULT.Old) {
+      return withFilter;
+    }
+    withFilter =
+      implementation == null
+        ? withFilter
+        : withFilter.filter(e => e.returnValues.implementation === extension.implementation);
+    withFilter =
+      tokenContract == null
+        ? withFilter
+        : withFilter.filter(e => e.returnValues.tokenContract === extension.tokenContract);
+    withFilter =
+      tokenId == null
+        ? withFilter
+        : withFilter.filter(e => e.returnValues.tokenId === extension.tokenId);
+    return withFilter;
+  })();
+  const result = filteredEvents.map((e: AccountCreated) => toDatum(e, extension)).flat();
+  return result;
 }
 
 function toDatum(
