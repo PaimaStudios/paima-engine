@@ -108,4 +108,9 @@ export class ENV {
   static get BATCHER_URI(): string {
     return process.env.BATCHER_URI || '';
   }
+
+  // TODO: put this in the right place
+  static get CARP_URL(): string | undefined {
+    return process.env.CARP_URL;
+  }
 }

@@ -82,3 +82,10 @@ CREATE TABLE emulated_block_heights (
   second_timestamp TEXT NOT NULL,
   emulated_block_height INTEGER NOT NULL
 );
+
+CREATE TABLE cde_cardano_pool_delegation (
+  cde_id INTEGER NOT NULL,
+  address TEXT NOT NULL,
+  pool TEXT,
+  PRIMARY KEY (cde_id, address)
+);

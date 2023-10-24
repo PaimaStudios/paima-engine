@@ -238,6 +238,27 @@ const TABLE_DATA_CDE_ERC6551_REGISTRY: TableData = {
   creationQuery: QUERY_CREATE_TABLE_CDE_ERC6551_REGISTRY,
 };
 
+const QUERY_CREATE_TABLE_CDE_CARDANO_POOL = `
+CREATE TABLE cde_cardano_pool_delegation (
+  cde_id INTEGER NOT NULL,
+  address TEXT NOT NULL,
+  pool TEXT,
+  PRIMARY KEY (cde_id, address)
+);
+`;
+
+const TABLE_DATA_CDE_CARDANO_POOL: TableData = {
+  tableName: 'cde_cardano_pool_delegation',
+  primaryKeyColumns: ['cde_id', 'address'],
+  columnData: packTuples([
+    ['cde_id', 'integer', 'NO', ''],
+    ['address', 'text', 'NO', ''],
+    ['pool', 'text', 'YES', ''],
+  ]),
+  serialColumns: [],
+  creationQuery: QUERY_CREATE_TABLE_CDE_CARDANO_POOL,
+};
+
 const QUERY_CREATE_TABLE_EMULATED = `
 CREATE TABLE emulated_block_heights (
   deployment_chain_block_height INTEGER PRIMARY KEY,
@@ -270,5 +291,6 @@ export const TABLES: TableData[] = [
   TABLE_DATA_CDE_ERC20_DEPOSIT,
   TABLE_DATA_CDE_GENERIC_DATA,
   TABLE_DATA_CDE_ERC6551_REGISTRY,
+  TABLE_DATA_CDE_CARDANO_POOL,
   TABLE_DATA_EMULATED,
 ];

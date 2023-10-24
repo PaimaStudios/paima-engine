@@ -64,6 +64,11 @@ interface CdeDatumErc6551RegistryPayload {
   salt: string; // uint256
 }
 
+interface CdeDatumCardanoPoolPayload {
+  address: string;
+  pool: string | undefined;
+}
+
 type ChainDataExtensionPayload =
   | CdeDatumErc20TransferPayload
   | CdeDatumErc721MintPayload
@@ -72,7 +77,8 @@ type ChainDataExtensionPayload =
   // TODO: better type definition to avoid this issue
   // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
   | CdeDatumGenericPayload
-  | CdeDatumErc6551RegistryPayload;
+  | CdeDatumErc6551RegistryPayload
+  | CdeDatumCardanoPoolPayload;
 
 interface CdeDatumBase {
   cdeId: number;
@@ -115,13 +121,20 @@ export interface CdeErc6551RegistryDatum extends CdeDatumBase {
   payload: CdeDatumErc6551RegistryPayload;
 }
 
+export interface CdeCardanoPoolDatum extends CdeDatumBase {
+  cdeDatumType: ChainDataExtensionDatumType.CardanoPool;
+  payload: CdeDatumCardanoPoolPayload;
+  scheduledPrefix: string;
+}
+
 export type ChainDataExtensionDatum =
   | CdeErc20TransferDatum
   | CdeErc721MintDatum
   | CdeErc721TransferDatum
   | CdeErc20DepositDatum
   | CdeGenericDatum
-  | CdeErc6551RegistryDatum;
+  | CdeErc6551RegistryDatum
+  | CdeCardanoPoolDatum;
 
 export enum CdeEntryTypeName {
   Generic = 'generic',
@@ -129,6 +142,7 @@ export enum CdeEntryTypeName {
   ERC20Deposit = 'erc20-deposit',
   ERC721 = 'erc721',
   ERC6551Registry = 'erc6551-registry',
+  CardanoDelegation = 'cardano-stake-delegation',
 }
 
 const EvmAddress = Type.Transform(Type.RegExp('0x[0-9a-fA-F]{40}'))
@@ -232,6 +246,20 @@ export type ChainDataExtensionErc6551Registry = ChainDataExtensionBase &
     contract: ERC6551RegistryContract | OldERC6551RegistryContract;
   };
 
+export const ChainDataExtensionCardanoDelegationConfig = Type.Intersect([
+  ChainDataExtensionConfigBase,
+  Type.Object({
+    type: Type.Literal(CdeEntryTypeName.CardanoDelegation),
+    pools: Type.Optional(Type.Array(Type.String())),
+    scheduledPrefix: Type.String(),
+  }),
+]);
+
+export type ChainDataExtensionCardanoDelegation = ChainDataExtensionBase &
+  Static<typeof ChainDataExtensionCardanoDelegationConfig> & {
+    cdeType: ChainDataExtensionType.CardanoPool;
+  };
+
 export const CdeConfig = Type.Object({
   extensions: Type.Array(
     Type.Union([
@@ -240,6 +268,7 @@ export const CdeConfig = Type.Object({
       ChainDataExtensionErc20DepositConfig,
       ChainDataExtensionGenericConfig,
       ChainDataExtensionErc6551RegistryConfig,
+      ChainDataExtensionCardanoDelegationConfig,
     ])
   ),
 });
@@ -263,7 +292,8 @@ export type ChainDataExtension =
   | ChainDataExtensionPaimaErc721
   | ChainDataExtensionErc20Deposit
   | ChainDataExtensionGeneric
-  | ChainDataExtensionErc6551Registry;
+  | ChainDataExtensionErc6551Registry
+  | ChainDataExtensionCardanoDelegation;
 
 export type GameStateTransitionFunctionRouter = (
   blockHeight: number
