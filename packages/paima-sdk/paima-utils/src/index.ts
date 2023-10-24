@@ -64,16 +64,22 @@ export function getBlockTime(deployment: Deployment): number {
 }
 
 export async function initWeb3(nodeUrl: string): Promise<Web3> {
-  const engine = new JsonRpcEngine();
-  // enable the line below if you want to debug RPC requests
+  /**
+   * enable the lines below if you want to debug RPC requests
+   * However, not that JsonRpcEngine seems to have an issue in how it handles error
+   * where promises that used to be caught by Paima Engine become uncaught exceptions
+   * So best to only use this when debugging
+   */
+  // const engine = new JsonRpcEngine();
   // engine.push((req, _, next) => {
   //   console.dir(req, { depth: null });
   //   next();
   // });
-  engine.push(createFetchMiddleware({ btoa, fetch, rpcUrl: nodeUrl }));
-  const provider = providerFromEngine(engine);
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-  const web3 = new Web3(provider as any);
+  // engine.push(createFetchMiddleware({ btoa, fetch, rpcUrl: nodeUrl }));
+  // const provider = providerFromEngine(engine);
+  // // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+  // const web3 = new Web3(provider as any);
+  const web3 = new Web3(nodeUrl);
   try {
     await web3.eth.getNodeInfo();
   } catch (e) {
