@@ -48,6 +48,11 @@ export async function getBaseChainDataSingle(
 
 async function getBlockData(web3: Web3, blockNumber: number): Promise<ChainData> {
   const block = await timeout(web3.eth.getBlock(blockNumber), DEFAULT_FUNNEL_TIMEOUT);
+  if (block == null) {
+    throw new Error(
+      `Unable to find block number ${blockNumber}. Perhaps it no long exists due to a rollback or load-balancing`
+    );
+  }
   return blockDataToChainData(block);
 }
 

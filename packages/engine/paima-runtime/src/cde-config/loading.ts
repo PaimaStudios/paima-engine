@@ -1,6 +1,8 @@
 import * as fs from 'fs/promises';
 import YAML from 'yaml';
 import type Web3 from 'web3';
+import type { Static, TSchema } from '@sinclair/typebox';
+import { Value, ValueErrorType } from '@sinclair/typebox/value';
 
 import type { AbiItem } from '@paima/utils';
 import {
@@ -11,30 +13,39 @@ import {
   getErc165Contract,
   getPaimaErc721Contract,
   getAbiContract,
+  getErc6551RegistryContract,
+  getOldErc6551RegistryContract,
+  ERC6551_REGISTRY_DEFAULT,
 } from '@paima/utils';
 
-import type { ChainDataExtension, ChainDataExtensionGeneric } from '../types';
-import { loadAbi, parseCdeType, requireFields } from './utils';
+import type {
+  ChainDataExtension,
+  ChainDataExtensionErc6551Registry,
+  ChainDataExtensionGeneric,
+  TChainDataExtensionErc721Config,
+  TChainDataExtensionGenericConfig,
+} from '../types';
+import {
+  CdeBaseConfig,
+  CdeEntryTypeName,
+  ChainDataExtensionErc20Config,
+  ChainDataExtensionErc20DepositConfig,
+  ChainDataExtensionErc6551RegistryConfig,
+  ChainDataExtensionErc721Config,
+  ChainDataExtensionGenericConfig,
+} from '../types';
+import type { CdeConfig } from '../types';
+import { loadAbi } from './utils';
+import assertNever from 'assert-never';
+import fnv from 'fnv-plus';
+import stableStringify from 'json-stable-stringify';
 
-interface CdeConfig {
-  cdeId: number;
-  type: string;
-  name: string;
-  contractAddress: string;
-  startBlockHeight: number;
-  scheduledPrefix: string;
-  depositAddress: string;
-  eventSignature: string;
-  abiPath: string;
-}
+type ValidationResult = [config: ChainDataExtension[], validated: boolean];
 
-type CdeBase = Omit<ChainDataExtension, 'cdeType' | 'contract' | 'depositAddress'>;
-
-// Returns [extensions, extensionsValid: boolean]
 export async function loadChainDataExtensions(
   web3: Web3,
   configFilePath: string
-): Promise<[ChainDataExtension[], boolean]> {
+): Promise<ValidationResult> {
   let configFileData: string;
   try {
     configFileData = await fs.readFile(configFilePath, 'utf8');
@@ -46,7 +57,7 @@ export async function loadChainDataExtensions(
   try {
     const config = parseCdeConfigFile(configFileData);
     const instantiatedExtensions = await Promise.all(
-      config.map(e => instantiateExtension(e, web3))
+      config.extensions.map((e, i) => instantiateExtension(e, i, web3))
     );
     return [instantiatedExtensions, true];
   } catch (err) {
@@ -56,105 +67,141 @@ export async function loadChainDataExtensions(
 }
 
 // Validate the overall structure of the config file and extract the relevant data
-function parseCdeConfigFile(configFileData: string): CdeConfig[] {
+export function parseCdeConfigFile(configFileData: string): Static<typeof CdeConfig> {
+  // Parse the YAML content into an object
   const configObject = YAML.parse(configFileData);
 
-  if (!configObject.extensions || !Array.isArray(configObject.extensions)) {
-    throw new Error(`[cde-config] extensions field missing or invalid`);
-  }
+  // Validate the YAML object against the schema
+  const baseConfig = checkOrError(undefined, CdeBaseConfig, configObject);
 
-  const config = configObject.extensions.map((e: any, i: number) => parseSingleCdeConfig(e, i + 1));
+  const checkedConfig = baseConfig.extensions.map(entry => {
+    switch (entry.type) {
+      case CdeEntryTypeName.ERC20:
+        return checkOrError(entry.name, ChainDataExtensionErc20Config, entry);
+      case CdeEntryTypeName.ERC721:
+        return checkOrError(entry.name, ChainDataExtensionErc721Config, entry);
+      case CdeEntryTypeName.ERC20Deposit:
+        return checkOrError(entry.name, ChainDataExtensionErc20DepositConfig, entry);
+      case CdeEntryTypeName.Generic:
+        return checkOrError(entry.name, ChainDataExtensionGenericConfig, entry);
+      case CdeEntryTypeName.ERC6551Registry:
+        return checkOrError(entry.name, ChainDataExtensionErc6551RegistryConfig, entry);
+      default:
+        assertNever(entry.type);
+    }
+  });
 
-  return config;
+  return { extensions: checkedConfig };
 }
 
-// Ensure the expected fields exist and are of correct types
-function parseSingleCdeConfig(config: any, cdeId: number): CdeConfig {
-  if (
-    !config ||
-    typeof config.type !== 'string' ||
-    typeof config.contractAddress != 'string' ||
-    typeof config.name !== 'string' ||
-    typeof config.startBlockHeight !== 'number'
-  ) {
-    throw new Error(`[cde-config] invalid config or required field of unexpected type`);
+function checkOrError<T extends TSchema>(
+  name: undefined | string,
+  structure: T,
+  config: unknown
+): Static<T> {
+  // 1) Check if there are any errors since Value.Decode doesn't give error messages
+  {
+    const skippableErrors: ValueErrorType[] = [ValueErrorType.Intersect, ValueErrorType.Union];
+
+    const errors = Array.from(Value.Errors(structure, config));
+    for (const error of errors) {
+      // there are many useless errors in this library
+      // ex: 1st error: "foo" should be "bar" in struct Foo
+      //     2nd error: struct Foo is invalid inside struct Config
+      //     in this case, the 2nd error is useless as we only care about the 1st error
+      // However, we always want to show the error if for some reason it's the only error
+      if (errors.length !== 1 && skippableErrors.find(val => val === error.type) != null) continue;
+      console.error({
+        name: name ?? 'Configuration root',
+        path: error.path,
+        valueProvided: error.value,
+        message: error.message,
+      });
+    }
+    if (errors.length > 1) {
+      throw new Error(`[cde-config] extensions field missing or invalid. See above for error.`);
+    }
   }
 
-  const { type, contractAddress, name, startBlockHeight } = config;
+  const decoded = Value.Decode(structure, config);
+  return decoded;
+}
 
-  const scheduledPrefix = typeof config.scheduledPrefix === 'string' ? config.scheduledPrefix : '';
-
-  const depositAddress =
-    typeof config.depositAddress === 'string' ? config.depositAddress.toLowerCase() : '';
-
-  const eventSignature = typeof config.eventSignature === 'string' ? config.eventSignature : '';
-
-  const abiPath = typeof config.abiPath === 'string' ? config.abiPath : '';
-
-  return {
-    cdeId,
-    type,
-    name,
-    contractAddress,
-    startBlockHeight,
-    scheduledPrefix,
-    depositAddress,
-    eventSignature,
-    abiPath,
-  };
+function hashConfig(config: any): number {
+  // fnv returns an unsigned int, but postgres doesn't support unsigned ints
+  const unsignedInt = fnv.fast1a32(stableStringify(config));
+  // map unsigned into signed in. Obviously this isn't lossless, but it's still good enough for collision avoidance
+  return Math.floor(unsignedInt / 2);
 }
 
 // Do type-specific initialization and construct contract objects
-async function instantiateExtension(config: CdeConfig, web3: Web3): Promise<ChainDataExtension> {
-  const cdeType = parseCdeType(config.type);
-  const cdeBase: CdeBase = {
-    cdeId: config.cdeId,
-    cdeName: config.name,
-    contractAddress: config.contractAddress,
-    startBlockHeight: config.startBlockHeight,
-    scheduledPrefix: config.scheduledPrefix,
-  };
-
-  switch (cdeType) {
-    case ChainDataExtensionType.ERC20:
+async function instantiateExtension(
+  config: Static<typeof CdeConfig>['extensions'][0],
+  index: number,
+  web3: Web3
+): Promise<ChainDataExtension> {
+  switch (config.type) {
+    case CdeEntryTypeName.ERC20:
       return {
-        ...cdeBase,
-        cdeType,
+        ...config,
+        cdeId: index,
+        hash: hashConfig(config),
+        cdeType: ChainDataExtensionType.ERC20,
         contract: getErc20Contract(config.contractAddress, web3),
       };
-    case ChainDataExtensionType.PaimaERC721:
-    case ChainDataExtensionType.ERC721:
-      requireFields(config, ['scheduledPrefix']);
+    case CdeEntryTypeName.ERC721:
       if (await isPaimaErc721(config, web3)) {
         return {
-          ...cdeBase,
+          ...config,
+          cdeId: index,
+          hash: hashConfig(config),
           cdeType: ChainDataExtensionType.PaimaERC721,
           contract: getPaimaErc721Contract(config.contractAddress, web3),
         };
       } else {
         return {
-          ...cdeBase,
+          ...config,
+          cdeId: index,
+          hash: hashConfig(config),
           cdeType: ChainDataExtensionType.ERC721,
           contract: getErc721Contract(config.contractAddress, web3),
         };
       }
-    case ChainDataExtensionType.ERC20Deposit:
-      requireFields(config, ['scheduledPrefix', 'depositAddress']);
+    case CdeEntryTypeName.ERC20Deposit:
       return {
-        ...cdeBase,
-        cdeType,
-        depositAddress: config.depositAddress,
+        ...config,
+        cdeId: index,
+        hash: hashConfig(config),
+        cdeType: ChainDataExtensionType.ERC20Deposit,
         contract: getErc20Contract(config.contractAddress, web3),
       };
-    case ChainDataExtensionType.Generic:
-      requireFields(config, ['scheduledPrefix', 'eventSignature', 'abiPath']);
-      return await instantiateCdeGeneric(config, web3, cdeBase);
+    case CdeEntryTypeName.Generic:
+      return await instantiateCdeGeneric(config, index, web3);
+    case CdeEntryTypeName.ERC6551Registry:
+      const contractAddress = config.contractAddress ?? ERC6551_REGISTRY_DEFAULT.New;
+      return {
+        ...config,
+        cdeId: index,
+        hash: hashConfig(config),
+        cdeType: ChainDataExtensionType.ERC6551Registry,
+        contractAddress,
+        contract: ((): ChainDataExtensionErc6551Registry['contract'] => {
+          if (contractAddress === ERC6551_REGISTRY_DEFAULT.Old) {
+            return getOldErc6551RegistryContract(contractAddress, web3);
+          }
+          // assume everything else is using the new contract
+          return getErc6551RegistryContract(contractAddress, web3);
+        })(),
+      };
     default:
-      throw new Error(`[cde-config] Invalid cde type: ${cdeType}`);
+      assertNever(config);
   }
 }
 
-async function isPaimaErc721(cdeConfig: CdeConfig, web3: Web3): Promise<boolean> {
+export async function isPaimaErc721(
+  cdeConfig: TChainDataExtensionErc721Config,
+  web3: Web3
+): Promise<boolean> {
   const PAIMA_EXTENDED_MINT_SIGNATURE = 'mint(address,string)';
   const interfaceId = web3.utils.keccak256(PAIMA_EXTENDED_MINT_SIGNATURE).substring(0, 10);
   try {
@@ -167,12 +214,12 @@ async function isPaimaErc721(cdeConfig: CdeConfig, web3: Web3): Promise<boolean>
 }
 
 async function instantiateCdeGeneric(
-  config: CdeConfig,
-  web3: Web3,
-  cdeBase: CdeBase
+  config: TChainDataExtensionGenericConfig,
+  index: number,
+  web3: Web3
 ): Promise<ChainDataExtensionGeneric> {
   const eventSignature = config.eventSignature;
-  const eventMatch = eventSignature.match(/^[A-Za-z0-9_]+/);
+  const eventMatch = eventSignature.match(/^[A-Za-z0-9_]+/); // ex: MyEvent(address,uint256) → "MyEvent"
   if (!eventMatch) {
     throw new Error('[cde-config] Event signature invalid!');
   }
@@ -185,8 +232,11 @@ async function instantiateCdeGeneric(
   }
   try {
     const contract = getAbiContract(config.contractAddress, parsedContractAbi as AbiItem[], web3);
+    const { abiPath: _, ...rest } = config; // want to remove abi path since it's no longer relevant at runtime
     return {
-      ...cdeBase,
+      ...rest,
+      cdeId: index,
+      hash: hashConfig(config),
       cdeType: ChainDataExtensionType.Generic,
       contract,
       eventSignature,

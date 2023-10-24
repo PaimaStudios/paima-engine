@@ -1,7 +1,6 @@
 export enum WalletMode {
   NO_WALLET,
   METAMASK,
-  METAMASK_BATCHED,
   EVM_FLINT,
   CARDANO,
   CARDANO_FLINT,

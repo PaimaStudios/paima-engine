@@ -6,6 +6,7 @@ import { TruffleConnector } from '@paima/providers';
 import { GenericRejectionCode } from './types.js';
 
 import { AddressType, wait } from '@paima/utils';
+import assertNever from 'assert-never';
 
 export * from './config.js';
 export * from './config-validation.js';
@@ -71,7 +72,10 @@ export function addressTypeName(addressType: AddressType): string {
       return 'Astar / Polkadot';
     case AddressType.ALGORAND:
       return 'Algorand';
+    case AddressType.UNKNOWN:
+      return 'Unknown address type';
     default:
+      assertNever(addressType, true);
       return 'Unknown address type';
   }
 }

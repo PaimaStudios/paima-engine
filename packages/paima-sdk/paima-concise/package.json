@@ -20,7 +20,7 @@
   "homepage": "https://docs.paimastudios.com",
   "scripts": {
     "lint:eslint": "eslint .",
-    "test": "jest --runInBand",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest --runInBand",
     "build": "tsc --build tsconfig.build.json"
   },
   "dependencies": {

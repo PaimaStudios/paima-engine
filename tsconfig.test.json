@@ -1,0 +1,3 @@
+{
+  "extends": "./tsconfig.base.json", // this file needs to exist to please @nx/jest
+}

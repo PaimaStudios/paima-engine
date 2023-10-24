@@ -16,6 +16,7 @@ import type { BatchedSubunit } from '@paima/concise';
 import { CryptoManager } from '@paima/crypto';
 import { createMessageForBatcher } from '@paima/concise';
 import { initWeb3, AddressType, getReadNamespaces } from '@paima/utils';
+import assertNever from 'assert-never';
 
 class PaimaAddressValidator {
   private web3: Web3 | undefined;
@@ -75,7 +76,10 @@ class PaimaAddressValidator {
         return await CryptoManager.Polkadot().verifyAddress(address);
       case AddressType.ALGORAND:
         return await CryptoManager.Algorand().verifyAddress(address);
+      case AddressType.UNKNOWN:
+        return false;
       default:
+        assertNever(addressType, true);
         return false;
     }
   };
@@ -117,7 +121,10 @@ class PaimaAddressValidator {
             message,
             input.userSignature
           );
+        case AddressType.UNKNOWN:
+          return false;
         default:
+          assertNever(addressType, true);
           return false;
       }
     };

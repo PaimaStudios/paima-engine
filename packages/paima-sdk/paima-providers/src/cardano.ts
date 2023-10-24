@@ -77,6 +77,9 @@ export class CardanoConnector implements IConnector<CardanoApi> {
     gameInfo: GameInfo,
     conn: ActiveConnection<CardanoApi>
   ): Promise<CardanoProvider> => {
+    if (this.provider?.getConnection().metadata?.name === conn.metadata.name) {
+      return this.provider;
+    }
     this.provider = await CardanoProvider.init(gameInfo, conn);
     return this.provider;
   };

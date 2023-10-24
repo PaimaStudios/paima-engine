@@ -1,13 +1,4 @@
 {
   "extends": "../tsconfig.json",
   "files": [],
-  "references": [
-    { "path": "../db" },
-    { "path": "../utils" },
-    { "path": "../address-validator" },
-    { "path": "../game-input-validator" },
-    { "path": "../batcher-transaction-poster" },
-    { "path": "../webserver" },
-    { "path": "../runtime" }
-  ]
 }

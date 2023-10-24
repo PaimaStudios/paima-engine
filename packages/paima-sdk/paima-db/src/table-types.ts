@@ -1,4 +1,9 @@
-type ColumnDataTuple = [string, string, string, string];
+type ColumnDataTuple = [
+  column_name: string,
+  data_type: string,
+  nullable: string,
+  default_value: string,
+];
 
 export interface ColumnData {
   columnName: string;

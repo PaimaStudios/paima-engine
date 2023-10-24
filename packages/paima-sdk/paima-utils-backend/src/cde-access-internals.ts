@@ -6,46 +6,16 @@ import {
   cdeErc721GetAllOwnedNfts,
   cdeErc721GetOwner,
   selectChainDataExtensionsByName,
-  selectChainDataExtensionsByAddress,
-  selectChainDataExtensionsByTypeAndAddress,
   cdeErc20DepositGetTotalDeposited,
   cdeErc20DepositSelectAll,
   cdeGenericGetBlockheightData,
   cdeGenericGetRangeData,
+  cdeErc6551GetOwnedAccounts,
+  cdeErc6551GetOwner,
 } from '@paima/db';
-import type { ChainDataExtensionType, OwnedNftsResponse, GenericCdeDataUnit } from '@paima/utils';
+import type { OwnedNftsResponse, GenericCdeDataUnit, TokenIdPair } from './types';
 
 /* Functions to retrieve CDE ID: */
-
-export async function getCdeIdByAddress(
-  readonlyDBConn: Pool,
-  contractAddress: string
-): Promise<number | null> {
-  const results = await selectChainDataExtensionsByAddress.run(
-    { contract_address: contractAddress },
-    readonlyDBConn
-  );
-
-  if (results.length === 0) {
-    return null;
-  }
-  return results[0].cde_id;
-}
-
-export async function getCdeIdByTypeAndAddress(
-  readonlyDBConn: Pool,
-  cdeType: ChainDataExtensionType,
-  contractAddress: string
-): Promise<number | null> {
-  const results = await selectChainDataExtensionsByTypeAndAddress.run(
-    { cde_type: cdeType, contract_address: contractAddress },
-    readonlyDBConn
-  );
-  if (results.length === 0) {
-    return null;
-  }
-  return results[0].cde_id;
-}
 
 export async function getCdeIdByName(
   readonlyDBConn: Pool,
@@ -175,4 +145,35 @@ export async function internalGetGenericDataBlockheightRange(
     blockHeight: res.block_height,
     payload: res.event_data,
   }));
+}
+
+export async function internalGetErc6551AccountOwner(
+  readonlyDBConn: Pool,
+  cdeId: number,
+  accountCreated: string
+): Promise<TokenIdPair | null> {
+  const results = await cdeErc6551GetOwner.run(
+    { cde_id: cdeId, account_created: accountCreated },
+    readonlyDBConn
+  );
+  if (results.length === 0) {
+    return null;
+  } else {
+    return {
+      tokenContract: results[0].token_contract,
+      tokenId: results[0].token_id,
+    };
+  }
+}
+
+export async function internalGetAllOwnedErc6551Accounts(
+  readonlyDBConn: Pool,
+  cdeId: number,
+  nft: TokenIdPair
+): Promise<string[]> {
+  const results = await cdeErc6551GetOwnedAccounts.run(
+    { cde_id: cdeId, token_contract: nft.tokenContract, token_id: nft.tokenId },
+    readonlyDBConn
+  );
+  return results.map(row => row.account_created);
 }

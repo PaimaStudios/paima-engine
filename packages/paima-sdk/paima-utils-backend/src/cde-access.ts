@@ -10,8 +10,10 @@ import {
   internalGetAllOwnedNfts,
   internalGetGenericDataBlockheight,
   internalGetGenericDataBlockheightRange,
+  internalGetErc6551AccountOwner,
+  internalGetAllOwnedErc6551Accounts,
 } from './cde-access-internals';
-import type { OwnedNftsResponse, GenericCdeDataUnit } from '@paima/utils';
+import type { OwnedNftsResponse, GenericCdeDataUnit, TokenIdPair } from './types';
 
 /**
  * Fetch the owner of the NFT from the database
@@ -127,4 +129,30 @@ export async function getGenericDataBlockheightRange(
   const cdeId = await getCdeIdByName(readonlyDBConn, cdeName);
   if (cdeId === null) return [];
   return await internalGetGenericDataBlockheightRange(readonlyDBConn, cdeId, fromBlock, toBlock);
+}
+
+/**
+ * Fetch the NFT that owns this account
+ */
+export async function getErc6551AccountOwner(
+  readonlyDBConn: Pool,
+  cdeName: string,
+  accountCreated: string
+): Promise<TokenIdPair | null> {
+  const cdeId = await getCdeIdByName(readonlyDBConn, cdeName);
+  if (cdeId === null) return null;
+  return await internalGetErc6551AccountOwner(readonlyDBConn, cdeId, accountCreated);
+}
+
+/**
+ * Fetch all accounts owned by this NFT. This call is NOT recursive
+ */
+export async function getAllOwnedErc6551Accounts(
+  readonlyDBConn: Pool,
+  cdeName: string,
+  nft: TokenIdPair
+): Promise<string[]> {
+  const cdeId = await getCdeIdByName(readonlyDBConn, cdeName);
+  if (cdeId === null) return [];
+  return await internalGetAllOwnedErc6551Accounts(readonlyDBConn, cdeId, nft);
 }

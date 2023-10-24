@@ -1,28 +1,33 @@
 import Web3 from 'web3';
+import { JsonRpcEngine } from '@metamask/json-rpc-engine';
+import { providerFromEngine } from '@metamask/eth-json-rpc-provider';
 import type { AbiItem } from 'web3-utils';
 import type { Contract, EventData } from 'web3-eth-contract';
 import web3UtilsPkg from 'web3-utils';
-import paimaL2ContractBuild from './artifacts/PaimaL2Contract';
-import erc20ContractBuild from './artifacts/ERC20Contract';
-import erc721ContractBuild from './artifacts/ERC721Contract';
-import paimaErc721ContractBuild from './artifacts/PaimaERC721Contract';
-import erc165ContractBuild from './artifacts/ERC165Contract';
+import paimaL2ContractBuild from './artifacts/PaimaL2Contract.js';
+import erc20ContractBuild from './artifacts/ERC20Contract.js';
+import erc721ContractBuild from './artifacts/ERC721Contract.js';
+import paimaErc721ContractBuild from './artifacts/PaimaERC721Contract.js';
+import erc165ContractBuild from './artifacts/ERC165Contract.js';
+import erc6551RegistryContractBuild from './artifacts/ERC6551RegistryContract.js';
+import oldErc6551RegistryContractBuild from './artifacts/OldERC6551RegistryContract.js';
 import type * as Contracts from './contract-types';
 import { doLog, logError } from './logging.js';
-import type { Deployment, ErrorCode, ErrorMessageFxn, ErrorMessageMapping } from './types';
+import type { Deployment, ErrorCode, ErrorMessageFxn, ErrorMessageMapping } from './types.js';
 import {
   AddressType,
   DEFAULT_FUNNEL_TIMEOUT,
   ChainDataExtensionType,
   ChainDataExtensionDatumType,
-} from './constants';
+} from './constants.js';
+import { createFetchMiddleware } from '@metamask/eth-json-rpc-middleware';
 
 const { isAddress } = web3UtilsPkg;
 
-export * from './config';
-export * from './types';
-export type * from './types';
-export * from './security/parse';
+export * from './config.js';
+export * from './types.js';
+export type * from './types.js';
+export * from './security/parse.js';
 export type * from './contract-types';
 
 export type { Web3, Contract, AbiItem, EventData };
@@ -59,6 +64,21 @@ export function getBlockTime(deployment: Deployment): number {
 }
 
 export async function initWeb3(nodeUrl: string): Promise<Web3> {
+  /**
+   * enable the lines below if you want to debug RPC requests
+   * However, not that JsonRpcEngine seems to have an issue in how it handles error
+   * where promises that used to be caught by Paima Engine become uncaught exceptions
+   * So best to only use this when debugging
+   */
+  // const engine = new JsonRpcEngine();
+  // engine.push((req, _, next) => {
+  //   console.dir(req, { depth: null });
+  //   next();
+  // });
+  // engine.push(createFetchMiddleware({ btoa, fetch, rpcUrl: nodeUrl }));
+  // const provider = providerFromEngine(engine);
+  // // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+  // const web3 = new Web3(provider as any);
   const web3 = new Web3(nodeUrl);
   try {
     await web3.eth.getNodeInfo();
@@ -116,6 +136,35 @@ export function getErc165Contract(address: string, web3?: Web3): Contracts.ERC16
     erc165ContractBuild.abi as AbiItem[],
     web3
   ) as unknown as Contracts.ERC165Contract;
+}
+
+/** Default registry address specified in ERC6551 */
+export const ERC6551_REGISTRY_DEFAULT = {
+  // ERC6551 has an old version that got adopted by some projects that did not use indexed fields for the logs
+  // You can find a version history here: https://github.com/erc6551/reference/releases
+  Old: '0x02101dfB77FDE026414827Fdc604ddAF224F0921'.toLowerCase(),
+  New: '0x000000006551c19487814612e58FE06813775758'.toLowerCase(),
+};
+
+export function getErc6551RegistryContract(
+  address: string,
+  web3?: Web3
+): Contracts.ERC6551RegistryContract {
+  return getAbiContract(
+    address,
+    erc6551RegistryContractBuild.abi as AbiItem[],
+    web3
+  ) as unknown as Contracts.ERC6551RegistryContract;
+}
+export function getOldErc6551RegistryContract(
+  address: string,
+  web3?: Web3
+): Contracts.OldERC6551RegistryContract {
+  return getAbiContract(
+    address,
+    oldErc6551RegistryContractBuild.abi as AbiItem[],
+    web3
+  ) as unknown as Contracts.OldERC6551RegistryContract;
 }
 
 export function validatePaimaL2ContractAddress(address: string): void {

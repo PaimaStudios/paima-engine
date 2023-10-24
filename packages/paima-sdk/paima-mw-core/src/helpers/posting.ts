@@ -9,6 +9,7 @@ import {
 } from '../errors';
 import {
   getEmulatedBlocksActive,
+  getFee,
   getPostingMode,
   getStorageAddress,
   getWeb3,
@@ -27,7 +28,10 @@ import { buildDirectTx } from './transaction-building';
 import { batcherQuerySubmitUserInput, batcherQueryTrackUserInput } from './query-constructors';
 import { postDataToEndpoint } from './general';
 import { pushLog } from './logging';
-import { deploymentChainBlockHeightToEmulated } from './auxiliary-queries';
+import {
+  deploymentChainBlockHeightToEmulated,
+  emulatedBlocksActiveOnBackend,
+} from './auxiliary-queries';
 import {
   TruffleConnector,
   AlgorandConnector,
@@ -36,6 +40,7 @@ import {
   PolkadotConnector,
 } from '@paima/providers';
 import type { BatchedSubunit } from '@paima/concise';
+import assertNever from 'assert-never';
 
 const BATCHER_WAIT_PERIOD = 500;
 const BATCHER_RETRIES = 50;
@@ -49,8 +54,16 @@ const EMULATED_CONVERSION_RETRY_COUNT = 8;
 
 type PostFxn = (tx: Record<string, any>) => Promise<string>;
 
+function oneHourPassed(timestamp: number): boolean {
+  const currTime = new Date().getTime();
+  const diffSeconds = (currTime - timestamp) / 1000;
+  return diffSeconds / 60 / 60 > 1;
+}
 export async function updateFee(): Promise<void> {
   try {
+    // assume the fee doesn't change at runtime
+    const prevFee = getFee();
+    if (prevFee != null && !oneHourPassed(prevFee.lastFetch)) return;
     const web3 = await getWeb3();
     const newFee = await retrieveFee(getStorageAddress(), web3);
     setFee(newFee);
@@ -140,6 +153,7 @@ export async function postConciselyEncodedData(gameInput: string): Promise<Resul
         gameInput
       );
     default:
+      assertNever(postingMode, true);
       return errorFxn(
         PaimaMiddlewareErrorCode.INTERNAL_INVALID_POSTING_MODE,
         `Invalid posting mode: ${postingMode}`
@@ -148,7 +162,8 @@ export async function postConciselyEncodedData(gameInput: string): Promise<Resul
 }
 
 async function getAdjustedHeight(deploymentChainBlockHeight: number): Promise<number> {
-  if (getEmulatedBlocksActive()) {
+  const emulatedActive = getEmulatedBlocksActive() ?? (await emulatedBlocksActiveOnBackend());
+  if (emulatedActive) {
     const emulatedBlockHeight = await retryPromise(
       () => deploymentChainBlockHeightToEmulated(deploymentChainBlockHeight),
       EMULATED_CONVERSION_RETRY_DELAY,

@@ -10,6 +10,7 @@ import {
   EvmConnector,
   PolkadotConnector,
 } from '@paima/providers';
+import assertNever from 'assert-never';
 
 export const enum PostingMode {
   UNBATCHED,
@@ -49,10 +50,15 @@ const deployment: Deployment = ENV.DEPLOYMENT as Deployment;
 
 let postingMode: PostingMode = PostingMode.UNBATCHED;
 
-let emulatedBlocksActive: boolean = false;
+let emulatedBlocksActive: undefined | boolean = undefined;
 
 let web3: Web3 | undefined = undefined;
-let fee: string = ENV.DEFAULT_FEE;
+
+type FeeCache = {
+  fee: string;
+  lastFetch: number;
+};
+let fee: undefined | FeeCache = undefined;
 
 export const setBackendUri = (newUri: URI): URI => (backendUri = newUri);
 export const getBackendUri = (): URI => backendUri;
@@ -64,7 +70,7 @@ export const setEmulatedBlocksActive = (): void => {
 export const setEmulatedBlocksInactive = (): void => {
   emulatedBlocksActive = false;
 };
-export const getEmulatedBlocksActive = (): boolean => emulatedBlocksActive;
+export const getEmulatedBlocksActive = (): undefined | boolean => emulatedBlocksActive;
 
 export const setGameVersion = (newGameVersion: VersionString): VersionString =>
   (gameVersion = newGameVersion);
@@ -96,8 +102,12 @@ export const setBatchedAlgorandMode = (): PostingMode =>
   setPostingMode(PostingMode.BATCHED_ALGORAND);
 export const setAutomaticMode = (): PostingMode => setPostingMode(PostingMode.AUTOMATIC);
 
-export const setFee = (newFee: string): string => (fee = newFee);
-export const getFee = (): string => fee;
+export const setFee = (newFee: string): FeeCache =>
+  (fee = {
+    lastFetch: new Date().getTime(),
+    fee: newFee,
+  });
+export const getFee = (): undefined | FeeCache => fee;
 
 export const getWeb3 = async (): Promise<Web3> => {
   if (typeof web3 === 'undefined') {
@@ -120,6 +130,7 @@ export const getActiveAddress = (): string => {
     case PostingMode.BATCHED_ALGORAND:
       return AlgorandConnector.instance().getOrThrowProvider().getAddress();
     default:
+      assertNever(postingMode, true);
       const errorCode = PaimaMiddlewareErrorCode.INTERNAL_INVALID_POSTING_MODE;
       const errorMessage = `${paimaErrorMessageFxn(errorCode)}: ${postingMode}`;
       throw new Error(errorMessage);

@@ -3,17 +3,20 @@ import type { Express, RequestHandler } from 'express';
 
 import type { SQLUpdate } from '@paima/db';
 import type {
+  ChainDataExtensionDatumType,
+  ChainDataExtensionType,
   Contract,
   ERC20Contract,
   ERC721Contract,
-  ChainDataExtensionType,
-  ChainDataExtensionDatumType,
   VersionString,
   SubmittedChainData,
   SubmittedData,
   PaimaERC721Contract,
-  AbiItem,
+  OldERC6551RegistryContract,
+  ERC6551RegistryContract,
 } from '@paima/utils';
+import { Type } from '@sinclair/typebox';
+import type { Static } from '@sinclair/typebox';
 
 export { SubmittedChainData, SubmittedData };
 
@@ -56,6 +59,15 @@ interface CdeDatumErc20DepositPayload {
 
 type CdeDatumGenericPayload = any;
 
+interface CdeDatumErc6551RegistryPayload {
+  accountCreated: string; // address
+  implementation: string; // address
+  chainId: string; // uint256
+  tokenContract: string; // address
+  tokenId: string; // uint256
+  salt: string; // uint256
+}
+
 type ChainDataExtensionPayload =
   | CdeDatumErc20TransferPayload
   | CdeDatumErc721MintPayload
@@ -63,7 +75,8 @@ type ChainDataExtensionPayload =
   | CdeDatumErc20DepositPayload
   // TODO: better type definition to avoid this issue
   // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
-  | CdeDatumGenericPayload;
+  | CdeDatumGenericPayload
+  | CdeDatumErc6551RegistryPayload;
 
 interface CdeDatumBase {
   cdeId: number;
@@ -101,61 +114,160 @@ export interface CdeGenericDatum extends CdeDatumBase {
   scheduledPrefix: string;
 }
 
+export interface CdeErc6551RegistryDatum extends CdeDatumBase {
+  cdeDatumType: ChainDataExtensionDatumType.ERC6551Registry;
+  payload: CdeDatumErc6551RegistryPayload;
+}
+
 export type ChainDataExtensionDatum =
   | CdeErc20TransferDatum
   | CdeErc721MintDatum
   | CdeErc721TransferDatum
   | CdeErc20DepositDatum
-  | CdeGenericDatum;
+  | CdeGenericDatum
+  | CdeErc6551RegistryDatum;
 
-type CdeContract = ERC20Contract | ERC721Contract | PaimaERC721Contract | Contract;
+export enum CdeEntryTypeName {
+  Generic = 'generic',
+  ERC20 = 'erc20',
+  ERC20Deposit = 'erc20-deposit',
+  ERC721 = 'erc721',
+  ERC6551Registry = 'erc6551-registry',
+}
 
+const EvmAddress = Type.Transform(Type.RegExp('0x[0-9a-fA-F]{40}'))
+  .Decode(value => value.toLowerCase())
+  .Encode(value => value);
+
+const ChainDataExtensionConfigBase = Type.Object({
+  name: Type.String(),
+  startBlockHeight: Type.Number(),
+});
 interface ChainDataExtensionBase {
   cdeId: number;
-  cdeType: ChainDataExtensionType;
-  cdeName: string;
-  contract: CdeContract;
-  contractAddress: string;
-  startBlockHeight: number;
-  scheduledPrefix: string;
+  hash: number; // hash of the CDE config that created this type
 }
 
-export interface ChainDataExtensionErc20 extends ChainDataExtensionBase {
-  cdeType: ChainDataExtensionType.ERC20;
-  contract: ERC20Contract;
-}
+export const ChainDataExtensionErc20Config = Type.Intersect([
+  ChainDataExtensionConfigBase,
+  Type.Object({
+    type: Type.Literal(CdeEntryTypeName.ERC20),
+    contractAddress: EvmAddress,
+  }),
+]);
+export type ChainDataExtensionErc20 = ChainDataExtensionBase &
+  Static<typeof ChainDataExtensionErc20Config> & {
+    cdeType: ChainDataExtensionType.ERC20;
+    contract: ERC20Contract;
+  };
 
-export interface ChainDataExtensionErc721 extends ChainDataExtensionBase {
-  cdeType: ChainDataExtensionType.ERC721;
-  contract: ERC721Contract;
-}
+export const ChainDataExtensionErc721Config = Type.Intersect([
+  ChainDataExtensionConfigBase,
+  Type.Object({
+    type: Type.Literal(CdeEntryTypeName.ERC721),
+    contractAddress: EvmAddress,
+    scheduledPrefix: Type.String(),
+  }),
+]);
+export type TChainDataExtensionErc721Config = Static<typeof ChainDataExtensionErc721Config>;
 
-export interface ChainDataExtensionPaimaErc721 extends ChainDataExtensionBase {
-  cdeType: ChainDataExtensionType.PaimaERC721;
-  contract: PaimaERC721Contract;
-}
+export type ChainDataExtensionErc721 = ChainDataExtensionBase &
+  Static<typeof ChainDataExtensionErc721Config> & {
+    cdeType: ChainDataExtensionType.ERC721;
+    contract: ERC721Contract;
+  };
 
-export interface ChainDataExtensionErc20Deposit extends ChainDataExtensionBase {
-  cdeType: ChainDataExtensionType.ERC20Deposit;
-  contract: ERC20Contract;
-  depositAddress: string;
-}
+/** same as ERC721, but with a different type flag (see isPaimaErc721) */
+export type ChainDataExtensionPaimaErc721 = ChainDataExtensionBase &
+  Static<typeof ChainDataExtensionErc721Config> & {
+    cdeType: ChainDataExtensionType.PaimaERC721;
+    contract: PaimaERC721Contract;
+  };
 
-export interface ChainDataExtensionGeneric extends ChainDataExtensionBase {
-  cdeType: ChainDataExtensionType.Generic;
-  eventSignature: string;
-  eventName: string;
-  eventSignatureHash: string;
-  rawContractAbi: string;
-  contract: Contract;
-}
+export const ChainDataExtensionErc20DepositConfig = Type.Intersect([
+  ChainDataExtensionConfigBase,
+  Type.Object({
+    type: Type.Literal(CdeEntryTypeName.ERC20Deposit),
+    contractAddress: EvmAddress,
+    scheduledPrefix: Type.String(),
+    depositAddress: EvmAddress,
+  }),
+]);
+export type ChainDataExtensionErc20Deposit = ChainDataExtensionBase &
+  Static<typeof ChainDataExtensionErc20DepositConfig> & {
+    cdeType: ChainDataExtensionType.ERC20Deposit;
+    contract: ERC20Contract;
+  };
 
+export const ChainDataExtensionGenericConfig = Type.Intersect([
+  ChainDataExtensionConfigBase,
+  Type.Object({
+    type: Type.Literal(CdeEntryTypeName.Generic),
+    contractAddress: EvmAddress,
+    abiPath: Type.String(),
+    eventSignature: Type.String(),
+    scheduledPrefix: Type.String(),
+  }),
+]);
+export type TChainDataExtensionGenericConfig = Static<typeof ChainDataExtensionGenericConfig>;
+export type ChainDataExtensionGeneric = ChainDataExtensionBase &
+  Omit<Static<typeof ChainDataExtensionGenericConfig>, 'abiPath'> & {
+    cdeType: ChainDataExtensionType.Generic;
+    eventName: string;
+    eventSignatureHash: string;
+    rawContractAbi: string;
+    contract: Contract;
+  };
+
+export const ChainDataExtensionErc6551RegistryConfig = Type.Intersect([
+  ChainDataExtensionConfigBase,
+  Type.Object({
+    type: Type.Literal(CdeEntryTypeName.ERC6551Registry),
+    contractAddress: Type.Optional(EvmAddress),
+    implementation: Type.Optional(EvmAddress),
+    tokenContract: Type.Optional(EvmAddress),
+    tokenId: Type.Optional(Type.String()), // uint256
+    salt: Type.Optional(Type.String()), // uint256
+  }),
+]);
+export type ChainDataExtensionErc6551Registry = ChainDataExtensionBase &
+  Static<typeof ChainDataExtensionErc6551RegistryConfig> & {
+    cdeType: ChainDataExtensionType.ERC6551Registry;
+    contract: ERC6551RegistryContract | OldERC6551RegistryContract;
+  };
+
+export const CdeConfig = Type.Object({
+  extensions: Type.Array(
+    Type.Union([
+      ChainDataExtensionErc20Config,
+      ChainDataExtensionErc721Config,
+      ChainDataExtensionErc20DepositConfig,
+      ChainDataExtensionGenericConfig,
+      ChainDataExtensionErc6551RegistryConfig,
+    ])
+  ),
+});
+
+/**
+ * We check a base config before checking the full configuration
+ * This is because validation logic doesn't know `type` is a special key
+ * that should be used to decide what the type of all other keys should be
+ */
+export const CdeBaseConfig = Type.Object({
+  extensions: Type.Array(
+    Type.Object({
+      name: Type.String(),
+      type: Type.Enum(CdeEntryTypeName),
+    })
+  ),
+});
 export type ChainDataExtension =
   | ChainDataExtensionErc20
   | ChainDataExtensionErc721
   | ChainDataExtensionPaimaErc721
   | ChainDataExtensionErc20Deposit
-  | ChainDataExtensionGeneric;
+  | ChainDataExtensionGeneric
+  | ChainDataExtensionErc6551Registry;
 
 export interface ChainFunnel {
   readData: (blockHeight: number) => Promise<ChainData[]>;

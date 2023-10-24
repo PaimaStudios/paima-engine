@@ -7,7 +7,7 @@ find packages -maxdepth 3 -name 'build' -type d -exec rm -rf {} +
 
 if [[ "$1" == "remove-package-lock" ]]; then
     rm -f package-lock.json */package-lock.json
-elif [[ "$1" == "remove modules" ]]; then
+elif [[ "$1" == "remove-modules" ]]; then
     rm -f package-lock.json */package-lock.json
     rm -rf node_modules */node_modules */*/node_modules
 fi

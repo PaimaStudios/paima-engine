@@ -7,9 +7,11 @@ import processErc20TransferDatum from './cde-erc20-transfer';
 import processErc721TransferDatum from './cde-erc721-transfer';
 import processErc721MintDatum from './cde-erc721-mint';
 import processErc20DepositDatum from './cde-erc20-deposit';
+import processErc6551RegistryDatum from './cde-erc6551-registry';
 import processGenericDatum from './cde-generic';
 import type { SQLUpdate } from '@paima/db';
 import { getSpecificCdeBlockheight } from '@paima/db';
+import assertNever from 'assert-never';
 
 export async function cdeTransitionFunction(
   readonlyDBConn: PoolClient,
@@ -26,8 +28,10 @@ export async function cdeTransitionFunction(
       return await processErc20DepositDatum(readonlyDBConn, cdeDatum);
     case ChainDataExtensionDatumType.Generic:
       return await processGenericDatum(cdeDatum);
+    case ChainDataExtensionDatumType.ERC6551Registry:
+      return await processErc6551RegistryDatum(cdeDatum);
     default:
-      throw new Error(`[paima-sm] Unknown type on CDE datum: ${cdeDatum}`);
+      assertNever(cdeDatum);
   }
 }
 

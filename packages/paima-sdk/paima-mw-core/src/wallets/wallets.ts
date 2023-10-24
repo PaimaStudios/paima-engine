@@ -1,3 +1,4 @@
+import assertNever from 'assert-never';
 import { buildEndpointErrorFxn, FE_ERR_SPECIFIC_WALLET_NOT_INSTALLED } from '../errors';
 import {
   setBatchedAlgorandMode,
@@ -14,6 +15,8 @@ import { polkadotLoginWrapper } from './polkadot';
 import { WalletMode } from './wallet-modes';
 
 export function stringToWalletMode(loginType: string): WalletMode {
+  // TODO: this function has a bunch of magic strings in it which is not great
+  // some of these are also repeated in other places (ex: evmWalletModeToName)
   switch (loginType) {
     case 'metamask':
       return WalletMode.METAMASK;
@@ -66,7 +69,10 @@ export async function specificWalletLogin(
     case WalletMode.ALGORAND_PERA:
       setBatchedAlgorandMode();
       return await algorandLoginWrapper();
+    case WalletMode.NO_WALLET:
+      return errorFxn(FE_ERR_SPECIFIC_WALLET_NOT_INSTALLED);
     default:
+      assertNever(walletMode, true);
       return errorFxn(FE_ERR_SPECIFIC_WALLET_NOT_INSTALLED);
   }
 }

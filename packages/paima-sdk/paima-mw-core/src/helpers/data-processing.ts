@@ -8,6 +8,7 @@ import {
   PolkadotConnector,
 } from '@paima/providers';
 import { createMessageForBatcher, type BatchedSubunit } from '@paima/concise';
+import assertNever from 'assert-never';
 
 export function batchedToJsonString(b: BatchedSubunit): string {
   return JSON.stringify({
@@ -29,7 +30,10 @@ function selectSignFunction(addressType: AddressType): SignFunction {
       return PolkadotConnector.instance().getOrThrowProvider().signMessage;
     case AddressType.ALGORAND:
       return AlgorandConnector.instance().getOrThrowProvider().signMessage;
+    case AddressType.UNKNOWN:
+      throw new Error(`[selectSignFunction] unknown address type`);
     default:
+      assertNever(addressType, true);
       throw new Error(`[selectSignFunction] invalid address type: ${addressType}`);
   }
 }

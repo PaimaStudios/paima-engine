@@ -106,7 +106,7 @@ CREATE TABLE chain_data_extensions (
   cde_id INTEGER PRIMARY KEY,
   cde_type INTEGER NOT NULL,
   cde_name TEXT NOT NULL,
-  contract_address TEXT NOT NULL,
+  cde_hash integer NOT NULL,
   start_blockheight INTEGER NOT NULL,
   scheduled_prefix TEXT
 );
@@ -119,50 +119,12 @@ const TABLE_DATA_CDE: TableData = {
     ['cde_id', 'integer', 'NO', ''],
     ['cde_type', 'integer', 'NO', ''],
     ['cde_name', 'text', 'NO', ''],
-    ['contract_address', 'text', 'NO', ''],
+    ['cde_hash', 'integer', 'NO', ''],
     ['start_blockheight', 'integer', 'NO', ''],
     ['scheduled_prefix', 'text', 'YES', ''],
   ]),
   serialColumns: [],
   creationQuery: QUERY_CREATE_TABLE_CDE,
-};
-
-const QUERY_CREATE_TABLE_CDE_CONFIG_ERC20_DEPOSIT = `
-CREATE TABLE cde_config_erc20_deposit (
-  cde_id INTEGER PRIMARY KEY,
-  deposit_address TEXT NOT NULL
-);
-`;
-
-const TABLE_DATA_CDE_CONFIG_ERC20_DEPOSIT: TableData = {
-  tableName: 'cde_config_erc20_deposit',
-  primaryKeyColumns: ['cde_id'],
-  columnData: packTuples([
-    ['cde_id', 'integer', 'NO', ''],
-    ['deposit_address', 'text', 'NO', ''],
-  ]),
-  serialColumns: [],
-  creationQuery: QUERY_CREATE_TABLE_CDE_CONFIG_ERC20_DEPOSIT,
-};
-
-const QUERY_CREATE_TABLE_CDE_CONFIG_GENERIC = `
-CREATE TABLE cde_config_generic (
-  cde_id INTEGER PRIMARY KEY,
-  event_signature TEXT NOT NULL,
-  contract_abi TEXT NOT NULL
-);
-`;
-
-const TABLE_DATA_CDE_CONFIG_GENERIC: TableData = {
-  tableName: 'cde_config_generic',
-  primaryKeyColumns: ['cde_id'],
-  columnData: packTuples([
-    ['cde_id', 'integer', 'NO', ''],
-    ['event_signature', 'text', 'NO', ''],
-    ['contract_abi', 'text', 'NO', ''],
-  ]),
-  serialColumns: [],
-  creationQuery: QUERY_CREATE_TABLE_CDE_CONFIG_GENERIC,
 };
 
 const QUERY_CREATE_TABLE_CDE_ERC20 = `
@@ -251,6 +213,37 @@ const TABLE_DATA_CDE_GENERIC_DATA: TableData = {
   creationQuery: QUERY_CREATE_TABLE_CDE_GENERIC_DATA,
 };
 
+const QUERY_CREATE_TABLE_CDE_ERC6551_REGISTRY = `
+CREATE TABLE cde_erc6551_registry_data (
+  cde_id INTEGER NOT NULL,
+  block_height INTEGER NOT NULL,
+  account_created TEXT NOT NULL,
+  implementation TEXT NOT NULL,
+  token_contract TEXT NOT NULL,
+  token_id TEXT NOT NULL,
+  chain_id TEXT NOT NULL,
+  salt TEXT NOT NULL,
+  PRIMARY KEY (cde_id, account_created)
+);
+`;
+
+const TABLE_DATA_CDE_ERC6551_REGISTRY: TableData = {
+  tableName: 'cde_erc6551_registry_data',
+  primaryKeyColumns: ['cde_id', 'account_created'],
+  columnData: packTuples([
+    ['cde_id', 'integer', 'NO', ''],
+    ['block_height', 'integer', 'NO', ''],
+    ['account_created', 'text', 'NO', ''],
+    ['implementation', 'text', 'NO', ''],
+    ['token_contract', 'text', 'NO', ''],
+    ['token_id', 'text', 'NO', ''],
+    ['chain_id', 'text', 'NO', ''],
+    ['salt', 'text', 'NO', ''],
+  ]),
+  serialColumns: [],
+  creationQuery: QUERY_CREATE_TABLE_CDE_ERC6551_REGISTRY,
+};
+
 const QUERY_CREATE_TABLE_EMULATED = `
 CREATE TABLE emulated_block_heights (
   deployment_chain_block_height INTEGER PRIMARY KEY,
@@ -278,11 +271,10 @@ export const TABLES: TableData[] = [
   TABLE_DATA_HISTORICAL,
   TABLE_DATA_CDE_TRACKING,
   TABLE_DATA_CDE,
-  TABLE_DATA_CDE_CONFIG_ERC20_DEPOSIT,
-  TABLE_DATA_CDE_CONFIG_GENERIC,
   TABLE_DATA_CDE_ERC20,
   TABLE_DATA_CDE_ERC721,
   TABLE_DATA_CDE_ERC20_DEPOSIT,
   TABLE_DATA_CDE_GENERIC_DATA,
+  TABLE_DATA_CDE_ERC6551_REGISTRY,
   TABLE_DATA_EMULATED,
 ];

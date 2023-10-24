@@ -21,7 +21,7 @@
   "scripts": {
     "lint:eslint": "eslint .",
     "build": "tsc --build tsconfig.build.json",
-    "test": "jest --runInBand"
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest --runInBand"
   },
   "devDependencies": {},
   "dependencies": {

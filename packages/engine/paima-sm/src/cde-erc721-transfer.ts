@@ -10,7 +10,7 @@ export default async function processErc721Datum(
   cdeDatum: CdeErc721TransferDatum
 ): Promise<SQLUpdate[]> {
   const cdeId = cdeDatum.cdeId;
-  const { from, to, tokenId } = cdeDatum.payload;
+  const { to, tokenId } = cdeDatum.payload;
   const toAddr = to.toLowerCase();
 
   const updateList: SQLUpdate[] = [];
