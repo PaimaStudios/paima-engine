@@ -139,12 +139,19 @@ export class EmulatedBlocksFunnel extends BaseFunnel {
     if (blocks.length === 0) {
       return;
     } else if (blocks.length === 1) {
-      doLog(`Emulated funnel ${ENV.CHAIN_ID}: ${blocks[0].timestamp}`);
+      // padding with "-timestamp" so that the logs are the same size no matter which branch
+      // this just makes console outputs easier to read
+      const paddingLength = blocks[0].timestamp.toString().length + 1;
+      doLog(
+        `Emulated funnel ${ENV.CHAIN_ID}: ${blocks[0].timestamp}${' '.repeat(paddingLength)} \t [${
+          blocks[0].timestamp - ENV.BLOCK_TIME
+        }~${blocks[0].timestamp})`
+      );
     } else {
       doLog(
         `Emulated funnel ${ENV.CHAIN_ID}: ${blocks[0].timestamp}-${
           blocks[blocks.length - 1].timestamp
-        }`
+        } \t [${blocks[0].timestamp - ENV.BLOCK_TIME}~${blocks[blocks.length - 1].timestamp})`
       );
     }
   };
@@ -318,7 +325,11 @@ export class EmulatedBlocksFunnel extends BaseFunnel {
     //    so we know for sure there won't be a new block for this interval
     // 2. (currentTimestamp - this.maxWait) has exceeded the end of the interval
     //    so we assume no other block will come in
-    if (nextBlockEndTimestamp >= this.emulatedState.timestampLowerBound) {
+    // Note: > and not >= because the end timestamp is non-exclusive
+    //       ex: for [0~3), nextBlockEndTimestamp=3
+    //           so if we see timestampLowerBound=3
+    //           we can close this block since 3 is not part of the [0~3) range
+    if (nextBlockEndTimestamp > this.emulatedState.timestampLowerBound) {
       return undefined;
     }
 
