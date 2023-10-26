@@ -1,7 +1,12 @@
 import process from 'process';
 
 import { doLog, logError, ENV } from '@paima/utils';
-import { DataMigrations, deploymentChainBlockheightToEmulated, getGameInput } from '@paima/db';
+import {
+  DataMigrations,
+  deploymentChainBlockheightToEmulated,
+  emulatedSelectLatestPrior,
+  getGameInput,
+} from '@paima/db';
 import { validatePersistentCdeConfig } from './cde-config/validation';
 import type { GameStateMachine, IFunnelFactory, PaimaRuntimeInitializer } from './types';
 
@@ -72,6 +77,7 @@ const paimaEngine: PaimaRuntimeInitializer = {
         this.addGET('/emulated_blocks_active', (req, res): void => {
           res.json({ emulatedBlocksActive: ENV.EMULATED_BLOCKS });
         });
+        /** Return the emulated block where a given underlying block appears, or -1 if that block doesn't exist yet */
         this.addGET('/deployment_blockheight_to_emulated', (req, res): void => {
           try {
             const paramString = String(req.query.deploymentBlockheight);
@@ -83,21 +89,50 @@ const paimaEngine: PaimaRuntimeInitializer = {
               });
             }
 
+            // The block may be onchain without being included in an emulated block yet
+            // ex: waiting to see if there are other blocks that need to be bundled as part of the same emulated block
+            const blockNotYet = -1;
             const DBConn = gameStateMachine.getReadonlyDbConn();
-            deploymentChainBlockheightToEmulated
-              .run({ deployment_chain_block_height: deploymentBlockheight }, DBConn)
-              .then(emulatedBlockheights => {
-                if (emulatedBlockheights.length !== 1) {
+            emulatedSelectLatestPrior
+              .run({ emulated_block_height: 2147483647 }, DBConn)
+              .then(([latestBlock]) => {
+                if (latestBlock == null) {
+                  res.status(200).json({
+                    success: false,
+                    result: blockNotYet,
+                  });
+                  return false;
+                }
+                // The block may be onchain without being included in an emulated block yet
+                // ex: waiting to see if there are other blocks that need to be bundled as part of the same emulated block
+                if (latestBlock.deployment_chain_block_height < deploymentBlockheight) {
+                  res.status(200).json({
+                    success: false,
+                    result: blockNotYet,
+                  });
+                  return false;
+                }
+                return true;
+              })
+              .then(seenBlock =>
+                !seenBlock
+                  ? Promise.resolve(blockNotYet)
+                  : deploymentChainBlockheightToEmulated
+                      .run({ deployment_chain_block_height: deploymentBlockheight }, DBConn)
+                      .then(res => res.at(0)?.emulated_block_height)
+              )
+              .then(emulatedBlockheight => {
+                if (emulatedBlockheight === blockNotYet) return; // error already handled earlier in the promise chain
+                if (emulatedBlockheight == null) {
                   return res.status(200).json({
                     success: false,
                     errorMessage: `Supplied blockheight ${deploymentBlockheight} not found in DB`,
                   });
-                } else {
-                  return res.status(200).json({
-                    success: true,
-                    result: emulatedBlockheights[0].emulated_block_height,
-                  });
                 }
+                return res.status(200).json({
+                  success: true,
+                  result: emulatedBlockheight,
+                });
               })
               .catch(err => {
                 doLog(`Webserver error:`);

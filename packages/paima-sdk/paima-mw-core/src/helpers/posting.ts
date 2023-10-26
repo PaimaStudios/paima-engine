@@ -49,9 +49,6 @@ const TX_VERIFICATION_RETRY_DELAY = 1000;
 const TX_VERIFICATION_DELAY = 1000;
 const TX_VERIFICATION_RETRY_COUNT = 8;
 
-const EMULATED_CONVERSION_RETRY_DELAY = 1000;
-const EMULATED_CONVERSION_RETRY_COUNT = 8;
-
 type PostFxn = (tx: Record<string, any>) => Promise<string>;
 
 function oneHourPassed(timestamp: number): boolean {
@@ -164,12 +161,15 @@ export async function postConciselyEncodedData(gameInput: string): Promise<Resul
 async function getAdjustedHeight(deploymentChainBlockHeight: number): Promise<number> {
   const emulatedActive = getEmulatedBlocksActive() ?? (await emulatedBlocksActiveOnBackend());
   if (emulatedActive) {
-    const emulatedBlockHeight = await retryPromise(
-      () => deploymentChainBlockHeightToEmulated(deploymentChainBlockHeight),
-      EMULATED_CONVERSION_RETRY_DELAY,
-      EMULATED_CONVERSION_RETRY_COUNT
-    );
-    return emulatedBlockHeight;
+    const BLOCK_DELAY = 1000;
+    let block = -1;
+    while (block === -1) {
+      block = await deploymentChainBlockHeightToEmulated(deploymentChainBlockHeight);
+      if (block === -1) {
+        await wait(BLOCK_DELAY);
+      }
+    }
+    return block;
   } else {
     return deploymentChainBlockHeight;
   }
