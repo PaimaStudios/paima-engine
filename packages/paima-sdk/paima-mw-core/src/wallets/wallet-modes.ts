@@ -1,5 +1,6 @@
 export enum WalletMode {
   NO_WALLET,
+  EVM,
   METAMASK,
   EVM_FLINT,
   CARDANO,
@@ -8,5 +9,6 @@ export enum WalletMode {
   CARDANO_NAMI,
   CARDANO_ETERNL,
   POLKADOT,
+  ALGORAND,
   ALGORAND_PERA,
 }

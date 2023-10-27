@@ -5,7 +5,6 @@ import { queryEndpoints } from './endpoints/queries';
 import { utilityEndpoints } from './endpoints/utility';
 
 import {
-  cardanoWalletLoginEndpoint,
   retrievePostingInfo,
   switchToBatchedCardanoMode,
   switchToBatchedEthMode,
@@ -83,7 +82,6 @@ export {
 
 // NOT FOR USE IN PRODUCTION, just internal endpoints and helper functions for easier testing and debugging:
 export {
-  cardanoWalletLoginEndpoint,
   retrievePostingInfo,
   switchToBatchedCardanoMode,
   switchToBatchedEthMode,

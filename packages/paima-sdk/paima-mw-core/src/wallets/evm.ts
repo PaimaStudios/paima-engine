@@ -101,19 +101,25 @@ export async function evmLoginWrapper(walletMode: WalletMode): Promise<Result<Wa
   const errorFxn = buildEndpointErrorFxn('evmLoginWrapper');
 
   const walletName = evmWalletModeToName(walletMode);
-  if (!walletName) {
-    return errorFxn(PaimaMiddlewareErrorCode.WALLET_NOT_SUPPORTED);
-  }
-  console.log(`[evmLoginWrapper] Attempting to log into ${walletName}`);
-
   try {
-    await EvmConnector.instance().connectNamed(
-      {
+    if (walletMode === WalletMode.EVM) {
+      await EvmConnector.instance().connectSimple({
         gameName: getGameName(),
         gameChainId: '0x' + getChainId().toString(16),
-      },
-      walletName
-    );
+      });
+    } else {
+      if (!walletName) {
+        return errorFxn(PaimaMiddlewareErrorCode.WALLET_NOT_SUPPORTED);
+      }
+      console.log(`[evmLoginWrapper] Attempting to log into ${walletName}`);
+      await EvmConnector.instance().connectNamed(
+        {
+          gameName: getGameName(),
+          gameChainId: '0x' + getChainId().toString(16),
+        },
+        walletName
+      );
+    }
   } catch (err) {
     if (err instanceof WalletNotFound || err instanceof UnsupportedWallet) {
       return errorFxn(
@@ -122,7 +128,7 @@ export async function evmLoginWrapper(walletMode: WalletMode): Promise<Result<Wa
         FE_ERR_SPECIFIC_WALLET_NOT_INSTALLED
       );
     }
-    console.log(`[evmLoginWrapper] Error while logging into wallet ${walletName}`);
+    console.log(`[evmLoginWrapper] Error while logging into wallet ${walletName ?? 'simple'}`);
 
     return errorFxn(PaimaMiddlewareErrorCode.EVM_LOGIN, err);
   }

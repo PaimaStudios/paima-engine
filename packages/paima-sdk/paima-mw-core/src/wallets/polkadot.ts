@@ -7,15 +7,34 @@ import { getGameName } from '../state';
 import type { Result, Wallet } from '../types';
 import { UnsupportedWallet, WalletNotFound } from '@paima/providers';
 import { PolkadotConnector } from '@paima/providers';
+import { WalletMode } from './wallet-modes';
 
-export async function polkadotLoginWrapper(): Promise<Result<Wallet>> {
+// TODO: the whole concept of converting wallet mode to names should be removed
+function polkadotWalletModeToName(walletMode: WalletMode): string {
+  switch (walletMode) {
+    default:
+      return '';
+  }
+}
+
+export async function polkadotLoginWrapper(walletMode: WalletMode): Promise<Result<Wallet>> {
   const errorFxn = buildEndpointErrorFxn('polkadotLoginWrapper');
 
+  const walletName = polkadotWalletModeToName(walletMode);
   try {
-    const provider = await PolkadotConnector.instance().connectSimple({
-      gameName: getGameName(),
-      gameChainId: undefined,
-    });
+    const provider =
+      walletMode === WalletMode.POLKADOT
+        ? await PolkadotConnector.instance().connectSimple({
+            gameName: getGameName(),
+            gameChainId: undefined, // Not needed because of batcher
+          })
+        : await PolkadotConnector.instance().connectNamed(
+            {
+              gameName: getGameName(),
+              gameChainId: undefined, // Not needed because of batcher
+            },
+            walletName
+          );
     return {
       success: true,
       result: {

@@ -17,7 +17,7 @@ import {
 import type { PostingInfo, PostingModeSwitchResult, Result, Wallet } from '../types';
 import { specificWalletLogin, stringToWalletMode } from '../wallets/wallets';
 import { emulatedBlocksActiveOnBackend } from '../helpers/auxiliary-queries';
-import { CardanoConnector, TruffleConnector } from '@paima/providers';
+import { TruffleConnector } from '@paima/providers';
 import HDWalletProvider from '@truffle/hdwallet-provider';
 
 export async function userWalletLoginWithoutChecks(
@@ -26,24 +26,6 @@ export async function userWalletLoginWithoutChecks(
 ): Promise<Result<Wallet>> {
   const walletMode = stringToWalletMode(loginType);
   return await specificWalletLogin(walletMode, preferBatchedMode);
-}
-
-export async function cardanoWalletLoginEndpoint(): Promise<Result<Wallet>> {
-  const errorFxn = buildEndpointErrorFxn('cardanoWalletLoginEndpoint');
-  try {
-    const provider = await CardanoConnector.instance().connectSimple({
-      gameName: getGameName(),
-      gameChainId: undefined,
-    });
-    return {
-      success: true,
-      result: {
-        walletAddress: provider.getAddress(),
-      },
-    };
-  } catch (err) {
-    return errorFxn(PaimaMiddlewareErrorCode.CARDANO_LOGIN, err);
-  }
 }
 
 export async function automaticWalletLogin(privateKey: string): Promise<Result<Wallet>> {

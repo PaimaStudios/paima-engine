@@ -18,6 +18,8 @@ export function stringToWalletMode(loginType: string): WalletMode {
   // TODO: this function has a bunch of magic strings in it which is not great
   // some of these are also repeated in other places (ex: evmWalletModeToName)
   switch (loginType) {
+    case 'evm':
+      return WalletMode.EVM;
     case 'metamask':
       return WalletMode.METAMASK;
     case 'evm-flint':
@@ -36,6 +38,8 @@ export function stringToWalletMode(loginType: string): WalletMode {
       return WalletMode.POLKADOT;
     case 'pera':
       return WalletMode.ALGORAND_PERA;
+    case 'algorand':
+      return WalletMode.ALGORAND;
     default:
       return WalletMode.NO_WALLET;
   }
@@ -48,6 +52,7 @@ export async function specificWalletLogin(
   const errorFxn = buildEndpointErrorFxn('specificWalletLogin');
 
   switch (walletMode) {
+    case WalletMode.EVM:
     case WalletMode.METAMASK:
     case WalletMode.EVM_FLINT:
       if (preferBatchedMode) {
@@ -65,10 +70,11 @@ export async function specificWalletLogin(
       return await cardanoLoginWrapper(walletMode);
     case WalletMode.POLKADOT:
       setBatchedPolkadotMode();
-      return await polkadotLoginWrapper();
+      return await polkadotLoginWrapper(walletMode);
+    case WalletMode.ALGORAND:
     case WalletMode.ALGORAND_PERA:
       setBatchedAlgorandMode();
-      return await algorandLoginWrapper();
+      return await algorandLoginWrapper(walletMode);
     case WalletMode.NO_WALLET:
       return errorFxn(FE_ERR_SPECIFIC_WALLET_NOT_INSTALLED);
     default:
