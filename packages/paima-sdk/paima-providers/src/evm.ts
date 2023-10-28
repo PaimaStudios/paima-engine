@@ -52,7 +52,7 @@ window?.addEventListener('eip6963:announceProvider', (event: EIP6963AnnounceProv
 window?.dispatchEvent(new Event('eip6963:requestProvider'));
 declare global {
   interface Window {
-    ethereum: EIP1193Provider;
+    ethereum?: EIP1193Provider;
     evmproviders?: EIP5749EVMProviders;
   }
   interface WindowEventMap {
@@ -125,14 +125,15 @@ export class EvmConnector implements IConnector<EvmApi> {
     }
 
     // Metamask doesn't support EIP6963 yet, but it plans to. In the meantime, we add it manually
-    if (window.ethereum.isMetaMask) {
+    if (window.ethereum != null && window.ethereum.isMetaMask) {
+      const ethereum = window.ethereum;
       addOptions([
         {
           metadata: {
             name: 'metamask',
             displayName: 'Metamask',
           },
-          api: () => Promise.resolve(window.ethereum),
+          api: () => Promise.resolve(ethereum),
         },
       ]);
     }
@@ -166,7 +167,7 @@ export class EvmConnector implements IConnector<EvmApi> {
 
     // Update the selected Eth address if the user changes after logging in.
     // warning: not supported by all wallets (ex: Flint)
-    window.ethereum.on('accountsChanged', newAccounts => {
+    window.ethereum?.on('accountsChanged', newAccounts => {
       const accounts = newAccounts as string[];
       if (!accounts || !accounts[0] || accounts[0] !== this.provider?.address) {
         this.provider = undefined;

@@ -16,7 +16,7 @@ export type PolkadotApi = InjectedExtension;
 
 declare global {
   interface Window {
-    injectedWeb3: Record<string, InjectedWindowProvider>;
+    injectedWeb3?: Record<string, InjectedWindowProvider>;
   }
 }
 
@@ -25,6 +25,7 @@ export class PolkadotConnector implements IConnector<PolkadotApi> {
   private static INSTANCE: undefined | PolkadotConnector = undefined;
 
   static async getWalletOptions(gameName: string): Promise<ConnectionOption<PolkadotApi>[]> {
+    if (window.injectedWeb3 == null) return [];
     return Object.keys(window.injectedWeb3).map(wallet => ({
       metadata: {
         name: wallet,
