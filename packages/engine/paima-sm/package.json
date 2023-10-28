@@ -14,5 +14,6 @@
   },
   "author": "Paima Studios",
   "dependencies": {
+    "assert-never": "^1.2.1"
   }
 }

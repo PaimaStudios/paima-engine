@@ -1,4 +1,5 @@
 import type { Hash, WalletAddress, UserSignature } from '@paima/utils';
+export type * from './wallets/wallet-modes';
 
 export interface PostingInfo {
   address: WalletAddress;
