@@ -124,7 +124,7 @@ export async function evmLoginWrapper(
   return {
     success: true,
     result: {
-      walletAddress: EvmConnector.instance().getOrThrowProvider().getAddress().toLocaleLowerCase(),
+      walletAddress: EvmConnector.instance().getOrThrowProvider().getAddress(),
     },
   };
 }

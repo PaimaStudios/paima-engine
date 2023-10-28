@@ -41,7 +41,7 @@ export async function cardanoLoginWrapper(
   return {
     success: true,
     result: {
-      walletAddress: loginResult.result.getAddress().toLocaleLowerCase(),
+      walletAddress: loginResult.result.getAddress(),
     },
   };
 }

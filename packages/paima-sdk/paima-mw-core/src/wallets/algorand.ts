@@ -28,7 +28,7 @@ export async function algorandLoginWrapper(
   return {
     success: true,
     result: {
-      walletAddress: loginResult.result.getAddress().toLocaleLowerCase(),
+      walletAddress: loginResult.result.getAddress(),
     },
   };
 }
