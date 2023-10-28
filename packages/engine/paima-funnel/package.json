@@ -17,5 +17,6 @@
     "typescript": "^5.2.2"
   },
   "dependencies": {
+    "assert-never": "^1.2.1"
   }
 }

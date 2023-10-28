@@ -1,13 +1,15 @@
 import { hexStringToUint8Array, type UserSignature } from '@paima/utils';
 import { utf8ToHex } from 'web3-utils';
-import type { ActiveConnection, GameInfo, IConnector, IProvider } from './IProvider';
-import { bech32 } from 'bech32';
 import {
-  ProviderApiError,
-  ProviderNotInitialized,
-  UnsupportedWallet,
-  WalletNotFound,
-} from './errors';
+  optionToActive,
+  type ActiveConnection,
+  type ConnectionOption,
+  type GameInfo,
+  type IConnector,
+  type IProvider,
+} from './IProvider';
+import { bech32 } from 'bech32';
+import { ProviderApiError, ProviderNotInitialized, WalletNotFound } from './errors';
 
 // TODO: proper type definitions for CIP30
 export type CardanoApi = any;
@@ -27,6 +29,28 @@ export class CardanoConnector implements IConnector<CardanoApi> {
   private provider: CardanoProvider | undefined;
   private static INSTANCE: undefined | CardanoConnector = undefined;
 
+  static getWalletOptions(): ConnectionOption<CardanoApi>[] {
+    const cardanoApi: Record<string, { name?: string; enable?: () => Promise<CardanoApi> }> = (
+      window as any
+    ).cardano;
+    if (cardanoApi == null) return [];
+
+    const options = Object.entries(cardanoApi).reduce((options, [key, info]) => {
+      if (info.name != null && info.enable != null) {
+        options.push({
+          metadata: {
+            name: key,
+            displayName: info.name,
+            icon: 'icon' in info ? (info.icon as string) : undefined,
+          },
+          api: info.enable,
+        });
+      }
+      return options;
+    }, [] as ConnectionOption<CardanoApi>[]);
+    return options;
+  }
+
   static instance(): CardanoConnector {
     if (CardanoConnector.INSTANCE == null) {
       const newInstance = new CardanoConnector();
@@ -38,40 +62,29 @@ export class CardanoConnector implements IConnector<CardanoApi> {
     if (this.provider != null) {
       return this.provider;
     }
-    const cardanoApi: Record<string, { name?: string; enable?: () => Promise<CardanoApi> }> = (
-      window as any
-    ).cardano;
-    if (cardanoApi == null) {
-      throw new WalletNotFound(`[cardano] no wallet detected`);
+    const options = CardanoConnector.getWalletOptions();
+    if (options.length === 0) {
+      throw new WalletNotFound(`No Cardano wallet found`);
     }
-    const pontentialWallets = Object.keys(cardanoApi);
 
     // flint has some custom support for Paima, so best to return this one first if it exists
-    if (pontentialWallets.includes('flint')) {
-      return await this.connectNamed(gameInfo, 'flint');
+    const flintWallet = options.find(option => option.metadata.name === 'flint');
+    if (flintWallet != null) {
+      return await this.connectExternal(gameInfo, await optionToActive(flintWallet));
     }
-    for (const key of pontentialWallets) {
-      if (cardanoApi[key]?.name == null || cardanoApi[key]?.enable == null) {
-        continue;
-      }
-      return await this.connectNamed(gameInfo, key);
-    }
-    throw new UnsupportedWallet('[cardanoLogin] Unable to connect to any supported Cardano wallet');
+    return await this.connectExternal(gameInfo, await optionToActive(options[0]));
   };
   connectNamed = async (gameInfo: GameInfo, name: string): Promise<CardanoProvider> => {
     if (this.provider?.getConnection().metadata?.name === name) {
       return this.provider;
     }
-    if (typeof (window as any).cardano?.[name] === 'undefined') {
-      throw new WalletNotFound(`[cardanoLoginSpecific] Wallet ${name} not injected in the browser`);
+    const provider = CardanoConnector.getWalletOptions().find(
+      entry => entry.metadata.name === name
+    );
+    if (provider == null) {
+      throw new WalletNotFound(`Cardano wallet ${name} not found`);
     }
-    const api: CardanoApi = await (window as any).cardano[name].enable();
-    return await this.connectExternal(gameInfo, {
-      api,
-      metadata: {
-        name,
-      },
-    });
+    return await this.connectExternal(gameInfo, await optionToActive(provider));
   };
   connectExternal = async (
     gameInfo: GameInfo,

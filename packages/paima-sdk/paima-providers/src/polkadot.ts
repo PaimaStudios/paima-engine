@@ -1,19 +1,46 @@
-import type { ActiveConnection, GameInfo, IConnector, IProvider, UserSignature } from './IProvider';
 import {
-  ProviderApiError,
-  ProviderNotInitialized,
-  UnsupportedWallet,
-  WalletNotFound,
-} from './errors';
-import type { InjectedExtension } from '@polkadot/extension-inject/types';
+  optionToActive,
+  type ActiveConnection,
+  type ConnectionOption,
+  type GameInfo,
+  type IConnector,
+  type IProvider,
+  type UserSignature,
+} from './IProvider';
+import { ProviderApiError, ProviderNotInitialized, WalletNotFound } from './errors';
+import type { InjectedExtension, InjectedWindowProvider } from '@polkadot/extension-inject/types';
 import { utf8ToHex } from 'web3-utils';
 
 export type PolkadotAddress = string;
 export type PolkadotApi = InjectedExtension;
 
+declare global {
+  interface Window {
+    injectedWeb3?: Record<string, InjectedWindowProvider>;
+  }
+}
+
 export class PolkadotConnector implements IConnector<PolkadotApi> {
   private provider: PolkadotProvider | undefined;
   private static INSTANCE: undefined | PolkadotConnector = undefined;
+
+  static async getWalletOptions(gameName: string): Promise<ConnectionOption<PolkadotApi>[]> {
+    if (window.injectedWeb3 == null) return [];
+    return Object.keys(window.injectedWeb3).map(wallet => ({
+      metadata: {
+        name: wallet,
+        // polkadot provides no way to get a human-friendly name or icon for wallets
+        displayName: wallet,
+      },
+      api: async (): Promise<PolkadotApi> => {
+        const { web3Enable, web3FromSource } = await import('@polkadot/extension-dapp');
+
+        await web3Enable(gameName);
+        const injector = await web3FromSource(wallet);
+        return injector;
+      },
+    }));
+  }
 
   static instance(): PolkadotConnector {
     if (PolkadotConnector.INSTANCE == null) {
@@ -31,6 +58,9 @@ export class PolkadotConnector implements IConnector<PolkadotApi> {
     if (extensions.length === 0) {
       throw new WalletNotFound(`[polkadot] no extension detected`);
     }
+
+    // we get all accounts instead of picking a specific extension
+    // because some extensions could have no accounts in them
     const allAccounts = await web3Accounts();
     for (const account of allAccounts) {
       const injector = await web3FromAddress(account.address);
@@ -38,6 +68,8 @@ export class PolkadotConnector implements IConnector<PolkadotApi> {
       return await this.connectExternal(gameInfo, {
         metadata: {
           name: account.meta.source,
+          // polkadot provides no way to get a human-friendly name or icon for wallets
+          displayName: account.meta.source,
         },
         api: injector,
       });
@@ -58,21 +90,13 @@ export class PolkadotConnector implements IConnector<PolkadotApi> {
     if (this.provider?.getConnection().metadata?.name === name) {
       return this.provider;
     }
-
-    const { web3Enable, web3FromSource } = await import('@polkadot/extension-dapp');
-
-    await web3Enable(gameInfo.gameName);
-    try {
-      const injector = await web3FromSource(name);
-      return await this.connectExternal(gameInfo, {
-        metadata: {
-          name,
-        },
-        api: injector,
-      });
-    } catch (e) {
-      throw new UnsupportedWallet(`[polkadot] no account found for extension ${name}`);
+    const provider = (await PolkadotConnector.getWalletOptions(gameInfo.gameName)).find(
+      entry => entry.metadata.name === name
+    );
+    if (provider == null) {
+      throw new WalletNotFound(`Polkadot wallet ${name} not found`);
     }
+    return await this.connectExternal(gameInfo, await optionToActive(provider));
   };
   getProvider = (): undefined | PolkadotProvider => {
     return this.provider;

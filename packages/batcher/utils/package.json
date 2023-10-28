@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@truffle/hdwallet-provider": "^2.1.15",
-    "web3": "1.10.0"
+    "web3": "1.10.0",
+    "assert-never": "^1.2.1"
   }
 }

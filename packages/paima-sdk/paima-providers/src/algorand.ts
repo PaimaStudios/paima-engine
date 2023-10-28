@@ -1,20 +1,53 @@
 import type { PeraWalletConnect } from '@perawallet/connect';
-import type { ActiveConnection, GameInfo, IConnector, IProvider, UserSignature } from './IProvider';
+import {
+  optionToActive,
+  type ActiveConnection,
+  type ConnectionOption,
+  type GameInfo,
+  type IConnector,
+  type IProvider,
+  type UserSignature,
+} from './IProvider';
 import { CryptoManager } from '@paima/crypto';
 import { uint8ArrayToHexString } from '@paima/utils';
-import { ProviderApiError, ProviderNotInitialized, UnsupportedWallet } from './errors';
+import {
+  ProviderApiError,
+  ProviderNotInitialized,
+  UnsupportedWallet,
+  WalletNotFound,
+} from './errors';
 
 export type AlgorandApi = PeraWalletConnect;
 export type AlgorandAddress = string;
 
-// TODO: this should probably be dynamically detected
-enum SupportedAlgorandWallets {
-  PERA = 'pera',
-}
-
 export class AlgorandConnector implements IConnector<AlgorandApi> {
   private provider: AlgorandProvider | undefined;
   private static INSTANCE: undefined | AlgorandConnector = undefined;
+
+  static getWalletOptions(): ConnectionOption<AlgorandApi>[] {
+    // Algorand has no standard for wallet discovery
+    // The closest that exists is ARC11 (https://arc.algorand.foundation/ARCs/arc-0011)
+    // but it doesn't give any information about which wallet is injected
+    // and, similar to window.ethereum, has wallets overriding each other
+    // and Pera wallet doesn't even use this standard
+    // instead, the best we can do is check if Pera injected its UI component in the window
+    if (window.customElements.get('pera-wallet-connect-modal') == null) {
+      return [];
+    }
+    return [
+      {
+        metadata: {
+          name: 'pera',
+          displayName: 'Pera Wallet',
+        },
+        api: async (): Promise<AlgorandApi> => {
+          const { PeraWalletConnect } = await import('@perawallet/connect');
+          const peraWallet = new PeraWalletConnect();
+          return peraWallet;
+        },
+      },
+    ];
+  }
 
   static instance(): AlgorandConnector {
     if (AlgorandConnector.INSTANCE == null) {
@@ -27,7 +60,11 @@ export class AlgorandConnector implements IConnector<AlgorandApi> {
     if (this.provider != null) {
       return this.provider;
     }
-    return await this.connectNamed(gameInfo, SupportedAlgorandWallets.PERA);
+    const options = AlgorandConnector.getWalletOptions();
+    if (options.length === 0) {
+      throw new WalletNotFound(`No Algorand wallet found`);
+    }
+    return await this.connectExternal(gameInfo, await optionToActive(options[0]));
   };
   connectExternal = async (
     gameInfo: GameInfo,
@@ -43,18 +80,13 @@ export class AlgorandConnector implements IConnector<AlgorandApi> {
     if (this.provider?.getConnection().metadata?.name === name) {
       return this.provider;
     }
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
-    if (name !== SupportedAlgorandWallets.PERA) {
-      throw new UnsupportedWallet(`AlgorandProvider: unknown connection type ${name}`);
+    const provider = AlgorandConnector.getWalletOptions().find(
+      entry => entry.metadata.name === name
+    );
+    if (provider == null) {
+      throw new UnsupportedWallet(`AlgorandProvider: unsupported connection type ${name}`);
     }
-    const { PeraWalletConnect } = await import('@perawallet/connect');
-    const peraWallet = new PeraWalletConnect();
-    return await this.connectExternal(gameInfo, {
-      metadata: {
-        name: SupportedAlgorandWallets.PERA,
-      },
-      api: peraWallet,
-    });
+    return await this.connectExternal(gameInfo, await optionToActive(provider));
   };
   getProvider = (): undefined | AlgorandProvider => {
     return this.provider;

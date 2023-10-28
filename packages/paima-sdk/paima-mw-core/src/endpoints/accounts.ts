@@ -5,7 +5,7 @@ import {
 } from '../helpers/auxiliary-queries';
 import { checkCardanoWalletStatus } from '../wallets/cardano';
 import { checkEthWalletStatus } from '../wallets/evm';
-import { specificWalletLogin, stringToWalletMode } from '../wallets/wallets';
+import { specificWalletLogin } from '../wallets/wallets';
 import {
   getEmulatedBlocksActive,
   getPostingMode,
@@ -14,6 +14,7 @@ import {
   setEmulatedBlocksInactive,
 } from '../state';
 import type { Result, OldResult, Wallet } from '../types';
+import type { LoginInfo } from '../wallets/wallet-modes';
 
 /**
  * Wrapper function for all wallet status checking functions
@@ -39,15 +40,10 @@ async function checkWalletStatus(): Promise<OldResult> {
  * thus allowing the game to get past the login screen.
  * @param preferBatchedMode - If true (or truthy value) even EVM wallet inputs will be batched.
  */
-async function userWalletLogin(
-  loginType: string,
-  preferBatchedMode: boolean = false
-): Promise<Result<Wallet>> {
+async function userWalletLogin(loginInfo: LoginInfo): Promise<Result<Wallet>> {
   const errorFxn = buildEndpointErrorFxn('userWalletLogin');
 
-  const walletMode = stringToWalletMode(loginType);
-  // Unity bridge uses 0|1 instead of booleans
-  const response = await specificWalletLogin(walletMode, !!preferBatchedMode);
+  const response = await specificWalletLogin(loginInfo);
   if (!response.success) {
     return response;
   }

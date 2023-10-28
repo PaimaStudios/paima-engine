@@ -12,7 +12,7 @@ export default async function getCdeData(
   // https://github.com/dethcrypto/TypeChain/issues/767
   const events = (await timeout(
     extension.contract.getPastEvents('Transfer', {
-      filter: { to: extension.depositAddress.toLocaleLowerCase() },
+      filter: { to: extension.depositAddress.toLowerCase() },
       fromBlock: fromBlock,
       toBlock: toBlock,
     }),

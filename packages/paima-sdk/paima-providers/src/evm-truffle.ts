@@ -55,6 +55,7 @@ export class TruffleEvmProvider implements IProvider<TruffleApi> {
       api: hdWalletProvider,
       metadata: {
         name: 'truffle',
+        displayName: 'truffle',
       },
     };
     return new TruffleEvmProvider(conn, web3, address);

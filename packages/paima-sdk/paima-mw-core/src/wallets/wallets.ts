@@ -7,72 +7,37 @@ import {
   setBatchedPolkadotMode,
   setUnbatchedMode,
 } from '../state';
-import type { Result, Wallet } from '../types';
+import type { LoginInfo, Result, Wallet } from '../types';
 import { algorandLoginWrapper } from './algorand';
 import { cardanoLoginWrapper } from './cardano';
 import { evmLoginWrapper } from './evm';
 import { polkadotLoginWrapper } from './polkadot';
 import { WalletMode } from './wallet-modes';
 
-export function stringToWalletMode(loginType: string): WalletMode {
-  // TODO: this function has a bunch of magic strings in it which is not great
-  // some of these are also repeated in other places (ex: evmWalletModeToName)
-  switch (loginType) {
-    case 'metamask':
-      return WalletMode.METAMASK;
-    case 'evm-flint':
-      return WalletMode.EVM_FLINT;
-    case 'cardano':
-      return WalletMode.CARDANO;
-    case 'flint':
-      return WalletMode.CARDANO_FLINT;
-    case 'nufi':
-      return WalletMode.CARDANO_NUFI;
-    case 'nami':
-      return WalletMode.CARDANO_NAMI;
-    case 'eternl':
-      return WalletMode.CARDANO_ETERNL;
-    case 'polkadot':
-      return WalletMode.POLKADOT;
-    case 'pera':
-      return WalletMode.ALGORAND_PERA;
-    default:
-      return WalletMode.NO_WALLET;
-  }
-}
-
-export async function specificWalletLogin(
-  walletMode: WalletMode,
-  preferBatchedMode: boolean
-): Promise<Result<Wallet>> {
+export async function specificWalletLogin(loginInfo: LoginInfo): Promise<Result<Wallet>> {
   const errorFxn = buildEndpointErrorFxn('specificWalletLogin');
 
-  switch (walletMode) {
-    case WalletMode.METAMASK:
-    case WalletMode.EVM_FLINT:
-      if (preferBatchedMode) {
+  switch (loginInfo.mode) {
+    case WalletMode.EVM:
+      if (loginInfo.preferBatchedMode) {
         setBatchedEthMode();
       } else {
         setUnbatchedMode();
       }
-      return await evmLoginWrapper(walletMode);
+      return await evmLoginWrapper(loginInfo);
     case WalletMode.CARDANO:
-    case WalletMode.CARDANO_FLINT:
-    case WalletMode.CARDANO_NUFI:
-    case WalletMode.CARDANO_NAMI:
-    case WalletMode.CARDANO_ETERNL:
       setBatchedCardanoMode();
-      return await cardanoLoginWrapper(walletMode);
+      return await cardanoLoginWrapper(loginInfo);
     case WalletMode.POLKADOT:
       setBatchedPolkadotMode();
-      return await polkadotLoginWrapper();
-    case WalletMode.ALGORAND_PERA:
+      return await polkadotLoginWrapper(loginInfo);
+    case WalletMode.ALGORAND:
       setBatchedAlgorandMode();
-      return await algorandLoginWrapper();
+      return await algorandLoginWrapper(loginInfo);
     case WalletMode.NO_WALLET:
       return errorFxn(FE_ERR_SPECIFIC_WALLET_NOT_INSTALLED);
     default:
-      assertNever(walletMode, true);
+      assertNever(loginInfo, true);
       return errorFxn(FE_ERR_SPECIFIC_WALLET_NOT_INSTALLED);
   }
 }

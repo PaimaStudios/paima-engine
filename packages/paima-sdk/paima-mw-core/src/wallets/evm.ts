@@ -1,8 +1,4 @@
-import {
-  buildEndpointErrorFxn,
-  PaimaMiddlewareErrorCode,
-  FE_ERR_SPECIFIC_WALLET_NOT_INSTALLED,
-} from '../errors';
+import { buildEndpointErrorFxn, PaimaMiddlewareErrorCode } from '../errors';
 import {
   getChainCurrencyDecimals,
   getChainCurrencyName,
@@ -13,11 +9,12 @@ import {
   getChainUri,
   getGameName,
 } from '../state';
-import type { OldResult, Result, Wallet } from '../types';
+import type { LoginInfoMap, OldResult, Result, Wallet } from '../types';
 import { updateFee } from '../helpers/posting';
 
-import { WalletMode } from './wallet-modes';
-import { EvmConnector, UnsupportedWallet, WalletNotFound } from '@paima/providers';
+import { connectWallet } from './wallet-modes';
+import type { WalletMode } from './wallet-modes';
+import { EvmConnector } from '@paima/providers';
 
 interface SwitchError {
   code: number;
@@ -86,45 +83,25 @@ export async function checkEthWalletStatus(): Promise<OldResult> {
   return { success: true, message: '' };
 }
 
-function evmWalletModeToName(walletMode: WalletMode): string {
-  switch (walletMode) {
-    case WalletMode.METAMASK:
-      return 'metamask';
-    case WalletMode.EVM_FLINT:
-      return 'flint';
-    default:
-      return '';
-  }
-}
-
-export async function evmLoginWrapper(walletMode: WalletMode): Promise<Result<Wallet>> {
+export async function evmLoginWrapper(
+  loginInfo: LoginInfoMap[WalletMode.EVM]
+): Promise<Result<Wallet>> {
   const errorFxn = buildEndpointErrorFxn('evmLoginWrapper');
 
-  const walletName = evmWalletModeToName(walletMode);
-  if (!walletName) {
-    return errorFxn(PaimaMiddlewareErrorCode.WALLET_NOT_SUPPORTED);
-  }
-  console.log(`[evmLoginWrapper] Attempting to log into ${walletName}`);
-
-  try {
-    await EvmConnector.instance().connectNamed(
-      {
-        gameName: getGameName(),
-        gameChainId: '0x' + getChainId().toString(16),
-      },
-      walletName
-    );
-  } catch (err) {
-    if (err instanceof WalletNotFound || err instanceof UnsupportedWallet) {
-      return errorFxn(
-        PaimaMiddlewareErrorCode.CARDANO_WALLET_NOT_INSTALLED,
-        undefined,
-        FE_ERR_SPECIFIC_WALLET_NOT_INSTALLED
-      );
-    }
-    console.log(`[evmLoginWrapper] Error while logging into wallet ${walletName}`);
-
-    return errorFxn(PaimaMiddlewareErrorCode.EVM_LOGIN, err);
+  const gameInfo = {
+    gameName: getGameName(),
+    gameChainId: '0x' + getChainId().toString(16),
+  };
+  const loginResult = await connectWallet(
+    'evmLoginWrapper',
+    errorFxn,
+    PaimaMiddlewareErrorCode.EVM_LOGIN,
+    loginInfo,
+    EvmConnector.instance(),
+    gameInfo
+  );
+  if (loginResult.success === false) {
+    return loginResult;
   }
 
   try {
@@ -147,7 +124,7 @@ export async function evmLoginWrapper(walletMode: WalletMode): Promise<Result<Wa
   return {
     success: true,
     result: {
-      walletAddress: EvmConnector.instance().getOrThrowProvider().getAddress().toLocaleLowerCase(),
+      walletAddress: EvmConnector.instance().getOrThrowProvider().getAddress(),
     },
   };
 }

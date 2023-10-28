@@ -5,7 +5,6 @@ import { queryEndpoints } from './endpoints/queries';
 import { utilityEndpoints } from './endpoints/utility';
 
 import {
-  cardanoWalletLoginEndpoint,
   retrievePostingInfo,
   switchToBatchedCardanoMode,
   switchToBatchedEthMode,
@@ -59,6 +58,7 @@ export type * from './errors';
 // Only for use in game-specific middleware:
 export * from './types';
 export type * from './types';
+export { WalletMode } from './wallets/wallet-modes';
 export {
   paimaEndpoints,
   getBlockNumber,
@@ -83,7 +83,6 @@ export {
 
 // NOT FOR USE IN PRODUCTION, just internal endpoints and helper functions for easier testing and debugging:
 export {
-  cardanoWalletLoginEndpoint,
   retrievePostingInfo,
   switchToBatchedCardanoMode,
   switchToBatchedEthMode,

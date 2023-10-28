@@ -1,13 +1,62 @@
 import type { MetaMaskInpageProvider } from '@metamask/providers';
-import type { ActiveConnection, GameInfo, IConnector, IProvider, UserSignature } from './IProvider';
+import {
+  optionToActive,
+  type ActiveConnection,
+  type ConnectionOption,
+  type GameInfo,
+  type IConnector,
+  type IProvider,
+  type UserSignature,
+} from './IProvider';
 import { utf8ToHex } from 'web3-utils';
 import { ProviderApiError, ProviderNotInitialized, WalletNotFound } from './errors';
 
+type EIP1193Provider = MetaMaskInpageProvider;
+
+interface EIP5749ProviderInfo {
+  uuid: string;
+  name: string;
+  icon: `data:image/svg+xml;base64,${string}`;
+  description: string;
+}
+interface EIP5749ProviderWithInfo extends EIP1193Provider {
+  info: EIP5749ProviderInfo;
+}
+interface EIP5749EVMProviders {
+  /**
+   * The key is RECOMMENDED to be the name of the extension in snake_case. It MUST contain only lowercase letters, numbers, and underscores.
+   */
+  [index: string]: EIP5749ProviderWithInfo;
+}
+
+interface EIP6963ProviderInfo {
+  uuid: string;
+  name: string;
+  icon: string;
+  rdns: string;
+}
+interface EIP6963ProviderDetail {
+  info: EIP6963ProviderInfo;
+  provider: EIP1193Provider;
+}
+interface EIP6963AnnounceProviderEvent extends CustomEvent {
+  type: 'eip6963:announceProvider';
+  detail: EIP6963ProviderDetail;
+}
+
+const eip5953Providers: EIP6963ProviderDetail[] = [];
+
+window?.addEventListener('eip6963:announceProvider', (event: EIP6963AnnounceProviderEvent) => {
+  eip5953Providers.push(event.detail);
+});
+window?.dispatchEvent(new Event('eip6963:requestProvider'));
 declare global {
   interface Window {
-    ethereum: MetaMaskInpageProvider;
-    // API should be the same as MetaMask
-    evmproviders?: Record<string, MetaMaskInpageProvider>;
+    ethereum?: EIP1193Provider;
+    evmproviders?: EIP5749EVMProviders;
+  }
+  interface WindowEventMap {
+    'eip6963:announceProvider': EIP6963AnnounceProviderEvent;
   }
 }
 
@@ -28,36 +77,68 @@ interface AddEthereumChainParameter {
   rpcUrls?: string[];
 }
 
-export type EvmApi = MetaMaskInpageProvider;
+export type EvmApi = EIP1193Provider;
 export type EvmAddress = string;
-
-/**
- * NOTE: https://eips.ethereum.org/EIPS/eip-5749
- */
-
-// TODO: this should probably be dynamically detected
-enum SupportedEvmWallets {
-  Metamask = 'metamask',
-  Flint = 'flint',
-}
-
-const getProvider = (name: string): MetaMaskInpageProvider => {
-  switch (name) {
-    case 'metamask':
-      return window.ethereum;
-    default: {
-      if (window.evmproviders != null && name in window.evmproviders) {
-        return window.evmproviders[name];
-      }
-      throw new WalletNotFound(`EVM wallet ${name} not found`);
-    }
-  }
-};
 
 export class EvmConnector implements IConnector<EvmApi> {
   private provider: EvmProvider | undefined;
   private static INSTANCE: undefined | EvmConnector = undefined;
 
+  static getWalletOptions(): ConnectionOption<EvmApi>[] {
+    const seenNames: Set<string> = new Set();
+    const allWallets: ConnectionOption<EvmApi>[] = [];
+
+    // add options and de-duplicate based off the display name
+    // we can't duplicate on other keys because they have a different formats for different EIPs
+    const addOptions: (options: ConnectionOption<EvmApi>[]) => void = options => {
+      for (const option of options) {
+        if (seenNames.has(option.metadata.name)) continue;
+        seenNames.add(option.metadata.name);
+        allWallets.push(option);
+      }
+    };
+
+    // 1) Add EIP6963 and prioritize it for deduplicating
+    {
+      const eip6963Options = eip5953Providers.map(({ info, provider }) => ({
+        metadata: {
+          name: info.rdns,
+          displayName: info.name,
+          icon: info.icon,
+        },
+        api: () => Promise.resolve(provider),
+      }));
+      addOptions(eip6963Options);
+    }
+
+    // 2) Add EIP5749
+    {
+      const eip5749Options = Object.entries(window.evmproviders ?? {}).map(([key, provider]) => ({
+        metadata: {
+          name: key,
+          displayName: provider.info.name,
+          icon: provider.info.icon,
+        },
+        api: () => Promise.resolve(provider),
+      }));
+      addOptions(eip5749Options);
+    }
+
+    // Metamask doesn't support EIP6963 yet, but it plans to. In the meantime, we add it manually
+    if (window.ethereum != null && window.ethereum.isMetaMask) {
+      const ethereum = window.ethereum;
+      addOptions([
+        {
+          metadata: {
+            name: 'metamask',
+            displayName: 'Metamask',
+          },
+          api: () => Promise.resolve(ethereum),
+        },
+      ]);
+    }
+    return allWallets;
+  }
   static instance(): EvmConnector {
     if (EvmConnector.INSTANCE == null) {
       const newInstance = new EvmConnector();
@@ -69,8 +150,11 @@ export class EvmConnector implements IConnector<EvmApi> {
     if (this.provider != null) {
       return this.provider;
     }
-    // TODO: probably this should be better
-    return await this.connectNamed(gameInfo, SupportedEvmWallets.Metamask);
+    const options = EvmConnector.getWalletOptions();
+    if (options.length === 0) {
+      throw new WalletNotFound(`No EVM wallet found`);
+    }
+    return await this.connectExternal(gameInfo, await optionToActive(options[0]));
   };
   connectExternal = async (
     gameInfo: GameInfo,
@@ -83,7 +167,7 @@ export class EvmConnector implements IConnector<EvmApi> {
 
     // Update the selected Eth address if the user changes after logging in.
     // warning: not supported by all wallets (ex: Flint)
-    window.ethereum.on('accountsChanged', newAccounts => {
+    window.ethereum?.on('accountsChanged', newAccounts => {
       const accounts = newAccounts as string[];
       if (!accounts || !accounts[0] || accounts[0] !== this.provider?.address) {
         this.provider = undefined;
@@ -96,12 +180,11 @@ export class EvmConnector implements IConnector<EvmApi> {
       return this.provider;
     }
 
-    return await this.connectExternal(gameInfo, {
-      metadata: {
-        name,
-      },
-      api: getProvider(name),
-    });
+    const provider = EvmConnector.getWalletOptions().find(entry => entry.metadata.name === name);
+    if (provider == null) {
+      throw new WalletNotFound(`EVM wallet ${name} not found`);
+    }
+    return await this.connectExternal(gameInfo, await optionToActive(provider));
   };
   getProvider = (): undefined | EvmProvider => {
     return this.provider;

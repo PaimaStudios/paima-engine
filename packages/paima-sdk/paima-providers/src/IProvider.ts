@@ -1,12 +1,35 @@
 export type UserSignature = string;
 
+export type WalletOption = {
+  name: string; // name of the wallet used in APIs (as opposed to a human-friendly string)
+  displayName: string;
+  /**
+   * URI-encoded image
+   * DANGER: SVGs can contain Javascript, so these should only be rendered with <img> tags
+   *
+   * Note: not every wallet type has an image (ex: locally generated keypairs)
+   * Example values:
+   * data:image/svg+xml,...
+   * data:image/png;base64,...
+   */
+  icon?: undefined | string;
+};
+
 export type ActiveConnection<T> = {
-  metadata: {
-    // TODO: should also expose the icon for the wallet
-    name: string;
-  };
+  metadata: WalletOption;
   api: T;
 };
+export type ConnectionOption<T> = {
+  metadata: WalletOption;
+  api: () => Promise<T>;
+};
+export async function optionToActive<T>(option: ConnectionOption<T>): Promise<ActiveConnection<T>> {
+  const connection = {
+    metadata: option.metadata,
+    api: await option.api(),
+  };
+  return connection;
+}
 
 export type GameInfo = {
   gameName: string;
