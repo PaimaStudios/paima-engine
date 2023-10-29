@@ -12,8 +12,8 @@ import { algorandLoginWrapper } from './algorand';
 import { cardanoLoginWrapper } from './cardano';
 import { evmLoginWrapper } from './evm/injected';
 import { polkadotLoginWrapper } from './polkadot';
-import { WalletMode } from './wallet-modes';
 import { ethersLoginWrapper } from './evm/ethers';
+import { WalletMode } from '@paima/providers';
 
 export async function specificWalletLogin(loginInfo: LoginInfo): Promise<Result<Wallet>> {
   const errorFxn = buildEndpointErrorFxn('specificWalletLogin');

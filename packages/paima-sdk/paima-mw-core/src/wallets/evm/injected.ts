@@ -13,7 +13,7 @@ import type { LoginInfoMap, OldResult, Result, Wallet } from '../../types';
 import { updateFee } from '../../helpers/posting';
 
 import { connectInjected } from '../wallet-modes';
-import type { WalletMode } from '../wallet-modes';
+import type { WalletMode } from '@paima/providers';
 import { EvmInjectedConnector } from '@paima/providers';
 
 interface SwitchError {

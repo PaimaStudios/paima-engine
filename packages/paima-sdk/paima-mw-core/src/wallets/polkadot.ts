@@ -1,8 +1,7 @@
 import { buildEndpointErrorFxn, PaimaMiddlewareErrorCode } from '../errors';
 import { getGameName } from '../state';
 import type { LoginInfoMap, Result, Wallet } from '../types';
-import { PolkadotConnector } from '@paima/providers';
-import type { WalletMode } from './wallet-modes';
+import { PolkadotConnector, WalletMode } from '@paima/providers';
 import { connectInjected } from './wallet-modes';
 
 export async function polkadotLoginWrapper(

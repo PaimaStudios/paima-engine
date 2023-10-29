@@ -3,8 +3,7 @@ import { getChainId, getGameName } from '../../state';
 import type { LoginInfoMap, Result, Wallet } from '../../types';
 import { updateFee } from '../../helpers/posting';
 
-import type { WalletMode } from '../wallet-modes';
-import type { EthersApi, IProvider } from '@paima/providers';
+import type { EthersApi, IProvider, WalletMode } from '@paima/providers';
 import { EthersConnector } from '@paima/providers';
 
 async function connectWallet(
