@@ -4,7 +4,7 @@ import {
   localRemoteVersionsCompatible,
 } from '../helpers/auxiliary-queries';
 import { checkCardanoWalletStatus } from '../wallets/cardano';
-import { checkEthWalletStatus } from '../wallets/evm';
+import { checkEthWalletStatus } from '../wallets/evm/injected';
 import { specificWalletLogin } from '../wallets/wallets';
 import {
   getEmulatedBlocksActive,

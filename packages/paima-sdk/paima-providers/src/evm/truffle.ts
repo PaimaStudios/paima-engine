@@ -1,13 +1,12 @@
 import type HDWalletProvider from '@truffle/hdwallet-provider';
+import type { TransactionConfig } from 'web3-core';
 import Web3 from 'web3';
-import type { ActiveConnection, IProvider, UserSignature } from './IProvider';
-import type { EvmAddress } from './evm';
-import { ProviderNotInitialized } from './errors';
+import type { ActiveConnection, IProvider, UserSignature } from '../IProvider';
+import { DEFAULT_GAS_LIMIT, type EvmAddress } from './types';
+import { ProviderNotInitialized } from '../errors';
 import { utf8ToHex } from 'web3-utils';
 
 export type TruffleApi = HDWalletProvider;
-
-export const DEFAULT_GAS_LIMIT = 100000;
 
 export class TruffleConnector {
   private provider: TruffleEvmProvider | undefined;
@@ -21,7 +20,7 @@ export class TruffleConnector {
     return TruffleConnector.INSTANCE;
   }
 
-  connectExternal = async (conn: HDWalletProvider): Promise<TruffleEvmProvider> => {
+  connectExternal = async (conn: TruffleApi): Promise<TruffleEvmProvider> => {
     this.provider = TruffleEvmProvider.init(conn);
     return this.provider;
   };
@@ -30,7 +29,7 @@ export class TruffleConnector {
   };
   getOrThrowProvider = (): TruffleEvmProvider => {
     if (this.provider == null) {
-      throw new ProviderNotInitialized(`EvmConnector not initialized yet`);
+      throw new ProviderNotInitialized(`TruffleConnector not initialized yet`);
     }
     return this.provider;
   };
@@ -45,14 +44,14 @@ export class TruffleEvmProvider implements IProvider<TruffleApi> {
     readonly address: EvmAddress
   ) {}
 
-  static init = (hdWalletProvider: HDWalletProvider): TruffleEvmProvider => {
+  static init = (api: TruffleApi): TruffleEvmProvider => {
     // The line below should work without the <any> addition, and does in other projects (with the same versions of imported packages),
     // but for some reason causes typing issues here.
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    const web3 = new Web3(<any>hdWalletProvider);
-    const address = hdWalletProvider.getAddress();
+    const web3 = new Web3(<any>api);
+    const address = api.getAddress();
     const conn = {
-      api: hdWalletProvider,
+      api: api,
       metadata: {
         name: 'truffle',
         displayName: 'truffle',
@@ -72,7 +71,7 @@ export class TruffleEvmProvider implements IProvider<TruffleApi> {
     const signature = await this.web3.eth.personal.sign(hexMessage, this.getAddress(), '');
     return signature;
   };
-  sendTransaction = async (tx: Record<string, any>): Promise<string> => {
+  sendTransaction = async (tx: TransactionConfig): Promise<string> => {
     const nonce = await this.web3.eth.getTransactionCount(this.address);
     const finalTx = {
       ...tx,
@@ -80,6 +79,6 @@ export class TruffleEvmProvider implements IProvider<TruffleApi> {
       gasLimit: DEFAULT_GAS_LIMIT,
     };
     const result = await this.web3.eth.sendTransaction(finalTx);
-    return result?.transactionHash || '';
+    return result.transactionHash;
   };
 }

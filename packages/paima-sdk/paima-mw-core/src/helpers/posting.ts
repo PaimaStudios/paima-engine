@@ -36,7 +36,7 @@ import {
   TruffleConnector,
   AlgorandConnector,
   CardanoConnector,
-  EvmConnector,
+  EvmInjectedConnector,
   PolkadotConnector,
 } from '@paima/providers';
 import type { BatchedSubunit } from '@paima/concise';
@@ -115,14 +115,14 @@ export async function postConciselyEncodedData(gameInput: string): Promise<Resul
   switch (postingMode) {
     case PostingMode.UNBATCHED:
       return await postString(
-        EvmConnector.instance().getOrThrowProvider().sendTransaction,
-        EvmConnector.instance().getOrThrowProvider().getAddress(),
+        EvmInjectedConnector.instance().getOrThrowProvider().sendTransaction,
+        EvmInjectedConnector.instance().getOrThrowProvider().getAddress(),
         gameInput
       );
     case PostingMode.BATCHED_ETH:
       return await buildBatchedSubunit(
         AddressType.EVM,
-        EvmConnector.instance().getOrThrowProvider().getAddress(),
+        EvmInjectedConnector.instance().getOrThrowProvider().getAddress(),
         gameInput
       ).then(submitToBatcher);
     case PostingMode.BATCHED_CARDANO:

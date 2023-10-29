@@ -1,4 +1,4 @@
-import { buildEndpointErrorFxn, PaimaMiddlewareErrorCode } from '../errors';
+import { buildEndpointErrorFxn, PaimaMiddlewareErrorCode } from '../../errors';
 import {
   getChainCurrencyDecimals,
   getChainCurrencyName,
@@ -8,13 +8,13 @@ import {
   getChainName,
   getChainUri,
   getGameName,
-} from '../state';
-import type { LoginInfoMap, OldResult, Result, Wallet } from '../types';
-import { updateFee } from '../helpers/posting';
+} from '../../state';
+import type { LoginInfoMap, OldResult, Result, Wallet } from '../../types';
+import { updateFee } from '../../helpers/posting';
 
-import { connectWallet } from './wallet-modes';
-import type { WalletMode } from './wallet-modes';
-import { EvmConnector } from '@paima/providers';
+import { connectInjectedWallet } from '../wallet-modes';
+import type { WalletMode } from '../wallet-modes';
+import { EvmInjectedConnector } from '@paima/providers';
 
 interface SwitchError {
   code: number;
@@ -27,14 +27,14 @@ async function switchChain(): Promise<boolean> {
   const hexChainId = '0x' + getChainId().toString(16);
 
   try {
-    await EvmConnector.instance().getOrThrowProvider().switchChain(hexChainId);
+    await EvmInjectedConnector.instance().getOrThrowProvider().switchChain(hexChainId);
     return await verifyWalletChain();
   } catch (switchError) {
     // This error code indicates that the chain has not been added to the wallet.
     const se = switchError as SwitchError;
     if (se.hasOwnProperty('code') && se.code === CHAIN_NOT_ADDED_ERROR_CODE) {
       try {
-        await EvmConnector.instance()
+        await EvmInjectedConnector.instance()
           .getOrThrowProvider()
           .addChain({
             chainId: hexChainId,
@@ -48,7 +48,7 @@ async function switchChain(): Promise<boolean> {
             // blockExplorerUrls: Chain not added with empty string.
             blockExplorerUrls: getChainExplorerUri() ? [getChainExplorerUri()] : undefined,
           });
-        await EvmConnector.instance().getOrThrowProvider().switchChain(hexChainId);
+        await EvmInjectedConnector.instance().getOrThrowProvider().switchChain(hexChainId);
         return await verifyWalletChain();
       } catch (addError) {
         errorFxn(PaimaMiddlewareErrorCode.ERROR_ADDING_CHAIN, addError);
@@ -62,13 +62,13 @@ async function switchChain(): Promise<boolean> {
 }
 
 async function verifyWalletChain(): Promise<boolean> {
-  return await EvmConnector.instance().getOrThrowProvider().verifyWalletChain();
+  return await EvmInjectedConnector.instance().getOrThrowProvider().verifyWalletChain();
 }
 
 export async function checkEthWalletStatus(): Promise<OldResult> {
   const errorFxn = buildEndpointErrorFxn('checkEthWalletStatus');
 
-  if (EvmConnector.instance().getProvider() === null) {
+  if (EvmInjectedConnector.instance().getProvider() === null) {
     return errorFxn(PaimaMiddlewareErrorCode.NO_ADDRESS_SELECTED);
   }
 
@@ -84,7 +84,7 @@ export async function checkEthWalletStatus(): Promise<OldResult> {
 }
 
 export async function evmLoginWrapper(
-  loginInfo: LoginInfoMap[WalletMode.EVM]
+  loginInfo: LoginInfoMap[WalletMode.EvmInjected]
 ): Promise<Result<Wallet>> {
   const errorFxn = buildEndpointErrorFxn('evmLoginWrapper');
 
@@ -92,12 +92,12 @@ export async function evmLoginWrapper(
     gameName: getGameName(),
     gameChainId: '0x' + getChainId().toString(16),
   };
-  const loginResult = await connectWallet(
+  const loginResult = await connectInjectedWallet(
     'evmLoginWrapper',
     errorFxn,
     PaimaMiddlewareErrorCode.EVM_LOGIN,
     loginInfo,
-    EvmConnector.instance(),
+    EvmInjectedConnector.instance(),
     gameInfo
   );
   if (loginResult.success === false) {
@@ -124,7 +124,7 @@ export async function evmLoginWrapper(
   return {
     success: true,
     result: {
-      walletAddress: EvmConnector.instance().getOrThrowProvider().getAddress(),
+      walletAddress: EvmInjectedConnector.instance().getOrThrowProvider().getAddress(),
     },
   };
 }

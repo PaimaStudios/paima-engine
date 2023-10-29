@@ -4,7 +4,7 @@ import type { SignFunction } from '../types';
 import {
   AlgorandConnector,
   CardanoConnector,
-  EvmConnector,
+  EvmInjectedConnector,
   PolkadotConnector,
 } from '@paima/providers';
 import { createMessageForBatcher, type BatchedSubunit } from '@paima/concise';
@@ -23,7 +23,7 @@ export function batchedToJsonString(b: BatchedSubunit): string {
 function selectSignFunction(addressType: AddressType): SignFunction {
   switch (addressType) {
     case AddressType.EVM:
-      return EvmConnector.instance().getOrThrowProvider().signMessage;
+      return EvmInjectedConnector.instance().getOrThrowProvider().signMessage;
     case AddressType.CARDANO:
       return CardanoConnector.instance().getOrThrowProvider().signMessage;
     case AddressType.POLKADOT:

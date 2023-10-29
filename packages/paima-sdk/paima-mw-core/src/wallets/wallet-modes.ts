@@ -7,6 +7,7 @@ import type {
   IConnector,
   IProvider,
   GameInfo,
+  EthersApi,
 } from '@paima/providers';
 import { WalletNotFound, UnsupportedWallet } from '@paima/providers';
 import type { EndpointErrorFxn } from '../errors';
@@ -16,14 +17,15 @@ import { FE_ERR_SPECIFIC_WALLET_NOT_INSTALLED } from '../errors';
 import assertNever from 'assert-never';
 
 export const enum WalletMode {
-  NO_WALLET,
-  EVM,
-  CARDANO,
-  POLKADOT,
-  ALGORAND,
+  NoWallet,
+  EvmInjected,
+  EvmEthers,
+  Cardano,
+  Polkadot,
+  Algorand,
 }
 
-export type Preference<T> =
+export type InjectionPreference<T> =
   | {
       name: string;
     }
@@ -32,14 +34,15 @@ export type Preference<T> =
     };
 
 export type BaseLoginInfo<Api> = {
-  preference?: Preference<Api>;
+  preference?: InjectionPreference<Api>;
 };
 export type LoginInfoMap = {
-  [WalletMode.EVM]: BaseLoginInfo<EvmApi> & { preferBatchedMode: boolean };
-  [WalletMode.CARDANO]: BaseLoginInfo<CardanoApi>;
-  [WalletMode.POLKADOT]: BaseLoginInfo<PolkadotApi>;
-  [WalletMode.ALGORAND]: BaseLoginInfo<AlgorandApi>;
-  [WalletMode.NO_WALLET]: void;
+  [WalletMode.EvmInjected]: BaseLoginInfo<EvmApi> & { preferBatchedMode: boolean };
+  [WalletMode.EvmEthers]: { connection: ActiveConnection<EthersApi>; preferBatchedMode: boolean };
+  [WalletMode.Cardano]: BaseLoginInfo<CardanoApi>;
+  [WalletMode.Polkadot]: BaseLoginInfo<PolkadotApi>;
+  [WalletMode.Algorand]: BaseLoginInfo<AlgorandApi>;
+  [WalletMode.NoWallet]: void;
 };
 
 type ToUnion<T> = {
@@ -55,7 +58,7 @@ function getWalletName(info: BaseLoginInfo<unknown>): undefined | string {
   }
   return info.preference.connection.metadata.name;
 }
-export async function connectWallet<Api>(
+export async function connectInjectedWallet<Api>(
   typeName: string,
   errorFxn: EndpointErrorFxn,
   errorCode: PaimaMiddlewareErrorCode,

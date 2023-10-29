@@ -7,7 +7,7 @@ import type { PostingInfo, PostingModeString } from './types';
 import {
   AlgorandConnector,
   CardanoConnector,
-  EvmConnector,
+  EvmInjectedConnector,
   PolkadotConnector,
 } from '@paima/providers';
 import assertNever from 'assert-never';
@@ -120,13 +120,13 @@ export const getActiveAddress = (): string => {
   switch (postingMode) {
     case PostingMode.UNBATCHED:
     case PostingMode.BATCHED_ETH:
-      return EvmConnector.instance().getOrThrowProvider().getAddress();
+      return EvmInjectedConnector.instance().getOrThrowProvider().getAddress();
     case PostingMode.BATCHED_CARDANO:
       return CardanoConnector.instance().getOrThrowProvider().getAddress();
     case PostingMode.BATCHED_POLKADOT:
       return PolkadotConnector.instance().getOrThrowProvider().getAddress();
     case PostingMode.AUTOMATIC:
-      return EvmConnector.instance().getOrThrowProvider().getAddress();
+      return EvmInjectedConnector.instance().getOrThrowProvider().getAddress();
     case PostingMode.BATCHED_ALGORAND:
       return AlgorandConnector.instance().getOrThrowProvider().getAddress();
     default:

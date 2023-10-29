@@ -7,9 +7,10 @@ import {
   type IConnector,
   type IProvider,
   type UserSignature,
-} from './IProvider';
+} from '../IProvider';
 import { utf8ToHex } from 'web3-utils';
-import { ProviderApiError, ProviderNotInitialized, WalletNotFound } from './errors';
+import { ProviderApiError, ProviderNotInitialized, WalletNotFound } from '../errors';
+import type { EvmAddress } from './types';
 
 type EIP1193Provider = MetaMaskInpageProvider;
 
@@ -78,11 +79,10 @@ interface AddEthereumChainParameter {
 }
 
 export type EvmApi = EIP1193Provider;
-export type EvmAddress = string;
 
-export class EvmConnector implements IConnector<EvmApi> {
-  private provider: EvmProvider | undefined;
-  private static INSTANCE: undefined | EvmConnector = undefined;
+export class EvmInjectedConnector implements IConnector<EvmApi> {
+  private provider: EvmInjectedProvider | undefined;
+  private static INSTANCE: undefined | EvmInjectedConnector = undefined;
 
   static getWalletOptions(): ConnectionOption<EvmApi>[] {
     const seenNames: Set<string> = new Set();
@@ -137,20 +137,31 @@ export class EvmConnector implements IConnector<EvmApi> {
         },
       ]);
     }
+    // some wallets aggressively put themselves in the list of wallets the user has installed
+    // even if the user has never actually used these
+    // we put these wallets at the bottom of the priority
+    const aggressiveWallets = ['com.brave.wallet'];
+    allWallets.sort((a, b) => {
+      const aAggressive = aggressiveWallets.includes(a.metadata.name);
+      const bAggressive = aggressiveWallets.includes(b.metadata.name);
+      if (aAggressive && !bAggressive) return 1;
+      if (bAggressive && !aAggressive) return -1;
+      return 0;
+    });
     return allWallets;
   }
-  static instance(): EvmConnector {
-    if (EvmConnector.INSTANCE == null) {
-      const newInstance = new EvmConnector();
-      EvmConnector.INSTANCE = newInstance;
+  static instance(): EvmInjectedConnector {
+    if (EvmInjectedConnector.INSTANCE == null) {
+      const newInstance = new EvmInjectedConnector();
+      EvmInjectedConnector.INSTANCE = newInstance;
     }
-    return EvmConnector.INSTANCE;
+    return EvmInjectedConnector.INSTANCE;
   }
-  connectSimple = async (gameInfo: GameInfo): Promise<EvmProvider> => {
+  connectSimple = async (gameInfo: GameInfo): Promise<EvmInjectedProvider> => {
     if (this.provider != null) {
       return this.provider;
     }
-    const options = EvmConnector.getWalletOptions();
+    const options = EvmInjectedConnector.getWalletOptions();
     if (options.length === 0) {
       throw new WalletNotFound(`No EVM wallet found`);
     }
@@ -159,11 +170,11 @@ export class EvmConnector implements IConnector<EvmApi> {
   connectExternal = async (
     gameInfo: GameInfo,
     conn: ActiveConnection<EvmApi>
-  ): Promise<EvmProvider> => {
+  ): Promise<EvmInjectedProvider> => {
     if (this.provider?.getConnection().metadata?.name === conn.metadata.name) {
       return this.provider;
     }
-    this.provider = await EvmProvider.init(gameInfo, conn);
+    this.provider = await EvmInjectedProvider.init(gameInfo, conn);
 
     // Update the selected Eth address if the user changes after logging in.
     // warning: not supported by all wallets (ex: Flint)
@@ -175,23 +186,25 @@ export class EvmConnector implements IConnector<EvmApi> {
     });
     return this.provider;
   };
-  connectNamed = async (gameInfo: GameInfo, name: string): Promise<EvmProvider> => {
+  connectNamed = async (gameInfo: GameInfo, name: string): Promise<EvmInjectedProvider> => {
     if (this.provider?.getConnection().metadata?.name === name) {
       return this.provider;
     }
 
-    const provider = EvmConnector.getWalletOptions().find(entry => entry.metadata.name === name);
+    const provider = EvmInjectedConnector.getWalletOptions().find(
+      entry => entry.metadata.name === name
+    );
     if (provider == null) {
       throw new WalletNotFound(`EVM wallet ${name} not found`);
     }
     return await this.connectExternal(gameInfo, await optionToActive(provider));
   };
-  getProvider = (): undefined | EvmProvider => {
+  getProvider = (): undefined | EvmInjectedProvider => {
     return this.provider;
   };
-  getOrThrowProvider = (): EvmProvider => {
+  getOrThrowProvider = (): EvmInjectedProvider => {
     if (this.provider == null) {
-      throw new ProviderNotInitialized(`EvmConnector not initialized yet`);
+      throw new ProviderNotInitialized(`EvmInjectedConnector not initialized yet`);
     }
     return this.provider;
   };
@@ -200,7 +213,7 @@ export class EvmConnector implements IConnector<EvmApi> {
   };
 }
 
-export class EvmProvider implements IProvider<EvmApi> {
+export class EvmInjectedProvider implements IProvider<EvmApi> {
   constructor(
     private readonly conn: ActiveConnection<EvmApi>,
     private readonly gameInfo: GameInfo,
@@ -209,7 +222,7 @@ export class EvmProvider implements IProvider<EvmApi> {
   static init = async (
     gameInfo: GameInfo,
     conn: ActiveConnection<EvmApi>
-  ): Promise<EvmProvider> => {
+  ): Promise<EvmInjectedProvider> => {
     const accounts = (await conn.api.request({
       method: 'eth_requestAccounts',
     })) as string[];
@@ -217,7 +230,7 @@ export class EvmProvider implements IProvider<EvmApi> {
       throw new ProviderApiError('Unknown error while receiving EVM accounts');
     }
 
-    return new EvmProvider(conn, gameInfo, accounts[0]);
+    return new EvmInjectedProvider(conn, gameInfo, accounts[0]);
   };
   getConnection = (): ActiveConnection<EvmApi> => {
     return this.conn;

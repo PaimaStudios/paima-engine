@@ -1,12 +1,10 @@
-export type * from './algorand';
-export type * from './cardano';
-export type * from './evm';
-export type * from './evm-truffle';
-export type * from './polkadot';
-export type * from './IProvider';
 export * from './algorand';
 export * from './cardano';
-export * from './evm';
-export * from './evm-truffle';
+export * from './evm/index';
 export * from './polkadot';
 export * from './errors';
+export type * from './algorand';
+export type * from './cardano';
+export type * from './evm/index';
+export type * from './polkadot';
+export type * from './IProvider';
