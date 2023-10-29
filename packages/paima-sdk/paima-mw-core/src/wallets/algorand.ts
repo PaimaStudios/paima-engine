@@ -3,7 +3,7 @@ import { PaimaMiddlewareErrorCode, buildEndpointErrorFxn } from '../errors';
 import { AlgorandConnector } from '@paima/providers';
 import { getGameName } from '../state';
 import type { WalletMode } from './wallet-modes';
-import { connectInjectedWallet } from './wallet-modes';
+import { connectInjected } from './wallet-modes';
 
 export async function algorandLoginWrapper(
   loginInfo: LoginInfoMap[WalletMode.Algorand]
@@ -14,7 +14,7 @@ export async function algorandLoginWrapper(
     gameName: getGameName(),
     gameChainId: undefined, // Not needed because of batcher
   };
-  const loginResult = await connectInjectedWallet(
+  const loginResult = await connectInjected(
     'algorandLoginWrapper',
     errorFxn,
     PaimaMiddlewareErrorCode.ALGORAND_LOGIN,

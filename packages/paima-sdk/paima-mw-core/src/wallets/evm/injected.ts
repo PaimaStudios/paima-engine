@@ -12,7 +12,7 @@ import {
 import type { LoginInfoMap, OldResult, Result, Wallet } from '../../types';
 import { updateFee } from '../../helpers/posting';
 
-import { connectInjectedWallet } from '../wallet-modes';
+import { connectInjected } from '../wallet-modes';
 import type { WalletMode } from '../wallet-modes';
 import { EvmInjectedConnector } from '@paima/providers';
 
@@ -92,7 +92,7 @@ export async function evmLoginWrapper(
     gameName: getGameName(),
     gameChainId: '0x' + getChainId().toString(16),
   };
-  const loginResult = await connectInjectedWallet(
+  const loginResult = await connectInjected(
     'evmLoginWrapper',
     errorFxn,
     PaimaMiddlewareErrorCode.EVM_LOGIN,

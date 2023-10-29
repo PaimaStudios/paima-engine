@@ -3,7 +3,7 @@ import { getGameName } from '../state';
 import type { LoginInfoMap, Result, Wallet } from '../types';
 import { PolkadotConnector } from '@paima/providers';
 import type { WalletMode } from './wallet-modes';
-import { connectInjectedWallet } from './wallet-modes';
+import { connectInjected } from './wallet-modes';
 
 export async function polkadotLoginWrapper(
   loginInfo: LoginInfoMap[WalletMode.Polkadot]
@@ -14,7 +14,7 @@ export async function polkadotLoginWrapper(
     gameName: getGameName(),
     gameChainId: undefined, // Not needed because of batcher
   };
-  const loginResult = await connectInjectedWallet(
+  const loginResult = await connectInjected(
     'polkadotLoginWrapper',
     errorFxn,
     PaimaMiddlewareErrorCode.POLKADOT_LOGIN,

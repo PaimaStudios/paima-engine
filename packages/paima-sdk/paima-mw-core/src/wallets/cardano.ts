@@ -1,7 +1,7 @@
 import type { LoginInfoMap, OldResult, Result, Wallet } from '../types';
 import { buildEndpointErrorFxn, PaimaMiddlewareErrorCode } from '../errors';
 import type { WalletMode } from './wallet-modes';
-import { connectInjectedWallet } from './wallet-modes';
+import { connectInjected } from './wallet-modes';
 import { CardanoConnector } from '@paima/providers';
 import { getGameName } from '../state';
 
@@ -27,7 +27,7 @@ export async function cardanoLoginWrapper(
     gameName: getGameName(),
     gameChainId: undefined, // Not needed because of batcher
   };
-  const loginResult = await connectInjectedWallet(
+  const loginResult = await connectInjected(
     'cardanoLoginWrapper',
     errorFxn,
     PaimaMiddlewareErrorCode.CARDANO_LOGIN,
