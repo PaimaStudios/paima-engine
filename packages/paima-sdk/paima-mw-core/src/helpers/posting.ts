@@ -34,7 +34,8 @@ import {
   deploymentChainBlockHeightToEmulated,
   emulatedBlocksActiveOnBackend,
 } from './auxiliary-queries';
-import { EthersEvmProvider, EvmInjectedProvider } from '@paima/providers';
+import { EthersEvmProvider, EvmInjectedProvider, WalletModeMap } from '@paima/providers';
+import type { WalletMode } from '@paima/providers';
 import type { BatchedSubunit } from '@paima/concise';
 import assertNever from 'assert-never';
 
@@ -72,10 +73,11 @@ export async function updateFee(): Promise<void> {
  */
 export const postConciseData = async (
   data: string,
-  errorFxn: EndpointErrorFxn
+  errorFxn: EndpointErrorFxn,
+  mode?: WalletMode
 ): Promise<PostDataResponse | FailedResult> => {
   try {
-    const response = await postConciselyEncodedData(data);
+    const response = await postConciselyEncodedData(data, mode);
     if (!response.success) {
       return errorFxn(
         PaimaMiddlewareErrorCode.ERROR_POSTING_TO_CHAIN,
@@ -102,10 +104,13 @@ export const postConciseData = async (
  * @param gameInput
  * @returns On success the block number of the transaction
  */
-export async function postConciselyEncodedData(gameInput: string): Promise<Result<number>> {
+export async function postConciselyEncodedData(
+  gameInput: string,
+  mode?: WalletMode
+): Promise<Result<number>> {
   const errorFxn = buildEndpointErrorFxn('postConciselyEncodedData');
 
-  const provider = getDefaultProvider();
+  const provider = mode == null ? getDefaultProvider() : WalletModeMap[mode].getOrThrowProvider();
   if (provider == null) {
     const errorCode = PaimaMiddlewareErrorCode.WALLET_NOT_CONNECTED;
     return errorFxn(errorCode, 'Failed to get default provider');
