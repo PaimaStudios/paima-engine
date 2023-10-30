@@ -8,12 +8,13 @@ import {
   getChainName,
   getChainUri,
   getGameName,
+  hasLogin,
 } from '../../state';
 import type { LoginInfoMap, OldResult, Result } from '../../types';
 import { updateFee } from '../../helpers/posting';
 
 import { connectInjected } from '../wallet-modes';
-import type { ApiForMode, IProvider, WalletMode } from '@paima/providers';
+import { ApiForMode, IProvider, WalletMode } from '@paima/providers';
 import { EvmInjectedConnector } from '@paima/providers';
 
 interface SwitchError {
@@ -68,9 +69,11 @@ async function verifyWalletChain(): Promise<boolean> {
 export async function checkEthWalletStatus(): Promise<OldResult> {
   const errorFxn = buildEndpointErrorFxn('checkEthWalletStatus');
 
-  if (EvmInjectedConnector.instance().getProvider() === null) {
-    // TODO: this is not quite right. We want to know if we had a provider, but not anymore
+  if (!hasLogin(WalletMode.EvmInjected)) {
     return { success: true, message: '' };
+  }
+  if (EvmInjectedConnector.instance().getProvider() === null) {
+    return errorFxn(PaimaMiddlewareErrorCode.NO_ADDRESS_SELECTED);
   }
 
   try {

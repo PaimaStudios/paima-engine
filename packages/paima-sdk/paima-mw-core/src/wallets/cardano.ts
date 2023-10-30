@@ -1,25 +1,20 @@
 import type { LoginInfoMap, OldResult, Result } from '../types';
 import { buildEndpointErrorFxn, PaimaMiddlewareErrorCode } from '../errors';
 import { connectInjected } from './wallet-modes';
-import { CardanoConnector } from '@paima/providers';
-import type { ApiForMode, IProvider, WalletMode } from '@paima/providers';
-import { getGameName } from '../state';
+import { CardanoConnector, WalletMode } from '@paima/providers';
+import type { ApiForMode, IProvider } from '@paima/providers';
+import { getGameName, hasLogin } from '../state';
 
 export async function checkCardanoWalletStatus(): Promise<OldResult> {
   const errorFxn = buildEndpointErrorFxn('checkCardanoWalletStatus');
 
-  const provider = CardanoConnector.instance().getProvider();
-  if (provider == null) {
-    // TODO: this is not quite right. We want to know if we had a provider, but not anymore
+  if (!hasLogin(WalletMode.Cardano)) {
     return { success: true, message: '' };
   }
-  const currentAddress = provider.getAddress().address;
-  if (currentAddress === '') {
-    // TODO: should never happen. Not sure why we're checking this
+  const provider = CardanoConnector.instance().getProvider();
+  if (provider == null) {
     return errorFxn(PaimaMiddlewareErrorCode.NO_ADDRESS_SELECTED);
   }
-
-  // TODO: more proper checking?
 
   return { success: true, message: '' };
 }

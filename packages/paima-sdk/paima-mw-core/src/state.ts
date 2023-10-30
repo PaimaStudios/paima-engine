@@ -82,6 +82,12 @@ export const setPostingMode = (provider: IProvider<unknown>, newMode: PostingMod
   return newMode;
 };
 
+let loginMap: Map<WalletMode, boolean> = new Map();
+export const hasLogin = (mode: WalletMode): boolean => loginMap.has(mode);
+export const addLogin = (mode: WalletMode): void => {
+  loginMap.set(mode, true);
+};
+
 export const setFee = (newFee: string): FeeCache =>
   (fee = {
     lastFetch: new Date().getTime(),
