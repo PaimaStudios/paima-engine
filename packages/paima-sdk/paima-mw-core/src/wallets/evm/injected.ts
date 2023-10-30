@@ -14,7 +14,8 @@ import type { LoginInfoMap, OldResult, Result } from '../../types';
 import { updateFee } from '../../helpers/posting';
 
 import { connectInjected } from '../wallet-modes';
-import { ApiForMode, IProvider, WalletMode } from '@paima/providers';
+import { WalletMode } from '@paima/providers';
+import type { ApiForMode, IProvider } from '@paima/providers';
 import { EvmInjectedConnector } from '@paima/providers';
 
 interface SwitchError {

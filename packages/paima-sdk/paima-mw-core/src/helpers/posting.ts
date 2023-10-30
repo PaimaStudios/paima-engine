@@ -1,4 +1,4 @@
-import { retrieveFee, retryPromise, wait, AddressType } from '@paima/utils';
+import { retrieveFee, retryPromise, wait } from '@paima/utils';
 import type { EndpointErrorFxn } from '../errors';
 import {
   BatcherRejectionCode,
