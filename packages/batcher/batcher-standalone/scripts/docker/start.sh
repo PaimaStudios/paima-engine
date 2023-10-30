@@ -3,7 +3,7 @@
 if [[ ! -f "./paima-batcher-linux" ]]; then
     echo "Error: paima-batcher-linux binary not found. Docker requires the linux binary for the application."
     exit 1
-else
+fi
 
 if [ ! -x ./paima-batcher-linux ]; then chmod +x ./paima-batcher-linux; fi
 
