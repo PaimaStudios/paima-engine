@@ -215,6 +215,24 @@ export class EvmInjectedConnector implements IConnector<EvmApi> {
   };
 }
 
+/**
+ * For some reason I can't find any official type definitions for this
+ * https://docs.metamask.io/wallet/reference/eth_sendtransaction/
+ */
+type Web3TransactionRequest = {
+  to?: string;
+  from: string;
+
+  gas?: string;
+  gasPrice?: string;
+
+  data: string;
+  value?: string;
+
+  maxPriorityFeePerGas?: string;
+  maxFeePerGas?: string;
+};
+
 export class EvmInjectedProvider implements IProvider<EvmApi> {
   constructor(
     private readonly conn: ActiveConnection<EvmApi>,
@@ -291,7 +309,7 @@ export class EvmInjectedProvider implements IProvider<EvmApi> {
       throw new ProviderApiError(`[switchChain] error: ${e?.message}`, e?.code);
     }
   };
-  sendTransaction = async (tx: Record<string, any>): Promise<string> => {
+  sendTransaction = async (tx: Web3TransactionRequest): Promise<string> => {
     await this.verifyWalletChain();
     try {
       const hash = await this.conn.api.request({

@@ -28,11 +28,28 @@ function getTxTemplate<T extends keyof PaimaL2Contract['methods']>(
   };
 }
 
+/** Common parameters between the different EVM providers */
+type CommonTransactionRequest = {
+  to?: string;
+  from: string;
+  nonce?: string;
+
+  gasPrice?: string;
+
+  data: string;
+  value?: string;
+
+  maxPriorityFeePerGas?: string;
+  maxFeePerGas?: string;
+};
+
+export type PostFxn = (tx: CommonTransactionRequest) => Promise<string>;
+
 export function buildDirectTx(
   userAddress: string,
   methodName: 'paimaSubmitGameInput',
   dataUtf8: string
-): Record<string, any> {
+): CommonTransactionRequest {
   const hexData = utf8ToHex(dataUtf8);
   const txTemplate = getTxTemplate(getStorageAddress(), methodName, hexData);
 

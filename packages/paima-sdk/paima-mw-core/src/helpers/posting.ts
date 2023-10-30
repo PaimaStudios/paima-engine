@@ -25,6 +25,7 @@ import type {
   Result,
 } from '../types';
 import { batchedToJsonString, buildBatchedSubunit } from './data-processing';
+import type { PostFxn } from './transaction-building';
 import { buildDirectTx } from './transaction-building';
 import { batcherQuerySubmitUserInput, batcherQueryTrackUserInput } from './query-constructors';
 import { postDataToEndpoint } from './general';
@@ -43,8 +44,6 @@ const BATCHER_RETRIES = 50;
 const TX_VERIFICATION_RETRY_DELAY = 1000;
 const TX_VERIFICATION_DELAY = 1000;
 const TX_VERIFICATION_RETRY_COUNT = 8;
-
-type PostFxn = (tx: Record<string, any>) => Promise<string>;
 
 function oneHourPassed(timestamp: number): boolean {
   const currTime = new Date().getTime();
