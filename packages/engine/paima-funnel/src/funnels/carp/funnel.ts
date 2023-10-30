@@ -302,7 +302,8 @@ async function readDataInternal(
     Network.EVM,
     data[0].blockNumber,
     data[data.length - 1].blockNumber,
-    poolEvents.filter(data => data.length > 0)
+    poolEvents
+  .filter(data => data.length > 0)
   );
 
   return grouped;
