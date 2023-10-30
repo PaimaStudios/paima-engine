@@ -48,7 +48,13 @@ export class FunnelFactory implements IFunnelFactory {
     // and wrap it with dynamic decorators as needed
 
     let chainFunnel: ChainFunnel = await BlockFunnel.recoverState(this.sharedData, dbTx);
-    chainFunnel = await wrapToCarpFunnel(chainFunnel, this.sharedData, dbTx, ENV.CARP_URL);
+    chainFunnel = await wrapToCarpFunnel(
+      chainFunnel,
+      this.sharedData,
+      dbTx,
+      ENV.CARP_URL,
+      ENV.START_BLOCKHEIGHT
+    );
     chainFunnel = await wrapToEmulatedBlocksFunnel(
       chainFunnel,
       this.sharedData,

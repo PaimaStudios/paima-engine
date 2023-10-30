@@ -29,6 +29,7 @@ export * from './types.js';
 export type * from './types.js';
 export * from './security/parse.js';
 export type * from './contract-types/index.js';
+export * from './constants';
 
 export type { Web3, Contract, AbiItem, EventData };
 export {

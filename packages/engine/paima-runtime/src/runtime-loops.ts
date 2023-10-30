@@ -1,9 +1,9 @@
 import process from 'process';
 
-import { doLog, logError, delay } from '@paima/utils';
+import { doLog, logError, delay, Network, ENV } from '@paima/utils';
 import { tx, DataMigrations } from '@paima/db';
-import { getEarliestStartBlockheight } from './cde-config/utils.js';
-import type { ChainFunnel, IFunnelFactory } from './types.js';
+import { getEarliestStartBlockheight, getEarliestStartSlot } from './cde-config/utils.js';
+import type { ChainFunnel, IFunnelFactory, ReadPresyncDataFrom } from './types.js';
 import type { ChainData, ChainDataExtension, GameStateMachine } from '@paima/sm';
 
 import { run } from './run-flag.js';
@@ -57,94 +57,108 @@ async function runPresync(
   startBlockHeight: number,
   stopBlockHeight: number | null
 ): Promise<void> {
-  const maximumPresyncBlockheight = stopBlockHeight
-    ? Math.min(startBlockHeight, stopBlockHeight)
-    : startBlockHeight;
   let presyncBlockHeight = await getPresyncStartBlockheight(
     gameStateMachine,
     funnelFactory.getExtensions(),
-    startBlockHeight,
-    maximumPresyncBlockheight
+    startBlockHeight
   );
 
-  if (presyncBlockHeight > maximumPresyncBlockheight) {
-    // doLog(
-    //   `[paima-runtime] Skipping presync (presync block height: ${presyncBlockHeight}, maximum presync block height: ${startBlockHeight})`
-    // );
-    return;
+  if (!ENV.CARP_URL) {
+    delete presyncBlockHeight[Network.CARDANO];
   }
 
   if (run) {
     doLog('---------------------------\nBeginning Presync\n---------------------------');
   }
-  while (run && presyncBlockHeight <= maximumPresyncBlockheight) {
-    const upper = Math.min(presyncBlockHeight + stepSize - 1, maximumPresyncBlockheight);
-    if (upper > presyncBlockHeight) {
-      doLog(`p${presyncBlockHeight}-${upper}`);
+  while (run && Object.keys(presyncBlockHeight).length !== 0) {
+    const upper = Object.fromEntries(
+      Object.entries(presyncBlockHeight)
+        .filter(([_network, h]) => h >= 0)
+        .map(([network, h]) => [network, h + stepSize - 1])
+    );
+
+    if (upper[Network.EVM] > presyncBlockHeight[Network.EVM]) {
+      doLog(`${JSON.stringify(presyncBlockHeight)}-${JSON.stringify(upper)}`);
     } else {
-      doLog(`p${presyncBlockHeight}`);
+      doLog(`${JSON.stringify(presyncBlockHeight)}`);
     }
 
     // eslint-disable-next-line @typescript-eslint/no-loop-func
-    presyncBlockHeight = await tx<number>(gameStateMachine.getReadWriteDbConn(), async dbTx => {
+    let newHeight = (await tx)(gameStateMachine.getReadWriteDbConn(), async dbTx => {
       const chainFunnel = await funnelFactory.generateFunnel(dbTx);
       return await runPresyncRound(
         gameStateMachine,
         chainFunnel,
         pollingPeriod,
-        presyncBlockHeight,
-        upper
+        Object.entries(presyncBlockHeight).map(([network, height]) => ({
+          network: Number(network),
+          from: height,
+          to: upper[network],
+        }))
       );
     });
+
+    presyncBlockHeight = await newHeight;
   }
-  await loopIfStopBlockReached(presyncBlockHeight, stopBlockHeight);
-  doLog(`[paima-runtime] Presync finished at ${presyncBlockHeight}`);
+
+  await loopIfStopBlockReached(presyncBlockHeight[Network.EVM], stopBlockHeight);
+  doLog(`[paima-runtime] Presync finished at ${JSON.stringify(presyncBlockHeight)}`);
 }
 
 async function getPresyncStartBlockheight(
   gameStateMachine: GameStateMachine,
   CDEs: ChainDataExtension[],
-  startBlockHeight: number,
   maximumPresyncBlockheight: number
-): Promise<number> {
+): Promise<{ [network: number]: number }> {
   const earliestCdeSbh = getEarliestStartBlockheight(CDEs);
   const freshPresyncStart = earliestCdeSbh >= 0 ? earliestCdeSbh : maximumPresyncBlockheight + 1;
-  const latestSyncBlockheight = await gameStateMachine.latestProcessedBlockHeight();
 
-  if (freshPresyncStart > maximumPresyncBlockheight || latestSyncBlockheight > startBlockHeight) {
-    // No need for presync:
-    return maximumPresyncBlockheight + 1;
-  }
+  const earliestCdeCardanoSlot = getEarliestStartSlot(CDEs);
 
   const latestPresyncBlockheight = await gameStateMachine.getPresyncBlockHeight();
+  const latestPresyncSlotHeight = await gameStateMachine.getPresyncCardanoSlotHeight();
+
+  const result = { [Network.EVM]: freshPresyncStart, [Network.CARDANO]: earliestCdeCardanoSlot };
+
   if (latestPresyncBlockheight > 0) {
-    // Continue previously unfinished presync:
-    return latestPresyncBlockheight + 1;
-  } else {
-    // Start fresh presync:
-    return freshPresyncStart;
+    result[Network.EVM] = latestPresyncBlockheight + 1;
   }
+
+  if (latestPresyncSlotHeight > 0) {
+    result[Network.CARDANO] = latestPresyncSlotHeight + 1;
+  }
+
+  return result;
 }
 
 async function runPresyncRound(
   gameStateMachine: GameStateMachine,
   chainFunnel: ChainFunnel,
   pollingPeriod: number,
-  fromBlock: number,
-  toBlock: number
-): Promise<number> {
-  const latestPresyncDataList = await chainFunnel.readPresyncData(fromBlock, toBlock);
-  if (!latestPresyncDataList || latestPresyncDataList.length === 0) {
+  from: ReadPresyncDataFrom
+): Promise<{ [network: number]: number }> {
+  const latestPresyncDataList = await chainFunnel.readPresyncData(from);
+
+  if (!latestPresyncDataList || Object.values(latestPresyncDataList).every(l => l.length === 0)) {
     await delay(pollingPeriod);
-    return fromBlock;
+    return Object.fromEntries(from.map(({ network, from }) => [network, from])) as Record<
+      Network,
+      number
+    >;
   }
-  const filteredPresyncDataList = latestPresyncDataList.filter(
-    unit => unit.extensionDatums.length > 0
-  );
+
+  const filteredPresyncDataList = Object.values(latestPresyncDataList)
+    .flatMap(network => (network !== 'finished' ? network : []))
+    .filter(unit => unit.extensionDatums.length > 0);
   for (const presyncData of filteredPresyncDataList) {
     await gameStateMachine.presyncProcess(chainFunnel.getDbTx(), presyncData);
   }
-  return toBlock + 1;
+
+  return Object.fromEntries(
+    from
+      .filter(arg => latestPresyncDataList[arg.network] !== 'finished')
+      .map(arg => [arg.network, arg.to + 1])
+  );
 }
 
 async function runSync(

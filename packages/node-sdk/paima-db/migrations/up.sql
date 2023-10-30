@@ -26,6 +26,12 @@ CREATE TABLE cde_tracking (
   block_height INTEGER PRIMARY KEY
 );
 
+CREATE TABLE cde_tracking_cardano (
+  slot INTEGER PRIMARY KEY,
+  datum_count INTEGER NOT NULL,
+  done BOOLEAN NOT NULL DEFAULT false
+);
+
 CREATE TABLE chain_data_extensions (
   cde_id INTEGER PRIMARY KEY,
   cde_type INTEGER NOT NULL,

@@ -1,7 +1,7 @@
 import type Web3 from 'web3';
 import type { BlockTransactionString } from 'web3-eth';
 
-import { timeout, cutAfterFirstRejected, DEFAULT_FUNNEL_TIMEOUT, doLog, delay } from '@paima/utils';
+import { timeout, cutAfterFirstRejected, DEFAULT_FUNNEL_TIMEOUT, doLog } from '@paima/utils';
 import type { PaimaL2Contract } from '@paima/utils';
 import { TimeoutError } from '@paima/runtime';
 import type { ChainData } from '@paima/sm';

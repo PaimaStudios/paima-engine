@@ -30,3 +30,8 @@ export const enum ChainDataExtensionDatumType {
   ERC6551Registry,
   CardanoPool,
 }
+
+export const enum Network {
+  EVM = 1,
+  CARDANO = 2,
+}

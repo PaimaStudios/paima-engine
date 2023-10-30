@@ -21,13 +21,15 @@ export async function getUngroupedCdeData(
     return extensions.map(_ => []);
   }
   const allData = await Promise.all(
-    extensions.map(extension => getSpecificCdeData(extension, fromBlock, toBlock))
+    extensions.map(extension =>
+      'startBlockHeight' in extension ? getSpecificCdeData(extension, fromBlock, toBlock) : []
+    )
   );
   return allData;
 }
 
 async function getSpecificCdeData(
-  extension: ChainDataExtension,
+  extension: ChainDataExtension & { startBlockHeight: number },
   fromBlock: number,
   toBlock: number
 ): Promise<ChainDataExtensionDatum[]> {

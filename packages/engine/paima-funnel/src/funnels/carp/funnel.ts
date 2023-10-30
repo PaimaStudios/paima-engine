@@ -1,6 +1,9 @@
 import {
   ChainDataExtensionType,
   DEFAULT_FUNNEL_TIMEOUT,
+  ENV,
+  Network,
+  delay,
   doLog,
   logError,
   timeout,
@@ -11,13 +14,13 @@ import {
   type ChainDataExtensionCardanoDelegation,
   type PresyncChainData,
 } from '@paima/sm';
-import { composeChainData, groupCdeData } from '../../utils';
+import { composeChainData, groupCdeData } from '../../utils.js';
 import { BaseFunnel } from '../BaseFunnel.js';
 import type { FunnelSharedData } from '../BaseFunnel.js';
 import type { PoolClient } from 'pg';
 import getCdePoolData from '../../cde/cardanoPool.js';
 import axios from 'axios';
-import type { ChainFunnel } from '@paima/runtime';
+import type { ChainFunnel, ReadPresyncDataFrom } from '@paima/runtime';
 
 type BlockInfo = {
   block: {
@@ -29,17 +32,27 @@ type BlockInfo = {
   };
 };
 
-// hardcoded preview time
-const knownTime = 1666656000;
-
 const confirmationDepth = '10';
+
+function knownTime(): number {
+  switch (ENV.CARDANO_NETWORK) {
+    case 'preview':
+      return 1666656000;
+    case 'preprod':
+      return 1666656000;
+    case 'mainnet':
+      return 1666656000;
+    default:
+      throw new Error('unknown cardano network');
+  }
+}
 
 function timestampToAbsoluteSlot(timestamp: number): number {
   const firstSlot = 0;
   // map timestamps with a delta, since we are waiting for blocks.
-  const confirmationTimeDelta = 20 * 10;
+  const confirmationTimeDelta = 20 * Number(confirmationDepth);
 
-  return timestamp - confirmationTimeDelta - knownTime + firstSlot;
+  return timestamp - confirmationTimeDelta - knownTime() + firstSlot;
 }
 
 export class CarpFunnel extends BaseFunnel implements ChainFunnel {
@@ -47,7 +60,8 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
     sharedData: FunnelSharedData,
     dbTx: PoolClient,
     private readonly baseFunnel: ChainFunnel,
-    private readonly carpUrl: string
+    private readonly carpUrl: string,
+    private readonly startSlot: number
   ) {
     super(sharedData, dbTx);
     // TODO: replace once TS5 decorators are better supported
@@ -95,19 +109,54 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
   }
 
   public override async readPresyncData(
-    fromBlock: number,
-    toBlock: number
-  ): Promise<PresyncChainData[]> {
-    return await this.baseFunnel.readPresyncData(fromBlock, toBlock);
+    args: ReadPresyncDataFrom
+  ): Promise<{ [network: number]: PresyncChainData[] | 'finished' }> {
+    const arg = args.find(arg => arg.network == Network.CARDANO);
+
+    let data = await this.baseFunnel.readPresyncData(args);
+
+    if (arg && arg.from >= 0 && arg.from < this.startSlot) {
+      const poolEvents = await Promise.all(
+        this.sharedData.extensions
+          .filter(extension => extension.cdeType === ChainDataExtensionType.CardanoPool)
+          .map(extension => {
+            const data = getCdePoolData(
+              `${this.carpUrl}/delegation/pool`,
+              extension as ChainDataExtensionCardanoDelegation,
+              arg.from,
+              Math.min(arg.to, this.startSlot - 1),
+              slot => {
+                return slot;
+              }
+            );
+            return data;
+          })
+      );
+
+      let grouped = groupCdeData(Network.CARDANO, arg.from, arg.to, poolEvents);
+
+      if (grouped.length > 0) {
+        data[Network.CARDANO] = grouped;
+      }
+    } else if (arg) {
+      data[Network.CARDANO] = 'finished';
+    }
+
+    return data;
   }
 
   public static async recoverState(
     sharedData: FunnelSharedData,
     dbTx: PoolClient,
     baseFunnel: ChainFunnel,
-    carpUrl: string
+    carpUrl: string,
+    startingBlockHeight: number
   ): Promise<CarpFunnel> {
-    return new CarpFunnel(sharedData, dbTx, baseFunnel, carpUrl);
+    const startingSlot = timestampToAbsoluteSlot(
+      (await sharedData.web3.eth.getBlock(startingBlockHeight)).timestamp as number
+    );
+
+    return new CarpFunnel(sharedData, dbTx, baseFunnel, carpUrl, startingSlot);
   }
 }
 
@@ -122,8 +171,6 @@ async function readDataInternal(
   // the upper range is inclusive
   const max = timestampToAbsoluteSlot(Math.max(...data.map(data => data.timestamp)));
 
-  const sleep = (ms: number): Promise<number> => new Promise(resolve => setTimeout(resolve, ms));
-
   while (true) {
     // TODO: replace with carp client
     const stableBlock = await timeout(
@@ -137,8 +184,7 @@ async function readDataInternal(
       break;
     }
 
-    // TODO: is there a more js-like way of doing this?
-    await sleep(1000);
+    await delay(1000);
   }
 
   const blockNumbers = data.reduce(
@@ -172,7 +218,12 @@ async function readDataInternal(
       })
   );
 
-  let grouped = groupCdeData(data[0].blockNumber, data[data.length - 1].blockNumber, poolEvents);
+  let grouped = groupCdeData(
+    Network.EVM,
+    data[0].blockNumber,
+    data[data.length - 1].blockNumber,
+    poolEvents
+  );
 
   return grouped;
 }
@@ -181,14 +232,21 @@ export async function wrapToCarpFunnel(
   chainFunnel: ChainFunnel,
   sharedData: FunnelSharedData,
   dbTx: PoolClient,
-  carpUrl: string | undefined
+  carpUrl: string | undefined,
+  startingBlockHeight: number
 ): Promise<ChainFunnel> {
   if (!carpUrl) {
     return chainFunnel;
   }
 
   try {
-    const ebp = await CarpFunnel.recoverState(sharedData, dbTx, chainFunnel, carpUrl);
+    const ebp = await CarpFunnel.recoverState(
+      sharedData,
+      dbTx,
+      chainFunnel,
+      carpUrl,
+      startingBlockHeight
+    );
     return ebp;
   } catch (err) {
     doLog('[paima-funnel] Unable to initialize carp events processor:');

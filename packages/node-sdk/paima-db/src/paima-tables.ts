@@ -95,6 +95,26 @@ const TABLE_DATA_CDE_TRACKING: TableData = {
   creationQuery: QUERY_CREATE_TABLE_CDE_TRACKING,
 };
 
+const QUERY_CREATE_TABLE_CDE_TRACKING_CARDANO = `
+CREATE TABLE cde_tracking_cardano (
+  slot INTEGER PRIMARY KEY,
+  datum_count INTEGER NOT NULL,
+  done BOOLEAN NOT NULL DEFAULT false
+);
+`;
+
+const TABLE_DATA_CDE_TRACKING_CARDANO: TableData = {
+  tableName: 'cde_tracking_cardano',
+  primaryKeyColumns: ['slot'],
+  columnData: packTuples([
+    ['slot', 'integer', 'NO', ''],
+    ['datum_count', 'integer', 'NO', ''],
+    ['done', 'boolean', 'NO', 'false'],
+  ]),
+  serialColumns: [],
+  creationQuery: QUERY_CREATE_TABLE_CDE_TRACKING_CARDANO,
+};
+
 const QUERY_CREATE_TABLE_CDE = `
 CREATE TABLE chain_data_extensions (
   cde_id INTEGER PRIMARY KEY,
@@ -285,6 +305,7 @@ export const TABLES: TableData[] = [
   TABLE_DATA_SCHEDULED,
   TABLE_DATA_HISTORICAL,
   TABLE_DATA_CDE_TRACKING,
+  TABLE_DATA_CDE_TRACKING_CARDANO,
   TABLE_DATA_CDE,
   TABLE_DATA_CDE_ERC20,
   TABLE_DATA_CDE_ERC721,

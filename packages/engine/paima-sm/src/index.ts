@@ -1,7 +1,13 @@
 import { Pool } from 'pg';
 import type { PoolClient } from 'pg';
 
-import { doLog, ENV, SCHEDULED_DATA_ADDRESS } from '@paima/utils';
+import {
+  ChainDataExtensionDatumType,
+  doLog,
+  ENV,
+  Network,
+  SCHEDULED_DATA_ADDRESS,
+} from '@paima/utils';
 import {
   tx,
   getConnection,
@@ -16,6 +22,8 @@ import {
   saveLastBlockHeight,
   markCdeBlockheightProcessed,
   getLatestProcessedCdeBlockheight,
+  getCardanoLatestProcessedCdeBlockheight,
+  markCardanoCdeBlockheightProcessed,
 } from '@paima/db';
 import Prando from '@paima/prando';
 
@@ -56,6 +64,13 @@ const SM: GameStateMachineInitializer = {
         const blockHeight = b?.block_height ?? 0;
         return blockHeight;
       },
+      getPresyncCardanoSlotHeight: async (
+        dbTx: PoolClient | Pool = readonlyDBConn
+      ): Promise<number> => {
+        const [b] = await getCardanoLatestProcessedCdeBlockheight.run(undefined, dbTx);
+        const slot = b?.slot ?? 0;
+        return slot;
+      },
       presyncStarted: async (dbTx: PoolClient | Pool = readonlyDBConn): Promise<boolean> => {
         const res = await getLatestProcessedCdeBlockheight.run(undefined, dbTx);
         return res.length > 0;
@@ -74,13 +89,29 @@ const SM: GameStateMachineInitializer = {
         return DBConn;
       },
       presyncProcess: async (dbTx: PoolClient, latestCdeData: PresyncChainData): Promise<void> => {
-        const cdeDataLength = await processCdeData(
-          latestCdeData.blockNumber,
-          latestCdeData.extensionDatums,
-          dbTx
-        );
-        if (cdeDataLength > 0) {
-          doLog(`Processed ${cdeDataLength} CDE events in block #${latestCdeData.blockNumber}`);
+        if (latestCdeData.network == Network.EVM) {
+          const cdeDataLength = await processCdeData(
+            latestCdeData.blockNumber,
+            latestCdeData.extensionDatums?.filter(
+              // TODO: find a more generic way of filtering
+              data => data.cdeDatumType == ChainDataExtensionDatumType.CardanoPool
+            ),
+            dbTx
+          );
+          if (cdeDataLength > 0) {
+            doLog(`Processed ${cdeDataLength} CDE events in block #${latestCdeData.blockNumber}`);
+          }
+        }
+        // TODO: duplicated code?
+        else if (latestCdeData.network == Network.CARDANO) {
+          const cdeDataLength = await processCardanoCdeData(
+            latestCdeData.blockNumber,
+            latestCdeData.extensionDatums,
+            dbTx
+          );
+          if (cdeDataLength > 0) {
+            doLog(`Processed ${cdeDataLength} CDE events in slot #${latestCdeData.blockNumber}`);
+          }
         }
       },
       markPresyncMilestone: async (
@@ -177,10 +208,10 @@ const SM: GameStateMachineInitializer = {
   },
 };
 
-async function processCdeData(
-  blockHeight: number,
+async function processCdeDataBase(
   cdeData: ChainDataExtensionDatum[] | undefined,
-  dbTx: PoolClient
+  dbTx: PoolClient,
+  markProcessed: () => Promise<void>
 ): Promise<number> {
   if (!cdeData) {
     return 0;
@@ -199,12 +230,34 @@ async function processCdeData(
   }
 
   try {
-    await markCdeBlockheightProcessed.run({ block_height: blockHeight }, dbTx);
+    await markProcessed();
   } catch (err) {
     doLog(`[paima-sm] Database error on markCdeBlockheightProcessed: ${err}`);
     throw err;
   }
   return cdeData.length;
+}
+
+async function processCdeData(
+  blockHeight: number,
+  cdeData: ChainDataExtensionDatum[] | undefined,
+  dbTx: PoolClient
+): Promise<number> {
+  return await processCdeDataBase(cdeData, dbTx, async () => {
+    await markCdeBlockheightProcessed.run({ block_height: blockHeight }, dbTx);
+    return;
+  });
+}
+
+async function processCardanoCdeData(
+  slot: number,
+  cdeData: ChainDataExtensionDatum[] | undefined,
+  dbTx: PoolClient
+): Promise<number> {
+  return await processCdeDataBase(cdeData, dbTx, async () => {
+    await markCardanoCdeBlockheightProcessed.run({ slot: slot }, dbTx);
+    return;
+  });
 }
 
 // Process all of the scheduled data inputs by running each of them through the game STF,

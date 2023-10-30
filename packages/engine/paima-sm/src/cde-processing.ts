@@ -10,8 +10,8 @@ import processErc20DepositDatum from './cde-erc20-deposit.js';
 import processErc6551RegistryDatum from './cde-erc6551-registry.js';
 import processGenericDatum from './cde-generic.js';
 import processCardanoDelegationDatum from './cde-cardano-pool.js';
-import type { SQLUpdate } from '@paima/db';
 import assertNever from 'assert-never';
+import type { SQLUpdate } from '@paima/db';
 
 export async function cdeTransitionFunction(
   readonlyDBConn: PoolClient,

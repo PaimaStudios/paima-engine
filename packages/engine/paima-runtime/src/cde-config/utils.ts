@@ -1,13 +1,36 @@
 import * as fs from 'fs/promises';
 
-import { doLog } from '@paima/utils';
+import { ChainDataExtensionType, doLog } from '@paima/utils';
 
 import type { ChainDataExtension } from '@paima/sm';
 
 export function getEarliestStartBlockheight(config: ChainDataExtension[]): number {
-  const startBlockheights = config.map(cde => cde.startBlockHeight).filter(sbh => !!sbh);
+  const startBlockheights = config
+    .map(cde => {
+      if (cde.cdeType != ChainDataExtensionType.CardanoPool) {
+        return cde.startBlockHeight;
+      } else {
+        return null;
+      }
+    })
+    // TODO: can this cast be avoided?
+    .filter(sbh => !!sbh) as number[];
   const minStartBlockheight = Math.min(...startBlockheights);
   return isFinite(minStartBlockheight) ? minStartBlockheight : -1;
+}
+
+export function getEarliestStartSlot(config: ChainDataExtension[]): number {
+  const startSlots = config
+    .map(cde => {
+      if (cde.cdeType == ChainDataExtensionType.CardanoPool) {
+        return cde.startSlot;
+      } else {
+        return null;
+      }
+    })
+    .filter(sbh => !!sbh) as number[];
+  const minStartSlot = Math.min(...startSlots);
+  return isFinite(minStartSlot) ? minStartSlot : -1;
 }
 
 // returns pair [rawAbiFileData, artifactObject.abi]

@@ -1,4 +1,4 @@
-import type { ChainFunnel } from '@paima/runtime';
+import type { ChainFunnel, ReadPresyncDataFrom } from '@paima/runtime';
 import type { ChainData, ChainDataExtension, PresyncChainData } from '@paima/sm';
 import type { PaimaL2Contract, Web3 } from '@paima/utils';
 import type { FunnelCacheManager } from './FunnelCache.js';
@@ -30,8 +30,10 @@ export class BaseFunnel implements ChainFunnel {
     return [];
   }
 
-  public async readPresyncData(_fromBlock: number, _toBlock: number): Promise<PresyncChainData[]> {
-    return [];
+  public async readPresyncData(
+    _args: ReadPresyncDataFrom
+  ): Promise<{ [network: number]: PresyncChainData[] | 'finished' }> {
+    return {};
   }
 
   public getDbTx(): PoolClient {

@@ -56,7 +56,7 @@ async function storeCdeConfig(config: ChainDataExtension[], DBConn: PoolClient):
           cde_type: cde.cdeType,
           cde_name: cde.name,
           cde_hash: cde.hash,
-          start_blockheight: cde.startBlockHeight,
+          start_blockheight: 'startBlockHeight' in cde ? cde.startBlockHeight : cde.startSlot,
           scheduled_prefix: 'scheduledPrefix' in cde ? cde.scheduledPrefix : '',
         },
         DBConn

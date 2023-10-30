@@ -113,4 +113,8 @@ export class ENV {
   static get CARP_URL(): string | undefined {
     return process.env.CARP_URL;
   }
+  // TODO: put this in the right place
+  static get CARDANO_NETWORK(): string | undefined {
+    return process.env.CARDANO_NETWORK;
+  }
 }
