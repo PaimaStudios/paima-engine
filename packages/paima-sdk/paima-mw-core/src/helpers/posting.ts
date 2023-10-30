@@ -8,6 +8,7 @@ import {
   PaimaMiddlewareErrorCode,
 } from '../errors';
 import {
+  getDefaultProvider,
   getEmulatedBlocksActive,
   getFee,
   getPostingMode,
@@ -32,13 +33,7 @@ import {
   deploymentChainBlockHeightToEmulated,
   emulatedBlocksActiveOnBackend,
 } from './auxiliary-queries';
-import {
-  TruffleConnector,
-  AlgorandConnector,
-  CardanoConnector,
-  EvmInjectedConnector,
-  PolkadotConnector,
-} from '@paima/providers';
+import { EthersEvmProvider, EvmInjectedProvider } from '@paima/providers';
 import type { BatchedSubunit } from '@paima/concise';
 import assertNever from 'assert-never';
 
@@ -110,44 +105,32 @@ export const postConciseData = async (
  */
 export async function postConciselyEncodedData(gameInput: string): Promise<Result<number>> {
   const errorFxn = buildEndpointErrorFxn('postConciselyEncodedData');
-  const postingMode = getPostingMode();
+
+  const provider = getDefaultProvider();
+  if (provider == null) {
+    const errorCode = PaimaMiddlewareErrorCode.WALLET_NOT_CONNECTED;
+    return errorFxn(errorCode, 'Failed to get default provider');
+  }
+  const postingMode = getPostingMode(provider);
+  if (postingMode == null) {
+    return errorFxn(
+      PaimaMiddlewareErrorCode.INTERNAL_INVALID_POSTING_MODE,
+      `Invalid posting mode: ${postingMode}`
+    );
+  }
 
   switch (postingMode) {
     case PostingMode.UNBATCHED:
-      return await postString(
-        EvmInjectedConnector.instance().getOrThrowProvider().sendTransaction,
-        EvmInjectedConnector.instance().getOrThrowProvider().getAddress(),
-        gameInput
+      if (provider instanceof EthersEvmProvider || provider instanceof EvmInjectedProvider) {
+        return await postString(provider.sendTransaction, provider.getAddress(), gameInput);
+      }
+      return errorFxn(
+        PaimaMiddlewareErrorCode.INTERNAL_INVALID_POSTING_MODE,
+        `Unbatched only supported for EVM wallets`
       );
-    case PostingMode.BATCHED_ETH:
-      return await buildBatchedSubunit(
-        AddressType.EVM,
-        EvmInjectedConnector.instance().getOrThrowProvider().getAddress(),
-        gameInput
-      ).then(submitToBatcher);
-    case PostingMode.BATCHED_CARDANO:
-      return await buildBatchedSubunit(
-        AddressType.CARDANO,
-        CardanoConnector.instance().getOrThrowProvider().getAddress(),
-        gameInput
-      ).then(submitToBatcher);
-    case PostingMode.BATCHED_POLKADOT:
-      return await buildBatchedSubunit(
-        AddressType.POLKADOT,
-        PolkadotConnector.instance().getOrThrowProvider().getAddress(),
-        gameInput
-      ).then(submitToBatcher);
-    case PostingMode.BATCHED_ALGORAND:
-      return await buildBatchedSubunit(
-        AddressType.ALGORAND,
-        AlgorandConnector.instance().getOrThrowProvider().getAddress(),
-        gameInput
-      ).then(submitToBatcher);
-    case PostingMode.AUTOMATIC:
-      return await postString(
-        TruffleConnector.instance().getOrThrowProvider().sendTransaction,
-        TruffleConnector.instance().getOrThrowProvider().getAddress(),
-        gameInput
+    case PostingMode.BATCHED:
+      return await buildBatchedSubunit(AddressType.EVM, provider.getAddress(), gameInput).then(
+        submitToBatcher
       );
     default:
       assertNever(postingMode, true);

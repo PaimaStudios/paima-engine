@@ -8,8 +8,6 @@ import { checkEthWalletStatus } from '../wallets/evm/injected';
 import { specificWalletLogin } from '../wallets/wallets';
 import {
   getEmulatedBlocksActive,
-  getPostingMode,
-  PostingMode,
   setEmulatedBlocksActive,
   setEmulatedBlocksInactive,
 } from '../state';
@@ -20,19 +18,17 @@ import type { LoginInfo } from '../wallets/wallet-modes';
  * Wrapper function for all wallet status checking functions
  */
 async function checkWalletStatus(): Promise<OldResult> {
-  switch (getPostingMode()) {
-    case PostingMode.UNBATCHED:
-    case PostingMode.BATCHED_ETH:
-      return await checkEthWalletStatus();
-    case PostingMode.BATCHED_CARDANO:
-      return await checkCardanoWalletStatus();
-    // TODO: what about the other currency types?
-    default:
-      return {
-        success: true,
-        message: '',
-      };
+  // TODO: what about the other currency types?
+  const results = await Promise.all([checkEthWalletStatus(), checkCardanoWalletStatus()]);
+  for (const result of results) {
+    if (result.success === false) {
+      return result;
+    }
   }
+  return {
+    success: true,
+    message: '',
+  };
 }
 
 /**

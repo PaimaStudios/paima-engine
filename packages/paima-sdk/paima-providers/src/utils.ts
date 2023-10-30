@@ -6,13 +6,23 @@ import { CardanoConnector } from './cardano';
 import { PolkadotConnector } from './polkadot';
 
 export const enum WalletMode {
-  NoWallet,
   EvmInjected,
   EvmEthers,
   Cardano,
   Polkadot,
   Algorand,
 }
+
+export const WalletModeMap = {
+  [WalletMode.EvmInjected]: EvmInjectedConnector.instance(),
+  [WalletMode.EvmEthers]: EvmInjectedConnector.instance(),
+  [WalletMode.Cardano]: CardanoConnector.instance(),
+  [WalletMode.Polkadot]: PolkadotConnector.instance(),
+  [WalletMode.Algorand]: AlgorandConnector.instance(),
+};
+
+type ExtractGeneric<T> = T extends IConnector<infer U> ? U : never;
+export type ApiForMode<Mode extends WalletMode> = ExtractGeneric<(typeof WalletModeMap)[Mode]>;
 
 export type InjectionPreference<T> =
   | {
@@ -23,17 +33,17 @@ export type InjectionPreference<T> =
     };
 
 export async function allInjectedWallets(gameInfo: GameInfo): Promise<{
-  [WalletMode.EvmInjected]: ReturnType<typeof EvmInjectedConnector.getWalletOptions>,
-  [WalletMode.Cardano]: ReturnType<typeof CardanoConnector.getWalletOptions>,
-  [WalletMode.Polkadot]: Awaited<ReturnType<typeof PolkadotConnector.getWalletOptions>>,
-  [WalletMode.Algorand]: ReturnType<typeof AlgorandConnector.getWalletOptions>,
+  [WalletMode.EvmInjected]: ReturnType<typeof EvmInjectedConnector.getWalletOptions>;
+  [WalletMode.Cardano]: ReturnType<typeof CardanoConnector.getWalletOptions>;
+  [WalletMode.Polkadot]: Awaited<ReturnType<typeof PolkadotConnector.getWalletOptions>>;
+  [WalletMode.Algorand]: ReturnType<typeof AlgorandConnector.getWalletOptions>;
 }> {
   return {
     [WalletMode.EvmInjected]: EvmInjectedConnector.getWalletOptions(),
     [WalletMode.Cardano]: CardanoConnector.getWalletOptions(),
     [WalletMode.Polkadot]: await PolkadotConnector.getWalletOptions(gameInfo.gameName),
     [WalletMode.Algorand]: AlgorandConnector.getWalletOptions(),
-  }
+  };
 }
 export async function connectInjectedWallet<Api>(
   typeName: string,
@@ -57,4 +67,19 @@ export async function connectInjectedWallet<Api>(
     return provider;
   }
   assertNever(preference);
+}
+
+export function callProvider<
+  Mode extends WalletMode,
+  Api extends ApiForMode<Mode>,
+  Func extends keyof IProvider<Api>,
+>(
+  mode: Mode,
+  funcName: Func,
+  ...args: Parameters<IProvider<Api>[Func]>
+): ReturnType<IProvider<Api>[Func]> {
+  const provider = WalletModeMap[mode].getOrThrowProvider();
+  const func = provider[funcName];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (func as any)(...args);
 }

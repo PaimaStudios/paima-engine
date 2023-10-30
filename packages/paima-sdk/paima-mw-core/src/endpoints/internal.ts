@@ -1,19 +1,12 @@
 import type { URI } from '@paima/utils';
 import { buildEndpointErrorFxn, PaimaMiddlewareErrorCode } from '../errors';
 import {
-  getActiveAddress,
   getChainUri,
-  getPostingInfo,
-  setAutomaticMode,
   setBackendUri,
-  setBatchedCardanoMode,
-  setBatchedEthMode,
-  setBatchedPolkadotMode,
   setEmulatedBlocksActive,
   setEmulatedBlocksInactive,
-  setUnbatchedMode,
 } from '../state';
-import type { PostingInfo, PostingModeSwitchResult, Result, Wallet } from '../types';
+import type { Result, Wallet } from '../types';
 import { specificWalletLogin } from '../wallets/wallets';
 import { emulatedBlocksActiveOnBackend } from '../helpers/auxiliary-queries';
 import { TruffleConnector } from '@paima/providers';
@@ -53,60 +46,6 @@ export async function automaticWalletLogin(privateKey: string): Promise<Result<W
   } catch (err) {
     return errorFxn(PaimaMiddlewareErrorCode.TRUFFLE_LOGIN, err);
   }
-}
-
-export async function switchToUnbatchedMode(): Promise<PostingModeSwitchResult> {
-  setUnbatchedMode();
-  return {
-    success: true,
-    ...getPostingInfo(),
-  };
-}
-
-export async function switchToBatchedEthMode(): Promise<PostingModeSwitchResult> {
-  setBatchedEthMode();
-  return {
-    success: true,
-    ...getPostingInfo(),
-  };
-}
-
-export async function switchToBatchedCardanoMode(): Promise<PostingModeSwitchResult> {
-  setBatchedCardanoMode();
-  return {
-    success: true,
-    ...getPostingInfo(),
-  };
-}
-
-export async function switchToBatchedPolkadotMode(): Promise<PostingModeSwitchResult> {
-  setBatchedPolkadotMode();
-  return {
-    success: true,
-    ...getPostingInfo(),
-  };
-}
-
-export async function switchToAutomaticMode(): Promise<PostingModeSwitchResult> {
-  setAutomaticMode();
-  return {
-    success: true,
-    ...getPostingInfo(),
-  };
-}
-
-export async function retrieveActiveAddress(): Promise<Result<string>> {
-  return {
-    success: true,
-    result: getActiveAddress(),
-  };
-}
-
-export async function retrievePostingInfo(): Promise<Result<PostingInfo>> {
-  return {
-    success: true,
-    result: getPostingInfo(),
-  };
 }
 
 export async function updateBackendUri(newUri: URI): Promise<void> {

@@ -1,13 +1,18 @@
-import type { LoginInfoMap, OldResult, Result, Wallet } from '../types';
+import type { LoginInfoMap, OldResult, Result } from '../types';
 import { buildEndpointErrorFxn, PaimaMiddlewareErrorCode } from '../errors';
 import { connectInjected } from './wallet-modes';
-import { CardanoConnector, WalletMode } from '@paima/providers';
+import { CardanoConnector } from '@paima/providers';
+import type { ApiForMode, IProvider, WalletMode } from '@paima/providers';
 import { getGameName } from '../state';
 
 export async function checkCardanoWalletStatus(): Promise<OldResult> {
   const errorFxn = buildEndpointErrorFxn('checkCardanoWalletStatus');
 
-  const currentAddress = CardanoConnector.instance().getProvider()?.getAddress();
+  const provider = CardanoConnector.instance().getProvider();
+  if (provider == null) {
+    return { success: true, message: '' };
+  }
+  const currentAddress = provider.getAddress();
   if (currentAddress == null || currentAddress === '') {
     return errorFxn(PaimaMiddlewareErrorCode.NO_ADDRESS_SELECTED);
   }
@@ -19,7 +24,7 @@ export async function checkCardanoWalletStatus(): Promise<OldResult> {
 
 export async function cardanoLoginWrapper(
   loginInfo: LoginInfoMap[WalletMode.Cardano]
-): Promise<Result<Wallet>> {
+): Promise<Result<IProvider<ApiForMode<WalletMode.Cardano>>>> {
   const errorFxn = buildEndpointErrorFxn('cardanoLoginWrapper');
 
   const gameInfo = {
@@ -39,8 +44,6 @@ export async function cardanoLoginWrapper(
   }
   return {
     success: true,
-    result: {
-      walletAddress: loginResult.result.getAddress(),
-    },
+    result: loginResult.result,
   };
 }

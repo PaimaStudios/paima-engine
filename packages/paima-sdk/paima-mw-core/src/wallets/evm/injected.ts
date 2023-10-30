@@ -9,11 +9,11 @@ import {
   getChainUri,
   getGameName,
 } from '../../state';
-import type { LoginInfoMap, OldResult, Result, Wallet } from '../../types';
+import type { LoginInfoMap, OldResult, Result } from '../../types';
 import { updateFee } from '../../helpers/posting';
 
 import { connectInjected } from '../wallet-modes';
-import type { WalletMode } from '@paima/providers';
+import type { ApiForMode, IProvider, WalletMode } from '@paima/providers';
 import { EvmInjectedConnector } from '@paima/providers';
 
 interface SwitchError {
@@ -69,7 +69,7 @@ export async function checkEthWalletStatus(): Promise<OldResult> {
   const errorFxn = buildEndpointErrorFxn('checkEthWalletStatus');
 
   if (EvmInjectedConnector.instance().getProvider() === null) {
-    return errorFxn(PaimaMiddlewareErrorCode.NO_ADDRESS_SELECTED);
+    return { success: true, message: '' };
   }
 
   try {
@@ -85,7 +85,7 @@ export async function checkEthWalletStatus(): Promise<OldResult> {
 
 export async function evmLoginWrapper(
   loginInfo: LoginInfoMap[WalletMode.EvmInjected]
-): Promise<Result<Wallet>> {
+): Promise<Result<IProvider<ApiForMode<WalletMode.EvmInjected>>>> {
   const errorFxn = buildEndpointErrorFxn('evmLoginWrapper');
 
   const gameInfo = {
@@ -123,8 +123,6 @@ export async function evmLoginWrapper(
 
   return {
     success: true,
-    result: {
-      walletAddress: EvmInjectedConnector.instance().getOrThrowProvider().getAddress(),
-    },
+    result: loginResult.result,
   };
 }

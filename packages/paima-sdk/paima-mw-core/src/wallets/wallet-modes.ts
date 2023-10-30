@@ -26,7 +26,6 @@ export type LoginInfoMap = {
   [WalletMode.Cardano]: BaseLoginInfo<CardanoApi>;
   [WalletMode.Polkadot]: BaseLoginInfo<PolkadotApi>;
   [WalletMode.Algorand]: BaseLoginInfo<AlgorandApi>;
-  [WalletMode.NoWallet]: void;
 };
 
 type ToUnion<T> = {
@@ -51,10 +50,15 @@ export async function connectInjected<Api>(
   gameInfo: GameInfo
 ): Promise<Result<IProvider<Api>>> {
   try {
-    const provider = await connectInjectedWallet(typeName, loginInfo.preference, connector, gameInfo);
+    const provider = await connectInjectedWallet(
+      typeName,
+      loginInfo.preference,
+      connector,
+      gameInfo
+    );
     return {
       success: true,
-      result: provider
+      result: provider,
     };
   } catch (err) {
     if (err instanceof WalletNotFound || err instanceof UnsupportedWallet) {

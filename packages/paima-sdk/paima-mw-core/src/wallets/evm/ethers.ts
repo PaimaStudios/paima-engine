@@ -1,9 +1,9 @@
 import { buildEndpointErrorFxn, PaimaMiddlewareErrorCode } from '../../errors';
 import { getChainId, getGameName } from '../../state';
-import type { LoginInfoMap, Result, Wallet } from '../../types';
+import type { LoginInfoMap, Result } from '../../types';
 import { updateFee } from '../../helpers/posting';
 
-import type { EthersApi, IProvider, WalletMode } from '@paima/providers';
+import type { ApiForMode, EthersApi, IProvider, WalletMode } from '@paima/providers';
 import { EthersConnector } from '@paima/providers';
 
 async function connectWallet(
@@ -34,7 +34,7 @@ async function connectWallet(
 }
 export async function ethersLoginWrapper(
   loginInfo: LoginInfoMap[WalletMode.EvmEthers]
-): Promise<Result<Wallet>> {
+): Promise<Result<IProvider<ApiForMode<WalletMode.Cardano>>>> {
   const errorFxn = buildEndpointErrorFxn('ethersLoginWrapper');
 
   const loginResult = await connectWallet(loginInfo);
@@ -52,8 +52,6 @@ export async function ethersLoginWrapper(
 
   return {
     success: true,
-    result: {
-      walletAddress: EthersConnector.instance().getOrThrowProvider().getAddress(),
-    },
+    result: loginResult.result,
   };
 }

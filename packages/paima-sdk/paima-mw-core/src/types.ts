@@ -1,25 +1,6 @@
 import type { Hash, WalletAddress, UserSignature } from '@paima/utils';
 export type * from './wallets/wallet-modes';
 
-export interface PostingInfo {
-  address: WalletAddress;
-  postingModeString: PostingModeString;
-}
-
-export type PostingModeString =
-  | 'unbatched'
-  | 'batched-eth'
-  | 'batched-cardano'
-  | 'batched-polkadot'
-  | 'batched-algorand'
-  | 'automatic';
-
-export type PostingModeSwitchResult = PostingModeSwitchSuccessfulResult | FailedResult;
-
-interface PostingModeSwitchSuccessfulResult extends PostingInfo {
-  success: true;
-}
-
 export type SignFunction = (message: string) => Promise<UserSignature>;
 
 export interface SuccessfulResultMessage {

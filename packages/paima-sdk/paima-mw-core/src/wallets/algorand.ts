@@ -1,12 +1,13 @@
-import type { LoginInfoMap, Result, Wallet } from '../types';
+import type { LoginInfoMap, Result } from '../types';
 import { PaimaMiddlewareErrorCode, buildEndpointErrorFxn } from '../errors';
-import { AlgorandConnector, WalletMode } from '@paima/providers';
+import { AlgorandConnector } from '@paima/providers';
+import type { ApiForMode, IProvider, WalletMode } from '@paima/providers';
 import { getGameName } from '../state';
 import { connectInjected } from './wallet-modes';
 
 export async function algorandLoginWrapper(
   loginInfo: LoginInfoMap[WalletMode.Algorand]
-): Promise<Result<Wallet>> {
+): Promise<Result<IProvider<ApiForMode<WalletMode.Algorand>>>> {
   const errorFxn = buildEndpointErrorFxn('algorandLoginWrapper');
 
   const gameInfo = {
@@ -26,8 +27,6 @@ export async function algorandLoginWrapper(
   }
   return {
     success: true,
-    result: {
-      walletAddress: loginResult.result.getAddress(),
-    },
+    result: loginResult.result,
   };
 }
