@@ -86,19 +86,13 @@ export class EvmInjectedConnector implements IConnector<EvmApi> {
   private provider: EvmInjectedProvider | undefined;
   private static INSTANCE: undefined | EvmInjectedConnector = undefined;
 
-  static getWalletOptions(): ConnectionOption<EvmApi>[] {
-    const seenNames: Set<string> = new Set();
+  /**
+   * Wallets may inject themselves using multiple competing standards
+   * We have to track all of them (with duplicates) internally
+   * To make sure `connectNamed` calls properly find wallets no matter the name used
+   */
+  static getPossiblyDuplicateWalletOptions(): ConnectionOption<EvmApi>[] {
     const allWallets: ConnectionOption<EvmApi>[] = [];
-
-    // add options and de-duplicate based off the display name
-    // we can't duplicate on other keys because they have a different formats for different EIPs
-    const addOptions: (options: ConnectionOption<EvmApi>[]) => void = options => {
-      for (const option of options) {
-        if (seenNames.has(option.metadata.name)) continue;
-        seenNames.add(option.metadata.name);
-        allWallets.push(option);
-      }
-    };
 
     // 1) Add EIP6963 and prioritize it for deduplicating
     {
@@ -110,7 +104,7 @@ export class EvmInjectedConnector implements IConnector<EvmApi> {
         },
         api: () => Promise.resolve(provider),
       }));
-      addOptions(eip6963Options);
+      allWallets.push(...eip6963Options);
     }
 
     // 2) Add EIP5749
@@ -123,21 +117,19 @@ export class EvmInjectedConnector implements IConnector<EvmApi> {
         },
         api: () => Promise.resolve(provider),
       }));
-      addOptions(eip5749Options);
+      allWallets.push(...eip5749Options);
     }
 
     // Metamask doesn't support EIP6963 yet, but it plans to. In the meantime, we add it manually
     if (window.ethereum != null && window.ethereum.isMetaMask) {
       const ethereum = window.ethereum;
-      addOptions([
-        {
-          metadata: {
-            name: 'metamask',
-            displayName: 'Metamask',
-          },
-          api: () => Promise.resolve(ethereum),
+      allWallets.push({
+        metadata: {
+          name: 'metamask',
+          displayName: 'Metamask',
         },
-      ]);
+        api: () => Promise.resolve(ethereum),
+      });
     }
     // some wallets aggressively put themselves in the list of wallets the user has installed
     // even if the user has never actually used these
@@ -152,6 +144,20 @@ export class EvmInjectedConnector implements IConnector<EvmApi> {
     });
     return allWallets;
   }
+  static getWalletOptions(): ConnectionOption<EvmApi>[] {
+    const withDuplicates = EvmInjectedConnector.getPossiblyDuplicateWalletOptions();
+    const seenNames: Set<string> = new Set();
+
+    const result: ConnectionOption<EvmApi>[] = [];
+    for (const option of withDuplicates) {
+      if (seenNames.has(option.metadata.name)) continue;
+      seenNames.add(option.metadata.name);
+      result.push(option);
+    }
+
+    return result;
+  }
+
   static instance(): EvmInjectedConnector {
     if (EvmInjectedConnector.INSTANCE == null) {
       const newInstance = new EvmInjectedConnector();
@@ -193,7 +199,7 @@ export class EvmInjectedConnector implements IConnector<EvmApi> {
       return this.provider;
     }
 
-    const provider = EvmInjectedConnector.getWalletOptions().find(
+    const provider = EvmInjectedConnector.getPossiblyDuplicateWalletOptions().find(
       entry => entry.metadata.name === name
     );
     if (provider == null) {
