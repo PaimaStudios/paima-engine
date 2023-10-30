@@ -1,16 +1,18 @@
 import type { MetaMaskInpageProvider } from '@metamask/providers';
-import {
-  optionToActive,
-  type ActiveConnection,
-  type ConnectionOption,
-  type GameInfo,
-  type IConnector,
-  type IProvider,
-  type UserSignature,
-} from '../IProvider';
+import type {
+  ActiveConnection,
+  ConnectionOption,
+  GameInfo,
+  IConnector,
+  IProvider,
+  UserSignature,
+  AddressAndType,
+} from '../IProvider.js';
+import { optionToActive } from '../IProvider.js';
 import { utf8ToHex } from 'web3-utils';
-import { ProviderApiError, ProviderNotInitialized, WalletNotFound } from '../errors';
-import type { EvmAddress } from './types';
+import { ProviderApiError, ProviderNotInitialized, WalletNotFound } from '../errors.js';
+import type { EvmAddress } from './types.js';
+import { AddressType } from '@paima/utils';
 
 type EIP1193Provider = MetaMaskInpageProvider;
 
@@ -235,8 +237,11 @@ export class EvmInjectedProvider implements IProvider<EvmApi> {
   getConnection = (): ActiveConnection<EvmApi> => {
     return this.conn;
   };
-  getAddress = (): string => {
-    return this.address;
+  getAddress = (): AddressAndType => {
+    return {
+      type: AddressType.EVM,
+      address: this.address.toLowerCase(),
+    };
   };
   signMessage = async (message: string): Promise<UserSignature> => {
     const hexMessage = utf8ToHex(message);

@@ -13,8 +13,11 @@ import { TruffleConnector } from '@paima/providers';
 import HDWalletProvider from '@truffle/hdwallet-provider';
 import type { LoginInfo } from '../wallets/wallet-modes';
 
-export async function userWalletLoginWithoutChecks(loginInfo: LoginInfo): Promise<Result<Wallet>> {
-  return await specificWalletLogin(loginInfo);
+export async function userWalletLoginWithoutChecks(
+  loginInfo: LoginInfo,
+  setDefault: boolean = true
+): Promise<Result<Wallet>> {
+  return await specificWalletLogin(loginInfo, setDefault);
 }
 
 export async function automaticWalletLogin(privateKey: string): Promise<Result<Wallet>> {
@@ -40,7 +43,7 @@ export async function automaticWalletLogin(privateKey: string): Promise<Result<W
     return {
       success: true,
       result: {
-        walletAddress: provider.getAddress(),
+        walletAddress: provider.getAddress().address,
       },
     };
   } catch (err) {

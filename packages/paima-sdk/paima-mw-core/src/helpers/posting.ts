@@ -122,14 +122,14 @@ export async function postConciselyEncodedData(gameInput: string): Promise<Resul
   switch (postingMode) {
     case PostingMode.UNBATCHED:
       if (provider instanceof EthersEvmProvider || provider instanceof EvmInjectedProvider) {
-        return await postString(provider.sendTransaction, provider.getAddress(), gameInput);
+        return await postString(provider.sendTransaction, provider.getAddress().address, gameInput);
       }
       return errorFxn(
         PaimaMiddlewareErrorCode.INTERNAL_INVALID_POSTING_MODE,
         `Unbatched only supported for EVM wallets`
       );
     case PostingMode.BATCHED:
-      return await buildBatchedSubunit(AddressType.EVM, provider.getAddress(), gameInput).then(
+      return await buildBatchedSubunit(provider.signMessage, provider.getAddress(), gameInput).then(
         submitToBatcher
       );
     default:
@@ -145,6 +145,8 @@ async function getAdjustedHeight(deploymentChainBlockHeight: number): Promise<nu
   const emulatedActive = getEmulatedBlocksActive() ?? (await emulatedBlocksActiveOnBackend());
   if (emulatedActive) {
     const BLOCK_DELAY = 1000;
+
+    // TODO: magic number. -1 here means the block isn't part of the chain yet so we can't know the mapping
     let block = -1;
     while (block === -1) {
       block = await deploymentChainBlockHeightToEmulated(deploymentChainBlockHeight);

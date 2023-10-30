@@ -1,21 +1,22 @@
 import type { PeraWalletConnect } from '@perawallet/connect';
-import {
-  optionToActive,
-  type ActiveConnection,
-  type ConnectionOption,
-  type GameInfo,
-  type IConnector,
-  type IProvider,
-  type UserSignature,
-} from './IProvider';
+import type {
+  ActiveConnection,
+  ConnectionOption,
+  GameInfo,
+  IConnector,
+  IProvider,
+  UserSignature,
+  AddressAndType,
+} from './IProvider.js';
+import { optionToActive } from './IProvider.js';
 import { CryptoManager } from '@paima/crypto';
-import { uint8ArrayToHexString } from '@paima/utils';
+import { AddressType, uint8ArrayToHexString } from '@paima/utils';
 import {
   ProviderApiError,
   ProviderNotInitialized,
   UnsupportedWallet,
   WalletNotFound,
-} from './errors';
+} from './errors.js';
 
 export type AlgorandApi = PeraWalletConnect;
 export type AlgorandAddress = string;
@@ -121,17 +122,23 @@ export class AlgorandProvider implements IProvider<AlgorandApi> {
   getConnection = (): ActiveConnection<AlgorandApi> => {
     return this.conn;
   };
-  getAddress = (): string => {
-    return this.address;
+  getAddress = (): AddressAndType => {
+    return {
+      type: AddressType.ALGORAND,
+      address: this.address,
+    };
   };
   signMessage = async (message: string): Promise<UserSignature> => {
-    const txn = await CryptoManager.Algorand().buildAlgorandTransaction(this.getAddress(), message);
+    const txn = await CryptoManager.Algorand().buildAlgorandTransaction(
+      this.getAddress().address,
+      message
+    );
     const signerTx = {
       txn,
-      signers: [this.getAddress()],
+      signers: [this.getAddress().address],
     };
 
-    const signedTxs = await this.conn.api.signTransaction([[signerTx]], this.getAddress());
+    const signedTxs = await this.conn.api.signTransaction([[signerTx]], this.getAddress().address);
     if (signedTxs.length !== 1) {
       throw new ProviderApiError(
         `[signMessageAlgorand] invalid number of signatures returned: ${signedTxs.length}`

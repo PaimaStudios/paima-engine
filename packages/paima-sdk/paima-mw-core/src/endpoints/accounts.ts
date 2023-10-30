@@ -36,10 +36,13 @@ async function checkWalletStatus(): Promise<OldResult> {
  * thus allowing the game to get past the login screen.
  * @param preferBatchedMode - If true (or truthy value) even EVM wallet inputs will be batched.
  */
-async function userWalletLogin(loginInfo: LoginInfo): Promise<Result<Wallet>> {
+async function userWalletLogin(
+  loginInfo: LoginInfo,
+  setDefault: boolean = true
+): Promise<Result<Wallet>> {
   const errorFxn = buildEndpointErrorFxn('userWalletLogin');
 
-  const response = await specificWalletLogin(loginInfo);
+  const response = await specificWalletLogin(loginInfo, setDefault);
   if (!response.success) {
     return response;
   }

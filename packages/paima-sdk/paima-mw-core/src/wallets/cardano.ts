@@ -10,10 +10,12 @@ export async function checkCardanoWalletStatus(): Promise<OldResult> {
 
   const provider = CardanoConnector.instance().getProvider();
   if (provider == null) {
+    // TODO: this is not quite right. We want to know if we had a provider, but not anymore
     return { success: true, message: '' };
   }
-  const currentAddress = provider.getAddress();
-  if (currentAddress == null || currentAddress === '') {
+  const currentAddress = provider.getAddress().address;
+  if (currentAddress === '') {
+    // TODO: should never happen. Not sure why we're checking this
     return errorFxn(PaimaMiddlewareErrorCode.NO_ADDRESS_SELECTED);
   }
 

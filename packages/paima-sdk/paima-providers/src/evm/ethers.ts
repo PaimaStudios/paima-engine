@@ -1,9 +1,16 @@
 import type { Signer } from '@ethersproject/abstract-signer';
 import type { TransactionRequest } from '@ethersproject/abstract-provider';
-import type { ActiveConnection, GameInfo, IProvider, UserSignature } from '../IProvider';
-import { DEFAULT_GAS_LIMIT, type EvmAddress } from './types';
-import { ProviderNotInitialized } from '../errors';
+import type {
+  ActiveConnection,
+  AddressAndType,
+  GameInfo,
+  IProvider,
+  UserSignature,
+} from '../IProvider.js';
+import { DEFAULT_GAS_LIMIT, type EvmAddress } from './types.js';
+import { ProviderNotInitialized } from '../errors.js';
 import { utf8ToHex } from 'web3-utils';
+import { AddressType } from '@paima/utils';
 
 export type EthersApi = Signer;
 
@@ -58,12 +65,16 @@ export class EthersEvmProvider implements IProvider<EthersApi> {
   getConnection = (): ActiveConnection<EthersApi> => {
     return this.conn;
   };
-  getAddress = (): string => {
-    return this.address;
+  getAddress = (): AddressAndType => {
+    return {
+      type: AddressType.EVM,
+      address: this.address.toLowerCase(),
+    };
   };
   signMessage = async (message: string): Promise<UserSignature> => {
     const hexMessage = utf8ToHex(message);
-    const signature = await this.conn.api.signMessage(hexMessage);
+    const buffer = Buffer.from(hexMessage.slice(2), 'hex');
+    const signature = await this.conn.api.signMessage(buffer);
     return signature;
   };
   sendTransaction = async (tx: TransactionRequest): Promise<string> => {

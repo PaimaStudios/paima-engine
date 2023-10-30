@@ -8,9 +8,12 @@ import { polkadotLoginWrapper } from './polkadot';
 import { ethersLoginWrapper } from './evm/ethers';
 import type { IProvider } from '@paima/providers';
 import { WalletMode } from '@paima/providers';
-import { PostingMode, setPostingMode } from '../state';
+import { PostingMode, setDefaultProvider, setPostingMode } from '../state';
 
-export async function specificWalletLogin(loginInfo: LoginInfo): Promise<Result<Wallet>> {
+export async function specificWalletLogin(
+  loginInfo: LoginInfo,
+  setDefault: boolean = true
+): Promise<Result<Wallet>> {
   const errorFxn = buildEndpointErrorFxn('specificWalletLogin');
 
   const provider = await (async (): Promise<Result<IProvider<unknown>>> => {
@@ -37,6 +40,10 @@ export async function specificWalletLogin(loginInfo: LoginInfo): Promise<Result<
   })();
   if (provider.success === false) return provider;
 
+  if (setDefault) {
+    setDefaultProvider(provider.result);
+  }
+
   const postingMode = ((): PostingMode => {
     if ('preferBatchedMode' in loginInfo) {
       return loginInfo.preferBatchedMode ? PostingMode.BATCHED : PostingMode.UNBATCHED;
@@ -45,5 +52,5 @@ export async function specificWalletLogin(loginInfo: LoginInfo): Promise<Result<
   })();
 
   setPostingMode(provider.result, postingMode);
-  return { success: true, result: { walletAddress: provider.result.getAddress() } };
+  return { success: true, result: { walletAddress: provider.result.getAddress().address } };
 }

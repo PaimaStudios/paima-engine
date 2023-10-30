@@ -1,9 +1,9 @@
-import type { ActiveConnection, GameInfo, IConnector, IProvider } from './IProvider';
+import type { ActiveConnection, GameInfo, IConnector, IProvider } from './IProvider.js';
 import assertNever from 'assert-never';
-import { AlgorandConnector } from './algorand';
-import { EvmInjectedConnector } from './evm';
-import { CardanoConnector } from './cardano';
-import { PolkadotConnector } from './polkadot';
+import { AlgorandConnector } from './algorand.js';
+import { EvmInjectedConnector } from './evm/index.js';
+import { CardanoConnector } from './cardano.js';
+import { PolkadotConnector } from './polkadot.js';
 
 export const enum WalletMode {
   EvmInjected,

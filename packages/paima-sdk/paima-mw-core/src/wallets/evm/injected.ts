@@ -69,6 +69,7 @@ export async function checkEthWalletStatus(): Promise<OldResult> {
   const errorFxn = buildEndpointErrorFxn('checkEthWalletStatus');
 
   if (EvmInjectedConnector.instance().getProvider() === null) {
+    // TODO: this is not quite right. We want to know if we had a provider, but not anymore
     return { success: true, message: '' };
   }
 

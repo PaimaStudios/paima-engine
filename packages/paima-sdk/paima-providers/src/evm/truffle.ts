@@ -1,10 +1,11 @@
 import type HDWalletProvider from '@truffle/hdwallet-provider';
 import type { TransactionConfig } from 'web3-core';
 import Web3 from 'web3';
-import type { ActiveConnection, IProvider, UserSignature } from '../IProvider';
-import { DEFAULT_GAS_LIMIT, type EvmAddress } from './types';
-import { ProviderNotInitialized } from '../errors';
+import type { ActiveConnection, AddressAndType, IProvider, UserSignature } from '../IProvider.js';
+import { DEFAULT_GAS_LIMIT, type EvmAddress } from './types.js';
+import { ProviderNotInitialized } from '../errors.js';
 import { utf8ToHex } from 'web3-utils';
+import { AddressType } from '@paima/utils';
 
 export type TruffleApi = HDWalletProvider;
 
@@ -63,12 +64,15 @@ export class TruffleEvmProvider implements IProvider<TruffleApi> {
   getConnection = (): ActiveConnection<TruffleApi> => {
     return this.conn;
   };
-  getAddress = (): string => {
-    return this.address;
+  getAddress = (): AddressAndType => {
+    return {
+      type: AddressType.EVM,
+      address: this.address,
+    };
   };
   signMessage = async (message: string): Promise<UserSignature> => {
     const hexMessage = utf8ToHex(message);
-    const signature = await this.web3.eth.personal.sign(hexMessage, this.getAddress(), '');
+    const signature = await this.web3.eth.personal.sign(hexMessage, this.getAddress().address, '');
     return signature;
   };
   sendTransaction = async (tx: TransactionConfig): Promise<string> => {

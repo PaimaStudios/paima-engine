@@ -101,8 +101,8 @@ export const getDefaultActiveAddress = (): string => {
     const errorCode = PaimaMiddlewareErrorCode.WALLET_NOT_CONNECTED;
     throw new Error(paimaErrorMessageFxn(errorCode));
   }
-  return defaultProvider.getAddress();
+  return defaultProvider.getAddress().address;
 };
 export const getActiveAddress = (mode: WalletMode): string => {
-  return callProvider(mode, 'getAddress');
+  return callProvider(mode, 'getAddress').address;
 };

@@ -1,7 +1,7 @@
-export * from './injected';
-export * from './truffle';
-export * from './ethers';
-export type * from './types';
-export type * from './injected';
-export type * from './truffle';
-export type * from './ethers';
+export * from './injected.js';
+export * from './truffle.js';
+export * from './ethers.js';
+export type * from './types.js';
+export type * from './injected.js';
+export type * from './truffle.js';
+export type * from './ethers.js';
