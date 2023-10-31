@@ -1,5 +1,5 @@
 # Common build stage
-FROM node:16.17.0 as common-build-stage
+FROM  --platform=linux/amd64 node:16.17.0 as common-build-stage
 
 COPY . ./app
 
