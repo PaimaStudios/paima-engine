@@ -1,13 +1,15 @@
-import {
-  optionToActive,
-  type ActiveConnection,
-  type ConnectionOption,
-  type GameInfo,
-  type IConnector,
-  type IProvider,
-  type UserSignature,
-} from './IProvider';
-import { ProviderApiError, ProviderNotInitialized, WalletNotFound } from './errors';
+import { AddressType } from '@paima/utils';
+import type {
+  ActiveConnection,
+  AddressAndType,
+  ConnectionOption,
+  GameInfo,
+  IConnector,
+  IProvider,
+  UserSignature,
+} from './IProvider.js';
+import { optionToActive } from './IProvider.js';
+import { ProviderApiError, ProviderNotInitialized, WalletNotFound } from './errors.js';
 import type { InjectedExtension, InjectedWindowProvider } from '@polkadot/extension-inject/types';
 import { utf8ToHex } from 'web3-utils';
 
@@ -132,8 +134,11 @@ export class PolkadotProvider implements IProvider<PolkadotApi> {
   getConnection = (): ActiveConnection<PolkadotApi> => {
     return this.conn;
   };
-  getAddress = (): string => {
-    return this.address;
+  getAddress = (): AddressAndType => {
+    return {
+      type: AddressType.POLKADOT,
+      address: this.address,
+    };
   };
   signMessage = async (message: string): Promise<UserSignature> => {
     if (this.conn.api.signer.signRaw == null) {
@@ -143,7 +148,7 @@ export class PolkadotProvider implements IProvider<PolkadotApi> {
     }
     const hexMessage = utf8ToHex(message);
     const { signature } = await this.conn.api.signer.signRaw({
-      address: this.getAddress(),
+      address: this.getAddress().address,
       data: hexMessage,
       type: 'bytes',
     });

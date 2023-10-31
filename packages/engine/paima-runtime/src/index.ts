@@ -98,7 +98,7 @@ const paimaEngine: PaimaRuntimeInitializer = {
               .then(([latestBlock]) => {
                 if (latestBlock == null) {
                   res.status(200).json({
-                    success: false,
+                    success: true,
                     result: blockNotYet,
                   });
                   return false;
@@ -107,7 +107,7 @@ const paimaEngine: PaimaRuntimeInitializer = {
                 // ex: waiting to see if there are other blocks that need to be bundled as part of the same emulated block
                 if (latestBlock.deployment_chain_block_height < deploymentBlockheight) {
                   res.status(200).json({
-                    success: false,
+                    success: true,
                     result: blockNotYet,
                   });
                   return false;

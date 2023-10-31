@@ -1,4 +1,5 @@
 export const enum AddressType {
+  // CAREFUL: changing these values is a backward incompatible change
   UNKNOWN = 0,
   EVM = 1,
   CARDANO = 2,
@@ -9,6 +10,7 @@ export const enum AddressType {
 export const DEFAULT_FUNNEL_TIMEOUT = 5000;
 
 export const enum ChainDataExtensionType {
+  // CAREFUL: changing these values is a backward incompatible change
   UNKNOWN = 0,
   ERC20 = 1,
   ERC721 = 2,

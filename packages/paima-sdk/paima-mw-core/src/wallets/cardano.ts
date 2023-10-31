@@ -1,33 +1,34 @@
-import type { LoginInfoMap, OldResult, Result, Wallet } from '../types';
+import type { LoginInfoMap, OldResult, Result } from '../types';
 import { buildEndpointErrorFxn, PaimaMiddlewareErrorCode } from '../errors';
-import type { WalletMode } from './wallet-modes';
-import { connectWallet } from './wallet-modes';
-import { CardanoConnector } from '@paima/providers';
-import { getGameName } from '../state';
+import { connectInjected } from './wallet-modes';
+import { CardanoConnector, WalletMode } from '@paima/providers';
+import type { ApiForMode, IProvider } from '@paima/providers';
+import { getGameName, hasLogin } from '../state';
 
 export async function checkCardanoWalletStatus(): Promise<OldResult> {
   const errorFxn = buildEndpointErrorFxn('checkCardanoWalletStatus');
 
-  const currentAddress = CardanoConnector.instance().getProvider()?.getAddress();
-  if (currentAddress == null || currentAddress === '') {
+  if (!hasLogin(WalletMode.Cardano)) {
+    return { success: true, message: '' };
+  }
+  const provider = CardanoConnector.instance().getProvider();
+  if (provider == null) {
     return errorFxn(PaimaMiddlewareErrorCode.NO_ADDRESS_SELECTED);
   }
-
-  // TODO: more proper checking?
 
   return { success: true, message: '' };
 }
 
 export async function cardanoLoginWrapper(
-  loginInfo: LoginInfoMap[WalletMode.CARDANO]
-): Promise<Result<Wallet>> {
+  loginInfo: LoginInfoMap[WalletMode.Cardano]
+): Promise<Result<IProvider<ApiForMode<WalletMode.Cardano>>>> {
   const errorFxn = buildEndpointErrorFxn('cardanoLoginWrapper');
 
   const gameInfo = {
     gameName: getGameName(),
     gameChainId: undefined, // Not needed because of batcher
   };
-  const loginResult = await connectWallet(
+  const loginResult = await connectInjected(
     'cardanoLoginWrapper',
     errorFxn,
     PaimaMiddlewareErrorCode.CARDANO_LOGIN,
@@ -40,8 +41,6 @@ export async function cardanoLoginWrapper(
   }
   return {
     success: true,
-    result: {
-      walletAddress: loginResult.result.getAddress(),
-    },
+    result: loginResult.result,
   };
 }

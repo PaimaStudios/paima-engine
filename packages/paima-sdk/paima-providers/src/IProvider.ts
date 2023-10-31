@@ -1,3 +1,5 @@
+import type { AddressType } from '@paima/utils';
+
 export type UserSignature = string;
 
 export type WalletOption = {
@@ -49,8 +51,13 @@ export interface IConnector<T> {
   getOrThrowProvider(): IProvider<T>;
   isConnected(): boolean;
 }
+
+export type AddressAndType = {
+  type: AddressType;
+  address: string;
+};
 export interface IProvider<T> {
   getConnection(): ActiveConnection<T>;
   signMessage(message: string): Promise<UserSignature>;
-  getAddress(): string;
+  getAddress(): AddressAndType;
 }

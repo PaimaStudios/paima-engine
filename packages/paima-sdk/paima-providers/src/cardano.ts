@@ -1,15 +1,16 @@
-import { hexStringToUint8Array, type UserSignature } from '@paima/utils';
+import { AddressType, hexStringToUint8Array, type UserSignature } from '@paima/utils';
 import { utf8ToHex } from 'web3-utils';
-import {
-  optionToActive,
-  type ActiveConnection,
-  type ConnectionOption,
-  type GameInfo,
-  type IConnector,
-  type IProvider,
-} from './IProvider';
+import { optionToActive } from './IProvider.js';
+import type {
+  ActiveConnection,
+  AddressAndType,
+  ConnectionOption,
+  GameInfo,
+  IConnector,
+  IProvider,
+} from './IProvider.js';
 import { bech32 } from 'bech32';
-import { ProviderApiError, ProviderNotInitialized, WalletNotFound } from './errors';
+import { ProviderApiError, ProviderNotInitialized, WalletNotFound } from './errors.js';
 
 // TODO: proper type definitions for CIP30
 export type CardanoApi = any;
@@ -153,12 +154,16 @@ export class CardanoProvider implements IProvider<CardanoApi> {
   getConnection = (): ActiveConnection<CardanoApi> => {
     return this.conn;
   };
-  getAddress = (): string => {
-    return this.address.bech32;
+  getAddress = (): AddressAndType => {
+    return {
+      type: AddressType.CARDANO,
+      address: this.address.bech32,
+    };
   };
   signMessage = async (message: string): Promise<UserSignature> => {
     const hexMessage = utf8ToHex(message).slice(2);
-    const { signature, key } = await this.conn.api.signData(this.getAddress(), hexMessage);
+    const address = this.conn.metadata.name === 'nami' ? this.address.hex : this.address.bech32;
+    const { signature, key } = await this.conn.api.signData(address, hexMessage);
     return `${signature}+${key}`;
   };
 

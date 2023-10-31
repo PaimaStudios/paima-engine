@@ -5,12 +5,6 @@ import { queryEndpoints } from './endpoints/queries';
 import { utilityEndpoints } from './endpoints/utility';
 
 import {
-  retrievePostingInfo,
-  switchToBatchedCardanoMode,
-  switchToBatchedEthMode,
-  switchToBatchedPolkadotMode,
-  switchToUnbatchedMode,
-  switchToAutomaticMode,
   userWalletLoginWithoutChecks,
   automaticWalletLogin,
   updateBackendUri,
@@ -29,6 +23,7 @@ import {
   setGameVersion,
   getBackendUri,
   getBatcherUri,
+  getDefaultActiveAddress,
   getActiveAddress,
   getStorageAddress,
   getDeployment,
@@ -58,13 +53,13 @@ export type * from './errors';
 // Only for use in game-specific middleware:
 export * from './types';
 export type * from './types';
-export { WalletMode } from './wallets/wallet-modes';
 export {
   paimaEndpoints,
   getBlockNumber,
   getBackendUri,
   getBatcherUri,
   getDeployment,
+  getDefaultActiveAddress,
   getActiveAddress,
   getStorageAddress,
   postConciseData,
@@ -83,12 +78,6 @@ export {
 
 // NOT FOR USE IN PRODUCTION, just internal endpoints and helper functions for easier testing and debugging:
 export {
-  retrievePostingInfo,
-  switchToBatchedCardanoMode,
-  switchToBatchedEthMode,
-  switchToBatchedPolkadotMode,
-  switchToUnbatchedMode,
-  switchToAutomaticMode,
   userWalletLoginWithoutChecks,
   automaticWalletLogin,
   updateBackendUri,

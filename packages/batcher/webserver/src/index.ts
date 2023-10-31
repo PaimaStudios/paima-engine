@@ -232,7 +232,7 @@ async function initializeServer(
 
         const input: BatchedSubunit = {
           addressType,
-          userAddress: truffleProvider.getAddress(),
+          userAddress: truffleProvider.getAddress().address,
           gameInput,
           millisecondTimestamp,
           userSignature,
@@ -271,7 +271,7 @@ async function initializeServer(
           await insertValidatedInput.run(
             {
               address_type: addressType,
-              user_address: truffleProvider.getAddress(),
+              user_address: truffleProvider.getAddress().address,
               game_input: gameInput,
               millisecond_timestamp: millisecondTimestamp,
               user_signature: userSignature,

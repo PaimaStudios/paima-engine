@@ -1,15 +1,18 @@
 import type { MetaMaskInpageProvider } from '@metamask/providers';
-import {
-  optionToActive,
-  type ActiveConnection,
-  type ConnectionOption,
-  type GameInfo,
-  type IConnector,
-  type IProvider,
-  type UserSignature,
-} from './IProvider';
+import type {
+  ActiveConnection,
+  ConnectionOption,
+  GameInfo,
+  IConnector,
+  IProvider,
+  UserSignature,
+  AddressAndType,
+} from '../IProvider.js';
+import { optionToActive } from '../IProvider.js';
 import { utf8ToHex } from 'web3-utils';
-import { ProviderApiError, ProviderNotInitialized, WalletNotFound } from './errors';
+import { ProviderApiError, ProviderNotInitialized, WalletNotFound } from '../errors.js';
+import type { EvmAddress } from './types.js';
+import { AddressType } from '@paima/utils';
 
 type EIP1193Provider = MetaMaskInpageProvider;
 
@@ -78,25 +81,18 @@ interface AddEthereumChainParameter {
 }
 
 export type EvmApi = EIP1193Provider;
-export type EvmAddress = string;
 
-export class EvmConnector implements IConnector<EvmApi> {
-  private provider: EvmProvider | undefined;
-  private static INSTANCE: undefined | EvmConnector = undefined;
+export class EvmInjectedConnector implements IConnector<EvmApi> {
+  private provider: EvmInjectedProvider | undefined;
+  private static INSTANCE: undefined | EvmInjectedConnector = undefined;
 
-  static getWalletOptions(): ConnectionOption<EvmApi>[] {
-    const seenNames: Set<string> = new Set();
+  /**
+   * Wallets may inject themselves using multiple competing standards
+   * We have to track all of them (with duplicates) internally
+   * To make sure `connectNamed` calls properly find wallets no matter the name used
+   */
+  static getPossiblyDuplicateWalletOptions(): ConnectionOption<EvmApi>[] {
     const allWallets: ConnectionOption<EvmApi>[] = [];
-
-    // add options and de-duplicate based off the display name
-    // we can't duplicate on other keys because they have a different formats for different EIPs
-    const addOptions: (options: ConnectionOption<EvmApi>[]) => void = options => {
-      for (const option of options) {
-        if (seenNames.has(option.metadata.name)) continue;
-        seenNames.add(option.metadata.name);
-        allWallets.push(option);
-      }
-    };
 
     // 1) Add EIP6963 and prioritize it for deduplicating
     {
@@ -108,7 +104,7 @@ export class EvmConnector implements IConnector<EvmApi> {
         },
         api: () => Promise.resolve(provider),
       }));
-      addOptions(eip6963Options);
+      allWallets.push(...eip6963Options);
     }
 
     // 2) Add EIP5749
@@ -121,36 +117,59 @@ export class EvmConnector implements IConnector<EvmApi> {
         },
         api: () => Promise.resolve(provider),
       }));
-      addOptions(eip5749Options);
+      allWallets.push(...eip5749Options);
     }
 
     // Metamask doesn't support EIP6963 yet, but it plans to. In the meantime, we add it manually
     if (window.ethereum != null && window.ethereum.isMetaMask) {
       const ethereum = window.ethereum;
-      addOptions([
-        {
-          metadata: {
-            name: 'metamask',
-            displayName: 'Metamask',
-          },
-          api: () => Promise.resolve(ethereum),
+      allWallets.push({
+        metadata: {
+          name: 'metamask',
+          displayName: 'Metamask',
         },
-      ]);
+        api: () => Promise.resolve(ethereum),
+      });
     }
+    // some wallets aggressively put themselves in the list of wallets the user has installed
+    // even if the user has never actually used these
+    // we put these wallets at the bottom of the priority
+    const aggressiveWallets = ['com.brave.wallet'];
+    allWallets.sort((a, b) => {
+      const aAggressive = aggressiveWallets.includes(a.metadata.name);
+      const bAggressive = aggressiveWallets.includes(b.metadata.name);
+      if (aAggressive && !bAggressive) return 1;
+      if (bAggressive && !aAggressive) return -1;
+      return 0;
+    });
     return allWallets;
   }
-  static instance(): EvmConnector {
-    if (EvmConnector.INSTANCE == null) {
-      const newInstance = new EvmConnector();
-      EvmConnector.INSTANCE = newInstance;
+  static getWalletOptions(): ConnectionOption<EvmApi>[] {
+    const withDuplicates = EvmInjectedConnector.getPossiblyDuplicateWalletOptions();
+    const seenNames: Set<string> = new Set();
+
+    const result: ConnectionOption<EvmApi>[] = [];
+    for (const option of withDuplicates) {
+      if (seenNames.has(option.metadata.name)) continue;
+      seenNames.add(option.metadata.name);
+      result.push(option);
     }
-    return EvmConnector.INSTANCE;
+
+    return result;
   }
-  connectSimple = async (gameInfo: GameInfo): Promise<EvmProvider> => {
+
+  static instance(): EvmInjectedConnector {
+    if (EvmInjectedConnector.INSTANCE == null) {
+      const newInstance = new EvmInjectedConnector();
+      EvmInjectedConnector.INSTANCE = newInstance;
+    }
+    return EvmInjectedConnector.INSTANCE;
+  }
+  connectSimple = async (gameInfo: GameInfo): Promise<EvmInjectedProvider> => {
     if (this.provider != null) {
       return this.provider;
     }
-    const options = EvmConnector.getWalletOptions();
+    const options = EvmInjectedConnector.getWalletOptions();
     if (options.length === 0) {
       throw new WalletNotFound(`No EVM wallet found`);
     }
@@ -159,11 +178,11 @@ export class EvmConnector implements IConnector<EvmApi> {
   connectExternal = async (
     gameInfo: GameInfo,
     conn: ActiveConnection<EvmApi>
-  ): Promise<EvmProvider> => {
+  ): Promise<EvmInjectedProvider> => {
     if (this.provider?.getConnection().metadata?.name === conn.metadata.name) {
       return this.provider;
     }
-    this.provider = await EvmProvider.init(gameInfo, conn);
+    this.provider = await EvmInjectedProvider.init(gameInfo, conn);
 
     // Update the selected Eth address if the user changes after logging in.
     // warning: not supported by all wallets (ex: Flint)
@@ -175,23 +194,25 @@ export class EvmConnector implements IConnector<EvmApi> {
     });
     return this.provider;
   };
-  connectNamed = async (gameInfo: GameInfo, name: string): Promise<EvmProvider> => {
+  connectNamed = async (gameInfo: GameInfo, name: string): Promise<EvmInjectedProvider> => {
     if (this.provider?.getConnection().metadata?.name === name) {
       return this.provider;
     }
 
-    const provider = EvmConnector.getWalletOptions().find(entry => entry.metadata.name === name);
+    const provider = EvmInjectedConnector.getPossiblyDuplicateWalletOptions().find(
+      entry => entry.metadata.name === name
+    );
     if (provider == null) {
       throw new WalletNotFound(`EVM wallet ${name} not found`);
     }
     return await this.connectExternal(gameInfo, await optionToActive(provider));
   };
-  getProvider = (): undefined | EvmProvider => {
+  getProvider = (): undefined | EvmInjectedProvider => {
     return this.provider;
   };
-  getOrThrowProvider = (): EvmProvider => {
+  getOrThrowProvider = (): EvmInjectedProvider => {
     if (this.provider == null) {
-      throw new ProviderNotInitialized(`EvmConnector not initialized yet`);
+      throw new ProviderNotInitialized(`EvmInjectedConnector not initialized yet`);
     }
     return this.provider;
   };
@@ -200,7 +221,25 @@ export class EvmConnector implements IConnector<EvmApi> {
   };
 }
 
-export class EvmProvider implements IProvider<EvmApi> {
+/**
+ * For some reason I can't find any official type definitions for this
+ * https://docs.metamask.io/wallet/reference/eth_sendtransaction/
+ */
+type Web3TransactionRequest = {
+  to?: string;
+  from: string;
+
+  gas?: string;
+  gasPrice?: string;
+
+  data: string;
+  value?: string;
+
+  maxPriorityFeePerGas?: string;
+  maxFeePerGas?: string;
+};
+
+export class EvmInjectedProvider implements IProvider<EvmApi> {
   constructor(
     private readonly conn: ActiveConnection<EvmApi>,
     private readonly gameInfo: GameInfo,
@@ -209,7 +248,7 @@ export class EvmProvider implements IProvider<EvmApi> {
   static init = async (
     gameInfo: GameInfo,
     conn: ActiveConnection<EvmApi>
-  ): Promise<EvmProvider> => {
+  ): Promise<EvmInjectedProvider> => {
     const accounts = (await conn.api.request({
       method: 'eth_requestAccounts',
     })) as string[];
@@ -217,13 +256,16 @@ export class EvmProvider implements IProvider<EvmApi> {
       throw new ProviderApiError('Unknown error while receiving EVM accounts');
     }
 
-    return new EvmProvider(conn, gameInfo, accounts[0]);
+    return new EvmInjectedProvider(conn, gameInfo, accounts[0]);
   };
   getConnection = (): ActiveConnection<EvmApi> => {
     return this.conn;
   };
-  getAddress = (): string => {
-    return this.address;
+  getAddress = (): AddressAndType => {
+    return {
+      type: AddressType.EVM,
+      address: this.address.toLowerCase(),
+    };
   };
   signMessage = async (message: string): Promise<UserSignature> => {
     const hexMessage = utf8ToHex(message);
@@ -273,7 +315,7 @@ export class EvmProvider implements IProvider<EvmApi> {
       throw new ProviderApiError(`[switchChain] error: ${e?.message}`, e?.code);
     }
   };
-  sendTransaction = async (tx: Record<string, any>): Promise<string> => {
+  sendTransaction = async (tx: Web3TransactionRequest): Promise<string> => {
     await this.verifyWalletChain();
     try {
       const hash = await this.conn.api.request({

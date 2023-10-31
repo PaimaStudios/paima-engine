@@ -7,39 +7,25 @@ import type {
   IConnector,
   IProvider,
   GameInfo,
+  EthersApi,
+  InjectionPreference,
+  WalletMode,
 } from '@paima/providers';
-import { WalletNotFound, UnsupportedWallet } from '@paima/providers';
+import { WalletNotFound, UnsupportedWallet, connectInjectedWallet } from '@paima/providers';
 import type { EndpointErrorFxn } from '../errors';
 import type { Result } from '../types';
 import type { PaimaMiddlewareErrorCode } from '../errors';
 import { FE_ERR_SPECIFIC_WALLET_NOT_INSTALLED } from '../errors';
-import assertNever from 'assert-never';
-
-export const enum WalletMode {
-  NO_WALLET,
-  EVM,
-  CARDANO,
-  POLKADOT,
-  ALGORAND,
-}
-
-export type Preference<T> =
-  | {
-      name: string;
-    }
-  | {
-      connection: ActiveConnection<T>;
-    };
 
 export type BaseLoginInfo<Api> = {
-  preference?: Preference<Api>;
+  preference?: InjectionPreference<Api>;
 };
 export type LoginInfoMap = {
-  [WalletMode.EVM]: BaseLoginInfo<EvmApi> & { preferBatchedMode: boolean };
-  [WalletMode.CARDANO]: BaseLoginInfo<CardanoApi>;
-  [WalletMode.POLKADOT]: BaseLoginInfo<PolkadotApi>;
-  [WalletMode.ALGORAND]: BaseLoginInfo<AlgorandApi>;
-  [WalletMode.NO_WALLET]: void;
+  [WalletMode.EvmInjected]: BaseLoginInfo<EvmApi> & { preferBatchedMode: boolean };
+  [WalletMode.EvmEthers]: { connection: ActiveConnection<EthersApi>; preferBatchedMode: boolean };
+  [WalletMode.Cardano]: BaseLoginInfo<CardanoApi>;
+  [WalletMode.Polkadot]: BaseLoginInfo<PolkadotApi>;
+  [WalletMode.Algorand]: BaseLoginInfo<AlgorandApi>;
 };
 
 type ToUnion<T> = {
@@ -55,7 +41,7 @@ function getWalletName(info: BaseLoginInfo<unknown>): undefined | string {
   }
   return info.preference.connection.metadata.name;
 }
-export async function connectWallet<Api>(
+export async function connectInjected<Api>(
   typeName: string,
   errorFxn: EndpointErrorFxn,
   errorCode: PaimaMiddlewareErrorCode,
@@ -64,32 +50,16 @@ export async function connectWallet<Api>(
   gameInfo: GameInfo
 ): Promise<Result<IProvider<Api>>> {
   try {
-    if (loginInfo.preference == null) {
-      console.log(`${typeName} Attempting simple login`);
-      const provider = await connector.connectSimple(gameInfo);
-      return {
-        success: true,
-        result: provider,
-      };
-    } else if ('name' in loginInfo.preference) {
-      const walletName = loginInfo.preference.name;
-      console.log(`${typeName} Attempting to log into ${walletName}`);
-      const provider = await connector.connectNamed(gameInfo, walletName);
-      return {
-        success: true,
-        result: provider,
-      };
-    } else if ('connection' in loginInfo.preference) {
-      const walletName = loginInfo.preference.connection.metadata.name;
-      console.log(`${typeName} Attempting to log into ${walletName}`);
-      const provider = await connector.connectExternal(gameInfo, loginInfo.preference.connection);
-      return {
-        success: true,
-        result: provider,
-      };
-    } else {
-      assertNever(loginInfo.preference);
-    }
+    const provider = await connectInjectedWallet(
+      typeName,
+      loginInfo.preference,
+      connector,
+      gameInfo
+    );
+    return {
+      success: true,
+      result: provider,
+    };
   } catch (err) {
     if (err instanceof WalletNotFound || err instanceof UnsupportedWallet) {
       return errorFxn(errorCode, undefined, FE_ERR_SPECIFIC_WALLET_NOT_INSTALLED);

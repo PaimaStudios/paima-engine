@@ -3,32 +3,13 @@ import { ENV } from '@paima/utils';
 import { initWeb3 } from '@paima/utils';
 
 import { PaimaMiddlewareErrorCode, paimaErrorMessageFxn } from './errors';
-import type { PostingInfo, PostingModeString } from './types';
-import {
-  AlgorandConnector,
-  CardanoConnector,
-  EvmConnector,
-  PolkadotConnector,
-} from '@paima/providers';
-import assertNever from 'assert-never';
+import type { IProvider, WalletMode } from '@paima/providers';
+import { callProvider } from '@paima/providers';
 
 export const enum PostingMode {
   UNBATCHED,
-  BATCHED_ETH,
-  BATCHED_CARDANO,
-  BATCHED_POLKADOT,
-  BATCHED_ALGORAND,
-  AUTOMATIC,
+  BATCHED,
 }
-
-export const POSTING_MODE_NAMES: Record<PostingMode, PostingModeString> = {
-  [PostingMode.UNBATCHED]: 'unbatched',
-  [PostingMode.BATCHED_ETH]: 'batched-eth',
-  [PostingMode.BATCHED_CARDANO]: 'batched-cardano',
-  [PostingMode.BATCHED_POLKADOT]: 'batched-polkadot',
-  [PostingMode.BATCHED_ALGORAND]: 'batched-algorand',
-  [PostingMode.AUTOMATIC]: 'automatic',
-};
 
 let gameVersion: VersionString = '0.0.0';
 let gameName: string = '';
@@ -47,8 +28,6 @@ const chainCurrencyDecimals: number = ENV.CHAIN_CURRENCY_DECIMALS;
 const storageAddress: ContractAddress = ENV.CONTRACT_ADDRESS;
 
 const deployment: Deployment = ENV.DEPLOYMENT as Deployment;
-
-let postingMode: PostingMode = PostingMode.UNBATCHED;
 
 let emulatedBlocksActive: undefined | boolean = undefined;
 
@@ -90,17 +69,24 @@ export const getStorageAddress = (): ContractAddress => storageAddress;
 
 export const getDeployment = (): Deployment => deployment;
 
-export const getPostingMode = (): PostingMode => postingMode;
-export const getPostingModeString = (): PostingModeString => POSTING_MODE_NAMES[postingMode];
-const setPostingMode = (newMode: PostingMode): PostingMode => (postingMode = newMode);
-export const setUnbatchedMode = (): PostingMode => setPostingMode(PostingMode.UNBATCHED);
-export const setBatchedEthMode = (): PostingMode => setPostingMode(PostingMode.BATCHED_ETH);
-export const setBatchedCardanoMode = (): PostingMode => setPostingMode(PostingMode.BATCHED_CARDANO);
-export const setBatchedPolkadotMode = (): PostingMode =>
-  setPostingMode(PostingMode.BATCHED_POLKADOT);
-export const setBatchedAlgorandMode = (): PostingMode =>
-  setPostingMode(PostingMode.BATCHED_ALGORAND);
-export const setAutomaticMode = (): PostingMode => setPostingMode(PostingMode.AUTOMATIC);
+let defaultProvider: IProvider<unknown> | undefined;
+export const getDefaultProvider = (): IProvider<unknown> | undefined => defaultProvider;
+export const setDefaultProvider = <T>(provider: IProvider<T>): IProvider<T> =>
+  (defaultProvider = provider);
+
+let postingMode: Map<IProvider<unknown>, PostingMode> = new Map();
+export const getPostingMode = (provider: IProvider<unknown>): PostingMode | undefined =>
+  postingMode.get(provider);
+export const setPostingMode = (provider: IProvider<unknown>, newMode: PostingMode): PostingMode => {
+  postingMode.set(provider, newMode);
+  return newMode;
+};
+
+let loginMap: Map<WalletMode, boolean> = new Map();
+export const hasLogin = (mode: WalletMode): boolean => loginMap.has(mode);
+export const addLogin = (mode: WalletMode): void => {
+  loginMap.set(mode, true);
+};
 
 export const setFee = (newFee: string): FeeCache =>
   (fee = {
@@ -116,28 +102,13 @@ export const getWeb3 = async (): Promise<Web3> => {
   return web3;
 };
 
-export const getActiveAddress = (): string => {
-  switch (postingMode) {
-    case PostingMode.UNBATCHED:
-    case PostingMode.BATCHED_ETH:
-      return EvmConnector.instance().getOrThrowProvider().getAddress();
-    case PostingMode.BATCHED_CARDANO:
-      return CardanoConnector.instance().getOrThrowProvider().getAddress();
-    case PostingMode.BATCHED_POLKADOT:
-      return PolkadotConnector.instance().getOrThrowProvider().getAddress();
-    case PostingMode.AUTOMATIC:
-      return EvmConnector.instance().getOrThrowProvider().getAddress();
-    case PostingMode.BATCHED_ALGORAND:
-      return AlgorandConnector.instance().getOrThrowProvider().getAddress();
-    default:
-      assertNever(postingMode, true);
-      const errorCode = PaimaMiddlewareErrorCode.INTERNAL_INVALID_POSTING_MODE;
-      const errorMessage = `${paimaErrorMessageFxn(errorCode)}: ${postingMode}`;
-      throw new Error(errorMessage);
+export const getDefaultActiveAddress = (): string => {
+  if (defaultProvider == null) {
+    const errorCode = PaimaMiddlewareErrorCode.WALLET_NOT_CONNECTED;
+    throw new Error(paimaErrorMessageFxn(errorCode));
   }
+  return defaultProvider.getAddress().address;
 };
-
-export const getPostingInfo = (): PostingInfo => ({
-  address: getActiveAddress(),
-  postingModeString: getPostingModeString(),
-});
+export const getActiveAddress = (mode: WalletMode): string => {
+  return callProvider(mode, 'getAddress').address;
+};

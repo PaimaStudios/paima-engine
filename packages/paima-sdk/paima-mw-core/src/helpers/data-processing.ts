@@ -1,14 +1,8 @@
-import { AddressType, getWriteNamespace } from '@paima/utils';
+import { getWriteNamespace } from '@paima/utils';
 
 import type { SignFunction } from '../types';
-import {
-  AlgorandConnector,
-  CardanoConnector,
-  EvmConnector,
-  PolkadotConnector,
-} from '@paima/providers';
 import { createMessageForBatcher, type BatchedSubunit } from '@paima/concise';
-import assertNever from 'assert-never';
+import type { AddressAndType } from '@paima/providers';
 
 export function batchedToJsonString(b: BatchedSubunit): string {
   return JSON.stringify({
@@ -20,30 +14,11 @@ export function batchedToJsonString(b: BatchedSubunit): string {
   });
 }
 
-function selectSignFunction(addressType: AddressType): SignFunction {
-  switch (addressType) {
-    case AddressType.EVM:
-      return EvmConnector.instance().getOrThrowProvider().signMessage;
-    case AddressType.CARDANO:
-      return CardanoConnector.instance().getOrThrowProvider().signMessage;
-    case AddressType.POLKADOT:
-      return PolkadotConnector.instance().getOrThrowProvider().signMessage;
-    case AddressType.ALGORAND:
-      return AlgorandConnector.instance().getOrThrowProvider().signMessage;
-    case AddressType.UNKNOWN:
-      throw new Error(`[selectSignFunction] unknown address type`);
-    default:
-      assertNever(addressType, true);
-      throw new Error(`[selectSignFunction] invalid address type: ${addressType}`);
-  }
-}
-
 export async function buildBatchedSubunit(
-  addressType: AddressType,
-  userAddress: string,
+  signFunction: SignFunction,
+  userAddress: AddressAndType,
   gameInput: string
 ): Promise<BatchedSubunit> {
-  const signFunction = selectSignFunction(addressType);
   const millisecondTimestamp: string = new Date().getTime().toString(10);
   const message: string = createMessageForBatcher(
     await getWriteNamespace(),
@@ -52,8 +27,8 @@ export async function buildBatchedSubunit(
   );
   const userSignature = await signFunction(message);
   return {
-    addressType,
-    userAddress,
+    addressType: userAddress.type,
+    userAddress: userAddress.address,
     userSignature,
     gameInput,
     millisecondTimestamp,

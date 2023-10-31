@@ -84,7 +84,7 @@ class BatchedTransactionPoster {
     const tx = {
       data: this.storage.methods.paimaSubmitGameInput(hexMsg).encodeABI(),
       to: this.contractAddress,
-      from: this.truffleProvider.getAddress(),
+      from: this.truffleProvider.getAddress().address,
       value: this.truffleProvider.web3.utils.numberToHex(this.fee),
       gas: estimateGasLimit(msg.length),
     };

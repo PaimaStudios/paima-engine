@@ -1,4 +1,4 @@
-import { retrieveFee, retryPromise, wait, AddressType } from '@paima/utils';
+import { retrieveFee, retryPromise, wait } from '@paima/utils';
 import type { EndpointErrorFxn } from '../errors';
 import {
   BatcherRejectionCode,
@@ -8,6 +8,7 @@ import {
   PaimaMiddlewareErrorCode,
 } from '../errors';
 import {
+  getDefaultProvider,
   getEmulatedBlocksActive,
   getFee,
   getPostingMode,
@@ -24,6 +25,7 @@ import type {
   Result,
 } from '../types';
 import { batchedToJsonString, buildBatchedSubunit } from './data-processing';
+import type { PostFxn } from './transaction-building';
 import { buildDirectTx } from './transaction-building';
 import { batcherQuerySubmitUserInput, batcherQueryTrackUserInput } from './query-constructors';
 import { postDataToEndpoint } from './general';
@@ -32,13 +34,8 @@ import {
   deploymentChainBlockHeightToEmulated,
   emulatedBlocksActiveOnBackend,
 } from './auxiliary-queries';
-import {
-  TruffleConnector,
-  AlgorandConnector,
-  CardanoConnector,
-  EvmConnector,
-  PolkadotConnector,
-} from '@paima/providers';
+import { EthersEvmProvider, EvmInjectedProvider, WalletModeMap } from '@paima/providers';
+import type { WalletMode } from '@paima/providers';
 import type { BatchedSubunit } from '@paima/concise';
 import assertNever from 'assert-never';
 
@@ -48,8 +45,6 @@ const BATCHER_RETRIES = 50;
 const TX_VERIFICATION_RETRY_DELAY = 1000;
 const TX_VERIFICATION_DELAY = 1000;
 const TX_VERIFICATION_RETRY_COUNT = 8;
-
-type PostFxn = (tx: Record<string, any>) => Promise<string>;
 
 function oneHourPassed(timestamp: number): boolean {
   const currTime = new Date().getTime();
@@ -78,10 +73,11 @@ export async function updateFee(): Promise<void> {
  */
 export const postConciseData = async (
   data: string,
-  errorFxn: EndpointErrorFxn
+  errorFxn: EndpointErrorFxn,
+  mode?: WalletMode
 ): Promise<PostDataResponse | FailedResult> => {
   try {
-    const response = await postConciselyEncodedData(data);
+    const response = await postConciselyEncodedData(data, mode);
     if (!response.success) {
       return errorFxn(
         PaimaMiddlewareErrorCode.ERROR_POSTING_TO_CHAIN,
@@ -108,46 +104,37 @@ export const postConciseData = async (
  * @param gameInput
  * @returns On success the block number of the transaction
  */
-export async function postConciselyEncodedData(gameInput: string): Promise<Result<number>> {
+export async function postConciselyEncodedData(
+  gameInput: string,
+  mode?: WalletMode
+): Promise<Result<number>> {
   const errorFxn = buildEndpointErrorFxn('postConciselyEncodedData');
-  const postingMode = getPostingMode();
+
+  const provider = mode == null ? getDefaultProvider() : WalletModeMap[mode].getOrThrowProvider();
+  if (provider == null) {
+    const errorCode = PaimaMiddlewareErrorCode.WALLET_NOT_CONNECTED;
+    return errorFxn(errorCode, 'Failed to get default provider');
+  }
+  const postingMode = getPostingMode(provider);
+  if (postingMode == null) {
+    return errorFxn(
+      PaimaMiddlewareErrorCode.INTERNAL_INVALID_POSTING_MODE,
+      `Invalid posting mode: ${postingMode}`
+    );
+  }
 
   switch (postingMode) {
     case PostingMode.UNBATCHED:
-      return await postString(
-        EvmConnector.instance().getOrThrowProvider().sendTransaction,
-        EvmConnector.instance().getOrThrowProvider().getAddress(),
-        gameInput
+      if (provider instanceof EthersEvmProvider || provider instanceof EvmInjectedProvider) {
+        return await postString(provider.sendTransaction, provider.getAddress().address, gameInput);
+      }
+      return errorFxn(
+        PaimaMiddlewareErrorCode.INTERNAL_INVALID_POSTING_MODE,
+        `Unbatched only supported for EVM wallets`
       );
-    case PostingMode.BATCHED_ETH:
-      return await buildBatchedSubunit(
-        AddressType.EVM,
-        EvmConnector.instance().getOrThrowProvider().getAddress(),
-        gameInput
-      ).then(submitToBatcher);
-    case PostingMode.BATCHED_CARDANO:
-      return await buildBatchedSubunit(
-        AddressType.CARDANO,
-        CardanoConnector.instance().getOrThrowProvider().getAddress(),
-        gameInput
-      ).then(submitToBatcher);
-    case PostingMode.BATCHED_POLKADOT:
-      return await buildBatchedSubunit(
-        AddressType.POLKADOT,
-        PolkadotConnector.instance().getOrThrowProvider().getAddress(),
-        gameInput
-      ).then(submitToBatcher);
-    case PostingMode.BATCHED_ALGORAND:
-      return await buildBatchedSubunit(
-        AddressType.ALGORAND,
-        AlgorandConnector.instance().getOrThrowProvider().getAddress(),
-        gameInput
-      ).then(submitToBatcher);
-    case PostingMode.AUTOMATIC:
-      return await postString(
-        TruffleConnector.instance().getOrThrowProvider().sendTransaction,
-        TruffleConnector.instance().getOrThrowProvider().getAddress(),
-        gameInput
+    case PostingMode.BATCHED:
+      return await buildBatchedSubunit(provider.signMessage, provider.getAddress(), gameInput).then(
+        submitToBatcher
       );
     default:
       assertNever(postingMode, true);
@@ -162,6 +149,8 @@ async function getAdjustedHeight(deploymentChainBlockHeight: number): Promise<nu
   const emulatedActive = getEmulatedBlocksActive() ?? (await emulatedBlocksActiveOnBackend());
   if (emulatedActive) {
     const BLOCK_DELAY = 1000;
+
+    // TODO: magic number. -1 here means the block isn't part of the chain yet so we can't know the mapping
     let block = -1;
     while (block === -1) {
       block = await deploymentChainBlockHeightToEmulated(deploymentChainBlockHeight);

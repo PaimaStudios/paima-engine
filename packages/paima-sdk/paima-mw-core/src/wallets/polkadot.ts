@@ -1,20 +1,20 @@
 import { buildEndpointErrorFxn, PaimaMiddlewareErrorCode } from '../errors';
 import { getGameName } from '../state';
-import type { LoginInfoMap, Result, Wallet } from '../types';
+import type { LoginInfoMap, Result } from '../types';
 import { PolkadotConnector } from '@paima/providers';
-import type { WalletMode } from './wallet-modes';
-import { connectWallet } from './wallet-modes';
+import type { ApiForMode, IProvider, WalletMode } from '@paima/providers';
+import { connectInjected } from './wallet-modes';
 
 export async function polkadotLoginWrapper(
-  loginInfo: LoginInfoMap[WalletMode.POLKADOT]
-): Promise<Result<Wallet>> {
+  loginInfo: LoginInfoMap[WalletMode.Polkadot]
+): Promise<Result<IProvider<ApiForMode<WalletMode.Polkadot>>>> {
   const errorFxn = buildEndpointErrorFxn('polkadotLoginWrapper');
 
   const gameInfo = {
     gameName: getGameName(),
     gameChainId: undefined, // Not needed because of batcher
   };
-  const loginResult = await connectWallet(
+  const loginResult = await connectInjected(
     'polkadotLoginWrapper',
     errorFxn,
     PaimaMiddlewareErrorCode.POLKADOT_LOGIN,
@@ -27,8 +27,6 @@ export async function polkadotLoginWrapper(
   }
   return {
     success: true,
-    result: {
-      walletAddress: loginResult.result.getAddress(),
-    },
+    result: loginResult.result,
   };
 }
