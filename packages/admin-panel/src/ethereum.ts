@@ -40,7 +40,7 @@ export async function userWalletLogin(): Promise<string> {
     console.error(e);
   }
   if (!accounts) {
-    throw new Error('Problem while retreiving accounts');
+    throw new Error('Problem while retrieving accounts');
   } else {
     return accounts[0];
   }

@@ -12,6 +12,7 @@ import { optionToActive } from './IProvider.js';
 import { ProviderApiError, ProviderNotInitialized, WalletNotFound } from './errors.js';
 import type { InjectedExtension, InjectedWindowProvider } from '@polkadot/extension-inject/types';
 import { utf8ToHex } from 'web3-utils';
+import { getWindow } from './window.js';
 
 export type PolkadotAddress = string;
 export type PolkadotApi = InjectedExtension;
@@ -27,8 +28,9 @@ export class PolkadotConnector implements IConnector<PolkadotApi> {
   private static INSTANCE: undefined | PolkadotConnector = undefined;
 
   static async getWalletOptions(gameName: string): Promise<ConnectionOption<PolkadotApi>[]> {
-    if (window.injectedWeb3 == null) return [];
-    return Object.keys(window.injectedWeb3).map(wallet => ({
+    const windowObj = getWindow();
+    if (windowObj?.injectedWeb3 == null) return [];
+    return Object.keys(windowObj.injectedWeb3).map(wallet => ({
       metadata: {
         name: wallet,
         // polkadot provides no way to get a human-friendly name or icon for wallets

@@ -11,6 +11,7 @@ import type {
 } from './IProvider.js';
 import { bech32 } from 'bech32';
 import { ProviderApiError, ProviderNotInitialized, WalletNotFound } from './errors.js';
+import { getWindow } from './window.js';
 
 // TODO: proper type definitions for CIP30
 export type CardanoApi = any;
@@ -19,6 +20,12 @@ export type CardanoAddress = {
   bech32: string;
   hex: string;
 };
+
+declare global {
+  interface Window {
+    cardano?: Record<string, { name?: string; enable?: () => Promise<CardanoApi> }>;
+  }
+}
 
 // 4 helpers to convert hex addresses to bech32
 const NETWORK_TAG_MAINNET = '1';
@@ -31,9 +38,7 @@ export class CardanoConnector implements IConnector<CardanoApi> {
   private static INSTANCE: undefined | CardanoConnector = undefined;
 
   static getWalletOptions(): ConnectionOption<CardanoApi>[] {
-    const cardanoApi: Record<string, { name?: string; enable?: () => Promise<CardanoApi> }> = (
-      window as any
-    ).cardano;
+    const cardanoApi = getWindow()?.cardano;
     if (cardanoApi == null) return [];
 
     const options = Object.entries(cardanoApi).reduce((options, [key, info]) => {

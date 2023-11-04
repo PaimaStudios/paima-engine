@@ -13,6 +13,7 @@ import { utf8ToHex } from 'web3-utils';
 import { ProviderApiError, ProviderNotInitialized, WalletNotFound } from '../errors.js';
 import type { EvmAddress } from './types.js';
 import { AddressType } from '@paima/utils';
+import { getWindow } from '../window.js';
 
 type EIP1193Provider = MetaMaskInpageProvider;
 
@@ -49,10 +50,10 @@ interface EIP6963AnnounceProviderEvent extends CustomEvent {
 
 const eip5953Providers: EIP6963ProviderDetail[] = [];
 
-window?.addEventListener('eip6963:announceProvider', (event: EIP6963AnnounceProviderEvent) => {
+getWindow()?.addEventListener('eip6963:announceProvider', (event: EIP6963AnnounceProviderEvent) => {
   eip5953Providers.push(event.detail);
 });
-window?.dispatchEvent(new Event('eip6963:requestProvider'));
+getWindow()?.dispatchEvent(new Event('eip6963:requestProvider'));
 declare global {
   interface Window {
     ethereum?: EIP1193Provider;
@@ -94,6 +95,9 @@ export class EvmInjectedConnector implements IConnector<EvmApi> {
   static getPossiblyDuplicateWalletOptions(): ConnectionOption<EvmApi>[] {
     const allWallets: ConnectionOption<EvmApi>[] = [];
 
+    const windowObj = getWindow();
+    if (windowObj == null) return [];
+
     // 1) Add EIP6963 and prioritize it for deduplicating
     {
       const eip6963Options = eip5953Providers.map(({ info, provider }) => ({
@@ -109,20 +113,22 @@ export class EvmInjectedConnector implements IConnector<EvmApi> {
 
     // 2) Add EIP5749
     {
-      const eip5749Options = Object.entries(window.evmproviders ?? {}).map(([key, provider]) => ({
-        metadata: {
-          name: key,
-          displayName: provider.info.name,
-          icon: provider.info.icon,
-        },
-        api: () => Promise.resolve(provider),
-      }));
+      const eip5749Options = Object.entries(windowObj.evmproviders ?? {}).map(
+        ([key, provider]) => ({
+          metadata: {
+            name: key,
+            displayName: provider.info.name,
+            icon: provider.info.icon,
+          },
+          api: () => Promise.resolve(provider),
+        })
+      );
       allWallets.push(...eip5749Options);
     }
 
     // Metamask doesn't support EIP6963 yet, but it plans to. In the meantime, we add it manually
-    if (window.ethereum != null && window.ethereum.isMetaMask) {
-      const ethereum = window.ethereum;
+    if (windowObj.ethereum != null && windowObj.ethereum.isMetaMask) {
+      const ethereum = windowObj.ethereum;
       allWallets.push({
         metadata: {
           name: 'metamask',
@@ -186,7 +192,7 @@ export class EvmInjectedConnector implements IConnector<EvmApi> {
 
     // Update the selected Eth address if the user changes after logging in.
     // warning: not supported by all wallets (ex: Flint)
-    window.ethereum?.on('accountsChanged', newAccounts => {
+    getWindow()?.ethereum?.on('accountsChanged', newAccounts => {
       const accounts = newAccounts as string[];
       if (!accounts || !accounts[0] || accounts[0] !== this.provider?.address) {
         this.provider = undefined;

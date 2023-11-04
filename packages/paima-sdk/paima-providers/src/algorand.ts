@@ -17,6 +17,7 @@ import {
   UnsupportedWallet,
   WalletNotFound,
 } from './errors.js';
+import { getWindow } from './window.js';
 
 export type AlgorandApi = PeraWalletConnect;
 export type AlgorandAddress = string;
@@ -32,7 +33,7 @@ export class AlgorandConnector implements IConnector<AlgorandApi> {
     // and, similar to window.ethereum, has wallets overriding each other
     // and Pera wallet doesn't even use this standard
     // instead, the best we can do is check if Pera injected its UI component in the window
-    if (window.customElements.get('pera-wallet-connect-modal') == null) {
+    if (getWindow()?.customElements.get('pera-wallet-connect-modal') == null) {
       return [];
     }
     return [
