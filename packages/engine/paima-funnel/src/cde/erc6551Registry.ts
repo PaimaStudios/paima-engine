@@ -9,7 +9,7 @@ import type {
   ChainDataExtensionDatum,
   ChainDataExtensionErc6551Registry,
 } from '@paima/runtime';
-import type { AccountCreated } from '@paima/utils/src/contract-types/ERC6551RegistryContract';
+import type { AccountCreated } from '@paima/utils/src/contract-types/ERC6551RegistryContract.js';
 
 export default async function getCdeData(
   extension: ChainDataExtensionErc6551Registry,

@@ -12,11 +12,11 @@ import {
 import type { IGetBlockHeightsResult } from '@paima/db';
 import { hashTogether } from '@paima/utils-backend';
 
-import { calculateBoundaryTimestamp, emulateCde, timestampToBlockNumber } from './utils';
-import { BaseFunnel } from '../BaseFunnel';
-import type { FunnelSharedData } from '../BaseFunnel';
+import { calculateBoundaryTimestamp, emulateCde, timestampToBlockNumber } from './utils.js';
+import { BaseFunnel } from '../BaseFunnel.js';
+import type { FunnelSharedData } from '../BaseFunnel.js';
 
-import { QueuedBlockCacheEntry, RpcCacheEntry, RpcRequestState } from '../FunnelCache';
+import { QueuedBlockCacheEntry, RpcCacheEntry, RpcRequestState } from '../FunnelCache.js';
 
 /**
  * For hash calculation of empty blocks to work,

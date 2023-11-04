@@ -1,6 +1,6 @@
 import type Web3 from 'web3';
 import { doLog } from '@paima/utils';
-import type { IVerify } from './IVerify';
+import type { IVerify } from './IVerify.js';
 
 export class EvmCrypto implements IVerify {
   constructor(public readonly web3: Web3) {}

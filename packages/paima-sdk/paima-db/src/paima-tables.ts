@@ -1,5 +1,5 @@
-import type { TableData } from './table-types';
-import { packTuples } from './table-types';
+import type { TableData } from './table-types.js';
+import { packTuples } from './table-types.js';
 
 const QUERY_CREATE_TABLE_BLOCKHEIGHTS = `
 CREATE TABLE block_heights ( 

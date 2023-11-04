@@ -1,5 +1,5 @@
 import { describe, expect, test } from '@jest/globals';
-import { PaimaParser, PaimaParserError } from '../src/PaimaParser';
+import { PaimaParser, PaimaParserError } from '../src/PaimaParser.js';
 
 const myGrammar = `
   join = j|x|number?|number_?

@@ -1,6 +1,6 @@
 import { getWriteNamespace } from '@paima/utils';
 
-import type { SignFunction } from '../types';
+import type { SignFunction } from '../types.js';
 import { createMessageForBatcher, type BatchedSubunit } from '@paima/concise';
 import type { AddressAndType } from '@paima/providers';
 

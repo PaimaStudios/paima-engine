@@ -1,12 +1,12 @@
 import { retrieveFee, retryPromise, wait } from '@paima/utils';
-import type { EndpointErrorFxn } from '../errors';
+import type { EndpointErrorFxn } from '../errors.js';
 import {
   BatcherRejectionCode,
   buildEndpointErrorFxn,
   FE_ERR_BATCHER_LIMIT_REACHED,
   FE_ERR_BATCHER_REJECTED_INPUT,
   PaimaMiddlewareErrorCode,
-} from '../errors';
+} from '../errors.js';
 import {
   getDefaultProvider,
   getEmulatedBlocksActive,
@@ -16,24 +16,24 @@ import {
   getWeb3,
   PostingMode,
   setFee,
-} from '../state';
+} from '../state.js';
 import type {
   BatcherPostResponse,
   BatcherTrackResponse,
   FailedResult,
   PostDataResponse,
   Result,
-} from '../types';
-import { batchedToJsonString, buildBatchedSubunit } from './data-processing';
-import type { PostFxn } from './transaction-building';
-import { buildDirectTx } from './transaction-building';
-import { batcherQuerySubmitUserInput, batcherQueryTrackUserInput } from './query-constructors';
-import { postDataToEndpoint } from './general';
-import { pushLog } from './logging';
+} from '../types.js';
+import { batchedToJsonString, buildBatchedSubunit } from './data-processing.js';
+import type { PostFxn } from './transaction-building.js';
+import { buildDirectTx } from './transaction-building.js';
+import { batcherQuerySubmitUserInput, batcherQueryTrackUserInput } from './query-constructors.js';
+import { postDataToEndpoint } from './general.js';
+import { pushLog } from './logging.js';
 import {
   deploymentChainBlockHeightToEmulated,
   emulatedBlocksActiveOnBackend,
-} from './auxiliary-queries';
+} from './auxiliary-queries.js';
 import { EthersEvmProvider, EvmInjectedProvider, WalletModeMap } from '@paima/providers';
 import type { WalletMode } from '@paima/providers';
 import type { BatchedSubunit } from '@paima/concise';

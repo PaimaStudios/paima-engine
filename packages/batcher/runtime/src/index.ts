@@ -24,7 +24,7 @@ import {
 import type { ErrorCode, ErrorMessageFxn, GameInputValidatorCore } from '@paima/batcher-utils';
 
 import { initializePool } from './pg/pgPool.js';
-import type { BatcherRuntimeInitializer } from './types';
+import type { BatcherRuntimeInitializer } from './types.js';
 
 const MINIMUM_INTER_CATCH_PERIOD = 1000;
 let batchedTransactionPosterReference: BatchedTransactionPoster | null = null;

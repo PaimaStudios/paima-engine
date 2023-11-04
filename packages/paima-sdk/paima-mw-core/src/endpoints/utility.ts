@@ -1,4 +1,4 @@
-import { joinLogs, pushLog as log } from '../helpers/logging';
+import { joinLogs, pushLog as log } from '../helpers/logging.js';
 
 const exportLogs = (): string => {
   return joinLogs();

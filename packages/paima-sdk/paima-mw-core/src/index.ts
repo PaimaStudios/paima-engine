@@ -1,22 +1,22 @@
 import type { VersionString } from '@paima/utils';
 
-import { accountsEndpoints } from './endpoints/accounts';
-import { queryEndpoints } from './endpoints/queries';
-import { utilityEndpoints } from './endpoints/utility';
+import { accountsEndpoints } from './endpoints/accounts.js';
+import { queryEndpoints } from './endpoints/queries.js';
+import { utilityEndpoints } from './endpoints/utility.js';
 
 import {
   userWalletLoginWithoutChecks,
   automaticWalletLogin,
   updateBackendUri,
-} from './endpoints/internal';
+} from './endpoints/internal.js';
 
-import { getBlockNumber, postDataToEndpoint } from './helpers/general';
-import { getRemoteBackendVersion, awaitBlock } from './helpers/auxiliary-queries';
-import { postConciselyEncodedData, postConciseData } from './helpers/posting';
-import { buildQuery, buildBackendQuery } from './helpers/query-constructors';
-import { pushLog } from './helpers/logging';
+import { getBlockNumber, postDataToEndpoint } from './helpers/general.js';
+import { getRemoteBackendVersion, awaitBlock } from './helpers/auxiliary-queries.js';
+import { postConciselyEncodedData, postConciseData } from './helpers/posting.js';
+import { buildQuery, buildBackendQuery } from './helpers/query-constructors.js';
+import { pushLog } from './helpers/logging.js';
 
-import { walletToName } from './name-generation';
+import { walletToName } from './name-generation/index.js';
 
 import {
   setGameName,
@@ -27,13 +27,13 @@ import {
   getActiveAddress,
   getStorageAddress,
   getDeployment,
-} from './state';
+} from './state.js';
 import {
   EndpointErrorFxn,
   buildAbstractEndpointErrorFxn,
   PaimaMiddlewareErrorCode,
   PAIMA_MIDDLEWARE_ERROR_MESSAGES,
-} from './errors';
+} from './errors.js';
 
 export async function initMiddlewareCore(
   gameName: string,
@@ -49,10 +49,10 @@ const paimaEndpoints = {
   ...utilityEndpoints,
 };
 
-export type * from './errors';
+export type * from './errors.js';
 // Only for use in game-specific middleware:
-export * from './types';
-export type * from './types';
+export * from './types.js';
+export type * from './types.js';
 export {
   paimaEndpoints,
   getBlockNumber,

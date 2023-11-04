@@ -15,6 +15,7 @@ const compat = new FlatCompat({
 module.exports = [
   ...compat.extends(
     'airbnb-typescript',
+    'plugin:require-extensions/recommended',
     'plugin:@typescript-eslint/recommended',
     'plugin:@typescript-eslint/recommended-requiring-type-checking',
     'plugin:import/typescript',

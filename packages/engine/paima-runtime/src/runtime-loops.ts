@@ -2,24 +2,24 @@ import process from 'process';
 
 import { doLog, logError, delay } from '@paima/utils';
 import { tx, DataMigrations } from '@paima/db';
-import { getEarliestStartBlockheight } from './cde-config/utils';
+import { getEarliestStartBlockheight } from './cde-config/utils.js';
 import type {
   ChainData,
   ChainDataExtension,
   ChainFunnel,
   GameStateMachine,
   IFunnelFactory,
-} from './types';
+} from './types.js';
 
-import { run } from './run-flag';
+import { run } from './run-flag.js';
 import { snapshotIfTime } from './snapshots.js';
 import {
   TimeoutError,
   acquireLatestBlockHeight,
   exitIfStopped,
   loopIfStopBlockReached,
-} from './utils';
-import { cleanNoncesIfTime } from './nonce-gc';
+} from './utils.js';
+import { cleanNoncesIfTime } from './nonce-gc.js';
 import type { PoolClient } from 'pg';
 
 // The core logic of paima runtime which polls the funnel and processes the resulting chain data using the game's state machine.

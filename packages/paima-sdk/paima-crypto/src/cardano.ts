@@ -1,5 +1,5 @@
 import { doLog } from '@paima/utils';
-import type { IVerify } from './IVerify';
+import type { IVerify } from './IVerify.js';
 
 export class CardanoCrypto implements IVerify {
   verifyAddress = async (address: string): Promise<boolean> => {

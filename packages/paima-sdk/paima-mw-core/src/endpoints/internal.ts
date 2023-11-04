@@ -1,17 +1,17 @@
 import type { URI } from '@paima/utils';
-import { buildEndpointErrorFxn, PaimaMiddlewareErrorCode } from '../errors';
+import { buildEndpointErrorFxn, PaimaMiddlewareErrorCode } from '../errors.js';
 import {
   getChainUri,
   setBackendUri,
   setEmulatedBlocksActive,
   setEmulatedBlocksInactive,
-} from '../state';
-import type { Result, Wallet } from '../types';
-import { specificWalletLogin } from '../wallets/wallets';
-import { emulatedBlocksActiveOnBackend } from '../helpers/auxiliary-queries';
+} from '../state.js';
+import type { Result, Wallet } from '../types.js';
+import { specificWalletLogin } from '../wallets/wallets.js';
+import { emulatedBlocksActiveOnBackend } from '../helpers/auxiliary-queries.js';
 import { TruffleConnector } from '@paima/providers';
 import HDWalletProvider from '@truffle/hdwallet-provider';
-import type { LoginInfo } from '../wallets/wallet-modes';
+import type { LoginInfo } from '../wallets/wallet-modes.js';
 
 export async function userWalletLoginWithoutChecks(
   loginInfo: LoginInfo,

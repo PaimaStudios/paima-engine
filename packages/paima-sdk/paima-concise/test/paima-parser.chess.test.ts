@@ -1,5 +1,5 @@
 import { describe, expect, test } from '@jest/globals';
-import { PaimaParser } from '../src/PaimaParser';
+import { PaimaParser } from '../src/PaimaParser.js';
 
 const myGrammar = `
 createdLobby = c|numOfRounds|roundLength|playTimePerPlayer|isHidden?|isPractice?|playerOneIsWhite?

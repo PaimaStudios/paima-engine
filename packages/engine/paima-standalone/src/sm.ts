@@ -1,7 +1,7 @@
 import type { GameStateMachine } from '@paima/runtime';
 import PaimaSM from '@paima/sm';
-import { importGameStateTransitionRouter } from './utils/import';
-import { poolConfig } from './utils';
+import { importGameStateTransitionRouter } from './utils/import.js';
+import { poolConfig } from './utils/index.js';
 import { ENV } from '@paima/utils';
 
 export const gameSM = (): GameStateMachine => {

@@ -1,4 +1,4 @@
-import { getWeb3 } from '../state';
+import { getWeb3 } from '../state.js';
 
 export async function getBlockNumber(): Promise<number> {
   return await getWeb3().then(web3 => web3.eth.getBlockNumber());

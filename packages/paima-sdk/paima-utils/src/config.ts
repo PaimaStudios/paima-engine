@@ -1,4 +1,4 @@
-import type { VersionString } from './types';
+import type { VersionString } from './types.js';
 
 export class ENV {
   static doHealthCheck(): void {

@@ -11,7 +11,7 @@ import paimaErc721ContractBuild from './artifacts/PaimaERC721Contract.js';
 import erc165ContractBuild from './artifacts/ERC165Contract.js';
 import erc6551RegistryContractBuild from './artifacts/ERC6551RegistryContract.js';
 import oldErc6551RegistryContractBuild from './artifacts/OldERC6551RegistryContract.js';
-import type * as Contracts from './contract-types';
+import type * as Contracts from './contract-types/index.js';
 import { doLog, logError } from './logging.js';
 import type { Deployment, ErrorCode, ErrorMessageFxn, ErrorMessageMapping } from './types.js';
 import {
@@ -28,7 +28,7 @@ export * from './config.js';
 export * from './types.js';
 export type * from './types.js';
 export * from './security/parse.js';
-export type * from './contract-types';
+export type * from './contract-types/index.js';
 
 export type { Web3, Contract, AbiItem, EventData };
 export {

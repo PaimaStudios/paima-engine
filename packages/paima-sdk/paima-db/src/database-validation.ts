@@ -1,8 +1,8 @@
 import { doLog } from '@paima/utils';
 import type { PoolClient } from 'pg';
-import { TABLES } from './paima-tables';
-import { createTable, tableExists, tableIsValid } from './postgres-metadata';
-import type { TableData } from './table-types';
+import { TABLES } from './paima-tables.js';
+import { createTable, tableExists, tableIsValid } from './postgres-metadata.js';
+import type { TableData } from './table-types.js';
 
 const FAILURE_MESSAGE: string = `Please remove these tables from your database or update them to conform with
 Paima requirements.
