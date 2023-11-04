@@ -1,7 +1,7 @@
 import { buildErrorCodeTranslator } from '@paima/utils';
 import type { ErrorCode, ErrorMessageFxn } from '@paima/utils';
-import { pushLog } from './helpers/logging';
-import type { FailedResult } from './types';
+import { pushLog } from './helpers/logging.js';
+import type { FailedResult } from './types.js';
 
 export type EndpointErrorFxn = (
   errorDescription: ErrorCode | string,

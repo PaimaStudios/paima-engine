@@ -24,7 +24,7 @@ import type {
   ChainDataExtensionGeneric,
   TChainDataExtensionErc721Config,
   TChainDataExtensionGenericConfig,
-} from '../types';
+} from '../types.js';
 import {
   CdeBaseConfig,
   CdeEntryTypeName,
@@ -33,9 +33,9 @@ import {
   ChainDataExtensionErc6551RegistryConfig,
   ChainDataExtensionErc721Config,
   ChainDataExtensionGenericConfig,
-} from '../types';
-import type { CdeConfig } from '../types';
-import { loadAbi } from './utils';
+} from '../types.js';
+import type { CdeConfig } from '../types.js';
+import { loadAbi } from './utils.js';
 import assertNever from 'assert-never';
 import fnv from 'fnv-plus';
 import stableStringify from 'json-stable-stringify';

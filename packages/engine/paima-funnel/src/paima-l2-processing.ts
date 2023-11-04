@@ -3,7 +3,7 @@ import web3UtilsPkg from 'web3-utils';
 
 import { AddressType, doLog, getReadNamespaces } from '@paima/utils';
 import type { SubmittedData } from '@paima/runtime';
-import type { PaimaGameInteraction } from '@paima/utils/src/contract-types/PaimaL2Contract';
+import type { PaimaGameInteraction } from '@paima/utils/src/contract-types/PaimaL2Contract.js';
 import { CryptoManager } from '@paima/crypto';
 import {
   INNER_BATCH_DIVIDER,

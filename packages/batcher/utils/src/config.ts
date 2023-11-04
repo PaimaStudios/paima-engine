@@ -1,4 +1,4 @@
-import { GameInputValidatorCoreType } from './types';
+import { GameInputValidatorCoreType } from './types.js';
 import { config } from 'dotenv';
 import { ENV as ENGINE_ENV } from '@paima/utils';
 

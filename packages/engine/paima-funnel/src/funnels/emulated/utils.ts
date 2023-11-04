@@ -1,9 +1,9 @@
 import type { PoolClient } from 'pg';
 
 import type { ChainDataExtensionDatum, ChainFunnel } from '@paima/runtime';
-import { EmulatedBlocksFunnel } from './funnel';
+import { EmulatedBlocksFunnel } from './funnel.js';
 import { DEFAULT_FUNNEL_TIMEOUT, doLog, logError, timeout } from '@paima/utils';
-import type { FunnelSharedData } from '../BaseFunnel';
+import type { FunnelSharedData } from '../BaseFunnel.js';
 
 export async function wrapToEmulatedBlocksFunnel(
   chainFunnel: ChainFunnel,

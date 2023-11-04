@@ -1,4 +1,4 @@
-import { buildEndpointErrorFxn, PaimaMiddlewareErrorCode } from '../../errors';
+import { buildEndpointErrorFxn, PaimaMiddlewareErrorCode } from '../../errors.js';
 import {
   getChainCurrencyDecimals,
   getChainCurrencyName,
@@ -9,11 +9,11 @@ import {
   getChainUri,
   getGameName,
   hasLogin,
-} from '../../state';
-import type { LoginInfoMap, OldResult, Result } from '../../types';
-import { updateFee } from '../../helpers/posting';
+} from '../../state.js';
+import type { LoginInfoMap, OldResult, Result } from '../../types.js';
+import { updateFee } from '../../helpers/posting.js';
 
-import { connectInjected } from '../wallet-modes';
+import { connectInjected } from '../wallet-modes.js';
 import { WalletMode } from '@paima/providers';
 import type { ApiForMode, IProvider } from '@paima/providers';
 import { EvmInjectedConnector } from '@paima/providers';

@@ -1,14 +1,14 @@
-import type { SQLUpdate } from './types';
+import type { SQLUpdate } from './types.js';
 import {
   newScheduledData,
   removeAllScheduledDataByInputData,
   removeScheduledData,
-} from './sql/scheduled.queries';
+} from './sql/scheduled.queries.js';
 import type {
   INewScheduledDataParams,
   IRemoveScheduledDataParams,
   IRemoveAllScheduledDataByInputDataParams,
-} from './sql/scheduled.queries';
+} from './sql/scheduled.queries.js';
 
 // Create an SQL update which schedules a piece of data to be run through
 // the STF at a future block height.

@@ -3,12 +3,12 @@ import type { PoolClient } from 'pg';
 import { ChainDataExtensionDatumType } from '@paima/utils';
 import type { ChainDataExtensionDatum } from '@paima/runtime';
 
-import processErc20TransferDatum from './cde-erc20-transfer';
-import processErc721TransferDatum from './cde-erc721-transfer';
-import processErc721MintDatum from './cde-erc721-mint';
-import processErc20DepositDatum from './cde-erc20-deposit';
-import processErc6551RegistryDatum from './cde-erc6551-registry';
-import processGenericDatum from './cde-generic';
+import processErc20TransferDatum from './cde-erc20-transfer.js';
+import processErc721TransferDatum from './cde-erc721-transfer.js';
+import processErc721MintDatum from './cde-erc721-mint.js';
+import processErc20DepositDatum from './cde-erc20-deposit.js';
+import processErc6551RegistryDatum from './cde-erc6551-registry.js';
+import processGenericDatum from './cde-generic.js';
 import type { SQLUpdate } from '@paima/db';
 import { getSpecificCdeBlockheight } from '@paima/db';
 import assertNever from 'assert-never';

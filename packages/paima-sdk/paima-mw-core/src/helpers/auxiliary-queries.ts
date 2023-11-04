@@ -1,14 +1,14 @@
 import { wait } from '@paima/utils';
-import { buildEndpointErrorFxn, PaimaMiddlewareErrorCode } from '../errors';
-import { getGameVersion } from '../state';
-import type { Result } from '../types';
-import { pushLog } from './logging';
+import { buildEndpointErrorFxn, PaimaMiddlewareErrorCode } from '../errors.js';
+import { getGameVersion } from '../state.js';
+import type { Result } from '../types.js';
+import { pushLog } from './logging.js';
 import {
   backendQueryBackendVersion,
   backendQueryDeploymentBlockheightToEmulated,
   backendQueryEmulatedBlocksActive,
   backendQueryLatestProcessedBlockHeight,
-} from './query-constructors';
+} from './query-constructors.js';
 
 export async function getRawLatestProcessedBlockHeight(): Promise<Result<number>> {
   const errorFxn = buildEndpointErrorFxn('getRawLatestProcessedBlockHeight');

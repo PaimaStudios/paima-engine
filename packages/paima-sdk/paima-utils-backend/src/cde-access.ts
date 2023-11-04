@@ -12,8 +12,8 @@ import {
   internalGetGenericDataBlockheightRange,
   internalGetErc6551AccountOwner,
   internalGetAllOwnedErc6551Accounts,
-} from './cde-access-internals';
-import type { OwnedNftsResponse, GenericCdeDataUnit, TokenIdPair } from './types';
+} from './cde-access-internals.js';
+import type { OwnedNftsResponse, GenericCdeDataUnit, TokenIdPair } from './types.js';
 
 /**
  * Fetch the owner of the NFT from the database

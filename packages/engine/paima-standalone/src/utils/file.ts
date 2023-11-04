@@ -1,8 +1,8 @@
 import { doLog } from '@paima/utils';
 import fs from 'fs';
 import path from 'path';
-import { API_FILENAME, ROUTER_FILENAME } from './import';
-import type { Template } from './types';
+import { API_FILENAME, ROUTER_FILENAME } from './import.js';
+import type { Template } from './types.js';
 
 export const PACKAGED_TEMPLATES_PATH = `${__dirname}/templates`;
 const PACKAGED_BATCHER_PATH = `${__dirname}/batcher`;

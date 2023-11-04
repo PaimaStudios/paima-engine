@@ -1,7 +1,7 @@
 import type { SignedTransaction, Transaction, SuggestedParams } from 'algosdk';
 import { doLog, hexStringToUint8Array } from '@paima/utils';
 import web3UtilsPkg from 'web3-utils';
-import type { IVerify } from './IVerify';
+import type { IVerify } from './IVerify.js';
 
 export class AlgorandCrypto implements IVerify {
   verifyAddress = async (address: string): Promise<boolean> => {

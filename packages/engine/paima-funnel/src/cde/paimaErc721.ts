@@ -10,7 +10,7 @@ import type {
   ChainDataExtensionDatum,
   ChainDataExtensionPaimaErc721,
 } from '@paima/runtime';
-import type { Minted, Transfer } from '@paima/utils/src/contract-types/PaimaERC721Contract';
+import type { Minted, Transfer } from '@paima/utils/src/contract-types/PaimaERC721Contract.js';
 
 export default async function getCdeData(
   extension: ChainDataExtensionPaimaErc721,

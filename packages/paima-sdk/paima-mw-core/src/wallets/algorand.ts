@@ -1,9 +1,9 @@
-import type { LoginInfoMap, Result } from '../types';
-import { PaimaMiddlewareErrorCode, buildEndpointErrorFxn } from '../errors';
+import type { LoginInfoMap, Result } from '../types.js';
+import { PaimaMiddlewareErrorCode, buildEndpointErrorFxn } from '../errors.js';
 import { AlgorandConnector } from '@paima/providers';
 import type { ApiForMode, IProvider, WalletMode } from '@paima/providers';
-import { getGameName } from '../state';
-import { connectInjected } from './wallet-modes';
+import { getGameName } from '../state.js';
+import { connectInjected } from './wallet-modes.js';
 
 export async function algorandLoginWrapper(
   loginInfo: LoginInfoMap[WalletMode.Algorand]

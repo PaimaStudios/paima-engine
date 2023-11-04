@@ -3,7 +3,7 @@ import type { PoolClient, Pool } from 'pg';
 import { doLog } from '@paima/utils';
 import { tx, getChainDataExtensions, registerChainDataExtension } from '@paima/db';
 
-import type { ChainDataExtension } from '../types';
+import type { ChainDataExtension } from '../types.js';
 
 /**
  * Check that the configuration used when syncing the game node still matches their current value

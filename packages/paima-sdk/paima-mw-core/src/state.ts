@@ -2,7 +2,7 @@ import type { ContractAddress, Deployment, URI, VersionString, Web3 } from '@pai
 import { ENV } from '@paima/utils';
 import { initWeb3 } from '@paima/utils';
 
-import { PaimaMiddlewareErrorCode, paimaErrorMessageFxn } from './errors';
+import { PaimaMiddlewareErrorCode, paimaErrorMessageFxn } from './errors.js';
 import type { IProvider, WalletMode } from '@paima/providers';
 import { callProvider } from '@paima/providers';
 

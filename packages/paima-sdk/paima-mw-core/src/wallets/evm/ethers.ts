@@ -1,7 +1,7 @@
-import { buildEndpointErrorFxn, PaimaMiddlewareErrorCode } from '../../errors';
-import { getChainId, getGameName } from '../../state';
-import type { LoginInfoMap, Result } from '../../types';
-import { updateFee } from '../../helpers/posting';
+import { buildEndpointErrorFxn, PaimaMiddlewareErrorCode } from '../../errors.js';
+import { getChainId, getGameName } from '../../state.js';
+import type { LoginInfoMap, Result } from '../../types.js';
+import { updateFee } from '../../helpers/posting.js';
 
 import type { ApiForMode, EthersApi, IProvider, WalletMode } from '@paima/providers';
 import { EthersConnector } from '@paima/providers';

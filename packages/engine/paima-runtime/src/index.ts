@@ -7,19 +7,19 @@ import {
   emulatedSelectLatestPrior,
   getGameInput,
 } from '@paima/db';
-import { validatePersistentCdeConfig } from './cde-config/validation';
-import type { GameStateMachine, IFunnelFactory, PaimaRuntimeInitializer } from './types';
+import { validatePersistentCdeConfig } from './cde-config/validation.js';
+import type { GameStateMachine, IFunnelFactory, PaimaRuntimeInitializer } from './types.js';
 
-import { run, setRunFlag, clearRunFlag } from './run-flag';
+import { run, setRunFlag, clearRunFlag } from './run-flag.js';
 import { server, startServer } from './server.js';
 import { initSnapshots } from './snapshots.js';
-import { startRuntime } from './runtime-loops';
+import { startRuntime } from './runtime-loops.js';
 
-export * from './cde-config/loading';
-export * from './cde-config/validation';
-export * from './cde-config/utils';
-export * from './types';
-export { TimeoutError } from './utils';
+export * from './cde-config/loading.js';
+export * from './cde-config/validation.js';
+export * from './cde-config/utils.js';
+export * from './types.js';
+export { TimeoutError } from './utils.js';
 
 process.on('SIGINT', () => {
   if (!run) process.exit(0);

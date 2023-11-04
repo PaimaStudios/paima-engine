@@ -1,7 +1,7 @@
 import { doLog, logError, delay } from '@paima/utils';
-import type { GameStateMachine } from './types';
+import type { GameStateMachine } from './types.js';
 
-import { run } from './run-flag';
+import { run } from './run-flag.js';
 import type { PoolClient } from 'pg';
 
 export async function loopIfStopBlockReached(

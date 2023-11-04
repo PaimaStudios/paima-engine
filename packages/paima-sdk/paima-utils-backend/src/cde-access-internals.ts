@@ -13,7 +13,7 @@ import {
   cdeErc6551GetOwnedAccounts,
   cdeErc6551GetOwner,
 } from '@paima/db';
-import type { OwnedNftsResponse, GenericCdeDataUnit, TokenIdPair } from './types';
+import type { OwnedNftsResponse, GenericCdeDataUnit, TokenIdPair } from './types.js';
 
 /* Functions to retrieve CDE ID: */
 

@@ -1,11 +1,11 @@
 import { ENV, doLog, timeout } from '@paima/utils';
 import type { ChainData, ChainFunnel, PresyncChainData } from '@paima/runtime';
-import { getBaseChainDataMulti, getBaseChainDataSingle } from '../../reading';
-import { getUngroupedCdeData } from '../../cde/reading';
-import { composeChainData, groupCdeData } from '../../utils';
-import { BaseFunnel } from '../BaseFunnel';
-import type { FunnelSharedData } from '../BaseFunnel';
-import { RpcCacheEntry, RpcRequestState } from '../FunnelCache';
+import { getBaseChainDataMulti, getBaseChainDataSingle } from '../../reading.js';
+import { getUngroupedCdeData } from '../../cde/reading.js';
+import { composeChainData, groupCdeData } from '../../utils.js';
+import { BaseFunnel } from '../BaseFunnel.js';
+import type { FunnelSharedData } from '../BaseFunnel.js';
+import { RpcCacheEntry, RpcRequestState } from '../FunnelCache.js';
 import type { PoolClient } from 'pg';
 
 const GET_BLOCK_NUMBER_TIMEOUT = 5000;

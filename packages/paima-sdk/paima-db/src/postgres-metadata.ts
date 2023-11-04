@@ -1,7 +1,7 @@
 import { doLog } from '@paima/utils';
 import type { PoolClient } from 'pg';
 
-import type { ColumnData, TableData } from './table-types';
+import type { ColumnData, TableData } from './table-types.js';
 
 const QUERY_TABLE_EXISTENCE = 'SELECT * FROM pg_tables WHERE tablename = $1';
 const QUERY_TABLE_COLUMN =

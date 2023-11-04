@@ -1,5 +1,5 @@
 import { describe, expect, test } from '@jest/globals';
-import { getReadNamespaces, getWriteNamespace } from '../../src/security/parse';
+import { getReadNamespaces, getWriteNamespace } from '../../src/security/parse.js';
 
 const CONTRACT_ADDRESS = '0x35390c41200DD56Ac3A679a0c1EeA369444f3b60';
 process.env.CONTRACT_ADDRESS = CONTRACT_ADDRESS;

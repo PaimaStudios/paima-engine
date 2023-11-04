@@ -3,7 +3,7 @@ import { Type } from '@sinclair/typebox';
 import { Value } from '@sinclair/typebox/value';
 import YAML from 'yaml';
 import * as fs from 'fs/promises';
-import { ENV } from '../config';
+import { ENV } from '../config.js';
 
 const BlockSettings = Type.Object({
   block_height: Type.Integer(),

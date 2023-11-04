@@ -1,18 +1,18 @@
-import { buildEndpointErrorFxn, PaimaMiddlewareErrorCode } from '../errors';
+import { buildEndpointErrorFxn, PaimaMiddlewareErrorCode } from '../errors.js';
 import {
   emulatedBlocksActiveOnBackend,
   localRemoteVersionsCompatible,
-} from '../helpers/auxiliary-queries';
-import { checkCardanoWalletStatus } from '../wallets/cardano';
-import { checkEthWalletStatus } from '../wallets/evm/injected';
-import { specificWalletLogin } from '../wallets/wallets';
+} from '../helpers/auxiliary-queries.js';
+import { checkCardanoWalletStatus } from '../wallets/cardano.js';
+import { checkEthWalletStatus } from '../wallets/evm/injected.js';
+import { specificWalletLogin } from '../wallets/wallets.js';
 import {
   getEmulatedBlocksActive,
   setEmulatedBlocksActive,
   setEmulatedBlocksInactive,
-} from '../state';
-import type { Result, OldResult, Wallet } from '../types';
-import type { LoginInfo } from '../wallets/wallet-modes';
+} from '../state.js';
+import type { Result, OldResult, Wallet } from '../types.js';
+import type { LoginInfo } from '../wallets/wallet-modes.js';
 
 /**
  * Wrapper function for all wallet status checking functions

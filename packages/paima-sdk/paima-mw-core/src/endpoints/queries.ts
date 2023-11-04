@@ -1,6 +1,6 @@
-import { buildEndpointErrorFxn, PaimaMiddlewareErrorCode } from '../errors';
-import { getRawLatestProcessedBlockHeight } from '../helpers/auxiliary-queries';
-import type { Result } from '../types';
+import { buildEndpointErrorFxn, PaimaMiddlewareErrorCode } from '../errors.js';
+import { getRawLatestProcessedBlockHeight } from '../helpers/auxiliary-queries.js';
+import type { Result } from '../types.js';
 
 async function getLatestProcessedBlockHeight(): Promise<Result<number>> {
   const errorFxn = buildEndpointErrorFxn('getLatestProcessedBlockHeight');

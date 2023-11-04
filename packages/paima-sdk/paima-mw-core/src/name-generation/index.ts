@@ -1,7 +1,7 @@
 import Prando from '@paima/prando';
-import type { WalletAddress } from '@paima/utils/src/types';
-import { adjectives } from './adjectives';
-import { nouns } from './nouns';
+import type { WalletAddress } from '@paima/utils';
+import { adjectives } from './adjectives.js';
+import { nouns } from './nouns.js';
 
 // around 0.2% repetition with 10k users
 // around 1.5% repetition with 100k users

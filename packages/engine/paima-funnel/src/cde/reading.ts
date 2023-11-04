@@ -3,12 +3,12 @@ import type Web3 from 'web3';
 import { ChainDataExtensionType } from '@paima/utils';
 import type { ChainDataExtensionDatum, ChainDataExtension } from '@paima/runtime';
 
-import getCdeErc20Data from './erc20';
-import getCdeErc721Data from './erc721';
-import getCdePaimaErc721Data from './paimaErc721';
-import getCdeErc20DepositData from './erc20Deposit';
-import getCdeGenericData from './generic';
-import getCdeErc6551RegistryData from './erc6551Registry';
+import getCdeErc20Data from './erc20.js';
+import getCdeErc721Data from './erc721.js';
+import getCdePaimaErc721Data from './paimaErc721.js';
+import getCdeErc20DepositData from './erc20Deposit.js';
+import getCdeGenericData from './generic.js';
+import getCdeErc6551RegistryData from './erc6551Registry.js';
 import assertNever from 'assert-never';
 
 export async function getUngroupedCdeData(

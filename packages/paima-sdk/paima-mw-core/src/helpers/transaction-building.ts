@@ -8,7 +8,7 @@ import {
 } from '@paima/utils';
 import type { PaimaL2Contract } from '@paima/utils';
 import type { TransactionTemplate } from '@paima/utils';
-import { getFee, getStorageAddress } from '../state';
+import { getFee, getStorageAddress } from '../state.js';
 
 const { numberToHex, utf8ToHex } = web3UtilsPkg;
 

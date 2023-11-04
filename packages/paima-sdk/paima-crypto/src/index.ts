@@ -1,10 +1,10 @@
-import { AlgorandCrypto } from './algorand';
-import { CardanoCrypto } from './cardano';
-import { EvmCrypto } from './evm';
-import { PolkadotCrypto } from './polkadot';
+import { AlgorandCrypto } from './algorand.js';
+import { CardanoCrypto } from './cardano.js';
+import { EvmCrypto } from './evm.js';
+import { PolkadotCrypto } from './polkadot.js';
 import type Web3 from 'web3';
 export { AlgorandCrypto, CardanoCrypto, EvmCrypto, PolkadotCrypto };
-export type * from './IVerify';
+export type * from './IVerify.js';
 
 export class CryptoManager {
   // TODO: these should be dynamically imported
