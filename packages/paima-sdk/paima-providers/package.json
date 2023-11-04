@@ -1,6 +1,6 @@
 {
   "name": "@paima/providers",
-  "version": "1.1.5",
+  "version": "2.0.0",
   "publishConfig": {
     "access": "public"
   },
@@ -26,8 +26,8 @@
   "dependencies": {
     "@ethersproject/abstract-signer": "^5.7.0",
     "@metamask/providers": "^10.2.1",
-    "@paima/crypto": "1.1.5",
-    "@paima/utils": "1.1.5",
+    "@paima/crypto": "2.0.0",
+    "@paima/utils": "2.0.0",
     "@perawallet/connect": "^1.2.3",
     "@polkadot/extension-dapp": "^0.44.9",
     "@truffle/hdwallet-provider": "^2.1.15",

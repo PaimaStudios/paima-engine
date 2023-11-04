@@ -1,6 +1,6 @@
 {
   "name": "@paima/sdk",
-  "version": "1.1.5",
+  "version": "2.0.0",
   "publishConfig": {
     "access": "public"
   },
@@ -26,14 +26,14 @@
   },
   "devDependencies": {},
   "dependencies": {
-    "@paima/concise": "1.1.5",
-    "@paima/crypto": "1.1.5",
-    "@paima/db": "1.1.5",
-    "@paima/executors": "1.1.5",
-    "@paima/mw-core": "1.1.5",
-    "@paima/prando": "1.1.5",
-    "@paima/providers": "1.1.5",
-    "@paima/utils-backend": "1.1.5",
-    "@paima/utils": "1.1.5"
+    "@paima/concise": "2.0.0",
+    "@paima/crypto": "2.0.0",
+    "@paima/db": "2.0.0",
+    "@paima/executors": "2.0.0",
+    "@paima/mw-core": "2.0.0",
+    "@paima/prando": "2.0.0",
+    "@paima/providers": "2.0.0",
+    "@paima/utils-backend": "2.0.0",
+    "@paima/utils": "2.0.0"
   }
 }
