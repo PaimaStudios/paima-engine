@@ -1,7 +1,7 @@
 import type { ActiveConnection, GameInfo, IConnector, IProvider } from './IProvider.js';
 import assertNever from 'assert-never';
 import { AlgorandConnector } from './algorand.js';
-import { EvmInjectedConnector, TruffleConnector } from './evm/index.js';
+import { EthersConnector, EvmInjectedConnector, TruffleConnector } from './evm/index.js';
 import { CardanoConnector } from './cardano.js';
 import { PolkadotConnector } from './polkadot.js';
 
@@ -16,7 +16,7 @@ export const enum WalletMode {
 
 export const WalletModeMap = {
   [WalletMode.EvmInjected]: EvmInjectedConnector.instance(),
-  [WalletMode.EvmEthers]: EvmInjectedConnector.instance(),
+  [WalletMode.EvmEthers]: EthersConnector.instance(),
   [WalletMode.EvmTruffle]: TruffleConnector.instance(),
   [WalletMode.Cardano]: CardanoConnector.instance(),
   [WalletMode.Polkadot]: PolkadotConnector.instance(),
