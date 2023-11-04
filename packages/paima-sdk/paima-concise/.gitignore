@@ -2,5 +2,4 @@ build/
 node_modules
 *.tsbuildinfo
 cache/
-*.js
 *.d.ts
