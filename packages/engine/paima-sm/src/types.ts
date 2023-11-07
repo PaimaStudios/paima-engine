@@ -250,7 +250,7 @@ export type ChainDataExtensionErc6551Registry = ChainDataExtensionBase &
 
 export const ChainDataExtensionCardanoDelegationConfig = Type.Object({
   type: Type.Literal(CdeEntryTypeName.CardanoDelegation),
-  pools: Type.Optional(Type.Array(Type.String())),
+  pools: Type.Array(Type.String()),
   scheduledPrefix: Type.String(),
   startSlot: Type.Number(),
   name: Type.String(),

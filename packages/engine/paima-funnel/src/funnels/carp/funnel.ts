@@ -18,19 +18,10 @@ import { composeChainData, groupCdeData } from '../../utils.js';
 import { BaseFunnel } from '../BaseFunnel.js';
 import type { FunnelSharedData } from '../BaseFunnel.js';
 import type { PoolClient } from 'pg';
-import getCdePoolData from '../../cde/cardanoPool.js';
-import axios from 'axios';
 import type { ChainFunnel, ReadPresyncDataFrom } from '@paima/runtime';
-
-type BlockInfo = {
-  block: {
-    era: number;
-    hash: string;
-    height: number;
-    epoch: number;
-    slot: number;
-  };
-};
+import getCdePoolData from '../../cde/cardanoPool.js';
+import { query, getErrorResponse } from '@dcspark/carp-client/client/src/index';
+import { Routes } from '@dcspark/carp-client/shared/routes';
 
 const confirmationDepth = '10';
 
@@ -121,7 +112,7 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
           .filter(extension => extension.cdeType === ChainDataExtensionType.CardanoPool)
           .map(extension => {
             const data = getCdePoolData(
-              `${this.carpUrl}/delegation/pool`,
+              this.carpUrl,
               extension as ChainDataExtensionCardanoDelegation,
               arg.from,
               Math.min(arg.to, this.startSlot - 1),
@@ -172,15 +163,14 @@ async function readDataInternal(
   const max = timestampToAbsoluteSlot(Math.max(...data.map(data => data.timestamp)));
 
   while (true) {
-    // TODO: replace with carp client
     const stableBlock = await timeout(
-      axios.post<BlockInfo>(`${carpUrl}/block/latest`, {
-        offset: confirmationDepth,
+      query(carpUrl, Routes.blockLatest, {
+        offset: Number(confirmationDepth),
       }),
       DEFAULT_FUNNEL_TIMEOUT
     );
 
-    if (stableBlock.data.block.slot > max) {
+    if (stableBlock.block.slot > max) {
       break;
     }
 
@@ -200,7 +190,7 @@ async function readDataInternal(
       .filter(extension => extension.cdeType === ChainDataExtensionType.CardanoPool)
       .map(extension => {
         const data = getCdePoolData(
-          `${carpUrl}/delegation/pool`,
+          carpUrl,
           extension as ChainDataExtensionCardanoDelegation,
           min,
           max,

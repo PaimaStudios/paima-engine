@@ -4,13 +4,8 @@ import type {
   ChainDataExtensionDatum,
 } from '@paima/sm';
 import { ChainDataExtensionDatumType, DEFAULT_FUNNEL_TIMEOUT, timeout } from '@paima/utils';
-import axios from 'axios';
-
-interface ApiResult {
-  credential: string;
-  pool: string | undefined;
-  slot: number;
-}
+import { Routes, query } from '@dcspark/carp-client/client/src';
+import type { DelegationForPoolResponse } from '@dcspark/carp-client/shared/models/DelegationForPool';
 
 export default async function getCdeData(
   url: string,
@@ -20,19 +15,18 @@ export default async function getCdeData(
   getBlockNumber: (slot: number) => number
 ): Promise<ChainDataExtensionDatum[]> {
   const events = await timeout(
-    // TODO: replace with the carp client later
-    axios.post<ApiResult[]>(url, {
+    query(url, Routes.delegationForPool, {
       pools: extension.pools,
       range: { minSlot: fromAbsoluteSlot, maxSlot: toAbsoluteSlot },
     }),
     DEFAULT_FUNNEL_TIMEOUT
   );
 
-  return events.data.map(e => eventToCdeDatum(e, extension, getBlockNumber(e.slot)));
+  return events.map(e => eventToCdeDatum(e, extension, getBlockNumber(e.slot)));
 }
 
 function eventToCdeDatum(
-  event: ApiResult,
+  event: DelegationForPoolResponse[0],
   extension: ChainDataExtensionCardanoDelegation,
   blockNumber: number
 ): CdeCardanoPoolDatum {
@@ -42,7 +36,7 @@ function eventToCdeDatum(
     blockNumber,
     payload: {
       address: event.credential,
-      pool: event.pool,
+      pool: event.pool || undefined,
     },
     scheduledPrefix: extension.scheduledPrefix,
   };
