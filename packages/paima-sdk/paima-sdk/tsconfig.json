@@ -15,8 +15,6 @@
     { "path": "../paima-utils/tsconfig.build.json" },
     { "path": "../paima-crypto/tsconfig.build.json" },
     { "path": "../paima-providers/tsconfig.build.json" },
-    { "path": "../paima-db" },
-    { "path": "../paima-utils-backend" },
     { "path": "../paima-concise/tsconfig.build.json" },
     { "path": "../paima-executors" },
     { "path": "../paima-mw-core" },

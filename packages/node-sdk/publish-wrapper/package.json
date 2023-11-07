@@ -1,10 +1,10 @@
 {
-  "name": "@paima/sdk",
+  "name": "@paima/node-sdk",
   "version": "2.0.1",
   "publishConfig": {
     "access": "public"
   },
-  "description": "SDK for Paima Engine",
+  "description": "Node SDK for Paima Engine",
   "type": "module",
   "author": "Paima Studios",
   "license": "See license file",
@@ -26,12 +26,7 @@
   },
   "devDependencies": {},
   "dependencies": {
-    "@paima/concise": "2.0.1",
-    "@paima/crypto": "2.0.1",
-    "@paima/executors": "2.0.1",
-    "@paima/mw-core": "2.0.1",
-    "@paima/prando": "2.0.1",
-    "@paima/providers": "2.0.1",
-    "@paima/utils": "2.0.1"
+    "@paima/db": "2.0.1",
+    "@paima/utils-backend": "2.0.1"
   }
 }

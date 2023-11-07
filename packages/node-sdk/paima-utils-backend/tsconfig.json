@@ -1,12 +1,13 @@
 {
   "extends": "../tsconfig.json",
   "compilerOptions": {
-    "rootDir": ".",
-    "noEmit": true
+    "rootDir": "src",
+    "outDir": "build",
+    "resolveJsonModule": true
   },
-  "include": ["src/**/*", "test/**/*"],
+  "include": ["src/**/*"],
   "references": [
+    { "path": "../paima-db" },
     { "path": "../../paima-sdk/paima-utils/tsconfig.build.json" },
-    { "path": "../../node-sdk/paima-db" },
   ]
 }

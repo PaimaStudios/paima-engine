@@ -13,7 +13,7 @@
     "prebuild": "npx nx run-many --parallel=${NX_PARALLEL:-3} -t prebuild",
     "build": "npm run lint:configs && npx nx run-many --parallel=${NX_PARALLEL:-3} -t build",
     "test": "npm run lint:configs && npx nx run-many --parallel=${NX_PARALLEL:-3} -t test",
-    "release:lib": "./wipe.sh && sh ./tools/scripts/bump-version.sh && npm run build && npm run lint && npm run test && read -p 'Enter OTP: ' otp && export NPM_CONFIG_OTP=$otp && npx nx release publish -g paima-sdk",
+    "release:lib": "./wipe.sh && sh ./tools/scripts/bump-version.sh && npm run build && npm run lint && npm run test && read -p 'Enter OTP: ' otp && export NPM_CONFIG_OTP=$otp && npx nx release publish -g paima-sdk && npx nx release publish -g node-sdk",
     "release:bin": "./wipe.sh && npm run lint:configs && npx nx run-many --parallel=${NX_PARALLEL:-3} -t release && mkdir -p ./bin && cp -r ./packages/engine/paima-standalone/packaged/@standalone/* ./bin"
   },
   "devDependencies": {

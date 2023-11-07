@@ -1,0 +1,12 @@
+{
+  "name": "@paima/node-sdk",
+  "targets": {
+    "nx-release-publish": {
+      "dependsOn": ["^nx-release-publish"],
+      "executor": "@nx/js:release-publish",
+      "options": {
+        "packageRoot": "{projectRoot}/build/"
+      }
+    }
+  }
+}
