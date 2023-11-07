@@ -84,6 +84,14 @@ export class ENV {
     return parseInt(process.env.MAX_USER_INPUTS_PER_DAY || '0', 10);
   }
 
+  static get CARP_URL(): string | undefined {
+    return process.env.BATCHER_CARP_URL;
+  }
+
+  static get BATCHER_CARDANO_ENABLED_POOLS(): string[] | undefined {
+    return process.env.BATCHER_CARDANO_ENABLED_POOLS?.split(',');
+  }
+
   // NOTE: this variable is not currently used, with DEFAULT_VALIDATION_ACTIVE determining the type.
   static get GAME_INPUT_VALIDATION_TYPE_NAME(): string {
     return process.env.GAME_INPUT_VALIDATION_TYPE_NAME || '';
