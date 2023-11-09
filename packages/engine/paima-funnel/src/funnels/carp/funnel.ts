@@ -14,6 +14,7 @@ import {
   type ChainDataExtension,
   type ChainDataExtensionCardanoDelegation,
   type PresyncChainData,
+  ChainDataExtensionDatum,
 } from '@paima/sm';
 import { composeChainData, groupCdeData } from '../../utils.js';
 import { BaseFunnel } from '../BaseFunnel.js';
