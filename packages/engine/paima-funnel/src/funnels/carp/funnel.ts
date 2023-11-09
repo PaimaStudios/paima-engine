@@ -8,6 +8,7 @@ import {
   logError,
   timeout,
 } from '@paima/utils';
+import type { ChainDataExtensionDatum } from '@paima/sm';
 import {
   type ChainData,
   type ChainDataExtension,
@@ -20,7 +21,7 @@ import type { FunnelSharedData } from '../BaseFunnel.js';
 import type { PoolClient } from 'pg';
 import type { ChainFunnel, ReadPresyncDataFrom } from '@paima/runtime';
 import getCdePoolData from '../../cde/cardanoPool.js';
-import { query, getErrorResponse } from '@dcspark/carp-client/client/src/index';
+import { query } from '@dcspark/carp-client/client/src/index';
 import { Routes } from '@dcspark/carp-client/shared/routes';
 
 const confirmationDepth = '10';
@@ -88,7 +89,7 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
     let grouped = await readDataInternal(
       this.bufferedData,
       this.carpUrl,
-      this.sharedData.extensions.filter(ext => ext.cdeType == ChainDataExtensionType.CardanoPool),
+      this.sharedData.extensions,
       lastTimestamp.timestamp as number
     );
 
@@ -185,34 +186,46 @@ async function readDataInternal(
     {} as { [slot: number]: number }
   );
 
+  // This extends blockNumbers but for intermediate slots.
+  // Between two evm blocks there can be more than one slot, and the mapping only has the slots for blocks that exist.
+  const mapSlotToBlockNumber = (slot: number) => {
+    while (true) {
+      const curr = blockNumbers[slot];
+      if (curr) {
+        return curr;
+      }
+      slot += 1;
+    }
+  };
+
   const poolEvents = await Promise.all(
-    extensions
-      .filter(extension => extension.cdeType === ChainDataExtensionType.CardanoPool)
-      .map(extension => {
-        const data = getCdePoolData(
-          carpUrl,
-          extension as ChainDataExtensionCardanoDelegation,
-          min,
-          max,
-          slot => {
-            while (true) {
-              const curr = blockNumbers[slot];
-              if (curr) {
-                return curr;
-              }
-              slot += 1;
-            }
-          }
-        );
-        return data;
-      })
+    extensions.map((extension: ChainDataExtension): Promise<ChainDataExtensionDatum[]> => {
+      if ('stopSlot' in extension && extension.stopSlot && min >= extension.stopSlot) {
+        return Promise.resolve([]);
+      }
+
+      switch (extension.cdeType) {
+        case ChainDataExtensionType.CardanoPool:
+          const data = getCdePoolData(
+            carpUrl,
+            extension,
+            min,
+            Math.min(max, extension.stopSlot || max),
+            mapSlotToBlockNumber
+          );
+
+          return data;
+        default:
+          return Promise.resolve([]);
+      }
+    })
   );
 
   let grouped = groupCdeData(
     Network.EVM,
     data[0].blockNumber,
     data[data.length - 1].blockNumber,
-    poolEvents
+    poolEvents.filter(data => data.length > 0)
   );
 
   return grouped;

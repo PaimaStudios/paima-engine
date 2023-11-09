@@ -253,6 +253,7 @@ export const ChainDataExtensionCardanoDelegationConfig = Type.Object({
   pools: Type.Array(Type.String()),
   scheduledPrefix: Type.String(),
   startSlot: Type.Number(),
+  stopSlot: Type.Optional(Type.Number()),
   name: Type.String(),
 });
 
