@@ -102,7 +102,14 @@ async function runPresync(
   }
 
   await loopIfStopBlockReached(presyncBlockHeight[Network.EVM], stopBlockHeight);
-  doLog(`[paima-runtime] Presync finished at ${JSON.stringify(presyncBlockHeight)}`);
+
+  const latestPresyncBlockheight = await gameStateMachine.getPresyncBlockHeight();
+  doLog(`[paima-runtime] Presync finished at ${latestPresyncBlockheight}`);
+
+  const latestPresyncSlotHeight = await gameStateMachine.getPresyncCardanoSlotHeight();
+  if (latestPresyncSlotHeight > 0) {
+    doLog(`[paima-runtime] Cardano presync finished at ${latestPresyncSlotHeight}`);
+  }
 }
 
 async function getPresyncStartBlockheight(
@@ -148,7 +155,7 @@ async function runPresyncRound(
   }
 
   const filteredPresyncDataList = Object.values(latestPresyncDataList)
-    .flatMap(network => (network !== 'finished' ? network : []))
+    .flatMap(data => (data !== 'finished' ? data : []))
     .filter(unit => unit.extensionDatums.length > 0);
   for (const presyncData of filteredPresyncDataList) {
     await gameStateMachine.presyncProcess(chainFunnel.getDbTx(), presyncData);

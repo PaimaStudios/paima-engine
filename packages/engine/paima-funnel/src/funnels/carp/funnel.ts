@@ -105,36 +105,45 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
   ): Promise<{ [network: number]: PresyncChainData[] | 'finished' }> {
     const arg = args.find(arg => arg.network == Network.CARDANO);
 
-    let data = await this.baseFunnel.readPresyncData(args);
+    let basePromise = this.baseFunnel.readPresyncData(args);
 
     if (arg && arg.from >= 0 && arg.from < this.startSlot) {
-      const poolEvents = await Promise.all(
-        this.sharedData.extensions
-          .filter(extension => extension.cdeType === ChainDataExtensionType.CardanoPool)
-          .map(extension => {
-            const data = getCdePoolData(
-              this.carpUrl,
-              extension as ChainDataExtensionCardanoDelegation,
-              arg.from,
-              Math.min(arg.to, this.startSlot - 1),
-              slot => {
-                return slot;
-              }
-            );
-            return data;
-          })
-      );
+      const [poolEvents, data] = await Promise.all([
+        Promise.all(
+          this.sharedData.extensions
+            .filter(extension => extension.cdeType === ChainDataExtensionType.CardanoPool)
+            .map(extension => {
+              const data = getCdePoolData(
+                this.carpUrl,
+                extension as ChainDataExtensionCardanoDelegation,
+                arg.from,
+                Math.min(arg.to, this.startSlot - 1),
+                slot => {
+                  return slot;
+                }
+              );
+              return data;
+            })
+        ),
+        basePromise,
+      ]);
 
       let grouped = groupCdeData(Network.CARDANO, arg.from, arg.to, poolEvents);
 
       if (grouped.length > 0) {
         data[Network.CARDANO] = grouped;
       }
-    } else if (arg) {
-      data[Network.CARDANO] = 'finished';
-    }
 
-    return data;
+      return data;
+    } else {
+      const data = await basePromise;
+
+      if (arg) {
+        data[Network.CARDANO] = 'finished';
+      }
+
+      return data;
+    }
   }
 
   public static async recoverState(
