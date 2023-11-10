@@ -47,7 +47,10 @@ export class ENV {
     return process.env.EMULATED_BLOCKS === 'true';
   }
   static get EMULATED_BLOCKS_MAX_WAIT(): number {
-    return parseFloat(process.env.EMULATED_BLOCKS_MAX_WAIT || `${ENV.BLOCK_TIME * 2.5}`);
+    // 20 seconds is just picked as a large value that is most likely safe as a default
+    // it's too long for a good UX, but it's also least likely to cause a crash
+    // if somebody knows they can safely set a smaller value, they can just override the default
+    return parseFloat(process.env.EMULATED_BLOCKS_MAX_WAIT || '20');
   }
 
   // Security
