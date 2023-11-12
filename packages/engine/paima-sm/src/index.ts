@@ -127,7 +127,7 @@ const SM: GameStateMachineInitializer = {
         const seed = await getSeed(latestChainData, dbTx);
         await saveLastBlockHeight.run(
           { block_height: latestChainData.blockNumber, seed: seed },
-          DBConn
+          dbTx
         );
         // Generate Prando object
         const randomnessGenerator = new Prando(seed);
@@ -138,29 +138,39 @@ const SM: GameStateMachineInitializer = {
           dbTx
         );
 
-        // Fetch and execute scheduled input data
-        const scheduledInputsLength = await processScheduledData(
-          latestChainData,
-          dbTx,
-          gameStateTransition,
-          randomnessGenerator
-        );
-
-        // Execute user submitted input data
-        const userInputsLength = await processUserInputs(
-          latestChainData,
-          dbTx,
-          gameStateTransition,
-          randomnessGenerator
-        );
-
-        // Extra logging
-        if (cdeDataLength + userInputsLength + scheduledInputsLength > 0)
-          doLog(
-            `Processed ${userInputsLength} user inputs, ${scheduledInputsLength} scheduled inputs and ${cdeDataLength} CDE events in block #${latestChainData.blockNumber}`
+        const checkpointName = `game_sm_start`;
+        await dbTx.query(`SAVEPOINT ${checkpointName}`);
+        try {
+          // Fetch and execute scheduled input data
+          const scheduledInputsLength = await processScheduledData(
+            latestChainData,
+            dbTx,
+            gameStateTransition,
+            randomnessGenerator
           );
-        // Commit finishing of processing to DB
-        await blockHeightDone.run({ block_height: latestChainData.blockNumber }, dbTx);
+
+          // Execute user submitted input data
+          const userInputsLength = await processUserInputs(
+            latestChainData,
+            dbTx,
+            gameStateTransition,
+            randomnessGenerator
+          );
+
+          // Extra logging
+          if (cdeDataLength + userInputsLength + scheduledInputsLength > 0)
+            doLog(
+              `Processed ${userInputsLength} user inputs, ${scheduledInputsLength} scheduled inputs and ${cdeDataLength} CDE events in block #${latestChainData.blockNumber}`
+            );
+        } catch (e) {
+          await dbTx.query(`ROLLBACK TO SAVEPOINT ${checkpointName}`);
+          throw e;
+        } finally {
+          await dbTx.query(`RELEASE SAVEPOINT ${checkpointName}`);
+
+          // Commit finishing of processing to DB
+          await blockHeightDone.run({ block_height: latestChainData.blockNumber }, dbTx);
+        }
       },
     };
   },

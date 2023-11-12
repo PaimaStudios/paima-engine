@@ -6,6 +6,4 @@ import "../NativeNftSale.sol";
 import "./UpgradeDev.sol";
 
 /// @dev For testing upgradeability.
-contract NativeNftSaleUpgradeDev is UpgradeDev, NativeNftSale {
-
-}
+contract NativeNftSaleUpgradeDev is UpgradeDev, NativeNftSale {}
