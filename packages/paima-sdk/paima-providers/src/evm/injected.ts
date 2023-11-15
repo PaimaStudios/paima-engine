@@ -277,7 +277,7 @@ export class EvmInjectedProvider implements IProvider<EvmApi> {
     const hexMessage = utf8ToHex(message);
     const signature = await this.conn.api.request({
       method: 'personal_sign',
-      params: [hexMessage, this.getAddress(), ''],
+      params: [hexMessage, this.getAddress().address, ''],
     });
     if (typeof signature !== 'string') {
       console.log('[signMessageEth] invalid signature:', signature);
