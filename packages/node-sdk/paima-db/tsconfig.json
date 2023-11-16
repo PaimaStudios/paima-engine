@@ -5,9 +5,11 @@
     "outDir": "build",
     "resolveJsonModule": true
   },
-  "include": ["src/**/*"],
+  "include": [
+    "src/**/*",
+    "src/**/*.json"
+  ],
   "references": [
-    { "path": "../paima-db" },
-    { "path": "../paima-utils/tsconfig.build.json" },
+    { "path": "../../paima-sdk/paima-utils/tsconfig.build.json" }
   ]
 }

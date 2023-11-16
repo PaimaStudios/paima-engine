@@ -40,6 +40,12 @@
     "groups": {
       "paima-sdk": {
         "projects": ["directory:packages/paima-sdk/*"]
+      },
+      "node-sdk": {
+        "projects": ["directory:packages/node-sdk/*"]
+      },
+      "build-utils": {
+        "projects": ["directory:packages/build-utils/*"]
       }
     }
   }

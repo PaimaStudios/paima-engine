@@ -9,7 +9,9 @@
     "src/**/*",
     "src/**/*.json"
   ],
+  "files": [],
   "references": [
-    { "path": "../paima-utils/tsconfig.build.json" }
+    { "path": "../paima-db" },
+    { "path": "../paima-utils-backend" }
   ]
 }

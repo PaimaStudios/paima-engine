@@ -37,7 +37,7 @@ function isPackage(path: string): boolean {
   return false;
 }
 
-const libFolders = ['paima-sdk'];
+const libFolders = ['paima-sdk', 'node-sdk', 'build-utils'];
 function isLib(path: string): boolean {
   for (const lib of libFolders) {
     if (path.includes(`packages/${lib}`)) {
