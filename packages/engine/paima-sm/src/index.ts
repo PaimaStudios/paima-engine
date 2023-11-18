@@ -22,14 +22,13 @@ import {
   getLatestProcessedBlockHeight,
   getScheduledDataByBlockHeight,
   saveLastBlockHeight,
-  markCdeDatumProcessed,
   markCdeBlockheightProcessed,
   getLatestProcessedCdeBlockheight,
 } from '@paima/db';
 import Prando from '@paima/prando';
 
 import { randomnessRouter } from './randomness.js';
-import { cdeTransitionFunction, getProcessedCdeDatumCount } from './cde-processing.js';
+import { cdeTransitionFunction } from './cde-processing.js';
 
 const SM: GameStateMachineInitializer = {
   initialize: (
@@ -185,26 +184,12 @@ async function processCdeData(
     return 0;
   }
 
-  let processedCdeDatumCount = await getProcessedCdeDatumCount(dbTx, blockHeight);
-  if (processedCdeDatumCount > 0) {
-    cdeData = cdeData.slice(processedCdeDatumCount);
-  }
-
   for (const datum of cdeData) {
     const sqlQueries = await cdeTransitionFunction(dbTx, datum);
     try {
-      processedCdeDatumCount++;
-      const datumCount = processedCdeDatumCount;
       for (const [query, params] of sqlQueries) {
         await query.run(params, dbTx);
       }
-      await markCdeDatumProcessed.run(
-        {
-          block_height: blockHeight,
-          datum_count: datumCount,
-        },
-        dbTx
-      );
     } catch (err) {
       doLog(`[paima-sm] Database error: ${err}`);
     }

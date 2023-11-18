@@ -83,20 +83,14 @@ const TABLE_DATA_HISTORICAL: TableData = {
 
 const QUERY_CREATE_TABLE_CDE_TRACKING = `
 CREATE TABLE cde_tracking (
-  block_height INTEGER PRIMARY KEY,
-  datum_count INTEGER NOT NULL,
-  done BOOLEAN NOT NULL DEFAULT false
+  block_height INTEGER PRIMARY KEY
 );
 `;
 
 const TABLE_DATA_CDE_TRACKING: TableData = {
   tableName: 'cde_tracking',
   primaryKeyColumns: ['block_height'],
-  columnData: packTuples([
-    ['block_height', 'integer', 'NO', ''],
-    ['datum_count', 'integer', 'NO', ''],
-    ['done', 'boolean', 'NO', 'false'],
-  ]),
+  columnData: packTuples([['block_height', 'integer', 'NO', '']]),
   serialColumns: [],
   creationQuery: QUERY_CREATE_TABLE_CDE_TRACKING,
 };
