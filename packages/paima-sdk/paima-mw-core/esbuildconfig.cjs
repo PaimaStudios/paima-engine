@@ -29,17 +29,6 @@ if (
   throw new Error('Please ensure you have filled out your .env file');
 }
 
-/** @type esbuild.Plugin */
-const fsaReplace = {
-  name: 'fsa-replace',
-  setup(build) {
-    build.onResolve({ filter: /fsa\.js/ }, (args) => {
-      const mockFile = args.path.replace('fsa.js', 'fsa_empty.js');
-      return { path: `${args.resolveDir}/${mockFile}`, namespace: args.namespace };
-    });
-  }
-};
-
 const config = {
   entryPoints: ['build/index.js'],
   bundle: true,
@@ -50,7 +39,7 @@ const config = {
 
   define,
   outfile: 'web/middleware.js',
-  plugins: [polyfillNode({}), fsaReplace],
+  plugins: [polyfillNode({})],
   external: ['pg-native'],
 };
 

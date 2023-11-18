@@ -12,7 +12,7 @@ import erc165ContractBuild from './artifacts/ERC165Contract.js';
 import erc6551RegistryContractBuild from './artifacts/ERC6551RegistryContract.js';
 import oldErc6551RegistryContractBuild from './artifacts/OldERC6551RegistryContract.js';
 import type * as Contracts from './contract-types/index.js';
-import { doLog, logError } from './logging.js';
+import { doLog, setLogger, logError } from './logging.js';
 import type { Deployment, ErrorCode, ErrorMessageFxn, ErrorMessageMapping } from './types.js';
 import {
   AddressType,
@@ -37,6 +37,7 @@ export {
   ChainDataExtensionDatumType,
   DEFAULT_FUNNEL_TIMEOUT,
   logError,
+  setLogger,
   doLog,
 };
 

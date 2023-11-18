@@ -25,17 +25,6 @@ if (
 )
   throw new Error('Please ensure you have filled out your .env file');
 
-// mock out fs as we can't use it in browser builds
-const fsaReplace: esbuild.Plugin = {
-  name: 'fsa-replace',
-  setup(build) {
-    build.onResolve({ filter: /fsa\.js/ }, args => {
-      const mockFile = args.path.replace('fsa.js', 'fsa_empty.js');
-      return { path: `${args.resolveDir}/${mockFile}`, namespace: args.namespace };
-    });
-  },
-};
-
 export const config: esbuild.BuildOptions = {
   // JS output from previous compilation step used here instead of index.ts to have more control over the TS build process
   // however, that means type definitions will be lost until this is implemented: https://github.com/evanw/esbuild/issues/95#issuecomment-1559710310
@@ -44,6 +33,6 @@ export const config: esbuild.BuildOptions = {
   format: 'esm',
   define,
   outfile: 'packaged/middleware.js',
-  plugins: [polyfillNode({}), fsaReplace],
+  plugins: [polyfillNode({})],
   external: ['pg-native'],
 };
