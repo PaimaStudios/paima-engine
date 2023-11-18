@@ -1,10 +1,20 @@
 import { stringify } from 'flatted';
-import * as fsa from './fs_access/fsa.js';
 
 export function logError(error: unknown): void {
   doLog(`***ERROR***`);
   doLog(error);
   doLog(`***`);
+}
+
+type LoggerFunc = (str: string) => void;
+
+class LoggerHolder {
+  static INSTANCE = new LoggerHolder();
+  log: LoggerFunc = _s => {};
+}
+
+export function setLogger(newLogger: LoggerFunc): void {
+  LoggerHolder.INSTANCE.log = newLogger;
 }
 
 // TODO: probably we want to unify this with pushLog
@@ -15,12 +25,12 @@ export function doLog(...s: unknown[]): void {
       if (typeof str === 'function') {
         continue;
       }
-      fsa.appendToFile(String(str));
+      LoggerHolder.INSTANCE.log(String(str));
     } else if (str instanceof Error) {
-      fsa.appendToFile(`${str.name}: ${str.message}\nStack: ${str.stack}`);
+      LoggerHolder.INSTANCE.log(`${str.name}: ${str.message}\nStack: ${str.stack}`);
     } else {
       try {
-        fsa.appendToFile(stringify(str));
+        LoggerHolder.INSTANCE.log(stringify(str));
       } catch (e) {
         // should not happen, but maybe there is some type that fails for some reason
       }
