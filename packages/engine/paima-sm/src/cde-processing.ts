@@ -10,7 +10,6 @@ import processErc20DepositDatum from './cde-erc20-deposit.js';
 import processErc6551RegistryDatum from './cde-erc6551-registry.js';
 import processGenericDatum from './cde-generic.js';
 import type { SQLUpdate } from '@paima/db';
-import { getSpecificCdeBlockheight } from '@paima/db';
 import assertNever from 'assert-never';
 
 export async function cdeTransitionFunction(
@@ -33,18 +32,4 @@ export async function cdeTransitionFunction(
     default:
       assertNever(cdeDatum);
   }
-}
-
-export async function getProcessedCdeDatumCount(
-  readonlyDBConn: PoolClient,
-  blockHeight: number
-): Promise<number> {
-  const cdeStatus = await getSpecificCdeBlockheight.run(
-    { block_height: blockHeight },
-    readonlyDBConn
-  );
-  if (cdeStatus.length === 0) {
-    return 0;
-  }
-  return cdeStatus[0].datum_count;
 }
