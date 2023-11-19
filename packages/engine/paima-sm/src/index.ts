@@ -191,15 +191,16 @@ async function processCdeData(
         await query.run(params, dbTx);
       }
     } catch (err) {
-      doLog(`[paima-sm] Database error: ${err}`);
+      doLog(`[paima-sm] Database error on cdeTransitionFunction: ${err}`);
+      throw err;
     }
   }
 
   try {
     await markCdeBlockheightProcessed.run({ block_height: blockHeight }, dbTx);
   } catch (err) {
-    doLog(`[paima-sm] Database error: ${err}`);
-    return 0;
+    doLog(`[paima-sm] Database error on markCdeBlockheightProcessed: ${err}`);
+    throw err;
   }
   return cdeData.length;
 }
@@ -238,7 +239,8 @@ async function processScheduledData(
       }
       await deleteScheduled.run({ id: data.id }, DBConn);
     } catch (err) {
-      doLog(`[paima-sm] Database error: ${err}`);
+      doLog(`[paima-sm] Database error on deleteScheduled: ${err}`);
+      throw err;
     }
   }
   return scheduledData.length;
@@ -297,7 +299,8 @@ async function processUserInputs(
         );
       }
     } catch (err) {
-      doLog(`[paima-sm] Database error: ${err}`);
+      doLog(`[paima-sm] Database error on gameStateTransition: ${err}`);
+      throw err;
     }
   }
   return latestChainData.submittedData.length;
