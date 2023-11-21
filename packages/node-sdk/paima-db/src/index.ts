@@ -28,6 +28,8 @@ export * from './sql/cde-erc6551-registry.queries.js';
 export type * from './sql/cde-erc6551-registry.queries.js';
 export * from './sql/emulated.queries.js';
 export type * from './sql/emulated.queries.js';
+export type * from './sql/wallet-delegation.queries.js';
+export * from './sql/wallet-delegation.queries.js';
 export type * from './types.js';
 
 export {

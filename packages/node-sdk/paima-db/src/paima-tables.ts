@@ -258,6 +258,43 @@ const TABLE_DATA_EMULATED: TableData = {
   creationQuery: QUERY_CREATE_TABLE_EMULATED,
 };
 
+const QUERY_CREATE_TABLE_ADDRESSES = `
+CREATE TABLE addresses (
+  id SERIAL PRIMARY KEY,
+  address TEXT NOT NULL UNIQUE
+);
+`;
+
+const TABLE_DATA_ADDRESSES: TableData = {
+  tableName: 'addresses',
+  primaryKeyColumns: ['id'],
+  columnData: packTuples([
+    ['id', 'serial', 'NO', ''],
+    ['address', 'text', 'NO', ''],
+  ]),
+  serialColumns: [],
+  creationQuery: QUERY_CREATE_TABLE_ADDRESSES,
+};
+
+const QUERY_CREATE_TABLE_DELEGATIONS = `
+CREATE TABLE delegations (
+	from_id INTEGER NOT NULL REFERENCES addresses(id),
+	set_id INTEGER NOT NULL REFERENCES addresses(id),
+  PRIMARY KEY (from_id, set_id)
+);
+`;
+
+const TABLE_DATA_DELEGATIONS: TableData = {
+  tableName: 'delegations',
+  primaryKeyColumns: ['from_id', 'set_id'],
+  columnData: packTuples([
+    ['from_id', 'text', 'NO', ''],
+    ['set_id', 'text', 'NO', ''],
+  ]),
+  serialColumns: [],
+  creationQuery: QUERY_CREATE_TABLE_DELEGATIONS,
+};
+
 export const TABLES: TableData[] = [
   TABLE_DATA_BLOCKHEIGHTS,
   TABLE_DATA_NONCES,
@@ -271,4 +308,6 @@ export const TABLES: TableData[] = [
   TABLE_DATA_CDE_GENERIC_DATA,
   TABLE_DATA_CDE_ERC6551_REGISTRY,
   TABLE_DATA_EMULATED,
+  TABLE_DATA_ADDRESSES,
+  TABLE_DATA_DELEGATIONS,
 ];

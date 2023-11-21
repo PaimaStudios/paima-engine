@@ -29,6 +29,7 @@ import Prando from '@paima/prando';
 
 import { randomnessRouter } from './randomness.js';
 import { cdeTransitionFunction } from './cde-processing.js';
+import { DelegateWallet } from './delegate-wallet.js';
 
 const SM: GameStateMachineInitializer = {
   initialize: (
@@ -265,6 +266,17 @@ async function processUserInputs(
     if (nonceData.length > 0) {
       doLog(`Skipping inputData with duplicate nonce: ${JSON.stringify(inputData)}`);
       continue;
+    }
+
+    //
+    // Check if internal Concise Command
+    // Internal Concise Commands are prefixed with an ampersand (&)
+    //
+    // delegate       = &wd|from|to|from_signature|to_signature
+    // migrate        = &wm|from|to|from_signature|to_signature
+    // cancelDelegate = &wc|to|to_signature
+    if (inputData.inputData.startsWith(DelegateWallet.INTERNAL_COMMAND_PREFIX)) {
+      await new DelegateWallet(DBConn).process(inputData.inputData);
     }
 
     // Trigger STF

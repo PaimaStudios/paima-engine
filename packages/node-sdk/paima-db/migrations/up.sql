@@ -82,3 +82,14 @@ CREATE TABLE emulated_block_heights (
   second_timestamp TEXT NOT NULL,
   emulated_block_height INTEGER NOT NULL
 );
+
+CREATE TABLE addresses (
+  id SERIAL PRIMARY KEY,
+  address TEXT NOT NULL UNIQUE
+);
+
+CREATE TABLE delegations (
+	from_id INTEGER NOT NULL REFERENCES addresses(id),
+	set_id INTEGER NOT NULL REFERENCES addresses(id),
+  PRIMARY KEY (from_id, set_id)
+);
