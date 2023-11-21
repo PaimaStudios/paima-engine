@@ -23,7 +23,7 @@ import {
   markCdeBlockheightProcessed,
   getLatestProcessedCdeBlockheight,
   getCardanoLatestProcessedCdeBlockheight,
-  markCardanoCdeBlockheightProcessed,
+  markCardanoCdeSlotProcessed,
 } from '@paima/db';
 import Prando from '@paima/prando';
 
@@ -89,21 +89,16 @@ const SM: GameStateMachineInitializer = {
         return DBConn;
       },
       presyncProcess: async (dbTx: PoolClient, latestCdeData: PresyncChainData): Promise<void> => {
-        if (latestCdeData.network == Network.EVM) {
+        if (latestCdeData.network === Network.EVM) {
           const cdeDataLength = await processCdeData(
             latestCdeData.blockNumber,
-            latestCdeData.extensionDatums?.filter(
-              // TODO: find a more generic way of filtering
-              data => data.cdeDatumType == ChainDataExtensionDatumType.CardanoPool
-            ),
+            latestCdeData.extensionDatums,
             dbTx
           );
           if (cdeDataLength > 0) {
             doLog(`Processed ${cdeDataLength} CDE events in block #${latestCdeData.blockNumber}`);
           }
-        }
-        // TODO: duplicated code?
-        else if (latestCdeData.network == Network.CARDANO) {
+        } else if (latestCdeData.network === Network.CARDANO) {
           const cdeDataLength = await processCardanoCdeData(
             latestCdeData.blockNumber,
             latestCdeData.extensionDatums,
@@ -255,7 +250,7 @@ async function processCardanoCdeData(
   dbTx: PoolClient
 ): Promise<number> {
   return await processCdeDataBase(cdeData, dbTx, async () => {
-    await markCardanoCdeBlockheightProcessed.run({ slot: slot }, dbTx);
+    await markCardanoCdeSlotProcessed.run({ slot: slot }, dbTx);
     return;
   });
 }

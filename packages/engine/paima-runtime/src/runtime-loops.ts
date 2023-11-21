@@ -1,11 +1,9 @@
 import process from 'process';
-
 import { doLog, logError, delay, Network, ENV } from '@paima/utils';
 import { tx, DataMigrations } from '@paima/db';
 import { getEarliestStartBlockheight, getEarliestStartSlot } from './cde-config/utils.js';
 import type { ChainFunnel, IFunnelFactory, ReadPresyncDataFrom } from './types.js';
 import type { ChainData, ChainDataExtension, GameStateMachine } from '@paima/sm';
-
 import { run } from './run-flag.js';
 import { snapshotIfTime } from './snapshots.js';
 import {
@@ -16,6 +14,7 @@ import {
 } from './utils.js';
 import { cleanNoncesIfTime } from './nonce-gc.js';
 import type { PoolClient } from 'pg';
+import { FUNNEL_PRESYNC_FINISHED } from '@paima/utils';
 
 // The core logic of paima runtime which polls the funnel and processes the resulting chain data using the game's state machine.
 // Of note, the runtime is designed to continue running/attempting to process the next required block no matter what errors propagate upwards.
@@ -155,7 +154,7 @@ async function runPresyncRound(
   }
 
   const filteredPresyncDataList = Object.values(latestPresyncDataList)
-    .flatMap(data => (data !== 'finished' ? data : []))
+    .flatMap(data => (data !== FUNNEL_PRESYNC_FINISHED ? data : []))
     .filter(unit => unit.extensionDatums.length > 0);
   for (const presyncData of filteredPresyncDataList) {
     await gameStateMachine.presyncProcess(chainFunnel.getDbTx(), presyncData);
@@ -163,7 +162,7 @@ async function runPresyncRound(
 
   return Object.fromEntries(
     from
-      .filter(arg => latestPresyncDataList[arg.network] !== 'finished')
+      .filter(arg => latestPresyncDataList[arg.network] !== FUNNEL_PRESYNC_FINISHED)
       .map(arg => [arg.network, arg.to + 1])
   );
 }

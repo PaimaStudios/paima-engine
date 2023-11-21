@@ -1,5 +1,4 @@
 import type { PoolClient } from 'pg';
-
 import Prando from '@paima/prando';
 import type { ChainFunnel, ReadPresyncDataFrom } from '@paima/runtime';
 import type { ChainData, PresyncChainData } from '@paima/sm';
@@ -16,9 +15,9 @@ import { hashTogether } from '@paima/utils-backend';
 import { calculateBoundaryTimestamp, emulateCde, timestampToBlockNumber } from './utils.js';
 import { BaseFunnel } from '../BaseFunnel.js';
 import type { FunnelSharedData } from '../BaseFunnel.js';
-
 import { QueuedBlockCacheEntry, RpcCacheEntry, RpcRequestState } from '../FunnelCache.js';
 import { Network } from '@paima/utils/src/constants';
+import { FUNNEL_PRESYNC_FINISHED } from '@paima/utils/src/constants';
 
 /**
  * For hash calculation of empty blocks to work,
@@ -160,11 +159,11 @@ export class EmulatedBlocksFunnel extends BaseFunnel {
 
   public override async readPresyncData(
     args: ReadPresyncDataFrom
-  ): Promise<{ [network: number]: PresyncChainData[] | 'finished' }> {
+  ): Promise<{ [network: number]: PresyncChainData[] | typeof FUNNEL_PRESYNC_FINISHED }> {
     // map base funnel data to the right timestamp range
     const baseData = await this.ctorData.baseFunnel.readPresyncData(args);
 
-    if (!baseData[Network.EVM] || baseData[Network.EVM] === 'finished') {
+    if (!baseData[Network.EVM] || baseData[Network.EVM] === FUNNEL_PRESYNC_FINISHED) {
       return baseData;
     }
 

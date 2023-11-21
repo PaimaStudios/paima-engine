@@ -23,28 +23,29 @@ import type { ChainFunnel, ReadPresyncDataFrom } from '@paima/runtime';
 import getCdePoolData from '../../cde/cardanoPool.js';
 import { query } from '@dcspark/carp-client/client/src/index';
 import { Routes } from '@dcspark/carp-client/shared/routes';
+import { FUNNEL_PRESYNC_FINISHED } from '@paima/utils/src/constants';
 
-const confirmationDepth = '10';
+const confirmationDepth = 10;
 
-function knownTime(): number {
+function knownShelleyTime(): number {
   switch (ENV.CARDANO_NETWORK) {
     case 'preview':
       return 1666656000;
     case 'preprod':
-      return 1666656000;
+      return 1655769600;
     case 'mainnet':
-      return 1666656000;
+      return 1596059091;
     default:
       throw new Error('unknown cardano network');
   }
 }
 
 function timestampToAbsoluteSlot(timestamp: number): number {
-  const firstSlot = 0;
+  const cardanoAvgBlockPeriod = 20;
   // map timestamps with a delta, since we are waiting for blocks.
-  const confirmationTimeDelta = 20 * Number(confirmationDepth);
+  const confirmationTimeDelta = cardanoAvgBlockPeriod * confirmationDepth;
 
-  return timestamp - confirmationTimeDelta - knownTime() + firstSlot;
+  return timestamp - confirmationTimeDelta - knownShelleyTime();
 }
 
 export class CarpFunnel extends BaseFunnel implements ChainFunnel {
@@ -102,7 +103,7 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
 
   public override async readPresyncData(
     args: ReadPresyncDataFrom
-  ): Promise<{ [network: number]: PresyncChainData[] | 'finished' }> {
+  ): Promise<{ [network: number]: PresyncChainData[] | typeof FUNNEL_PRESYNC_FINISHED }> {
     const arg = args.find(arg => arg.network == Network.CARDANO);
 
     let basePromise = this.baseFunnel.readPresyncData(args);
@@ -139,7 +140,7 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
       const data = await basePromise;
 
       if (arg) {
-        data[Network.CARDANO] = 'finished';
+        data[Network.CARDANO] = FUNNEL_PRESYNC_FINISHED;
       }
 
       return data;
@@ -197,7 +198,7 @@ async function readDataInternal(
 
   // This extends blockNumbers but for intermediate slots.
   // Between two evm blocks there can be more than one slot, and the mapping only has the slots for blocks that exist.
-  const mapSlotToBlockNumber = (slot: number) => {
+  const mapSlotToBlockNumber = (slot: number): number => {
     while (true) {
       const curr = blockNumbers[slot];
       if (curr) {

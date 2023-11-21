@@ -35,3 +35,5 @@ export const enum Network {
   EVM = 1,
   CARDANO = 2,
 }
+
+export const FUNNEL_PRESYNC_FINISHED = 'finished';

@@ -1,64 +1,30 @@
 /** Types generated for queries found in "src/sql/cde-tracking-cardano.sql" */
 import { PreparedQuery } from '@pgtyped/runtime';
 
-/** 'MarkCardanoCdeDatumProcessed' parameters type */
-export interface IMarkCardanoCdeDatumProcessedParams {
-  datum_count?: number | null | void;
+/** 'MarkCardanoCdeSlotProcessed' parameters type */
+export interface IMarkCardanoCdeSlotProcessedParams {
   slot: number;
 }
 
-/** 'MarkCardanoCdeDatumProcessed' return type */
-export type IMarkCardanoCdeDatumProcessedResult = void;
+/** 'MarkCardanoCdeSlotProcessed' return type */
+export type IMarkCardanoCdeSlotProcessedResult = void;
 
-/** 'MarkCardanoCdeDatumProcessed' query type */
-export interface IMarkCardanoCdeDatumProcessedQuery {
-  params: IMarkCardanoCdeDatumProcessedParams;
-  result: IMarkCardanoCdeDatumProcessedResult;
+/** 'MarkCardanoCdeSlotProcessed' query type */
+export interface IMarkCardanoCdeSlotProcessedQuery {
+  params: IMarkCardanoCdeSlotProcessedParams;
+  result: IMarkCardanoCdeSlotProcessedResult;
 }
 
-const markCardanoCdeDatumProcessedIR: any = {"usedParamSet":{"slot":true,"datum_count":true},"params":[{"name":"slot","required":true,"transform":{"type":"scalar"},"locs":[{"a":66,"b":71}]},{"name":"datum_count","required":false,"transform":{"type":"scalar"},"locs":[{"a":74,"b":85}]}],"statement":"INSERT INTO cde_tracking_cardano(slot, datum_count, done)\nVALUES (:slot!, :datum_count, FALSE)\nON CONFLICT (slot)\nDO UPDATE SET\nslot = EXCLUDED.slot,\ndatum_count = EXCLUDED.datum_count,\ndone = EXCLUDED.done"};
+const markCardanoCdeSlotProcessedIR: any = {"usedParamSet":{"slot":true},"params":[{"name":"slot","required":true,"transform":{"type":"scalar"},"locs":[{"a":47,"b":52}]}],"statement":"INSERT INTO cde_tracking(block_height)\nVALUES (:slot!)"};
 
 /**
  * Query generated from SQL:
  * ```
- * INSERT INTO cde_tracking_cardano(slot, datum_count, done)
- * VALUES (:slot!, :datum_count, FALSE)
- * ON CONFLICT (slot)
- * DO UPDATE SET
- * slot = EXCLUDED.slot,
- * datum_count = EXCLUDED.datum_count,
- * done = EXCLUDED.done
+ * INSERT INTO cde_tracking(block_height)
+ * VALUES (:slot!)
  * ```
  */
-export const markCardanoCdeDatumProcessed = new PreparedQuery<IMarkCardanoCdeDatumProcessedParams,IMarkCardanoCdeDatumProcessedResult>(markCardanoCdeDatumProcessedIR);
-
-
-/** 'MarkCardanoCdeBlockheightProcessed' parameters type */
-export interface IMarkCardanoCdeBlockheightProcessedParams {
-  slot: number;
-}
-
-/** 'MarkCardanoCdeBlockheightProcessed' return type */
-export type IMarkCardanoCdeBlockheightProcessedResult = void;
-
-/** 'MarkCardanoCdeBlockheightProcessed' query type */
-export interface IMarkCardanoCdeBlockheightProcessedQuery {
-  params: IMarkCardanoCdeBlockheightProcessedParams;
-  result: IMarkCardanoCdeBlockheightProcessedResult;
-}
-
-const markCardanoCdeBlockheightProcessedIR: any = {"usedParamSet":{"slot":true},"params":[{"name":"slot","required":true,"transform":{"type":"scalar"},"locs":[{"a":59,"b":64}]}],"statement":"UPDATE cde_tracking_cardano\nSET\n  done = TRUE\nWHERE slot = :slot!"};
-
-/**
- * Query generated from SQL:
- * ```
- * UPDATE cde_tracking_cardano
- * SET
- *   done = TRUE
- * WHERE slot = :slot!
- * ```
- */
-export const markCardanoCdeBlockheightProcessed = new PreparedQuery<IMarkCardanoCdeBlockheightProcessedParams,IMarkCardanoCdeBlockheightProcessedResult>(markCardanoCdeBlockheightProcessedIR);
+export const markCardanoCdeSlotProcessed = new PreparedQuery<IMarkCardanoCdeSlotProcessedParams,IMarkCardanoCdeSlotProcessedResult>(markCardanoCdeSlotProcessedIR);
 
 
 /** 'GetCardanoSpecificCdeBlockheight' parameters type */
@@ -68,8 +34,6 @@ export interface IGetCardanoSpecificCdeBlockheightParams {
 
 /** 'GetCardanoSpecificCdeBlockheight' return type */
 export interface IGetCardanoSpecificCdeBlockheightResult {
-  datum_count: number;
-  done: boolean;
   slot: number;
 }
 
@@ -96,8 +60,6 @@ export type IGetCardanoLatestProcessedCdeBlockheightParams = void;
 
 /** 'GetCardanoLatestProcessedCdeBlockheight' return type */
 export interface IGetCardanoLatestProcessedCdeBlockheightResult {
-  datum_count: number;
-  done: boolean;
   slot: number;
 }
 
@@ -107,13 +69,12 @@ export interface IGetCardanoLatestProcessedCdeBlockheightQuery {
   result: IGetCardanoLatestProcessedCdeBlockheightResult;
 }
 
-const getCardanoLatestProcessedCdeBlockheightIR: any = {"usedParamSet":{},"params":[],"statement":"SELECT * FROM cde_tracking_cardano\nWHERE done IS TRUE\nORDER BY slot DESC\nLIMIT 1"};
+const getCardanoLatestProcessedCdeBlockheightIR: any = {"usedParamSet":{},"params":[],"statement":"SELECT * FROM cde_tracking_cardano\nORDER BY slot DESC\nLIMIT 1"};
 
 /**
  * Query generated from SQL:
  * ```
  * SELECT * FROM cde_tracking_cardano
- * WHERE done IS TRUE
  * ORDER BY slot DESC
  * LIMIT 1
  * ```

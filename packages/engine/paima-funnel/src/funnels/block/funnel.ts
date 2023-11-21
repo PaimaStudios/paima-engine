@@ -8,6 +8,7 @@ import { BaseFunnel } from '../BaseFunnel.js';
 import type { FunnelSharedData } from '../BaseFunnel.js';
 import { RpcCacheEntry, RpcRequestState } from '../FunnelCache.js';
 import type { PoolClient } from 'pg';
+import { FUNNEL_PRESYNC_FINISHED } from '@paima/utils';
 
 const GET_BLOCK_NUMBER_TIMEOUT = 5000;
 
@@ -121,7 +122,7 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
 
   public override async readPresyncData(
     args: ReadPresyncDataFrom
-  ): Promise<{ [network: number]: PresyncChainData[] | 'finished' }> {
+  ): Promise<{ [network: number]: PresyncChainData[] | typeof FUNNEL_PRESYNC_FINISHED }> {
     let arg = args.find(arg => arg.network == Network.EVM);
 
     if (!arg) {
@@ -132,7 +133,7 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
     let toBlock = arg.to;
 
     if (fromBlock >= ENV.START_BLOCKHEIGHT) {
-      return { [Network.EVM]: 'finished' };
+      return { [Network.EVM]: FUNNEL_PRESYNC_FINISHED };
     }
 
     try {

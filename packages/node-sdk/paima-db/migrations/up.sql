@@ -27,9 +27,7 @@ CREATE TABLE cde_tracking (
 );
 
 CREATE TABLE cde_tracking_cardano (
-  slot INTEGER PRIMARY KEY,
-  datum_count INTEGER NOT NULL,
-  done BOOLEAN NOT NULL DEFAULT false
+  slot INTEGER PRIMARY KEY
 );
 
 CREATE TABLE chain_data_extensions (
@@ -81,7 +79,6 @@ CREATE TABLE cde_erc6551_registry_data (
   salt TEXT NOT NULL,
   PRIMARY KEY (cde_id, account_created)
 );
-
 
 CREATE TABLE emulated_block_heights (
   deployment_chain_block_height INTEGER PRIMARY KEY,
