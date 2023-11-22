@@ -44,6 +44,7 @@
       "@paima/mw-core/*": ["./packages/paima-sdk/paima-mw-core/*"],
       "@paima/prando/*": ["./packages/paima-sdk/paima-prando/*"],
       "@paima/providers/*": ["./packages/paima-sdk/paima-providers/*"],
+      "@paima/rest/*": ["./packages/engine/paima-rest/*"],
       "@paima/runtime/*": ["./packages/engine/paima-runtime/*"],
       "@paima/sdk/*": ["./packages/paima-sdk/paima-sdk/*"],
       "@paima/sm/*": ["./packages/engine/paima-sm/*"],
