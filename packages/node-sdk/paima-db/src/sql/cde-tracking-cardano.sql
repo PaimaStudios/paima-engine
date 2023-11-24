@@ -1,12 +1,8 @@
 /* @name markCardanoCdeSlotProcessed */
-INSERT INTO cde_tracking_cardano(slot)
-VALUES (:slot!);
+INSERT INTO cde_tracking_cardano(id,slot)
+VALUES (0, :slot!)
+ON CONFLICT (id)
+DO UPDATE SET slot = :slot!;
 
-/* @name getCardanoSpecificCdeBlockheight */
-SELECT * FROM cde_tracking_cardano
-WHERE slot = :slot!;
-
-/* @name getCardanoLatestProcessedCdeBlockheight */
-SELECT * FROM cde_tracking_cardano
-ORDER BY slot DESC
-LIMIT 1;
+/* @name getCardanoLatestProcessedCdeSlot */
+SELECT slot FROM cde_tracking_cardano LIMIT 1;

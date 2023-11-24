@@ -97,14 +97,18 @@ const TABLE_DATA_CDE_TRACKING: TableData = {
 
 const QUERY_CREATE_TABLE_CDE_TRACKING_CARDANO = `
 CREATE TABLE cde_tracking_cardano (
-  slot INTEGER PRIMARY KEY
+  id INTEGER PRIMARY KEY,
+  slot INTEGER NOT NULL
 );
 `;
 
 const TABLE_DATA_CDE_TRACKING_CARDANO: TableData = {
   tableName: 'cde_tracking_cardano',
-  primaryKeyColumns: ['slot'],
-  columnData: packTuples([['slot', 'integer', 'NO', '']]),
+  primaryKeyColumns: ['id'],
+  columnData: packTuples([
+    ['id', 'integer', 'NO', ''],
+    ['slot', 'integer', 'NO', ''],
+  ]),
   serialColumns: [],
   creationQuery: QUERY_CREATE_TABLE_CDE_TRACKING_CARDANO,
 };

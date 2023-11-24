@@ -1,6 +1,4 @@
-import type { Pool } from 'pg';
-
-import { doLog, ENV } from '@paima/utils';
+import { ENV } from '@paima/utils';
 import { createScheduledData, cdeCardanoPoolInsertData } from '@paima/db';
 import type { SQLUpdate } from '@paima/db';
 import type { CdeCardanoPoolDatum } from './types.js';

@@ -22,7 +22,7 @@ import {
   saveLastBlockHeight,
   markCdeBlockheightProcessed,
   getLatestProcessedCdeBlockheight,
-  getCardanoLatestProcessedCdeBlockheight,
+  getCardanoLatestProcessedCdeSlot,
   markCardanoCdeSlotProcessed,
 } from '@paima/db';
 import Prando from '@paima/prando';
@@ -67,7 +67,7 @@ const SM: GameStateMachineInitializer = {
       getPresyncCardanoSlotHeight: async (
         dbTx: PoolClient | Pool = readonlyDBConn
       ): Promise<number> => {
-        const [b] = await getCardanoLatestProcessedCdeBlockheight.run(undefined, dbTx);
+        const [b] = await getCardanoLatestProcessedCdeSlot.run(undefined, dbTx);
         const slot = b?.slot ?? 0;
         return slot;
       },
@@ -114,6 +114,9 @@ const SM: GameStateMachineInitializer = {
         dbTx: PoolClient | Pool = readonlyDBConn
       ): Promise<void> => {
         await markCdeBlockheightProcessed.run({ block_height: blockHeight }, dbTx);
+      },
+      markCardanoPresyncMilestone: async (dbTx: PoolClient, slot: number): Promise<void> => {
+        await markCardanoCdeSlotProcessed.run({ slot: slot }, dbTx);
       },
       dryRun: async (
         gameInput: string,

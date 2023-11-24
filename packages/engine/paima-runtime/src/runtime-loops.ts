@@ -83,7 +83,7 @@ async function runPresync(
     }
 
     // eslint-disable-next-line @typescript-eslint/no-loop-func
-    let newHeight = (await tx)(gameStateMachine.getReadWriteDbConn(), async dbTx => {
+    let newHeight = tx(gameStateMachine.getReadWriteDbConn(), async dbTx => {
       const chainFunnel = await funnelFactory.generateFunnel(dbTx);
       return await runPresyncRound(
         gameStateMachine,
@@ -156,8 +156,16 @@ async function runPresyncRound(
   const filteredPresyncDataList = Object.values(latestPresyncDataList)
     .flatMap(data => (data !== FUNNEL_PRESYNC_FINISHED ? data : []))
     .filter(unit => unit.extensionDatums.length > 0);
+
+  const dbTx = chainFunnel.getDbTx();
+
   for (const presyncData of filteredPresyncDataList) {
-    await gameStateMachine.presyncProcess(chainFunnel.getDbTx(), presyncData);
+    await gameStateMachine.presyncProcess(dbTx, presyncData);
+  }
+
+  const cardanoFrom = from.find(arg => arg.network === Network.CARDANO);
+  if (cardanoFrom) {
+    await gameStateMachine.markCardanoPresyncMilestone(dbTx, cardanoFrom.to);
   }
 
   return Object.fromEntries(

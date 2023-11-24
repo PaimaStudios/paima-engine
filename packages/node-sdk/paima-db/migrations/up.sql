@@ -27,7 +27,8 @@ CREATE TABLE cde_tracking (
 );
 
 CREATE TABLE cde_tracking_cardano (
-  slot INTEGER PRIMARY KEY
+  id INTEGER PRIMARY KEY,
+  slot INTEGER NOT NULL
 );
 
 CREATE TABLE chain_data_extensions (

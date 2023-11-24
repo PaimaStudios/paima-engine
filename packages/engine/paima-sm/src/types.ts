@@ -329,5 +329,6 @@ export interface GameStateMachine {
   process: (dbTx: PoolClient, chainData: ChainData) => Promise<void>;
   presyncProcess: (dbTx: PoolClient, latestCdeData: PresyncChainData) => Promise<void>;
   markPresyncMilestone: (blockHeight: number) => Promise<void>;
+  markCardanoPresyncMilestone: (dbTx: PoolClient, slot: number) => Promise<void>;
   dryRun: (gameInput: string, userAddress: string) => Promise<boolean>;
 }
