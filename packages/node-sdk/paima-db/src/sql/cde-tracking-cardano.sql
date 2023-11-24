@@ -1,5 +1,5 @@
 /* @name markCardanoCdeSlotProcessed */
-INSERT INTO cde_tracking(block_height)
+INSERT INTO cde_tracking_cardano(slot)
 VALUES (:slot!);
 
 /* @name getCardanoSpecificCdeBlockheight */

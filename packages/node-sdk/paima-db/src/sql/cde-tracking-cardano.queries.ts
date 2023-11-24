@@ -15,12 +15,12 @@ export interface IMarkCardanoCdeSlotProcessedQuery {
   result: IMarkCardanoCdeSlotProcessedResult;
 }
 
-const markCardanoCdeSlotProcessedIR: any = {"usedParamSet":{"slot":true},"params":[{"name":"slot","required":true,"transform":{"type":"scalar"},"locs":[{"a":47,"b":52}]}],"statement":"INSERT INTO cde_tracking(block_height)\nVALUES (:slot!)"};
+const markCardanoCdeSlotProcessedIR: any = {"usedParamSet":{"slot":true},"params":[{"name":"slot","required":true,"transform":{"type":"scalar"},"locs":[{"a":47,"b":52}]}],"statement":"INSERT INTO cde_tracking_cardano(slot)\nVALUES (:slot!)"};
 
 /**
  * Query generated from SQL:
  * ```
- * INSERT INTO cde_tracking(block_height)
+ * INSERT INTO cde_tracking_cardano(slot)
  * VALUES (:slot!)
  * ```
  */
