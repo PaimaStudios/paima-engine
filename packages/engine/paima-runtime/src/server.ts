@@ -4,8 +4,8 @@ import express from 'express';
 import swaggerUi from 'swagger-ui-express';
 import { basicControllerJson } from '@paima/rest';
 import { merge, isErrorResult } from 'openapi-merge';
-
 import { doLog, logError } from '@paima/utils';
+import path from 'path';
 
 const server: Express = express();
 const bodyParser = express.json();
@@ -38,7 +38,7 @@ function getOpenApiJson(userStateMachineApi: object | undefined): object {
 }
 
 function registerDocs(userStateMachineApi: object | undefined): void {
-  const swaggerUiPath = require('path').resolve(__dirname) + '/swagger-ui';
+  const swaggerUiPath = path.resolve(__dirname) + '/swagger-ui';
   const swaggerServer = [
     swaggerUi.serve[0],
     // the default swaggerUi.serve points to the root of the `pkg` build from standalone
