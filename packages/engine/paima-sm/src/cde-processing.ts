@@ -1,7 +1,7 @@
 import type { PoolClient } from 'pg';
 
 import { ChainDataExtensionDatumType } from '@paima/utils';
-import type { ChainDataExtensionDatum } from '@paima/runtime';
+import type { ChainDataExtensionDatum } from './types.js';
 
 import processErc20TransferDatum from './cde-erc20-transfer.js';
 import processErc721TransferDatum from './cde-erc721-transfer.js';

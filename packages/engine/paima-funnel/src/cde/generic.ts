@@ -4,7 +4,7 @@ import type {
   CdeGenericDatum,
   ChainDataExtensionDatum,
   ChainDataExtensionGeneric,
-} from '@paima/runtime';
+} from '@paima/sm';
 
 export default async function getCdeData(
   extension: ChainDataExtensionGeneric,

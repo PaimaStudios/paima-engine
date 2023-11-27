@@ -89,3 +89,10 @@ Paima standalone game templates intentionally left out the following modules fro
 ## How To Use Paima Engine Standalone
 
 Refer to [how to guide](https://github.com/PaimaStudios/paima-engine-docs/blob/3f71545c7593415871ca784ba0dd78d9b0a67209/1%20-%20how-to-use-paima-engine.md).
+
+## Debug package content
+
+1. Make sure all the `license` fields in `package.json` are set to a recognized field (no custom strings allowed)
+2. `export DEBUG_PKG=1`
+3. Build the `dev` build of the paima standalone
+4. Run `./packaged/@standalone/dev-paima-engine-linux`

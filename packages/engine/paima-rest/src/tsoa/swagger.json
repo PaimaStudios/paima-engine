@@ -1,0 +1,324 @@
+{
+	"openapi": "3.0.0",
+	"components": {
+		"examples": {},
+		"headers": {},
+		"parameters": {},
+		"requestBodies": {},
+		"responses": {},
+		"schemas": {
+			"DryRunResponse": {
+				"properties": {
+					"valid": {
+						"type": "boolean"
+					}
+				},
+				"required": [
+					"valid"
+				],
+				"type": "object"
+			},
+			"VersionString": {
+				"type": "string",
+				"description": "tsoa doesn't support string interpolation in type names like `${number}`\nBut the real type of this is `${number}.${number}.${number}`\nhttps://github.com/lukeautry/tsoa/pull/1469"
+			},
+			"LatestProcessedBlockheightResponse": {
+				"properties": {
+					"block_height": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"block_height"
+				],
+				"type": "object"
+			},
+			"EmulatedBlockActiveResponse": {
+				"properties": {
+					"emulatedBlocksActive": {
+						"type": "boolean"
+					}
+				},
+				"required": [
+					"emulatedBlocksActive"
+				],
+				"type": "object"
+			},
+			"SuccessfulResult_number_": {
+				"properties": {
+					"success": {
+						"type": "boolean",
+						"enum": [
+							true
+						],
+						"nullable": false
+					},
+					"result": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"success",
+					"result"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"FailedResult": {
+				"properties": {
+					"success": {
+						"type": "boolean",
+						"enum": [
+							false
+						],
+						"nullable": false
+					},
+					"errorMessage": {
+						"type": "string"
+					},
+					"errorCode": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"success",
+					"errorMessage"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"Result_number_": {
+				"anyOf": [
+					{
+						"$ref": "#/components/schemas/SuccessfulResult_number_"
+					},
+					{
+						"$ref": "#/components/schemas/FailedResult"
+					}
+				]
+			},
+			"DeploymentBlockheightToEmulatedResponse": {
+				"$ref": "#/components/schemas/Result_number_"
+			},
+			"SuccessfulResult_boolean_": {
+				"properties": {
+					"success": {
+						"type": "boolean",
+						"enum": [
+							true
+						],
+						"nullable": false
+					},
+					"result": {
+						"type": "boolean"
+					}
+				},
+				"required": [
+					"success",
+					"result"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"Result_boolean_": {
+				"anyOf": [
+					{
+						"$ref": "#/components/schemas/SuccessfulResult_boolean_"
+					},
+					{
+						"$ref": "#/components/schemas/FailedResult"
+					}
+				]
+			},
+			"ConfirmInputAcceptanceResponse": {
+				"$ref": "#/components/schemas/Result_boolean_"
+			}
+		},
+		"securitySchemes": {}
+	},
+	"info": {
+		"title": "@paima/rest",
+		"version": "1.0.0",
+		"description": "Paima Engine REST, defining the REST endpoints for the Paima node",
+		"contact": {
+			"name": "Paima Studios"
+		}
+	},
+	"paths": {
+		"/dry_run": {
+			"get": {
+				"operationId": "DryRunGet",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/DryRunResponse"
+								}
+							}
+						}
+					}
+				},
+				"security": [],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "gameInput",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "userAddress",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/backend_version": {
+			"get": {
+				"operationId": "VersionGet",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/VersionString"
+								}
+							}
+						}
+					}
+				},
+				"security": [],
+				"parameters": []
+			}
+		},
+		"/latest_processed_blockheight": {
+			"get": {
+				"operationId": "LatestProcessedBlockheightGet",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/LatestProcessedBlockheightResponse"
+								}
+							}
+						}
+					}
+				},
+				"security": [],
+				"parameters": []
+			}
+		},
+		"/emulated_blocks_active": {
+			"get": {
+				"operationId": "EmulatedBlockActiveGet",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/EmulatedBlockActiveResponse"
+								}
+							}
+						}
+					}
+				},
+				"security": [],
+				"parameters": []
+			}
+		},
+		"/deployment_blockheight_to_emulated": {
+			"get": {
+				"operationId": "DeploymentBlockheightToEmulatedGet",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/DeploymentBlockheightToEmulatedResponse"
+								}
+							}
+						}
+					}
+				},
+				"security": [],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "deploymentBlockheight",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
+			}
+		},
+		"/confirm_input_acceptance": {
+			"get": {
+				"operationId": "ConfirmInputAcceptanceGet",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ConfirmInputAcceptanceResponse"
+								}
+							}
+						}
+					}
+				},
+				"security": [],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "gameInput",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "userAddress",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "blockHeight",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
+			}
+		}
+	},
+	"servers": [
+		{
+			"url": "/"
+		}
+	]
+}

@@ -2,7 +2,8 @@ import type { PoolClient } from 'pg';
 
 import { ENV, getPaimaL2Contract, initWeb3, validatePaimaL2ContractAddress } from '@paima/utils';
 import { loadChainDataExtensions } from '@paima/runtime';
-import type { ChainDataExtension, ChainFunnel, IFunnelFactory } from '@paima/runtime';
+import type { ChainFunnel, IFunnelFactory } from '@paima/runtime';
+import type { ChainDataExtension } from '@paima/sm';
 import { wrapToEmulatedBlocksFunnel } from './funnels/emulated/utils.js';
 import { BlockFunnel } from './funnels/block/funnel.js';
 import type { FunnelSharedData } from './funnels/BaseFunnel.js';

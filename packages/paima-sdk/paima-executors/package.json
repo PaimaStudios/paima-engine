@@ -23,7 +23,7 @@
     "build": "tsc"
   },
   "devDependencies": {
-    "typescript": "^5.2.2"
+    "typescript": "^5.3.2"
   },
   "dependencies": {
     "@paima/prando": "2.0.1"

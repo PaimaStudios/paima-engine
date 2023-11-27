@@ -1,7 +1,8 @@
 import type { PoolClient } from 'pg';
 
 import Prando from '@paima/prando';
-import type { ChainData, ChainFunnel, PresyncChainData } from '@paima/runtime';
+import type { ChainFunnel } from '@paima/runtime';
+import type { ChainData, PresyncChainData } from '@paima/sm';
 import { ENV, doLog } from '@paima/utils';
 import {
   emulatedSelectLatestPrior,

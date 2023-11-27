@@ -2,7 +2,7 @@ import * as fs from 'fs/promises';
 
 import { doLog } from '@paima/utils';
 
-import type { ChainDataExtension } from '../types.js';
+import type { ChainDataExtension } from '@paima/sm';
 
 export function getEarliestStartBlockheight(config: ChainDataExtension[]): number {
   const startBlockheights = config.map(cde => cde.startBlockHeight).filter(sbh => !!sbh);

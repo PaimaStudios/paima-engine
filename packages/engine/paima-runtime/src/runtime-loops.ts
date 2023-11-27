@@ -3,13 +3,8 @@ import process from 'process';
 import { doLog, logError, delay } from '@paima/utils';
 import { tx, DataMigrations } from '@paima/db';
 import { getEarliestStartBlockheight } from './cde-config/utils.js';
-import type {
-  ChainData,
-  ChainDataExtension,
-  ChainFunnel,
-  GameStateMachine,
-  IFunnelFactory,
-} from './types.js';
+import type { ChainFunnel, IFunnelFactory } from './types.js';
+import type { ChainData, ChainDataExtension, GameStateMachine } from '@paima/sm';
 
 import { run } from './run-flag.js';
 import { snapshotIfTime } from './snapshots.js';

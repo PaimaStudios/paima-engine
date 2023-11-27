@@ -1,8 +1,11 @@
 import cors from 'cors';
 import type { Express } from 'express';
 import express from 'express';
+import swaggerUi from 'swagger-ui-express';
+import { basicControllerJson } from '@paima/rest';
+import { merge, isErrorResult } from 'openapi-merge';
 
-import { doLog } from '@paima/utils';
+import { doLog, logError } from '@paima/utils';
 
 const server: Express = express();
 const bodyParser = express.json();
@@ -19,4 +22,32 @@ function startServer(): void {
     doLog(`Game Node Webserver Started At: http://localhost:${port}`);
   });
 }
-export { server, startServer };
+
+function getOpenApiJson(userStateMachineApi: object | undefined): object {
+  if (userStateMachineApi == null) {
+    return basicControllerJson;
+  } else {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const mergeResult = merge([{ oas: basicControllerJson as any }, { oas: userStateMachineApi }]);
+    if (isErrorResult(mergeResult)) {
+      logError('Failed to merge openAPI definitions');
+      return userStateMachineApi;
+    }
+    return mergeResult.output;
+  }
+}
+
+function registerDocs(userStateMachineApi: object | undefined): void {
+  const swaggerUiPath = require('path').resolve(__dirname) + '/swagger-ui';
+  const swaggerServer = [
+    swaggerUi.serve[0],
+    // the default swaggerUi.serve points to the root of the `pkg` build from standalone
+    // there is no way to override the path, so we instead just add a new path
+    // that we manually added in the standalone build that contains the swagger-ui
+    // this isn't ideal as it bloats the executable by 10MB
+    express.static(swaggerUiPath, {}),
+  ];
+  const openApi = getOpenApiJson(userStateMachineApi);
+  server.use('/docs', swaggerServer, swaggerUi.setup(openApi, { explorer: false }));
+}
+export { server, startServer, registerDocs };

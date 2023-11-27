@@ -1,4 +1,5 @@
-import type { ChainData, ChainDataExtension, ChainFunnel, PresyncChainData } from '@paima/runtime';
+import type { ChainFunnel } from '@paima/runtime';
+import type { ChainData, ChainDataExtension, PresyncChainData } from '@paima/sm';
 import type { PaimaL2Contract, Web3 } from '@paima/utils';
 import type { FunnelCacheManager } from './FunnelCache.js';
 import type { PoolClient } from 'pg';

@@ -1,5 +1,5 @@
 import { doLog, logError, delay } from '@paima/utils';
-import type { GameStateMachine } from './types.js';
+import type { GameStateMachine } from '@paima/sm';
 
 import { run } from './run-flag.js';
 import type { PoolClient } from 'pg';

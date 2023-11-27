@@ -1,6 +1,7 @@
 import type { PoolClient } from 'pg';
 
-import type { ChainDataExtensionDatum, ChainFunnel } from '@paima/runtime';
+import type { ChainDataExtensionDatum } from '@paima/sm';
+import type { ChainFunnel } from '@paima/runtime';
 import { EmulatedBlocksFunnel } from './funnel.js';
 import { DEFAULT_FUNNEL_TIMEOUT, doLog, logError, timeout } from '@paima/utils';
 import type { FunnelSharedData } from '../BaseFunnel.js';

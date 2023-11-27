@@ -1,5 +1,5 @@
 import { ENV } from '@paima/utils';
-import type { CdeGenericDatum } from '@paima/runtime';
+import type { CdeGenericDatum } from './types.js';
 import { createScheduledData, cdeGenericInsertData } from '@paima/db';
 import type { SQLUpdate } from '@paima/db';
 
