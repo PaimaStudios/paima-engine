@@ -93,3 +93,14 @@ CREATE TABLE cde_cardano_pool_delegation (
   pool TEXT,
   PRIMARY KEY (cde_id, address)
 );
+
+CREATE TABLE cde_cardano_projected_nft (
+  cde_id INTEGER NOT NULL,
+  id SERIAL,
+  address TEXT NOT NULL,
+  asset TEXT NOT NULL,
+  amount TEXT NOT NULL,
+  status TEXT NOT NULL,
+  datum TEXT NOT NULL,
+  PRIMARY KEY (cde_id, id)
+);

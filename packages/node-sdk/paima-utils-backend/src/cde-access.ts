@@ -13,6 +13,7 @@ import {
   internalGetErc6551AccountOwner,
   internalGetAllOwnedErc6551Accounts,
   internalGetCardanoAddressDelegation,
+  internalGetCardanoProjectedNft,
 } from './cde-access-internals.js';
 import type { OwnedNftsResponse, GenericCdeDataUnit, TokenIdPair } from './types.js';
 
@@ -166,4 +167,14 @@ export async function getCardanoAddressDelegation(
   address: string
 ): Promise<string | null> {
   return await internalGetCardanoAddressDelegation(readonlyDBConn, address);
+}
+
+/**
+ * Fetch the pool this address is delegating to, if any.
+ */
+export async function getCardanoAddressProjectedNft(
+  readonlyDBConn: Pool,
+  address: string
+): Promise<string | null> {
+  return await internalGetCardanoProjectedNft(readonlyDBConn, address);
 }

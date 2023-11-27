@@ -1,12 +1,12 @@
 import * as fs from 'fs/promises';
 
-import { ChainDataExtensionType, doLog } from '@paima/utils';
+import {ChainDataExtensionType, doLog} from '@paima/utils';
 
-import type { ChainDataExtension } from '@paima/sm';
+import type {ChainDataExtension} from '@paima/sm';
 
 export function getEarliestStartBlockheight(config: ChainDataExtension[]): number {
   const minStartBlockheight = config.reduce((min, cde) => {
-    if (cde.cdeType !== ChainDataExtensionType.CardanoPool) {
+    if (cde.cdeType !== ChainDataExtensionType.CardanoPool && cde.cdeType != ChainDataExtensionType.CardanoProjectedNFT) {
       return Math.min(min, cde.startBlockHeight);
     }
     return min;
@@ -16,7 +16,7 @@ export function getEarliestStartBlockheight(config: ChainDataExtension[]): numbe
 
 export function getEarliestStartSlot(config: ChainDataExtension[]): number {
   const minStartSlot = config.reduce((min, cde) => {
-    if (cde.cdeType === ChainDataExtensionType.CardanoPool) {
+    if (cde.cdeType === ChainDataExtensionType.CardanoPool || cde.cdeType == ChainDataExtensionType.CardanoProjectedNFT) {
       return Math.min(min, cde.startSlot);
     }
     return min;

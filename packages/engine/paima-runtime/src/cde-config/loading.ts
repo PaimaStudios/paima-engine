@@ -30,6 +30,7 @@ import {
   CdeBaseConfig,
   CdeEntryTypeName,
   ChainDataExtensionCardanoDelegationConfig,
+  ChainDataExtensionCardanoProjectedNFTConfig,
   ChainDataExtensionErc20Config,
   ChainDataExtensionErc20DepositConfig,
   ChainDataExtensionErc6551RegistryConfig,
@@ -89,6 +90,8 @@ export function parseCdeConfigFile(configFileData: string): Static<typeof CdeCon
         return checkOrError(entry.name, ChainDataExtensionErc6551RegistryConfig, entry);
       case CdeEntryTypeName.CardanoDelegation:
         return checkOrError(entry.name, ChainDataExtensionCardanoDelegationConfig, entry);
+      case CdeEntryTypeName.CardanoProjectedNFT:
+        return checkOrError(entry.name, ChainDataExtensionCardanoProjectedNFTConfig, entry);
       default:
         assertNever(entry.type);
     }
@@ -202,6 +205,13 @@ async function instantiateExtension(
         cdeId: index,
         hash: hashConfig(config),
         cdeType: ChainDataExtensionType.CardanoPool,
+      };
+    case CdeEntryTypeName.CardanoProjectedNFT:
+      return {
+        ...config,
+        cdeId: index,
+        hash: hashConfig(config),
+        cdeType: ChainDataExtensionType.CardanoProjectedNFT,
       };
     default:
       assertNever(config);
