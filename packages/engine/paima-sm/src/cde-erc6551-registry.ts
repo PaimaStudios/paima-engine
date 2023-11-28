@@ -1,4 +1,4 @@
-import type { CdeErc6551RegistryDatum } from '@paima/runtime';
+import type { CdeErc6551RegistryDatum } from './types.js';
 import { cdeErc6551InsertRegistry } from '@paima/db';
 import type { SQLUpdate } from '@paima/db';
 

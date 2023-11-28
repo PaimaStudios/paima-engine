@@ -24,7 +24,8 @@ import type {
   ChainDataExtensionGeneric,
   TChainDataExtensionErc721Config,
   TChainDataExtensionGenericConfig,
-} from '../types.js';
+  CdeConfig,
+} from '@paima/sm';
 import {
   CdeBaseConfig,
   CdeEntryTypeName,
@@ -33,8 +34,7 @@ import {
   ChainDataExtensionErc6551RegistryConfig,
   ChainDataExtensionErc721Config,
   ChainDataExtensionGenericConfig,
-} from '../types.js';
-import type { CdeConfig } from '../types.js';
+} from '@paima/sm';
 import { loadAbi } from './utils.js';
 import assertNever from 'assert-never';
 import fnv from 'fnv-plus';

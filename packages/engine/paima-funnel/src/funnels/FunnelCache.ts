@@ -1,4 +1,4 @@
-import type { ChainData } from '@paima/runtime';
+import type { ChainData } from '@paima/sm';
 
 export interface FunnelCacheEntry {
   /**

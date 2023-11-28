@@ -28,7 +28,7 @@
     "dotenv": "^16.0.3",
     "esbuild": "^0.19.3",
     "esbuild-plugin-polyfill-node": "^0.3.0",
-    "typescript": "^5.2.2"
+    "typescript": "^5.3.2"
   },
   "dependencies": {
     "@metamask/providers": "^10.2.1",

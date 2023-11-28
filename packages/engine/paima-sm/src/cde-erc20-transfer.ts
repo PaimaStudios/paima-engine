@@ -1,7 +1,7 @@
 import type { PoolClient } from 'pg';
 
 import { doLog } from '@paima/utils';
-import type { CdeErc20TransferDatum } from '@paima/runtime';
+import type { CdeErc20TransferDatum } from './types.js';
 import { cdeErc20GetBalance, cdeErc20InsertBalance, cdeErc20UpdateBalance } from '@paima/db';
 import type { SQLUpdate } from '@paima/db';
 

@@ -2,14 +2,6 @@ import { Pool } from 'pg';
 import type { PoolClient } from 'pg';
 
 import { doLog, ENV, SCHEDULED_DATA_ADDRESS } from '@paima/utils';
-import type {
-  ChainData,
-  PresyncChainData,
-  SubmittedData,
-  ChainDataExtensionDatum,
-  GameStateTransitionFunction,
-  GameStateMachineInitializer,
-} from '@paima/runtime';
 import {
   tx,
   getConnection,
@@ -29,6 +21,16 @@ import Prando from '@paima/prando';
 
 import { randomnessRouter } from './randomness.js';
 import { cdeTransitionFunction } from './cde-processing.js';
+import type {
+  SubmittedData,
+  ChainData,
+  PresyncChainData,
+  ChainDataExtensionDatum,
+  GameStateTransitionFunction,
+  GameStateMachineInitializer,
+} from './types.js';
+export * from './types.js';
+export type * from './types.js';
 
 const SM: GameStateMachineInitializer = {
   initialize: (

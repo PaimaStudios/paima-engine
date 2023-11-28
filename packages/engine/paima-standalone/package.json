@@ -29,7 +29,8 @@
       "./templates/**/*",
       "./contracts/**/*",
       "./batcher/**/*",
-      "./documentation/**/*"
+      "./documentation/**/*",
+      "./swagger-ui/**/*"
     ],
     "targets": [
       "node18-linux-x64",

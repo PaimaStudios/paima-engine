@@ -14,7 +14,7 @@
   },
   "author": "Paima Studios",
   "devDependencies": {
-    "typescript": "^5.2.2"
+    "typescript": "^5.3.2"
   },
   "dependencies": {
     "assert-never": "^1.2.1"

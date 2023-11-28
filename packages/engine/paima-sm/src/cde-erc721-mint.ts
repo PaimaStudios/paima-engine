@@ -1,5 +1,5 @@
 import { ENV } from '@paima/utils';
-import type { CdeErc721MintDatum } from '@paima/runtime';
+import type { CdeErc721MintDatum } from './types.js';
 import { createScheduledData } from '@paima/db';
 import type { SQLUpdate } from '@paima/db';
 

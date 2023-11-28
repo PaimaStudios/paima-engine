@@ -1,5 +1,6 @@
 import { ENV, doLog, timeout } from '@paima/utils';
-import type { ChainData, ChainFunnel, PresyncChainData } from '@paima/runtime';
+import type { ChainFunnel } from '@paima/runtime';
+import type { ChainData, PresyncChainData } from '@paima/sm';
 import { getBaseChainDataMulti, getBaseChainDataSingle } from '../../reading.js';
 import { getUngroupedCdeData } from '../../cde/reading.js';
 import { composeChainData, groupCdeData } from '../../utils.js';

@@ -2,3 +2,4 @@
 **/*.d.ts
 contract-types/
 packaged/
+packages/engine/paima-rest/src/tsoa/routes.ts

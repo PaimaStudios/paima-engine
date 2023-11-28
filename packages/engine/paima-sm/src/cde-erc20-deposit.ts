@@ -1,7 +1,7 @@
 import type { PoolClient } from 'pg';
 
 import { doLog, ENV } from '@paima/utils';
-import type { CdeErc20DepositDatum } from '@paima/runtime';
+import type { CdeErc20DepositDatum } from './types.js';
 import type { SQLUpdate } from '@paima/db';
 import {
   createScheduledData,

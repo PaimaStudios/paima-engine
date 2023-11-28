@@ -1,4 +1,5 @@
-import type { GameStateTransitionFunctionRouter, TsoaFunction } from '@paima/runtime';
+import type { GameStateTransitionFunctionRouter } from '@paima/sm';
+import type { TsoaFunction } from '@paima/runtime';
 
 function importFile<T>(file: string): T {
   // dynamic import cannot be used here due to PKG limitations
@@ -20,3 +21,15 @@ export const API_FILENAME = 'packaged/endpoints.cjs';
  * Reads repackaged user's code placed next to the executable in `endpoints.cjs` file
  */
 export const importTsoaFunction = (): TsoaFunction => importFile<TsoaFunction>(API_FILENAME);
+
+export const GAME_OPENAPI_FILENAME = 'packaged/openapi.json';
+/**
+ * Reads repackaged user's code placed next to the executable in `endpoints.cjs` file
+ */
+export const importOpenApiJson = (): undefined | object => {
+  try {
+    return require(`${process.cwd()}/${GAME_OPENAPI_FILENAME}`);
+  } catch (e) {
+    return undefined;
+  }
+};

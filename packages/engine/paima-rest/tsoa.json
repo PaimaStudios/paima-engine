@@ -1,0 +1,19 @@
+{
+  "entryFile": "src/index.ts",
+  "noImplicitAdditionalProperties": "throw-on-extras",
+  "controllerPathGlobs": ["src/controllers/*.ts"],
+  "spec": {
+    "outputDirectory": "src/tsoa",
+    "specVersion": 3,
+    "operationIdTemplate": "{{replace controllerName 'Controller' ''}}{{titleCase method.name}}"
+  },
+  "routes": {
+    "routesDir": "src/tsoa"
+  },
+  "compilerOptions": {
+    "baseUrl": "./",
+    "paths": {
+      "@paima/utils/*": ["../../paima-sdk/paima-utils/*"]
+    }
+  }
+}

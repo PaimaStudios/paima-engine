@@ -1,7 +1,7 @@
 import type Web3 from 'web3';
 
 import { ChainDataExtensionType } from '@paima/utils';
-import type { ChainDataExtensionDatum, ChainDataExtension } from '@paima/runtime';
+import type { ChainDataExtensionDatum, ChainDataExtension } from '@paima/sm';
 
 import getCdeErc20Data from './erc20.js';
 import getCdeErc721Data from './erc721.js';

@@ -1,5 +1,5 @@
 import { FunnelFactory } from '@paima/funnel';
-import paimaRuntime from '@paima/runtime';
+import paimaRuntime, { registerDocs, registerValidationErrorHandler } from '@paima/runtime';
 import { ENV, doLog } from '@paima/utils';
 import { exec } from 'child_process';
 import { createInterface } from 'readline';
@@ -14,8 +14,9 @@ import {
   prepareDocumentation,
   prepareTemplate,
 } from './file.js';
-import { importTsoaFunction } from './import.js';
+import { importOpenApiJson, importTsoaFunction } from './import.js';
 import type { Template } from './types.js';
+import RegisterRoutes, { EngineService } from '@paima/rest';
 
 // Prompt user for input in the CLI
 export const userPrompt = (query: string): Promise<string> => {
@@ -106,10 +107,15 @@ export const runPaimaEngine = async (): Promise<void> => {
     const stateMachine = gameSM();
     const funnelFactory = await FunnelFactory.initialize(ENV.CHAIN_URI, ENV.CONTRACT_ADDRESS);
     const engine = paimaRuntime.initialize(funnelFactory, stateMachine, ENV.GAME_NODE_VERSION);
-    const registerEndpoints = importTsoaFunction();
 
+    EngineService.INSTANCE.updateSM(stateMachine);
     engine.setPollingRate(ENV.POLLING_RATE);
-    engine.addEndpoints(registerEndpoints);
+    engine.addEndpoints(importTsoaFunction());
+    engine.addEndpoints(server => {
+      RegisterRoutes(server);
+    });
+    registerDocs(importOpenApiJson());
+    registerValidationErrorHandler();
 
     void engine.run(ENV.STOP_BLOCKHEIGHT, ENV.SERVER_ONLY_MODE);
   } else {

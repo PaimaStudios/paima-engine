@@ -3,7 +3,8 @@ import type { BlockTransactionString } from 'web3-eth';
 
 import { timeout, cutAfterFirstRejected, DEFAULT_FUNNEL_TIMEOUT, doLog, delay } from '@paima/utils';
 import type { PaimaL2Contract } from '@paima/utils';
-import { TimeoutError, type ChainData } from '@paima/runtime';
+import { TimeoutError } from '@paima/runtime';
+import type { ChainData } from '@paima/sm';
 import type { PaimaGameInteraction } from '@paima/utils/src/contract-types/PaimaL2Contract.js';
 
 import { extractSubmittedData } from './paima-l2-processing.js';
