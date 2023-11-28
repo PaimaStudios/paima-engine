@@ -1,5 +1,5 @@
 import { FunnelFactory } from '@paima/funnel';
-import paimaRuntime, { registerDocs } from '@paima/runtime';
+import paimaRuntime, { registerDocs, registerValidationErrorHandler } from '@paima/runtime';
 import { ENV, doLog } from '@paima/utils';
 import { exec } from 'child_process';
 import { createInterface } from 'readline';
@@ -115,6 +115,7 @@ export const runPaimaEngine = async (): Promise<void> => {
       RegisterRoutes(server);
     });
     registerDocs(importOpenApiJson());
+    registerValidationErrorHandler();
 
     void engine.run(ENV.STOP_BLOCKHEIGHT, ENV.SERVER_ONLY_MODE);
   } else {

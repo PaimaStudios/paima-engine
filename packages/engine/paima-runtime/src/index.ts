@@ -15,7 +15,7 @@ export * from './cde-config/loading.js';
 export * from './cde-config/validation.js';
 export * from './cde-config/utils.js';
 export * from './types.js';
-export { registerDocs } from './server.js';
+export { registerDocs, registerValidationErrorHandler } from './server.js';
 export { TimeoutError } from './utils.js';
 
 process.on('SIGINT', () => {
