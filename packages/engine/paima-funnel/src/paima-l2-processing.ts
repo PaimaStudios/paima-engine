@@ -1,6 +1,4 @@
 import type Web3 from 'web3';
-import web3UtilsPkg from 'web3-utils';
-
 import { AddressType, doLog, getReadNamespaces } from '@paima/utils';
 import type { SubmittedData } from '@paima/runtime';
 import type { PaimaGameInteraction } from '@paima/utils/src/contract-types/PaimaL2Contract.js';
@@ -11,9 +9,7 @@ import {
   createMessageForBatcher,
   extractBatches,
 } from '@paima/concise';
-import { sha3 } from 'web3-utils';
-
-const { toBN, hexToUtf8 } = web3UtilsPkg;
+import { toBN, hexToUtf8, sha3 } from 'web3-utils';
 
 interface ValidatedSubmittedData extends SubmittedData {
   validated: boolean;

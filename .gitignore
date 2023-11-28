@@ -1,5 +1,6 @@
 node_modules
 bin
+.nx
 **/dist
 **/build
 **/lib
