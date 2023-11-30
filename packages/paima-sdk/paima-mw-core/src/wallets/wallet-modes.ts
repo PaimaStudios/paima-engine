@@ -21,7 +21,10 @@ export type BaseLoginInfo<Api> = {
   preference?: InjectionPreference<Api>;
 };
 export type LoginInfoMap = {
-  [WalletMode.EvmInjected]: BaseLoginInfo<EvmApi> & { preferBatchedMode: boolean };
+  [WalletMode.EvmInjected]: BaseLoginInfo<EvmApi> & {
+    preferBatchedMode: boolean;
+    checkChainId?: boolean;
+  };
   [WalletMode.EvmEthers]: { connection: ActiveConnection<EthersApi>; preferBatchedMode: boolean };
   [WalletMode.Cardano]: BaseLoginInfo<CardanoApi>;
   [WalletMode.Polkadot]: BaseLoginInfo<PolkadotApi>;

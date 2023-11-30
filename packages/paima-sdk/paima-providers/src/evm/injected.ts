@@ -132,7 +132,7 @@ export class EvmInjectedConnector implements IConnector<EvmApi> {
       allWallets.push({
         metadata: {
           name: 'metamask',
-          displayName: 'Metamask',
+          displayName: 'MetaMask',
         },
         api: () => Promise.resolve(ethereum),
       });
@@ -153,11 +153,15 @@ export class EvmInjectedConnector implements IConnector<EvmApi> {
   static getWalletOptions(): ConnectionOption<EvmApi>[] {
     const withDuplicates = EvmInjectedConnector.getPossiblyDuplicateWalletOptions();
     const seenNames: Set<string> = new Set();
+    const seenDisplayNames: Set<string> = new Set();
 
     const result: ConnectionOption<EvmApi>[] = [];
     for (const option of withDuplicates) {
+      const lowerCaseName = option.metadata.displayName.toLowerCase();
       if (seenNames.has(option.metadata.name)) continue;
+      if (seenDisplayNames.has(lowerCaseName)) continue;
       seenNames.add(option.metadata.name);
+      seenDisplayNames.add(lowerCaseName);
       result.push(option);
     }
 

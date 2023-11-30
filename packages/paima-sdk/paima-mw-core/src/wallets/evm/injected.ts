@@ -117,9 +117,11 @@ export async function evmLoginWrapper(
     // If the fee has increased beyond the default value, posting won't work.
   }
   try {
-    if (!(await verifyWalletChain())) {
-      if (!(await switchChain())) {
-        return errorFxn(PaimaMiddlewareErrorCode.EVM_CHAIN_SWITCH);
+    if (loginInfo.checkChainId !== false) {
+      if (!(await verifyWalletChain())) {
+        if (!(await switchChain())) {
+          return errorFxn(PaimaMiddlewareErrorCode.EVM_CHAIN_SWITCH);
+        }
       }
     }
   } catch (err) {
