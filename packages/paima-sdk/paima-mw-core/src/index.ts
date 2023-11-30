@@ -34,6 +34,7 @@ import {
   PaimaMiddlewareErrorCode,
   PAIMA_MIDDLEWARE_ERROR_MESSAGES,
 } from './errors.js';
+import { specificWalletLogin } from './wallets/wallets.js';
 
 export async function initMiddlewareCore(
   gameName: string,
@@ -74,6 +75,7 @@ export {
   PaimaMiddlewareErrorCode,
   PAIMA_MIDDLEWARE_ERROR_MESSAGES,
   walletToName,
+  specificWalletLogin,
 };
 
 // NOT FOR USE IN PRODUCTION, just internal endpoints and helper functions for easier testing and debugging:
