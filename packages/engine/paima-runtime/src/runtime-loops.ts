@@ -62,8 +62,10 @@ async function runPresync(
     startBlockHeight
   );
 
-  if (!ENV.CARP_URL) {
-    delete presyncBlockHeight[Network.CARDANO];
+  if (!ENV.CARP_URL && presyncBlockHeight[Network.CARDANO]) {
+    throw new Error(
+      '[paima-runtime] Detected Cardano CDE sync in progress, but CARP_URL is not set.'
+    );
   }
 
   if (run) {
@@ -83,7 +85,7 @@ async function runPresync(
     }
 
     // eslint-disable-next-line @typescript-eslint/no-loop-func
-    let newHeight = tx(gameStateMachine.getReadWriteDbConn(), async dbTx => {
+    presyncBlockHeight = await tx(gameStateMachine.getReadWriteDbConn(), async dbTx => {
       const chainFunnel = await funnelFactory.generateFunnel(dbTx);
       return await runPresyncRound(
         gameStateMachine,
@@ -96,8 +98,6 @@ async function runPresync(
         }))
       );
     });
-
-    presyncBlockHeight = await newHeight;
   }
 
   await loopIfStopBlockReached(presyncBlockHeight[Network.EVM], stopBlockHeight);
