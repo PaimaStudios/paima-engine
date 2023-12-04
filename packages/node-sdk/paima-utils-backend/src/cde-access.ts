@@ -16,6 +16,7 @@ import {
   internalGetCardanoProjectedNft,
 } from './cde-access-internals.js';
 import type { OwnedNftsResponse, GenericCdeDataUnit, TokenIdPair } from './types.js';
+import {ICdeCardanoGetProjectedNftResult} from "@paima/db/src";
 
 /**
  * Fetch the owner of the NFT from the database
@@ -172,9 +173,9 @@ export async function getCardanoAddressDelegation(
 /**
  * Fetch the pool this address is delegating to, if any.
  */
-export async function getCardanoAddressProjectedNft(
+export async function getCardanoAddressProjectedNfts(
   readonlyDBConn: Pool,
   address: string
-): Promise<string | null> {
+): Promise<ICdeCardanoGetProjectedNftResult[]> {
   return await internalGetCardanoProjectedNft(readonlyDBConn, address);
 }

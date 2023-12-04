@@ -3,11 +3,19 @@ export declare type ProjectedNftRangeRequest = {
 };
 
 export declare type ProjectedNftRangeResponse = {
-    txId: string | null,
-    slot: number,
-    address: string | null,
+    actionSlot: number,
+
+    ownerAddress: string | null,
+
+    actionTxId: string | null,
+    actionOutputIndex: number | null,
+
+    previousTxHash: string | null,
+    previousTxOutputIndex: number | null,
+
     asset: string,
     amount: number,
     status: string | null,
     plutusDatum: string | null,
+    forHowLong: number | null,
 }[];

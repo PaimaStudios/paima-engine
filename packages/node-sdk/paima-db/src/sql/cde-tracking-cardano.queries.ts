@@ -15,7 +15,7 @@ export interface IMarkCardanoCdeSlotProcessedQuery {
   result: IMarkCardanoCdeSlotProcessedResult;
 }
 
-const markCardanoCdeSlotProcessedIR: any = {"usedParamSet":{"slot":true},"params":[{"name":"slot","required":true,"transform":{"type":"scalar"},"locs":[{"a":53,"b":58},{"a":100,"b":105}]}],"statement":"INSERT INTO cde_tracking_cardano(id,slot)\nVALUES (0, :slot!)\nON CONFLICT (id) \nDO UPDATE SET slot = :slot!"};
+const markCardanoCdeSlotProcessedIR: any = {"usedParamSet":{"slot":true},"params":[{"name":"slot","required":true,"transform":{"type":"scalar"},"locs":[{"a":53,"b":58},{"a":99,"b":104}]}],"statement":"INSERT INTO cde_tracking_cardano(id,slot)\nVALUES (0, :slot!)\nON CONFLICT (id)\nDO UPDATE SET slot = :slot!"};
 
 /**
  * Query generated from SQL:
@@ -34,7 +34,7 @@ export type IGetCardanoLatestProcessedCdeSlotParams = void;
 
 /** 'GetCardanoLatestProcessedCdeSlot' return type */
 export interface IGetCardanoLatestProcessedCdeSlotResult {
-  slot: number | null;
+  slot: number;
 }
 
 /** 'GetCardanoLatestProcessedCdeSlot' query type */
