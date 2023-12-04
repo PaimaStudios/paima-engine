@@ -24,8 +24,10 @@ import getCdePoolData from '../../cde/cardanoPool.js';
 import { query } from '@dcspark/carp-client/client/src/index';
 import { Routes } from '@dcspark/carp-client/shared/routes';
 import { FUNNEL_PRESYNC_FINISHED } from '@paima/utils/src/constants';
+import { CarpFunnelCacheEntry } from '../FunnelCache.js';
 
 const confirmationDepth = 10;
+const delayForWaitingForFinalityLoop = 1000;
 
 function knownShelleyTime(): number {
   switch (ENV.CARDANO_NETWORK) {
@@ -54,7 +56,7 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
     dbTx: PoolClient,
     private readonly baseFunnel: ChainFunnel,
     private readonly carpUrl: string,
-    private readonly startSlot: number
+    private cache: CarpFunnelCacheEntry
   ) {
     super(sharedData, dbTx);
     // TODO: replace once TS5 decorators are better supported
@@ -77,21 +79,30 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
       this.bufferedData = data;
     }
 
+    const cachedState = this.cache.getState().lastPoint;
+
+    let lastTimestamp;
+
     // there are most likely some slots between the last end of range and the
     // first block in the current range, so we need to start from the previous point.
+    if (cachedState && cachedState.blockHeight == blockHeight - 1) {
+      // this is the last timestamp that was queried as the max in the previous pull
+      lastTimestamp = cachedState.timestamp;
+    } else {
+      lastTimestamp = await timeout(
+        this.sharedData.web3.eth.getBlock(blockHeight - 1),
+        DEFAULT_FUNNEL_TIMEOUT
+      );
 
-    // TODO: cache this? but it's not in the db afaik, so it can't be done on
-    // recoverState
-    const lastTimestamp = await timeout(
-      this.sharedData.web3.eth.getBlock(blockHeight - 1),
-      DEFAULT_FUNNEL_TIMEOUT
-    );
+      lastTimestamp = lastTimestamp.timestamp as number;
+    }
 
     let grouped = await readDataInternal(
       this.bufferedData,
       this.carpUrl,
       this.sharedData.extensions,
-      lastTimestamp.timestamp as number
+      lastTimestamp,
+      this.cache
     );
 
     const composed = composeChainData(this.bufferedData, grouped);
@@ -108,7 +119,7 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
 
     let basePromise = this.baseFunnel.readPresyncData(args);
 
-    if (arg && arg.from >= 0 && arg.from < this.startSlot) {
+    if (arg && arg.from >= 0 && arg.from < this.cache.getState().startingSlot) {
       const [poolEvents, data] = await Promise.all([
         Promise.all(
           this.sharedData.extensions
@@ -118,7 +129,7 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
                 this.carpUrl,
                 extension as ChainDataExtensionCardanoDelegation,
                 arg.from,
-                Math.min(arg.to, this.startSlot - 1),
+                Math.min(arg.to, this.cache.getState().startingSlot - 1),
                 slot => {
                   return slot;
                 }
@@ -154,11 +165,23 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
     carpUrl: string,
     startingBlockHeight: number
   ): Promise<CarpFunnel> {
-    const startingSlot = timestampToAbsoluteSlot(
-      (await sharedData.web3.eth.getBlock(startingBlockHeight)).timestamp as number
-    );
+    const cacheEntry = (async (): Promise<CarpFunnelCacheEntry> => {
+      const entry = sharedData.cacheManager.cacheEntries[CarpFunnelCacheEntry.SYMBOL];
+      if (entry != null) return entry;
 
-    return new CarpFunnel(sharedData, dbTx, baseFunnel, carpUrl, startingSlot);
+      const newEntry = new CarpFunnelCacheEntry();
+      sharedData.cacheManager.cacheEntries[CarpFunnelCacheEntry.SYMBOL] = newEntry;
+
+      newEntry.updateStartingSlot(
+        timestampToAbsoluteSlot(
+          (await sharedData.web3.eth.getBlock(startingBlockHeight)).timestamp as number
+        )
+      );
+
+      return newEntry;
+    })();
+
+    return new CarpFunnel(sharedData, dbTx, baseFunnel, carpUrl, await cacheEntry);
   }
 }
 
@@ -166,13 +189,22 @@ async function readDataInternal(
   data: ChainData[],
   carpUrl: string,
   extensions: ChainDataExtension[],
-  lastTimestamp: number
+  lastTimestamp: number,
+  cache: CarpFunnelCacheEntry
 ): Promise<PresyncChainData[]> {
   // the lower range is exclusive
   const min = timestampToAbsoluteSlot(lastTimestamp);
   // the upper range is inclusive
-  const max = timestampToAbsoluteSlot(Math.max(...data.map(data => data.timestamp)));
+  const maxElement = data[data.length - 1];
 
+  const max = timestampToAbsoluteSlot(maxElement.timestamp);
+
+  cache.updateLastPoint(maxElement.blockNumber, maxElement.timestamp);
+
+  // Block finality depends on depth, and not on time, so it's possible that a
+  // block at a non confirmed depth falls in the slot range that we are querying
+  // here. This waits until the upper end of the range falls in the confirmed
+  // zone.
   while (true) {
     const stableBlock = await timeout(
       query(carpUrl, Routes.blockLatest, {
@@ -185,7 +217,7 @@ async function readDataInternal(
       break;
     }
 
-    await delay(1000);
+    await delay(delayForWaitingForFinalityLoop);
   }
 
   const blockNumbers = data.reduce(
