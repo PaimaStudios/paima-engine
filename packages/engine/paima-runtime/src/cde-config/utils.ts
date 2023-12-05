@@ -13,7 +13,6 @@ export function getEarliestStartBlockheight(config: ChainDataExtension[]): numbe
         return null;
       }
     })
-    // TODO: can this cast be avoided?
     .filter(sbh => !!sbh) as number[];
   const minStartBlockheight = Math.min(...startBlockheights);
   return isFinite(minStartBlockheight) ? minStartBlockheight : -1;
