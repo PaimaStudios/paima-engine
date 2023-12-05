@@ -5,24 +5,22 @@ import { ChainDataExtensionType, doLog } from '@paima/utils';
 import type { ChainDataExtension } from '@paima/sm';
 
 export function getEarliestStartBlockheight(config: ChainDataExtension[]): number {
-  const startBlockheights = config.reduce((arr, cde) => {
+  const minStartBlockheight = config.reduce((min, cde) => {
     if (cde.cdeType !== ChainDataExtensionType.CardanoPool) {
-      arr.push(cde.startBlockHeight);
+      return Math.min(min, cde.startBlockHeight);
     }
-    return arr;
-  }, [] as number[]);
-  const minStartBlockheight = Math.min(...startBlockheights);
+    return min;
+  }, 0);
   return isFinite(minStartBlockheight) ? minStartBlockheight : -1;
 }
 
 export function getEarliestStartSlot(config: ChainDataExtension[]): number {
-  const startSlots = config.reduce((arr, cde) => {
+  const minStartSlot = config.reduce((min, cde) => {
     if (cde.cdeType === ChainDataExtensionType.CardanoPool) {
-      arr.push(cde.startSlot);
+      return Math.min(min, cde.startSlot);
     }
-    return arr;
-  }, [] as number[]);
-  const minStartSlot = Math.min(...startSlots);
+    return min;
+  }, 0);
   return isFinite(minStartSlot) ? minStartSlot : -1;
 }
 
