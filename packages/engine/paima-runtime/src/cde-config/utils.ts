@@ -10,7 +10,7 @@ export function getEarliestStartBlockheight(config: ChainDataExtension[]): numbe
       return Math.min(min, cde.startBlockHeight);
     }
     return min;
-  }, 0);
+  }, Infinity);
   return isFinite(minStartBlockheight) ? minStartBlockheight : -1;
 }
 
@@ -20,7 +20,7 @@ export function getEarliestStartSlot(config: ChainDataExtension[]): number {
       return Math.min(min, cde.startSlot);
     }
     return min;
-  }, 0);
+  }, Infinity);
   return isFinite(minStartSlot) ? minStartSlot : -1;
 }
 
