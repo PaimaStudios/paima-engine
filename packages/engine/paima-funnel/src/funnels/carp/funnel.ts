@@ -26,7 +26,6 @@ import { Routes } from '@dcspark/carp-client/shared/routes';
 import { FUNNEL_PRESYNC_FINISHED } from '@paima/utils/src/constants';
 import { CarpFunnelCacheEntry } from '../FunnelCache.js';
 
-const confirmationDepth = 10;
 const delayForWaitingForFinalityLoop = 1000;
 
 function knownShelleyTime(): number {
@@ -42,7 +41,7 @@ function knownShelleyTime(): number {
   }
 }
 
-function timestampToAbsoluteSlot(timestamp: number): number {
+function timestampToAbsoluteSlot(timestamp: number, confirmationDepth: number): number {
   const cardanoAvgBlockPeriod = 20;
   // map timestamps with a delta, since we are waiting for blocks.
   const confirmationTimeDelta = cardanoAvgBlockPeriod * confirmationDepth;
@@ -56,7 +55,8 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
     dbTx: PoolClient,
     private readonly baseFunnel: ChainFunnel,
     private readonly carpUrl: string,
-    private cache: CarpFunnelCacheEntry
+    private cache: CarpFunnelCacheEntry,
+    private readonly confirmationDepth: number
   ) {
     super(sharedData, dbTx);
     // TODO: replace once TS5 decorators are better supported
@@ -102,7 +102,8 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
       this.carpUrl,
       this.sharedData.extensions,
       lastTimestamp,
-      this.cache
+      this.cache,
+      this.confirmationDepth
     );
 
     const composed = composeChainData(this.bufferedData, grouped);
@@ -165,6 +166,12 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
     carpUrl: string,
     startingBlockHeight: number
   ): Promise<CarpFunnel> {
+    if (!ENV.CARDANO_CONFIRMATION_DEPTH) {
+      throw new Error('[carp-funnel] Missing CARDANO_CONFIRMATION_DEPTH setting.');
+    }
+
+    const confirmationDepth = ENV.CARDANO_CONFIRMATION_DEPTH;
+
     const cacheEntry = (async (): Promise<CarpFunnelCacheEntry> => {
       const entry = sharedData.cacheManager.cacheEntries[CarpFunnelCacheEntry.SYMBOL];
       if (entry != null) return entry;
@@ -174,14 +181,22 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
 
       newEntry.updateStartingSlot(
         timestampToAbsoluteSlot(
-          (await sharedData.web3.eth.getBlock(startingBlockHeight)).timestamp as number
+          (await sharedData.web3.eth.getBlock(startingBlockHeight)).timestamp as number,
+          confirmationDepth
         )
       );
 
       return newEntry;
     })();
 
-    return new CarpFunnel(sharedData, dbTx, baseFunnel, carpUrl, await cacheEntry);
+    return new CarpFunnel(
+      sharedData,
+      dbTx,
+      baseFunnel,
+      carpUrl,
+      await cacheEntry,
+      confirmationDepth
+    );
   }
 }
 
@@ -190,14 +205,15 @@ async function readDataInternal(
   carpUrl: string,
   extensions: ChainDataExtension[],
   lastTimestamp: number,
-  cache: CarpFunnelCacheEntry
+  cache: CarpFunnelCacheEntry,
+  confirmationDepth: number
 ): Promise<PresyncChainData[]> {
   // the lower range is exclusive
-  const min = timestampToAbsoluteSlot(lastTimestamp);
+  const min = timestampToAbsoluteSlot(lastTimestamp, confirmationDepth);
   // the upper range is inclusive
   const maxElement = data[data.length - 1];
 
-  const max = timestampToAbsoluteSlot(maxElement.timestamp);
+  const max = timestampToAbsoluteSlot(maxElement.timestamp, confirmationDepth);
 
   cache.updateLastPoint(maxElement.blockNumber, maxElement.timestamp);
 
@@ -222,7 +238,7 @@ async function readDataInternal(
 
   const blockNumbers = data.reduce(
     (dict, data) => {
-      dict[timestampToAbsoluteSlot(data.timestamp)] = data.blockNumber;
+      dict[timestampToAbsoluteSlot(data.timestamp, confirmationDepth)] = data.blockNumber;
       return dict;
     },
     {} as { [slot: number]: number }

@@ -109,12 +109,13 @@ export class ENV {
     return process.env.BATCHER_URI || '';
   }
 
-  // TODO: put this in the right place
   static get CARP_URL(): string | undefined {
     return process.env.CARP_URL;
   }
-  // TODO: put this in the right place
   static get CARDANO_NETWORK(): string | undefined {
     return process.env.CARDANO_NETWORK;
+  }
+  static get CARDANO_CONFIRMATION_DEPTH(): number | undefined {
+    return Number(process.env.CARDANO_CONFIRMATION_DEPTH);
   }
 }
