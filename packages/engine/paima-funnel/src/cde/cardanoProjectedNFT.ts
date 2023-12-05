@@ -7,7 +7,7 @@ import { ChainDataExtensionDatumType, DEFAULT_FUNNEL_TIMEOUT, timeout } from '@p
 import { Routes, query } from '@dcspark/carp-client/client/src';
 import type { ProjectedNftRangeResponse } from "@dcspark/carp-client/shared/models/ProjectedNftRange";
 
-export default async function getCdeData(
+export default async function getCdeProjectedNFTData(
     url: string,
     extension: ChainDataExtensionCardanoProjectedNFT,
     fromAbsoluteSlot: number,

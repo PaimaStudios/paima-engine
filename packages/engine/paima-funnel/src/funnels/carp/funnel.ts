@@ -1,31 +1,31 @@
 import {
   ChainDataExtensionType,
   DEFAULT_FUNNEL_TIMEOUT,
-  ENV,
-  Network,
   delay,
   doLog,
+  ENV,
   logError,
+  Network,
   timeout,
 } from '@paima/utils';
-import type { ChainDataExtensionDatum } from '@paima/sm';
 import {
   type ChainData,
   type ChainDataExtension,
-  type ChainDataExtensionCardanoDelegation,
+  type ChainDataExtensionCardanoDelegation, ChainDataExtensionCardanoProjectedNFT,
+  type ChainDataExtensionDatum,
   type PresyncChainData,
-  ChainDataExtensionDatum,
 } from '@paima/sm';
-import { composeChainData, groupCdeData } from '../../utils.js';
-import { BaseFunnel } from '../BaseFunnel.js';
-import type { FunnelSharedData } from '../BaseFunnel.js';
-import type { PoolClient } from 'pg';
-import type { ChainFunnel, ReadPresyncDataFrom } from '@paima/runtime';
+import {composeChainData, groupCdeData} from '../../utils.js';
+import type {FunnelSharedData} from '../BaseFunnel.js';
+import {BaseFunnel} from '../BaseFunnel.js';
+import type {PoolClient} from 'pg';
+import type {ChainFunnel, ReadPresyncDataFrom} from '@paima/runtime';
 import getCdePoolData from '../../cde/cardanoPool.js';
-import { query } from '@dcspark/carp-client/client/src/index';
-import { Routes } from '@dcspark/carp-client/shared/routes';
-import { FUNNEL_PRESYNC_FINISHED } from '@paima/utils/src/constants';
-import { CarpFunnelCacheEntry } from '../FunnelCache.js';
+import getCdeProjectedNFTData from '../../cde/cardanoProjectedNFT.js';
+import {query} from '@dcspark/carp-client/client/src/index';
+import {Routes} from '@dcspark/carp-client/shared/routes';
+import {FUNNEL_PRESYNC_FINISHED} from '@paima/utils/src/constants';
+import {CarpFunnelCacheEntry} from '../FunnelCache.js';
 
 const delayForWaitingForFinalityLoop = 1000;
 
@@ -141,27 +141,40 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
     let basePromise = this.baseFunnel.readPresyncData(args);
 
     if (arg && arg.from >= 0 && arg.from < this.cache.getState().startingSlot) {
-      const [poolEvents, data] = await Promise.all([
+      const [carpEvents, data] = await Promise.all([
         Promise.all(
           this.sharedData.extensions
-            .filter(extension => extension.cdeType === ChainDataExtensionType.CardanoPool)
+            .filter(extension => extension.cdeType === ChainDataExtensionType.CardanoPool || extension.cdeType === ChainDataExtensionType.CardanoProjectedNFT)
             .map(extension => {
-              const data = getCdePoolData(
-                this.carpUrl,
-                extension as ChainDataExtensionCardanoDelegation,
-                arg.from,
-                Math.min(arg.to, this.cache.getState().startingSlot - 1),
-                slot => {
-                  return slot;
-                }
-              );
-              return data;
+              if (extension.cdeType === ChainDataExtensionType.CardanoPool) {
+                const data = getCdePoolData(
+                    this.carpUrl,
+                    extension as ChainDataExtensionCardanoDelegation,
+                    arg.from,
+                    Math.min(arg.to, this.cache.getState().startingSlot - 1),
+                    slot => {
+                      return slot;
+                    }
+                );
+                return data;
+              } else { // ProjectedNFT
+                const data = getCdeProjectedNFTData(
+                    this.carpUrl,
+                    extension as ChainDataExtensionCardanoProjectedNFT,
+                    arg.from,
+                    Math.min(arg.to, this.cache.getState().startingSlot - 1),
+                    slot => {
+                      return slot;
+                    }
+                );
+                return data;
+              }
             })
         ),
         basePromise,
       ]);
 
-      let grouped = groupCdeData(Network.CARDANO, arg.from, arg.to, poolEvents);
+      let grouped = groupCdeData(Network.CARDANO, arg.from, arg.to, carpEvents);
 
       if (grouped.length > 0) {
         data[Network.CARDANO] = grouped;
@@ -284,7 +297,7 @@ async function readDataInternal(
 
       switch (extension.cdeType) {
         case ChainDataExtensionType.CardanoPool:
-          const data = getCdePoolData(
+          const poolData = getCdePoolData(
             carpUrl,
             extension,
             min,
@@ -292,7 +305,17 @@ async function readDataInternal(
             mapSlotToBlockNumber
           );
 
-          return data;
+          return poolData;
+        case ChainDataExtensionType.CardanoProjectedNFT:
+          const projectedNFTData = getCdeProjectedNFTData(
+            carpUrl,
+            extension,
+            min,
+            Math.min(max, extension.stopSlot || max),
+            mapSlotToBlockNumber
+          );
+
+          return projectedNFTData;
         default:
           return Promise.resolve([]);
       }

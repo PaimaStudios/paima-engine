@@ -72,20 +72,20 @@ interface CdeDatumCardanoPoolPayload {
 }
 
 interface CdeDatumCardanoProjectedNFTPayload {
-  ownerAddress: string,
+  ownerAddress: string;
 
-  actionTxId: string,
-  actionOutputIndex: number | undefined,
+  actionTxId: string;
+  actionOutputIndex: number | undefined;
 
-  previousTxHash: string | undefined,
-  previousTxOutputIndex: number | undefined,
+  previousTxHash: string | undefined;
+  previousTxOutputIndex: number | undefined;
 
-  asset: string,
-  amount: number,
-  status: string,
-  plutusDatum: string,
+  asset: string;
+  amount: number;
+  status: string;
+  plutusDatum: string;
 
-  forHowLong: number | undefined,
+  forHowLong: number | undefined;
 }
 
 type ChainDataExtensionPayload =
@@ -288,16 +288,15 @@ export type ChainDataExtensionCardanoDelegation = ChainDataExtensionBase &
     cdeType: ChainDataExtensionType.CardanoPool;
   };
 
-export const ChainDataExtensionCardanoProjectedNFTConfig = Type.Intersect([
-  Type.Object({
-    type: Type.Literal(CdeEntryTypeName.CardanoProjectedNFT),
-    contract: Type.String(),
-    scheduledPrefix: Type.String(),
-    startSlot: Type.Number(),
-    stopSlot: Type.Optional(Type.Number()),
-    name: Type.String(),
-  }),
-]);
+export const ChainDataExtensionCardanoProjectedNFTConfig = Type.Object({
+  type: Type.Literal(CdeEntryTypeName.CardanoProjectedNFT),
+  contract: Type.String(),
+  scheduledPrefix: Type.String(),
+  startSlot: Type.Number(),
+  stopSlot: Type.Optional(Type.Number()),
+  name: Type.String(),
+});
+
 export type ChainDataExtensionCardanoProjectedNFT = ChainDataExtensionBase &
     Static<typeof ChainDataExtensionCardanoProjectedNFTConfig> & {
   cdeType: ChainDataExtensionType.CardanoProjectedNFT;
