@@ -259,17 +259,19 @@ const TABLE_DATA_CDE_ERC6551_REGISTRY: TableData = {
 const QUERY_CREATE_TABLE_CDE_CARDANO_POOL = `
 CREATE TABLE cde_cardano_pool_delegation (
   cde_id INTEGER NOT NULL,
+  epoch INTEGER NOT NULL,
   address TEXT NOT NULL,
   pool TEXT,
-  PRIMARY KEY (cde_id, address)
+  PRIMARY KEY (cde_id, epoch, address)
 );
 `;
 
 const TABLE_DATA_CDE_CARDANO_POOL: TableData = {
   tableName: 'cde_cardano_pool_delegation',
-  primaryKeyColumns: ['cde_id', 'address'],
+  primaryKeyColumns: ['cde_id', 'epoch', 'address'],
   columnData: packTuples([
     ['cde_id', 'integer', 'NO', ''],
+    ['epoch', 'integer', 'NO', ''],
     ['address', 'text', 'NO', ''],
     ['pool', 'text', 'YES', ''],
   ]),
@@ -318,6 +320,24 @@ const TABLE_DATA_CDE_CARDANO_PROJECTED_NFT: TableData = {
   creationQuery: QUERY_CREATE_TABLE_CDE_CARDANO_PROJECTED_NFT,
 };
 
+const QUERY_CREATE_TABLE_CARDANO_LAST_EPOCH = `
+CREATE TABLE cardano_last_epoch (
+  id INTEGER PRIMARY KEY,
+  epoch INTEGER NOT NULL
+);
+`;
+
+const TABLE_DATA_CARDANO_LAST_EPOCH: TableData = {
+  tableName: 'cardano_last_epoch',
+  primaryKeyColumns: ['id'],
+  columnData: packTuples([
+    ['id', 'integer', 'NO', ''],
+    ['epoch', 'integer', 'NO', ''],
+  ]),
+  serialColumns: [],
+  creationQuery: QUERY_CREATE_TABLE_CARDANO_LAST_EPOCH,
+};
+
 const QUERY_CREATE_TABLE_EMULATED = `
 CREATE TABLE emulated_block_heights (
   deployment_chain_block_height INTEGER PRIMARY KEY,
@@ -354,4 +374,5 @@ export const TABLES: TableData[] = [
   TABLE_DATA_CDE_CARDANO_POOL,
   TABLE_DATA_CDE_CARDANO_PROJECTED_NFT,
   TABLE_DATA_EMULATED,
+  TABLE_DATA_CARDANO_LAST_EPOCH,
 ];

@@ -15,6 +15,7 @@ import {
   cdeCardanoPoolGetAddressDelegation,
   cdeCardanoGetProjectedNft,
   type ICdeCardanoGetProjectedNftResult,
+  getCardanoEpoch,
 } from '@paima/db';
 import type { OwnedNftsResponse, GenericCdeDataUnit, TokenIdPair } from './types.js';
 
@@ -184,13 +185,24 @@ export async function internalGetAllOwnedErc6551Accounts(
 export async function internalGetCardanoAddressDelegation(
   readonlyDBConn: Pool,
   address: string
-): Promise<string | null> {
+): Promise<{ events: { pool: string | null; epoch: number }[]; currentEpoch: number } | null> {
   const results = await cdeCardanoPoolGetAddressDelegation.run({ address }, readonlyDBConn);
   if (results.length === 0) {
     return null;
   }
 
-  return results[0].pool;
+  const currentEpoch = await getCardanoEpoch.run(undefined, readonlyDBConn);
+
+  if (currentEpoch.length === 0) {
+    throw new Error('Current epoch table not initialized');
+  }
+
+  return {
+    currentEpoch: currentEpoch[0].epoch,
+    events: results.map(r => {
+      return { pool: r.pool, epoch: r.epoch };
+    }),
+  };
 }
 
 export async function internalGetCardanoProjectedNft(

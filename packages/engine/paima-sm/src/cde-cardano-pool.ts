@@ -1,5 +1,5 @@
 import { ENV } from '@paima/utils';
-import { createScheduledData, cdeCardanoPoolInsertData } from '@paima/db';
+import { createScheduledData, cdeCardanoPoolInsertData, removeOldEntries } from '@paima/db';
 import type { SQLUpdate } from '@paima/db';
 import type { CdeCardanoPoolDatum } from './types.js';
 
@@ -16,7 +16,18 @@ export default async function processDatum(cdeDatum: CdeCardanoPoolDatum): Promi
     createScheduledData(scheduledInputData, scheduledBlockHeight),
     [
       cdeCardanoPoolInsertData,
-      { cde_id: cdeId, address: cdeDatum.payload.address, pool: cdeDatum.payload.pool },
+      {
+        cde_id: cdeId,
+        address: cdeDatum.payload.address,
+        pool: cdeDatum.payload.pool,
+        epoch: cdeDatum.payload.epoch,
+      },
+    ],
+    [
+      removeOldEntries,
+      {
+        address: cdeDatum.payload.address,
+      },
     ],
   ];
   return updateList;

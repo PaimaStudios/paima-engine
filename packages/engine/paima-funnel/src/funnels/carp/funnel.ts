@@ -8,11 +8,10 @@ import {
   Network,
   timeout,
 } from '@paima/utils';
-import type { ChainDataExtensionCardanoProjectedNFT } from '@paima/sm';
+import type { ChainDataExtensionCardanoProjectedNFT, InternalEvent } from '@paima/sm';
 import {
   type ChainData,
   type ChainDataExtension,
-  type ChainDataExtensionCardanoDelegation,
   type ChainDataExtensionDatum,
   type PresyncChainData,
 } from '@paima/sm';
@@ -25,7 +24,7 @@ import getCdePoolData from '../../cde/cardanoPool.js';
 import getCdeProjectedNFTData from '../../cde/cardanoProjectedNFT.js';
 import { query } from '@dcspark/carp-client/client/src/index';
 import { Routes } from '@dcspark/carp-client/shared/routes';
-import { FUNNEL_PRESYNC_FINISHED } from '@paima/utils/src/constants';
+import { FUNNEL_PRESYNC_FINISHED, InternalEventType } from '@paima/utils/src/constants';
 import { CarpFunnelCacheEntry } from '../FunnelCache.js';
 
 const delayForWaitingForFinalityLoop = 1000;
@@ -42,6 +41,33 @@ function knownShelleyTime(): { timestamp: number; absoluteSlot: number } {
       return { timestamp: 1596059091, absoluteSlot: 4492800 };
     default:
       throw new Error('unknown cardano network');
+  }
+}
+
+function shelleyEra(): { firstSlot: number; startEpoch: number; slotDuration: number } {
+  switch (ENV.CARDANO_NETWORK) {
+    case 'preview':
+      return { firstSlot: 0, startEpoch: 0, slotDuration: 86400 };
+    case 'preprod':
+      return { firstSlot: 86400, startEpoch: 4, slotDuration: 432000 };
+    case 'mainnet':
+      return { firstSlot: 4492800, startEpoch: 208, slotDuration: 432000 };
+    default:
+      throw new Error('unknown cardano network');
+  }
+}
+
+export function absoluteSlotToEpoch(slot: number): number {
+  const era = shelleyEra();
+  const slotRelativeToEra = slot - era.firstSlot;
+
+  if (slotRelativeToEra >= 0) {
+    return era.startEpoch + Math.floor(slotRelativeToEra / era.slotDuration);
+  } else {
+    // this shouldn't really happen in practice, unless for some reason the
+    // indexed EVM blocks are older than the start of the shelley era (which
+    // does not apply to the presync).
+    throw new Error('slot number is not in the current era');
   }
 }
 
@@ -130,6 +156,19 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
     const composed = composeChainData(this.bufferedData, grouped);
 
     this.bufferedData = null;
+
+    for (const data of composed) {
+      // TODO: this can be optimized, since if the epoch doesn't change we don't actually need to do anything
+      if (!data.internalEvents) {
+        data.internalEvents = [] as InternalEvent[];
+        data.internalEvents?.push({
+          type: InternalEventType.CardanoBestEpoch,
+          epoch: absoluteSlotToEpoch(
+            timestampToAbsoluteSlot(data.timestamp, this.confirmationDepth)
+          ),
+        });
+      }
+    }
 
     return composed;
   }

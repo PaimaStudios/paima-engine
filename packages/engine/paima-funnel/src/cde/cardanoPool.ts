@@ -6,6 +6,7 @@ import type {
 import { ChainDataExtensionDatumType, DEFAULT_FUNNEL_TIMEOUT, timeout } from '@paima/utils';
 import { Routes, query } from '@dcspark/carp-client/client/src';
 import type { DelegationForPoolResponse } from '@dcspark/carp-client/shared/models/DelegationForPool';
+import { absoluteSlotToEpoch } from '../funnels/carp/funnel.js';
 
 export default async function getCdeData(
   url: string,
@@ -22,13 +23,16 @@ export default async function getCdeData(
     DEFAULT_FUNNEL_TIMEOUT
   );
 
-  return events.map(e => eventToCdeDatum(e, extension, getBlockNumber(e.slot)));
+  return events.map(e =>
+    eventToCdeDatum(e, extension, getBlockNumber(e.slot), absoluteSlotToEpoch(e.slot))
+  );
 }
 
 function eventToCdeDatum(
   event: DelegationForPoolResponse[0],
   extension: ChainDataExtensionCardanoDelegation,
-  blockNumber: number
+  blockNumber: number,
+  epoch: number
 ): CdeCardanoPoolDatum {
   return {
     cdeId: extension.cdeId,
@@ -37,6 +41,7 @@ function eventToCdeDatum(
     payload: {
       address: event.credential,
       pool: event.pool || undefined,
+      epoch,
     },
     scheduledPrefix: extension.scheduledPrefix,
   };

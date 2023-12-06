@@ -166,7 +166,7 @@ export async function getAllOwnedErc6551Accounts(
 export async function getCardanoAddressDelegation(
   readonlyDBConn: Pool,
   address: string
-): Promise<string | null> {
+): Promise<{ events: { pool: string | null; epoch: number }[]; currentEpoch: number } | null> {
   return await internalGetCardanoAddressDelegation(readonlyDBConn, address);
 }
 
