@@ -14,7 +14,7 @@ import HDWalletProvider from '@truffle/hdwallet-provider';
 import type { LoginInfo } from '../wallets/wallet-modes.js';
 
 /**
- * @deprecated use specificWalletLogin instead
+ * @deprecated do not use this unless you are really sure. Instead, prefer `userWalletLogin`
  */
 export async function userWalletLoginWithoutChecks(
   loginInfo: LoginInfo,

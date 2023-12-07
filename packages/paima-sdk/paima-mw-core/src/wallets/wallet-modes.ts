@@ -22,7 +22,15 @@ export type BaseLoginInfo<Api> = {
 };
 export type LoginInfoMap = {
   [WalletMode.EvmInjected]: BaseLoginInfo<EvmApi> & {
+    /** If true even EVM wallet inputs will be batched (sign data and send to the batcher) */
     preferBatchedMode: boolean;
+    /**
+     * By default, Paima will try and switch the wallet's network to the one used for the game
+     * This uses EIP3326 (https://eips.ethereum.org/EIPS/eip-3326)
+     * This may not be desired, since not all wallets support switching to an arbitrary network
+     * Set to false if you only need to sign data. Otherwise, keep as true
+     * @default true
+     */
     checkChainId?: boolean;
   };
   [WalletMode.EvmEthers]: { connection: ActiveConnection<EthersApi>; preferBatchedMode: boolean };
