@@ -28,25 +28,44 @@ import { CarpFunnelCacheEntry } from '../FunnelCache.js';
 
 const delayForWaitingForFinalityLoop = 1000;
 
-function knownShelleyTime(): number {
+// This returns the unix timestamp of the first block in the Shelley era of the
+// configured network, and the slot of the corresponding block.
+function knownShelleyTime(): { timestamp: number; absoluteSlot: number } {
   switch (ENV.CARDANO_NETWORK) {
     case 'preview':
-      return 1666656000;
+      return { timestamp: 1666656000, absoluteSlot: 0 };
     case 'preprod':
-      return 1655769600;
+      return { timestamp: 1655769600, absoluteSlot: 86400 };
     case 'mainnet':
-      return 1596059091;
+      return { timestamp: 1596059091, absoluteSlot: 4492800 };
     default:
       throw new Error('unknown cardano network');
   }
 }
 
+/*
+Maps an EVM timestamp to a unique absolute slot in Cardano.
+
+Conceptually, we want to pair the EVM blocks with the slot that is closest in
+time to it. In this case, an EVM block that happened exactly at the same second
+as the first Shelley block will get assigned to that slot.
+
+However, since we need to wait for finality, an offset is subtracted first
+from the timestamp, so that the matching is done to blocks slightly in the past,
+since otherwise we would have to wait for confirmation all the time.
+
+Note: The state pairing only matters after the presync stage is done, so as
+long as the timestamp of the block specified in START_BLOCKHEIGHT happens after
+the first Shelley block, we don't need to consider the previous Cardano era (if any).
+*/
 function timestampToAbsoluteSlot(timestamp: number, confirmationDepth: number): number {
   const cardanoAvgBlockPeriod = 20;
   // map timestamps with a delta, since we are waiting for blocks.
   const confirmationTimeDelta = cardanoAvgBlockPeriod * confirmationDepth;
 
-  return timestamp - confirmationTimeDelta - knownShelleyTime();
+  const era = knownShelleyTime();
+
+  return timestamp - confirmationTimeDelta - era.timestamp + era.absoluteSlot;
 }
 
 export class CarpFunnel extends BaseFunnel implements ChainFunnel {
