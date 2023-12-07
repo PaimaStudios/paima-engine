@@ -34,7 +34,6 @@ async function checkWalletStatus(): Promise<OldResult> {
 /**
  * Core "login" function which tells the frontend whether the user has a wallet in a valid state
  * thus allowing the game to get past the login screen.
- * @param preferBatchedMode - If true (or truthy value) even EVM wallet inputs will be batched.
  */
 async function userWalletLogin(
   loginInfo: LoginInfo,
