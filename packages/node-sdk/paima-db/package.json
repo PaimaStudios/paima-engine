@@ -30,7 +30,6 @@
   "dependencies": {
     "pg": "^8.7.3",
     "pg-tx": "^1.0.1",
-    "@pgtyped/runtime": "2.1.0",
-    "@paima/utils": "2.0.1"
+    "@pgtyped/runtime": "2.1.0"
   }
 }
