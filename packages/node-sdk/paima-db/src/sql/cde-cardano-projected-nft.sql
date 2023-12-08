@@ -28,6 +28,7 @@ INSERT INTO cde_cardano_projected_nft(
 /* @name cdeCardanoProjectedNftUpdateData */
 UPDATE cde_cardano_projected_nft
 SET
+    owner_address = :owner_address!,
     previous_tx_hash = :previous_tx_hash!,
     previous_tx_output_index = :previous_tx_output_index!,
     current_tx_hash = :new_tx_hash!,
@@ -37,7 +38,6 @@ SET
     for_how_long = :for_how_long!
 WHERE
     cde_id = :cde_id!
-    AND owner_address = :owner_address!
     AND current_tx_hash = :previous_tx_hash!
     AND current_tx_output_index = :previous_tx_output_index!
     AND asset = :asset!

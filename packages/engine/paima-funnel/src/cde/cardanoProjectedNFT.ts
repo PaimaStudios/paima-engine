@@ -33,12 +33,10 @@ function eventToCdeDatum(
   blockNumber: number
 ): CdeCardanoProjectedNFTDatum | null {
   if (
-    event.ownerAddress === null ||
-    event.ownerAddress == '' ||
     event.actionTxId === null ||
     event.actionTxId == '' ||
     event.status === null ||
-    event.actionTxId == ''
+    event.status == ''
   ) {
     return null;
   }
