@@ -8,11 +8,12 @@ import {
   Network,
   timeout,
 } from '@paima/utils';
+import type {
+  ChainDataExtensionCardanoProjectedNFT} from '@paima/sm';
 import {
   type ChainData,
   type ChainDataExtension,
   type ChainDataExtensionCardanoDelegation,
-  ChainDataExtensionCardanoProjectedNFT,
   type ChainDataExtensionDatum,
   type PresyncChainData,
 } from '@paima/sm';
@@ -154,7 +155,7 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
               if (extension.cdeType === ChainDataExtensionType.CardanoPool) {
                 const data = getCdePoolData(
                   this.carpUrl,
-                  extension as ChainDataExtensionCardanoDelegation,
+                  extension ,
                   arg.from,
                   Math.min(arg.to, this.cache.getState().startingSlot - 1),
                   slot => {

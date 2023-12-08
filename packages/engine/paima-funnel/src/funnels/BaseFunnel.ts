@@ -3,7 +3,7 @@ import type { ChainData, ChainDataExtension, PresyncChainData } from '@paima/sm'
 import type { PaimaL2Contract, Web3 } from '@paima/utils';
 import type { FunnelCacheManager } from './FunnelCache.js';
 import type { PoolClient } from 'pg';
-import { FUNNEL_PRESYNC_FINISHED } from '@paima/utils';
+import type { FUNNEL_PRESYNC_FINISHED } from '@paima/utils';
 
 export type FunnelSharedData = {
   readonly web3: Web3;

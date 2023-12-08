@@ -24,7 +24,7 @@ export default async function getCdeProjectedNFTData(
   return events
     .map(e => eventToCdeDatum(e, extension, getBlockNumber(e.actionSlot)))
     .filter(e => e != null)
-    .map(e => e!!);
+    .map(e => e!);
 }
 
 function eventToCdeDatum(

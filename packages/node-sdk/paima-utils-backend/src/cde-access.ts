@@ -16,7 +16,7 @@ import {
   internalGetCardanoProjectedNft,
 } from './cde-access-internals.js';
 import type { OwnedNftsResponse, GenericCdeDataUnit, TokenIdPair } from './types.js';
-import { ICdeCardanoGetProjectedNftResult } from '@paima/db/src';
+import type { ICdeCardanoGetProjectedNftResult } from '@paima/db/src';
 
 /**
  * Fetch the owner of the NFT from the database

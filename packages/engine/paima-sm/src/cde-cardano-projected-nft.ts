@@ -1,5 +1,5 @@
 import { ENV } from '@paima/utils';
-import type { CdeCardanoProjectedNFTDatum } from './types';
+import type { CdeCardanoProjectedNFTDatum } from './types.js';
 import {
   createScheduledData,
   cdeCardanoProjectedNftInsertData,
