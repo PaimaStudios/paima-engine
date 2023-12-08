@@ -1,6 +1,6 @@
 {
   "name": "@paima/node-sdk",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "publishConfig": {
     "access": "public"
   },
@@ -26,7 +26,7 @@
   },
   "devDependencies": {},
   "dependencies": {
-    "@paima/db": "2.1.0",
-    "@paima/utils-backend": "2.1.0"
+    "@paima/db": "2.1.1",
+    "@paima/utils-backend": "2.1.1"
   }
 }

@@ -1,6 +1,6 @@
 {
   "name": "@paima/mw-core",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "publishConfig": {
     "access": "public"
   },
@@ -37,10 +37,10 @@
     "@truffle/hdwallet-provider": "^2.1.15",
     "algosdk": "^2.3.0",
     "bech32": "^2.0.0",
-    "@paima/utils": "2.1.0",
-    "@paima/providers": "2.1.0",
-    "@paima/concise": "2.1.0",
-    "@paima/prando": "2.1.0",
+    "@paima/utils": "2.1.1",
+    "@paima/providers": "2.1.1",
+    "@paima/concise": "2.1.1",
+    "@paima/prando": "2.1.1",
     "assert-never": "^1.2.1"
   }
 }
