@@ -298,9 +298,9 @@ export const ChainDataExtensionCardanoProjectedNFTConfig = Type.Object({
 });
 
 export type ChainDataExtensionCardanoProjectedNFT = ChainDataExtensionBase &
-    Static<typeof ChainDataExtensionCardanoProjectedNFTConfig> & {
-  cdeType: ChainDataExtensionType.CardanoProjectedNFT;
-};
+  Static<typeof ChainDataExtensionCardanoProjectedNFTConfig> & {
+    cdeType: ChainDataExtensionType.CardanoProjectedNFT;
+  };
 
 export const CdeConfig = Type.Object({
   extensions: Type.Array(

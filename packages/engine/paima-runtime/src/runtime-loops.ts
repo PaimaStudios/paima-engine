@@ -2,10 +2,8 @@ import process from 'process';
 import { doLog, logError, delay, Network, ENV } from '@paima/utils';
 import { tx, DataMigrations } from '@paima/db';
 import { getEarliestStartBlockheight, getEarliestStartSlot } from './cde-config/utils.js';
-import type { ChainFunnel,
-  IFunnelFactory,
-  ReadPresyncDataFrom
-} from './types.js';import type { ChainData, ChainDataExtension, GameStateMachine } from '@paima/sm';
+import type { ChainFunnel, IFunnelFactory, ReadPresyncDataFrom } from './types.js';
+import type { ChainData, ChainDataExtension, GameStateMachine } from '@paima/sm';
 import { run } from './run-flag.js';
 import { snapshotIfTime } from './snapshots.js';
 import {

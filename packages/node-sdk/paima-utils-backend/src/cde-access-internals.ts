@@ -13,7 +13,8 @@ import {
   cdeErc6551GetOwnedAccounts,
   cdeErc6551GetOwner,
   cdeCardanoPoolGetAddressDelegation,
-  cdeCardanoGetProjectedNft, ICdeCardanoGetProjectedNftResult,
+  cdeCardanoGetProjectedNft,
+  ICdeCardanoGetProjectedNftResult,
 } from '@paima/db';
 import type { OwnedNftsResponse, GenericCdeDataUnit, TokenIdPair } from './types.js';
 

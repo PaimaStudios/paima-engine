@@ -1,58 +1,69 @@
 import type {
-    CdeCardanoProjectedNFTDatum,
-    ChainDataExtensionCardanoProjectedNFT,
-    ChainDataExtensionDatum,
+  CdeCardanoProjectedNFTDatum,
+  ChainDataExtensionCardanoProjectedNFT,
+  ChainDataExtensionDatum,
 } from '@paima/sm';
 import { ChainDataExtensionDatumType, DEFAULT_FUNNEL_TIMEOUT, timeout } from '@paima/utils';
 import { Routes, query } from '@dcspark/carp-client/client/src';
-import type { ProjectedNftRangeResponse } from "@dcspark/carp-client/shared/models/ProjectedNftRange";
+import type { ProjectedNftRangeResponse } from '@dcspark/carp-client/shared/models/ProjectedNftRange';
 
 export default async function getCdeProjectedNFTData(
-    url: string,
-    extension: ChainDataExtensionCardanoProjectedNFT,
-    fromAbsoluteSlot: number,
-    toAbsoluteSlot: number,
-    getBlockNumber: (slot: number) => number
+  url: string,
+  extension: ChainDataExtensionCardanoProjectedNFT,
+  fromAbsoluteSlot: number,
+  toAbsoluteSlot: number,
+  getBlockNumber: (slot: number) => number
 ): Promise<ChainDataExtensionDatum[]> {
-    const events = await timeout(
-        query(url, Routes.projectedNftEventsRange, {
-            range: { minSlot: fromAbsoluteSlot, maxSlot: toAbsoluteSlot },
-        }),
-        DEFAULT_FUNNEL_TIMEOUT
-    );
+  const events = await timeout(
+    query(url, Routes.projectedNftEventsRange, {
+      range: { minSlot: fromAbsoluteSlot, maxSlot: toAbsoluteSlot },
+    }),
+    DEFAULT_FUNNEL_TIMEOUT
+  );
 
-    return events.map(e => eventToCdeDatum(e, extension, getBlockNumber(e.actionSlot))).filter(e => e != null).map(e => e!!);
+  return events
+    .map(e => eventToCdeDatum(e, extension, getBlockNumber(e.actionSlot)))
+    .filter(e => e != null)
+    .map(e => e!!);
 }
 
 function eventToCdeDatum(
-    event: ProjectedNftRangeResponse[0],
-    extension: ChainDataExtensionCardanoProjectedNFT,
-    blockNumber: number
+  event: ProjectedNftRangeResponse[0],
+  extension: ChainDataExtensionCardanoProjectedNFT,
+  blockNumber: number
 ): CdeCardanoProjectedNFTDatum | null {
-    if (event.ownerAddress == null || event.actionTxId == null || event.status == null) {
-        return null;
-    }
+  if (
+    event.ownerAddress === null ||
+    event.ownerAddress == '' ||
+    event.actionTxId === null ||
+    event.actionTxId == '' ||
+    event.status === null ||
+    event.actionTxId == ''
+  ) {
+    return null;
+  }
 
-    return {
-        cdeId: extension.cdeId,
-        cdeDatumType: ChainDataExtensionDatumType.CardanoProjectedNFT,
-        blockNumber,
-        payload: {
-            ownerAddress: event.ownerAddress!!,
+  return {
+    cdeId: extension.cdeId,
+    cdeDatumType: ChainDataExtensionDatumType.CardanoProjectedNFT,
+    blockNumber,
+    payload: {
+      ownerAddress: event.ownerAddress != null ? event.ownerAddress : '',
 
-            actionTxId: event.actionTxId,
-            actionOutputIndex: event.actionOutputIndex || undefined,
+      actionTxId: event.actionTxId,
+      actionOutputIndex: event.actionOutputIndex != null ? event.actionOutputIndex : undefined,
 
-            previousTxHash: event.previousTxHash || undefined,
-            previousTxOutputIndex: event.previousTxOutputIndex || undefined,
+      previousTxHash: event.previousTxHash != null ? event.previousTxHash : undefined,
+      previousTxOutputIndex:
+        event.previousTxOutputIndex != null ? event.previousTxOutputIndex : undefined,
 
-            asset: event.asset,
-            amount: event.amount,
-            status: event.status,
-            plutusDatum: event.plutusDatum || "",
+      asset: event.asset,
+      amount: event.amount,
+      status: event.status,
+      plutusDatum: event.plutusDatum != null ? event.plutusDatum : '',
 
-            forHowLong: event.forHowLong || undefined,
-        },
-        scheduledPrefix: extension.scheduledPrefix,
-    };
+      forHowLong: event.forHowLong != null ? event.forHowLong : undefined,
+    },
+    scheduledPrefix: extension.scheduledPrefix,
+  };
 }

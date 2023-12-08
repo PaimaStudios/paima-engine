@@ -11,21 +11,22 @@ import {
 import {
   type ChainData,
   type ChainDataExtension,
-  type ChainDataExtensionCardanoDelegation, ChainDataExtensionCardanoProjectedNFT,
+  type ChainDataExtensionCardanoDelegation,
+  ChainDataExtensionCardanoProjectedNFT,
   type ChainDataExtensionDatum,
   type PresyncChainData,
 } from '@paima/sm';
-import {composeChainData, groupCdeData} from '../../utils.js';
-import type {FunnelSharedData} from '../BaseFunnel.js';
-import {BaseFunnel} from '../BaseFunnel.js';
-import type {PoolClient} from 'pg';
-import type {ChainFunnel, ReadPresyncDataFrom} from '@paima/runtime';
+import { composeChainData, groupCdeData } from '../../utils.js';
+import type { FunnelSharedData } from '../BaseFunnel.js';
+import { BaseFunnel } from '../BaseFunnel.js';
+import type { PoolClient } from 'pg';
+import type { ChainFunnel, ReadPresyncDataFrom } from '@paima/runtime';
 import getCdePoolData from '../../cde/cardanoPool.js';
 import getCdeProjectedNFTData from '../../cde/cardanoProjectedNFT.js';
-import {query} from '@dcspark/carp-client/client/src/index';
-import {Routes} from '@dcspark/carp-client/shared/routes';
-import {FUNNEL_PRESYNC_FINISHED} from '@paima/utils/src/constants';
-import {CarpFunnelCacheEntry} from '../FunnelCache.js';
+import { query } from '@dcspark/carp-client/client/src/index';
+import { Routes } from '@dcspark/carp-client/shared/routes';
+import { FUNNEL_PRESYNC_FINISHED } from '@paima/utils/src/constants';
+import { CarpFunnelCacheEntry } from '../FunnelCache.js';
 
 const delayForWaitingForFinalityLoop = 1000;
 
@@ -144,28 +145,33 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
       const [carpEvents, data] = await Promise.all([
         Promise.all(
           this.sharedData.extensions
-            .filter(extension => extension.cdeType === ChainDataExtensionType.CardanoPool || extension.cdeType === ChainDataExtensionType.CardanoProjectedNFT)
+            .filter(
+              extension =>
+                extension.cdeType === ChainDataExtensionType.CardanoPool ||
+                extension.cdeType === ChainDataExtensionType.CardanoProjectedNFT
+            )
             .map(extension => {
               if (extension.cdeType === ChainDataExtensionType.CardanoPool) {
                 const data = getCdePoolData(
-                    this.carpUrl,
-                    extension as ChainDataExtensionCardanoDelegation,
-                    arg.from,
-                    Math.min(arg.to, this.cache.getState().startingSlot - 1),
-                    slot => {
-                      return slot;
-                    }
+                  this.carpUrl,
+                  extension as ChainDataExtensionCardanoDelegation,
+                  arg.from,
+                  Math.min(arg.to, this.cache.getState().startingSlot - 1),
+                  slot => {
+                    return slot;
+                  }
                 );
                 return data;
-              } else { // ProjectedNFT
+              } else {
+                // ProjectedNFT
                 const data = getCdeProjectedNFTData(
-                    this.carpUrl,
-                    extension as ChainDataExtensionCardanoProjectedNFT,
-                    arg.from,
-                    Math.min(arg.to, this.cache.getState().startingSlot - 1),
-                    slot => {
-                      return slot;
-                    }
+                  this.carpUrl,
+                  extension as ChainDataExtensionCardanoProjectedNFT,
+                  arg.from,
+                  Math.min(arg.to, this.cache.getState().startingSlot - 1),
+                  slot => {
+                    return slot;
+                  }
                 );
                 return data;
               }
@@ -326,8 +332,7 @@ async function readDataInternal(
     Network.EVM,
     data[0].blockNumber,
     data[data.length - 1].blockNumber,
-    poolEvents
-  .filter(data => data.length > 0)
+    poolEvents.filter(data => data.length > 0)
   );
 
   return grouped;
