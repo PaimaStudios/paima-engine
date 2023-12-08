@@ -13,5 +13,6 @@
     { "path": "../../paima-sdk/paima-utils/tsconfig.build.json" },
     { "path": "../paima-funnel" },
     { "path": "../paima-rest/tsconfig.build.json" },
+    { "path": "../../node-sdk/paima-utils-backend" },
   ]
 }
