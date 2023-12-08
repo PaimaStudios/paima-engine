@@ -4,6 +4,7 @@ import { argumentRouter } from './utils/input.js';
 
 import * as fs from 'fs';
 import { setLogger } from '@paima/utils';
+import { parseSecurityYaml } from '@paima/utils-backend';
 
 setLogger(s => {
   try {
@@ -15,6 +16,7 @@ setLogger(s => {
 config({ path: `${process.cwd()}/.env.${process.env.NODE_ENV || 'development'}` });
 
 async function main(): Promise<void> {
+  await parseSecurityYaml();
   await argumentRouter();
 }
 

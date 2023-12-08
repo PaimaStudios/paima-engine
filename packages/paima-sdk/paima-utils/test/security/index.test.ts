@@ -1,5 +1,10 @@
 import { describe, expect, test } from '@jest/globals';
-import { getReadNamespaces, getWriteNamespace } from '../../src/security/parse.js';
+import {
+  getReadNamespaces,
+  getWriteNamespace,
+  parseAndValidateYAML,
+} from '../../src/security/parse.js';
+import * as fs from 'fs/promises';
 
 const CONTRACT_ADDRESS = '0x35390c41200DD56Ac3A679a0c1EeA369444f3b60';
 process.env.CONTRACT_ADDRESS = CONTRACT_ADDRESS;
@@ -9,6 +14,10 @@ describe('Test if parsed', () => {
     inputs.forEach(([namespace, blockHeight, expectedResult]: [string, number, string[]]) => {
       test(`${namespace} at blockHeight=${blockHeight} to be ${expectedResult}`, async () => {
         process.env.SECURITY_NAMESPACE = namespace;
+        if (namespace.endsWith('yml')) {
+          const content = await fs.readFile(process.env.SECURITY_NAMESPACE, 'utf-8');
+          parseAndValidateYAML(content);
+        }
         const result = await getReadNamespaces(blockHeight);
         expect(result).toEqual(expectedResult);
       });

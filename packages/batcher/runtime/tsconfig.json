@@ -11,5 +11,7 @@
     { "path": "../utils" },
     { "path": "../batcher-transaction-poster" },
     { "path": "../../paima-sdk/paima-providers/tsconfig.build.json" },
+    { "path": "../../paima-sdk/paima-utils/tsconfig.build.json" },
+    { "path": "../../node-sdk/paima-utils-backend" },
   ]
 }
