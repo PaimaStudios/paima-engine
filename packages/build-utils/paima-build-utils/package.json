@@ -27,7 +27,8 @@
     "build": "tsc --project tsconfig.cjs.json && tsc --project tsconfig.esm.json"
   },
   "bin": {
-    "paima-build-middleware": "./scripts/esbuild.sh"
+    "paima-build-middleware": "./scripts/esbuild.sh",
+    "paima-reset-db": "./scripts/change-db.js"
   },
   "peerDependencies": {
     "esbuild": "^0.19.3",
