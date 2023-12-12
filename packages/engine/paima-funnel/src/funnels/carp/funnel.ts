@@ -44,14 +44,14 @@ function knownShelleyTime(): { timestamp: number; absoluteSlot: number } {
   }
 }
 
-function shelleyEra(): { firstSlot: number; startEpoch: number; slotDuration: number } {
+function shelleyEra(): { firstSlot: number; startEpoch: number; slotsPerEpoch: number } {
   switch (ENV.CARDANO_NETWORK) {
     case 'preview':
-      return { firstSlot: 0, startEpoch: 0, slotDuration: 86400 };
+      return { firstSlot: 0, startEpoch: 0, slotsPerEpoch: 86400 };
     case 'preprod':
-      return { firstSlot: 86400, startEpoch: 4, slotDuration: 432000 };
+      return { firstSlot: 86400, startEpoch: 4, slotsPerEpoch: 432000 };
     case 'mainnet':
-      return { firstSlot: 4492800, startEpoch: 208, slotDuration: 432000 };
+      return { firstSlot: 4492800, startEpoch: 208, slotsPerEpoch: 432000 };
     default:
       throw new Error('unknown cardano network');
   }
@@ -62,7 +62,7 @@ export function absoluteSlotToEpoch(slot: number): number {
   const slotRelativeToEra = slot - era.firstSlot;
 
   if (slotRelativeToEra >= 0) {
-    return era.startEpoch + Math.floor(slotRelativeToEra / era.slotDuration);
+    return era.startEpoch + Math.floor(slotRelativeToEra / era.slotsPerEpoch);
   } else {
     // this shouldn't really happen in practice, unless for some reason the
     // indexed EVM blocks are older than the start of the shelley era (which
@@ -157,16 +157,24 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
 
     this.bufferedData = null;
 
+    let prevEpoch;
+
     for (const data of composed) {
-      // TODO: this can be optimized, since if the epoch doesn't change we don't actually need to do anything
       if (!data.internalEvents) {
         data.internalEvents = [] as InternalEvent[];
-        data.internalEvents?.push({
-          type: InternalEventType.CardanoBestEpoch,
-          epoch: absoluteSlotToEpoch(
-            timestampToAbsoluteSlot(data.timestamp, this.confirmationDepth)
-          ),
-        });
+
+        const epoch = absoluteSlotToEpoch(
+          timestampToAbsoluteSlot(data.timestamp, this.confirmationDepth)
+        );
+
+        if (!prevEpoch || epoch !== prevEpoch) {
+          data.internalEvents?.push({
+            type: InternalEventType.CardanoBestEpoch,
+            epoch: epoch,
+          });
+        }
+
+        prevEpoch = epoch;
       }
     }
 
