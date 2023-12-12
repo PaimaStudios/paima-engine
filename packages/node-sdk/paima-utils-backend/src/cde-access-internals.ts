@@ -197,12 +197,20 @@ export async function internalGetCardanoAddressDelegation(
     throw new Error('Current epoch table not initialized');
   }
 
-  return {
-    currentEpoch: currentEpoch[0].epoch,
-    events: results.map(r => {
-      return { pool: r.pool, epoch: r.epoch };
-    }),
-  };
+  if (currentEpoch[0].epoch === results[results.length - 1].epoch) {
+    return {
+      currentEpoch: currentEpoch[0].epoch,
+      events: results.map(r => {
+        return { pool: r.pool, epoch: r.epoch };
+      }),
+    };
+  } else {
+    const result = results[results.length - 1];
+    return {
+      currentEpoch: currentEpoch[0].epoch,
+      events: [{ pool: result.pool, epoch: result.epoch }],
+    };
+  }
 }
 
 export async function internalGetCardanoProjectedNft(
