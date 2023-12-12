@@ -8,7 +8,7 @@ export function getEarliestStartBlockheight(config: ChainDataExtension[]): numbe
   const minStartBlockheight = config.reduce((min, cde) => {
     if (
         cde.cdeType !== ChainDataExtensionType.CardanoPool &&
-        cde.cdeType != ChainDataExtensionType.CardanoProjectedNFT
+        cde.cdeType !== ChainDataExtensionType.CardanoProjectedNFT
       ) {
       return Math.min(min, cde.startBlockHeight);
     }
@@ -21,7 +21,7 @@ export function getEarliestStartSlot(config: ChainDataExtension[]): number {
   const minStartSlot = config.reduce((min, cde) => {
     if (
         cde.cdeType === ChainDataExtensionType.CardanoPool ||
-        cde.cdeType == ChainDataExtensionType.CardanoProjectedNFT
+        cde.cdeType === ChainDataExtensionType.CardanoProjectedNFT
       ) {
       return Math.min(min, cde.startSlot);
     }
