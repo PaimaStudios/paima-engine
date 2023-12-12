@@ -6,14 +6,14 @@ import type {
 import { ChainDataExtensionDatumType, DEFAULT_FUNNEL_TIMEOUT, timeout } from '@paima/utils';
 import { Routes, query } from '@dcspark/carp-client/client/src';
 import type { DelegationForPoolResponse } from '@dcspark/carp-client/shared/models/DelegationForPool';
-import { absoluteSlotToEpoch } from '../funnels/carp/funnel.js';
 
 export default async function getCdeData(
   url: string,
   extension: ChainDataExtensionCardanoDelegation,
   fromAbsoluteSlot: number,
   toAbsoluteSlot: number,
-  getBlockNumber: (slot: number) => number
+  getBlockNumber: (slot: number) => number,
+  absoluteSlotToEpoch: (slot: number) => number
 ): Promise<ChainDataExtensionDatum[]> {
   const events = await timeout(
     query(url, Routes.delegationForPool, {
