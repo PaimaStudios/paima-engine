@@ -92,6 +92,10 @@ export class CarpFunnelCacheEntry implements FunnelCacheEntry {
     }
   }
 
+  public initialized(): boolean {
+    return !!this.state;
+  }
+
   public getState(): Readonly<CarpFunnelCacheEntryState> {
     if (!this.state) {
       throw new Error('[carp-funnel] Uninitialized cache entry');

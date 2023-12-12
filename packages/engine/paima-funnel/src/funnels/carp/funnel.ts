@@ -193,7 +193,7 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
 
     const cacheEntry = (async (): Promise<CarpFunnelCacheEntry> => {
       const entry = sharedData.cacheManager.cacheEntries[CarpFunnelCacheEntry.SYMBOL];
-      if (entry != null) return entry;
+      if (entry != null && entry.initialized()) return entry;
 
       const newEntry = new CarpFunnelCacheEntry();
       sharedData.cacheManager.cacheEntries[CarpFunnelCacheEntry.SYMBOL] = newEntry;
