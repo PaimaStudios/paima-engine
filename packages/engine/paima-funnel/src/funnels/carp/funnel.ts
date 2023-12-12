@@ -26,6 +26,7 @@ import { query } from '@dcspark/carp-client/client/src/index';
 import { Routes } from '@dcspark/carp-client/shared/routes';
 import { FUNNEL_PRESYNC_FINISHED, InternalEventType } from '@paima/utils/src/constants';
 import { CarpFunnelCacheEntry } from '../FunnelCache.js';
+import { getCardanoEpoch } from '@paima/db';
 
 const delayForWaitingForFinalityLoop = 1000;
 
@@ -155,10 +156,6 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
 
     const composed = composeChainData(this.bufferedData, grouped);
 
-    this.bufferedData = null;
-
-    let prevEpoch;
-
     for (const data of composed) {
       if (!data.internalEvents) {
         data.internalEvents = [] as InternalEvent[];
@@ -167,6 +164,8 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
           timestampToAbsoluteSlot(data.timestamp, this.confirmationDepth)
         );
 
+        const prevEpoch = this.cache.getState().epoch;
+
         if (!prevEpoch || epoch !== prevEpoch) {
           data.internalEvents?.push({
             type: InternalEventType.CardanoBestEpoch,
@@ -174,9 +173,11 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
           });
         }
 
-        prevEpoch = epoch;
+        this.cache.updateEpoch(epoch);
       }
     }
+
+    this.bufferedData = null;
 
     return composed;
   }
@@ -271,6 +272,12 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
           confirmationDepth
         )
       );
+
+      const epoch = await getCardanoEpoch.run(undefined, dbTx);
+
+      if (epoch.length === 1) {
+        newEntry.updateEpoch(epoch[0].epoch);
+      }
 
       return newEntry;
     })();

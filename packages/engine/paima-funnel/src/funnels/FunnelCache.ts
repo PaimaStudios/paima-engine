@@ -76,6 +76,7 @@ export class RpcCacheEntry implements FunnelCacheEntry {
 export type CarpFunnelCacheEntryState = {
   startingSlot: number;
   lastPoint: { blockHeight: number; timestamp: number } | undefined;
+  epoch: number | undefined;
 };
 
 export class CarpFunnelCacheEntry implements FunnelCacheEntry {
@@ -83,12 +84,18 @@ export class CarpFunnelCacheEntry implements FunnelCacheEntry {
   public static readonly SYMBOL = Symbol('CarpFunnelStartingSlot');
 
   public updateStartingSlot(startingSlot: number): void {
-    this.state = { startingSlot, lastPoint: this.state?.lastPoint };
+    this.state = { startingSlot, lastPoint: this.state?.lastPoint, epoch: this.state?.epoch };
   }
 
   public updateLastPoint(blockHeight: number, timestamp: number): void {
     if (this.state) {
       this.state.lastPoint = { blockHeight, timestamp };
+    }
+  }
+
+  public updateEpoch(epoch: number): void {
+    if (this.state) {
+      this.state.epoch = epoch;
     }
   }
 
