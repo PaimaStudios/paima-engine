@@ -1,5 +1,5 @@
-import { ENV, doLog, timeout } from '@paima/utils';
-import type { ChainFunnel } from '@paima/runtime';
+import { ENV, Network, doLog, timeout } from '@paima/utils';
+import type { ChainFunnel, ReadPresyncDataFrom } from '@paima/runtime';
 import type { ChainData, PresyncChainData } from '@paima/sm';
 import { getBaseChainDataMulti, getBaseChainDataSingle } from '../../reading.js';
 import { getUngroupedCdeData } from '../../cde/reading.js';
@@ -8,6 +8,7 @@ import { BaseFunnel } from '../BaseFunnel.js';
 import type { FunnelSharedData } from '../BaseFunnel.js';
 import { RpcCacheEntry, RpcRequestState } from '../FunnelCache.js';
 import type { PoolClient } from 'pg';
+import { FUNNEL_PRESYNC_FINISHED } from '@paima/utils';
 
 const GET_BLOCK_NUMBER_TIMEOUT = 5000;
 
@@ -111,7 +112,7 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
         ),
         getUngroupedCdeData(this.sharedData.web3, this.sharedData.extensions, fromBlock, toBlock),
       ]);
-      const cdeData = groupCdeData(fromBlock, toBlock, ungroupedCdeData);
+      const cdeData = groupCdeData(Network.CARDANO, fromBlock, toBlock, ungroupedCdeData);
       return composeChainData(baseChainData, cdeData);
     } catch (err) {
       doLog(`[funnel] at ${fromBlock}-${toBlock} caught ${err}`);
@@ -120,9 +121,21 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
   };
 
   public override async readPresyncData(
-    fromBlock: number,
-    toBlock: number
-  ): Promise<PresyncChainData[]> {
+    args: ReadPresyncDataFrom
+  ): Promise<{ [network: number]: PresyncChainData[] | typeof FUNNEL_PRESYNC_FINISHED }> {
+    let arg = args.find(arg => arg.network == Network.EVM);
+
+    if (!arg) {
+      return [];
+    }
+
+    let fromBlock = arg.from;
+    let toBlock = arg.to;
+
+    if (fromBlock >= ENV.START_BLOCKHEIGHT) {
+      return { [Network.EVM]: FUNNEL_PRESYNC_FINISHED };
+    }
+
     try {
       toBlock = Math.min(toBlock, ENV.START_BLOCKHEIGHT);
       fromBlock = Math.max(fromBlock, 0);
@@ -136,7 +149,7 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
         fromBlock,
         toBlock
       );
-      return groupCdeData(fromBlock, toBlock, ungroupedCdeData);
+      return { [Network.EVM]: groupCdeData(Network.EVM, fromBlock, toBlock, ungroupedCdeData) };
     } catch (err) {
       doLog(`[paima-funnel::readPresyncData] Exception occurred while reading blocks: ${err}`);
       throw err;

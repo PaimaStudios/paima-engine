@@ -1,15 +1,29 @@
 import type { PoolClient } from 'pg';
 import type { Express, RequestHandler } from 'express';
-import type { VersionString, SubmittedChainData, SubmittedData } from '@paima/utils';
+import type {
+  VersionString,
+  SubmittedChainData,
+  SubmittedData,
+  Network,
+  FUNNEL_PRESYNC_FINISHED,
+} from '@paima/utils';
 import type { ChainData, PresyncChainData, ChainDataExtension, GameStateMachine } from '@paima/sm';
 
 export { SubmittedChainData, SubmittedData };
 
 export type TsoaFunction = (s: Express) => void;
 
+export type ReadPresyncDataFrom = {
+  network: Network;
+  from: number;
+  to: number;
+}[];
+
 export interface ChainFunnel {
   readData: (blockHeight: number) => Promise<ChainData[]>;
-  readPresyncData: (fromBlock: number, toBlock: number) => Promise<PresyncChainData[]>;
+  readPresyncData: (
+    args: ReadPresyncDataFrom
+  ) => Promise<{ [network: number]: PresyncChainData[] | typeof FUNNEL_PRESYNC_FINISHED }>;
   getDbTx(): PoolClient;
 }
 

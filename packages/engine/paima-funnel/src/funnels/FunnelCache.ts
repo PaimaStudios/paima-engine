@@ -11,6 +11,7 @@ export interface FunnelCacheEntry {
 export type CacheMapType = {
   [QueuedBlockCacheEntry.SYMBOL]?: QueuedBlockCacheEntry;
   [RpcCacheEntry.SYMBOL]?: RpcCacheEntry;
+  [CarpFunnelCacheEntry.SYMBOL]?: CarpFunnelCacheEntry;
 };
 export class FunnelCacheManager {
   public cacheEntries: CacheMapType = {};
@@ -69,5 +70,40 @@ export class RpcCacheEntry implements FunnelCacheEntry {
 
   clear: FunnelCacheEntry['clear'] = () => {
     this.rpcResult = {};
+  };
+}
+
+export type CarpFunnelCacheEntryState = {
+  startingSlot: number;
+  lastPoint: { blockHeight: number; timestamp: number } | undefined;
+};
+
+export class CarpFunnelCacheEntry implements FunnelCacheEntry {
+  private state: CarpFunnelCacheEntryState | null = null;
+  public static readonly SYMBOL = Symbol('CarpFunnelStartingSlot');
+
+  public updateStartingSlot(startingSlot: number): void {
+    this.state = { startingSlot, lastPoint: this.state?.lastPoint };
+  }
+
+  public updateLastPoint(blockHeight: number, timestamp: number): void {
+    if (this.state) {
+      this.state.lastPoint = { blockHeight, timestamp };
+    }
+  }
+
+  public initialized(): boolean {
+    return !!this.state;
+  }
+
+  public getState(): Readonly<CarpFunnelCacheEntryState> {
+    if (!this.state) {
+      throw new Error('[carp-funnel] Uninitialized cache entry');
+    }
+    return this.state;
+  }
+
+  clear: FunnelCacheEntry['clear'] = () => {
+    this.state = null;
   };
 }

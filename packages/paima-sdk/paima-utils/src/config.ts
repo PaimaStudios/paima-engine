@@ -108,4 +108,14 @@ export class ENV {
   static get BATCHER_URI(): string {
     return process.env.BATCHER_URI || '';
   }
+
+  static get CARP_URL(): string | undefined {
+    return process.env.CARP_URL;
+  }
+  static get CARDANO_NETWORK(): string | undefined {
+    return process.env.CARDANO_NETWORK;
+  }
+  static get CARDANO_CONFIRMATION_DEPTH(): number | undefined {
+    return Number(process.env.CARDANO_CONFIRMATION_DEPTH);
+  }
 }

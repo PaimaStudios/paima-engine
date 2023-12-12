@@ -26,6 +26,11 @@ CREATE TABLE cde_tracking (
   block_height INTEGER PRIMARY KEY
 );
 
+CREATE TABLE cde_tracking_cardano (
+  id INTEGER PRIMARY KEY,
+  slot INTEGER NOT NULL
+);
+
 CREATE TABLE chain_data_extensions (
   cde_id INTEGER PRIMARY KEY,
   cde_type INTEGER NOT NULL,
@@ -76,9 +81,15 @@ CREATE TABLE cde_erc6551_registry_data (
   PRIMARY KEY (cde_id, account_created)
 );
 
-
 CREATE TABLE emulated_block_heights (
   deployment_chain_block_height INTEGER PRIMARY KEY,
   second_timestamp TEXT NOT NULL,
   emulated_block_height INTEGER NOT NULL
+);
+
+CREATE TABLE cde_cardano_pool_delegation (
+  cde_id INTEGER NOT NULL,
+  address TEXT NOT NULL,
+  pool TEXT,
+  PRIMARY KEY (cde_id, address)
 );

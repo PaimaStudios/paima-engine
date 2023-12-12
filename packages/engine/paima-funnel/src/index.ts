@@ -8,6 +8,7 @@ import { wrapToEmulatedBlocksFunnel } from './funnels/emulated/utils.js';
 import { BlockFunnel } from './funnels/block/funnel.js';
 import type { FunnelSharedData } from './funnels/BaseFunnel.js';
 import { FunnelCacheManager } from './funnels/FunnelCache.js';
+import { wrapToCarpFunnel } from './funnels/carp/funnel.js';
 
 export class FunnelFactory implements IFunnelFactory {
   private constructor(public sharedData: FunnelSharedData) {}
@@ -47,6 +48,13 @@ export class FunnelFactory implements IFunnelFactory {
     // and wrap it with dynamic decorators as needed
 
     let chainFunnel: ChainFunnel = await BlockFunnel.recoverState(this.sharedData, dbTx);
+    chainFunnel = await wrapToCarpFunnel(
+      chainFunnel,
+      this.sharedData,
+      dbTx,
+      ENV.CARP_URL,
+      ENV.START_BLOCKHEIGHT
+    );
     chainFunnel = await wrapToEmulatedBlocksFunnel(
       chainFunnel,
       this.sharedData,

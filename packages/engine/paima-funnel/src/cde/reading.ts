@@ -21,13 +21,15 @@ export async function getUngroupedCdeData(
     return extensions.map(_ => []);
   }
   const allData = await Promise.all(
-    extensions.map(extension => getSpecificCdeData(extension, fromBlock, toBlock))
+    extensions.map(extension =>
+      'startBlockHeight' in extension ? getSpecificCdeData(extension, fromBlock, toBlock) : []
+    )
   );
   return allData;
 }
 
 async function getSpecificCdeData(
-  extension: ChainDataExtension,
+  extension: ChainDataExtension & { startBlockHeight: number },
   fromBlock: number,
   toBlock: number
 ): Promise<ChainDataExtensionDatum[]> {
@@ -49,6 +51,10 @@ async function getSpecificCdeData(
       return await getCdeGenericData(extension, fromBlock, toBlock);
     case ChainDataExtensionType.ERC6551Registry:
       return await getCdeErc6551RegistryData(extension, fromBlock, toBlock);
+    case ChainDataExtensionType.CardanoPool:
+      // this is used by the block funnel, which can't get information for this
+      // extension
+      return [];
     default:
       assertNever(extension);
   }

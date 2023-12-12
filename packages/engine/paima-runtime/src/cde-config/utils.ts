@@ -1,13 +1,27 @@
 import * as fs from 'fs/promises';
 
-import { doLog } from '@paima/utils';
+import { ChainDataExtensionType, doLog } from '@paima/utils';
 
 import type { ChainDataExtension } from '@paima/sm';
 
 export function getEarliestStartBlockheight(config: ChainDataExtension[]): number {
-  const startBlockheights = config.map(cde => cde.startBlockHeight).filter(sbh => !!sbh);
-  const minStartBlockheight = Math.min(...startBlockheights);
+  const minStartBlockheight = config.reduce((min, cde) => {
+    if (cde.cdeType !== ChainDataExtensionType.CardanoPool) {
+      return Math.min(min, cde.startBlockHeight);
+    }
+    return min;
+  }, Infinity);
   return isFinite(minStartBlockheight) ? minStartBlockheight : -1;
+}
+
+export function getEarliestStartSlot(config: ChainDataExtension[]): number {
+  const minStartSlot = config.reduce((min, cde) => {
+    if (cde.cdeType === ChainDataExtensionType.CardanoPool) {
+      return Math.min(min, cde.startSlot);
+    }
+    return min;
+  }, Infinity);
+  return isFinite(minStartSlot) ? minStartSlot : -1;
 }
 
 // returns pair [rawAbiFileData, artifactObject.abi]

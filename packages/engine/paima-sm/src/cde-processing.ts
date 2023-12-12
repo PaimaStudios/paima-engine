@@ -9,8 +9,9 @@ import processErc721MintDatum from './cde-erc721-mint.js';
 import processErc20DepositDatum from './cde-erc20-deposit.js';
 import processErc6551RegistryDatum from './cde-erc6551-registry.js';
 import processGenericDatum from './cde-generic.js';
-import type { SQLUpdate } from '@paima/db';
+import processCardanoDelegationDatum from './cde-cardano-pool.js';
 import assertNever from 'assert-never';
+import type { SQLUpdate } from '@paima/db';
 
 export async function cdeTransitionFunction(
   readonlyDBConn: PoolClient,
@@ -29,6 +30,8 @@ export async function cdeTransitionFunction(
       return await processGenericDatum(cdeDatum);
     case ChainDataExtensionDatumType.ERC6551Registry:
       return await processErc6551RegistryDatum(cdeDatum);
+    case ChainDataExtensionDatumType.CardanoPool:
+      return await processCardanoDelegationDatum(cdeDatum);
     default:
       assertNever(cdeDatum);
   }

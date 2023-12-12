@@ -17,6 +17,7 @@
     "typescript": "^5.3.2"
   },
   "dependencies": {
-    "assert-never": "^1.2.1"
+    "assert-never": "^1.2.1",
+    "@dcspark/carp-client": "^2.3.0"
   }
 }

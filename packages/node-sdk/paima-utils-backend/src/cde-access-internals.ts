@@ -12,6 +12,7 @@ import {
   cdeGenericGetRangeData,
   cdeErc6551GetOwnedAccounts,
   cdeErc6551GetOwner,
+  cdeCardanoPoolGetAddressDelegation,
 } from '@paima/db';
 import type { OwnedNftsResponse, GenericCdeDataUnit, TokenIdPair } from './types.js';
 
@@ -176,4 +177,16 @@ export async function internalGetAllOwnedErc6551Accounts(
     readonlyDBConn
   );
   return results.map(row => row.account_created);
+}
+
+export async function internalGetCardanoAddressDelegation(
+  readonlyDBConn: Pool,
+  address: string
+): Promise<string | null> {
+  const results = await cdeCardanoPoolGetAddressDelegation.run({ address }, readonlyDBConn);
+  if (results.length === 0) {
+    return null;
+  }
+
+  return results[0].pool;
 }

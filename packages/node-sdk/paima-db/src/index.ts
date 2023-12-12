@@ -29,6 +29,10 @@ export type * from './sql/cde-erc6551-registry.queries.js';
 export * from './sql/emulated.queries.js';
 export type * from './sql/emulated.queries.js';
 export type * from './types.js';
+export * from './sql/cde-cardano-pool-delegation.queries.js';
+export type * from './sql/cde-cardano-pool-delegation.queries.js';
+export * from './sql/cde-tracking-cardano.queries.js';
+export type * from './sql/cde-tracking-cardano.queries.js';
 
 export {
   tx,

@@ -18,6 +18,7 @@ export const enum ChainDataExtensionType {
   ERC20Deposit = 4,
   Generic = 5,
   ERC6551Registry = 6,
+  CardanoPool = 7,
 }
 
 export const enum ChainDataExtensionDatumType {
@@ -27,4 +28,12 @@ export const enum ChainDataExtensionDatumType {
   ERC721Transfer,
   Generic,
   ERC6551Registry,
+  CardanoPool,
 }
+
+export const enum Network {
+  EVM = 1,
+  CARDANO = 2,
+}
+
+export const FUNNEL_PRESYNC_FINISHED = 'finished';

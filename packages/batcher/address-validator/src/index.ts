@@ -17,6 +17,8 @@ import { CryptoManager } from '@paima/crypto';
 import { createMessageForBatcher } from '@paima/concise';
 import { initWeb3, AddressType, getReadNamespaces } from '@paima/utils';
 import assertNever from 'assert-never';
+import { query, getErrorResponse } from '@dcspark/carp-client/client/src/index';
+import { Routes } from '@dcspark/carp-client/shared/routes';
 
 class PaimaAddressValidator {
   private web3: Web3 | undefined;
@@ -55,6 +57,13 @@ class PaimaAddressValidator {
     // Is the address allowed to post input?
     const addressAllowed = await this.authenticateUserAddress(input.userAddress);
     if (!addressAllowed) {
+      console.log('[address-validator] Address not allowed!');
+      return GenericRejectionCode.ADDRESS_NOT_ALLOWED;
+    }
+
+    // If a list of allowed cardano pools is provided, check that this user is delegating to that address
+    const isDelegatingToAllowedPools = await this.isDelegatingToAllowedPools(input.userAddress);
+    if (!isDelegatingToAllowedPools) {
       console.log('[address-validator] Address not allowed!');
       return GenericRejectionCode.ADDRESS_NOT_ALLOWED;
     }
@@ -208,6 +217,31 @@ class PaimaAddressValidator {
   ): boolean {
     return inputsMinute < ENV.MAX_USER_INPUTS_PER_MINUTE && inputsDay < ENV.MAX_USER_INPUTS_PER_DAY;
   }
+
+  private isDelegatingToAllowedPools = async (userAddress: string): Promise<boolean> => {
+    const pools = ENV.BATCHER_CARDANO_ENABLED_POOLS;
+
+    if (!pools) {
+      return true;
+    }
+
+    if (!ENV.CARP_URL) {
+      throw new Error(`[address-validator] missing CARP_URL setting`);
+    }
+
+    const latest = await query(ENV.CARP_URL, Routes.blockLatest, {
+      offset: 0,
+    });
+
+    const delegatingTo = await query(ENV.CARP_URL, Routes.delegationForAddress, {
+      address: userAddress,
+      until: {
+        absoluteSlot: latest.block.slot,
+      },
+    });
+
+    return !!pools.find(pool => delegatingTo.pool === pool);
+  };
 }
 
 export default PaimaAddressValidator;
