@@ -25,6 +25,15 @@ import type { ErrorCode, ErrorMessageFxn, GameInputValidatorCore } from '@paima/
 
 import { initializePool } from './pg/pgPool.js';
 import type { BatcherRuntimeInitializer } from './types.js';
+import { setLogger } from '@paima/utils';
+import * as fs from 'fs';
+import { parseSecurityYaml } from '@paima/utils-backend';
+
+setLogger(s => {
+  try {
+    fs.appendFileSync('./logs.log', `${s}\n`);
+  } catch (e) {}
+});
 
 const MINIMUM_INTER_CATCH_PERIOD = 1000;
 let batchedTransactionPosterReference: BatchedTransactionPoster | null = null;
@@ -127,6 +136,7 @@ async function main(): Promise<void> {
   if (!checkConfig()) {
     return;
   }
+  await parseSecurityYaml();
 
   const privateKey = ENV.BATCHER_PRIVATE_KEY;
 

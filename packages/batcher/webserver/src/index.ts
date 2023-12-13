@@ -177,7 +177,7 @@ async function initializeServer(
         console.log('[webserver/track_user_input] error:', err);
         res.status(500).json({
           success: false,
-          message: 'Unknown server error, please contact admin',
+          message: 'Unknown server error, please batcher operator',
         });
       }
     }
@@ -297,7 +297,7 @@ async function initializeServer(
         console.log('[webserver/submit_self_signed_input] error:', err);
         res.status(500).json({
           success: false,
-          message: 'Unknown server error, please contact admin',
+          message: 'Unknown server error, please contact batcher operator',
         });
       }
     }
@@ -421,7 +421,7 @@ async function initializeServer(
         console.log('[webserver/submit_user_input] error:', err);
         res.status(500).json({
           success: false,
-          message: 'Unknown server error, please contact admin',
+          message: 'Unknown server error, please contact batcher operator',
         });
       }
     }

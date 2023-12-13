@@ -14,17 +14,17 @@
     "build": "npm run lint:configs && npx nx run-many --parallel=${NX_PARALLEL:-3} -t build",
     "test": "npm run lint:configs && npx nx run-many --parallel=${NX_PARALLEL:-3} -t test",
     "release:lib": "./wipe.sh && sh ./tools/scripts/bump-version.sh && npm run build && npm run lint && npm run test && read -p 'Enter OTP: ' otp && export NPM_CONFIG_OTP=$otp && npx nx release publish -g paima-sdk && npx nx release publish -g node-sdk && npx nx release publish -g build-utils",
-    "release:bin": "./wipe.sh && npm run lint:configs && npx nx run-many --parallel=${NX_PARALLEL:-3} -t release && mkdir -p ./bin && cp -r ./packages/engine/paima-standalone/packaged/@standalone/* ./bin"
+    "release:bin": "./wipe.sh && npm run lint:configs && echo 'This command usually fails from NX, so go in the right folders and run /npm run release/ manually:\nnpx nx run-many --parallel=${NX_PARALLEL:-3} -t release\nPress any key to continue once done' && read _ && mkdir -p ./bin && cp -r ./packages/engine/paima-standalone/packaged/@standalone/* ./bin"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^2.1.2",
     "@eslint/js": "~8.50.0",
-    "@nx/esbuild": "16.9.1",
-    "@nx/jest": "16.10.0",
-    "@nx/js": "16.10.0",
-    "@nx/linter": "^16.9.1",
+    "@nx/esbuild": "17.1.3",
+    "@nx/jest": "17.1.3",
+    "@nx/js": "17.1.3",
+    "@nx/linter": "17.1.3",
     "@types/eslint-plugin-prettier": "^3.1.1",
-    "@types/jest": "^29.4.0",
+    "@types/jest": "^29.5.10",
     "@types/node": "^18.17.1",
     "@typescript-eslint/eslint-plugin": "^6.7.3",
     "@typescript-eslint/parser": "^6.7.3",
@@ -38,16 +38,16 @@
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-require-extensions": "^0.1.3",
     "husky": "^8.0.3",
-    "jest": "^29.4.1",
+    "jest": "29.7.0",
     "json5": "^2.2.3",
-    "nx": "16.9.1",
+    "nx": "17.1.3",
     "prettier": "^3.0.3",
     "prettier-plugin-organize-imports": "^3.2.3",
     "prettier-plugin-solidity": "^1.1.3",
     "syncpack": "^11.2.1",
     "ts-jest": "^29.1.1",
     "ts-node": "^10.9.1",
-    "typescript": "^5.2.2"
+    "typescript": "^5.3.2"
   },
   "overrides": {
     "web3-eth-contract": "1.10.0"

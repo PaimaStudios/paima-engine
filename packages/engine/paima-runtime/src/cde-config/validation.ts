@@ -3,7 +3,7 @@ import type { PoolClient, Pool } from 'pg';
 import { doLog } from '@paima/utils';
 import { tx, getChainDataExtensions, registerChainDataExtension } from '@paima/db';
 
-import type { ChainDataExtension } from '../types.js';
+import type { ChainDataExtension } from '@paima/sm';
 
 /**
  * Check that the configuration used when syncing the game node still matches their current value
@@ -56,7 +56,7 @@ async function storeCdeConfig(config: ChainDataExtension[], DBConn: PoolClient):
           cde_type: cde.cdeType,
           cde_name: cde.name,
           cde_hash: cde.hash,
-          start_blockheight: cde.startBlockHeight,
+          start_blockheight: 'startBlockHeight' in cde ? cde.startBlockHeight : cde.startSlot,
           scheduled_prefix: 'scheduledPrefix' in cde ? cde.scheduledPrefix : '',
         },
         DBConn

@@ -13,6 +13,9 @@ import { TruffleConnector } from '@paima/providers';
 import HDWalletProvider from '@truffle/hdwallet-provider';
 import type { LoginInfo } from '../wallets/wallet-modes.js';
 
+/**
+ * @deprecated do not use this unless you are really sure. Instead, prefer `userWalletLogin`
+ */
 export async function userWalletLoginWithoutChecks(
   loginInfo: LoginInfo,
   setDefault: boolean = true

@@ -16,7 +16,7 @@ export interface SuccessfulResult<T> {
 export interface FailedResult {
   success: false;
   errorMessage: string;
-  errorCode: number;
+  errorCode?: number;
 }
 
 export type QueryValue = string | number | boolean;

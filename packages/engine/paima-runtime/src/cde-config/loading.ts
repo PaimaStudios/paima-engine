@@ -24,17 +24,18 @@ import type {
   ChainDataExtensionGeneric,
   TChainDataExtensionErc721Config,
   TChainDataExtensionGenericConfig,
-} from '../types.js';
+  CdeConfig,
+} from '@paima/sm';
 import {
   CdeBaseConfig,
   CdeEntryTypeName,
+  ChainDataExtensionCardanoDelegationConfig,
   ChainDataExtensionErc20Config,
   ChainDataExtensionErc20DepositConfig,
   ChainDataExtensionErc6551RegistryConfig,
   ChainDataExtensionErc721Config,
   ChainDataExtensionGenericConfig,
-} from '../types.js';
-import type { CdeConfig } from '../types.js';
+} from '@paima/sm';
 import { loadAbi } from './utils.js';
 import assertNever from 'assert-never';
 import fnv from 'fnv-plus';
@@ -86,6 +87,8 @@ export function parseCdeConfigFile(configFileData: string): Static<typeof CdeCon
         return checkOrError(entry.name, ChainDataExtensionGenericConfig, entry);
       case CdeEntryTypeName.ERC6551Registry:
         return checkOrError(entry.name, ChainDataExtensionErc6551RegistryConfig, entry);
+      case CdeEntryTypeName.CardanoDelegation:
+        return checkOrError(entry.name, ChainDataExtensionCardanoDelegationConfig, entry);
       default:
         assertNever(entry.type);
     }
@@ -192,6 +195,13 @@ async function instantiateExtension(
           // assume everything else is using the new contract
           return getErc6551RegistryContract(contractAddress, web3);
         })(),
+      };
+    case CdeEntryTypeName.CardanoDelegation:
+      return {
+        ...config,
+        cdeId: index,
+        hash: hashConfig(config),
+        cdeType: ChainDataExtensionType.CardanoPool,
       };
     default:
       assertNever(config);

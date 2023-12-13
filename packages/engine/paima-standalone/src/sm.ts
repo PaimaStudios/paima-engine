@@ -1,4 +1,4 @@
-import type { GameStateMachine } from '@paima/runtime';
+import type { GameStateMachine } from '@paima/sm';
 import PaimaSM from '@paima/sm';
 import { importGameStateTransitionRouter } from './utils/import.js';
 import { poolConfig } from './utils/index.js';

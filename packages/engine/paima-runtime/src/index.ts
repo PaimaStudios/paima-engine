@@ -1,14 +1,10 @@
 import process from 'process';
 
 import { doLog, logError, ENV } from '@paima/utils';
-import {
-  DataMigrations,
-  deploymentChainBlockheightToEmulated,
-  emulatedSelectLatestPrior,
-  getGameInput,
-} from '@paima/db';
+import { DataMigrations } from '@paima/db';
 import { validatePersistentCdeConfig } from './cde-config/validation.js';
-import type { GameStateMachine, IFunnelFactory, PaimaRuntimeInitializer } from './types.js';
+import type { IFunnelFactory, PaimaRuntimeInitializer } from './types.js';
+import type { GameStateMachine } from '@paima/sm';
 
 import { run, setRunFlag, clearRunFlag } from './run-flag.js';
 import { server, startServer } from './server.js';
@@ -19,6 +15,7 @@ export * from './cde-config/loading.js';
 export * from './cde-config/validation.js';
 export * from './cde-config/utils.js';
 export * from './types.js';
+export { registerDocs, registerValidationErrorHandler } from './server.js';
 export { TimeoutError } from './utils.js';
 
 process.on('SIGINT', () => {
@@ -38,7 +35,7 @@ process.on('exit', code => {
 });
 
 const paimaEngine: PaimaRuntimeInitializer = {
-  initialize(funnelFactory, gameStateMachine, gameBackendVersion) {
+  initialize(funnelFactory, gameStateMachine, _gameBackendVersion) {
     return {
       pollingRate: ENV.POLLING_RATE,
       addEndpoints(tsoaFunction): void {
@@ -54,181 +51,6 @@ const paimaEngine: PaimaRuntimeInitializer = {
         this.pollingRate = seconds;
       },
       async run(stopBlockHeight: number | null, serverOnlyMode = false): Promise<void> {
-        if (ENV.ENABLE_DRY_RUN) {
-          this.addGET('/dry_run', (req, res): void => {
-            const gameInput = String(req.query.gameInput);
-            const userAddress = String(req.query.userAddress);
-            doLog(`[Input Validation] ${gameInput} ${userAddress}`);
-            gameStateMachine
-              .dryRun(gameInput, userAddress)
-              .then(valid => res.status(200).json({ valid }))
-              .catch(() => res.status(500));
-          });
-        }
-        this.addGET('/backend_version', (req, res): void => {
-          res.status(200).json(gameBackendVersion);
-        });
-        this.addGET('/latest_processed_blockheight', (req, res): void => {
-          gameStateMachine
-            .latestProcessedBlockHeight()
-            .then(blockHeight => res.json({ block_height: blockHeight }))
-            .catch(_error => res.status(500));
-        });
-        this.addGET('/emulated_blocks_active', (req, res): void => {
-          res.json({ emulatedBlocksActive: ENV.EMULATED_BLOCKS });
-        });
-        /** Return the emulated block where a given underlying block appears, or -1 if that block doesn't exist yet */
-        this.addGET('/deployment_blockheight_to_emulated', (req, res): void => {
-          try {
-            const paramString = String(req.query.deploymentBlockheight);
-            const deploymentBlockheight = parseInt(paramString, 10);
-            if (isNaN(deploymentBlockheight)) {
-              res.status(400).json({
-                success: false,
-                errorMessage: 'Invalid or missing deploymentBlockheight parameter',
-              });
-            }
-
-            // The block may be onchain without being included in an emulated block yet
-            // ex: waiting to see if there are other blocks that need to be bundled as part of the same emulated block
-            const blockNotYet = -1;
-            const DBConn = gameStateMachine.getReadonlyDbConn();
-            emulatedSelectLatestPrior
-              .run({ emulated_block_height: 2147483647 }, DBConn)
-              .then(([latestBlock]) => {
-                if (latestBlock == null) {
-                  res.status(200).json({
-                    success: true,
-                    result: blockNotYet,
-                  });
-                  return false;
-                }
-                // The block may be onchain without being included in an emulated block yet
-                // ex: waiting to see if there are other blocks that need to be bundled as part of the same emulated block
-                if (latestBlock.deployment_chain_block_height < deploymentBlockheight) {
-                  res.status(200).json({
-                    success: true,
-                    result: blockNotYet,
-                  });
-                  return false;
-                }
-                return true;
-              })
-              .then(seenBlock =>
-                !seenBlock
-                  ? Promise.resolve(blockNotYet)
-                  : deploymentChainBlockheightToEmulated
-                      .run({ deployment_chain_block_height: deploymentBlockheight }, DBConn)
-                      .then(res => res.at(0)?.emulated_block_height)
-              )
-              .then(emulatedBlockheight => {
-                if (emulatedBlockheight === blockNotYet) return; // error already handled earlier in the promise chain
-                if (emulatedBlockheight == null) {
-                  return res.status(200).json({
-                    success: false,
-                    errorMessage: `Supplied blockheight ${deploymentBlockheight} not found in DB`,
-                  });
-                }
-                return res.status(200).json({
-                  success: true,
-                  result: emulatedBlockheight,
-                });
-              })
-              .catch(err => {
-                doLog(`Webserver error:`);
-                logError(err);
-                return res.status(500).json({
-                  success: false,
-                  errorMessage: 'Unable to fetch blockheights from DB',
-                });
-              });
-          } catch (err) {
-            doLog(`Unexpected webserver error:`);
-            logError(err);
-            res.status(500).json({
-              success: false,
-              errorMessage: 'Unknown error, please contact game node administrator',
-            });
-          }
-        });
-        this.addGET('/confirm_input_acceptance', (req, res): void => {
-          try {
-            if (!ENV.STORE_HISTORICAL_GAME_INPUTS) {
-              res.status(500).json({
-                success: false,
-                errorMessage: 'Game input storing turned off in the game node',
-              });
-              return;
-            }
-
-            const gameInput = String(req.query.gameInput);
-            const userAddress = String(req.query.userAddress);
-            const blockHeightString = String(req.query.blockHeight);
-            const blockHeight = parseInt(blockHeightString, 10);
-
-            if (!userAddress) {
-              res.status(400).json({
-                success: false,
-                errorMessage: 'Query missing userAddress',
-              });
-              return;
-            }
-            if (!blockHeight) {
-              res.status(400).json({
-                success: false,
-                errorMessage: 'Query missing blockHeight',
-              });
-              return;
-            }
-            if (!gameInput) {
-              res.status(400).json({
-                success: false,
-                errorMessage: 'Query missing gameInput',
-              });
-              return;
-            }
-
-            const DBConn = gameStateMachine.getReadonlyDbConn();
-            getGameInput
-              .run(
-                {
-                  user_address: userAddress,
-                  block_height: blockHeight,
-                },
-                DBConn
-              )
-              .then(results => {
-                for (const row of results) {
-                  if (row.input_data === gameInput) {
-                    return res.status(200).json({
-                      success: true,
-                      result: true,
-                    });
-                  }
-                }
-                return res.status(200).json({
-                  success: true,
-                  result: false,
-                });
-              })
-              .catch(err => {
-                doLog(`Webserver error:`);
-                logError(err);
-                return res.status(500).json({
-                  success: false,
-                  errorMessage: 'Unable to fetch game inputs from the DB',
-                });
-              });
-          } catch (err) {
-            doLog(`Unexpected webserver error:`);
-            logError(err);
-            res.status(500).json({
-              success: false,
-              errorMessage: 'Unknown error, please contact game node administrator',
-            });
-          }
-        });
-
         setRunFlag();
 
         // run all initializations needed before starting the runtime loop

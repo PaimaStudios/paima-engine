@@ -3,7 +3,7 @@ import type {
   CdeErc20TransferDatum,
   ChainDataExtensionDatum,
   ChainDataExtensionErc20,
-} from '@paima/runtime';
+} from '@paima/sm';
 import type { Transfer } from '@paima/utils/src/contract-types/ERC20Contract.js';
 import { DEFAULT_FUNNEL_TIMEOUT } from '@paima/utils';
 

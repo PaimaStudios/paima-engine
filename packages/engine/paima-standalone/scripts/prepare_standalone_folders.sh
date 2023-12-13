@@ -6,6 +6,7 @@ CONTRACT_PATH="$PACKAGED_PATH/contracts"
 DOC_PATH="$PACKAGED_PATH/documentation"
 TEMPLATES_PATH="$PACKAGED_PATH/templates"
 BATCHER_PATH="$PACKAGED_PATH/batcher"
+SWAGGER_UI="$PACKAGED_PATH/swagger-ui"
 
 # Prepare smart contracts to be packed
 paima="paima-l2-contract"
@@ -42,8 +43,11 @@ rm -rf $DOC_PATH/docs
 find $DOC_PATH -type f -regextype posix-extended -regex '.*\.(png|jpg|jpeg|svg|gif|webp|bmp)' -delete
 rm -rf $DOC_PATH/.git*
 
-
 # Fetch templates
 rm -rf $TEMPLATES_PATH
 git clone --depth=1 git@github.com:PaimaStudios/paima-standalone-templates.git $TEMPLATES_PATH
 rm -rf $TEMPLATES_PATH/.git
+
+# Add in swagger static UI
+cp -r ../../../node_modules/swagger-ui-dist/ $SWAGGER_UI
+rm $SWAGGER_UI/index.html # this will get overwriten at runtime by swagger-ui-express

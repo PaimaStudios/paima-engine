@@ -23,6 +23,8 @@ function createTmpConfig() {
     fs.mkdirSync(getTmpFolder(), { recursive: true });
   }
   config.pkg.assets.push(`./batcher-bin/${getBatcherName()}`);
+  // note: config.pkg here has two compilation targets
+  // we keep it that way on purpose since prod builds require us to build all architectures at the same time
   fs.writeFileSync(getTmpFile(), JSON.stringify(config, null, 2));
 }
 function getBatcherName() {
@@ -45,9 +47,12 @@ async function packageApp() {
       ...['packaged/engineCorePacked.js'],
       ...['--options', baseOptions.join(',')],
       ...['--config', getTmpFile()],
-      // ...['--debug'], // use to see package content
     ];
     if (isDebug) {
+      // use to see package content
+      if (process.env.DEBUG_PKG === "1") {
+        args.push('--debug');
+      }
       args.push(...['--output', `packaged/@standalone/dev-paima-engine-${compilationTarget}`]);
       args.push(...[`-t`, `node18-${compilationTarget}-x64`]);
       args.push(...[`--build`]); // don't download prebuilt base binaries, build them
