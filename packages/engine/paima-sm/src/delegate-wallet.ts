@@ -195,8 +195,8 @@ export class DelegateWallet {
     if (await this.verifySignature(to, this.generateMessage(from), to_signature)) {
       throw new Error('Invalid Signature');
     }
-    const [fromAddress] = getAddressFromAddress.run({ address: from }, this.DBConn);
-    const [toAddress] = getAddressFromAddress.run({ address: to }, this.DBConn);
+    const [fromAddress] = await getAddressFromAddress.run({ address: from }, this.DBConn);
+    const [toAddress] = await getAddressFromAddress.run({ address: to }, this.DBConn);
     return;
   }
 
@@ -204,21 +204,21 @@ export class DelegateWallet {
     if (await this.verifySignature(to, this.generateMessage(), to_signature)) {
       throw new Error('Invalid Signature');
     }
-    const [toAddress] = getAddressFromAddress.run({ address: to }, this.DBConn);
+    const [toAddress] = await getAddressFromAddress.run({ address: to }, this.DBConn);
     if (!toAddress) return;
   }
 
-  public async getAddressMapping(address: string): Promise<string> {
-    const [addressId] = getAddressFromAddress.run({ address }, this.DBConn);
+  public async getAddressMapping(address: string): Promise<void> {
+    const [addressId] = await getAddressFromAddress.run({ address }, this.DBConn);
     if (addressId) return;
-    // insert new addres
+    // insert new address
     await newAddress.run({ address }, this.DBConn);
   }
 
   /*
    * Main entry point. Verify if command is valid and execute it.
    *
-   * If returns TRUE this is was an intened as internal command,
+   * If returns TRUE this is was an intend as internal command,
    * and the paima-concise command should not passed into the game STF.
    */
   public async process(command: string): Promise<boolean> {

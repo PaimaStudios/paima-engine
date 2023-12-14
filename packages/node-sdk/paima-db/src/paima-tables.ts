@@ -308,10 +308,10 @@ const TABLE_DATA_ADDRESSES: TableData = {
   tableName: 'addresses',
   primaryKeyColumns: ['id'],
   columnData: packTuples([
-    ['id', 'serial', 'NO', ''],
+    ['id', 'integer', 'NO', ''],
     ['address', 'text', 'NO', ''],
   ]),
-  serialColumns: [],
+  serialColumns: ['id'],
   creationQuery: QUERY_CREATE_TABLE_ADDRESSES,
 };
 
@@ -327,8 +327,8 @@ const TABLE_DATA_DELEGATIONS: TableData = {
   tableName: 'delegations',
   primaryKeyColumns: ['from_id', 'set_id'],
   columnData: packTuples([
-    ['from_id', 'text', 'NO', ''],
-    ['set_id', 'text', 'NO', ''],
+    ['from_id', 'integer', 'NO', ''],
+    ['set_id', 'integer', 'NO', ''],
   ]),
   serialColumns: [],
   creationQuery: QUERY_CREATE_TABLE_DELEGATIONS,
