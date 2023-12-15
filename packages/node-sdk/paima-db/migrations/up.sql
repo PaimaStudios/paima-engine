@@ -94,8 +94,8 @@ CREATE TABLE addresses (
 
 CREATE TABLE delegations (
   from_id INTEGER NOT NULL REFERENCES addresses(id),
-  set_id INTEGER NOT NULL REFERENCES addresses(id),
- PRIMARY KEY (from_id, set_id)
+  to_id INTEGER NOT NULL REFERENCES addresses(id),
+ PRIMARY KEY (from_id, to_id)
 );
 
 CREATE TABLE cde_cardano_pool_delegation (

@@ -57,7 +57,7 @@ export const newAddressWithId = new PreparedQuery<INewAddressWithIdParams,INewAd
 /** 'NewDelegation' parameters type */
 export interface INewDelegationParams {
   from_id: number;
-  set_id: number;
+  to_id: number;
 }
 
 /** 'NewDelegation' return type */
@@ -69,13 +69,13 @@ export interface INewDelegationQuery {
   result: INewDelegationResult;
 }
 
-const newDelegationIR: any = {"usedParamSet":{"from_id":true,"set_id":true},"params":[{"name":"from_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":51,"b":59}]},{"name":"set_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":62,"b":69}]}],"statement":"INSERT INTO delegations (from_id, set_id) \nVALUES (:from_id!, :set_id!)"};
+const newDelegationIR: any = {"usedParamSet":{"from_id":true,"to_id":true},"params":[{"name":"from_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":50,"b":58}]},{"name":"to_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":61,"b":67}]}],"statement":"INSERT INTO delegations (from_id, to_id) \nVALUES (:from_id!, :to_id!)"};
 
 /**
  * Query generated from SQL:
  * ```
- * INSERT INTO delegations (from_id, set_id) 
- * VALUES (:from_id!, :set_id!)
+ * INSERT INTO delegations (from_id, to_id) 
+ * VALUES (:from_id!, :to_id!)
  * ```
  */
 export const newDelegation = new PreparedQuery<INewDelegationParams,INewDelegationResult>(newDelegationIR);
@@ -142,13 +142,13 @@ export const getAddressFromAddress = new PreparedQuery<IGetAddressFromAddressPar
 /** 'GetDelegation' parameters type */
 export interface IGetDelegationParams {
   from_id: number;
-  set_id: number;
+  to_id: number;
 }
 
 /** 'GetDelegation' return type */
 export interface IGetDelegationResult {
   from_id: number;
-  set_id: number;
+  to_id: number;
 }
 
 /** 'GetDelegation' query type */
@@ -157,14 +157,14 @@ export interface IGetDelegationQuery {
   result: IGetDelegationResult;
 }
 
-const getDelegationIR: any = {"usedParamSet":{"from_id":true,"set_id":true},"params":[{"name":"from_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":42,"b":50}]},{"name":"set_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":65,"b":72}]}],"statement":"SELECT * FROM delegations\nWHERE from_id = :from_id!\nAND set_id = :set_id!"};
+const getDelegationIR: any = {"usedParamSet":{"from_id":true,"to_id":true},"params":[{"name":"from_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":42,"b":50}]},{"name":"to_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":64,"b":70}]}],"statement":"SELECT * FROM delegations\nWHERE from_id = :from_id!\nAND to_id = :to_id!"};
 
 /**
  * Query generated from SQL:
  * ```
  * SELECT * FROM delegations
  * WHERE from_id = :from_id!
- * AND set_id = :set_id!
+ * AND to_id = :to_id!
  * ```
  */
 export const getDelegation = new PreparedQuery<IGetDelegationParams,IGetDelegationResult>(getDelegationIR);
@@ -178,7 +178,7 @@ export interface IGetDelegationsFromParams {
 /** 'GetDelegationsFrom' return type */
 export interface IGetDelegationsFromResult {
   from_id: number;
-  set_id: number;
+  to_id: number;
 }
 
 /** 'GetDelegationsFrom' query type */
@@ -199,15 +199,47 @@ const getDelegationsFromIR: any = {"usedParamSet":{"from_id":true},"params":[{"n
 export const getDelegationsFrom = new PreparedQuery<IGetDelegationsFromParams,IGetDelegationsFromResult>(getDelegationsFromIR);
 
 
+/** 'GetDelegationsFromWithAddress' parameters type */
+export interface IGetDelegationsFromWithAddressParams {
+  from_id: number;
+}
+
+/** 'GetDelegationsFromWithAddress' return type */
+export interface IGetDelegationsFromWithAddressResult {
+  from_id: number;
+  id: number;
+  to_address: string;
+  to_id: number;
+}
+
+/** 'GetDelegationsFromWithAddress' query type */
+export interface IGetDelegationsFromWithAddressQuery {
+  params: IGetDelegationsFromWithAddressParams;
+  result: IGetDelegationsFromWithAddressResult;
+}
+
+const getDelegationsFromWithAddressIR: any = {"usedParamSet":{"from_id":true},"params":[{"name":"from_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":139,"b":147}]}],"statement":"SELECT id, from_id, to_id, address as to_address FROM delegations\nINNER JOIN addresses ON addresses.id = delegations.to_id\nWHERE from_id = :from_id!"};
+
+/**
+ * Query generated from SQL:
+ * ```
+ * SELECT id, from_id, to_id, address as to_address FROM delegations
+ * INNER JOIN addresses ON addresses.id = delegations.to_id
+ * WHERE from_id = :from_id!
+ * ```
+ */
+export const getDelegationsFromWithAddress = new PreparedQuery<IGetDelegationsFromWithAddressParams,IGetDelegationsFromWithAddressResult>(getDelegationsFromWithAddressIR);
+
+
 /** 'GetDelegationsTo' parameters type */
 export interface IGetDelegationsToParams {
-  set_id: number;
+  to_id: number;
 }
 
 /** 'GetDelegationsTo' return type */
 export interface IGetDelegationsToResult {
   from_id: number;
-  set_id: number;
+  to_id: number;
 }
 
 /** 'GetDelegationsTo' query type */
@@ -216,16 +248,48 @@ export interface IGetDelegationsToQuery {
   result: IGetDelegationsToResult;
 }
 
-const getDelegationsToIR: any = {"usedParamSet":{"set_id":true},"params":[{"name":"set_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":41,"b":48}]}],"statement":"SELECT * FROM delegations\nWHERE set_id = :set_id!"};
+const getDelegationsToIR: any = {"usedParamSet":{"to_id":true},"params":[{"name":"to_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":40,"b":46}]}],"statement":"SELECT * FROM delegations\nWHERE to_id = :to_id!"};
 
 /**
  * Query generated from SQL:
  * ```
  * SELECT * FROM delegations
- * WHERE set_id = :set_id!
+ * WHERE to_id = :to_id!
  * ```
  */
 export const getDelegationsTo = new PreparedQuery<IGetDelegationsToParams,IGetDelegationsToResult>(getDelegationsToIR);
+
+
+/** 'GetDelegationsToWithAddress' parameters type */
+export interface IGetDelegationsToWithAddressParams {
+  to_id: number;
+}
+
+/** 'GetDelegationsToWithAddress' return type */
+export interface IGetDelegationsToWithAddressResult {
+  from_address: string;
+  from_id: number;
+  id: number;
+  to_id: number;
+}
+
+/** 'GetDelegationsToWithAddress' query type */
+export interface IGetDelegationsToWithAddressQuery {
+  params: IGetDelegationsToWithAddressParams;
+  result: IGetDelegationsToWithAddressResult;
+}
+
+const getDelegationsToWithAddressIR: any = {"usedParamSet":{"to_id":true},"params":[{"name":"to_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":141,"b":147}]}],"statement":"SELECT id, from_id, to_id, address as from_address FROM delegations\nINNER JOIN addresses ON addresses.id = delegations.from_id\nWHERE to_id = :to_id!"};
+
+/**
+ * Query generated from SQL:
+ * ```
+ * SELECT id, from_id, to_id, address as from_address FROM delegations
+ * INNER JOIN addresses ON addresses.id = delegations.from_id
+ * WHERE to_id = :to_id!
+ * ```
+ */
+export const getDelegationsToWithAddress = new PreparedQuery<IGetDelegationsToWithAddressParams,IGetDelegationsToWithAddressResult>(getDelegationsToWithAddressIR);
 
 
 /** 'DeleteDelegationsFrom' parameters type */
@@ -256,7 +320,7 @@ export const deleteDelegationsFrom = new PreparedQuery<IDeleteDelegationsFromPar
 
 /** 'DeleteDelegationTo' parameters type */
 export interface IDeleteDelegationToParams {
-  set_id: number;
+  to_id: number;
 }
 
 /** 'DeleteDelegationTo' return type */
@@ -268,13 +332,13 @@ export interface IDeleteDelegationToQuery {
   result: IDeleteDelegationToResult;
 }
 
-const deleteDelegationToIR: any = {"usedParamSet":{"set_id":true},"params":[{"name":"set_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":39,"b":46}]}],"statement":"DELETE FROM delegations\nWHERE set_id = :set_id!"};
+const deleteDelegationToIR: any = {"usedParamSet":{"to_id":true},"params":[{"name":"to_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":38,"b":44}]}],"statement":"DELETE FROM delegations\nWHERE to_id = :to_id!"};
 
 /**
  * Query generated from SQL:
  * ```
  * DELETE FROM delegations
- * WHERE set_id = :set_id!
+ * WHERE to_id = :to_id!
  * ```
  */
 export const deleteDelegationTo = new PreparedQuery<IDeleteDelegationToParams,IDeleteDelegationToResult>(deleteDelegationToIR);
@@ -375,14 +439,14 @@ export interface IUpdateDelegateToQuery {
   result: IUpdateDelegateToResult;
 }
 
-const updateDelegateToIR: any = {"usedParamSet":{"new_to":true,"old_to":true},"params":[{"name":"new_to","required":true,"transform":{"type":"scalar"},"locs":[{"a":33,"b":40}]},{"name":"old_to","required":true,"transform":{"type":"scalar"},"locs":[{"a":57,"b":64}]}],"statement":"UPDATE delegations \nSET set_id = :new_to!\nWHERE set_id = :old_to!"};
+const updateDelegateToIR: any = {"usedParamSet":{"new_to":true,"old_to":true},"params":[{"name":"new_to","required":true,"transform":{"type":"scalar"},"locs":[{"a":32,"b":39}]},{"name":"old_to","required":true,"transform":{"type":"scalar"},"locs":[{"a":55,"b":62}]}],"statement":"UPDATE delegations \nSET to_id = :new_to!\nWHERE to_id = :old_to!"};
 
 /**
  * Query generated from SQL:
  * ```
  * UPDATE delegations 
- * SET set_id = :new_to!
- * WHERE set_id = :old_to!
+ * SET to_id = :new_to!
+ * WHERE to_id = :old_to!
  * ```
  */
 export const updateDelegateTo = new PreparedQuery<IUpdateDelegateToParams,IUpdateDelegateToResult>(updateDelegateToIR);
@@ -404,7 +468,7 @@ export interface IUpdateDelegateFromQuery {
   result: IUpdateDelegateFromResult;
 }
 
-const updateDelegateFromIR: any = {"usedParamSet":{"new_from":true,"old_from":true,"old_to":true},"params":[{"name":"new_from","required":true,"transform":{"type":"scalar"},"locs":[{"a":34,"b":43}]},{"name":"old_from","required":true,"transform":{"type":"scalar"},"locs":[{"a":61,"b":70}]},{"name":"old_to","required":true,"transform":{"type":"scalar"},"locs":[{"a":86,"b":93}]}],"statement":"UPDATE delegations \nSET from_id = :new_from!\nWHERE from_id = :old_from! \nAND set_id = :old_to!"};
+const updateDelegateFromIR: any = {"usedParamSet":{"new_from":true,"old_from":true,"old_to":true},"params":[{"name":"new_from","required":true,"transform":{"type":"scalar"},"locs":[{"a":34,"b":43}]},{"name":"old_from","required":true,"transform":{"type":"scalar"},"locs":[{"a":61,"b":70}]},{"name":"old_to","required":true,"transform":{"type":"scalar"},"locs":[{"a":85,"b":92}]}],"statement":"UPDATE delegations \nSET from_id = :new_from!\nWHERE from_id = :old_from! \nAND to_id = :old_to!"};
 
 /**
  * Query generated from SQL:
@@ -412,7 +476,7 @@ const updateDelegateFromIR: any = {"usedParamSet":{"new_from":true,"old_from":tr
  * UPDATE delegations 
  * SET from_id = :new_from!
  * WHERE from_id = :old_from! 
- * AND set_id = :old_to!
+ * AND to_id = :old_to!
  * ```
  */
 export const updateDelegateFrom = new PreparedQuery<IUpdateDelegateFromParams,IUpdateDelegateFromResult>(updateDelegateFromIR);

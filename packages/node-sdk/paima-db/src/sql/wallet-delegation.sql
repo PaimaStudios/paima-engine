@@ -7,8 +7,8 @@ INSERT INTO addresses (address, id)
 VALUES (:address!, :id!); 
 
 /* @name newDelegation */
-INSERT INTO delegations (from_id, set_id) 
-VALUES (:from_id!, :set_id!);
+INSERT INTO delegations (from_id, to_id) 
+VALUES (:from_id!, :to_id!);
 
 /* @name getAddressFromId */
 SELECT * FROM addresses
@@ -21,15 +21,25 @@ WHERE address = :address!;
 /* @name getDelegation */
 SELECT * FROM delegations
 WHERE from_id = :from_id!
-AND set_id = :set_id!;
+AND to_id = :to_id!;
 
 /* @name getDelegationsFrom */
 SELECT * FROM delegations
 WHERE from_id = :from_id!;
 
+/* @name getDelegationsFromWithAddress */
+SELECT id, from_id, to_id, address as to_address FROM delegations
+INNER JOIN addresses ON addresses.id = delegations.to_id
+WHERE from_id = :from_id!;
+
 /* @name getDelegationsTo */
 SELECT * FROM delegations
-WHERE set_id = :set_id!;
+WHERE to_id = :to_id!;
+
+/* @name getDelegationsToWithAddress */
+SELECT id, from_id, to_id, address as from_address FROM delegations
+INNER JOIN addresses ON addresses.id = delegations.from_id
+WHERE to_id = :to_id!;
 
 /* @name deleteDelegationsFrom */
 DELETE FROM delegations
@@ -37,7 +47,7 @@ WHERE from_id = :from_id!;
 
 /* @name deleteDelegationTo */
 DELETE FROM delegations
-WHERE set_id = :set_id!;
+WHERE to_id = :to_id!;
 
 /* @name deleteAddress */
 DELETE FROM addresses
@@ -54,11 +64,11 @@ WHERE address = :old_address!;
 
 /* @name updateDelegateTo */
 UPDATE delegations 
-SET set_id = :new_to!
-WHERE set_id = :old_to!;
+SET to_id = :new_to!
+WHERE to_id = :old_to!;
 
 /* @name updateDelegateFrom */
 UPDATE delegations 
 SET from_id = :new_from!
 WHERE from_id = :old_from! 
-AND set_id = :old_to!;
+AND to_id = :old_to!;

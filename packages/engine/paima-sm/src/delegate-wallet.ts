@@ -106,7 +106,7 @@ export class DelegateWallet {
     const [exitingAddress] = await getAddressFromAddress.run({ address: address }, this.DBConn);
     if (exitingAddress) return { address: exitingAddress, isNew: false };
     // create new.
-    await newAddress.run({ address }, this.DBConn);
+    await newAddress.run({ address: address }, this.DBConn);
     const [createdAddress] = await getAddressFromAddress.run({ address }, this.DBConn);
     return { address: createdAddress, isNew: true };
   }
@@ -132,12 +132,12 @@ export class DelegateWallet {
   ): Promise<void> {
     // Check if delegation or reverse delegation does not exist TODO.
     const [currentDelegation] = await getDelegation.run(
-      { from_id: fromAddress.address.id, set_id: toAddress.address.id },
+      { from_id: fromAddress.address.id, to_id: toAddress.address.id },
       this.DBConn
     );
     if (currentDelegation) throw new Error('Delegation already exists');
     const [reverseDelegation] = await getDelegation.run(
-      { from_id: toAddress.address.id, set_id: fromAddress.address.id },
+      { from_id: toAddress.address.id, to_id: fromAddress.address.id },
       this.DBConn
     );
     if (reverseDelegation) throw new Error('Reverse Delegation already exists');
@@ -150,7 +150,7 @@ export class DelegateWallet {
     // If "TO" has "TO" delegations, it is already owned by another wallet.
     // To reuse this address, cancel delegations first.
     const [toAddressHasTo] = await getDelegationsTo.run(
-      { set_id: toAddress.address.id },
+      { to_id: toAddress.address.id },
       this.DBConn
     );
     if (toAddressHasTo) throw new Error('To Address has delegations. Cannot merge.');
@@ -179,7 +179,7 @@ export class DelegateWallet {
     // Lets get master address, if there is any parent address of the from address.
     let masterAddress = fromAddress.address;
     const [fromAddressIsTo] = await getDelegationsTo.run(
-      { set_id: fromAddress.address.id },
+      { to_id: fromAddress.address.id },
       this.DBConn
     );
     if (fromAddressIsTo) {
@@ -189,7 +189,7 @@ export class DelegateWallet {
 
     // Write new delegation, for all cases.
     await newDelegation.run(
-      { from_id: masterAddress.id, set_id: toAddress.address.id },
+      { from_id: masterAddress.id, to_id: toAddress.address.id },
       this.DBConn
     );
 
@@ -234,7 +234,7 @@ export class DelegateWallet {
             const { from, to, from_signature, to_signature } = parsed.args;
             await this.verifySignature(from, this.generateMessage(to), from_signature);
             await this.verifySignature(to, this.generateMessage(from), to_signature);
-            await this.cmdDelegate(from, to);
+            await this.cmdDelegate(from.toLocaleLowerCase(), to.toLocaleLowerCase());
           }
           break;
         case 'migrate':
@@ -242,14 +242,14 @@ export class DelegateWallet {
             const { from, to, from_signature, to_signature } = parsed.args;
             await this.verifySignature(from, this.generateMessage(to), from_signature);
             await this.verifySignature(to, this.generateMessage(from), to_signature);
-            await this.cmdMigrate(from, to);
+            await this.cmdMigrate(from.toLocaleLowerCase(), to.toLocaleLowerCase());
           }
           break;
         case 'cancelDelegations':
           {
             const { to, to_signature } = parsed.args;
             await this.verifySignature(to, this.generateMessage(), to_signature);
-            await this.cmdCancelDelegations(to);
+            await this.cmdCancelDelegations(to.toLocaleLowerCase());
           }
           break;
         default:

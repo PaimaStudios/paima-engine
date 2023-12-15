@@ -318,17 +318,17 @@ const TABLE_DATA_ADDRESSES: TableData = {
 const QUERY_CREATE_TABLE_DELEGATIONS = `
 CREATE TABLE delegations (
 	from_id INTEGER NOT NULL REFERENCES addresses(id),
-	set_id INTEGER NOT NULL REFERENCES addresses(id),
-  PRIMARY KEY (from_id, set_id)
+	to_id INTEGER NOT NULL REFERENCES addresses(id),
+  PRIMARY KEY (from_id, to_id)
 );
 `;
 
 const TABLE_DATA_DELEGATIONS: TableData = {
   tableName: 'delegations',
-  primaryKeyColumns: ['from_id', 'set_id'],
+  primaryKeyColumns: ['from_id', 'to_id'],
   columnData: packTuples([
     ['from_id', 'integer', 'NO', ''],
-    ['set_id', 'integer', 'NO', ''],
+    ['to_id', 'integer', 'NO', ''],
   ]),
   serialColumns: [],
   creationQuery: QUERY_CREATE_TABLE_DELEGATIONS,
