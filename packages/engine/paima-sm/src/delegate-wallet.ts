@@ -87,7 +87,7 @@ export class DelegateWallet {
   /* Verify Signature with all possible wallets. */
   private async verifySignature(
     walletAddress: string,
-    internalMessage: string,
+    message: string,
     signature: string
   ): Promise<boolean> {
     if (!walletAddress || !signature) throw new Error('No Signature');
@@ -97,7 +97,6 @@ export class DelegateWallet {
       CryptoManager.Cardano(),
       CryptoManager.Polkadot(),
     ];
-    const message = this.generateMessage(internalMessage);
     for (const wallet of wallets) {
       try {
         if (await wallet.verifySignature(walletAddress, message, signature)) {
@@ -136,10 +135,10 @@ export class DelegateWallet {
     await newAddress.run({ address: addressB }, this.DBConn);
   }
 
-  private async cmdDelegate(from: string, to: string): Promise<void> {
-    const fromAddress = await this.getOrCreateNewAddress(from);
-    const toAddress = await this.getOrCreateNewAddress(to);
-
+  private async validateDelegate(
+    fromAddress: { address: IGetAddressFromAddressResult; isNew: boolean },
+    toAddress: { address: IGetAddressFromAddressResult; isNew: boolean }
+  ): Promise<void> {
     // Check if delegation or reverse delegation does not exist TODO.
     const [currentDelegation] = await getDelegation.run(
       { from_id: fromAddress.address.id, set_id: toAddress.address.id },
@@ -152,40 +151,36 @@ export class DelegateWallet {
     );
     if (reverseDelegation) throw new Error('Reverse Delegation already exists');
 
-    // Case 1:
-    // If  A->Y && B->Y, if B is new.
-    // Check if address needs to be replaced.
-    // This is a special case where FROM takes TO identity.
-    // As the identity is taken, no other updates are required.
-    const toAddressHasFrom = await getDelegationsFrom.run(
-      { from_id: toAddress.address.id },
-      this.DBConn
-    );
-    if (toAddressHasFrom.length > 0) {
-      if (fromAddress.isNew) {
-        await this.swap(fromAddress.address.address, toAddress.address.address);
-
-        const [newToAddressId] = await getAddressFromAddress.run(
-          { address: toAddress.address.address },
-          this.DBConn
-        );
-        await newDelegation.run(
-          { from_id: toAddress.address.id, set_id: newToAddressId.id },
-          this.DBConn
-        );
-        DelegateWallet.addressCache.clear();
-        return;
-      }
-
+    // Cannot merge if both have progress.
+    if (!fromAddress.isNew && !toAddress.isNew) {
       throw new Error('Both A and B have progress. Cannot merge.');
     }
 
+    // If "TO" has "TO" delegations, it is already owned by another wallet.
+    // To reuse this address, cancel delegations first.
     const [toAddressHasTo] = await getDelegationsTo.run(
       { set_id: toAddress.address.id },
       this.DBConn
     );
-    if (toAddressHasTo) {
-      throw new Error('Both A and B have progress. Cannot merge.');
+    if (toAddressHasTo) throw new Error('To Address has delegations. Cannot merge.');
+  }
+
+  private async cmdDelegate(from: string, to: string): Promise<void> {
+    const fromAddress = await this.getOrCreateNewAddress(from);
+    const toAddress = await this.getOrCreateNewAddress(to);
+    await this.validateDelegate(fromAddress, toAddress);
+
+    // Case 1:
+    // "from" is New, "to" has progress.
+    // swap IDs.
+    if (fromAddress.isNew && !toAddress.isNew) {
+      await this.swap(fromAddress.address.address, toAddress.address.address);
+      const [newToAddressId] = await getAddressFromAddress.run(
+        { address: toAddress.address.address },
+        this.DBConn
+      );
+      fromAddress.address.id = toAddress.address.id;
+      toAddress.address.id = newToAddressId.id;
     }
 
     // Case 2:
