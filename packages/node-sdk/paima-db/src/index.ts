@@ -4,6 +4,8 @@ import { createScheduledData, deleteScheduledData } from './scheduled-constructo
 import { initializePaimaTables } from './database-validation.js';
 import { DataMigrations } from './data-migrations.js';
 
+export * from './delegate-wallet.js';
+
 export * from './sql/block-heights.queries.js';
 export type * from './sql/block-heights.queries.js';
 export * from './sql/scheduled.queries.js';

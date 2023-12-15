@@ -25,12 +25,13 @@ import {
   getLatestProcessedCdeBlockheight,
   getCardanoLatestProcessedCdeSlot,
   markCardanoCdeSlotProcessed,
+  getMainAddress,
+  NO_USER_ID,
 } from '@paima/db';
 import Prando from '@paima/prando';
 
 import { randomnessRouter } from './randomness.js';
 import { cdeTransitionFunction } from './cde-processing.js';
-import type { WalletDelegate } from './delegate-wallet.js';
 import { DelegateWallet } from './delegate-wallet.js';
 import type {
   SubmittedData,
@@ -40,6 +41,7 @@ import type {
   GameStateTransitionFunction,
   GameStateMachineInitializer,
 } from './types.js';
+
 export * from './types.js';
 export type * from './types.js';
 
@@ -130,7 +132,7 @@ const SM: GameStateMachineInitializer = {
           const [b] = await getLatestProcessedBlockHeight.run(undefined, dbTx);
           const blockHeight = b?.block_height ?? startBlockHeight ?? 0;
           const gameStateTransition = gameStateTransitionRouter(blockHeight);
-          const address = await new DelegateWallet(dbTx).getMainAddress(userAddress);
+          const address = await getMainAddress(userAddress, dbTx);
 
           const data = await gameStateTransition(
             {
@@ -340,7 +342,7 @@ async function processUserInputs(
       await delegateWallet.process(inputData.inputData);
     } else {
       // If wallet does not exist in address table: create it.
-      if (inputData.userId === DelegateWallet.NO_USER_ID) {
+      if (inputData.userId === NO_USER_ID) {
         const newAddress = await delegateWallet.getOrCreateNewAddress(inputData.userAddress);
         inputData.userId = newAddress.address.id;
       }

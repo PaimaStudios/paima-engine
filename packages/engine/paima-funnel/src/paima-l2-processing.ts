@@ -12,6 +12,7 @@ import {
 import { toBN, hexToUtf8, sha3 } from 'web3-utils';
 import { DelegateWallet } from '@paima/sm/src/delegate-wallet';
 import type { PoolClient } from 'pg';
+import { getMainAddress } from '@paima/db';
 
 interface ValidatedSubmittedData extends SubmittedData {
   validated: boolean;
@@ -38,7 +39,7 @@ async function eventMapper(
   DBConn: PoolClient
 ): Promise<SubmittedData[]> {
   const decodedData = decodeEventData(e.returnValues.data);
-  const address = await new DelegateWallet(DBConn).getMainAddress(e.returnValues.userAddress);
+  const address = await getMainAddress(e.returnValues.userAddress, DBConn);
   return await processDataUnit(
     web3,
     {
@@ -150,7 +151,7 @@ async function processBatchedSubunit(
 
   const inputNonce = createBatchNonce(millisecondTimestamp, userAddress, inputData);
 
-  const address = await new DelegateWallet(DBConn).getMainAddress(userAddress);
+  const address = await getMainAddress(userAddress, DBConn);
   return {
     inputData,
     realAddress: userAddress,

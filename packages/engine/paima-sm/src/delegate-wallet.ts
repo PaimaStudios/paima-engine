@@ -1,4 +1,3 @@
-import { LRUCache } from 'lru-cache';
 import Web3 from 'web3';
 import type { PoolClient } from 'pg';
 
@@ -7,19 +6,17 @@ import { ENV, doLog } from '@paima/utils';
 import { CryptoManager } from '@paima/crypto';
 import type { IGetAddressFromAddressResult } from '@paima/db';
 import {
+  addressCache,
   deleteAddress,
   deleteDelegationsFrom,
   getAddressFromAddress,
   getAddressFromId,
   getDelegation,
-  getDelegationsFrom,
   getDelegationsTo,
   newAddress,
   newDelegation,
   updateAddress,
 } from '@paima/db';
-
-export type WalletDelegate = { address: string; id: number };
 
 type ParsedDelegateWalletCommand =
   | {
@@ -33,8 +30,6 @@ type ParsedDelegateWalletCommand =
   | { command: 'cancelDelegations'; args: { to: string; to_signature: string } };
 
 export class DelegateWallet {
-  public static readonly NO_USER_ID = -1;
-
   private static readonly DELEGATE_WALLET_PREFIX = 'DELEGATE-WALLET';
 
   public static readonly INTERNAL_COMMAND_PREFIX = '&';
@@ -70,10 +65,6 @@ export class DelegateWallet {
     DelegateWallet.delegationGrammar,
     DelegateWallet.parserCommands
   );
-
-  private static addressCache = new LRUCache<string, WalletDelegate>({
-    max: 2000,
-  });
 
   constructor(private DBConn: PoolClient) {}
 
@@ -202,7 +193,7 @@ export class DelegateWallet {
       this.DBConn
     );
 
-    DelegateWallet.addressCache.clear();
+    addressCache.clear();
   }
 
   // Migrate.
@@ -213,7 +204,7 @@ export class DelegateWallet {
 
     const toAddress = await this.getOrCreateNewAddress(to);
     await this.swap(fromAddress.address, toAddress.address.address);
-    DelegateWallet.addressCache.clear();
+    addressCache.clear();
   }
 
   // Cancel Delegations.
@@ -222,38 +213,7 @@ export class DelegateWallet {
     const [toAddress] = await getAddressFromAddress.run({ address: to }, this.DBConn);
     if (!toAddress) throw new Error('Invalid Address');
     await deleteDelegationsFrom.run({ from_id: toAddress.id }, this.DBConn);
-    DelegateWallet.addressCache.clear();
-  }
-
-  // Get Main Wallet and ID for address.
-  // If wallet does not exist, It will NOT be created in address, table.
-  public async getMainAddress(address: string): Promise<WalletDelegate> {
-    let addressMapping: WalletDelegate | undefined = DelegateWallet.addressCache.get(address);
-    if (addressMapping) return addressMapping;
-
-    // get main address.
-    // const addressResult = await this.getOrCreateNewAddress(address);
-    const [addressResult] = await getAddressFromAddress.run({ address }, this.DBConn);
-    if (!addressResult) {
-      // This wallet has never been used before.
-      // This value will get updated before sent to the STF.
-      return { address, id: DelegateWallet.NO_USER_ID };
-    }
-
-    // if exists we have to check if it is a delegation.
-    const [delegate] = await getDelegationsTo.run({ set_id: addressResult.id }, this.DBConn);
-    if (!delegate) {
-      // is main address or has no delegations.
-      addressMapping = { address: addressResult.address, id: addressResult.id };
-      DelegateWallet.addressCache.set(address, addressMapping);
-      return addressMapping;
-    }
-
-    // if is delegation, get main address.
-    const [mainAddress] = await getAddressFromId.run({ id: delegate.from_id }, this.DBConn);
-    addressMapping = { address: mainAddress.address, id: mainAddress.id };
-    DelegateWallet.addressCache.set(address, addressMapping);
-    return addressMapping;
+    addressCache.clear();
   }
 
   /*
