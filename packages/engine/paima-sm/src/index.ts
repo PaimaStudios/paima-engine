@@ -321,51 +321,56 @@ async function processUserInputs(
       continue;
     }
 
-    //
     // Check if internal Concise Command
     // Internal Concise Commands are prefixed with an ampersand (&)
     //
     // delegate       = &wd|from|to|from_signature|to_signature
     // migrate        = &wm|from|to|from_signature|to_signature
     // cancelDelegate = &wc|to|to_signature
+    const delegateWallet = new DelegateWallet(DBConn);
     if (inputData.inputData.startsWith(DelegateWallet.INTERNAL_COMMAND_PREFIX)) {
-      await new DelegateWallet(DBConn).process(inputData.inputData);
-    }
-
-    // Trigger STF
-    const sqlQueries = await gameStateTransition(
-      {
-        ...inputData,
-        inputData: inputData.inputData,
-      },
-      latestChainData.blockNumber,
-      randomnessGenerator,
-      DBConn
-    );
-    try {
-      for (const [query, params] of sqlQueries) {
-        await query.run(params, DBConn);
-      }
-      await insertNonce.run(
+      await delegateWallet.process(inputData.inputData);
+    } else {
+      // TODO
+      // Pass this data into state machine.
+      // Main Address has both, ID for the Game Logic, and the wallet Address.
+      const mainAddress = await delegateWallet.getMainAddress(inputData.userAddress);
+      // Trigger STF
+      const sqlQueries = await gameStateTransition(
         {
-          nonce: inputData.inputNonce,
-          block_height: latestChainData.blockNumber,
+          ...inputData,
+          inputData: inputData.inputData,
         },
+        latestChainData.blockNumber,
+        randomnessGenerator,
         DBConn
       );
-      if (ENV.STORE_HISTORICAL_GAME_INPUTS) {
-        await storeGameInput.run(
+
+      try {
+        for (const [query, params] of sqlQueries) {
+          await query.run(params, DBConn);
+        }
+        await insertNonce.run(
           {
+            nonce: inputData.inputNonce,
             block_height: latestChainData.blockNumber,
-            input_data: inputData.inputData,
-            user_address: inputData.userAddress,
           },
           DBConn
         );
+        if (ENV.STORE_HISTORICAL_GAME_INPUTS) {
+          await storeGameInput.run(
+            {
+              block_height: latestChainData.blockNumber,
+              input_data: inputData.inputData,
+              user_address: inputData.userAddress,
+            },
+            DBConn
+          );
+        }
+      } catch (err) {
+        doLog(`[paima-sm] Database error on gameStateTransition: ${err}`);
+        throw err;
       }
-    } catch (err) {
-      doLog(`[paima-sm] Database error on gameStateTransition: ${err}`);
-      throw err;
     }
   }
   return latestChainData.submittedData.length;

@@ -4,16 +4,20 @@ import { CryptoManager } from '@paima/crypto';
 import Web3 from 'web3';
 import type { PoolClient } from 'pg';
 import { error } from 'console';
+import type { IGetAddressFromAddressResult } from '@paima/db';
 import {
   deleteAddress,
-  deleteAddressId,
-  deleteDelegationFrom,
+  deleteDelegationTo,
+  deleteDelegationsFrom,
   getAddressFromAddress,
+  getAddressFromId,
+  getDelegation,
   getDelegationsFrom,
   getDelegationsTo,
   newAddress,
   newDelegation,
-  updateDelegateTo,
+  updateAddress,
+  updateDelegateFrom,
 } from '@paima/db';
 
 type ParsedDelegateWalletCommand =
@@ -79,7 +83,7 @@ export class DelegateWallet {
     internalMessage: string,
     signature: string
   ): Promise<boolean> {
-    if (!walletAddress || !signature) return false;
+    if (!walletAddress || !signature) throw new Error('No Signature');
     const wallets = [
       CryptoManager.Evm(new Web3()),
       CryptoManager.Algorand(),
@@ -96,123 +100,159 @@ export class DelegateWallet {
         // do nothing.
       }
     }
-    return false;
+    throw new Error('Invalid Signature');
   }
 
-  private async createBothAddressesAndDelegate(from: string, to: string): Promise<void> {
-    await newAddress.run({ address: from }, this.DBConn);
-    await newAddress.run({ address: to }, this.DBConn);
-    const [fromAddress] = await getAddressFromAddress.run({ address: from }, this.DBConn);
-    const [toAddress] = await getAddressFromAddress.run({ address: to }, this.DBConn);
-    await newDelegation.run({ from_id: fromAddress.id, set_id: toAddress.id }, this.DBConn);
+  private async getOrCreateNewAddress(
+    address: string
+  ): Promise<{ address: IGetAddressFromAddressResult; isNew: boolean }> {
+    const [exitingAddress] = await getAddressFromAddress.run({ address: address }, this.DBConn);
+    if (exitingAddress) return { address: exitingAddress, isNew: false };
+    // create new.
+    await newAddress.run({ address }, this.DBConn);
+    const [createdAddress] = await getAddressFromAddress.run({ address }, this.DBConn);
+    return { address: createdAddress, isNew: true };
   }
 
-  private async deleteDelegationsAndAddress(addressId: number): Promise<void> {
-    await deleteDelegationFrom.run({ from_id: addressId }, this.DBConn);
-    await deleteAddressId.run({ id: addressId }, this.DBConn);
-  }
-
-  private async redelegateTo(oldId: number, newId: number): Promise<void> {
-    // the 'from' address may have to delegations, update.
-    await updateDelegateTo.run(
+  // Swap:
+  // addressA gains addressB ID
+  // addressB is assigned a new ID
+  private async swap(addressA: string, addressB: string): Promise<void> {
+    await deleteAddress.run({ address: addressA }, this.DBConn);
+    await updateAddress.run(
       {
-        new_to: newId,
-        old_to: oldId,
+        new_address: addressA,
+        old_address: addressB,
       },
       this.DBConn
     );
+    await newAddress.run({ address: addressB }, this.DBConn);
   }
 
-  private async cmdDelegate(
-    from: string,
-    to: string,
-    from_signature: string,
-    to_signature: string
-  ): Promise<void> {
-    if (await this.verifySignature(from, this.generateMessage(to), from_signature)) {
-      throw new Error('Invalid Signature');
-    }
-    if (await this.verifySignature(to, this.generateMessage(from), to_signature)) {
-      throw new Error('Invalid Signature');
-    }
-    let [fromAddress] = await getAddressFromAddress.run({ address: from }, this.DBConn);
-    let [toAddress] = await getAddressFromAddress.run({ address: to }, this.DBConn);
+  private async cmdDelegate(from: string, to: string): Promise<void> {
+    const fromAddress = await this.getOrCreateNewAddress(from);
+    const toAddress = await this.getOrCreateNewAddress(to);
 
-    if (fromAddress && toAddress) {
-      throw new Error('Both addresses are already registered');
-    }
+    // Check if delegation or reverse delegation does not exist TODO.
+    const [currentDelegation] = await getDelegation.run(
+      { from_id: fromAddress.address.id, set_id: toAddress.address.id },
+      this.DBConn
+    );
+    if (currentDelegation) throw new Error('Delegation already exists');
+    const [reverseDelegation] = await getDelegation.run(
+      { from_id: toAddress.address.id, set_id: fromAddress.address.id },
+      this.DBConn
+    );
+    if (reverseDelegation) throw new Error('Reverse Delegation already exists');
 
-    if (!fromAddress && !toAddress) {
-      await this.createBothAddressesAndDelegate(from, to);
+    // Case 1:
+    // If  A->Y && B->Y, if B is new.
+    // Check if address needs to be replaced.
+    // This is a special case where FROM takes TO identity.
+    const toAddressHasFrom = await getDelegationsFrom.run(
+      { from_id: toAddress.address.id },
+      this.DBConn
+    );
+    if (fromAddress.isNew && toAddressHasFrom.length > 0) {
+      await this.swap(fromAddress.address.address, toAddress.address.address);
+
+      const [newToAddressId] = await getAddressFromAddress.run(
+        { address: toAddress.address.address },
+        this.DBConn
+      );
+      await newDelegation.run(
+        { from_id: toAddress.address.id, set_id: newToAddressId.id },
+        this.DBConn
+      );
+      // This is a special case, we are done.
       return;
     }
 
-    if (fromAddress) {
-      const fromDelegations = await getDelegationsFrom.run(
-        { from_id: fromAddress.id },
-        this.DBConn
-      );
-      // A address cannot have both from and to delegations.
-      if (fromDelegations.length) {
-        // Remove all delegations from this address.
-        await this.deleteDelegationsAndAddress(fromAddress.id);
-        await this.createBothAddressesAndDelegate(from, to);
-        return;
-      } else {
-        await newAddress.run({ address: to }, this.DBConn);
-        const [toAddress] = await getAddressFromAddress.run({ address: to }, this.DBConn);
-        await this.redelegateTo(fromAddress.id, toAddress.id);
-        await newDelegation.run({ from_id: fromAddress.id, set_id: toAddress.id }, this.DBConn);
-        return;
+    // Case 2:
+    // W->B && B->A ; then W->A && W->B
+    // Lets get master address, if there is any parent address of the from address.
+    let masterAddress = fromAddress.address;
+    const [fromAddressIsTo] = await getDelegationsTo.run(
+      { set_id: fromAddress.address.id },
+      this.DBConn
+    );
+    if (fromAddressIsTo) {
+      const [f] = await getAddressFromId.run({ id: fromAddressIsTo.from_id }, this.DBConn);
+      masterAddress = f;
+    }
+
+    // Write new delegation, for all cases.
+    await newDelegation.run(
+      { from_id: masterAddress.id, set_id: toAddress.address.id },
+      this.DBConn
+    );
+
+    // Case 3:
+    // A->Y && B->A ; then B->A && B->Y
+    // B replaces all A as from.
+    if (toAddressHasFrom.length > 0) {
+      for (const delegation of toAddressHasFrom) {
+        await updateDelegateFrom.run(
+          {
+            new_from: masterAddress.id,
+            old_from: delegation.from_id,
+            old_to: delegation.set_id,
+          },
+          this.DBConn
+        );
       }
     }
 
-    // always true
-    if (toAddress) {
-      const fromDelegations = await getDelegationsFrom.run({ from_id: toAddress.id }, this.DBConn);
-      const toDelegations = await getDelegationsFrom.run({ from_id: toAddress.id }, this.DBConn);
-      // A address cannot have both from and to delegations.
-      if (fromDelegations.length) {
-        // this is a delegated wallet.
-        await this.deleteDelegationsAndAddress(toAddress.id);
-        await this.createBothAddressesAndDelegate(from, to);
-      } else {
-      }
+    // Case 4:
+    // Z->A && B->A ; then B->A
+    // If toAddress had "to" delegations, delete them.
+    // If there toAddress had delegations, update them.
+    const [toAddressHasTo] = await getDelegationsTo.run(
+      { set_id: toAddress.address.id },
+      this.DBConn
+    );
+    if (toAddressHasTo) {
+      await deleteDelegationTo.run({ set_id: toAddress.address.id }, this.DBConn);
     }
-
-    return;
   }
 
-  private async cmdMigrate(
-    from: string,
-    to: string,
-    from_signature: string,
-    to_signature: string
-  ): Promise<void> {
-    if (await this.verifySignature(from, this.generateMessage(to), from_signature)) {
-      throw new Error('Invalid Signature');
-    }
-    if (await this.verifySignature(to, this.generateMessage(from), to_signature)) {
-      throw new Error('Invalid Signature');
-    }
+  // Migrate.
+  // To gains From ID, and From is assigned a new ID.
+  private async cmdMigrate(from: string, to: string): Promise<void> {
     const [fromAddress] = await getAddressFromAddress.run({ address: from }, this.DBConn);
-    const [toAddress] = await getAddressFromAddress.run({ address: to }, this.DBConn);
-    return;
+    if (!fromAddress) throw new Error('Invalid Address');
+
+    const toAddress = await this.getOrCreateNewAddress(to);
+    await this.swap(fromAddress.address, toAddress.address.address);
   }
 
-  private async cmdCancelDelegations(to: string, to_signature: string): Promise<void> {
-    if (await this.verifySignature(to, this.generateMessage(), to_signature)) {
-      throw new Error('Invalid Signature');
+  // Cancel Delegations.
+  // Delete all delegations from where TO=to
+  private async cmdCancelDelegations(to: string): Promise<void> {
+    const [toAddress] = await getAddressFromAddress.run({ address: to }, this.DBConn);
+    if (!toAddress) throw new Error('Invalid Address');
+    await deleteDelegationsFrom.run({ from_id: toAddress.id }, this.DBConn);
+  }
+
+  public async getMainAddress(address: string): Promise<{ address: string; id: number }> {
+    // get or create address.
+    const addressResult = await this.getOrCreateNewAddress(address);
+    if (addressResult.isNew)
+      return { address: addressResult.address.address, id: addressResult.address.id };
+
+    // if exists we have to check if it is a delegation.
+    const [delegate] = await getDelegationsTo.run(
+      { set_id: addressResult.address.id },
+      this.DBConn
+    );
+    if (!delegate) {
+      // is main address or has no delegations.
+      return { address: addressResult.address.address, id: addressResult.address.id };
     }
-    const [toAddress] = await getAddressFromAddress.run({ address: to }, this.DBConn);
-    if (!toAddress) return;
-  }
 
-  public async getAddressMapping(address: string): Promise<void> {
-    const [addressId] = await getAddressFromAddress.run({ address }, this.DBConn);
-    if (addressId) return;
-    // insert new address
-    await newAddress.run({ address }, this.DBConn);
+    // if is delegation, get main address.
+    const [mainAddress] = await getAddressFromId.run({ id: delegate.from_id }, this.DBConn);
+    return { address: mainAddress.address, id: mainAddress.id };
   }
 
   /*
@@ -227,23 +267,27 @@ export class DelegateWallet {
       const parsed: ParsedDelegateWalletCommand = DelegateWallet.parser.start(command) as any;
       switch (parsed.command) {
         case 'delegate':
-          await this.cmdDelegate(
-            parsed.args.from,
-            parsed.args.to,
-            parsed.args.from_signature,
-            parsed.args.to_signature
-          );
+          {
+            const { from, to, from_signature, to_signature } = parsed.args;
+            await this.verifySignature(from, this.generateMessage(to), from_signature);
+            await this.verifySignature(to, this.generateMessage(from), to_signature);
+            await this.cmdDelegate(from, to);
+          }
           break;
         case 'migrate':
-          await this.cmdMigrate(
-            parsed.args.from,
-            parsed.args.to,
-            parsed.args.from_signature,
-            parsed.args.to_signature
-          );
+          {
+            const { from, to, from_signature, to_signature } = parsed.args;
+            await this.verifySignature(from, this.generateMessage(to), from_signature);
+            await this.verifySignature(to, this.generateMessage(from), to_signature);
+            await this.cmdMigrate(from, to);
+          }
           break;
         case 'cancelDelegations':
-          await this.cmdCancelDelegations(parsed.args.to, parsed.args.to_signature);
+          {
+            const { to, to_signature } = parsed.args;
+            await this.verifySignature(to, this.generateMessage(), to_signature);
+            await this.cmdCancelDelegations(to);
+          }
           break;
         default:
           throw new Error(

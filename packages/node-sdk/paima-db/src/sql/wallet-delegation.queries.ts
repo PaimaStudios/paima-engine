@@ -228,21 +228,21 @@ const getDelegationsToIR: any = {"usedParamSet":{"set_id":true},"params":[{"name
 export const getDelegationsTo = new PreparedQuery<IGetDelegationsToParams,IGetDelegationsToResult>(getDelegationsToIR);
 
 
-/** 'DeleteDelegationFrom' parameters type */
-export interface IDeleteDelegationFromParams {
+/** 'DeleteDelegationsFrom' parameters type */
+export interface IDeleteDelegationsFromParams {
   from_id: number;
 }
 
-/** 'DeleteDelegationFrom' return type */
-export type IDeleteDelegationFromResult = void;
+/** 'DeleteDelegationsFrom' return type */
+export type IDeleteDelegationsFromResult = void;
 
-/** 'DeleteDelegationFrom' query type */
-export interface IDeleteDelegationFromQuery {
-  params: IDeleteDelegationFromParams;
-  result: IDeleteDelegationFromResult;
+/** 'DeleteDelegationsFrom' query type */
+export interface IDeleteDelegationsFromQuery {
+  params: IDeleteDelegationsFromParams;
+  result: IDeleteDelegationsFromResult;
 }
 
-const deleteDelegationFromIR: any = {"usedParamSet":{"from_id":true},"params":[{"name":"from_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":40,"b":48}]}],"statement":"DELETE FROM delegations\nWHERE from_id = :from_id!"};
+const deleteDelegationsFromIR: any = {"usedParamSet":{"from_id":true},"params":[{"name":"from_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":40,"b":48}]}],"statement":"DELETE FROM delegations\nWHERE from_id = :from_id!"};
 
 /**
  * Query generated from SQL:
@@ -251,7 +251,7 @@ const deleteDelegationFromIR: any = {"usedParamSet":{"from_id":true},"params":[{
  * WHERE from_id = :from_id!
  * ```
  */
-export const deleteDelegationFrom = new PreparedQuery<IDeleteDelegationFromParams,IDeleteDelegationFromResult>(deleteDelegationFromIR);
+export const deleteDelegationsFrom = new PreparedQuery<IDeleteDelegationsFromParams,IDeleteDelegationsFromResult>(deleteDelegationsFromIR);
 
 
 /** 'DeleteDelegationTo' parameters type */
@@ -332,6 +332,34 @@ const deleteAddressIdIR: any = {"usedParamSet":{"id":true},"params":[{"name":"id
 export const deleteAddressId = new PreparedQuery<IDeleteAddressIdParams,IDeleteAddressIdResult>(deleteAddressIdIR);
 
 
+/** 'UpdateAddress' parameters type */
+export interface IUpdateAddressParams {
+  new_address: string;
+  old_address: string;
+}
+
+/** 'UpdateAddress' return type */
+export type IUpdateAddressResult = void;
+
+/** 'UpdateAddress' query type */
+export interface IUpdateAddressQuery {
+  params: IUpdateAddressParams;
+  result: IUpdateAddressResult;
+}
+
+const updateAddressIR: any = {"usedParamSet":{"new_address":true,"old_address":true},"params":[{"name":"new_address","required":true,"transform":{"type":"scalar"},"locs":[{"a":31,"b":43}]},{"name":"old_address","required":true,"transform":{"type":"scalar"},"locs":[{"a":61,"b":73}]}],"statement":"UPDATE addresses\nSET address = :new_address!\nWHERE address = :old_address!"};
+
+/**
+ * Query generated from SQL:
+ * ```
+ * UPDATE addresses
+ * SET address = :new_address!
+ * WHERE address = :old_address!
+ * ```
+ */
+export const updateAddress = new PreparedQuery<IUpdateAddressParams,IUpdateAddressResult>(updateAddressIR);
+
+
 /** 'UpdateDelegateTo' parameters type */
 export interface IUpdateDelegateToParams {
   new_to: number;
@@ -358,5 +386,35 @@ const updateDelegateToIR: any = {"usedParamSet":{"new_to":true,"old_to":true},"p
  * ```
  */
 export const updateDelegateTo = new PreparedQuery<IUpdateDelegateToParams,IUpdateDelegateToResult>(updateDelegateToIR);
+
+
+/** 'UpdateDelegateFrom' parameters type */
+export interface IUpdateDelegateFromParams {
+  new_from: number;
+  old_from: number;
+  old_to: number;
+}
+
+/** 'UpdateDelegateFrom' return type */
+export type IUpdateDelegateFromResult = void;
+
+/** 'UpdateDelegateFrom' query type */
+export interface IUpdateDelegateFromQuery {
+  params: IUpdateDelegateFromParams;
+  result: IUpdateDelegateFromResult;
+}
+
+const updateDelegateFromIR: any = {"usedParamSet":{"new_from":true,"old_from":true,"old_to":true},"params":[{"name":"new_from","required":true,"transform":{"type":"scalar"},"locs":[{"a":34,"b":43}]},{"name":"old_from","required":true,"transform":{"type":"scalar"},"locs":[{"a":61,"b":70}]},{"name":"old_to","required":true,"transform":{"type":"scalar"},"locs":[{"a":86,"b":93}]}],"statement":"UPDATE delegations \nSET from_id = :new_from!\nWHERE from_id = :old_from! \nAND set_id = :old_to!"};
+
+/**
+ * Query generated from SQL:
+ * ```
+ * UPDATE delegations 
+ * SET from_id = :new_from!
+ * WHERE from_id = :old_from! 
+ * AND set_id = :old_to!
+ * ```
+ */
+export const updateDelegateFrom = new PreparedQuery<IUpdateDelegateFromParams,IUpdateDelegateFromResult>(updateDelegateFromIR);
 
 

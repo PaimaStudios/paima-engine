@@ -31,7 +31,7 @@ WHERE from_id = :from_id!;
 SELECT * FROM delegations
 WHERE set_id = :set_id!;
 
-/* @name deleteDelegationFrom */
+/* @name deleteDelegationsFrom */
 DELETE FROM delegations
 WHERE from_id = :from_id!;
 
@@ -47,8 +47,18 @@ WHERE address = :address!;
 DELETE FROM addresses
 WHERE id = :id!;
 
+/* @name updateAddress */
+UPDATE addresses
+SET address = :new_address!
+WHERE address = :old_address!;
+
 /* @name updateDelegateTo */
 UPDATE delegations 
 SET set_id = :new_to!
 WHERE set_id = :old_to!;
 
+/* @name updateDelegateFrom */
+UPDATE delegations 
+SET from_id = :new_from!
+WHERE from_id = :old_from! 
+AND set_id = :old_to!;
