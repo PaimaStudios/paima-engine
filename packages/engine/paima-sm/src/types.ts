@@ -81,11 +81,11 @@ interface CdeDatumCardanoProjectedNFTPayload {
   previousTxOutputIndex: number | undefined;
 
   asset: string;
-  amount: number;
+  amount: bigint;
   status: string;
   plutusDatum: string;
 
-  forHowLong: number | undefined;
+  forHowLong: bigint | undefined;
 }
 
 type ChainDataExtensionPayload =
@@ -290,7 +290,6 @@ export type ChainDataExtensionCardanoDelegation = ChainDataExtensionBase &
 
 export const ChainDataExtensionCardanoProjectedNFTConfig = Type.Object({
   type: Type.Literal(CdeEntryTypeName.CardanoProjectedNFT),
-  contract: Type.String(),
   scheduledPrefix: Type.String(),
   startSlot: Type.Number(),
   stopSlot: Type.Optional(Type.Number()),

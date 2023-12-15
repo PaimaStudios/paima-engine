@@ -171,7 +171,7 @@ export async function getCardanoAddressDelegation(
 }
 
 /**
- * Fetch the pool this address is delegating to, if any.
+ * Fetch the NFTs that are projected by particular PKH
  */
 export async function getCardanoAddressProjectedNfts(
   readonlyDBConn: Pool,
