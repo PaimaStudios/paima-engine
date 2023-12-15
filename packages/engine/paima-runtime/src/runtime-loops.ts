@@ -62,7 +62,7 @@ async function runPresync(
     startBlockHeight
   );
 
-  if (!ENV.CARP_URL && presyncBlockHeight[Network.CARDANO] === -1) {
+  if (!ENV.CARP_URL) {
     if (presyncBlockHeight[Network.CARDANO] === -1) {
       delete presyncBlockHeight[Network.CARDANO];
     } else {
