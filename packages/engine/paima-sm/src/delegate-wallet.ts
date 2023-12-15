@@ -1,13 +1,13 @@
+import { LRUCache } from 'lru-cache';
+import Web3 from 'web3';
+import type { PoolClient } from 'pg';
+
 import { PaimaParser } from '@paima/concise';
 import { ENV, doLog } from '@paima/utils';
 import { CryptoManager } from '@paima/crypto';
-import Web3 from 'web3';
-import type { PoolClient } from 'pg';
-import { error } from 'console';
 import type { IGetAddressFromAddressResult } from '@paima/db';
 import {
   deleteAddress,
-  deleteDelegationTo,
   deleteDelegationsFrom,
   getAddressFromAddress,
   getAddressFromId,
@@ -17,8 +17,9 @@ import {
   newAddress,
   newDelegation,
   updateAddress,
-  updateDelegateFrom,
 } from '@paima/db';
+
+export type WalletDelegate = { address: string; id: number };
 
 type ParsedDelegateWalletCommand =
   | {
@@ -32,6 +33,8 @@ type ParsedDelegateWalletCommand =
   | { command: 'cancelDelegations'; args: { to: string; to_signature: string } };
 
 export class DelegateWallet {
+  public static readonly NO_USER_ID = -1;
+
   private static readonly DELEGATE_WALLET_PREFIX = 'DELEGATE-WALLET';
 
   public static readonly INTERNAL_COMMAND_PREFIX = '&';
@@ -68,6 +71,10 @@ export class DelegateWallet {
     DelegateWallet.parserCommands
   );
 
+  private static addressCache = new LRUCache<string, WalletDelegate>({
+    max: 2000,
+  });
+
   constructor(private DBConn: PoolClient) {}
 
   /* Generate Plaintext Message */
@@ -100,10 +107,10 @@ export class DelegateWallet {
         // do nothing.
       }
     }
-    throw new Error('Invalid Signature');
+    throw new Error(`Invalid Signature for ${walletAddress} : ${message}`);
   }
 
-  private async getOrCreateNewAddress(
+  public async getOrCreateNewAddress(
     address: string
   ): Promise<{ address: IGetAddressFromAddressResult; isNew: boolean }> {
     const [exitingAddress] = await getAddressFromAddress.run({ address: address }, this.DBConn);
@@ -149,23 +156,36 @@ export class DelegateWallet {
     // If  A->Y && B->Y, if B is new.
     // Check if address needs to be replaced.
     // This is a special case where FROM takes TO identity.
+    // As the identity is taken, no other updates are required.
     const toAddressHasFrom = await getDelegationsFrom.run(
       { from_id: toAddress.address.id },
       this.DBConn
     );
-    if (fromAddress.isNew && toAddressHasFrom.length > 0) {
-      await this.swap(fromAddress.address.address, toAddress.address.address);
+    if (toAddressHasFrom.length > 0) {
+      if (fromAddress.isNew) {
+        await this.swap(fromAddress.address.address, toAddress.address.address);
 
-      const [newToAddressId] = await getAddressFromAddress.run(
-        { address: toAddress.address.address },
-        this.DBConn
-      );
-      await newDelegation.run(
-        { from_id: toAddress.address.id, set_id: newToAddressId.id },
-        this.DBConn
-      );
-      // This is a special case, we are done.
-      return;
+        const [newToAddressId] = await getAddressFromAddress.run(
+          { address: toAddress.address.address },
+          this.DBConn
+        );
+        await newDelegation.run(
+          { from_id: toAddress.address.id, set_id: newToAddressId.id },
+          this.DBConn
+        );
+        DelegateWallet.addressCache.clear();
+        return;
+      }
+
+      throw new Error('Both A and B have progress. Cannot merge.');
+    }
+
+    const [toAddressHasTo] = await getDelegationsTo.run(
+      { set_id: toAddress.address.id },
+      this.DBConn
+    );
+    if (toAddressHasTo) {
+      throw new Error('Both A and B have progress. Cannot merge.');
     }
 
     // Case 2:
@@ -187,33 +207,7 @@ export class DelegateWallet {
       this.DBConn
     );
 
-    // Case 3:
-    // A->Y && B->A ; then B->A && B->Y
-    // B replaces all A as from.
-    if (toAddressHasFrom.length > 0) {
-      for (const delegation of toAddressHasFrom) {
-        await updateDelegateFrom.run(
-          {
-            new_from: masterAddress.id,
-            old_from: delegation.from_id,
-            old_to: delegation.set_id,
-          },
-          this.DBConn
-        );
-      }
-    }
-
-    // Case 4:
-    // Z->A && B->A ; then B->A
-    // If toAddress had "to" delegations, delete them.
-    // If there toAddress had delegations, update them.
-    const [toAddressHasTo] = await getDelegationsTo.run(
-      { set_id: toAddress.address.id },
-      this.DBConn
-    );
-    if (toAddressHasTo) {
-      await deleteDelegationTo.run({ set_id: toAddress.address.id }, this.DBConn);
-    }
+    DelegateWallet.addressCache.clear();
   }
 
   // Migrate.
@@ -224,6 +218,7 @@ export class DelegateWallet {
 
     const toAddress = await this.getOrCreateNewAddress(to);
     await this.swap(fromAddress.address, toAddress.address.address);
+    DelegateWallet.addressCache.clear();
   }
 
   // Cancel Delegations.
@@ -232,27 +227,38 @@ export class DelegateWallet {
     const [toAddress] = await getAddressFromAddress.run({ address: to }, this.DBConn);
     if (!toAddress) throw new Error('Invalid Address');
     await deleteDelegationsFrom.run({ from_id: toAddress.id }, this.DBConn);
+    DelegateWallet.addressCache.clear();
   }
 
-  public async getMainAddress(address: string): Promise<{ address: string; id: number }> {
-    // get or create address.
-    const addressResult = await this.getOrCreateNewAddress(address);
-    if (addressResult.isNew)
-      return { address: addressResult.address.address, id: addressResult.address.id };
+  // Get Main Wallet and ID for address.
+  // If wallet does not exist, It will NOT be created in address, table.
+  public async getMainAddress(address: string): Promise<WalletDelegate> {
+    let addressMapping: WalletDelegate | undefined = DelegateWallet.addressCache.get(address);
+    if (addressMapping) return addressMapping;
+
+    // get main address.
+    // const addressResult = await this.getOrCreateNewAddress(address);
+    const [addressResult] = await getAddressFromAddress.run({ address }, this.DBConn);
+    if (!addressResult) {
+      // This wallet has never been used before.
+      // This value will get updated before sent to the STF.
+      return { address, id: DelegateWallet.NO_USER_ID };
+    }
 
     // if exists we have to check if it is a delegation.
-    const [delegate] = await getDelegationsTo.run(
-      { set_id: addressResult.address.id },
-      this.DBConn
-    );
+    const [delegate] = await getDelegationsTo.run({ set_id: addressResult.id }, this.DBConn);
     if (!delegate) {
       // is main address or has no delegations.
-      return { address: addressResult.address.address, id: addressResult.address.id };
+      addressMapping = { address: addressResult.address, id: addressResult.id };
+      DelegateWallet.addressCache.set(address, addressMapping);
+      return addressMapping;
     }
 
     // if is delegation, get main address.
     const [mainAddress] = await getAddressFromId.run({ id: delegate.from_id }, this.DBConn);
-    return { address: mainAddress.address, id: mainAddress.id };
+    addressMapping = { address: mainAddress.address, id: mainAddress.id };
+    DelegateWallet.addressCache.set(address, addressMapping);
+    return addressMapping;
   }
 
   /*
@@ -264,7 +270,9 @@ export class DelegateWallet {
   public async process(command: string): Promise<boolean> {
     try {
       if (!command.startsWith(DelegateWallet.INTERNAL_COMMAND_PREFIX)) return false;
-      const parsed: ParsedDelegateWalletCommand = DelegateWallet.parser.start(command) as any;
+      const parsed: ParsedDelegateWalletCommand = DelegateWallet.parser.start(
+        command
+      ) as ParsedDelegateWalletCommand;
       switch (parsed.command) {
         case 'delegate':
           {
@@ -295,7 +303,7 @@ export class DelegateWallet {
           );
       }
     } catch (e) {
-      doLog(`Error parsing command: ${command} ${String(error)}`);
+      doLog(`Error parsing command: ${command} ${String(e)}`);
     }
     return true;
   }

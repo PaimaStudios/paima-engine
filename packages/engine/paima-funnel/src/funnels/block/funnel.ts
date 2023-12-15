@@ -74,7 +74,12 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
     }
     try {
       const [baseChainData, cdeData] = await Promise.all([
-        getBaseChainDataSingle(this.sharedData.web3, this.sharedData.paimaL2Contract, blockNumber),
+        getBaseChainDataSingle(
+          this.sharedData.web3,
+          this.sharedData.paimaL2Contract,
+          blockNumber,
+          this.dbTx
+        ),
         getUngroupedCdeData(
           this.sharedData.web3,
           this.sharedData.extensions,
@@ -108,7 +113,8 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
           this.sharedData.web3,
           this.sharedData.paimaL2Contract,
           fromBlock,
-          toBlock
+          toBlock,
+          this.dbTx
         ),
         getUngroupedCdeData(this.sharedData.web3, this.sharedData.extensions, fromBlock, toBlock),
       ]);

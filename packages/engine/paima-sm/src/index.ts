@@ -7,6 +7,7 @@ import {
   ENV,
   Network,
   SCHEDULED_DATA_ADDRESS,
+  SCHEDULED_DATA_ID,
 } from '@paima/utils';
 import {
   tx,
@@ -29,6 +30,7 @@ import Prando from '@paima/prando';
 
 import { randomnessRouter } from './randomness.js';
 import { cdeTransitionFunction } from './cde-processing.js';
+import type { WalletDelegate } from './delegate-wallet.js';
 import { DelegateWallet } from './delegate-wallet.js';
 import type {
   SubmittedData,
@@ -128,9 +130,13 @@ const SM: GameStateMachineInitializer = {
           const [b] = await getLatestProcessedBlockHeight.run(undefined, dbTx);
           const blockHeight = b?.block_height ?? startBlockHeight ?? 0;
           const gameStateTransition = gameStateTransitionRouter(blockHeight);
+          const address = await new DelegateWallet(dbTx).getMainAddress(userAddress);
+
           const data = await gameStateTransition(
             {
-              userAddress: userAddress,
+              realAddress: userAddress,
+              userAddress: address.address,
+              userId: address.id,
               inputData: gameInput,
               inputNonce: '',
               suppliedValue: '0',
@@ -274,6 +280,8 @@ async function processScheduledData(
   );
   for (const data of scheduledData) {
     const inputData: SubmittedData = {
+      userId: SCHEDULED_DATA_ID,
+      realAddress: SCHEDULED_DATA_ADDRESS,
       userAddress: SCHEDULED_DATA_ADDRESS,
       inputData: data.input_data,
       inputNonce: '',
@@ -331,16 +339,14 @@ async function processUserInputs(
     if (inputData.inputData.startsWith(DelegateWallet.INTERNAL_COMMAND_PREFIX)) {
       await delegateWallet.process(inputData.inputData);
     } else {
-      // TODO
-      // Pass this data into state machine.
-      // Main Address has both, ID for the Game Logic, and the wallet Address.
-      const mainAddress = await delegateWallet.getMainAddress(inputData.userAddress);
+      // If wallet does not exist in address table: create it.
+      if (inputData.userId === DelegateWallet.NO_USER_ID) {
+        const newAddress = await delegateWallet.getOrCreateNewAddress(inputData.userAddress);
+        inputData.userId = newAddress.address.id;
+      }
       // Trigger STF
       const sqlQueries = await gameStateTransition(
-        {
-          ...inputData,
-          inputData: inputData.inputData,
-        },
+        inputData,
         latestChainData.blockNumber,
         randomnessGenerator,
         DBConn

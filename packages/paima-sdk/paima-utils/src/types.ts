@@ -32,8 +32,9 @@ export type TransactionTemplate = {
 export type NonceString = string;
 
 export interface SubmittedData {
-  // userId: string;
+  realAddress: WalletAddress;
   userAddress: WalletAddress;
+  userId: number;
   inputData: InputDataString;
   inputNonce: NonceString;
   suppliedValue: string;
