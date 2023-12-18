@@ -82,15 +82,11 @@ export async function getRelatedWallets(
 }
 
 // This improves performance by caching the results of the queries.
-// It is not enabled by default because `clearDelegateWalletCacheOnChanges` must also be called from client.
-export function enableDelegateWalletCache(): void {
-  useAddressCache = true;
-  addressCache.clear();
-}
-
-let isListening = false;
+// It is not enabled by default because `clearDelegateWalletCacheOnChanges` must be called from client.
 export async function clearDelegateWalletCacheOnChanges(DBConn: Client): Promise<void> {
-  if (isListening) throw new Error('Already listening to wallet connect updates');
+  useAddressCache = true;
+
+  if (useAddressCache) throw new Error('Already listening to wallet connect updates');
   doLog('Listening to wallet connect updates');
   await DBConn.query('LISTEN wallet_connect_change');
   DBConn.on('notification', (_: Notification) => {
@@ -108,5 +104,5 @@ export async function clearDelegateWalletCacheOnChanges(DBConn: Client): Promise
   DBConn.on('end', () => {
     doLog('Stopped listening to wallet connect updates?!');
   });
-  isListening = true;
+  useAddressCache = true;
 }
