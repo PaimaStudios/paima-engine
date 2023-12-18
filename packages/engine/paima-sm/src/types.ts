@@ -80,7 +80,8 @@ interface CdeDatumCardanoProjectedNFTPayload {
   previousTxHash: string | undefined;
   previousTxOutputIndex: number | undefined;
 
-  asset: string;
+  policyId: string;
+  assetName: string;
   amount: string;
   status: string;
   plutusDatum: string;

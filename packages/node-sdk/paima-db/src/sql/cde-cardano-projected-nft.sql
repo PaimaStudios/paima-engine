@@ -8,7 +8,8 @@ INSERT INTO cde_cardano_projected_nft(
     owner_address,
     current_tx_hash,
     current_tx_output_index,
-    asset,
+    policy_id,
+    asset_name,
     amount,
     status,
     plutus_datum,
@@ -18,7 +19,8 @@ INSERT INTO cde_cardano_projected_nft(
              :owner_address!,
              :current_tx_hash!,
              :current_tx_output_index!,
-             :asset!,
+             :policy_id!,
+             :asset_name!,
              :amount!,
              :status!,
              :plutus_datum!,
@@ -40,6 +42,7 @@ WHERE
     cde_id = :cde_id!
     AND current_tx_hash = :previous_tx_hash!
     AND current_tx_output_index = :previous_tx_output_index!
-    AND asset = :asset!
+    AND policy_id = :policy_id!
+    AND asset_name = :asset_name!
     AND amount = :amount!
 RETURNING previous_tx_hash, previous_tx_output_index;

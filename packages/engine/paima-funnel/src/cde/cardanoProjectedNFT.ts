@@ -55,7 +55,8 @@ function eventToCdeDatum(
       previousTxOutputIndex:
         event.previousTxOutputIndex != null ? event.previousTxOutputIndex : undefined,
 
-      asset: event.asset,
+      policyId: event.policyId,
+      assetName: event.assetName,
       amount: event.amount,
       status: event.status,
       plutusDatum: event.plutusDatum != null ? event.plutusDatum : '',
