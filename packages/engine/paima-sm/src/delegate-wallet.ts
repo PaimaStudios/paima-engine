@@ -119,21 +119,21 @@ export class DelegateWallet {
   // addressB gains addressA ID.
   // addressA is assigned a new ID
   private async swap(
-    addressA: AddressExists,
-    addressB: AddressDoesNotExist
+    existingAddress: AddressExists,
+    nonExistingAddress: AddressDoesNotExist
   ): Promise<[AddressExists, AddressExists]> {
     await updateAddress.run(
       {
-        new_address: addressB.address,
-        old_address: addressA.address.address,
+        new_address: nonExistingAddress.address,
+        old_address: existingAddress.address.address,
       },
       this.DBConn
     );
-    await newAddress.run({ address: addressA.address.address }, this.DBConn);
+    await newAddress.run({ address: existingAddress.address.address }, this.DBConn);
 
     return await Promise.all([
-      this.getAddress(addressA.address.address) as Promise<AddressExists>,
-      this.getAddress(addressB.address) as Promise<AddressExists>,
+      this.getAddress(existingAddress.address.address) as Promise<AddressExists>,
+      this.getAddress(nonExistingAddress.address) as Promise<AddressExists>,
     ]);
   }
 
@@ -152,22 +152,22 @@ export class DelegateWallet {
     }
 
     await Promise.all([
-      async (): Promise<void> => {
+      (async (): Promise<void> => {
         // Check if delegation or reverse delegation does not exist TODO.
         const [currentDelegation] = await getDelegation.run(
           { from_id: fromAddress.address.id, to_id: toAddress.address.id },
           this.DBConn
         );
         if (currentDelegation) throw new Error('Delegation already exists');
-      },
-      async (): Promise<void> => {
+      })(),
+      (async (): Promise<void> => {
         const [reverseDelegation] = await getDelegation.run(
           { from_id: toAddress.address.id, to_id: fromAddress.address.id },
           this.DBConn
         );
         if (reverseDelegation) throw new Error('Reverse Delegation already exists');
-      },
-      async (): Promise<void> => {
+      })(),
+      (async (): Promise<void> => {
         // If "TO" has "TO" delegations, it is already owned by another wallet.
         // To reuse this address, cancel delegations first.
         const [toAddressHasTo] = await getDelegationsTo.run(
@@ -175,7 +175,7 @@ export class DelegateWallet {
           this.DBConn
         );
         if (toAddressHasTo) throw new Error('To Address has delegations. Cannot merge.');
-      },
+      })(),
     ]);
   }
 
@@ -187,7 +187,7 @@ export class DelegateWallet {
       // Case 1:
       // "from" is New, "to" has progress.
       // swap IDs.
-      const [newFromAddress, newToAddress] = await this.swap(toAddress, fromAddress);
+      const [newToAddress, newFromAddress] = await this.swap(toAddress, fromAddress);
       fromAddress = newFromAddress;
       toAddress = newToAddress;
     } else {
@@ -195,14 +195,14 @@ export class DelegateWallet {
       // Do not swap progress.
       // Create new addresses
       await Promise.all([
-        async (): Promise<void> => {
+        (async (): Promise<void> => {
           if (!fromAddress.exists)
             fromAddress = { address: await this.createAddress(fromAddress.address), exists: true };
-        },
-        async (): Promise<void> => {
+        })(),
+        (async (): Promise<void> => {
           if (!toAddress.exists)
             toAddress = { address: await this.createAddress(toAddress.address), exists: true };
-        },
+        })(),
       ]);
     }
     if (!fromAddress.exists || !toAddress.exists)
@@ -237,8 +237,8 @@ export class DelegateWallet {
       this.getAddress(to),
     ]);
     await this.validateDelegate(fromAddress, toAddress);
-    if (!fromAddress.exists && toAddress.exists) {
-      await this.swap(toAddress, fromAddress);
+    if (fromAddress.exists && !toAddress.exists) {
+      await this.swap(fromAddress, toAddress);
     } else {
       throw new Error('Cannot migrate');
     }
