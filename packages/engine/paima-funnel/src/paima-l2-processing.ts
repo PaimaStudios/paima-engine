@@ -10,7 +10,6 @@ import {
   extractBatches,
 } from '@paima/concise';
 import { toBN, hexToUtf8, sha3 } from 'web3-utils';
-import { DelegateWallet } from '@paima/sm/src/delegate-wallet';
 import type { PoolClient } from 'pg';
 import { getMainAddress } from '@paima/db';
 
