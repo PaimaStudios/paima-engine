@@ -72,3 +72,14 @@ UPDATE delegations
 SET from_id = :new_from!
 WHERE from_id = :old_from! 
 AND to_id = :old_to!;
+
+/* @name getMainAddressFromAddress */
+select addr.id           as to_id, 
+       addr.address      as to_address,
+       main_addr.id      as from_id,      
+       main_addr.address as from_address
+from addresses addr
+left join delegations         on delegations.to_id   = addr.id
+left join addresses main_addr on delegations.from_id = main_addr.id
+where addr.address = :address!
+;

@@ -4,10 +4,9 @@ import type {
 } from './sql/wallet-delegation.queries.js';
 import {
   getAddressFromAddress,
-  getAddressFromId,
   getDelegationsFromWithAddress,
-  getDelegationsTo,
   getDelegationsToWithAddress,
+  getMainAddressFromAddress,
 } from './sql/wallet-delegation.queries.js';
 import type { PoolClient } from 'pg';
 
@@ -32,28 +31,23 @@ export async function getMainAddress(
   if (addressMapping) return addressMapping;
 
   // get main address.
-  // const addressResult = await this.getOrCreateNewAddress(address);
-  const [addressResult] = await getAddressFromAddress.run({ address }, DBConn);
+  const [addressResult] = await getMainAddressFromAddress.run({ address }, DBConn);
+
   if (!addressResult) {
     // This wallet has never been used before.
     // This value will get updated before sent to the STF.
     return { address, id: NO_USER_ID };
   }
 
-  // if exists we have to check if it is a delegation.
-  const [delegate] = await getDelegationsTo.run({ to_id: addressResult.id }, DBConn);
-  if (!delegate) {
-    // is main address or has no delegations.
-    addressMapping = { address: addressResult.address, id: addressResult.id };
-    addressCache.set(address, addressMapping);
-    return addressMapping;
-  }
+  const result = addressResult.from_address
+    ? // this wallet is a delegate.
+      { address: addressResult.from_address, id: addressResult.from_id }
+    : // this is the main wallet or does not have delegations.
+      { address: addressResult.to_address, id: addressResult.to_id };
 
-  // if is delegation, get main address.
-  const [mainAddress] = await getAddressFromId.run({ id: delegate.from_id }, DBConn);
-  addressMapping = { address: mainAddress.address, id: mainAddress.id };
-  addressCache.set(address, addressMapping);
-  return addressMapping;
+  addressCache.set(address, result);
+
+  return result;
 }
 
 export async function getRelatedWallets(

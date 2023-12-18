@@ -482,3 +482,40 @@ const updateDelegateFromIR: any = {"usedParamSet":{"new_from":true,"old_from":tr
 export const updateDelegateFrom = new PreparedQuery<IUpdateDelegateFromParams,IUpdateDelegateFromResult>(updateDelegateFromIR);
 
 
+/** 'GetMainAddressFromAddress' parameters type */
+export interface IGetMainAddressFromAddressParams {
+  address: string;
+}
+
+/** 'GetMainAddressFromAddress' return type */
+export interface IGetMainAddressFromAddressResult {
+  from_address: string;
+  from_id: number;
+  to_address: string;
+  to_id: number;
+}
+
+/** 'GetMainAddressFromAddress' query type */
+export interface IGetMainAddressFromAddressQuery {
+  params: IGetMainAddressFromAddressParams;
+  result: IGetMainAddressFromAddressResult;
+}
+
+const getMainAddressFromAddressIR: any = {"usedParamSet":{"address":true},"params":[{"name":"address","required":true,"transform":{"type":"scalar"},"locs":[{"a":332,"b":340}]}],"statement":"select addr.id           as to_id, \n       addr.address      as to_address,\n       main_addr.id      as from_id,      \n       main_addr.address as from_address\nfrom addresses addr\nleft join delegations         on delegations.to_id   = addr.id\nleft join addresses main_addr on delegations.from_id = main_addr.id\nwhere addr.address = :address!"};
+
+/**
+ * Query generated from SQL:
+ * ```
+ * select addr.id           as to_id, 
+ *        addr.address      as to_address,
+ *        main_addr.id      as from_id,      
+ *        main_addr.address as from_address
+ * from addresses addr
+ * left join delegations         on delegations.to_id   = addr.id
+ * left join addresses main_addr on delegations.from_id = main_addr.id
+ * where addr.address = :address!
+ * ```
+ */
+export const getMainAddressFromAddress = new PreparedQuery<IGetMainAddressFromAddressParams,IGetMainAddressFromAddressResult>(getMainAddressFromAddressIR);
+
+

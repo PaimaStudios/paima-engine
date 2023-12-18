@@ -343,8 +343,8 @@ async function processUserInputs(
     } else {
       // If wallet does not exist in address table: create it.
       if (inputData.userId === NO_USER_ID) {
-        const newAddress = await delegateWallet.getOrCreateNewAddress(inputData.userAddress);
-        inputData.userId = newAddress.address.id;
+        const newAddress = await delegateWallet.createAddress(inputData.userAddress);
+        inputData.userId = newAddress.id;
       }
       // Trigger STF
       const sqlQueries = await gameStateTransition(

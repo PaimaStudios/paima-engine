@@ -16,8 +16,9 @@ import {
   PolkadotConnector,
   AlgorandConnector,
 } from '@paima/providers';
-import { ENV } from '@paima/utils';
+import { AddressType, ENV } from '@paima/utils';
 import { paimaEndpoints } from '../index.js';
+import assertNever from 'assert-never';
 
 export async function walletConnect(
   from: string,
@@ -99,8 +100,6 @@ export async function walletConnectCancelDelegations(
   }
 }
 
-export type WalletConnectHelperTypes = 'EVM' | 'Cardano' | 'Polkadot' | 'Algorand';
-
 export class WalletConnectHelper {
   private static readonly DELEGATE_WALLET_PREFIX = 'DELEGATE-WALLET';
   private static readonly SEP = ':';
@@ -111,18 +110,15 @@ export class WalletConnectHelper {
     }${subMessage.toLocaleLowerCase()}${WalletConnectHelper.SEP}${ENV.CONTRACT_ADDRESS}`;
   }
 
-  private async signWithExternalWallet(
-    walletType: WalletConnectHelperTypes,
-    message: string
-  ): Promise<string> {
+  private async signWithExternalWallet(walletType: AddressType, message: string): Promise<string> {
     switch (walletType) {
-      case 'EVM':
+      case AddressType.EVM:
         return (await EvmInjectedConnector.instance().getProvider()?.signMessage(message)) || '';
-      case 'Cardano':
+      case AddressType.CARDANO:
         return (await CardanoConnector.instance().getProvider()?.signMessage(message)) || '';
-      case 'Polkadot':
+      case AddressType.POLKADOT:
         return (await PolkadotConnector.instance().getProvider()?.signMessage(message)) || '';
-      case 'Algorand':
+      case AddressType.ALGORAND:
         return (await AlgorandConnector.instance().getProvider()?.signMessage(message)) || '';
       default:
         throw new Error('Invalid wallet type');
@@ -130,7 +126,7 @@ export class WalletConnectHelper {
   }
 
   public async connectExternalWalletAndSign(
-    walletType: WalletConnectHelperTypes,
+    walletType: AddressType,
     walletName: string,
     subMessage: string
   ): Promise<{
@@ -140,7 +136,7 @@ export class WalletConnectHelper {
   }> {
     let loginInfo: LoginInfo;
     switch (walletType) {
-      case 'EVM':
+      case AddressType.EVM:
         loginInfo = {
           mode: WalletMode.EvmInjected,
           preferBatchedMode: false,
@@ -150,7 +146,7 @@ export class WalletConnectHelper {
           checkChainId: false,
         };
         break;
-      case 'Cardano':
+      case AddressType.CARDANO:
         loginInfo = {
           mode: WalletMode.Cardano,
           preference: {
@@ -158,14 +154,16 @@ export class WalletConnectHelper {
           },
         };
         break;
-      case 'Polkadot':
+      case AddressType.POLKADOT:
         loginInfo = { mode: WalletMode.Polkadot };
         break;
-      case 'Algorand':
+      case AddressType.ALGORAND:
         loginInfo = { mode: WalletMode.Algorand };
         break;
+      case AddressType.UNKNOWN:
+        throw new Error('AddressTypes cannot be Unknown.');
       default:
-        throw new Error('No supported wallet type.');
+        assertNever(walletType);
     }
 
     const response = await paimaEndpoints.userWalletLogin(loginInfo, false);
