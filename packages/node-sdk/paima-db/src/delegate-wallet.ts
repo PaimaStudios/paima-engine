@@ -56,10 +56,25 @@ export async function getRelatedWallets(
 ): Promise<{
   from: IGetDelegationsFromWithAddressResult[];
   to: IGetDelegationsToWithAddressResult[];
+  id: number;
 }> {
   const address = _address.toLocaleLowerCase();
   const [addressResult] = await getAddressFromAddress.run({ address }, DBConn);
-  const from = await getDelegationsFromWithAddress.run({ from_id: addressResult.id }, DBConn);
-  const to = await getDelegationsToWithAddress.run({ to_id: addressResult.id }, DBConn);
-  return { from, to };
+  if (!addressResult) {
+    return { from: [], to: [], id: NO_USER_ID };
+  }
+  let to: IGetDelegationsToWithAddressResult[] = [];
+  let from: IGetDelegationsFromWithAddressResult[] = [];
+
+  to = await getDelegationsToWithAddress.run({ to_id: addressResult.id }, DBConn);
+  if (!to.length) {
+    // cannot be both from and to.
+    from = await getDelegationsFromWithAddress.run({ from_id: addressResult.id }, DBConn);
+  }
+
+  return {
+    from,
+    to,
+    id: to.length ? to[0].id : addressResult.id,
+  };
 }
