@@ -9,9 +9,9 @@ import {
   addressCache,
   deleteDelegationTo,
   getAddressFromAddress,
-  getAddressFromId,
   getDelegation,
   getDelegationsTo,
+  getDelegationsToWithAddress,
   newAddress,
   newDelegation,
   updateAddress,
@@ -121,10 +121,7 @@ export class DelegateWallet {
   private async swap(
     addressA: AddressExists,
     addressB: AddressDoesNotExist
-  ): Promise<{
-    newA: AddressExists;
-    newB: AddressExists;
-  }> {
+  ): Promise<[AddressExists, AddressExists]> {
     await updateAddress.run(
       {
         new_address: addressB.address,
@@ -134,10 +131,10 @@ export class DelegateWallet {
     );
     await newAddress.run({ address: addressA.address.address }, this.DBConn);
 
-    return {
-      newA: (await this.getAddress(addressA.address.address)) as AddressExists,
-      newB: (await this.getAddress(addressB.address)) as AddressExists,
-    };
+    return await Promise.all([
+      this.getAddress(addressA.address.address) as Promise<AddressExists>,
+      this.getAddress(addressB.address) as Promise<AddressExists>,
+    ]);
   }
 
   private async validateDelegate(
@@ -154,62 +151,74 @@ export class DelegateWallet {
       throw new Error('Both A and B have progress. Cannot merge.');
     }
 
-    // Check if delegation or reverse delegation does not exist TODO.
-    const [currentDelegation] = await getDelegation.run(
-      { from_id: fromAddress.address.id, to_id: toAddress.address.id },
-      this.DBConn
-    );
-    if (currentDelegation) throw new Error('Delegation already exists');
-
-    const [reverseDelegation] = await getDelegation.run(
-      { from_id: toAddress.address.id, to_id: fromAddress.address.id },
-      this.DBConn
-    );
-    if (reverseDelegation) throw new Error('Reverse Delegation already exists');
-
-    // If "TO" has "TO" delegations, it is already owned by another wallet.
-    // To reuse this address, cancel delegations first.
-    const [toAddressHasTo] = await getDelegationsTo.run(
-      { to_id: toAddress.address.id },
-      this.DBConn
-    );
-    if (toAddressHasTo) throw new Error('To Address has delegations. Cannot merge.');
+    await Promise.all([
+      async (): Promise<void> => {
+        // Check if delegation or reverse delegation does not exist TODO.
+        const [currentDelegation] = await getDelegation.run(
+          { from_id: fromAddress.address.id, to_id: toAddress.address.id },
+          this.DBConn
+        );
+        if (currentDelegation) throw new Error('Delegation already exists');
+      },
+      async (): Promise<void> => {
+        const [reverseDelegation] = await getDelegation.run(
+          { from_id: toAddress.address.id, to_id: fromAddress.address.id },
+          this.DBConn
+        );
+        if (reverseDelegation) throw new Error('Reverse Delegation already exists');
+      },
+      async (): Promise<void> => {
+        // If "TO" has "TO" delegations, it is already owned by another wallet.
+        // To reuse this address, cancel delegations first.
+        const [toAddressHasTo] = await getDelegationsTo.run(
+          { to_id: toAddress.address.id },
+          this.DBConn
+        );
+        if (toAddressHasTo) throw new Error('To Address has delegations. Cannot merge.');
+      },
+    ]);
   }
 
   private async cmdDelegate(from: string, to: string): Promise<void> {
-    let fromAddress = await this.getAddress(from);
-    let toAddress = await this.getAddress(to);
+    let [fromAddress, toAddress] = await Promise.all([this.getAddress(from), this.getAddress(to)]);
     await this.validateDelegate(fromAddress, toAddress);
 
     if (!fromAddress.exists && toAddress.exists) {
       // Case 1:
       // "from" is New, "to" has progress.
       // swap IDs.
-      const { newA, newB } = await this.swap(toAddress, fromAddress);
-      fromAddress = newA;
-      toAddress = newB;
+      const [newFromAddress, newToAddress] = await this.swap(toAddress, fromAddress);
+      fromAddress = newFromAddress;
+      toAddress = newToAddress;
     } else {
       // Case  2:
       // Do not swap progress.
       // Create new addresses
-      if (!fromAddress.exists)
-        fromAddress = { address: await this.createAddress(fromAddress.address), exists: true };
-      if (!toAddress.exists)
-        toAddress = { address: await this.createAddress(toAddress.address), exists: true };
+      await Promise.all([
+        async (): Promise<void> => {
+          if (!fromAddress.exists)
+            fromAddress = { address: await this.createAddress(fromAddress.address), exists: true };
+        },
+        async (): Promise<void> => {
+          if (!toAddress.exists)
+            toAddress = { address: await this.createAddress(toAddress.address), exists: true };
+        },
+      ]);
     }
+    if (!fromAddress.exists || !toAddress.exists)
+      throw new Error('Critical Error. Address not created');
 
     // Case 2:
     // W->B && B->A ; then W->A && W->B
     // Lets get master address, if there is any parent address of the from address.
-    let masterAddress = fromAddress.address;
-    const [fromAddressIsTo] = await getDelegationsTo.run(
+    const [fromAddressIsTo] = await getDelegationsToWithAddress.run(
       { to_id: fromAddress.address.id },
       this.DBConn
     );
-    if (fromAddressIsTo) {
-      const [f] = await getAddressFromId.run({ id: fromAddressIsTo.from_id }, this.DBConn);
-      masterAddress = f;
-    }
+
+    const masterAddress = fromAddressIsTo
+      ? { address: fromAddressIsTo.from_address, id: fromAddressIsTo.from_id }
+      : fromAddress.address;
 
     // Write new delegation, for all cases.
     await newDelegation.run(
@@ -217,22 +226,22 @@ export class DelegateWallet {
       this.DBConn
     );
 
-    // TODO this is clears the entire cache. We can only clear necessary elements.
     addressCache.clear();
   }
 
   // Migrate.
   // To gains From ID, and From is assigned a new ID.
   private async cmdMigrate(from: string, to: string): Promise<void> {
-    let fromAddress = await this.getAddress(from);
-    let toAddress = await this.getAddress(to);
+    const [fromAddress, toAddress] = await Promise.all([
+      this.getAddress(from),
+      this.getAddress(to),
+    ]);
     await this.validateDelegate(fromAddress, toAddress);
     if (!fromAddress.exists && toAddress.exists) {
       await this.swap(toAddress, fromAddress);
     } else {
       throw new Error('Cannot migrate');
     }
-    // TODO this is clears the entire cache. We can only clear necessary elements.
     addressCache.clear();
   }
 
@@ -243,7 +252,6 @@ export class DelegateWallet {
     if (!toAddress) throw new Error('Invalid Address');
     await deleteDelegationTo.run({ to_id: toAddress.id }, this.DBConn);
 
-    // TODO this is clears the entire cache. We can only clear necessary elements.
     addressCache.clear();
   }
 

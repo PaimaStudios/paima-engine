@@ -83,3 +83,4 @@ left join delegations         on delegations.to_id   = addr.id
 left join addresses main_addr on delegations.from_id = main_addr.id
 where addr.address = :address!
 ;
+
