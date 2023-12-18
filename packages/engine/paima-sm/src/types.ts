@@ -81,11 +81,11 @@ interface CdeDatumCardanoProjectedNFTPayload {
   previousTxOutputIndex: number | undefined;
 
   asset: string;
-  amount: bigint;
+  amount: string;
   status: string;
   plutusDatum: string;
 
-  forHowLong: bigint | undefined;
+  forHowLong: string | undefined;
 }
 
 type ChainDataExtensionPayload =
