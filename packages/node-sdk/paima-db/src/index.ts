@@ -1,5 +1,5 @@
 import { tx } from './pg-tx.js';
-import { getConnection } from './pg-connection.js';
+import { getConnection, getPersistentConnection } from './pg-connection.js';
 import { createScheduledData, deleteScheduledData } from './scheduled-constructors.js';
 import { initializePaimaTables } from './database-validation.js';
 import { DataMigrations } from './data-migrations.js';
@@ -41,6 +41,7 @@ export type * from './sql/cde-tracking-cardano.queries.js';
 export {
   tx,
   getConnection,
+  getPersistentConnection,
   createScheduledData,
   deleteScheduledData,
   initializePaimaTables,

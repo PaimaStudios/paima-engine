@@ -1,3 +1,4 @@
+import { doLog } from '@paima/utils';
 import type {
   IGetDelegationsFromWithAddressResult,
   IGetDelegationsToWithAddressResult,
@@ -8,7 +9,7 @@ import {
   getDelegationsToWithAddress,
   getMainAddressFromAddress,
 } from './sql/wallet-delegation.queries.js';
-import type { PoolClient } from 'pg';
+import type { PoolClient, Notification, Client } from 'pg';
 
 export type WalletDelegate = { address: string; id: number };
 export const NO_USER_ID = -1;
@@ -18,6 +19,7 @@ export const NO_USER_ID = -1;
  *  This is a temporal fix as lru-cache module was
  *  not correctly packaged into a single file.
  */
+let useAddressCache = false;
 export const addressCache = new Map<string, WalletDelegate>();
 
 // Get Main Wallet and ID for address.
@@ -28,7 +30,7 @@ export async function getMainAddress(
 ): Promise<WalletDelegate> {
   const address = _address.toLocaleLowerCase();
   let addressMapping: WalletDelegate | undefined = addressCache.get(address);
-  if (addressMapping) return addressMapping;
+  if (useAddressCache && addressMapping) return addressMapping;
 
   // get main address.
   const [addressResult] = await getMainAddressFromAddress.run({ address }, DBConn);
@@ -77,4 +79,34 @@ export async function getRelatedWallets(
     to,
     id: to.length ? to[0].id : addressResult.id,
   };
+}
+
+// This improves performance by caching the results of the queries.
+// It is not enabled by default because `clearDelegateWalletCacheOnChanges` must also be called from client.
+export function enableDelegateWalletCache(): void {
+  useAddressCache = true;
+  addressCache.clear();
+}
+
+let isListening = false;
+export async function clearDelegateWalletCacheOnChanges(DBConn: Client): Promise<void> {
+  if (isListening) throw new Error('Already listening to wallet connect updates');
+  doLog('Listening to wallet connect updates');
+  await DBConn.query('LISTEN wallet_connect_change');
+  DBConn.on('notification', (_: Notification) => {
+    // { ...
+    //   payload: '{
+    //     "timestamp":"2023-12-18 14:26:57.186068-03",
+    //     "operation":"DELETE", /* INSERT | UPDATE | DELETE */
+    //     "schema":"public",
+    //     "table":"addresses", /* addresses | delegations */
+    //     "data":{"id":"16","address":"23"} /* addresses or delegations table fields */
+    //   }',
+    // }
+    addressCache.clear();
+  });
+  DBConn.on('end', () => {
+    doLog('Stopped listening to wallet connect updates?!');
+  });
+  isListening = true;
 }

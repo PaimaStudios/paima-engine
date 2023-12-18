@@ -7,7 +7,7 @@ import { CryptoManager } from '@paima/crypto';
 import type { IGetAddressFromAddressResult } from '@paima/db';
 import {
   addressCache,
-  deleteDelegationsFrom,
+  deleteDelegationTo,
   getAddressFromAddress,
   getAddressFromId,
   getDelegation,
@@ -241,7 +241,7 @@ export class DelegateWallet {
   private async cmdCancelDelegations(to: string): Promise<void> {
     const [toAddress] = await getAddressFromAddress.run({ address: to }, this.DBConn);
     if (!toAddress) throw new Error('Invalid Address');
-    await deleteDelegationsFrom.run({ from_id: toAddress.id }, this.DBConn);
+    await deleteDelegationTo.run({ to_id: toAddress.id }, this.DBConn);
 
     // TODO this is clears the entire cache. We can only clear necessary elements.
     addressCache.clear();

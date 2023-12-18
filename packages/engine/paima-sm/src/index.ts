@@ -1,17 +1,11 @@
 import { Pool } from 'pg';
-import type { PoolClient } from 'pg';
+import type { PoolClient, Client } from 'pg';
 
-import {
-  ChainDataExtensionDatumType,
-  doLog,
-  ENV,
-  Network,
-  SCHEDULED_DATA_ADDRESS,
-  SCHEDULED_DATA_ID,
-} from '@paima/utils';
+import { doLog, ENV, Network, SCHEDULED_DATA_ADDRESS, SCHEDULED_DATA_ID } from '@paima/utils';
 import {
   tx,
   getConnection,
+  getPersistentConnection,
   initializePaimaTables,
   storeGameInput,
   blockHeightDone,
@@ -53,6 +47,7 @@ const SM: GameStateMachineInitializer = {
     startBlockHeight
   ) => {
     const DBConn: Pool = getConnection(databaseInfo);
+    const persistentReadonlyDBConn: Client = getPersistentConnection(databaseInfo);
     const readonlyDBConn: Pool = getConnection(databaseInfo, true);
 
     return {
@@ -89,6 +84,9 @@ const SM: GameStateMachineInitializer = {
       },
       getReadonlyDbConn: (): Pool => {
         return readonlyDBConn;
+      },
+      getPersistentReadonlyDbConn: (): Client => {
+        return persistentReadonlyDBConn;
       },
       getReadWriteDbConn: (): Pool => {
         return DBConn;

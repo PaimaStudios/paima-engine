@@ -1,7 +1,7 @@
 import { doLog } from '@paima/utils';
 import type { PoolClient } from 'pg';
-import { TABLES } from './paima-tables.js';
-import { createTable, tableExists, tableIsValid } from './postgres-metadata.js';
+import { FUNCTIONS, TABLES } from './paima-tables.js';
+import { createFunctions, createTable, tableExists, tableIsValid } from './postgres-metadata.js';
 import type { TableData } from './table-types.js';
 
 const FAILURE_MESSAGE: string = `Please remove these tables from your database or update them to conform with
@@ -26,6 +26,15 @@ export async function initializePaimaTables(
       }
     } catch (err) {
       doLog(`Error while initializing ${table.tableName}: ${err}`);
+      noIssues = false;
+    }
+  }
+
+  for (const func of FUNCTIONS) {
+    try {
+      await createFunctions(pool, func);
+    } catch (err) {
+      doLog(`Error while initializing ${func}: ${err}`);
       noIssues = false;
     }
   }
