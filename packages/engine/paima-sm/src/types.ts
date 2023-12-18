@@ -150,7 +150,7 @@ export interface CdeCardanoPoolDatum extends CdeDatumBase {
 export interface CdeCardanoProjectedNFTDatum extends CdeDatumBase {
   cdeDatumType: ChainDataExtensionDatumType.CardanoProjectedNFT;
   payload: CdeDatumCardanoProjectedNFTPayload;
-  scheduledPrefix: string;
+  scheduledPrefix: string | undefined;
 }
 
 export type ChainDataExtensionDatum =
@@ -290,7 +290,7 @@ export type ChainDataExtensionCardanoDelegation = ChainDataExtensionBase &
 
 export const ChainDataExtensionCardanoProjectedNFTConfig = Type.Object({
   type: Type.Literal(CdeEntryTypeName.CardanoProjectedNFT),
-  scheduledPrefix: Type.String(),
+  scheduledPrefix: Type.Optional(Type.String()),
   startSlot: Type.Number(),
   stopSlot: Type.Optional(Type.Number()),
   name: Type.String(),
