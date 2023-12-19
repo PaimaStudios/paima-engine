@@ -271,16 +271,20 @@ export class DelegateWallet {
         case 'delegate':
           {
             const { from, to, from_signature, to_signature } = parsed.args;
-            await this.verifySignature(from, this.generateMessage(to), from_signature);
-            await this.verifySignature(to, this.generateMessage(from), to_signature);
+            await Promise.all([
+              this.verifySignature(from, this.generateMessage(to), from_signature),
+              this.verifySignature(to, this.generateMessage(from), to_signature),
+            ]);
             await this.cmdDelegate(from.toLocaleLowerCase(), to.toLocaleLowerCase());
           }
           break;
         case 'migrate':
           {
             const { from, to, from_signature, to_signature } = parsed.args;
-            await this.verifySignature(from, this.generateMessage(to), from_signature);
-            await this.verifySignature(to, this.generateMessage(from), to_signature);
+            await Promise.all([
+              this.verifySignature(from, this.generateMessage(to), from_signature),
+              this.verifySignature(to, this.generateMessage(from), to_signature),
+            ]);
             await this.cmdMigrate(from.toLocaleLowerCase(), to.toLocaleLowerCase());
           }
           break;
