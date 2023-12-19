@@ -10,6 +10,7 @@ import { awaitBlock } from '../helpers/auxiliary-queries.js';
 import { postConciseData } from '../helpers/posting.js';
 import type { FailedResult, SuccessfulResult, PostDataResponse, LoginInfo } from '../types.js';
 import { WalletMode } from '@paima/providers/src/utils.js';
+import type { IProvider } from '@paima/providers';
 import {
   EvmInjectedConnector,
   CardanoConnector,
@@ -110,31 +111,32 @@ export class WalletConnectHelper {
     }${subMessage.toLocaleLowerCase()}${WalletConnectHelper.SEP}${ENV.CONTRACT_ADDRESS}`;
   }
 
-  private async signWithExternalWallet(walletType: AddressType, message: string): Promise<string> {
+  private getProvider(walletType: AddressType): IProvider<unknown> {
+    let provider: IProvider<unknown> | undefined;
     switch (walletType) {
       case AddressType.EVM:
-        return (await EvmInjectedConnector.instance().getProvider()?.signMessage(message)) || '';
+        provider = EvmInjectedConnector.instance().getProvider();
+        break;
       case AddressType.CARDANO:
-        return (await CardanoConnector.instance().getProvider()?.signMessage(message)) || '';
+        provider = CardanoConnector.instance().getProvider();
+        break;
       case AddressType.POLKADOT:
-        return (await PolkadotConnector.instance().getProvider()?.signMessage(message)) || '';
+        provider = PolkadotConnector.instance().getProvider();
+        break;
       case AddressType.ALGORAND:
-        return (await AlgorandConnector.instance().getProvider()?.signMessage(message)) || '';
-      default:
-        throw new Error('Invalid wallet type');
+        provider = AlgorandConnector.instance().getProvider();
+        break;
     }
+    if (!provider) throw new Error('Cannot get provider ' + walletType);
+    return provider;
   }
 
-  public async connectExternalWalletAndSign(
-    walletType: AddressType,
-    walletName: string,
-    subMessage: string
-  ): Promise<{
-    message: string;
-    signedMessage: string;
-    walletAddress: string;
-  }> {
-    let loginInfo: LoginInfo;
+  private async signWithExternalWallet(walletType: AddressType, message: string): Promise<string> {
+    return await this.getProvider(walletType).signMessage(message);
+  }
+
+  private getLoginInfo(walletType: AddressType, walletName: string): LoginInfo {
+    let loginInfo: LoginInfo | undefined;
     switch (walletType) {
       case AddressType.EVM:
         loginInfo = {
@@ -165,15 +167,29 @@ export class WalletConnectHelper {
       default:
         assertNever(walletType);
     }
+    if (!loginInfo) throw new Error(`Cannot get loginInfo for ${walletType} ${walletName}`);
+    return loginInfo;
+  }
 
+  // This function connects an external wallet and signs a message for wallet-connect
+  // The signed message format is: DELEGATE-WALLET:subMessage:contractAddress
+  public async connectExternalWalletAndSign(
+    walletType: AddressType,
+    walletName: string,
+    subMessage: string
+  ): Promise<{
+    message: string;
+    signedMessage: string;
+    walletAddress: string;
+  }> {
+    const loginInfo = this.getLoginInfo(walletType, walletName);
     const response = await paimaEndpoints.userWalletLogin(loginInfo, false);
-    if (!response.success) throw new Error('Cannot connect wallet');
+    if (!response.success) throw new Error(`Cannot connect wallet ${walletType} ${walletName}`);
 
-    const toSign = this.buildMessageToSign(subMessage);
-
+    const messageToSign = this.buildMessageToSign(subMessage);
     return {
-      message: toSign,
-      signedMessage: await this.signWithExternalWallet(walletType, toSign),
+      message: messageToSign,
+      signedMessage: await this.signWithExternalWallet(walletType, messageToSign),
       walletAddress: response.result.walletAddress,
     };
   }
