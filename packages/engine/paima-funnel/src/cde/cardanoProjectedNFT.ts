@@ -17,6 +17,7 @@ export default async function getCdeProjectedNFTData(
   const events = await timeout(
     query(url, Routes.projectedNftEventsRange, {
       range: { minSlot: fromAbsoluteSlot, maxSlot: toAbsoluteSlot },
+      address: undefined,
     }),
     DEFAULT_FUNNEL_TIMEOUT
   );
