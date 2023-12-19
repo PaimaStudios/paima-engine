@@ -81,6 +81,11 @@ export async function getRelatedWallets(
   };
 }
 
+// This should only be used by paima-engine funnel.
+export function enableManualCache(): void {
+  useAddressCache = true;
+}
+
 // This improves performance by caching the results of the queries.
 // It is not enabled by default because `clearDelegateWalletCacheOnChanges` must be called from client.
 export async function clearDelegateWalletCacheOnChanges(DBConn: Client): Promise<void> {

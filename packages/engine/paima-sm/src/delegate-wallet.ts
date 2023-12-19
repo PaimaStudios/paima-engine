@@ -8,6 +8,7 @@ import type { IGetAddressFromAddressResult } from '@paima/db';
 import {
   addressCache,
   deleteDelegationTo,
+  enableManualCache,
   getAddressFromAddress,
   getDelegation,
   getDelegationsTo,
@@ -31,6 +32,9 @@ type ParsedDelegateWalletCommand =
       args: { from: string; to: string; from_signature: string; to_signature: string };
     }
   | { command: 'cancelDelegations'; args: { to: string; to_signature: string } };
+
+// Delegate Wallet manages cache cleanup.
+enableManualCache();
 
 export class DelegateWallet {
   private static readonly DELEGATE_WALLET_PREFIX = 'DELEGATE-WALLET';
@@ -115,6 +119,12 @@ export class DelegateWallet {
     return { address: exitingAddress, exists: true };
   }
 
+  public async getExistingAddress(address: string): Promise<AddressExists> {
+    const existingAddress = await this.getAddress(address);
+    if (!existingAddress.exists) throw new Error('Address does not exist');
+    return existingAddress;
+  }
+
   // Swap:
   // addressB gains addressA ID.
   // addressA is assigned a new ID
@@ -132,8 +142,8 @@ export class DelegateWallet {
     await newAddress.run({ address: existingAddress.address.address }, this.DBConn);
 
     return await Promise.all([
-      this.getAddress(existingAddress.address.address) as Promise<AddressExists>,
-      this.getAddress(nonExistingAddress.address) as Promise<AddressExists>,
+      this.getExistingAddress(existingAddress.address.address),
+      this.getExistingAddress(nonExistingAddress.address),
     ]);
   }
 
@@ -151,32 +161,21 @@ export class DelegateWallet {
       throw new Error('Both A and B have progress. Cannot merge.');
     }
 
-    await Promise.all([
-      (async (): Promise<void> => {
-        // Check if delegation or reverse delegation does not exist TODO.
-        const [currentDelegation] = await getDelegation.run(
-          { from_id: fromAddress.address.id, to_id: toAddress.address.id },
-          this.DBConn
-        );
-        if (currentDelegation) throw new Error('Delegation already exists');
-      })(),
-      (async (): Promise<void> => {
-        const [reverseDelegation] = await getDelegation.run(
-          { from_id: toAddress.address.id, to_id: fromAddress.address.id },
-          this.DBConn
-        );
-        if (reverseDelegation) throw new Error('Reverse Delegation already exists');
-      })(),
-      (async (): Promise<void> => {
-        // If "TO" has "TO" delegations, it is already owned by another wallet.
-        // To reuse this address, cancel delegations first.
-        const [toAddressHasTo] = await getDelegationsTo.run(
-          { to_id: toAddress.address.id },
-          this.DBConn
-        );
-        if (toAddressHasTo) throw new Error('To Address has delegations. Cannot merge.');
-      })(),
+    const [currentDelegation, reverseDelegation, toAddressHasTo] = await Promise.all([
+      getDelegation.run(
+        { from_id: fromAddress.address.id, to_id: toAddress.address.id },
+        this.DBConn
+      ),
+      getDelegation.run(
+        { from_id: toAddress.address.id, to_id: fromAddress.address.id },
+        this.DBConn
+      ),
+      getDelegationsTo.run({ to_id: toAddress.address.id }, this.DBConn),
     ]);
+
+    if (currentDelegation.length) throw new Error('Delegation already exists');
+    if (reverseDelegation.length) throw new Error('Reverse Delegation already exists');
+    if (toAddressHasTo.length) throw new Error('To Address has delegations. Cannot merge.');
   }
 
   private async cmdDelegate(from: string, to: string): Promise<void> {
