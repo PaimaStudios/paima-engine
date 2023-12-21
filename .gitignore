@@ -10,5 +10,3 @@ bin
 *.log
 
 .idea/
-
-packages/engine/paima-rest/src/tsoa/routes.ts
