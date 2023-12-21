@@ -18,13 +18,14 @@ export default async function processDatum(
   const currentTxHash = cdeDatum.payload.actionTxId;
   const currentOutputIndex = cdeDatum.payload.actionOutputIndex;
   const amount = cdeDatum.payload.amount;
-  const asset = cdeDatum.payload.asset;
+  const policyId = cdeDatum.payload.policyId;
+  const assetName = cdeDatum.payload.assetName;
   const status = cdeDatum.payload.status;
   const datum = cdeDatum.payload.plutusDatum;
   const forHowLong = cdeDatum.payload.forHowLong;
 
   const scheduledBlockHeight = Math.max(cdeDatum.blockNumber, ENV.SM_START_BLOCKHEIGHT + 1);
-  const scheduledInputData = `${prefix}|${ownerAddress}|${previousTxHash}|${previousOutputIndex}|${currentTxHash}|${currentOutputIndex}|${asset}|${status}`;
+  const scheduledInputData = `${prefix}|${ownerAddress}|${previousTxHash}|${previousOutputIndex}|${currentTxHash}|${currentOutputIndex}|${policyId}|${assetName}|${status}`;
 
   if (previousTxHash === undefined || previousOutputIndex === undefined) {
     const updateList: SQLUpdate[] = [
@@ -36,7 +37,8 @@ export default async function processDatum(
           owner_address: ownerAddress,
           current_tx_hash: currentTxHash,
           current_tx_output_index: currentOutputIndex,
-          asset: asset,
+          policy_id: policyId,
+          asset_name: assetName,
           amount: amount,
           status: status,
           plutus_datum: datum,
@@ -57,7 +59,8 @@ export default async function processDatum(
         new_tx_output_index: currentOutputIndex,
         previous_tx_hash: previousTxHash,
         previous_tx_output_index: previousOutputIndex,
-        asset: asset,
+        policy_id: policyId,
+        asset_name: assetName,
         amount: amount,
         status: status,
         plutus_datum: datum,
