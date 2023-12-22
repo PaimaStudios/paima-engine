@@ -175,13 +175,16 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
         const prevEpoch = this.cache.getState().epoch;
 
         if (!prevEpoch || epoch !== prevEpoch) {
-          data.internalEvents?.push({
+          data.internalEvents.push({
             type: InternalEventType.CardanoBestEpoch,
             epoch: epoch,
           });
-        }
 
-        this.cache.updateEpoch(epoch);
+          // The execution of the event that we just pushed should set the
+          // `cardano_last_epoch` table to `epoch`. This cache entry mirrors the
+          // value of that table, so we need to update it here too.
+          this.cache.updateEpoch(epoch);
+        }
       }
     }
 

@@ -182,6 +182,14 @@ export async function internalGetAllOwnedErc6551Accounts(
   return results.map(row => row.account_created);
 }
 
+/**
+ * If the most recent delegation is the current epoch, we need to return the
+ * list of recent delegations so the app can know what delegation the user had
+ * beforehand since delegations only matters once they cross an epoch boundary
+ *
+ * If the most recent delegation isn't from the current epoch, we know it's the
+ * one that is active now
+ */
 export async function internalGetCardanoAddressDelegation(
   readonlyDBConn: Pool,
   address: string
