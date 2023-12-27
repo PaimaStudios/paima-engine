@@ -20,6 +20,7 @@ export const enum ChainDataExtensionType {
   ERC6551Registry = 6,
   CardanoPool = 7,
   CardanoProjectedNFT = 8,
+  CardanoAssetUtxo = 9,
 }
 
 export const enum ChainDataExtensionDatumType {
@@ -31,6 +32,7 @@ export const enum ChainDataExtensionDatumType {
   ERC6551Registry,
   CardanoPool,
   CardanoProjectedNFT,
+  CardanoAssetUtxo,
 }
 
 export const enum Network {

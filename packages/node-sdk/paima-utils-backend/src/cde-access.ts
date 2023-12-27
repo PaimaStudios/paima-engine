@@ -14,6 +14,7 @@ import {
   internalGetAllOwnedErc6551Accounts,
   internalGetCardanoAddressDelegation,
   internalGetCardanoProjectedNft,
+  internalGetCardanoAssetUtxos,
 } from './cde-access-internals.js';
 import type { OwnedNftsResponse, GenericCdeDataUnit, TokenIdPair } from './types.js';
 import type { ICdeCardanoGetProjectedNftResult } from '@paima/db/src';
@@ -183,4 +184,25 @@ export async function getCardanoAddressProjectedNfts(
   address: string
 ): Promise<ICdeCardanoGetProjectedNftResult[]> {
   return await internalGetCardanoProjectedNft(readonlyDBConn, address);
+}
+
+export async function getCardanoAssetUtxosByFingerprint(
+  readonlyDBConn: Pool,
+  address: string,
+  cip14Fingerprint: string
+): Promise<{ txId: string; outputIndex: number; amount: string }[]> {
+  return await internalGetCardanoAssetUtxos(
+    readonlyDBConn,
+    address,
+    'cip14_fingerprint',
+    cip14Fingerprint
+  );
+}
+
+export async function getCardanoAssetUtxosByPolicyId(
+  readonlyDBConn: Pool,
+  address: string,
+  policyId: string
+): Promise<{ txId: string; outputIndex: number; amount: string }[]> {
+  return await internalGetCardanoAssetUtxos(readonlyDBConn, address, 'policy_id', policyId);
 }

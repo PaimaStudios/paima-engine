@@ -180,3 +180,13 @@ CREATE TABLE cde_cardano_projected_nft (
   for_how_long BIGINT,
   PRIMARY KEY (cde_id, id)
 );
+
+CREATE TABLE cde_cardano_asset_utxos (
+  cde_id INTEGER NOT NULL,
+  address TEXT NOT NULL,
+  tx_id TEXT NOT NULL,
+  output_index INTEGER NOT NULL,
+  amount BIGINT NOT NULL,
+  cip14_fingerprint TEXT NOT NULL,
+  PRIMARY KEY(cde_id,tx_id,output_index)
+);

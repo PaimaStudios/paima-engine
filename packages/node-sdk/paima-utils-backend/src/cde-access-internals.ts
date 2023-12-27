@@ -16,6 +16,7 @@ import {
   cdeCardanoGetProjectedNft,
   type ICdeCardanoGetProjectedNftResult,
   getCardanoEpoch,
+  cdeCardanoAssetUtxosByAddress,
 } from '@paima/db';
 import type { OwnedNftsResponse, GenericCdeDataUnit, TokenIdPair } from './types.js';
 
@@ -228,4 +229,17 @@ export async function internalGetCardanoProjectedNft(
   const results = await cdeCardanoGetProjectedNft.run({ owner_address }, readonlyDBConn);
 
   return results;
+}
+
+export async function internalGetCardanoAssetUtxos(
+  readonlyDBConn: Pool,
+  address: string,
+  cip14Fingerprint: string
+): Promise<{ txId: string; outputIndex: number; amount: string }[]> {
+  const results = await cdeCardanoAssetUtxosByAddress.run(
+    { address, cip14_fingerprint: cip14Fingerprint },
+    readonlyDBConn
+  );
+
+  return results.map(x => ({ txId: x.tx_id, outputIndex: x.output_index, amount: x.amount }));
 }

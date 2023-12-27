@@ -22,6 +22,7 @@ import type { PoolClient } from 'pg';
 import type { ChainFunnel, ReadPresyncDataFrom } from '@paima/runtime';
 import getCdePoolData from '../../cde/cardanoPool.js';
 import getCdeProjectedNFTData from '../../cde/cardanoProjectedNFT.js';
+import getCdeDelayedNft from '../../cde/delayedNft.js';
 import { query } from '@dcspark/carp-client/client/src/index';
 import { Routes } from '@dcspark/carp-client/shared/routes';
 import { FUNNEL_PRESYNC_FINISHED, InternalEventType } from '@paima/utils/src/constants';
@@ -203,13 +204,8 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
     if (arg && arg.from >= 0 && arg.from < this.cache.getState().startingSlot) {
       const [carpEvents, data] = await Promise.all([
         Promise.all(
-          this.sharedData.extensions
-            .filter(
-              extension =>
-                extension.cdeType === ChainDataExtensionType.CardanoPool ||
-                extension.cdeType === ChainDataExtensionType.CardanoProjectedNFT
-            )
-            .map(extension => {
+          this.sharedData.extensions.reduce(
+            (promises, extension) => {
               if (extension.cdeType === ChainDataExtensionType.CardanoPool) {
                 const data = getCdePoolData(
                   this.carpUrl,
@@ -221,21 +217,42 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
                   },
                   slot => absoluteSlotToEpoch(this.era, slot)
                 );
-                return data;
-              } else {
-                // ProjectedNFT
+
+                promises.push(data);
+              }
+
+              if (extension.cdeType === ChainDataExtensionType.CardanoProjectedNFT) {
                 const data = getCdeProjectedNFTData(
                   this.carpUrl,
-                  extension as ChainDataExtensionCardanoProjectedNFT,
+                  extension,
                   arg.from,
                   Math.min(arg.to, this.cache.getState().startingSlot - 1),
                   slot => {
                     return slot;
                   }
                 );
-                return data;
+
+                promises.push(data);
               }
-            })
+
+              if (extension.cdeType === ChainDataExtensionType.CardanoAssetUtxo) {
+                const data = getCdeDelayedNft(
+                  this.carpUrl,
+                  extension,
+                  arg.from,
+                  Math.min(arg.to, this.cache.getState().startingSlot - 1),
+                  slot => {
+                    return slot;
+                  }
+                );
+
+                promises.push(data);
+              }
+
+              return promises;
+            },
+            [] as Promise<ChainDataExtensionDatum[]>[]
+          )
         ),
         basePromise,
       ]);
@@ -379,7 +396,6 @@ async function readDataInternal(
             mapSlotToBlockNumber,
             slot => absoluteSlotToEpoch(era, slot)
           );
-
           return poolData;
         case ChainDataExtensionType.CardanoProjectedNFT:
           const projectedNFTData = getCdeProjectedNFTData(
@@ -389,8 +405,16 @@ async function readDataInternal(
             Math.min(max, extension.stopSlot || max),
             mapSlotToBlockNumber
           );
-
           return projectedNFTData;
+        case ChainDataExtensionType.CardanoAssetUtxo:
+          const delayedNftData = getCdeDelayedNft(
+            carpUrl,
+            extension,
+            min,
+            Math.min(max, extension.stopSlot || max),
+            mapSlotToBlockNumber
+          );
+          return delayedNftData;
         default:
           return Promise.resolve([]);
       }
