@@ -188,5 +188,7 @@ CREATE TABLE cde_cardano_asset_utxos (
   output_index INTEGER NOT NULL,
   amount BIGINT NOT NULL,
   cip14_fingerprint TEXT NOT NULL,
-  PRIMARY KEY(cde_id,tx_id,output_index)
+  policy_id TEXT NOT NULL,
+  asset_name TEXT NOT NULL,
+  PRIMARY KEY(cde_id,tx_id,output_index,cip14_fingerprint)
 );

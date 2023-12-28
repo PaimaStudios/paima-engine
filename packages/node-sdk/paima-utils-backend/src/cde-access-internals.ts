@@ -234,12 +234,18 @@ export async function internalGetCardanoProjectedNft(
 export async function internalGetCardanoAssetUtxos(
   readonlyDBConn: Pool,
   address: string,
-  cip14Fingerprint: string
+  filterBy: string,
+  value: string
 ): Promise<{ txId: string; outputIndex: number; amount: string }[]> {
-  const results = await cdeCardanoAssetUtxosByAddress.run(
-    { address, cip14_fingerprint: cip14Fingerprint },
-    readonlyDBConn
-  );
+  const arg = { address, [filterBy]: value };
 
-  return results.map(x => ({ txId: x.tx_id, outputIndex: x.output_index, amount: x.amount }));
+  const results = await cdeCardanoAssetUtxosByAddress.run(arg, readonlyDBConn);
+
+  return results.map(x => ({
+    txId: x.tx_id,
+    outputIndex: x.output_index,
+    amount: x.amount,
+    policyId: x.policy_id,
+    assetName: x.asset_name,
+  }));
 }

@@ -101,6 +101,8 @@ interface CdeDatumCardanoAssetUtxoPayload {
   outputIndex: number;
   amount: string | undefined;
   cip14Fingerprint: string;
+  policyId: string;
+  assetName: string;
 }
 
 type ChainDataExtensionPayload =
@@ -320,7 +322,8 @@ export const ChainDataExtensionCardanoProjectedNFTConfig = Type.Object({
 
 export const ChainDataExtensionCardanoDelayedNftConfig = Type.Object({
   type: Type.Literal(CdeEntryTypeName.CardanoDelayedNft),
-  assets: Type.Array(Type.String()),
+  fingerprints: Type.Optional(Type.Array(Type.String())),
+  policyIds: Type.Optional(Type.Array(Type.String())),
   startSlot: Type.Number(),
   stopSlot: Type.Optional(Type.Number()),
   name: Type.String(),

@@ -16,7 +16,8 @@ export default async function getCdeData(
 ): Promise<ChainDataExtensionDatum[]> {
   const events = await timeout(
     query(url, Routes.assetUtxos, {
-      assets: extension.assets,
+      policyIds: extension.policyIds,
+      fingerprints: extension.fingerprints,
       range: { minSlot: fromAbsoluteSlot, maxSlot: toAbsoluteSlot },
     }),
     DEFAULT_FUNNEL_TIMEOUT
@@ -40,6 +41,8 @@ function eventToCdeDatum(
       outputIndex: event.utxo.index,
       cip14Fingerprint: event.cip14Fingerprint,
       amount: event.amount,
+      policyId: event.policyId,
+      assetName: event.assetName,
     },
   };
 }

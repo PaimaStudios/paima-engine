@@ -11,6 +11,8 @@ export default async function processDatum(
   const tx_id = cdeDatum.payload.txId;
   const output_index = cdeDatum.payload.outputIndex;
   const cip14_fingerprint = cdeDatum.payload.cip14Fingerprint;
+  const policy_id = cdeDatum.payload.policyId;
+  const asset_name = cdeDatum.payload.assetName;
 
   if (amount) {
     return [
@@ -23,6 +25,8 @@ export default async function processDatum(
           output_index: output_index,
           amount,
           cip14_fingerprint,
+          policy_id,
+          asset_name,
         },
       ],
     ];

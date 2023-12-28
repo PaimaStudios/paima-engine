@@ -346,7 +346,9 @@ CREATE TABLE cde_cardano_asset_utxos (
   output_index INTEGER NOT NULL,
   amount BIGINT NOT NULL,
   cip14_fingerprint TEXT NOT NULL,
-  PRIMARY KEY(cde_id,tx_id,output_index)
+  policy_id text NOT NULL,
+  asset_name text NOT NULL,
+  PRIMARY KEY(cde_id,tx_id,output_index,cip14_fingerprint)
 );
 `;
 
@@ -360,6 +362,8 @@ const TABLE_DATA_CDE_CARDANO_ASSET_UTXOS: TableData = {
     ['output_index', 'integer', 'NO', ''],
     ['amount', 'bigint', 'NO', ''],
     ['cip14_fingerprint', 'text', 'NO', ''],
+    ['policy_id', 'text', 'NO', ''],
+    ['asset_name', 'text', 'NO', ''],
   ]),
   serialColumns: [],
   creationQuery: QUERY_CREATE_TABLE_CDE_CARDANO_ASSET_UTXOS,
