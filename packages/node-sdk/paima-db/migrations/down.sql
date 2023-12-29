@@ -12,3 +12,4 @@ DROP TABLE scheduled_data;
 DROP TABLE block_heights;
 DROP TABLE cde_cardano_pool_delegation;
 DROP TABLE cde_tracking_cardano;
+DROP TABLE cde_cardano_projected_nft;

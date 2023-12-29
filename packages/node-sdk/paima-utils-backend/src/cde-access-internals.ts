@@ -13,6 +13,8 @@ import {
   cdeErc6551GetOwnedAccounts,
   cdeErc6551GetOwner,
   cdeCardanoPoolGetAddressDelegation,
+  cdeCardanoGetProjectedNft,
+  type ICdeCardanoGetProjectedNftResult,
 } from '@paima/db';
 import type { OwnedNftsResponse, GenericCdeDataUnit, TokenIdPair } from './types.js';
 
@@ -189,4 +191,13 @@ export async function internalGetCardanoAddressDelegation(
   }
 
   return results[0].pool;
+}
+
+export async function internalGetCardanoProjectedNft(
+  readonlyDBConn: Pool,
+  owner_address: string
+): Promise<ICdeCardanoGetProjectedNftResult[]> {
+  const results = await cdeCardanoGetProjectedNft.run({ owner_address }, readonlyDBConn);
+
+  return results;
 }

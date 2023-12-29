@@ -13,8 +13,10 @@ import {
   internalGetErc6551AccountOwner,
   internalGetAllOwnedErc6551Accounts,
   internalGetCardanoAddressDelegation,
+  internalGetCardanoProjectedNft,
 } from './cde-access-internals.js';
 import type { OwnedNftsResponse, GenericCdeDataUnit, TokenIdPair } from './types.js';
+import type { ICdeCardanoGetProjectedNftResult } from '@paima/db/src';
 
 /**
  * Fetch the owner of the NFT from the database
@@ -166,4 +168,14 @@ export async function getCardanoAddressDelegation(
   address: string
 ): Promise<string | null> {
   return await internalGetCardanoAddressDelegation(readonlyDBConn, address);
+}
+
+/**
+ * Fetch the NFTs that are projected by particular PKH
+ */
+export async function getCardanoAddressProjectedNfts(
+  readonlyDBConn: Pool,
+  address: string
+): Promise<ICdeCardanoGetProjectedNftResult[]> {
+  return await internalGetCardanoProjectedNft(readonlyDBConn, address);
 }
