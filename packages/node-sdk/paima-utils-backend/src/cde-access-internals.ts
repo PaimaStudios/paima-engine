@@ -18,7 +18,12 @@ import {
   getCardanoEpoch,
   cdeCardanoAssetUtxosByAddress,
 } from '@paima/db';
-import type { OwnedNftsResponse, GenericCdeDataUnit, TokenIdPair } from './types.js';
+import type {
+  OwnedNftsResponse,
+  GenericCdeDataUnit,
+  TokenIdPair,
+  CardanoAssetUtxo,
+} from './types.js';
 
 /* Functions to retrieve CDE ID: */
 
@@ -236,7 +241,7 @@ export async function internalGetCardanoAssetUtxos(
   address: string,
   filterBy: string,
   value: string
-): Promise<{ txId: string; outputIndex: number; amount: string }[]> {
+): Promise<CardanoAssetUtxo[]> {
   const arg = { address, [filterBy]: value };
 
   const results = await cdeCardanoAssetUtxosByAddress.run(arg, readonlyDBConn);

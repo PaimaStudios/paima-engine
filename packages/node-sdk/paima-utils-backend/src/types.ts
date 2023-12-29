@@ -9,3 +9,11 @@ export interface GenericCdeDataUnit {
   blockHeight: number;
   payload: any;
 }
+
+export interface CardanoAssetUtxo {
+  txId: string;
+  outputIndex: number;
+  amount: string;
+  policyId: string;
+  assetName: string;
+}
