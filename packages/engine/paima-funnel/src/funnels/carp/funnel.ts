@@ -8,7 +8,7 @@ import {
   Network,
   timeout,
 } from '@paima/utils';
-import type { ChainDataExtensionCardanoProjectedNFT, InternalEvent } from '@paima/sm';
+import type { InternalEvent } from '@paima/sm';
 import {
   type ChainData,
   type ChainDataExtension,
@@ -22,7 +22,7 @@ import type { PoolClient } from 'pg';
 import type { ChainFunnel, ReadPresyncDataFrom } from '@paima/runtime';
 import getCdePoolData from '../../cde/cardanoPool.js';
 import getCdeProjectedNFTData from '../../cde/cardanoProjectedNFT.js';
-import getCdeDelayedNft from '../../cde/delayedNft.js';
+import getCdeDelayedAsset from '../../cde/delayedAsset.js';
 import { query } from '@dcspark/carp-client/client/src/index';
 import { Routes } from '@dcspark/carp-client/shared/routes';
 import { FUNNEL_PRESYNC_FINISHED, InternalEventType } from '@paima/utils/src/constants';
@@ -236,7 +236,7 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
               }
 
               if (extension.cdeType === ChainDataExtensionType.CardanoAssetUtxo) {
-                const data = getCdeDelayedNft(
+                const data = getCdeDelayedAsset(
                   this.carpUrl,
                   extension,
                   arg.from,
@@ -407,14 +407,14 @@ async function readDataInternal(
           );
           return projectedNFTData;
         case ChainDataExtensionType.CardanoAssetUtxo:
-          const delayedNftData = getCdeDelayedNft(
+          const delayedAssetData = getCdeDelayedAsset(
             carpUrl,
             extension,
             min,
             Math.min(max, extension.stopSlot || max),
             mapSlotToBlockNumber
           );
-          return delayedNftData;
+          return delayedAssetData;
         default:
           return Promise.resolve([]);
       }

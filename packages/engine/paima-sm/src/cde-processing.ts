@@ -11,7 +11,7 @@ import processErc6551RegistryDatum from './cde-erc6551-registry.js';
 import processGenericDatum from './cde-generic.js';
 import processCardanoDelegationDatum from './cde-cardano-pool.js';
 import processCardanoProjectedNFT from './cde-cardano-projected-nft.js';
-import processCardanoAssetUtxoDatum from './cde-cardano-delayed-nft.js';
+import processCardanoAssetUtxoDatum from './cde-cardano-delayed-asset.js';
 import assertNever from 'assert-never';
 import type { SQLUpdate } from '@paima/db';
 

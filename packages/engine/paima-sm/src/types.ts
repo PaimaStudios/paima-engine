@@ -194,7 +194,7 @@ export enum CdeEntryTypeName {
   ERC6551Registry = 'erc6551-registry',
   CardanoDelegation = 'cardano-stake-delegation',
   CardanoProjectedNFT = 'cardano-projected-nft',
-  CardanoDelayedNft = 'cardano-delayed-nft',
+  CardanoDelayedAsset = 'cardano-delayed-asset',
 }
 
 const EvmAddress = Type.Transform(Type.RegExp('0x[0-9a-fA-F]{40}'))
@@ -320,8 +320,8 @@ export const ChainDataExtensionCardanoProjectedNFTConfig = Type.Object({
   name: Type.String(),
 });
 
-export const ChainDataExtensionCardanoDelayedNftConfig = Type.Object({
-  type: Type.Literal(CdeEntryTypeName.CardanoDelayedNft),
+export const ChainDataExtensionCardanoDelayedAssetConfig = Type.Object({
+  type: Type.Literal(CdeEntryTypeName.CardanoDelayedAsset),
   fingerprints: Type.Optional(Type.Array(Type.String())),
   policyIds: Type.Optional(Type.Array(Type.String())),
   startSlot: Type.Number(),
@@ -334,8 +334,8 @@ export type ChainDataExtensionCardanoProjectedNFT = ChainDataExtensionBase &
     cdeType: ChainDataExtensionType.CardanoProjectedNFT;
   };
 
-export type ChainDataExtensionCardanoDelayedNft = ChainDataExtensionBase &
-  Static<typeof ChainDataExtensionCardanoDelayedNftConfig> & {
+export type ChainDataExtensionCardanoDelayedAsset = ChainDataExtensionBase &
+  Static<typeof ChainDataExtensionCardanoDelayedAssetConfig> & {
     cdeType: ChainDataExtensionType.CardanoAssetUtxo;
   };
 
@@ -349,7 +349,7 @@ export const CdeConfig = Type.Object({
       ChainDataExtensionErc6551RegistryConfig,
       ChainDataExtensionCardanoDelegationConfig,
       ChainDataExtensionCardanoProjectedNFTConfig,
-      ChainDataExtensionCardanoDelayedNftConfig,
+      ChainDataExtensionCardanoDelayedAssetConfig,
     ])
   ),
 });
@@ -376,7 +376,7 @@ export type ChainDataExtension =
   | ChainDataExtensionErc6551Registry
   | ChainDataExtensionCardanoDelegation
   | ChainDataExtensionCardanoProjectedNFT
-  | ChainDataExtensionCardanoDelayedNft;
+  | ChainDataExtensionCardanoDelayedAsset;
 
 export type GameStateTransitionFunctionRouter = (
   blockHeight: number

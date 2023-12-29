@@ -1,15 +1,15 @@
 import type {
   CdeCardanoAssetUtxoDatum,
-  ChainDataExtensionCardanoDelayedNft,
+  ChainDataExtensionCardanoDelayedAsset,
   ChainDataExtensionDatum,
 } from '@paima/sm';
 import { ChainDataExtensionDatumType, DEFAULT_FUNNEL_TIMEOUT, timeout } from '@paima/utils';
 import { Routes, query } from '@dcspark/carp-client/client/src';
-import { AssetUtxosResponse } from '@dcspark/carp-client/shared/models/AssetUtxos';
+import type { AssetUtxosResponse } from '@dcspark/carp-client/shared/models/AssetUtxos';
 
 export default async function getCdeData(
   url: string,
-  extension: ChainDataExtensionCardanoDelayedNft,
+  extension: ChainDataExtensionCardanoDelayedAsset,
   fromAbsoluteSlot: number,
   toAbsoluteSlot: number,
   getBlockNumber: (slot: number) => number
@@ -28,7 +28,7 @@ export default async function getCdeData(
 
 function eventToCdeDatum(
   event: AssetUtxosResponse[0],
-  extension: ChainDataExtensionCardanoDelayedNft,
+  extension: ChainDataExtensionCardanoDelayedAsset,
   blockNumber: number
 ): CdeCardanoAssetUtxoDatum {
   return {
