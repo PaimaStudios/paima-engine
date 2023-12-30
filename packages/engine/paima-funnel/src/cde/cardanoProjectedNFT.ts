@@ -5,6 +5,7 @@ import type {
 } from '@paima/sm';
 import { ChainDataExtensionDatumType, DEFAULT_FUNNEL_TIMEOUT, timeout } from '@paima/utils';
 import { Routes, query } from '@dcspark/carp-client/client/src';
+import { ProjectedNftStatus } from '@dcspark/carp-client/shared/models/ProjectedNftRange';
 import type { ProjectedNftRangeResponse } from '@dcspark/carp-client/shared/models/ProjectedNftRange';
 
 export default async function getCdeProjectedNFTData(
@@ -36,8 +37,7 @@ function eventToCdeDatum(
   if (
     event.actionTxId === null ||
     event.actionTxId == '' ||
-    event.status === null ||
-    event.status == ''
+    event.status === ProjectedNftStatus.Invalid
   ) {
     return null;
   }

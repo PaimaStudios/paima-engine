@@ -14,7 +14,7 @@
     "build": "npm run lint:configs && npx nx run-many --parallel=${NX_PARALLEL:-3} -t build",
     "test": "npm run lint:configs && npx nx run-many --parallel=${NX_PARALLEL:-3} -t test",
     "release:lib": "./wipe.sh && sh ./tools/scripts/bump-version.sh && npm run build && npm run lint && npm run test && read -p 'Enter OTP: ' otp && export NPM_CONFIG_OTP=$otp && npx nx release publish -g paima-sdk && npx nx release publish -g node-sdk && npx nx release publish -g build-utils",
-    "release:bin": "./wipe.sh && npm run lint:configs && echo 'This command usually fails from NX, so go in the right folders and run /npm run release/ manually:\nnpx nx run-many --parallel=${NX_PARALLEL:-3} -t release\nPress any key to continue once done' && read _ && mkdir -p ./bin && cp -r ./packages/engine/paima-standalone/packaged/@standalone/* ./bin"
+    "release:bin": "./wipe.sh && npm run lint:configs && npm run build && echo 'This command usually fails from NX, so go in the right folders and run /npm run release/ manually:\nnpx nx run-many --parallel=${NX_PARALLEL:-3} -t release\nPress any key to continue once done' && read _ && mkdir -p ./bin && cp -r ./packages/engine/paima-standalone/packaged/@standalone/* ./bin"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^2.1.2",
