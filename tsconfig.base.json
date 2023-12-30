@@ -36,6 +36,7 @@
       "@paima/batcher-webserver/*": ["./packages/batcher/webserver/*"],
       "@paima/build-utils/*": ["./packages/build-utils/paima-build-utils/*"],
       "@paima/db/*": ["./packages/node-sdk/paima-db/*"],
+      "@paima/evm-contracts/*": ["./packages/contracts/evm-contracts/*"],
       "@paima/node-sdk/*": ["./packages/node-sdk/publish-wrapper/*"],
       "@paima/utils-backend/*": ["./packages/node-sdk/paima-utils-backend/*"],
       "@paima/concise/*": ["./packages/paima-sdk/paima-concise/*"],
