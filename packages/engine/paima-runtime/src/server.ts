@@ -9,7 +9,7 @@ import path from 'path';
 import { ValidateError } from 'tsoa';
 
 const server: Express = express();
-const bodyParser = express.json();
+const bodyParser = express.json({ limit: '50mb' });
 
 server.use(cors());
 server.use(bodyParser);
