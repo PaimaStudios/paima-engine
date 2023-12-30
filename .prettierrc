@@ -10,6 +10,8 @@
     {
       "files": "*.sol",
       "options": {
+        "tabWidth": 4,
+        "arrowParens": "avoid",
         "parser": "solidity-parse"
       }
     }
