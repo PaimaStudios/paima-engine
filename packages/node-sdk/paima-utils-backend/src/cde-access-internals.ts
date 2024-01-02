@@ -24,6 +24,7 @@ import type {
   TokenIdPair,
   CardanoAssetUtxo,
 } from './types.js';
+import { ICdeCardanoAssetUtxosByAddressParams } from '@paima/db/src/sql/cde-cardano-asset-utxos.queries.js';
 
 /* Functions to retrieve CDE ID: */
 
@@ -239,7 +240,7 @@ export async function internalGetCardanoProjectedNft(
 export async function internalGetCardanoAssetUtxos(
   readonlyDBConn: Pool,
   address: string,
-  filterBy: string,
+  filterBy: keyof ICdeCardanoAssetUtxosByAddressParams,
   value: string
 ): Promise<CardanoAssetUtxo[]> {
   const arg = { address, [filterBy]: value };
