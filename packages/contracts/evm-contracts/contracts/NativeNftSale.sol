@@ -3,8 +3,6 @@
 pragma solidity ^0.8.13;
 
 import "./Nft.sol";
-import {NftType} from "./NftType.sol";
-import "./NftTypeMapper.sol";
 import "./BaseState.sol";
 import "./ERC1967.sol";
 
@@ -13,8 +11,6 @@ import "@openzeppelin/contracts/utils/Address.sol";
 
 contract NativeNftSale is BaseState, ERC1967, Ownable {
     using Address for address payable;
-
-    NftTypeMapper public typeMapper;
 
     event Initialized(address indexed owner, address indexed nft);
 
@@ -29,13 +25,12 @@ contract NativeNftSale is BaseState, ERC1967, Ownable {
         address buyer
     );
 
-    function initialize(address owner, address _nft, uint256 _price) public {
+    function initialize(address owner, address _nft, uint256 _price) virtual public {
         require(!initialized, "Contract already initialized");
         initialized = true;
 
         nftPrice = _price;
         nftAddress = _nft;
-        typeMapper = new NftTypeMapper();
         _transferOwnership(owner);
 
         emit Initialized(owner, _nft);
@@ -43,8 +38,8 @@ contract NativeNftSale is BaseState, ERC1967, Ownable {
 
     function buyNft(
         address receiverAddress,
-        NftType nftType
-    ) external payable returns (uint256) {
+        string calldata initialData
+    ) public virtual payable returns (uint256) {
         require(msg.value == nftPrice, "NativeNftSale: incorrect value");
         require(
             receiverAddress != address(0),
@@ -55,7 +50,7 @@ contract NativeNftSale is BaseState, ERC1967, Ownable {
 
         uint256 tokenId = Nft(nftAddress).mint(
             receiverAddress,
-            typeMapper.getNftTypeString(nftType)
+            initialData
         );
 
         emit BuyNFT(tokenId, price, receiverAddress, msg.sender);

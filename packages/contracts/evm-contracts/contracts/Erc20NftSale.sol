@@ -3,15 +3,12 @@
 pragma solidity ^0.8.13;
 
 import "./Nft.sol";
-import {NftType} from "./NftType.sol";
-import "./NftTypeMapper.sol";
 import "./State.sol";
 import "./ERC1967.sol";
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract Erc20NftSale is State, ERC1967, Ownable {
-    NftTypeMapper public typeMapper;
 
     event Initialized(
         ERC20[] indexed currencies,
@@ -39,7 +36,7 @@ contract Erc20NftSale is State, ERC1967, Ownable {
         address owner,
         address _nft,
         uint256 _price
-    ) public {
+    ) virtual public {
         require(!initialized, "Contract already initialized");
         initialized = true;
 
@@ -49,7 +46,6 @@ contract Erc20NftSale is State, ERC1967, Ownable {
 
         nftPrice = _price;
         nftAddress = _nft;
-        typeMapper = new NftTypeMapper();
         _transferOwnership(owner);
 
         emit Initialized(currencies, owner, _nft);
@@ -60,8 +56,8 @@ contract Erc20NftSale is State, ERC1967, Ownable {
     function buyWithToken(
         ERC20 _tokenAddress,
         address receiverAddress,
-        NftType nftType
-    ) external returns (uint256) {
+        string calldata initialData
+    ) public virtual returns (uint256) {
         require(
             tokenIsWhitelisted(_tokenAddress),
             "Erc20NftSale: token not whitelisted"
@@ -78,7 +74,7 @@ contract Erc20NftSale is State, ERC1967, Ownable {
 
         uint256 tokenId = Nft(nftAddress).mint(
             receiverAddress,
-            typeMapper.getNftTypeString(nftType)
+            initialData
         );
 
         if (!depositedCurrenciesMap[_tokenAddress]) {

@@ -2,7 +2,12 @@
 
 pragma solidity ^0.8.13;
 
-import {NftType} from "./NftType.sol";
+import "./NativeNftSale.sol";
+
+enum NftType {
+    FIRE,
+    WATER
+}
 
 contract NftTypeMapper {
     mapping(NftType => string) internal nftTypeToString;
@@ -16,5 +21,27 @@ contract NftTypeMapper {
         NftType nftType
     ) external view returns (string memory) {
         return nftTypeToString[nftType];
+    }
+}
+
+contract TypedNativeNftSale is NativeNftSale {
+
+    NftTypeMapper public typeMapper;
+
+    function initialize(address owner, address _nft, uint256 _price) override public {
+        require(!initialized, "Contract already initialized");
+        // initialize state here first since parent constructor emits event
+        typeMapper = new NftTypeMapper();
+        super.initialize(owner, _nft, _price);
+    }
+
+    function buyNft(
+        address receiverAddress,
+        NftType nftType
+    ) public override payable returns (uint256) {
+        super.buyNft(
+            receiverAddress,
+            typeMapper.getNftTypeString(nftType)
+        );
     }
 }

@@ -25,7 +25,7 @@ contract GenericPayment is ERC1967, Ownable {
         emit Initialized(owner);
     }
 
-    function pay(string memory message) external payable {
+    function pay(string calldata message) external payable {
         emit Pay(msg.value, msg.sender, message);
     }
 
