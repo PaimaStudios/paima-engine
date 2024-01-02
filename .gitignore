@@ -3,7 +3,6 @@ bin
 .nx
 **/dist
 **/build
-**/lib
 **/*.tsbuildinfo
 
 # logs
