@@ -39,3 +39,7 @@ export const enum Network {
 }
 
 export const FUNNEL_PRESYNC_FINISHED = 'finished';
+
+export const enum InternalEventType {
+  CardanoBestEpoch,
+}

@@ -89,9 +89,15 @@ CREATE TABLE emulated_block_heights (
 
 CREATE TABLE cde_cardano_pool_delegation (
   cde_id INTEGER NOT NULL,
+  epoch INTEGER NOT NULL,
   address TEXT NOT NULL,
   pool TEXT,
-  PRIMARY KEY (cde_id, address)
+  PRIMARY KEY (cde_id, epoch, address)
+);
+
+CREATE TABLE cardano_last_epoch (
+  id INTEGER PRIMARY KEY,
+  epoch INTEGER NOT NULL
 );
 
 CREATE TABLE cde_cardano_projected_nft (

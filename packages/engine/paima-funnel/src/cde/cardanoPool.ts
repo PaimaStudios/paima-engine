@@ -12,7 +12,8 @@ export default async function getCdeData(
   extension: ChainDataExtensionCardanoDelegation,
   fromAbsoluteSlot: number,
   toAbsoluteSlot: number,
-  getBlockNumber: (slot: number) => number
+  getBlockNumber: (slot: number) => number,
+  absoluteSlotToEpoch: (slot: number) => number
 ): Promise<ChainDataExtensionDatum[]> {
   const events = await timeout(
     query(url, Routes.delegationForPool, {
@@ -22,13 +23,16 @@ export default async function getCdeData(
     DEFAULT_FUNNEL_TIMEOUT
   );
 
-  return events.map(e => eventToCdeDatum(e, extension, getBlockNumber(e.slot)));
+  return events.map(e =>
+    eventToCdeDatum(e, extension, getBlockNumber(e.slot), absoluteSlotToEpoch(e.slot))
+  );
 }
 
 function eventToCdeDatum(
   event: DelegationForPoolResponse[0],
   extension: ChainDataExtensionCardanoDelegation,
-  blockNumber: number
+  blockNumber: number,
+  epoch: number
 ): CdeCardanoPoolDatum {
   return {
     cdeId: extension.cdeId,
@@ -37,6 +41,7 @@ function eventToCdeDatum(
     payload: {
       address: event.credential,
       pool: event.pool || undefined,
+      epoch,
     },
     scheduledPrefix: extension.scheduledPrefix,
   };

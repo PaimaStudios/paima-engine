@@ -15,6 +15,7 @@ import {
   cdeCardanoPoolGetAddressDelegation,
   cdeCardanoGetProjectedNft,
   type ICdeCardanoGetProjectedNftResult,
+  getCardanoEpoch,
 } from '@paima/db';
 import type { OwnedNftsResponse, GenericCdeDataUnit, TokenIdPair } from './types.js';
 
@@ -181,16 +182,43 @@ export async function internalGetAllOwnedErc6551Accounts(
   return results.map(row => row.account_created);
 }
 
+/**
+ * If the most recent delegation is the current epoch, we need to return the
+ * list of recent delegations so the app can know what delegation the user had
+ * beforehand since delegations only matters once they cross an epoch boundary
+ *
+ * If the most recent delegation isn't from the current epoch, we know it's the
+ * one that is active now
+ */
 export async function internalGetCardanoAddressDelegation(
   readonlyDBConn: Pool,
   address: string
-): Promise<string | null> {
+): Promise<{ events: { pool: string | null; epoch: number }[]; currentEpoch: number } | null> {
   const results = await cdeCardanoPoolGetAddressDelegation.run({ address }, readonlyDBConn);
   if (results.length === 0) {
     return null;
   }
 
-  return results[0].pool;
+  const currentEpoch = await getCardanoEpoch.run(undefined, readonlyDBConn);
+
+  if (currentEpoch.length === 0) {
+    throw new Error('Current epoch table not initialized');
+  }
+
+  if (currentEpoch[0].epoch === results[results.length - 1].epoch) {
+    return {
+      currentEpoch: currentEpoch[0].epoch,
+      events: results.map(r => {
+        return { pool: r.pool, epoch: r.epoch };
+      }),
+    };
+  } else {
+    const result = results[results.length - 1];
+    return {
+      currentEpoch: currentEpoch[0].epoch,
+      events: [{ pool: result.pool, epoch: result.epoch }],
+    };
+  }
 }
 
 export async function internalGetCardanoProjectedNft(

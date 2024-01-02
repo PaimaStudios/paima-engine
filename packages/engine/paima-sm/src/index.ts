@@ -5,6 +5,7 @@ import {
   ChainDataExtensionDatumType,
   doLog,
   ENV,
+  InternalEventType,
   Network,
   SCHEDULED_DATA_ADDRESS,
 } from '@paima/utils';
@@ -24,6 +25,7 @@ import {
   getLatestProcessedCdeBlockheight,
   getCardanoLatestProcessedCdeSlot,
   markCardanoCdeSlotProcessed,
+  updateCardanoEpoch,
 } from '@paima/db';
 import Prando from '@paima/prando';
 
@@ -36,6 +38,7 @@ import type {
   ChainDataExtensionDatum,
   GameStateTransitionFunction,
   GameStateMachineInitializer,
+  InternalEvent,
 } from './types.js';
 export * from './types.js';
 export type * from './types.js';
@@ -167,6 +170,8 @@ const SM: GameStateMachineInitializer = {
           latestChainData.extensionDatums,
           dbTx
         );
+
+        await processInternalEvents(latestChainData.internalEvents, dbTx);
 
         const checkpointName = `game_sm_start`;
         await dbTx.query(`SAVEPOINT ${checkpointName}`);
@@ -357,6 +362,23 @@ async function processUserInputs(
     }
   }
   return latestChainData.submittedData.length;
+}
+
+async function processInternalEvents(
+  events: InternalEvent[] | undefined,
+  dbTx: PoolClient
+): Promise<void> {
+  if (!events) {
+    return;
+  }
+
+  for (const event of events) {
+    switch (event.type) {
+      case InternalEventType.CardanoBestEpoch:
+        await updateCardanoEpoch.run({ epoch: event.epoch }, dbTx);
+        break;
+    }
+  }
 }
 
 export default SM;

@@ -35,6 +35,8 @@ export * from './sql/cde-cardano-projected-nft.queries.js';
 export type * from './sql/cde-cardano-projected-nft.queries.js';
 export * from './sql/cde-tracking-cardano.queries.js';
 export type * from './sql/cde-tracking-cardano.queries.js';
+export * from './sql/cardano-last-epoch.queries.js';
+export type * from './sql/cardano-last-epoch.queries.js';
 
 export {
   tx,

@@ -162,11 +162,16 @@ export async function getAllOwnedErc6551Accounts(
 
 /**
  * Fetch the pool this address is delegating to, if any.
+ *
+ * If the last delegation indexed for this address happened during the current
+ * epoch, this returns both the current delegation and the previous entry.
+ *
+ * Otherwise, this will just return a single entry.
  */
 export async function getCardanoAddressDelegation(
   readonlyDBConn: Pool,
   address: string
-): Promise<string | null> {
+): Promise<{ events: { pool: string | null; epoch: number }[]; currentEpoch: number } | null> {
   return await internalGetCardanoAddressDelegation(readonlyDBConn, address);
 }
 

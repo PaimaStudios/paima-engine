@@ -13,6 +13,7 @@ import type {
   OldERC6551RegistryContract,
   ERC6551RegistryContract,
   Network,
+  InternalEventType,
 } from '@paima/utils';
 import { Type } from '@sinclair/typebox';
 import type { Static } from '@sinclair/typebox';
@@ -25,7 +26,11 @@ export interface ChainData {
   blockNumber: number;
   submittedData: SubmittedData[];
   extensionDatums?: ChainDataExtensionDatum[];
+  internalEvents?: InternalEvent[];
 }
+
+export type InternalEvent = CardanoEpochEvent;
+export type CardanoEpochEvent = { type: InternalEventType.CardanoBestEpoch; epoch: number };
 
 export interface PresyncChainData {
   network: Network;
@@ -69,6 +74,7 @@ interface CdeDatumErc6551RegistryPayload {
 interface CdeDatumCardanoPoolPayload {
   address: string;
   pool: string | undefined;
+  epoch: number;
 }
 
 interface CdeDatumCardanoProjectedNFTPayload {
