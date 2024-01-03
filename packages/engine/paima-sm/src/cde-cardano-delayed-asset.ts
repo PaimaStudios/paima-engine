@@ -14,8 +14,9 @@ export default async function processDatum(
   const policy_id = cdeDatum.payload.policyId;
   const asset_name = cdeDatum.payload.assetName;
 
-  // The amount is only set by carp when the utxo represents an output. This is
-  // because for inputs the amount is already known from before.
+  // The amount is only set by carp when the utxo is created. When the utxo is
+  // spent, the amount is null. If the utxo is an input the amount is already
+  // known, since the entry is in the db.
   if (amount) {
     return [
       [
