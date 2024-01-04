@@ -89,27 +89,11 @@ export class DelegateWallet {
   }
 
   // Regex must match all possible wallets for the network.
-  private static readonly WALLET_VALIDATORS: { regex: RegExp; manager: () => IVerify }[] = [
-    {
-      // EVM 0xeEacBe169AD0EB650E8130fc918e2FDE0d8548b3
-      regex: /^0x[a-fA-F0-9]{40}$/,
-      manager: () => CryptoManager.Evm(new Web3()),
-    },
-    {
-      // Cardano addr1qxd9et27q0funwzturr3sex4zdammc7wdeelpg2ph5pt3dyzmyra5yewwvce7chndkth9g7q2u8n33puue4guh3c6lvqtkfq0t
-      regex: /^addr1[a-zA-Z0-9]+$/,
-      manager: () => CryptoManager.Cardano(),
-    },
-    {
-      // Algorand EZ6MRYCRVUQ4A6SCWKID6ND4C6ZNVVGBDJDXAEYX6EBCYMHLLUMOPEKU2U
-      regex: /^[A-Z2-7]{58}$/,
-      manager: () => CryptoManager.Algorand(),
-    },
-    {
-      // Polkadot 5FbQJpZnbEFkwwfagwyL5NWwtJhZ9GpdHcKhmWhPUYrJRnap
-      regex: /^[1-9A-HJ-NP-Za-km-z]{47,48}$/,
-      manager: () => CryptoManager.Polkadot(),
-    },
+  private static readonly WALLET_VALIDATORS = [
+    CryptoManager.Evm(new Web3()),
+    CryptoManager.Cardano(),
+    CryptoManager.Algorand(),
+    CryptoManager.Polkadot(),
   ];
 
   /* Verify Signature with all possible wallets. */
@@ -117,14 +101,14 @@ export class DelegateWallet {
     walletAddress: string,
     message: string,
     signature: string
-  ): Promise<boolean> {
+  ): Promise<void> {
     if (!walletAddress || !signature) throw new Error('No Signature');
 
     for (const validator of DelegateWallet.WALLET_VALIDATORS) {
       try {
-        if (!walletAddress.match(validator.regex)) continue;
-        if (await validator.manager().verifySignature(walletAddress, message, signature)) {
-          return true;
+        if (!(await validator.verifyAddress(walletAddress))) continue;
+        if (await validator.verifySignature(walletAddress, message, signature)) {
+          return;
         }
       } catch {
         // do nothing, some validators throw errors if the signature is invalid
