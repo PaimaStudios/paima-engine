@@ -56,6 +56,22 @@ export async function createTable(pool: PoolClient, table: TableData): Promise<b
     return false;
   }
 
+  if (table.index) {
+    try {
+      await pool.query(`DROP INDEX IF EXISTS ${table.index.name}`);
+    } catch (err) {
+      doLog(`[database-validation] Error while dropping index: ${err}`);
+      return false;
+    }
+
+    try {
+      await pool.query(table.index.creationQuery);
+    } catch (err) {
+      doLog(`[database-validation] Error while creating index: ${err}`);
+      return false;
+    }
+  }
+
   return true;
 }
 

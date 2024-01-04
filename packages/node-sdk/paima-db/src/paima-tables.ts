@@ -352,6 +352,10 @@ CREATE TABLE cde_cardano_asset_utxos (
 );
 `;
 
+const QUERY_CREATE_INDEX_CDE_CARDANO_ASSET_UTXOS_ADDRESS = `
+CREATE INDEX CDE_CARDANO_ASSET_UTXOS_ADDRESS_INDEX ON "cde_cardano_asset_utxos" (ADDRESS);
+`;
+
 const TABLE_DATA_CDE_CARDANO_ASSET_UTXOS: TableData = {
   tableName: 'cde_cardano_asset_utxos',
   primaryKeyColumns: ['cde_id', 'tx_id', 'output_index'],
@@ -367,6 +371,10 @@ const TABLE_DATA_CDE_CARDANO_ASSET_UTXOS: TableData = {
   ]),
   serialColumns: [],
   creationQuery: QUERY_CREATE_TABLE_CDE_CARDANO_ASSET_UTXOS,
+  index: {
+    name: 'CDE_CARDANO_ASSET_UTXOS_ADDRESS_INDEX',
+    creationQuery: QUERY_CREATE_INDEX_CDE_CARDANO_ASSET_UTXOS_ADDRESS,
+  },
 };
 
 const QUERY_CREATE_TABLE_EMULATED = `

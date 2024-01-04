@@ -24,7 +24,7 @@ import type {
   TokenIdPair,
   CardanoAssetUtxo,
 } from './types.js';
-import { ICdeCardanoAssetUtxosByAddressParams } from '@paima/db/src/sql/cde-cardano-asset-utxos.queries.js';
+import type { ICdeCardanoAssetUtxosByAddressParams } from '@paima/db/src/sql/cde-cardano-asset-utxos.queries.js';
 
 /* Functions to retrieve CDE ID: */
 
