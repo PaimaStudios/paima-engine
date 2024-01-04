@@ -55,6 +55,10 @@ async function getSpecificCdeData(
       // this is used by the block funnel, which can't get information for this
       // extension
       return [];
+    case ChainDataExtensionType.CardanoProjectedNFT:
+      // this is used by the block funnel, which can't get information for this
+      // extension
+      return [];
     default:
       assertNever(extension);
   }

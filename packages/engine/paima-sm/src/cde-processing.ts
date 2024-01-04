@@ -10,6 +10,7 @@ import processErc20DepositDatum from './cde-erc20-deposit.js';
 import processErc6551RegistryDatum from './cde-erc6551-registry.js';
 import processGenericDatum from './cde-generic.js';
 import processCardanoDelegationDatum from './cde-cardano-pool.js';
+import processCardanoProjectedNFT from './cde-cardano-projected-nft.js';
 import assertNever from 'assert-never';
 import type { SQLUpdate } from '@paima/db';
 
@@ -32,6 +33,8 @@ export async function cdeTransitionFunction(
       return await processErc6551RegistryDatum(cdeDatum);
     case ChainDataExtensionDatumType.CardanoPool:
       return await processCardanoDelegationDatum(cdeDatum);
+    case ChainDataExtensionDatumType.CardanoProjectedNFT:
+      return await processCardanoProjectedNFT(cdeDatum);
     default:
       assertNever(cdeDatum);
   }

@@ -19,6 +19,7 @@ export const enum ChainDataExtensionType {
   Generic = 5,
   ERC6551Registry = 6,
   CardanoPool = 7,
+  CardanoProjectedNFT = 8,
 }
 
 export const enum ChainDataExtensionDatumType {
@@ -29,6 +30,7 @@ export const enum ChainDataExtensionDatumType {
   Generic,
   ERC6551Registry,
   CardanoPool,
+  CardanoProjectedNFT,
 }
 
 export const enum Network {
@@ -37,3 +39,7 @@ export const enum Network {
 }
 
 export const FUNNEL_PRESYNC_FINISHED = 'finished';
+
+export const enum InternalEventType {
+  CardanoBestEpoch,
+}

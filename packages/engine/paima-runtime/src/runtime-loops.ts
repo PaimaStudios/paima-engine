@@ -62,10 +62,14 @@ async function runPresync(
     startBlockHeight
   );
 
-  if (!ENV.CARP_URL && presyncBlockHeight[Network.CARDANO]) {
-    throw new Error(
-      '[paima-runtime] Detected Cardano CDE sync in progress, but CARP_URL is not set.'
-    );
+  if (!ENV.CARP_URL) {
+    if (presyncBlockHeight[Network.CARDANO] === -1) {
+      delete presyncBlockHeight[Network.CARDANO];
+    } else {
+      throw new Error(
+        '[paima-runtime] Detected Cardano CDE sync in progress, but CARP_URL is not set.'
+      );
+    }
   }
 
   if (run) {

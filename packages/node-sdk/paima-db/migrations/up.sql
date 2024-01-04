@@ -153,7 +153,30 @@ CREATE OR REPLACE TRIGGER wallet_connect_insert_or_update
 
 CREATE TABLE cde_cardano_pool_delegation (
   cde_id INTEGER NOT NULL,
+  epoch INTEGER NOT NULL,
   address TEXT NOT NULL,
   pool TEXT,
-  PRIMARY KEY (cde_id, address)
+  PRIMARY KEY (cde_id, epoch, address)
+);
+
+CREATE TABLE cardano_last_epoch (
+  id INTEGER PRIMARY KEY,
+  epoch INTEGER NOT NULL
+);
+
+CREATE TABLE cde_cardano_projected_nft (
+  cde_id INTEGER NOT NULL,
+  id SERIAL,
+  owner_address TEXT NOT NULL,
+  previous_tx_hash TEXT,
+  previous_tx_output_index INTEGER,
+  current_tx_hash TEXT NOT NULL,
+  current_tx_output_index INTEGER,
+  policy_id TEXT NOT NULL,
+  asset_name TEXT NOT NULL,
+  amount BIGINT NOT NULL,
+  status TEXT NOT NULL,
+  plutus_datum TEXT NOT NULL,
+  for_how_long BIGINT,
+  PRIMARY KEY (cde_id, id)
 );

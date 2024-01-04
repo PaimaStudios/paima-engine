@@ -1,45 +1,80 @@
 import {
   ChainDataExtensionType,
   DEFAULT_FUNNEL_TIMEOUT,
-  ENV,
-  Network,
   delay,
   doLog,
+  ENV,
   logError,
+  Network,
   timeout,
 } from '@paima/utils';
-import type { ChainDataExtensionDatum } from '@paima/sm';
+import type { ChainDataExtensionCardanoProjectedNFT, InternalEvent } from '@paima/sm';
 import {
   type ChainData,
   type ChainDataExtension,
-  type ChainDataExtensionCardanoDelegation,
+  type ChainDataExtensionDatum,
   type PresyncChainData,
 } from '@paima/sm';
 import { composeChainData, groupCdeData } from '../../utils.js';
-import { BaseFunnel } from '../BaseFunnel.js';
 import type { FunnelSharedData } from '../BaseFunnel.js';
+import { BaseFunnel } from '../BaseFunnel.js';
 import type { PoolClient } from 'pg';
 import type { ChainFunnel, ReadPresyncDataFrom } from '@paima/runtime';
 import getCdePoolData from '../../cde/cardanoPool.js';
+import getCdeProjectedNFTData from '../../cde/cardanoProjectedNFT.js';
 import { query } from '@dcspark/carp-client/client/src/index';
 import { Routes } from '@dcspark/carp-client/shared/routes';
-import { FUNNEL_PRESYNC_FINISHED } from '@paima/utils/src/constants';
+import { FUNNEL_PRESYNC_FINISHED, InternalEventType } from '@paima/utils/src/constants';
 import { CarpFunnelCacheEntry } from '../FunnelCache.js';
+import { getCardanoEpoch } from '@paima/db';
 
 const delayForWaitingForFinalityLoop = 1000;
 
-// This returns the unix timestamp of the first block in the Shelley era of the
-// configured network, and the slot of the corresponding block.
-function knownShelleyTime(): { timestamp: number; absoluteSlot: number } {
+type Era = {
+  firstSlot: number;
+  startEpoch: number;
+  slotsPerEpoch: number;
+  timestamp: number;
+};
+
+function shelleyEra(): Era {
   switch (ENV.CARDANO_NETWORK) {
     case 'preview':
-      return { timestamp: 1666656000, absoluteSlot: 0 };
+      return {
+        firstSlot: 0,
+        startEpoch: 0,
+        slotsPerEpoch: 86400,
+        timestamp: 1666656000,
+      };
     case 'preprod':
-      return { timestamp: 1655769600, absoluteSlot: 86400 };
+      return {
+        firstSlot: 86400,
+        startEpoch: 4,
+        slotsPerEpoch: 432000,
+        timestamp: 1655769600,
+      };
     case 'mainnet':
-      return { timestamp: 1596059091, absoluteSlot: 4492800 };
+      return {
+        firstSlot: 4492800,
+        startEpoch: 208,
+        slotsPerEpoch: 432000,
+        timestamp: 1596059091,
+      };
     default:
       throw new Error('unknown cardano network');
+  }
+}
+
+function absoluteSlotToEpoch(era: Era, slot: number): number {
+  const slotRelativeToEra = slot - era.firstSlot;
+
+  if (slotRelativeToEra >= 0) {
+    return era.startEpoch + Math.floor(slotRelativeToEra / era.slotsPerEpoch);
+  } else {
+    // this shouldn't really happen in practice, unless for some reason the
+    // indexed EVM blocks are older than the start of the shelley era (which
+    // does not apply to the presync).
+    throw new Error('slot number is not in the current era');
   }
 }
 
@@ -58,14 +93,12 @@ Note: The state pairing only matters after the presync stage is done, so as
 long as the timestamp of the block specified in START_BLOCKHEIGHT happens after
 the first Shelley block, we don't need to consider the previous Cardano era (if any).
 */
-function timestampToAbsoluteSlot(timestamp: number, confirmationDepth: number): number {
+function timestampToAbsoluteSlot(era: Era, timestamp: number, confirmationDepth: number): number {
   const cardanoAvgBlockPeriod = 20;
   // map timestamps with a delta, since we are waiting for blocks.
   const confirmationTimeDelta = cardanoAvgBlockPeriod * confirmationDepth;
 
-  const era = knownShelleyTime();
-
-  return timestamp - confirmationTimeDelta - era.timestamp + era.absoluteSlot;
+  return timestamp - confirmationTimeDelta - era.timestamp + era.firstSlot;
 }
 
 export class CarpFunnel extends BaseFunnel implements ChainFunnel {
@@ -83,9 +116,11 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
     this.readPresyncData.bind(this);
     this.getDbTx.bind(this);
     this.bufferedData = null;
+    this.era = shelleyEra();
   }
 
   private bufferedData: ChainData[] | null;
+  private era: Era;
 
   public override async readData(blockHeight: number): Promise<ChainData[]> {
     if (!this.bufferedData || this.bufferedData[0].blockNumber != blockHeight) {
@@ -122,10 +157,36 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
       this.sharedData.extensions,
       lastTimestamp,
       this.cache,
-      this.confirmationDepth
+      this.confirmationDepth,
+      this.era
     );
 
     const composed = composeChainData(this.bufferedData, grouped);
+
+    for (const data of composed) {
+      if (!data.internalEvents) {
+        data.internalEvents = [] as InternalEvent[];
+
+        const epoch = absoluteSlotToEpoch(
+          this.era,
+          timestampToAbsoluteSlot(this.era, data.timestamp, this.confirmationDepth)
+        );
+
+        const prevEpoch = this.cache.getState().epoch;
+
+        if (!prevEpoch || epoch !== prevEpoch) {
+          data.internalEvents.push({
+            type: InternalEventType.CardanoBestEpoch,
+            epoch: epoch,
+          });
+
+          // The execution of the event that we just pushed should set the
+          // `cardano_last_epoch` table to `epoch`. This cache entry mirrors the
+          // value of that table, so we need to update it here too.
+          this.cache.updateEpoch(epoch);
+        }
+      }
+    }
 
     this.bufferedData = null;
 
@@ -140,27 +201,46 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
     let basePromise = this.baseFunnel.readPresyncData(args);
 
     if (arg && arg.from >= 0 && arg.from < this.cache.getState().startingSlot) {
-      const [poolEvents, data] = await Promise.all([
+      const [carpEvents, data] = await Promise.all([
         Promise.all(
           this.sharedData.extensions
-            .filter(extension => extension.cdeType === ChainDataExtensionType.CardanoPool)
+            .filter(
+              extension =>
+                extension.cdeType === ChainDataExtensionType.CardanoPool ||
+                extension.cdeType === ChainDataExtensionType.CardanoProjectedNFT
+            )
             .map(extension => {
-              const data = getCdePoolData(
-                this.carpUrl,
-                extension as ChainDataExtensionCardanoDelegation,
-                arg.from,
-                Math.min(arg.to, this.cache.getState().startingSlot - 1),
-                slot => {
-                  return slot;
-                }
-              );
-              return data;
+              if (extension.cdeType === ChainDataExtensionType.CardanoPool) {
+                const data = getCdePoolData(
+                  this.carpUrl,
+                  extension,
+                  arg.from,
+                  Math.min(arg.to, this.cache.getState().startingSlot - 1),
+                  slot => {
+                    return slot;
+                  },
+                  slot => absoluteSlotToEpoch(this.era, slot)
+                );
+                return data;
+              } else {
+                // ProjectedNFT
+                const data = getCdeProjectedNFTData(
+                  this.carpUrl,
+                  extension as ChainDataExtensionCardanoProjectedNFT,
+                  arg.from,
+                  Math.min(arg.to, this.cache.getState().startingSlot - 1),
+                  slot => {
+                    return slot;
+                  }
+                );
+                return data;
+              }
             })
         ),
         basePromise,
       ]);
 
-      let grouped = groupCdeData(Network.CARDANO, arg.from, arg.to, poolEvents);
+      let grouped = groupCdeData(Network.CARDANO, arg.from, arg.to, carpEvents);
 
       if (grouped.length > 0) {
         data[Network.CARDANO] = grouped;
@@ -200,10 +280,17 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
 
       newEntry.updateStartingSlot(
         timestampToAbsoluteSlot(
+          shelleyEra(),
           (await sharedData.web3.eth.getBlock(startingBlockHeight)).timestamp as number,
           confirmationDepth
         )
       );
+
+      const epoch = await getCardanoEpoch.run(undefined, dbTx);
+
+      if (epoch.length === 1) {
+        newEntry.updateEpoch(epoch[0].epoch);
+      }
 
       return newEntry;
     })();
@@ -225,14 +312,15 @@ async function readDataInternal(
   extensions: ChainDataExtension[],
   lastTimestamp: number,
   cache: CarpFunnelCacheEntry,
-  confirmationDepth: number
+  confirmationDepth: number,
+  era: Era
 ): Promise<PresyncChainData[]> {
   // the lower range is exclusive
-  const min = timestampToAbsoluteSlot(lastTimestamp, confirmationDepth);
+  const min = timestampToAbsoluteSlot(era, lastTimestamp, confirmationDepth);
   // the upper range is inclusive
   const maxElement = data[data.length - 1];
 
-  const max = timestampToAbsoluteSlot(maxElement.timestamp, confirmationDepth);
+  const max = timestampToAbsoluteSlot(era, maxElement.timestamp, confirmationDepth);
 
   cache.updateLastPoint(maxElement.blockNumber, maxElement.timestamp);
 
@@ -257,7 +345,7 @@ async function readDataInternal(
 
   const blockNumbers = data.reduce(
     (dict, data) => {
-      dict[timestampToAbsoluteSlot(data.timestamp, confirmationDepth)] = data.blockNumber;
+      dict[timestampToAbsoluteSlot(era, data.timestamp, confirmationDepth)] = data.blockNumber;
       return dict;
     },
     {} as { [slot: number]: number }
@@ -283,7 +371,18 @@ async function readDataInternal(
 
       switch (extension.cdeType) {
         case ChainDataExtensionType.CardanoPool:
-          const data = getCdePoolData(
+          const poolData = getCdePoolData(
+            carpUrl,
+            extension,
+            min,
+            Math.min(max, extension.stopSlot || max),
+            mapSlotToBlockNumber,
+            slot => absoluteSlotToEpoch(era, slot)
+          );
+
+          return poolData;
+        case ChainDataExtensionType.CardanoProjectedNFT:
+          const projectedNFTData = getCdeProjectedNFTData(
             carpUrl,
             extension,
             min,
@@ -291,7 +390,7 @@ async function readDataInternal(
             mapSlotToBlockNumber
           );
 
-          return data;
+          return projectedNFTData;
         default:
           return Promise.resolve([]);
       }

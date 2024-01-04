@@ -13,8 +13,10 @@ import {
   internalGetErc6551AccountOwner,
   internalGetAllOwnedErc6551Accounts,
   internalGetCardanoAddressDelegation,
+  internalGetCardanoProjectedNft,
 } from './cde-access-internals.js';
 import type { OwnedNftsResponse, GenericCdeDataUnit, TokenIdPair } from './types.js';
+import type { ICdeCardanoGetProjectedNftResult } from '@paima/db/src';
 
 /**
  * Fetch the owner of the NFT from the database
@@ -160,10 +162,25 @@ export async function getAllOwnedErc6551Accounts(
 
 /**
  * Fetch the pool this address is delegating to, if any.
+ *
+ * If the last delegation indexed for this address happened during the current
+ * epoch, this returns both the current delegation and the previous entry.
+ *
+ * Otherwise, this will just return a single entry.
  */
 export async function getCardanoAddressDelegation(
   readonlyDBConn: Pool,
   address: string
-): Promise<string | null> {
+): Promise<{ events: { pool: string | null; epoch: number }[]; currentEpoch: number } | null> {
   return await internalGetCardanoAddressDelegation(readonlyDBConn, address);
+}
+
+/**
+ * Fetch the NFTs that are projected by particular PKH
+ */
+export async function getCardanoAddressProjectedNfts(
+  readonlyDBConn: Pool,
+  address: string
+): Promise<ICdeCardanoGetProjectedNftResult[]> {
+  return await internalGetCardanoProjectedNft(readonlyDBConn, address);
 }
