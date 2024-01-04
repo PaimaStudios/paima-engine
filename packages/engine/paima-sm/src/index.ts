@@ -343,12 +343,16 @@ async function processUserInputs(
     // Check if internal Concise Command
     // Internal Concise Commands are prefixed with an ampersand (&)
     //
-    // delegate       = &wd|from|to|from_signature|to_signature
-    // migrate        = &wm|from|to|from_signature|to_signature
-    // cancelDelegate = &wc|to|to_signature
+    // delegate       = &wd|from?|to?|from_signature|to_signature
+    // migrate        = &wm|from?|to?|from_signature|to_signature
+    // cancelDelegate = &wc|to_signature
     const delegateWallet = new DelegateWallet(DBConn);
     if (inputData.inputData.startsWith(DelegateWallet.INTERNAL_COMMAND_PREFIX)) {
-      await delegateWallet.process(inputData.inputData);
+      await delegateWallet.process(
+        inputData.realAddress,
+        inputData.userAddress,
+        inputData.inputData
+      );
     } else {
       // If wallet does not exist in address table: create it.
       if (inputData.userId === NO_USER_ID) {

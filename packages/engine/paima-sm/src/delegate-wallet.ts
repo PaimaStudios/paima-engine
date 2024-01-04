@@ -3,6 +3,7 @@ import type { PoolClient } from 'pg';
 
 import { PaimaParser } from '@paima/concise';
 import { ENV, doLog } from '@paima/utils';
+import type { IVerify } from '@paima/crypto';
 import { CryptoManager } from '@paima/crypto';
 import type { IGetAddressFromAddressResult } from '@paima/db';
 import {
@@ -31,7 +32,7 @@ type ParsedDelegateWalletCommand =
       command: 'migrate';
       args: { from: string; to: string; from_signature: string; to_signature: string };
     }
-  | { command: 'cancelDelegations'; args: { to: string; to_signature: string } };
+  | { command: 'cancelDelegations'; args: { to_signature: string } };
 
 // Delegate Wallet manages cache cleanup.
 enableManualCache();
@@ -44,26 +45,25 @@ export class DelegateWallet {
   private static readonly SEP = ':';
 
   private static readonly delegationGrammar = `
-    delegate            =   &wd|from|to|from_signature|to_signature
-    migrate             =   &wm|from|to|from_signature|to_signature
-    cancelDelegations   =   &wc|to|to_signature
+    delegate            =   &wd|from?|to?|from_signature|to_signature
+    migrate             =   &wm|from?|to?|from_signature|to_signature
+    cancelDelegations   =   &wc|to_signature
     `;
 
   private static readonly parserCommands = {
     delegate: {
-      from: PaimaParser.WalletAddress(),
-      to: PaimaParser.WalletAddress(),
+      from: PaimaParser.OptionalParser('', PaimaParser.WalletAddress()),
+      to: PaimaParser.OptionalParser('', PaimaParser.WalletAddress()),
       from_signature: PaimaParser.NCharsParser(0, 1024),
       to_signature: PaimaParser.NCharsParser(0, 1024),
     },
     migrate: {
-      from: PaimaParser.WalletAddress(),
-      to: PaimaParser.WalletAddress(),
+      from: PaimaParser.OptionalParser('', PaimaParser.WalletAddress()),
+      to: PaimaParser.OptionalParser('', PaimaParser.WalletAddress()),
       from_signature: PaimaParser.NCharsParser(0, 1024),
       to_signature: PaimaParser.NCharsParser(0, 1024),
     },
     cancelDelegations: {
-      to: PaimaParser.WalletAddress(),
       to_signature: PaimaParser.NCharsParser(0, 1024),
     },
   };
@@ -82,6 +82,36 @@ export class DelegateWallet {
     }${internalMessage.toLocaleLowerCase()}${DelegateWallet.SEP}${ENV.CONTRACT_ADDRESS}`;
   }
 
+  private validateSender(to: string, from: string, realAddress: string): void {
+    if (to === from) throw new Error('Cannot delegate self');
+    const isSelf = to === realAddress || from === realAddress;
+    if (!isSelf) throw new Error('Either to or from must bt the sender address');
+  }
+
+  // Regex must match all possible wallets for the network.
+  private static readonly WALLET_VALIDATORS: { regex: RegExp; manager: () => IVerify }[] = [
+    {
+      // EVM 0xeEacBe169AD0EB650E8130fc918e2FDE0d8548b3
+      regex: /^0x[a-fA-F0-9]{40}$/,
+      manager: () => CryptoManager.Evm(new Web3()),
+    },
+    {
+      // Cardano addr1qxd9et27q0funwzturr3sex4zdammc7wdeelpg2ph5pt3dyzmyra5yewwvce7chndkth9g7q2u8n33puue4guh3c6lvqtkfq0t
+      regex: /^addr1[a-zA-Z0-9]+$/,
+      manager: () => CryptoManager.Cardano(),
+    },
+    {
+      // Algorand EZ6MRYCRVUQ4A6SCWKID6ND4C6ZNVVGBDJDXAEYX6EBCYMHLLUMOPEKU2U
+      regex: /^[A-Z2-7]{58}$/,
+      manager: () => CryptoManager.Algorand(),
+    },
+    {
+      // Polkadot 5FbQJpZnbEFkwwfagwyL5NWwtJhZ9GpdHcKhmWhPUYrJRnap
+      regex: /^[1-9A-HJ-NP-Za-km-z]{47,48}$/,
+      manager: () => CryptoManager.Polkadot(),
+    },
+  ];
+
   /* Verify Signature with all possible wallets. */
   private async verifySignature(
     walletAddress: string,
@@ -89,19 +119,15 @@ export class DelegateWallet {
     signature: string
   ): Promise<boolean> {
     if (!walletAddress || !signature) throw new Error('No Signature');
-    const wallets = [
-      CryptoManager.Evm(new Web3()),
-      CryptoManager.Algorand(),
-      CryptoManager.Cardano(),
-      CryptoManager.Polkadot(),
-    ];
-    for (const wallet of wallets) {
+
+    for (const validator of DelegateWallet.WALLET_VALIDATORS) {
       try {
-        if (await wallet.verifySignature(walletAddress, message, signature)) {
+        if (!walletAddress.match(validator.regex)) continue;
+        if (await validator.manager().verifySignature(walletAddress, message, signature)) {
           return true;
         }
       } catch {
-        // do nothing.
+        // do nothing, some validators throw errors if the signature is invalid
       }
     }
     throw new Error(`Invalid Signature for ${walletAddress} : ${message}`);
@@ -260,7 +286,11 @@ export class DelegateWallet {
    * If returns TRUE this is was an intend as internal command,
    * and the paima-concise command should not passed into the game STF.
    */
-  public async process(command: string): Promise<boolean> {
+  public async process(
+    realAddress: string,
+    userAddress: string,
+    command: string
+  ): Promise<boolean> {
     try {
       if (!command.startsWith(DelegateWallet.INTERNAL_COMMAND_PREFIX)) return false;
       const parsed: ParsedDelegateWalletCommand = DelegateWallet.parser.start(
@@ -269,29 +299,42 @@ export class DelegateWallet {
       switch (parsed.command) {
         case 'delegate':
           {
-            const { from, to, from_signature, to_signature } = parsed.args;
+            const from = parsed.args.from || realAddress;
+            const to = parsed.args.to || realAddress;
+            this.validateSender(to, from, realAddress);
+
+            const { from_signature, to_signature } = parsed.args;
             await Promise.all([
               this.verifySignature(from, this.generateMessage(to), from_signature),
               this.verifySignature(to, this.generateMessage(from), to_signature),
             ]);
             await this.cmdDelegate(from.toLocaleLowerCase(), to.toLocaleLowerCase());
+            doLog(`Delegate Wallet ${from.substring(0, 8)}... -> ${to.substring(0, 8)}...`);
           }
           break;
         case 'migrate':
           {
-            const { from, to, from_signature, to_signature } = parsed.args;
+            const from = parsed.args.from || realAddress;
+            const to = parsed.args.to || realAddress;
+            this.validateSender(to, from, realAddress);
+
+            const { from_signature, to_signature } = parsed.args;
             await Promise.all([
               this.verifySignature(from, this.generateMessage(to), from_signature),
               this.verifySignature(to, this.generateMessage(from), to_signature),
             ]);
             await this.cmdMigrate(from.toLocaleLowerCase(), to.toLocaleLowerCase());
+
+            doLog(`Migrate Wallet ${from.substring(0, 8)}... -> ${to.substring(0, 8)}...`);
           }
           break;
         case 'cancelDelegations':
           {
-            const { to, to_signature } = parsed.args;
+            const to = realAddress;
+            const { to_signature } = parsed.args;
             await this.verifySignature(to, this.generateMessage(), to_signature);
             await this.cmdCancelDelegations(to.toLocaleLowerCase());
+            doLog(`Cancel Delegate 'to' ${to.substring(0, 8)}...`);
           }
           break;
         default:

@@ -1,7 +1,7 @@
 /*
- * delegate            =   &wd|from|to|from_signature|to_signature
- * migrate             =   &wm|from|to|from_signature|to_signature
- * cancelDelegations   =   &wc|to|to_signature
+ * delegate            =   &wd|from?|to?|from_signature|to_signature
+ * migrate             =   &wm|from?|to?|from_signature|to_signature
+ * cancelDelegations   =   &wc|to_signature
  */
 
 import { builder } from '@paima/concise';
@@ -22,18 +22,18 @@ import { paimaEndpoints } from '../index.js';
 import assertNever from 'assert-never';
 
 export async function walletConnect(
-  from: string,
-  to: string,
+  from: string | null,
+  to: string | null,
   from_signature: string,
   to_signature: string
 ): Promise<SuccessfulResult<PostDataResponse> | FailedResult> {
-  const errorFxn = buildEndpointErrorFxn('wallet-connect');
+  const errorFxn = buildEndpointErrorFxn('delegate-wallet');
 
-  // walletConnect = &wc|from|to|from_signature|to_signature
+  // delegate = &wd|from?|to?|from_signature|to_signature
   const conciseBuilder = builder.initialize();
   conciseBuilder.setPrefix('&wd');
-  conciseBuilder.addValue({ value: from });
-  conciseBuilder.addValue({ value: to });
+  conciseBuilder.addValue({ value: from || '' });
+  conciseBuilder.addValue({ value: to || '' });
   conciseBuilder.addValue({ value: from_signature });
   conciseBuilder.addValue({ value: to_signature });
   try {
@@ -50,18 +50,18 @@ export async function walletConnect(
 }
 
 export async function walletConnectMigrate(
-  from: string,
-  to: string,
+  from: string | null,
+  to: string | null,
   from_signature: string,
   to_signature: string
 ): Promise<SuccessfulResult<PostDataResponse> | FailedResult> {
-  const errorFxn = buildEndpointErrorFxn('wallet-connect');
+  const errorFxn = buildEndpointErrorFxn('delegate-wallet-migrate');
 
-  // migrate = &wm|from|to|from_signature|to_signature
+  // migrate = &wm|from?|to?|from_signature|to_signature
   const conciseBuilder = builder.initialize();
   conciseBuilder.setPrefix('&wm');
-  conciseBuilder.addValue({ value: from });
-  conciseBuilder.addValue({ value: to });
+  conciseBuilder.addValue({ value: from || '' });
+  conciseBuilder.addValue({ value: to || '' });
   conciseBuilder.addValue({ value: from_signature });
   conciseBuilder.addValue({ value: to_signature });
   try {
@@ -78,15 +78,13 @@ export async function walletConnectMigrate(
 }
 
 export async function walletConnectCancelDelegations(
-  to: string,
   to_signature: string
 ): Promise<SuccessfulResult<PostDataResponse> | FailedResult> {
-  const errorFxn = buildEndpointErrorFxn('wallet-cancel-delegations');
+  const errorFxn = buildEndpointErrorFxn('delegate-wallet-cancel');
 
-  // walletConnect = &wc|to|to_signature
+  // walletConnect = &wc|to_signature
   const conciseBuilder = builder.initialize();
   conciseBuilder.setPrefix('&wc');
-  conciseBuilder.addValue({ value: to });
   conciseBuilder.addValue({ value: to_signature });
   try {
     const result = await postConciseData(conciseBuilder.build(), errorFxn);

@@ -32,8 +32,11 @@ export type TransactionTemplate = {
 export type NonceString = string;
 
 export interface SubmittedData {
+  // Address of the wallet that submitted the data.
   realAddress: WalletAddress;
+  // Mapped address to main wallet.
   userAddress: WalletAddress;
+  // Fixed User ID
   userId: number;
   inputData: InputDataString;
   inputNonce: NonceString;
