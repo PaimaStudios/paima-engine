@@ -1,6 +1,4 @@
 import Web3 from 'web3';
-import { JsonRpcEngine } from '@metamask/json-rpc-engine';
-import { providerFromEngine } from '@metamask/eth-json-rpc-provider';
 import type { AbiItem } from 'web3-utils';
 import type { Contract, EventData } from 'web3-eth-contract';
 import web3UtilsPkg from 'web3-utils';
@@ -20,7 +18,6 @@ import {
   ChainDataExtensionType,
   ChainDataExtensionDatumType,
 } from './constants.js';
-import { createFetchMiddleware } from '@metamask/eth-json-rpc-middleware';
 
 const { isAddress } = web3UtilsPkg;
 
@@ -29,7 +26,7 @@ export * from './types.js';
 export type * from './types.js';
 export * from './security/parse.js';
 export type * from './contract-types/index.js';
-export * from './constants';
+export * from './constants.js';
 
 export type { Web3, Contract, AbiItem, EventData };
 export {
@@ -45,6 +42,7 @@ export {
 export const DEFAULT_GAS_PRICE = '61000000000' as const;
 
 export const SCHEDULED_DATA_ADDRESS = '0x0';
+export const SCHEDULED_DATA_ID = 0;
 
 export function buildErrorCodeTranslator(obj: ErrorMessageMapping): ErrorMessageFxn {
   return function (errorCode: ErrorCode): string {

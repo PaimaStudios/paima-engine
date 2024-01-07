@@ -6,7 +6,7 @@ import type { IVerify } from './IVerify.js';
 export class AlgorandCrypto implements IVerify {
   verifyAddress = async (address: string): Promise<boolean> => {
     // TODO: improve
-    return await Promise.resolve(/^[0-9a-zA-Z]+$/.test(address));
+    return await Promise.resolve(/^[A-Z2-7]{58}$/.test(address));
   };
   verifySignature = async (
     userAddress: string,

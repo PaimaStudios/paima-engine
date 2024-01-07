@@ -10,6 +10,8 @@ import {
   extractBatches,
 } from '@paima/concise';
 import { toBN, hexToUtf8, sha3 } from 'web3-utils';
+import type { PoolClient } from 'pg';
+import { getMainAddress } from '@paima/db';
 
 interface ValidatedSubmittedData extends SubmittedData {
   validated: boolean;
@@ -20,29 +22,37 @@ const TIMESTAMP_LIMIT = 24 * 3600;
 export async function extractSubmittedData(
   web3: Web3,
   events: PaimaGameInteraction[],
-  blockTimestamp: number
+  blockTimestamp: number,
+  DBConn: PoolClient
 ): Promise<SubmittedData[]> {
-  const unflattenedList = await Promise.all(events.map(e => eventMapper(web3, e, blockTimestamp)));
+  const unflattenedList = await Promise.all(
+    events.map(e => eventMapper(web3, e, blockTimestamp, DBConn))
+  );
   return unflattenedList.flat();
 }
 
 async function eventMapper(
   web3: Web3,
   e: PaimaGameInteraction,
-  blockTimestamp: number
+  blockTimestamp: number,
+  DBConn: PoolClient
 ): Promise<SubmittedData[]> {
   const decodedData = decodeEventData(e.returnValues.data);
+  const address = await getMainAddress(e.returnValues.userAddress, DBConn);
   return await processDataUnit(
     web3,
     {
-      userAddress: e.returnValues.userAddress,
+      userId: address.id,
+      realAddress: e.returnValues.userAddress,
+      userAddress: address.address,
       inputData: decodedData,
       inputNonce: '', // placeholder that will be filled later
       suppliedValue: e.returnValues.value,
       scheduled: false,
     },
     e.blockNumber,
-    blockTimestamp
+    blockTimestamp,
+    DBConn
   );
 }
 
@@ -63,7 +73,8 @@ async function processDataUnit(
   web3: Web3,
   unit: SubmittedData,
   blockHeight: number,
-  blockTimestamp: number
+  blockTimestamp: number,
+  DBConn: PoolClient
 ): Promise<SubmittedData[]> {
   try {
     if (!unit.inputData.includes(OUTER_BATCH_DIVIDER)) {
@@ -83,7 +94,7 @@ async function processDataUnit(
     const subunitValue = toBN(unit.suppliedValue).div(toBN(subunits.length)).toString(10);
     const validatedSubUnits = await Promise.all(
       subunits.map(elem =>
-        processBatchedSubunit(web3, elem, subunitValue, blockHeight, blockTimestamp)
+        processBatchedSubunit(web3, elem, subunitValue, blockHeight, blockTimestamp, DBConn)
       )
     );
     return validatedSubUnits.filter(item => item.validated).map(unpackValidatedData);
@@ -98,10 +109,13 @@ async function processBatchedSubunit(
   input: string,
   suppliedValue: string,
   blockHeight: number,
-  blockTimestamp: number
+  blockTimestamp: number,
+  DBConn: PoolClient
 ): Promise<ValidatedSubmittedData> {
   const INVALID_INPUT: ValidatedSubmittedData = {
     inputData: '',
+    realAddress: '',
+    userId: -1,
     userAddress: '',
     inputNonce: '',
     suppliedValue: '0',
@@ -136,9 +150,12 @@ async function processBatchedSubunit(
 
   const inputNonce = createBatchNonce(millisecondTimestamp, userAddress, inputData);
 
+  const address = await getMainAddress(userAddress, DBConn);
   return {
     inputData,
-    userAddress,
+    realAddress: userAddress,
+    userAddress: address.address,
+    userId: address.id,
     inputNonce,
     suppliedValue,
     scheduled: false,

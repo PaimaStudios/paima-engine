@@ -87,6 +87,70 @@ CREATE TABLE emulated_block_heights (
   emulated_block_height INTEGER NOT NULL
 );
 
+CREATE TABLE addresses (
+  id SERIAL PRIMARY KEY,
+  address TEXT NOT NULL UNIQUE
+);
+
+CREATE TABLE delegations (
+  from_id INTEGER NOT NULL REFERENCES addresses(id),
+  to_id INTEGER NOT NULL REFERENCES addresses(id),
+ PRIMARY KEY (from_id, to_id)
+);
+
+-- Create a function to notify any change in address or delegate tables
+create or replace function public.notify_wallet_connect()
+  returns trigger
+  language plpgsql
+as $function$ 
+DECLARE
+  rec RECORD;
+  payload TEXT;
+  column_name TEXT;
+  column_value TEXT;
+  payload_items TEXT[];
+begin
+  CASE TG_OP
+    WHEN 'INSERT', 'UPDATE' THEN
+      rec := NEW;
+    WHEN 'DELETE' THEN
+      rec := OLD;
+    ELSE
+      RAISE EXCEPTION 'Unknown TG_OP: "%". Should not occur!', TG_OP;
+  END CASE;
+ 
+   -- Get required fields
+  FOREACH column_name IN ARRAY TG_ARGV LOOP
+    EXECUTE format('SELECT $1.%I::TEXT', column_name)
+    INTO column_value
+    USING rec;
+    payload_items := array_append(payload_items, '"' || replace(column_name, '"', '\"') || '":"' || replace(column_value, '"', '\"') || '"');
+  END LOOP;
+	  -- Build the payload
+  payload := ''
+              || '{'
+              || '"timestamp":"' || CURRENT_TIMESTAMP                    || '",'
+              || '"operation":"' || TG_OP                                || '",'
+              || '"schema":"'    || TG_TABLE_SCHEMA                      || '",'
+              || '"table":"'     || TG_TABLE_NAME                        || '",'
+              || '"data":{'      || array_to_string(payload_items, ',')  || '}'
+              || '}';
+             
+	perform pg_notify('wallet_connect_change', payload);
+ 	return null;
+end;
+$function$
+;
+
+CREATE OR REPLACE TRIGGER wallet_connect_insert_or_update
+  AFTER INSERT OR UPDATE or delete ON addresses
+  for each row execute procedure notify_wallet_connect('id', 'address');
+
+CREATE OR REPLACE TRIGGER wallet_connect_insert_or_update
+  AFTER INSERT OR UPDATE or delete ON delegations
+  for each row execute procedure notify_wallet_connect('from_id', 'to_id');
+
+
 CREATE TABLE cde_cardano_pool_delegation (
   cde_id INTEGER NOT NULL,
   epoch INTEGER NOT NULL,

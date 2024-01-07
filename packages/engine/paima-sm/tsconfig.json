@@ -11,5 +11,6 @@
     { "path": "../../paima-sdk/paima-prando" },
     { "path": "../../paima-sdk/paima-concise/tsconfig.build.json" },
     { "path": "../../node-sdk/paima-utils-backend" },
+    { "path": "../../paima-sdk/paima-crypto/tsconfig.build.json" }
   ]
 }

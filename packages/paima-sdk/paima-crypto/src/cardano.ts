@@ -4,7 +4,7 @@ import type { IVerify } from './IVerify.js';
 export class CardanoCrypto implements IVerify {
   verifyAddress = async (address: string): Promise<boolean> => {
     // TODO: improve
-    return await Promise.resolve(/^[0-9a-z_]+$/.test(address));
+    return await Promise.resolve(/^addr1[a-zA-Z0-9]+$/.test(address));
   };
   verifySignature = async (
     userAddress: string,

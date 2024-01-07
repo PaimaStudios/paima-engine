@@ -1,4 +1,4 @@
-import type { Pool, PoolClient, PoolConfig } from 'pg';
+import type { Client, Pool, PoolClient, PoolConfig } from 'pg';
 
 import type { SQLUpdate } from '@paima/db';
 import type {
@@ -373,6 +373,7 @@ export interface GameStateMachine {
   getPresyncBlockHeight: (dbTx?: PoolClient | Pool) => Promise<number>;
   getPresyncCardanoSlotHeight: (dbTx?: PoolClient | Pool) => Promise<number>;
   getReadonlyDbConn: () => Pool;
+  getPersistentReadonlyDbConn: () => Client;
   getReadWriteDbConn: () => Pool;
   process: (dbTx: PoolClient, chainData: ChainData) => Promise<void>;
   presyncProcess: (dbTx: PoolClient, latestCdeData: PresyncChainData) => Promise<void>;

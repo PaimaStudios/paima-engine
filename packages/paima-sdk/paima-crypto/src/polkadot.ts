@@ -4,7 +4,7 @@ import type { IVerify } from './IVerify.js';
 export class PolkadotCrypto implements IVerify {
   verifyAddress = async (address: string): Promise<boolean> => {
     // TODO: improve
-    return await Promise.resolve(/^[0-9a-zA-Z]+$/.test(address));
+    return await Promise.resolve(/^[1-9A-HJ-NP-Za-km-z]{47,48}$/.test(address));
   };
   verifySignature = async (
     userAddress: string,

@@ -1,8 +1,10 @@
 import { tx } from './pg-tx.js';
-import { getConnection } from './pg-connection.js';
+import { getConnection, getPersistentConnection } from './pg-connection.js';
 import { createScheduledData, deleteScheduledData } from './scheduled-constructors.js';
 import { initializePaimaTables } from './database-validation.js';
 import { DataMigrations } from './data-migrations.js';
+
+export * from './delegate-wallet.js';
 
 export * from './sql/block-heights.queries.js';
 export type * from './sql/block-heights.queries.js';
@@ -28,6 +30,8 @@ export * from './sql/cde-erc6551-registry.queries.js';
 export type * from './sql/cde-erc6551-registry.queries.js';
 export * from './sql/emulated.queries.js';
 export type * from './sql/emulated.queries.js';
+export type * from './sql/wallet-delegation.queries.js';
+export * from './sql/wallet-delegation.queries.js';
 export type * from './types.js';
 export * from './sql/cde-cardano-pool-delegation.queries.js';
 export type * from './sql/cde-cardano-pool-delegation.queries.js';
@@ -41,6 +45,7 @@ export type * from './sql/cardano-last-epoch.queries.js';
 export {
   tx,
   getConnection,
+  getPersistentConnection,
   createScheduledData,
   deleteScheduledData,
   initializePaimaTables,

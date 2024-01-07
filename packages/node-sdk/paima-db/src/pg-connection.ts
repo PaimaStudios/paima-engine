@@ -1,4 +1,4 @@
-import type { PoolClient, PoolConfig } from 'pg';
+import type { Client, PoolClient, PoolConfig } from 'pg';
 import pg from 'pg';
 
 import { logError } from '@paima/utils';
@@ -24,4 +24,16 @@ export const getConnection = (creds: PoolConfig, readonly = false): pg.Pool => {
   }
 
   return pool;
+};
+
+// For notifications use a direct (non-pooled) persistent connection.
+export const getPersistentConnection = (creds: PoolConfig): Client => {
+  const client = new pg.Client(creds);
+  client.connect(() => {});
+  client.on('error', err => logError(err));
+  // On each new client initiated, need to register for error(this is a serious bug on pg, the client throw errors although it should not)
+  client.on('error', (err: Error) => {
+    logError(err);
+  });
+  return client;
 };

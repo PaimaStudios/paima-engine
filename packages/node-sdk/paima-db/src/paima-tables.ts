@@ -358,6 +358,104 @@ const TABLE_DATA_EMULATED: TableData = {
   creationQuery: QUERY_CREATE_TABLE_EMULATED,
 };
 
+const QUERY_CREATE_TABLE_ADDRESSES = `
+CREATE TABLE addresses (
+  id SERIAL PRIMARY KEY,
+  address TEXT NOT NULL UNIQUE
+);
+`;
+
+const TABLE_DATA_ADDRESSES: TableData = {
+  tableName: 'addresses',
+  primaryKeyColumns: ['id'],
+  columnData: packTuples([
+    ['id', 'integer', 'NO', ''],
+    ['address', 'text', 'NO', ''],
+  ]),
+  serialColumns: ['id'],
+  creationQuery: QUERY_CREATE_TABLE_ADDRESSES,
+};
+
+const QUERY_CREATE_TABLE_DELEGATIONS = `
+CREATE TABLE delegations (
+	from_id INTEGER NOT NULL REFERENCES addresses(id),
+	to_id INTEGER NOT NULL REFERENCES addresses(id),
+  PRIMARY KEY (from_id, to_id)
+);
+`;
+
+const TABLE_DATA_DELEGATIONS: TableData = {
+  tableName: 'delegations',
+  primaryKeyColumns: ['from_id', 'to_id'],
+  columnData: packTuples([
+    ['from_id', 'integer', 'NO', ''],
+    ['to_id', 'integer', 'NO', ''],
+  ]),
+  serialColumns: [],
+  creationQuery: QUERY_CREATE_TABLE_DELEGATIONS,
+};
+
+const FUNCTION_NOTIFY_WALLET_CONNECT: string = `
+create or replace function public.notify_wallet_connect()
+  returns trigger
+  language plpgsql
+as $function$ 
+DECLARE
+  rec RECORD;
+  payload TEXT;
+  column_name TEXT;
+  column_value TEXT;
+  payload_items TEXT[];
+begin
+  CASE TG_OP
+    WHEN 'INSERT', 'UPDATE' THEN
+      rec := NEW;
+    WHEN 'DELETE' THEN
+      rec := OLD;
+    ELSE
+      RAISE EXCEPTION 'Unknown TG_OP: "%". Should not occur!', TG_OP;
+  END CASE;
+ 
+   -- Get required fields
+  FOREACH column_name IN ARRAY TG_ARGV LOOP
+    EXECUTE format('SELECT $1.%I::TEXT', column_name)
+    INTO column_value
+    USING rec;
+    payload_items := array_append(payload_items, '"' || replace(column_name, '"', '\"') || '":"' || replace(column_value, '"', '\"') || '"');
+  END LOOP;
+	  -- Build the payload
+  payload := ''
+              || '{'
+              || '"timestamp":"' || CURRENT_TIMESTAMP                    || '",'
+              || '"operation":"' || TG_OP                                || '",'
+              || '"schema":"'    || TG_TABLE_SCHEMA                      || '",'
+              || '"table":"'     || TG_TABLE_NAME                        || '",'
+              || '"data":{'      || array_to_string(payload_items, ',')  || '}'
+              || '}';
+             
+	perform pg_notify('wallet_connect_change', payload);
+ 	return null;
+end;
+$function$
+;`;
+
+const FUNCTION_TRIGGER_ADDRESSES: string = `
+CREATE OR REPLACE TRIGGER wallet_connect_insert_or_update
+  AFTER INSERT OR UPDATE or delete ON addresses
+  for each row execute procedure notify_wallet_connect('id', 'address');
+`;
+
+const FUNCTION_TRIGGER_DELEGATIONS: string = `
+CREATE OR REPLACE TRIGGER wallet_connect_insert_or_update
+  AFTER INSERT OR UPDATE or delete ON delegations
+  for each row execute procedure notify_wallet_connect('from_id', 'to_id');
+`;
+
+export const FUNCTIONS: string[] = [
+  FUNCTION_NOTIFY_WALLET_CONNECT,
+  FUNCTION_TRIGGER_ADDRESSES,
+  FUNCTION_TRIGGER_DELEGATIONS,
+];
 export const TABLES: TableData[] = [
   TABLE_DATA_BLOCKHEIGHTS,
   TABLE_DATA_NONCES,
@@ -374,5 +472,7 @@ export const TABLES: TableData[] = [
   TABLE_DATA_CDE_CARDANO_POOL,
   TABLE_DATA_CDE_CARDANO_PROJECTED_NFT,
   TABLE_DATA_EMULATED,
+  TABLE_DATA_ADDRESSES,
+  TABLE_DATA_DELEGATIONS,
   TABLE_DATA_CARDANO_LAST_EPOCH,
 ];

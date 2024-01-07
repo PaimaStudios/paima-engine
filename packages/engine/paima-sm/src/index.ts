@@ -1,17 +1,18 @@
 import { Pool } from 'pg';
-import type { PoolClient } from 'pg';
+import type { PoolClient, Client } from 'pg';
 
 import {
-  ChainDataExtensionDatumType,
   doLog,
   ENV,
   InternalEventType,
   Network,
   SCHEDULED_DATA_ADDRESS,
+  SCHEDULED_DATA_ID,
 } from '@paima/utils';
 import {
   tx,
   getConnection,
+  getPersistentConnection,
   initializePaimaTables,
   storeGameInput,
   blockHeightDone,
@@ -25,12 +26,15 @@ import {
   getLatestProcessedCdeBlockheight,
   getCardanoLatestProcessedCdeSlot,
   markCardanoCdeSlotProcessed,
+  getMainAddress,
+  NO_USER_ID,
   updateCardanoEpoch,
 } from '@paima/db';
 import Prando from '@paima/prando';
 
 import { randomnessRouter } from './randomness.js';
 import { cdeTransitionFunction } from './cde-processing.js';
+import { DelegateWallet } from './delegate-wallet.js';
 import type {
   SubmittedData,
   ChainData,
@@ -40,6 +44,7 @@ import type {
   GameStateMachineInitializer,
   InternalEvent,
 } from './types.js';
+
 export * from './types.js';
 export type * from './types.js';
 
@@ -51,6 +56,7 @@ const SM: GameStateMachineInitializer = {
     startBlockHeight
   ) => {
     const DBConn: Pool = getConnection(databaseInfo);
+    const persistentReadonlyDBConn: Client = getPersistentConnection(databaseInfo);
     const readonlyDBConn: Pool = getConnection(databaseInfo, true);
 
     return {
@@ -87,6 +93,9 @@ const SM: GameStateMachineInitializer = {
       },
       getReadonlyDbConn: (): Pool => {
         return readonlyDBConn;
+      },
+      getPersistentReadonlyDbConn: (): Client => {
+        return persistentReadonlyDBConn;
       },
       getReadWriteDbConn: (): Pool => {
         return DBConn;
@@ -130,9 +139,13 @@ const SM: GameStateMachineInitializer = {
           const [b] = await getLatestProcessedBlockHeight.run(undefined, dbTx);
           const blockHeight = b?.block_height ?? startBlockHeight ?? 0;
           const gameStateTransition = gameStateTransitionRouter(blockHeight);
+          const address = await getMainAddress(userAddress, dbTx);
+
           const data = await gameStateTransition(
             {
-              userAddress: userAddress,
+              realAddress: userAddress,
+              userAddress: address.address,
+              userId: address.id,
               inputData: gameInput,
               inputNonce: '',
               suppliedValue: '0',
@@ -278,6 +291,8 @@ async function processScheduledData(
   );
   for (const data of scheduledData) {
     const inputData: SubmittedData = {
+      userId: SCHEDULED_DATA_ID,
+      realAddress: SCHEDULED_DATA_ADDRESS,
       userAddress: SCHEDULED_DATA_ADDRESS,
       inputData: data.input_data,
       inputNonce: '',
@@ -325,40 +340,58 @@ async function processUserInputs(
       continue;
     }
 
-    // Trigger STF
-    const sqlQueries = await gameStateTransition(
-      {
-        ...inputData,
-        inputData: inputData.inputData,
-      },
-      latestChainData.blockNumber,
-      randomnessGenerator,
-      DBConn
-    );
-    try {
-      for (const [query, params] of sqlQueries) {
-        await query.run(params, DBConn);
+    // Check if internal Concise Command
+    // Internal Concise Commands are prefixed with an ampersand (&)
+    //
+    // delegate       = &wd|from?|to?|from_signature|to_signature
+    // migrate        = &wm|from?|to?|from_signature|to_signature
+    // cancelDelegate = &wc|to_signature
+    const delegateWallet = new DelegateWallet(DBConn);
+    if (inputData.inputData.startsWith(DelegateWallet.INTERNAL_COMMAND_PREFIX)) {
+      await delegateWallet.process(
+        inputData.realAddress,
+        inputData.userAddress,
+        inputData.inputData
+      );
+    } else {
+      // If wallet does not exist in address table: create it.
+      if (inputData.userId === NO_USER_ID) {
+        const newAddress = await delegateWallet.createAddress(inputData.userAddress);
+        inputData.userId = newAddress.id;
       }
-      await insertNonce.run(
-        {
-          nonce: inputData.inputNonce,
-          block_height: latestChainData.blockNumber,
-        },
+      // Trigger STF
+      const sqlQueries = await gameStateTransition(
+        inputData,
+        latestChainData.blockNumber,
+        randomnessGenerator,
         DBConn
       );
-      if (ENV.STORE_HISTORICAL_GAME_INPUTS) {
-        await storeGameInput.run(
+
+      try {
+        for (const [query, params] of sqlQueries) {
+          await query.run(params, DBConn);
+        }
+        await insertNonce.run(
           {
+            nonce: inputData.inputNonce,
             block_height: latestChainData.blockNumber,
-            input_data: inputData.inputData,
-            user_address: inputData.userAddress,
           },
           DBConn
         );
+        if (ENV.STORE_HISTORICAL_GAME_INPUTS) {
+          await storeGameInput.run(
+            {
+              block_height: latestChainData.blockNumber,
+              input_data: inputData.inputData,
+              user_address: inputData.userAddress,
+            },
+            DBConn
+          );
+        }
+      } catch (err) {
+        doLog(`[paima-sm] Database error on gameStateTransition: ${err}`);
+        throw err;
       }
-    } catch (err) {
-      doLog(`[paima-sm] Database error on gameStateTransition: ${err}`);
-      throw err;
     }
   }
   return latestChainData.submittedData.length;

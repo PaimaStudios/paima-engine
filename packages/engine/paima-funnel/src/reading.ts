@@ -1,6 +1,6 @@
 import type Web3 from 'web3';
 import type { BlockTransactionString } from 'web3-eth';
-
+import type { PoolClient } from 'pg';
 import { timeout, cutAfterFirstRejected, DEFAULT_FUNNEL_TIMEOUT, doLog } from '@paima/utils';
 import type { PaimaL2Contract } from '@paima/utils';
 import { TimeoutError } from '@paima/runtime';
@@ -13,7 +13,8 @@ export async function getBaseChainDataMulti(
   web3: Web3,
   paimaL2Contract: PaimaL2Contract,
   fromBlock: number,
-  toBlock: number
+  toBlock: number,
+  DBConn: PoolClient
 ): Promise<ChainData[]> {
   const [blockData, events] = await Promise.all([
     getMultipleBlockData(web3, fromBlock, toBlock),
@@ -22,7 +23,7 @@ export async function getBaseChainDataMulti(
   const resultList: ChainData[] = [];
   for (const block of blockData) {
     const blockEvents = events.filter(e => e.blockNumber === block.blockNumber);
-    const submittedData = await extractSubmittedData(web3, blockEvents, block.timestamp);
+    const submittedData = await extractSubmittedData(web3, blockEvents, block.timestamp, DBConn);
     resultList.push({
       ...block,
       submittedData,
@@ -34,13 +35,14 @@ export async function getBaseChainDataMulti(
 export async function getBaseChainDataSingle(
   web3: Web3,
   paimaL2Contract: PaimaL2Contract,
-  blockNumber: number
+  blockNumber: number,
+  DBConn: PoolClient
 ): Promise<ChainData> {
   const [blockData, events] = await Promise.all([
     getBlockData(web3, blockNumber),
     getPaimaEvents(paimaL2Contract, blockNumber, blockNumber),
   ]);
-  const submittedData = await extractSubmittedData(web3, events, blockData.timestamp);
+  const submittedData = await extractSubmittedData(web3, events, blockData.timestamp, DBConn);
   return {
     ...blockData,
     submittedData, // merge in the data

@@ -49,6 +49,7 @@ const paimaEndpoints = {
   ...utilityEndpoints,
 };
 
+export * from './delegate-wallet/index.js';
 export type * from './errors.js';
 // Only for use in game-specific middleware:
 export * from './types.js';

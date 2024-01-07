@@ -59,6 +59,17 @@ export async function createTable(pool: PoolClient, table: TableData): Promise<b
   return true;
 }
 
+export async function createFunctions(pool: PoolClient, query: string): Promise<boolean> {
+  try {
+    await pool.query(query);
+  } catch (err) {
+    doLog(`[database-validation] Error while creating functions: ${err}`);
+    return false;
+  }
+
+  return true;
+}
+
 async function checkTablePkey(
   pool: PoolClient,
   tableName: string,

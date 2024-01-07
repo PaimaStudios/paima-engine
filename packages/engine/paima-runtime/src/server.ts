@@ -31,7 +31,7 @@ function getOpenApiJson(userStateMachineApi: object | undefined): object {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const mergeResult = merge([{ oas: basicControllerJson as any }, { oas: userStateMachineApi }]);
     if (isErrorResult(mergeResult)) {
-      logError('Failed to merge openAPI definitions');
+      logError(`Failed to merge openAPI definitions: ${JSON.stringify(mergeResult)}`);
       return userStateMachineApi;
     }
     return mergeResult.output;
