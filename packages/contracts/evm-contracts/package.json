@@ -1,28 +1,44 @@
 {
   "name": "@paima/evm-contracts",
   "version": "1.0.0",
-  "description": "",
+  "description": "EVM contracts for the Paima ecosystem",
   "main": "index.js",
-  "directories": {
-    "lib": "lib",
-    "test": "test"
-  },
+  "types": "index.d.ts",
+  "files": [
+    "/build"
+  ],
   "scripts": {
-    "compile": "npx truffle compile",
-    "prettier": "prettier --write '**/*.{sol,js,ts}'"
+    "compile": "forge build && npx hardhat compile",
+    "test": "forge test",
+    "build": "rm -rf ./build && tsc --build .",
+    "prettier": "prettier --write '**/*.{sol,js,ts}'",
+    "publish": "rm -rf ./publish && npm run build && npm run compile && ./prepare.sh"
   },
-  "keywords": [],
+  "keywords": [
+    "solidity",
+    "evm",
+    "hardhat",
+    "hardhat-plugin"
+  ],
   "author": "Paima Studios",
   "license": "MIT",
   "dependencies": {
-    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
-    "@openzeppelin/contracts": "^4.6.0",
-    "@openzeppelin/contracts-upgradeable": "^4.6.0",
-    "dotenv": "^16.0.3"
+    "dotenv": "^16.3.1"
   },
   "devDependencies": {
+    "@nomicfoundation/hardhat-foundry": "^1.1.1",
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
     "@nomicfoundation/hardhat-toolbox-viem": "^2.0.0",
+    "@openzeppelin/contracts": "^4.6.0",
+    "@openzeppelin/contracts-upgradeable": "^4.6.0",
     "hardhat": "^2.19.3",
+    "hardhat-abi-exporter": "^2.10.1",
     "ts-node": "^10.9.1"
+  },
+  "peerDependencies": {
+    "@nomicfoundation/hardhat-foundry": "^1.1.1",
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "@nomicfoundation/hardhat-toolbox-viem": "^2.0.0",
+    "hardhat": "^2.19.3"
   }
 }

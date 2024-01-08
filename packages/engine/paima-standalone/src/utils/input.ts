@@ -148,7 +148,8 @@ export const helpCommand = (): void => {
   doLog(`   run       Start your game node.`);
   doLog(`   contracts Saves the bundled smart contracts to your local filesystem.`);
   doLog(`   docs      Saves the Paima Engine documentation to your local filesystem.`);
-  doLog(`   webui     Starts Paima Game Input Tester WebUI.`);
+  // TODO: fix webui
+  // doLog(`   webui     Starts Paima Game Input Tester WebUI.`);
   doLog(`   help      Shows list of commands currently available.`);
   doLog(`   version   Shows the version of used paima-engine.`);
   doLog(`   batcher   Saves the bundled batcher project to your local filesystem.`);
