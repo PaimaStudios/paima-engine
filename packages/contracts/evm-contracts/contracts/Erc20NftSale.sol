@@ -56,7 +56,8 @@ contract Erc20NftSale is State, ERC1967, Ownable {
     function buyWithToken(
         ERC20 _tokenAddress,
         address receiverAddress,
-        string calldata initialData
+        // not calldata to allow other contracts to wrap this and change what is bought with their own logic
+        string memory initialData
     ) public virtual returns (uint256) {
         require(
             tokenIsWhitelisted(_tokenAddress),

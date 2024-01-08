@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.13;
 
-import "./NativeNftSale.sol";
+import "../NativeNftSale.sol";
 
 enum NftType {
     FIRE,
@@ -35,11 +35,11 @@ contract TypedNativeNftSale is NativeNftSale {
         super.initialize(owner, _nft, _price);
     }
 
-    function buyNft(
+    function buyNftType(
         address receiverAddress,
         NftType nftType
-    ) public override payable returns (uint256) {
-        super.buyNft(
+    ) public payable returns (uint256) {
+        return super.buyNft(
             receiverAddress,
             typeMapper.getNftTypeString(nftType)
         );
