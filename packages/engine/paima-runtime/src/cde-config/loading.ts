@@ -34,6 +34,7 @@ import {
   ChainDataExtensionCardanoDelayedAssetConfig,
   ChainDataExtensionCardanoDelegationConfig,
   ChainDataExtensionCardanoProjectedNFTConfig,
+  ChainDataExtensionCardanoTransferConfig,
   ChainDataExtensionErc20Config,
   ChainDataExtensionErc20DepositConfig,
   ChainDataExtensionErc6551RegistryConfig,
@@ -129,6 +130,15 @@ export function parseCdeConfigFile(configFileData: string): Static<typeof CdeCon
         return checkOrError(
           entry.name,
           Type.Intersect([ChainDataExtensionCardanoDelayedAssetConfig, networkTagType]),
+          entry
+        );
+      case CdeEntryTypeName.CardanoTransfer:
+        return checkOrError(
+          entry.name,
+          Type.Intersect([
+            ChainDataExtensionCardanoTransferConfig,
+            Type.Object({ network: Type.String() }),
+          ]),
           entry
         );
       default:
@@ -270,6 +280,14 @@ async function instantiateExtension(
         cdeId: index,
         hash: hashConfig(config),
         cdeType: ChainDataExtensionType.CardanoAssetUtxo,
+      };
+    case CdeEntryTypeName.CardanoTransfer:
+      return {
+        ...config,
+        network: config.network || defaultCardanoNetworkName,
+        cdeId: index,
+        hash: hashConfig(config),
+        cdeType: ChainDataExtensionType.CardanoTransfer,
       };
     default:
       assertNever(config);

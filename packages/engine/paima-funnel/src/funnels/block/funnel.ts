@@ -139,13 +139,7 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
           this.chainName
         ),
       ]);
-      const cdeData = groupCdeData(
-        this.chainName,
-        ConfigNetworkType.EVM,
-        fromBlock,
-        toBlock,
-        ungroupedCdeData
-      );
+      const cdeData = groupCdeData(this.chainName, fromBlock, toBlock, ungroupedCdeData);
       return composeChainData(baseChainData, cdeData);
     } catch (err) {
       doLog(`[funnel] at ${fromBlock}-${toBlock} caught ${err}`);
@@ -184,13 +178,7 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
         this.chainName
       );
       return {
-        [this.chainName]: groupCdeData(
-          this.chainName,
-          ConfigNetworkType.EVM,
-          fromBlock,
-          toBlock,
-          ungroupedCdeData
-        ),
+        [this.chainName]: groupCdeData(this.chainName, fromBlock, toBlock, ungroupedCdeData),
       };
     } catch (err) {
       doLog(`[paima-funnel::readPresyncData] Exception occurred while reading blocks: ${err}`);

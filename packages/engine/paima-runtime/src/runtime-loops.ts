@@ -91,7 +91,7 @@ async function runPresync(
     }
 
     // eslint-disable-next-line @typescript-eslint/no-loop-func
-    presyncBlockHeight = await tx(gameStateMachine.getReadWriteDbConn(), async dbTx => {
+    const maybePresyncBlockHeight = await tx(gameStateMachine.getReadWriteDbConn(), async dbTx => {
       const chainFunnel = await funnelFactory.generateFunnel(dbTx);
       return await runPresyncRound(
         gameStateMachine,
@@ -105,6 +105,12 @@ async function runPresync(
         cardanoConfig
       );
     });
+
+    if (maybePresyncBlockHeight) {
+      presyncBlockHeight = maybePresyncBlockHeight;
+    } else {
+      break;
+    }
   }
 
   for (const network of Object.keys(networks)) {
@@ -112,11 +118,6 @@ async function runPresync(
 
     const latestPresyncBlockheight = await gameStateMachine.getPresyncBlockHeight(network);
     doLog(`[paima-runtime] Presync for ${network} finished at ${latestPresyncBlockheight}`);
-  }
-
-  const latestPresyncSlotHeight = await gameStateMachine.getPresyncCardanoSlotHeight();
-  if (latestPresyncSlotHeight > 0) {
-    doLog(`[paima-runtime] Cardano presync finished at ${latestPresyncSlotHeight}`);
   }
 }
 
@@ -148,18 +149,6 @@ async function getPresyncStartBlockheight(
     }
   }
 
-  if (cardanoConfig) {
-    const earliestCdeCardanoSlot = getEarliestStartSlot(CDEs);
-
-    const latestPresyncSlotHeight = await gameStateMachine.getPresyncCardanoSlotHeight();
-
-    result[cardanoConfig[0]] = earliestCdeCardanoSlot;
-
-    if (latestPresyncSlotHeight > 0) {
-      result[cardanoConfig[0]] = latestPresyncSlotHeight + 1;
-    }
-  }
-
   return result;
 }
 
@@ -180,9 +169,19 @@ async function runPresyncRound(
     >;
   }
 
+  const finished = Object.values(latestPresyncDataList).every(data => {
+    return data === FUNNEL_PRESYNC_FINISHED;
+  });
+
   const filteredPresyncDataList = Object.values(latestPresyncDataList)
     .flatMap(data => (data !== FUNNEL_PRESYNC_FINISHED ? data : []))
-    .filter(unit => unit.extensionDatums.length > 0);
+    // for cardano keep the empty list, used to update the slot range lower bound
+    .filter(
+      unit =>
+        (unit.networkType !== ConfigNetworkType.EVM &&
+          unit.networkType !== ConfigNetworkType.EVM_OTHER) ||
+        unit.extensionDatums.length > 0
+    );
 
   const dbTx = chainFunnel.getDbTx();
 
@@ -190,16 +189,19 @@ async function runPresyncRound(
     await gameStateMachine.presyncProcess(dbTx, presyncData);
   }
 
-  const cardanoFrom = cardanoConfig && from.find(arg => arg.network === cardanoConfig[0]);
-  if (cardanoFrom) {
-    await gameStateMachine.markCardanoPresyncMilestone(dbTx, cardanoFrom.to);
+  if (!finished) {
+    return Object.fromEntries(
+      from.map(from => {
+        if (latestPresyncDataList[from.network] === FUNNEL_PRESYNC_FINISHED) {
+          return [from.network, Number.MAX_SAFE_INTEGER];
+        } else {
+          return [from.network, from.to + 1];
+        }
+      })
+    );
+  } else {
+    return {};
   }
-
-  return Object.fromEntries(
-    from
-      .filter(arg => latestPresyncDataList[arg.network] !== FUNNEL_PRESYNC_FINISHED)
-      .map(arg => [arg.network, arg.to + 1])
-  );
 }
 
 async function runSync(
