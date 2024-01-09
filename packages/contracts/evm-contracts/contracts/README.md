@@ -2,8 +2,21 @@
 
 Solidity contracts provided as part of Paima Engine
 
-- [Erc20NftSale](#Erc20NftSale) provides a general role based access control mechanism. Multiple hierarchical roles can be created and assigned each to multiple accounts.
-- [GenericPayment](#GenericPayment) is a simpler mechanism with a single owner "role" that can be assigned to a single account. This simpler mechanism can be useful for quick tests but projects with production concerns are likely to outgrow it.
+Core contracts
+
+<ul>
+  <li>[PaimaL2Contract](#PaimaL2Contract): The main L2 contract for a Paima L2</li>
+</ul>
+State-annotated contracts
+<ul>
+  <li>[Nft](#Nft): A standard ERC721 that accepts calldata in the mint function for any initialization data needed in a Paima dApp</li>
+</ul>
+Facilitating monetization
+<ul>
+  <li>[NativeNftSale](#NativeNftSale): Facilitates selling NFTs that accepts extra data when buying for any initialization data needed in a Paima dApp</li>
+  <li>[GenericPayment](#GenericPayment): Facilitates accepting payment that accepts extra data to know what the payment was for inside a Paima dApp</li>
+  <li>[Erc20NftSale](#Erc20NftSale): Facilitates selling NFTs for specific ERC20s that accepts extra data when buying for any initialization data needed in a Paima dApp</li>
+</ul>
 
 ## Core contracts
 

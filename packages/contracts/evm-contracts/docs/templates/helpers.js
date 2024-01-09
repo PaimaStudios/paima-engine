@@ -2,7 +2,6 @@ const { version } = require('../../package.json');
 
 module.exports['escapeChars'] = (input) => {
   if (input == null) return "No description given";
-  console.log(input);
   return input.replace(/\{([a-zA-Z0-9-]+)\}/g, '\\{$1\\}');
 };
 
