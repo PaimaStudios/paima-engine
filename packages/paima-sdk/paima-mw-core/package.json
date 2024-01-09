@@ -25,7 +25,7 @@
     "start:standalone-web-ui": "npx http-server ./web -o --port 9123"
   },
   "devDependencies": {
-    "dotenv": "^16.0.3",
+    "dotenv": "^16.3.1",
     "esbuild": "^0.19.3",
     "esbuild-plugin-polyfill-node": "^0.3.0",
     "typescript": "^5.3.2"

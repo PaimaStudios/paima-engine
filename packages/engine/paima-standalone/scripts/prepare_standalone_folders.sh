@@ -9,16 +9,11 @@ BATCHER_PATH="$PACKAGED_PATH/batcher"
 SWAGGER_UI="$PACKAGED_PATH/swagger-ui"
 
 # Prepare smart contracts to be packed
-paima="paima-l2-contract"
+paima="evm-contracts"
 echo $CONTRACT_PATH
 rm -rf $CONTRACT_PATH
-mkdir -p $CONTRACT_PATH/$paima/src
-cp -r ../../contracts/$paima/src $CONTRACT_PATH/$paima
-cp ../../contracts/$paima/contract-addresses.json $CONTRACT_PATH/$paima
-cp ../../contracts/$paima/package.json $CONTRACT_PATH/$paima
-cp ../../contracts/$paima/truffle-config.js $CONTRACT_PATH/$paima
-git clean -Xdf ../../contracts/nft
-cp -r ../../contracts/nft $CONTRACT_PATH/nft
+mkdir -p $CONTRACT_PATH/$paima
+cp -r ../../contracts/$paima/contracts/* $CONTRACT_PATH/$paima
 
 # Prepare batcher:
 component="paima-batcher"

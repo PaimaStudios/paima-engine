@@ -36,6 +36,7 @@
       "@paima/batcher-webserver/*": ["./packages/batcher/webserver/*"],
       "@paima/build-utils/*": ["./packages/build-utils/paima-build-utils/*"],
       "@paima/db/*": ["./packages/node-sdk/paima-db/*"],
+      "@paima/evm-contracts/*": ["./packages/contracts/evm-contracts/*"],
       "@paima/node-sdk/*": ["./packages/node-sdk/publish-wrapper/*"],
       "@paima/utils-backend/*": ["./packages/node-sdk/paima-utils-backend/*"],
       "@paima/concise/*": ["./packages/paima-sdk/paima-concise/*"],
@@ -51,9 +52,7 @@
       "@paima/sm/*": ["./packages/engine/paima-sm/*"],
       "@paima/utils/*": ["./packages/paima-sdk/paima-utils/*"],
       "@standalone/paima-batcher/*": ["./packages/batcher/batcher-standalone/*"],
-      "@standalone/paima-engine/*": ["./packages/engine/paima-standalone/*"],
-      "nft-sale/*": ["./packages/contracts/nft/*"],
-      "storage-contract/*": ["./packages/contracts/paima-l2-contract/*"]
+      "@standalone/paima-engine/*": ["./packages/engine/paima-standalone/*"]
     }
   },
   "exclude": ["node_modules"]
