@@ -25,7 +25,7 @@ contract NativeNftSale is BaseState, ERC1967, Ownable {
         address buyer
     );
 
-    function initialize(address owner, address _nft, uint256 _price) virtual public {
+    function initialize(address owner, address _nft, uint256 _price) public virtual {
         require(!initialized, "Contract already initialized");
         initialized = true;
 
@@ -42,17 +42,11 @@ contract NativeNftSale is BaseState, ERC1967, Ownable {
         string memory initialData
     ) public payable returns (uint256) {
         require(msg.value == nftPrice, "NativeNftSale: incorrect value");
-        require(
-            receiverAddress != address(0),
-            "NativeNftSale: zero receiver address"
-        );
+        require(receiverAddress != address(0), "NativeNftSale: zero receiver address");
 
         uint256 price = nftPrice;
 
-        uint256 tokenId = Nft(nftAddress).mint(
-            receiverAddress,
-            initialData
-        );
+        uint256 tokenId = Nft(nftAddress).mint(receiverAddress, initialData);
 
         emit BuyNFT(tokenId, price, receiverAddress, msg.sender);
 

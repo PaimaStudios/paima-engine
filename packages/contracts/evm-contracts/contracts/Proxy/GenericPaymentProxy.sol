@@ -16,10 +16,7 @@ contract GenericPaymentProxy is ERC1967 {
         _assertCorrectImplementationSlot();
         _setImplementation(implementation);
 
-        bytes memory data = abi.encodeWithSignature(
-            "initialize(address)",
-            owner
-        );
+        bytes memory data = abi.encodeWithSignature("initialize(address)", owner);
         (bool success, ) = implementation.delegatecall(data);
         require(success, "Initialization unsuccessful");
     }

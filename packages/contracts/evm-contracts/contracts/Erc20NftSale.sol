@@ -9,12 +9,7 @@ import "./ERC1967.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract Erc20NftSale is State, ERC1967, Ownable {
-
-    event Initialized(
-        ERC20[] indexed currencies,
-        address indexed owner,
-        address indexed nft
-    );
+    event Initialized(ERC20[] indexed currencies, address indexed owner, address indexed nft);
 
     event UpdatePrice(uint256 indexed oldPrice, uint256 indexed newPrice);
 
@@ -36,7 +31,7 @@ contract Erc20NftSale is State, ERC1967, Ownable {
         address owner,
         address _nft,
         uint256 _price
-    ) virtual public {
+    ) public virtual {
         require(!initialized, "Contract already initialized");
         initialized = true;
 
@@ -59,24 +54,15 @@ contract Erc20NftSale is State, ERC1967, Ownable {
         // not calldata to allow other contracts to wrap this and change what is bought with their own logic
         string memory initialData
     ) public virtual returns (uint256) {
-        require(
-            tokenIsWhitelisted(_tokenAddress),
-            "Erc20NftSale: token not whitelisted"
-        );
-        require(
-            receiverAddress != address(0),
-            "Erc20NftSale: zero receiver address"
-        );
+        require(tokenIsWhitelisted(_tokenAddress), "Erc20NftSale: token not whitelisted");
+        require(receiverAddress != address(0), "Erc20NftSale: zero receiver address");
 
         uint256 price = nftPrice;
 
         // transfer tokens from buyer to contract
         ERC20(_tokenAddress).transferFrom(msg.sender, address(this), price);
 
-        uint256 tokenId = Nft(nftAddress).mint(
-            receiverAddress,
-            initialData
-        );
+        uint256 tokenId = Nft(nftAddress).mint(receiverAddress, initialData);
 
         if (!depositedCurrenciesMap[_tokenAddress]) {
             depositedCurrencies.push(_tokenAddress);
@@ -89,10 +75,7 @@ contract Erc20NftSale is State, ERC1967, Ownable {
     }
 
     function removeWhitelistedToken(ERC20 _token) external onlyOwner {
-        require(
-            tokenIsWhitelisted(_token),
-            "Erc20NftSale: token not whitelisted"
-        );
+        require(tokenIsWhitelisted(_token), "Erc20NftSale: token not whitelisted");
 
         ERC20[] memory supportedCurrenciesMem = supportedCurrencies;
 
@@ -104,14 +87,9 @@ contract Erc20NftSale is State, ERC1967, Ownable {
             }
         }
 
-        require(
-            tokenIndex < supportedCurrenciesMem.length,
-            "Erc20NftSale: out of bounds"
-        );
+        require(tokenIndex < supportedCurrenciesMem.length, "Erc20NftSale: out of bounds");
 
-        supportedCurrencies[tokenIndex] = supportedCurrencies[
-            supportedCurrencies.length - 1
-        ];
+        supportedCurrencies[tokenIndex] = supportedCurrencies[supportedCurrencies.length - 1];
         supportedCurrencies.pop();
 
         emit RemoveWhiteListedToken(address(_token));

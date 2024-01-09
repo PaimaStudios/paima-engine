@@ -17,10 +17,7 @@ contract Nft is ERC165, ERC721, Ownable {
     mapping(address => bool) public minters;
 
     modifier canMint() {
-        require(
-            isMinter(msg.sender) || owner() == msg.sender,
-            "NFT: not authorized to mint"
-        );
+        require(isMinter(msg.sender) || owner() == msg.sender, "NFT: not authorized to mint");
         _;
     }
 
@@ -34,10 +31,7 @@ contract Nft is ERC165, ERC721, Ownable {
         _;
     }
 
-    event UpdateMaxSupply(
-        uint256 indexed oldMaxSupply,
-        uint256 indexed newMaxSupply
-    );
+    event UpdateMaxSupply(uint256 indexed oldMaxSupply, uint256 indexed newMaxSupply);
 
     event SetMinter(address indexed newMinter);
 
@@ -71,10 +65,7 @@ contract Nft is ERC165, ERC721, Ownable {
             interfaceID == this.mint.selector; // ERC721 Paima-extended
     }
 
-    function mint(
-        address _to,
-        string calldata initialData
-    ) external canMint returns (uint256) {
+    function mint(address _to, string calldata initialData) external canMint returns (uint256) {
         require(maxSupply > totalSupply, "Nft: max supply reached");
         require(_to != address(0), "Nft: zero receiver address");
 
@@ -113,9 +104,7 @@ contract Nft is ERC165, ERC721, Ownable {
         return baseURI;
     }
 
-    function tokenURI(
-        uint256 tokenId
-    ) public view override returns (string memory) {
+    function tokenURI(uint256 tokenId) public view override returns (string memory) {
         string memory URI = super.tokenURI(tokenId);
         return string(abi.encodePacked(URI, baseExtension));
     }
@@ -126,18 +115,13 @@ contract Nft is ERC165, ERC721, Ownable {
         emit SetBaseURI(oldURI, _URI);
     }
 
-    function setBaseExtension(
-        string memory _newBaseExtension
-    ) public onlyOwner {
+    function setBaseExtension(string memory _newBaseExtension) public onlyOwner {
         baseExtension = _newBaseExtension;
     }
 
     function updateMaxSupply(uint256 _maxSupply) external onlyOwner {
         uint256 oldMaxSupply = maxSupply;
-        require(
-            _maxSupply > oldMaxSupply,
-            "NFT: old supply less than new supply"
-        );
+        require(_maxSupply > oldMaxSupply, "NFT: old supply less than new supply");
 
         maxSupply = _maxSupply;
         emit UpdateMaxSupply(oldMaxSupply, _maxSupply);

@@ -22,8 +22,7 @@ abstract contract ERC1967 {
      */
     function _assertCorrectImplementationSlot() internal pure {
         assert(
-            _IMPLEMENTATION_SLOT ==
-                bytes32(uint256(keccak256("eip1967.proxy.implementation")) - 1)
+            _IMPLEMENTATION_SLOT == bytes32(uint256(keccak256("eip1967.proxy.implementation")) - 1)
         );
     }
 
@@ -42,8 +41,6 @@ abstract contract ERC1967 {
             Address.isContract(newImplementation),
             "ERC1967: new implementation is not a contract"
         );
-        StorageSlot
-            .getAddressSlot(_IMPLEMENTATION_SLOT)
-            .value = newImplementation;
+        StorageSlot.getAddressSlot(_IMPLEMENTATION_SLOT).value = newImplementation;
     }
 }

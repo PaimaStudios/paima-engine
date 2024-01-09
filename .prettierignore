@@ -3,3 +3,4 @@
 contract-types/
 packaged/
 packages/engine/paima-rest/src/tsoa/routes.ts
+packages/contracts/evm-contracts/test-lib

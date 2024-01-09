@@ -11,7 +11,7 @@
     "compile": "forge build && npx hardhat compile && hardhat docgen",
     "test": "forge test",
     "build": "rm -rf ./build && tsc --build .",
-    "prettier": "prettier --write '**/*.{sol,js,ts}'",
+    "prettier": "prettier --write '**/*.{sol,js,ts}' --ignore-path .gitignore",
     "publish": "rm -rf ./publish && npm run build && npm run compile && ./prepare.sh"
   },
   "keywords": [
