@@ -4,16 +4,13 @@
   "description": "EVM contracts for the Paima ecosystem",
   "main": "index.js",
   "types": "index.d.ts",
-  "files": [
-    "/build"
-  ],
   "scripts": {
     "test": "forge test",
     "build:contracts": "forge build && npx hardhat compile && hardhat docgen",
     "build:plugin": "rm -rf ./build && tsc --build .",
     "build": "npm run build:contracts && npm run build:plugin",
     "prettier": "prettier --write '**/*.{sol,js,ts}' --ignore-path .gitignore",
-    "release": "rm -rf ./publish && npm run build && ./prepare.sh && (cd ./publish && npm publish)"
+    "release": "rm -rf ./publish && npm run build && ./prepare.sh && (cd ./publish && npm publish --access public)"
   },
   "keywords": [
     "solidity",
