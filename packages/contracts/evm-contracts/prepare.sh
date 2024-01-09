@@ -10,7 +10,7 @@ mkdir -p ./publish/abi
 # remove dependencies and test contracts
 rm -rf -r ./publish/abi/@openzeppelin
 rm -rf -r ./publish/abi/contracts/dev
-# hoise content out of redundant "contracts" folder
+# hoist content out of redundant "contracts" folder
 mv ./publish/abi/contracts/* ./publish/abi/ && rmdir ./publish/abi/contracts
 
 # flatten ./MyContract.sol/MyContract.json to just ./MyContract.json

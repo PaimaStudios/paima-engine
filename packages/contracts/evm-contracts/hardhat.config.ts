@@ -22,7 +22,6 @@ const config: HardhatUserConfig = {
     pageExtension: '.mdx',
     pages: (_, file, config: SiteConfig) => {
       // For each contract file, find the closest README.md and return its location as the output page path.
-      // const root = (config as any).root;
       const sourcesDir = path.resolve(config.root, config.sourcesDir);
       let dir = path.resolve(config.root, file.absolutePath);
       while (dir.startsWith(sourcesDir)) {
