@@ -52,9 +52,7 @@
       "@paima/sm/*": ["./packages/engine/paima-sm/*"],
       "@paima/utils/*": ["./packages/paima-sdk/paima-utils/*"],
       "@standalone/paima-batcher/*": ["./packages/batcher/batcher-standalone/*"],
-      "@standalone/paima-engine/*": ["./packages/engine/paima-standalone/*"],
-      "nft-sale/*": ["./packages/contracts/nft/*"],
-      "storage-contract/*": ["./packages/contracts/paima-l2-contract/*"]
+      "@standalone/paima-engine/*": ["./packages/engine/paima-standalone/*"]
     }
   },
   "exclude": ["node_modules"]
