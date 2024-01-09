@@ -1,9 +1,15 @@
 const { version } = require('../../package.json');
 
+module.exports['escapeChars'] = (input) => {
+  if (input == null) return "No description given";
+  console.log(input);
+  return input.replace(/\{([a-zA-Z0-9-]+)\}/g, '\\{$1\\}');
+};
+
 module.exports['oz-version'] = () => version;
 
 module.exports['readme-path'] = opts => {
-  return 'contracts/' + opts.data.root.id.replace(/\.adoc$/, '') + '/README.adoc';
+  return 'contracts/' + opts.data.root.id.replace(/\.mdx?$/, '') + '/README.md';
 };
 
 module.exports.names = params => params?.map(p => p.name).join(', ');
@@ -35,12 +41,14 @@ function getAllLinks(items) {
 }
 
 module.exports['with-prelude'] = opts => {
-  const links = getAllLinks(opts.data.site.items);
   const contents = opts.fn();
-  const neededLinks = contents
-    .match(/\{[-._a-z0-9]+\}/gi)
-    .map(m => m.replace(/^\{(.+)\}$/, '$1'))
-    .filter(k => k in links);
-  const prelude = neededLinks.map(k => `:${k}: ${links[k]}`).join('\n');
-  return prelude + '\n' + contents;
+  // generate table of contents
+  // const links = getAllLinks(opts.data.site.items);
+  // const neededLinks = contents
+  //   .match(/\[[-._a-z0-9]+\]/gi)
+  //   .map(m => m.replace(/^\[(.+)\]$/, '$1'))
+  //   .filter(k => k in links);
+  // const prelude = neededLinks.map(k => `- [${k}](#${k})`).join('\n');
+  return contents;
+  // return prelude + '\n' + contents;
 };

@@ -8,7 +8,7 @@
     "/build"
   ],
   "scripts": {
-    "compile": "forge build && npx hardhat compile",
+    "compile": "forge build && npx hardhat compile && hardhat docgen",
     "test": "forge test",
     "build": "rm -rf ./build && tsc --build .",
     "prettier": "prettier --write '**/*.{sol,js,ts}'",

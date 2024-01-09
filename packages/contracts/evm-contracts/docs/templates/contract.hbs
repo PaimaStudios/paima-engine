@@ -1,111 +1,109 @@
-{{#each items}}
-:{{name}}: pass:normal[xref:#{{anchor}}[`++{{name}}++`]]
-{{/each}}
+### `{{name}}` [![Github link](https://github.githubassets.com/favicons/favicon-dark.png)](https://github.com/PaimaStudios/paima-engine/tree/master/packages/evm-contracts/{{__item_context.file.absolutePath}}) {#{{~anchor~}} }
 
-[.contract]
-[[{{anchor}}]]
-=== `++{{name}}++` link:https://github.com/OpenZeppelin/openzeppelin-contracts/blob/v{{oz-version}}/{{__item_context.file.absolutePath}}[{github-icon},role=heading-link]
-
-[.hljs-theme-light.nopadding]
 ```solidity
-import "@openzeppelin/{{__item_context.file.absolutePath}}";
+import "@paima/evm-contracts/{{__item_context.file.absolutePath}}";
 ```
 
 {{{natspec.dev}}}
 
 {{#if modifiers}}
-[.contract-index]
-.Modifiers
---
+#### Modifiers
+
 {{#each modifiers}}
-* {xref-{{anchor~}} }[`++{{name}}({{names params}})++`]
+* [`{{name}}({{names params}})`](#xref-{{anchor~}})
 {{/each}}
---
+
 {{/if}}
 
 {{#if has-functions}}
-[.contract-index]
-.Functions
---
+#### Functions
+
 {{#each inherited-functions}}
 {{#unless @first}}
-[.contract-subindex-inherited]
-.{{contract.name}}
+##### From {{contract.name}}
 {{/unless}}
 {{#each functions}}
-* {xref-{{anchor~}} }[`++{{name}}({{names params}})++`]
+* [`{{name}}({{names params}})`](#xref-{{anchor~}})
 {{/each}}
 
 {{/each}}
---
+
 {{/if}}
 
 {{#if has-events}}
-[.contract-index]
-.Events
---
+#### Events
+
 {{#each inheritance}}
 {{#unless @first}}
-[.contract-subindex-inherited]
-.{{name}}
+##### From {{name}}
 {{/unless}}
 {{#each events}}
-* {xref-{{anchor~}} }[`++{{name}}({{names params}})++`]
+* [`{{name}}({{names params}})`](#xref-{{anchor~}})
 {{/each}}
 
 {{/each}}
---
+
 {{/if}}
 
 {{#if has-errors}}
-[.contract-index]
-.Errors
---
+#### Errors
+
 {{#each inheritance}}
 {{#unless @first}}
-[.contract-subindex-inherited]
-.{{name}}
+##### From {{name}}
 {{/unless}}
 {{#each errors}}
-* {xref-{{anchor~}} }[`++{{name}}({{names params}})++`]
+* [`{{name}}({{names params}})`](#xref-{{anchor~}})
 {{/each}}
 
 {{/each}}
---
+
 {{/if}}
 
 {{#each modifiers}}
-[.contract-item]
-[[{{anchor}}]]
-==== `[.contract-item-name]#++{{name}}++#++({{typed-params params}})++` [.item-kind]#modifier#
-
-{{{natspec.dev}}}
+<FunctionBlock
+    title="{{name}}"
+    params="({{typed-params params}})"
+    visibility="modifier"
+    anchor="xref-{{anchor}}"
+>
+    {{{escapeChars natspec.dev}}}
+</FunctionBlock>
 
 {{/each}}
 
 {{#each functions}}
-[.contract-item]
-[[{{anchor}}]]
-==== `[.contract-item-name]#++{{name}}++#++({{typed-params params}}){{#if returns2}} → {{typed-params returns2}}{{/if}}++` [.item-kind]#{{visibility}}#
-
-{{{natspec.dev}}}
+<FunctionBlock
+    title="{{name}}"
+    params="({{typed-params params}}){{#if returns2}} → {{typed-params returns2}}{{/if}}"
+    visibility="{{visibility}}"
+    anchor="xref-{{anchor}}"
+>
+    {{{escapeChars natspec.dev}}}
+</FunctionBlock>
 
 {{/each}}
 
 {{#each events}}
-[.contract-item]
-[[{{anchor}}]]
-==== `[.contract-item-name]#++{{name}}++#++({{typed-params params}})++` [.item-kind]#event#
-
-{{{natspec.dev}}}
+<FunctionBlock
+    title="{{name}}"
+    params="({{typed-params params}})"
+    visibility="event"
+    anchor="xref-{{anchor}}"
+>
+    {{{escapeChars natspec.dev}}}
+</FunctionBlock>
 
 {{/each}}
 
 {{#each errors}}
-[.contract-item]
-[[{{anchor}}]]
-==== `[.contract-item-name]#++{{name}}++#++({{typed-params params}})++` [.item-kind]#error#
-
-{{{natspec.dev}}}
+<FunctionBlock
+    title="{{name}}"
+    params="({{typed-params params}})"
+    visibility="error"
+    anchor="xref-{{anchor}}"
+>
+    {{{escapeChars natspec.dev}}}
+</FunctionBlock>
 
 {{/each}}

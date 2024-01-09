@@ -19,15 +19,15 @@ const config: HardhatUserConfig = {
     outputDir: 'artifacts/docs',
     templates: 'docs/templates',
     exclude: ['dev'],
-    pageExtension: '.adoc',
+    pageExtension: '.mdx',
     pages: (_, file, config: SiteConfig) => {
-      // For each contract file, find the closest README.adoc and return its location as the output page path.
+      // For each contract file, find the closest README.md and return its location as the output page path.
       // const root = (config as any).root;
       const sourcesDir = path.resolve(config.root, config.sourcesDir);
       let dir = path.resolve(config.root, file.absolutePath);
       while (dir.startsWith(sourcesDir)) {
         dir = path.dirname(dir);
-        if (fs.existsSync(path.join(dir, 'README.adoc'))) {
+        if (fs.existsSync(path.join(dir, 'README.md'))) {
           return path.relative(sourcesDir, dir) + config.pageExtension;
         }
       }
