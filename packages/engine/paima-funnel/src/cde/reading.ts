@@ -57,14 +57,9 @@ async function getSpecificCdeData(
     case ChainDataExtensionType.ERC6551Registry:
       return await getCdeErc6551RegistryData(extension, fromBlock, toBlock, network);
     case ChainDataExtensionType.CardanoPool:
-      // this is used by the block funnel, which can't get information for this
-      // extension
-      return [];
     case ChainDataExtensionType.CardanoProjectedNFT:
-      // this is used by the block funnel, which can't get information for this
-      // extension
-      return [];
     case ChainDataExtensionType.CardanoAssetUtxo:
+    case ChainDataExtensionType.CardanoTransfer:
       // this is used by the block funnel, which can't get information for this
       // extension
       return [];

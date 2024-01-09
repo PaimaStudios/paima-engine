@@ -194,3 +194,16 @@ CREATE TABLE cde_cardano_asset_utxos (
   asset_name TEXT NOT NULL,
   PRIMARY KEY(cde_id,tx_id,output_index,cip14_fingerprint)
 );
+
+CREATE TABLE cde_tracking_cardano_pagination (
+  cde_id INTEGER PRIMARY KEY,
+  cursor TEXT NOT NULL,
+  finished BOOLEAN NOT NULL
+);
+
+CREATE TABLE cde_cardano_transfer (
+  cde_id INTEGER NOT NULL,
+  tx_id TEXT NOT NULL,
+  raw_tx TEXT NOT NULL,
+  PRIMARY KEY (cde_id, tx_id)
+)

@@ -1,7 +1,7 @@
 import type { EvmConfig, Web3 } from '@paima/utils';
 import { doLog, initWeb3, logError, timeout, delay, InternalEventType } from '@paima/utils';
 import type { ChainFunnel, ReadPresyncDataFrom } from '@paima/runtime';
-import type { ChainData, PresyncChainData } from '@paima/sm';
+import type { ChainData, EvmPresyncChainData, PresyncChainData } from '@paima/sm';
 import { getUngroupedCdeData } from '../../cde/reading.js';
 import { composeChainData, groupCdeData } from '../../utils.js';
 import { BaseFunnel } from '../BaseFunnel.js';
@@ -385,16 +385,10 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
         }
       }
 
-      let cdeData: PresyncChainData[] = [];
+      let cdeData: EvmPresyncChainData[] = [];
 
       if (mappedFrom && mappedTo) {
-        cdeData = groupCdeData(
-          this.chainName,
-          ConfigNetworkType.EVM_OTHER,
-          mappedFrom,
-          mappedTo,
-          ungroupedCdeData
-        );
+        cdeData = groupCdeData(this.chainName, mappedFrom, mappedTo, ungroupedCdeData);
       }
 
       return composeChainData(baseChainData, cdeData);
@@ -443,13 +437,7 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
 
       return {
         ...baseData,
-        [this.chainName]: groupCdeData(
-          this.chainName,
-          ConfigNetworkType.EVM_OTHER,
-          fromBlock,
-          toBlock,
-          ungroupedCdeData
-        ),
+        [this.chainName]: groupCdeData(this.chainName, fromBlock, toBlock, ungroupedCdeData),
       };
     } catch (err) {
       doLog(`[paima-funnel::readPresyncData] Exception occurred while reading blocks: ${err}`);

@@ -25,11 +25,10 @@ import {
   saveLastBlockHeight,
   markCdeBlockheightProcessed,
   getLatestProcessedCdeBlockheight,
-  getCardanoLatestProcessedCdeSlot,
-  markCardanoCdeSlotProcessed,
   getMainAddress,
   NO_USER_ID,
   updateCardanoEpoch,
+  updateCardanoPaginationCursor,
 } from '@paima/db';
 import Prando from '@paima/prando';
 
@@ -79,13 +78,6 @@ const SM: GameStateMachineInitializer = {
         const blockHeight = b?.block_height ?? 0;
         return blockHeight;
       },
-      getPresyncCardanoSlotHeight: async (
-        dbTx: PoolClient | Pool = readonlyDBConn
-      ): Promise<number> => {
-        const [b] = await getCardanoLatestProcessedCdeSlot.run(undefined, dbTx);
-        const slot = b?.slot ?? 0;
-        return slot;
-      },
       presyncStarted: async (
         network: string,
         dbTx: PoolClient | Pool = readonlyDBConn
@@ -128,14 +120,18 @@ const SM: GameStateMachineInitializer = {
           }
         } else if (latestCdeData.networkType === ConfigNetworkType.CARDANO) {
           const cdeDataLength = await processCardanoCdeData(
-            latestCdeData.blockNumber,
+            latestCdeData.carpCursor,
             latestCdeData.extensionDatums,
             dbTx,
             true
           );
           if (cdeDataLength > 0) {
             doLog(
-              `[${latestCdeData.network}] Processed ${cdeDataLength} CDE events in slot #${latestCdeData.blockNumber}`
+              `[${latestCdeData.network}] Processed ${cdeDataLength} CDE events at #${
+                latestCdeData.carpCursor.kind === 'paginationCursor'
+                  ? latestCdeData.carpCursor.cursor
+                  : latestCdeData.carpCursor.slot
+              }`
             );
           }
         }
@@ -146,9 +142,6 @@ const SM: GameStateMachineInitializer = {
         dbTx: PoolClient | Pool = readonlyDBConn
       ): Promise<void> => {
         await markCdeBlockheightProcessed.run({ block_height: blockHeight, network }, dbTx);
-      },
-      markCardanoPresyncMilestone: async (dbTx: PoolClient, slot: number): Promise<void> => {
-        await markCardanoCdeSlotProcessed.run({ slot: slot }, dbTx);
       },
       dryRun: async (
         gameInput: string,
@@ -318,13 +311,33 @@ async function processCdeData(
 }
 
 async function processCardanoCdeData(
-  slot: number,
+  paginationCursor:
+    | { cdeId: number; cursor: string; finished: boolean }
+    | { cdeId: number; slot: number; finished: boolean },
   cdeData: ChainDataExtensionDatum[] | undefined,
   dbTx: PoolClient,
   inPresync: boolean
 ): Promise<number> {
   return await processCdeDataBase(cdeData, dbTx, inPresync, async () => {
-    await markCardanoCdeSlotProcessed.run({ slot: slot }, dbTx);
+    if ('cursor' in paginationCursor) {
+      await updateCardanoPaginationCursor.run(
+        {
+          cde_id: paginationCursor.cdeId,
+          cursor: paginationCursor.cursor,
+          finished: paginationCursor.finished,
+        },
+        dbTx
+      );
+    } else {
+      await updateCardanoPaginationCursor.run(
+        {
+          cde_id: paginationCursor.cdeId,
+          cursor: paginationCursor.slot.toString(),
+          finished: paginationCursor.finished,
+        },
+        dbTx
+      );
+    }
     return;
   });
 }
