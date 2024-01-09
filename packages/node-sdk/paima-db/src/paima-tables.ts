@@ -118,6 +118,26 @@ const TABLE_DATA_CDE_TRACKING_CARDANO: TableData = {
   creationQuery: QUERY_CREATE_TABLE_CDE_TRACKING_CARDANO,
 };
 
+const QUERY_CREATE_TABLE_CDE_TRACKING_CARDANO_PAGINATION = `
+CREATE TABLE cde_tracking_cardano_pagination (
+  cde_id INTEGER PRIMARY KEY,
+  cursor TEXT NOT NULL,
+  finished BOOLEAN NOT NULL
+);
+`;
+
+const TABLE_DATA_CDE_TRACKING_CARDANO_PAGINATION: TableData = {
+  tableName: 'cde_tracking_cardano_pagination',
+  primaryKeyColumns: ['cde_id'],
+  columnData: packTuples([
+    ['cde_id', 'integer', 'NO', ''],
+    ['cursor', 'text', 'NO', ''],
+    ['finished', 'boolean', 'NO', ''],
+  ]),
+  serialColumns: [],
+  creationQuery: QUERY_CREATE_TABLE_CDE_TRACKING_CARDANO_PAGINATION,
+};
+
 const QUERY_CREATE_TABLE_CDE = `
 CREATE TABLE chain_data_extensions (
   cde_id INTEGER PRIMARY KEY,
@@ -382,6 +402,27 @@ const TABLE_DATA_CDE_CARDANO_ASSET_UTXOS: TableData = {
   },
 };
 
+const QUERY_CREATE_TABLE_CDE_CARDANO_TRANSFER = `
+CREATE TABLE cde_cardano_transfer (
+  cde_id INTEGER NOT NULL,
+  tx_id TEXT NOT NULL,
+  raw_tx TEXT NOT NULL,
+  PRIMARY KEY (cde_id, tx_id)
+)
+`;
+
+const TABLE_DATA_CDE_CARDANO_TRANSFER: TableData = {
+  tableName: 'cde_cardano_transfer',
+  primaryKeyColumns: ['cde_id', 'tx_id'],
+  columnData: packTuples([
+    ['cde_id', 'integer', 'NO', ''],
+    ['tx_id', 'text', 'NO', ''],
+    ['raw_tx', 'text', 'NO', ''],
+  ]),
+  serialColumns: [],
+  creationQuery: QUERY_CREATE_TABLE_CDE_CARDANO_TRANSFER,
+};
+
 const QUERY_CREATE_TABLE_EMULATED = `
 CREATE TABLE emulated_block_heights (
   deployment_chain_block_height INTEGER PRIMARY KEY,
@@ -520,4 +561,6 @@ export const TABLES: TableData[] = [
   TABLE_DATA_ADDRESSES,
   TABLE_DATA_DELEGATIONS,
   TABLE_DATA_CARDANO_LAST_EPOCH,
+  TABLE_DATA_CDE_TRACKING_CARDANO_PAGINATION,
+  TABLE_DATA_CDE_CARDANO_TRANSFER,
 ];

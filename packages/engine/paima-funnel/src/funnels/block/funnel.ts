@@ -1,4 +1,5 @@
-import { ENV, EvmConfig, GlobalConfig, doLog, timeout } from '@paima/utils';
+import type { EvmConfig } from '@paima/utils';
+import { ENV, GlobalConfig, doLog, timeout } from '@paima/utils';
 import type { ChainFunnel, ReadPresyncDataFrom } from '@paima/runtime';
 import type { ChainData, PresyncChainData } from '@paima/sm';
 import { getBaseChainDataMulti, getBaseChainDataSingle } from '../../reading.js';
@@ -136,13 +137,7 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
           toBlock
         ),
       ]);
-      const cdeData = groupCdeData(
-        this.chainName,
-        ConfigNetworkType.EVM,
-        fromBlock,
-        toBlock,
-        ungroupedCdeData
-      );
+      const cdeData = groupCdeData(this.chainName, fromBlock, toBlock, ungroupedCdeData);
       return composeChainData(baseChainData, cdeData);
     } catch (err) {
       doLog(`[funnel] at ${fromBlock}-${toBlock} caught ${err}`);
@@ -180,13 +175,7 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
         toBlock
       );
       return {
-        [this.chainName]: groupCdeData(
-          this.chainName,
-          ConfigNetworkType.EVM,
-          fromBlock,
-          toBlock,
-          ungroupedCdeData
-        ),
+        [this.chainName]: groupCdeData(this.chainName, fromBlock, toBlock, ungroupedCdeData),
       };
     } catch (err) {
       doLog(`[paima-funnel::readPresyncData] Exception occurred while reading blocks: ${err}`);

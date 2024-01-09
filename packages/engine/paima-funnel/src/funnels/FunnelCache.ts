@@ -78,6 +78,13 @@ export type CarpFunnelCacheEntryState = {
   startingSlot: number;
   lastPoint: { blockHeight: number; timestamp: number } | undefined;
   epoch: number | undefined;
+  cursors:
+    | {
+        [cdeId: number]:
+          | { kind: 'paginationCursor'; cursor: string; finished: boolean }
+          | { kind: 'slot'; slot: number; finished: boolean };
+      }
+    | undefined;
 };
 
 export class CarpFunnelCacheEntry implements FunnelCacheEntry {
@@ -85,7 +92,12 @@ export class CarpFunnelCacheEntry implements FunnelCacheEntry {
   public static readonly SYMBOL = Symbol('CarpFunnelStartingSlot');
 
   public updateStartingSlot(startingSlot: number): void {
-    this.state = { startingSlot, lastPoint: this.state?.lastPoint, epoch: this.state?.epoch };
+    this.state = {
+      startingSlot,
+      lastPoint: this.state?.lastPoint,
+      epoch: this.state?.epoch,
+      cursors: this.state?.cursors,
+    };
   }
 
   public updateLastPoint(blockHeight: number, timestamp: number): void {
@@ -97,6 +109,21 @@ export class CarpFunnelCacheEntry implements FunnelCacheEntry {
   public updateEpoch(epoch: number): void {
     if (this.state) {
       this.state.epoch = epoch;
+    }
+  }
+
+  public updateCursor(
+    cdeId: number,
+    presyncCursor:
+      | { kind: 'paginationCursor'; cursor: string; finished: boolean }
+      | { kind: 'slot'; slot: number; finished: boolean }
+  ): void {
+    if (this.state) {
+      if (!this.state.cursors) {
+        this.state.cursors = {};
+      }
+
+      this.state.cursors[cdeId] = presyncCursor;
     }
   }
 

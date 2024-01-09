@@ -1,7 +1,7 @@
 import type { PoolClient } from 'pg';
 import Prando from '@paima/prando';
 import type { ChainFunnel, ReadPresyncDataFrom } from '@paima/runtime';
-import type { ChainData, PresyncChainData } from '@paima/sm';
+import type { ChainData, EvmPresyncChainData, PresyncChainData } from '@paima/sm';
 import { ENV, GlobalConfig, doLog } from '@paima/utils';
 import {
   emulatedSelectLatestPrior,
@@ -173,7 +173,7 @@ export class EmulatedBlocksFunnel extends BaseFunnel {
       const timestamp = calculateBoundaryTimestamp(
         this.ctorData.startTimestamp,
         ENV.BLOCK_TIME,
-        data.blockNumber
+        (data as EvmPresyncChainData).blockNumber
       );
       return {
         ...data,
