@@ -6,7 +6,7 @@ import 'hardhat-abi-exporter';
 import './build/plugin/index.js';
 import 'solidity-docgen';
 import path from 'path';
-import { SiteConfig } from 'solidity-docgen/dist/site.js';
+import type { SiteConfig } from 'solidity-docgen/dist/site.js';
 import fs from 'fs';
 
 const config: HardhatUserConfig = {
