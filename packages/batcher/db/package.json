@@ -11,9 +11,9 @@
     "generate": "npx pgtyped -w -c pgtypedconfig.json"
   },
   "dependencies": {
-    "@pgtyped/runtime": "2.1.0"
+    "@pgtyped/runtime": "2.3.0"
   },
   "devDependencies": {
-    "@pgtyped/cli": "^2.2.1"
+    "@pgtyped/cli": "^2.3.0"
   }
 }
