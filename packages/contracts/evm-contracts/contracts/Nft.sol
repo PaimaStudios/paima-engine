@@ -37,7 +37,7 @@ contract Nft is ERC165, ERC721, Ownable {
 
     event RemoveMinter(address indexed oldMinter);
 
-    event SetBaseURI(string indexed oldUri, string indexed newUri);
+    event SetBaseURI(string oldUri, string newUri);
 
     event Minted(uint256 indexed tokenId, string initialData);
 
