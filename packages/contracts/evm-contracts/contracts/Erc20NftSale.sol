@@ -15,9 +15,9 @@ contract Erc20NftSale is State, ERC1967, Ownable {
 
     event UpdateNftProxy(address indexed oldProxy, address indexed newProxy);
 
-    event RemoveWhiteListedToken(address indexed token);
+    event RemoveWhitelistedToken(address indexed token);
 
-    event WhiteListTokens(address[] indexed token);
+    event WhitelistTokens(address[] indexed token);
 
     event BuyWithToken(
         uint256 indexed tokenId,
@@ -92,7 +92,7 @@ contract Erc20NftSale is State, ERC1967, Ownable {
         supportedCurrencies[tokenIndex] = supportedCurrencies[supportedCurrencies.length - 1];
         supportedCurrencies.pop();
 
-        emit RemoveWhiteListedToken(address(_token));
+        emit RemoveWhitelistedToken(address(_token));
     }
 
     function whitelistTokens(ERC20[] memory _tokens) external onlyOwner {
@@ -103,7 +103,7 @@ contract Erc20NftSale is State, ERC1967, Ownable {
             supportedCurrencies.push(_tokens[i]);
         }
 
-        emit WhiteListTokens(newWhiteList);
+        emit WhitelistTokens(newWhiteList);
     }
 
     function updatePrice(uint256 _nftPrice) external onlyOwner {
