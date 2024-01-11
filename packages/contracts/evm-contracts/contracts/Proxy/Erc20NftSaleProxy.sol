@@ -9,15 +9,22 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
 /// @title Proxy
 /// @dev Proxy contract mostly based on https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/proxy/Proxy.sol
-contract NativeProxy is ERC1967 {
+contract Erc20NftSaleProxy is ERC1967 {
     /// @dev this is normally not needed as runtime bytecode is deployed in
     /// genesis file and implementation storage slot defined there too
-    constructor(address implementation, address owner, address nftAddress, uint256 nftPrice) {
+    constructor(
+        address implementation,
+        ERC20[] memory currencies,
+        address owner,
+        address nftAddress,
+        uint256 nftPrice
+    ) {
         _assertCorrectImplementationSlot();
         _setImplementation(implementation);
 
         bytes memory data = abi.encodeWithSignature(
-            "initialize(address,address,uint256)",
+            "initialize(address[],address,address,uint256)",
+            currencies,
             owner,
             nftAddress,
             nftPrice
