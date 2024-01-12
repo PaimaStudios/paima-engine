@@ -338,6 +338,45 @@ const TABLE_DATA_CARDANO_LAST_EPOCH: TableData = {
   creationQuery: QUERY_CREATE_TABLE_CARDANO_LAST_EPOCH,
 };
 
+const QUERY_CREATE_TABLE_CDE_CARDANO_ASSET_UTXOS = `
+CREATE TABLE cde_cardano_asset_utxos (
+  cde_id INTEGER NOT NULL,
+  address TEXT NOT NULL,
+  tx_id TEXT NOT NULL,
+  output_index INTEGER NOT NULL,
+  amount BIGINT NOT NULL,
+  cip14_fingerprint TEXT NOT NULL,
+  policy_id text NOT NULL,
+  asset_name text NOT NULL,
+  PRIMARY KEY(cde_id,tx_id,output_index,cip14_fingerprint)
+);
+`;
+
+const QUERY_CREATE_INDEX_CDE_CARDANO_ASSET_UTXOS_ADDRESS = `
+CREATE INDEX CDE_CARDANO_ASSET_UTXOS_ADDRESS_INDEX ON "cde_cardano_asset_utxos" (ADDRESS);
+`;
+
+const TABLE_DATA_CDE_CARDANO_ASSET_UTXOS: TableData = {
+  tableName: 'cde_cardano_asset_utxos',
+  primaryKeyColumns: ['cde_id', 'tx_id', 'output_index'],
+  columnData: packTuples([
+    ['cde_id', 'integer', 'NO', ''],
+    ['address', 'text', 'NO', ''],
+    ['tx_id', 'text', 'NO', ''],
+    ['output_index', 'integer', 'NO', ''],
+    ['amount', 'bigint', 'NO', ''],
+    ['cip14_fingerprint', 'text', 'NO', ''],
+    ['policy_id', 'text', 'NO', ''],
+    ['asset_name', 'text', 'NO', ''],
+  ]),
+  serialColumns: [],
+  creationQuery: QUERY_CREATE_TABLE_CDE_CARDANO_ASSET_UTXOS,
+  index: {
+    name: 'CDE_CARDANO_ASSET_UTXOS_ADDRESS_INDEX',
+    creationQuery: QUERY_CREATE_INDEX_CDE_CARDANO_ASSET_UTXOS_ADDRESS,
+  },
+};
+
 const QUERY_CREATE_TABLE_EMULATED = `
 CREATE TABLE emulated_block_heights (
   deployment_chain_block_height INTEGER PRIMARY KEY,
@@ -471,6 +510,7 @@ export const TABLES: TableData[] = [
   TABLE_DATA_CDE_ERC6551_REGISTRY,
   TABLE_DATA_CDE_CARDANO_POOL,
   TABLE_DATA_CDE_CARDANO_PROJECTED_NFT,
+  TABLE_DATA_CDE_CARDANO_ASSET_UTXOS,
   TABLE_DATA_EMULATED,
   TABLE_DATA_ADDRESSES,
   TABLE_DATA_DELEGATIONS,

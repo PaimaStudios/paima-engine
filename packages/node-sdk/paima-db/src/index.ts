@@ -41,6 +41,11 @@ export * from './sql/cde-tracking-cardano.queries.js';
 export type * from './sql/cde-tracking-cardano.queries.js';
 export * from './sql/cardano-last-epoch.queries.js';
 export type * from './sql/cardano-last-epoch.queries.js';
+export {
+  cdeCardanoAssetUtxosByAddress,
+  cdeInsertCardanoAssetUtxo,
+  cdeSpendCardanoAssetUtxo,
+} from './sql/cde-cardano-asset-utxos.queries.js';
 
 export {
   tx,

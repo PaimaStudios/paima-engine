@@ -18,6 +18,7 @@ export interface TableData {
   columnData: ColumnData[];
   serialColumns: string[];
   creationQuery: string;
+  index?: { name: string; creationQuery: string };
 }
 
 function packTuple(tuple: ColumnDataTuple): ColumnData {

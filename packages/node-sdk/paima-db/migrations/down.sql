@@ -15,3 +15,4 @@ DROP TABLE addresses;
 DROP TABLE cde_cardano_pool_delegation;
 DROP TABLE cde_tracking_cardano;
 DROP TABLE cde_cardano_projected_nft;
+DROP TABLE cde_cardano_asset_utxos;

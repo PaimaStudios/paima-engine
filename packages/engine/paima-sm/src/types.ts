@@ -95,6 +95,16 @@ interface CdeDatumCardanoProjectedNFTPayload {
   forHowLong: string | undefined;
 }
 
+interface CdeDatumCardanoAssetUtxoPayload {
+  address: string;
+  txId: string;
+  outputIndex: number;
+  amount: string | undefined;
+  cip14Fingerprint: string;
+  policyId: string;
+  assetName: string;
+}
+
 type ChainDataExtensionPayload =
   | CdeDatumErc20TransferPayload
   | CdeDatumErc721MintPayload
@@ -160,6 +170,11 @@ export interface CdeCardanoProjectedNFTDatum extends CdeDatumBase {
   scheduledPrefix: string | undefined;
 }
 
+export interface CdeCardanoAssetUtxoDatum extends CdeDatumBase {
+  cdeDatumType: ChainDataExtensionDatumType.CardanoAssetUtxo;
+  payload: CdeDatumCardanoAssetUtxoPayload;
+}
+
 export type ChainDataExtensionDatum =
   | CdeErc20TransferDatum
   | CdeErc721MintDatum
@@ -168,7 +183,8 @@ export type ChainDataExtensionDatum =
   | CdeGenericDatum
   | CdeErc6551RegistryDatum
   | CdeCardanoPoolDatum
-  | CdeCardanoProjectedNFTDatum;
+  | CdeCardanoProjectedNFTDatum
+  | CdeCardanoAssetUtxoDatum;
 
 export enum CdeEntryTypeName {
   Generic = 'generic',
@@ -178,6 +194,7 @@ export enum CdeEntryTypeName {
   ERC6551Registry = 'erc6551-registry',
   CardanoDelegation = 'cardano-stake-delegation',
   CardanoProjectedNFT = 'cardano-projected-nft',
+  CardanoDelayedAsset = 'cardano-delayed-asset',
 }
 
 const EvmAddress = Type.Transform(Type.RegExp('0x[0-9a-fA-F]{40}'))
@@ -303,9 +320,23 @@ export const ChainDataExtensionCardanoProjectedNFTConfig = Type.Object({
   name: Type.String(),
 });
 
+export const ChainDataExtensionCardanoDelayedAssetConfig = Type.Object({
+  type: Type.Literal(CdeEntryTypeName.CardanoDelayedAsset),
+  fingerprints: Type.Optional(Type.Array(Type.String())),
+  policyIds: Type.Optional(Type.Array(Type.String())),
+  startSlot: Type.Number(),
+  stopSlot: Type.Optional(Type.Number()),
+  name: Type.String(),
+});
+
 export type ChainDataExtensionCardanoProjectedNFT = ChainDataExtensionBase &
   Static<typeof ChainDataExtensionCardanoProjectedNFTConfig> & {
     cdeType: ChainDataExtensionType.CardanoProjectedNFT;
+  };
+
+export type ChainDataExtensionCardanoDelayedAsset = ChainDataExtensionBase &
+  Static<typeof ChainDataExtensionCardanoDelayedAssetConfig> & {
+    cdeType: ChainDataExtensionType.CardanoAssetUtxo;
   };
 
 export const CdeConfig = Type.Object({
@@ -318,6 +349,7 @@ export const CdeConfig = Type.Object({
       ChainDataExtensionErc6551RegistryConfig,
       ChainDataExtensionCardanoDelegationConfig,
       ChainDataExtensionCardanoProjectedNFTConfig,
+      ChainDataExtensionCardanoDelayedAssetConfig,
     ])
   ),
 });
@@ -343,7 +375,8 @@ export type ChainDataExtension =
   | ChainDataExtensionGeneric
   | ChainDataExtensionErc6551Registry
   | ChainDataExtensionCardanoDelegation
-  | ChainDataExtensionCardanoProjectedNFT;
+  | ChainDataExtensionCardanoProjectedNFT
+  | ChainDataExtensionCardanoDelayedAsset;
 
 export type GameStateTransitionFunctionRouter = (
   blockHeight: number
