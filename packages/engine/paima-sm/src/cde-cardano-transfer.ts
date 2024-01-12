@@ -10,12 +10,15 @@ export default async function processDatum(
   const prefix = cdeDatum.scheduledPrefix;
   const txId = cdeDatum.payload.txId;
   const rawTx = cdeDatum.payload.rawTx;
+  const inputCredentials = cdeDatum.payload.inputCredentials.join(',');
+  const outputs = JSON.stringify(cdeDatum.payload.outputs);
+  const metadata = cdeDatum.payload.metadata || undefined;
 
   const scheduledBlockHeight = Math.max(cdeDatum.blockNumber, ENV.SM_START_BLOCKHEIGHT + 1);
-  const scheduledInputData = `${prefix}|${txId}|${rawTx}`;
+  const scheduledInputData = `${prefix}|${txId}|${metadata}|${inputCredentials}|${outputs}`;
 
   const updateList: SQLUpdate[] = [
-    // createScheduledData(scheduledInputData, scheduledBlockHeight),
+    createScheduledData(scheduledInputData, scheduledBlockHeight),
     [
       cdeCardanoTransferInsert,
       {
