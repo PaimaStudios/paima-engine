@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "assert-never": "^1.2.1",
-    "@dcspark/carp-client": "^2.3.1"
+    "@dcspark/carp-client": "^2.3.1",
+    "@dcspark/cardano-multiplatform-lib-nodejs": "^3.0.1"
   }
 }
