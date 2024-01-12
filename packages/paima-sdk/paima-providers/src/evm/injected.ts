@@ -126,17 +126,6 @@ export class EvmInjectedConnector implements IConnector<EvmApi> {
       allWallets.push(...eip5749Options);
     }
 
-    // Metamask doesn't support EIP6963 yet, but it plans to. In the meantime, we add it manually
-    if (windowObj.ethereum != null && windowObj.ethereum.isMetaMask) {
-      const ethereum = windowObj.ethereum;
-      allWallets.push({
-        metadata: {
-          name: 'metamask',
-          displayName: 'MetaMask',
-        },
-        api: () => Promise.resolve(ethereum),
-      });
-    }
     // some wallets aggressively put themselves in the list of wallets the user has installed
     // even if the user has never actually used these
     // we put these wallets at the bottom of the priority
@@ -209,8 +198,11 @@ export class EvmInjectedConnector implements IConnector<EvmApi> {
       return this.provider;
     }
 
+    // the eip6963 name for Metamask is io.metamask
+    // but we want to keep simply "metamask" working for backwards compatibility with older versions of Paima
+    const adjustedName = name === 'metamask' ? 'io.metamask' : name;
     const provider = EvmInjectedConnector.getPossiblyDuplicateWalletOptions().find(
-      entry => entry.metadata.name === name
+      entry => entry.metadata.name === adjustedName
     );
     if (provider == null) {
       throw new WalletNotFound(`EVM wallet ${name} not found`);
