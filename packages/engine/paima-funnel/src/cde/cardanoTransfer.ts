@@ -83,6 +83,9 @@ function eventToCdeDatum(
     payload: {
       rawTx: event.transaction.payload,
       txId: event.transaction.hash,
+      outputs: event.transaction.outputs,
+      inputCredentials: event.transaction.inputCredentials,
+      metadata: event.transaction.metadata,
     },
     scheduledPrefix: extension.scheduledPrefix,
     paginationCursor: { cursor: JSON.stringify(cursor), finished: false },

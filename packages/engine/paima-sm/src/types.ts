@@ -129,6 +129,9 @@ interface CdeDatumCardanoAssetUtxoPayload {
 interface CdeDatumCardanoTransferPayload {
   txId: string;
   rawTx: string;
+  inputCredentials: string[];
+  outputs: { asset: { policyId: string; assetName: string } | null; amount: string }[];
+  metadata: string | null;
 }
 
 type ChainDataExtensionPayload =
