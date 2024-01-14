@@ -28,8 +28,8 @@
       "packaged/paima-batcher/**/*"
     ],
     "targets": [
-      "node18-linux-x64",
-      "node18-macos-x64"
+      "node20-linux-x64",
+      "node20-macos-x64"
     ],
     "outputPath": "packaged"
   },
@@ -40,17 +40,17 @@
     "build:binary": "npm run build && pkg packaged/batcherCorePacked.js --options \"experimental-specifier-resolution=node,no-warnings\" --config package.json && ./scripts/post_build.sh",
     "install-binaries": "../../../tools/scripts/unpack.sh",
     "build:dev-binary": "npm run build:dev-binary-macos && npm run build:dev-binary-linux && ./scripts/post_build.sh",
-    "build:dev-binary-macos": "npm run build && pkg-dev packaged/batcherCorePacked.js --output packaged/@standalone/dev-paima-batcher-macos -t node18-macos-x64 -b --options \"inspect,experimental-specifier-resolution=node,no-warnings\" --config package.json",
-    "build:dev-binary-linux": "npm run build && pkg-dev packaged/batcherCorePacked.js --output packaged/@standalone/dev-paima-batcher-linux -t node18-linux-x64 -b --options \"inspect,experimental-specifier-resolution=node,no-warnings\" --config package.json",
+    "build:dev-binary-macos": "npm run build && pkg-dev packaged/batcherCorePacked.js --output packaged/@standalone/dev-paima-batcher-macos -t node20-macos-x64 -b --options \"inspect,experimental-specifier-resolution=node,no-warnings\" --config package.json",
+    "build:dev-binary-linux": "npm run build && pkg-dev packaged/batcherCorePacked.js --output packaged/@standalone/dev-paima-batcher-linux -t node20-linux-x64 -b --options \"inspect,experimental-specifier-resolution=node,no-warnings\" --config package.json",
     "build:standalone": "npm run pack && npm run build:binary",
     "build:dev-standalone": "npm run install-binaries && npm run build:dev-binary",
-    "release": "npm run build:standalone && npm run build:dev-standalone"
+    "release": "npm run build:standalone"
   },
   "devDependencies": {
     "cross-env": "^7.0.3",
     "dotenv": "^16.3.1",
-    "esbuild": "^0.19.3",
-    "pkg": "^5.8.1",
+    "esbuild": "^0.19.11",
+    "@yao-pkg/pkg": "^5.11.1",
     "pkg-dev": "github:paimaStudios/pkg#main"
   }
 }

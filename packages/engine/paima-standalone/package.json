@@ -33,8 +33,8 @@
       "./swagger-ui/**/*"
     ],
     "targets": [
-      "node18-linux-x64",
-      "node18-macos-x64"
+      "node20-linux-x64",
+      "node20-macos-x64"
     ]
   },
   "scripts": {
@@ -51,15 +51,15 @@
     "prepare:standalone": "sh ./scripts/prepare_standalone_folders.sh",
     "build:standalone": "npm run build:prod-binary",
     "build:dev-standalone": "npm run install-binaries && npm run build:dev-binary",
-    "release": "npm run prepare:standalone && npm run build:standalone && npm run build:dev-standalone",
+    "release": "npm run prepare:standalone && npm run build:standalone",
     "standalone": "npm run prepare:standalone && npm run build:standalone"
   },
   "devDependencies": {
-    "ts-node": "^10.9.1",
+    "ts-node": "^10.9.2",
     "cross-env": "^7.0.3",
     "dotenv": "^16.3.1",
-    "esbuild": "^0.19.3",
-    "pkg": "^5.8.1",
+    "esbuild": "^0.19.11",
+    "@yao-pkg/pkg": "^5.11.1",
     "pkg-dev": "github:paimaStudios/pkg#main"
   }
 }

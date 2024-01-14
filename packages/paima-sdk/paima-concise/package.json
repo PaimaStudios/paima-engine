@@ -28,7 +28,7 @@
     "web3-utils": "1.10.0"
   },
   "devDependencies": {
-    "@types/node": "^18.17.1",
+    "@types/node": "^20.11.0",
     "@paima/utils": "2.1.1"
   }
 }

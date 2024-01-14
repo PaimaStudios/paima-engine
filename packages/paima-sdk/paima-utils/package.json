@@ -37,7 +37,7 @@
   "devDependencies": {
     "@typechain/web3-v1": "^6.0.6",
     "@types/express": "^4.17.20",
-    "@types/node": "^18.17.1",
+    "@types/node": "^20.11.0",
     "typechain": "^8.3.1"
   },
   "dependencies": {
@@ -46,8 +46,6 @@
     "@sinclair/typebox": "^0.31.28",
     "algosdk": "^2.3.0",
     "flatted": "^3.2.7",
-    "i": "^0.3.7",
-    "npm": "^10.0.0",
     "web3": "1.10.0",
     "yaml": "^2.3.1"
   }

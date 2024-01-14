@@ -297,6 +297,7 @@ export class EvmInjectedProvider implements IProvider<EvmApi> {
   };
   addChain = async (newChain: AddEthereumChainParameter): Promise<void> => {
     try {
+      // careful: not all wallets support adding arbitrary chains
       await this.conn.api.request({
         method: 'wallet_addEthereumChain',
         params: [newChain],
@@ -308,6 +309,7 @@ export class EvmInjectedProvider implements IProvider<EvmApi> {
   };
   switchChain = async (hexChainId: string): Promise<void> => {
     try {
+      // careful: not all wallets support switching chains
       await this.conn.api.request({
         method: 'wallet_switchEthereumChain',
         params: [{ chainId: hexChainId }],

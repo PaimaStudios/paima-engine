@@ -23,7 +23,7 @@
     "build": "tsc"
   },
   "devDependencies": {
-    "@types/node": "^18.17.1"
+    "@types/node": "^20.11.0"
   },
   "dependencies": {
     "yaml": "^2.3.1",

@@ -2,8 +2,8 @@
 
 # Install the required pkg-dev-prebuilts and cache it on the user's machine
 
-# uncompress linux/macos 18.15.0 debug node builds
-FILE=$HOME/.pkg-cache/v3.4/built-v18.15.0-linux-x64
+# uncompress linux/macos 20.11.0 debug node builds
+FILE=$HOME/.pkg-cache/v3.4/built-v20.11.0-linux-x64
 if test -f "$FILE"; then
     echo "binary $FILE exists, skipping instalation."
 else
@@ -24,5 +24,5 @@ else
 
   rm debug-builds.tar.gz dev-pkg-builta*
 
-  mv built-v18.15.0-* $HOME/.pkg-cache/v3.4/
+  mv built-v20.11.0-* $HOME/.pkg-cache/v3.4/
 fi
