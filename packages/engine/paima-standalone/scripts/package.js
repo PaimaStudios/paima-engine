@@ -1,7 +1,7 @@
 /* eslint-disable no-console, @typescript-eslint/explicit-function-return-type */
 
-import pkg from 'pkg';
-import devPkg from 'pkg-dev';
+import pkg from '@yao-pkg/pkg';
+// import devPkg from 'pkg-dev';
 import fs from 'fs';
 import pkgJson from '../package.json' assert { type: 'json' };
 
@@ -37,7 +37,9 @@ function getBatcherName() {
 async function packageApp() {
   try {
     createTmpConfig();
-    const exe = isDebug ? devPkg : pkg;
+    // const exe = isDebug ? devPkg : pkg;
+    if (isDebug) { console.error("Debug not supported at this time"); process.exit(1); }
+    const exe = pkg;
 
     const baseOptions = ['experimental-specifier-resolution=node', 'no-warnings'];
     if (isDebug) {
@@ -54,7 +56,7 @@ async function packageApp() {
         args.push('--debug');
       }
       args.push(...['--output', `packaged/@standalone/dev-paima-engine-${compilationTarget}`]);
-      args.push(...[`-t`, `node18-${compilationTarget}-x64`]);
+      args.push(...[`-t`, `node20-${compilationTarget}-x64`]);
       args.push(...[`--build`]); // don't download prebuilt base binaries, build them
     } else {
       // pkg only supports creating prod builds that match the machine you're compiling on (ex: linux can't build macos)

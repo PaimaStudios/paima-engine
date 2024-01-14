@@ -72,9 +72,12 @@ const matchExecutorInitializer: MatchExecutorInitializer = {
         while (true) {
           // Tick returns null after last event.
           const tick: ReturnType<typeof this.tick> = this.tick();
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-          if (tick) tick.forEach(t => ticks.push(t as any)); // any as generic not exposed
-          else return ticks;
+          if (tick) {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any
+            tick.forEach(t => ticks.push(t as any)); // any as generic not exposed
+          } else {
+            return ticks;
+          }
         }
       },
     };

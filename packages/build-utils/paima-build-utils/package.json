@@ -31,7 +31,7 @@
     "paima-reset-db": "./scripts/change-db.js"
   },
   "peerDependencies": {
-    "esbuild": "^0.19.3",
+    "esbuild": "^0.19.11",
     "esbuild-plugin-polyfill-node": "^0.3.0"
   }
 }

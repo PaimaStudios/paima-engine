@@ -25,7 +25,7 @@
 #       fail-fast: false
 #       matrix:
 #         os: [ubuntu-latest]
-#         node: [18]
+#         node: [20]
 
 #     steps:
 #       - name: Check out repository
