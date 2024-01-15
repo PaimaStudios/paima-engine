@@ -3,13 +3,13 @@ import type { VersionString } from './types.js';
 export class ENV {
   static doHealthCheck(): void {
     if (!ENV.CONTRACT_ADDRESS) {
-      throw new Error(`Please ensure your .env.${ENV.NODE_ENV} is properly filled out.`);
+      throw new Error(`Please ensure your .env.${ENV.NETWORK} is properly filled out.`);
     }
   }
 
   // System
-  static get NODE_ENV(): string {
-    return process.env.NODE_ENV || 'development';
+  static get NETWORK(): string {
+    return process.env.NETWORK || 'localhost';
   }
 
   // Target Blockchain:

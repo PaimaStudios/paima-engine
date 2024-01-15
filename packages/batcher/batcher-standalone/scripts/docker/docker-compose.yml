@@ -38,14 +38,14 @@ services:
     ports:
       - '${BATCHER_PORT}:${BATCHER_PORT}'
     volumes:
-      - ../.env.${NODE_ENV:-production}:/app/.env.${NODE_ENV:-production}
+      - ../.env.${NETWORK:-localhost}:/app/.env.${NETWORK:-localhost}
     restart: 'unless-stopped'
     links:
       - paima-batcher-db
     depends_on:
       - paima-batcher-db
     env_file:
-      - ../.env.${NODE_ENV:-production}
+      - ../.env.${NETWORK:-localhost}
 
 volumes:
   data:

@@ -21,7 +21,7 @@
   "scripts": {
     "lint:eslint": "eslint .",
     "build": "tsc",
-    "build:standalone-web-ui": "NODE_ENV=${NODE_ENV:=development} DOTENV_CONFIG_PATH=\"../../.env.$NODE_ENV\" node --require dotenv/config ./esbuildconfig.cjs",
+    "build:standalone-web-ui": "DOTENV_CONFIG_PATH=\"../../.env.{$NETWORK:-localhost}\" node --require dotenv/config ./esbuildconfig.cjs",
     "start:standalone-web-ui": "npx http-server ./web -o --port 9123"
   },
   "devDependencies": {

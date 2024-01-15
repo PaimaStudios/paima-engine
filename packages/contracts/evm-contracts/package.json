@@ -27,7 +27,6 @@
   "devDependencies": {
     "@nomicfoundation/hardhat-foundry": "^1.1.1",
     "@nomicfoundation/hardhat-toolbox": "^4.0.0",
-    "@nomicfoundation/hardhat-toolbox-viem": "^2.0.0",
     "@openzeppelin/contracts": "^4.6.0",
     "hardhat": "^2.19.3",
     "hardhat-abi-exporter": "^2.10.1",
@@ -37,7 +36,6 @@
   "peerDependencies": {
     "@nomicfoundation/hardhat-foundry": "^1.1.1",
     "@nomicfoundation/hardhat-toolbox": "^4.0.0",
-    "@nomicfoundation/hardhat-toolbox-viem": "^2.0.0",
     "@openzeppelin/contracts": "^4.6.0",
     "hardhat": "^2.19.3"
   }

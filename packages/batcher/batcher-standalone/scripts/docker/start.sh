@@ -7,4 +7,4 @@ fi
 
 if [ ! -x ./paima-batcher-linux ]; then chmod +x ./paima-batcher-linux; fi
 
-export ENV_FILE="../.env.${NODE_ENV:-production}"; echo \"ENV FILE: $ENV_FILE\"; docker compose --env-file $ENV_FILE build && docker compose --env-file $ENV_FILE up
+export ENV_FILE="../.env.${NETWORK:-localhost}"; echo \"ENV FILE: $ENV_FILE\"; docker compose --env-file $ENV_FILE build && docker compose --env-file $ENV_FILE up

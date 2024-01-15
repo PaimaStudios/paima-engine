@@ -3,7 +3,7 @@ import { config } from 'dotenv';
 import { ENV as ENGINE_ENV } from '@paima/utils';
 
 // Load environment variables
-config({ path: `${process.cwd()}/.env.${process.env.NODE_ENV || 'development'}` });
+config({ path: `${process.cwd()}/.env.${process.env.NETWORK || 'localhost'}` });
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export class ENV {
