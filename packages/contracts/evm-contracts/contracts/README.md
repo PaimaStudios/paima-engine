@@ -9,7 +9,7 @@ Core contracts
 </ul>
 State-annotated contracts
 <ul>
-  <li>[Nft](#Nft): A standard ERC721 that accepts calldata in the mint function for any initialization data needed in a Paima dApp</li>
+  <li>[AnnotatedMintNft](#AnnotatedMintNft): A standard ERC721 that accepts calldata in the mint function for any initialization data needed in a Paima dApp</li>
 </ul>
 Facilitating monetization
 <ul>
@@ -24,7 +24,7 @@ Facilitating monetization
 
 ## State-annotated contracts
 
-{{Nft}}
+{{AnnotatedMintNft}}
 
 ## Facilitating monetization
 

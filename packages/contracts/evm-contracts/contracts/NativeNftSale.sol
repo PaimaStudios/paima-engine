@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.13;
 
-import "./Nft.sol";
+import "./AnnotatedMintNft.sol";
 import "./BaseState.sol";
 import "./ERC1967.sol";
 
@@ -46,7 +46,7 @@ contract NativeNftSale is BaseState, ERC1967, Ownable {
 
         uint256 price = nftPrice;
 
-        uint256 tokenId = Nft(nftAddress).mint(receiverAddress, initialData);
+        uint256 tokenId = AnnotatedMintNft(nftAddress).mint(receiverAddress, initialData);
 
         emit BuyNFT(tokenId, price, receiverAddress, msg.sender);
 

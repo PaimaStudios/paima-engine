@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.13;
 
-import "./Nft.sol";
+import "./AnnotatedMintNft.sol";
 import "./State.sol";
 import "./ERC1967.sol";
 
@@ -62,7 +62,7 @@ contract Erc20NftSale is State, ERC1967, Ownable {
         // transfer tokens from buyer to contract
         ERC20(_tokenAddress).transferFrom(msg.sender, address(this), price);
 
-        uint256 tokenId = Nft(nftAddress).mint(receiverAddress, initialData);
+        uint256 tokenId = AnnotatedMintNft(nftAddress).mint(receiverAddress, initialData);
 
         if (!depositedCurrenciesMap[_tokenAddress]) {
             depositedCurrencies.push(_tokenAddress);

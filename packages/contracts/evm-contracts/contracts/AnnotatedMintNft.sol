@@ -7,7 +7,7 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 
-contract Nft is ERC165, ERC721, Ownable {
+contract AnnotatedMintNft is ERC165, ERC721, Ownable {
     uint256 public currentTokenId;
     string public baseURI;
     uint256 public totalSupply;
@@ -17,17 +17,17 @@ contract Nft is ERC165, ERC721, Ownable {
     mapping(address => bool) public minters;
 
     modifier canMint() {
-        require(isMinter(msg.sender) || owner() == msg.sender, "NFT: not authorized to mint");
+        require(isMinter(msg.sender) || owner() == msg.sender, "AnnotatedMintNft: not authorized to mint");
         _;
     }
 
     modifier onlyExistingTokenId(uint256 tokenId) {
-        require(_exists(tokenId), "Nft: non-existent tokenId");
+        require(_exists(tokenId), "AnnotatedMintNft: non-existent tokenId");
         _;
     }
 
     modifier onlyTokenOwner(uint256 tokenId) {
-        require(msg.sender == ownerOf(tokenId), "Nft: not owner");
+        require(msg.sender == ownerOf(tokenId), "AnnotatedMintNft: not owner");
         _;
     }
 
@@ -66,8 +66,8 @@ contract Nft is ERC165, ERC721, Ownable {
     }
 
     function mint(address _to, string calldata initialData) external canMint returns (uint256) {
-        require(maxSupply > totalSupply, "Nft: max supply reached");
-        require(_to != address(0), "Nft: zero receiver address");
+        require(maxSupply > totalSupply, "AnnotatedMintNft: max supply reached");
+        require(_to != address(0), "AnnotatedMintNft: zero receiver address");
 
         uint256 tokenId = currentTokenId;
         _safeMint(_to, tokenId);
@@ -87,14 +87,14 @@ contract Nft is ERC165, ERC721, Ownable {
     }
 
     function setMinter(address _minter) external onlyOwner {
-        require(_minter != address(0), "Nft: invalid minter");
+        require(_minter != address(0), "AnnotatedMintNft: invalid minter");
 
         minters[_minter] = true;
         emit SetMinter(_minter);
     }
 
     function removeMinter(address _minter) external onlyOwner {
-        require(_minter != address(0), "Nft: invalid minter");
+        require(_minter != address(0), "AnnotatedMintNft: invalid minter");
 
         minters[_minter] = false;
         emit RemoveMinter(_minter);
@@ -121,7 +121,7 @@ contract Nft is ERC165, ERC721, Ownable {
 
     function updateMaxSupply(uint256 _maxSupply) external onlyOwner {
         uint256 oldMaxSupply = maxSupply;
-        require(_maxSupply > oldMaxSupply, "NFT: old supply less than new supply");
+        require(_maxSupply > oldMaxSupply, "AnnotatedMintNft: old supply less than new supply");
 
         maxSupply = _maxSupply;
         emit UpdateMaxSupply(oldMaxSupply, _maxSupply);
