@@ -7,15 +7,22 @@ import "./ERC1967.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 
+/// @dev Facilitates accepting payment that accepts extra data to know what the payment was for inside a Paima dApp.
 contract GenericPayment is ERC1967, Ownable {
+    /// @dev True if contract has been initialized via the `initialize` function.
     bool public initialized;
 
     using Address for address payable;
 
+    /// @dev Emitted when the contract is initialized.
     event Initialized(address indexed owner);
 
+    /// @dev Emitted when payment of `amount` if made by `payer` with `message`.
     event Pay(uint256 amount, address payer, string message);
 
+    /// @dev Initializes the contracts, transferring ownership to the specified `owner`.
+    /// Callable only once.
+    /// Emits the `Initialized` event.
     function initialize(address owner) public {
         require(!initialized, "Contract already initialized");
         initialized = true;
@@ -25,10 +32,14 @@ contract GenericPayment is ERC1967, Ownable {
         emit Initialized(owner);
     }
 
+    /// @dev Transfers native tokens to the contract, providing `message`.
+    /// Emits the `Pay` event.
     function pay(string calldata message) external payable {
         emit Pay(msg.value, msg.sender, message);
     }
 
+    /// @dev Withdraws the contract balance to `_account`.
+    /// Callable only by the contract owner.
     function withdraw(address payable _account) external onlyOwner {
         uint256 balance = address(this).balance;
 
@@ -36,6 +47,8 @@ contract GenericPayment is ERC1967, Ownable {
         _account.sendValue(balance);
     }
 
+    /// @dev Upgrades the contract implementation to `_newContract`.
+    /// Callable only by the contract owner.
     function upgradeContract(address _newContract) external onlyOwner {
         _setImplementation(_newContract);
     }

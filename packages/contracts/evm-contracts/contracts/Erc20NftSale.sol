@@ -8,17 +8,21 @@ import "./ERC1967.sol";
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 
+/// @dev Facilitates selling NFTs for specific ERC20s that accepts extra data when buying for any initialization data needed in a Paima dApp.
 contract Erc20NftSale is State, ERC1967, Ownable {
+    /// @dev Emitted when the contract is initialized.
     event Initialized(ERC20[] indexed currencies, address indexed owner, address indexed nft);
 
+    /// @dev Emitted when the NFT price is updated from `oldPrice` to `newPrice`.
     event UpdatePrice(uint256 indexed oldPrice, uint256 indexed newPrice);
 
-    event UpdateNftProxy(address indexed oldProxy, address indexed newProxy);
-
+    /// @dev Emitted when the `token` is removed from the list of `supportedCurrencies`.
     event RemoveWhitelistedToken(address indexed token);
 
+    /// @dev Emitted when the `token` array is set as the `supportedCurrencies`.
     event WhitelistTokens(address[] indexed token);
 
+    /// @dev Emitted when an NFT of `tokenId` is minted to `receiver` by `buyer` paying `PRICE` in tokens of `supportedCurrencies`.
     event BuyWithToken(
         uint256 indexed tokenId,
         uint256 indexed PRICE,
@@ -26,6 +30,10 @@ contract Erc20NftSale is State, ERC1967, Ownable {
         address buyer
     );
 
+    /// @dev Initializes the contract with the requested price `_price` in tokens of `currencies` for specified NFT `_nft`,
+    /// transferring ownership to the specified `owner`.
+    /// Callable only once.
+    /// Emits the `Initialized` event.
     function initialize(
         ERC20[] memory currencies,
         address owner,
@@ -46,8 +54,10 @@ contract Erc20NftSale is State, ERC1967, Ownable {
         emit Initialized(currencies, owner, _nft);
     }
 
-    /// @dev Purchases an NFT using approved token. NFTs are sold based on FIFO
-    /// @param _tokenAddress Address of ERC20 token to use for payment
+    /// @dev Purchases NFT for address `receiverAddress`, paying required price in token of `_tokenAddress`,
+    /// if it is one of the `supportedCurrencies`.
+    /// This function calls the `mint` function on the `AnnotatedMintNft` contract, passing provided `initialData`.
+    /// Emits the `BuyWithToken` event.
     function buyWithToken(
         ERC20 _tokenAddress,
         address receiverAddress,
@@ -74,6 +84,9 @@ contract Erc20NftSale is State, ERC1967, Ownable {
         return tokenId;
     }
 
+    /// @dev Removes `_token` from the list of `supportedCurrencies`.
+    /// Callable only by the contract owner.
+    /// Emits the `RemoveWhitelistedToken` event.
     function removeWhitelistedToken(ERC20 _token) external onlyOwner {
         require(tokenIsWhitelisted(_token), "Erc20NftSale: token not whitelisted");
 
@@ -95,6 +108,9 @@ contract Erc20NftSale is State, ERC1967, Ownable {
         emit RemoveWhitelistedToken(address(_token));
     }
 
+    /// @dev Sets `_tokens` array as the `supportedCurrencies` array.
+    /// Callable only by the contract owner.
+    /// Emits the `WhitelistTokens` event.
     function whitelistTokens(ERC20[] memory _tokens) external onlyOwner {
         address[] memory newWhiteList = new address[](_tokens.length);
 
@@ -106,6 +122,9 @@ contract Erc20NftSale is State, ERC1967, Ownable {
         emit WhitelistTokens(newWhiteList);
     }
 
+    /// @dev Changes the sale price to `_nftPrice`.
+    /// Callable only by the contract owner.
+    /// Emits the `UpdatePrice` event.
     function updatePrice(uint256 _nftPrice) external onlyOwner {
         uint256 oldPrice = nftPrice;
         nftPrice = _nftPrice;
@@ -113,6 +132,8 @@ contract Erc20NftSale is State, ERC1967, Ownable {
         emit UpdatePrice(oldPrice, _nftPrice);
     }
 
+    /// @dev Withdraws the contract balance of `depositedCurrencies` to `_account`.
+    /// Callable only by the contract owner.
     function withdraw(address _account) external onlyOwner {
         ERC20[] memory currencies = depositedCurrencies;
 
@@ -132,10 +153,13 @@ contract Erc20NftSale is State, ERC1967, Ownable {
         delete depositedCurrencies;
     }
 
+    /// @dev Upgrades the contract implementation to `_newContract`.
+    /// Callable only by the contract owner.
     function upgradeContract(address _newContract) external onlyOwner {
         _setImplementation(_newContract);
     }
 
+    /// @dev Returns true if `_token` is part of the `supportedCurrencies`.
     function tokenIsWhitelisted(ERC20 _token) public view returns (bool) {
         ERC20[] memory supportedCurrenciesMem = supportedCurrencies;
         for (uint256 i = 0; i < supportedCurrenciesMem.length; i++) {
@@ -145,10 +169,12 @@ contract Erc20NftSale is State, ERC1967, Ownable {
         return false;
     }
 
+    /// @dev Returns the token addresses that have been used as a payment in the NFT purchases.
     function getDepositedCurrencies() public view returns (ERC20[] memory) {
         return depositedCurrencies;
     }
 
+    /// @dev Returns an array of token addresses that are accepted as payment in the NFT purchase.
     function getSupportedCurrencies() public view returns (ERC20[] memory) {
         return supportedCurrencies;
     }

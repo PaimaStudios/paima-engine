@@ -10,8 +10,8 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 /// @title Proxy
 /// @dev Proxy contract mostly based on https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/proxy/Proxy.sol
 contract Erc20NftSaleProxy is ERC1967 {
-    /// @dev this is normally not needed as runtime bytecode is deployed in
-    /// genesis file and implementation storage slot defined there too
+    /// @dev Sets `implementation` address and calls the `Erc20NftSale.initialize` function with the parameters
+    /// `currencies`, `owner`, `nftAddress`, `nftPrice`.
     constructor(
         address implementation,
         ERC20[] memory currencies,
@@ -61,13 +61,19 @@ contract Erc20NftSaleProxy is ERC1967 {
         }
     }
 
+    /// @dev Delegates the current call to the address returned by `_implementation()`.
+    /// This function does not return to its internal call site, it will return
+    /// directly to the external caller.
     function _fallback() internal {
         _delegate(_getImplementation());
     }
 
+    /// @dev Fallback function that delegates calls to the address returned by `_implementation()`.
+    /// Will run if no other function in the contract matches the call data.
     fallback() external payable {
         _fallback();
     }
 
+    /// @dev Called if this contract is receiving native tokens and `msg.data` is empty
     receive() external payable {}
 }
