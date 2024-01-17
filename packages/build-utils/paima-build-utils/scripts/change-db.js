@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 const fs = require('fs');
 const http = require('http');
 const https = require('https');
@@ -27,7 +29,7 @@ const getBlockHeight = (url, command) =>
 
 // Update .env START_BLOCKHEIGHT with latest value from RPC command: "eth_getBlockByNumber"
 const updateEnvFile = async file => {
-  const dataEnv = await fs.promises.readFile(__dirname + '/' + file, 'utf8');
+  const dataEnv = await fs.promises.readFile(process.cwd() + '/' + file, 'utf8');
   const url = dataEnv.match(/\nCHAIN_URI="(.+)"/)[1];
   if (!url) throw new Error('CHAIN_URI not found');
   const START_BLOCKHEIGHT = await getBlockHeight(url, {
@@ -46,7 +48,7 @@ const updateEnvFile = async file => {
 
 // Update docker compose volume with unique new name.
 const updateDockerFile = async file => {
-  const data = await fs.promises.readFile(__dirname + '/' + file, 'utf8');
+  const data = await fs.promises.readFile(process.cwd() + '/' + file, 'utf8');
   const ndata = data.replace(/generic(-.+)?-db/g, 'generic-' + new Date().getTime() + '-db');
   await fs.promises.writeFile(file, ndata, 'utf8');
 };
