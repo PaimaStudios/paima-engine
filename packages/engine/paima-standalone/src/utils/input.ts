@@ -92,9 +92,31 @@ export const initCommand = async (): Promise<void> => {
 // Run command logic
 export const runPaimaEngine = async (): Promise<void> => {
   // Verify env file is filled out before progressing
-  if (!ENV.CONTRACT_ADDRESS || !ENV.CHAIN_URI || !ENV.CHAIN_ID || !ENV.START_BLOCKHEIGHT) {
+  const restrictions = [
+    {
+      name: 'CONTRACT_ADDRESS',
+      val: ENV.CONTRACT_ADDRESS || undefined,
+    },
+    {
+      name: 'CHAIN_URI',
+      val: ENV.CHAIN_URI || undefined,
+    },
+    {
+      name: 'CHAIN_ID',
+      val: ENV.CHAIN_ID || undefined,
+    },
+  ];
+  // localhost networks start at block 0, so it's easier to just enable a start block of 0 for them
+  if (ENV.NETWORK !== 'localhost') {
+    restrictions.push({
+      name: 'START_BLOCKHEIGHT',
+      val: ENV.START_BLOCKHEIGHT || undefined,
+    });
+  }
+  const missingEnvs = restrictions.filter(env => env.val === undefined);
+  if (missingEnvs.length > 0) {
     doLog(
-      'Please ensure that your .env.{NETWORK} file is filled out properly before starting your game node.'
+      `Please ensure that your .env.{NETWORK} file is filled out properly before starting your game node. Missing ${missingEnvs.map(env => env.name).join(',')}`
     );
     process.exit(0);
   }
