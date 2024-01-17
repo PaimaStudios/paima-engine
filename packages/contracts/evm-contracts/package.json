@@ -1,6 +1,6 @@
 {
   "name": "@paima/evm-contracts",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "EVM contracts for the Paima ecosystem",
   "main": "index.js",
   "types": "index.d.ts",
