@@ -1,4 +1,5 @@
 const fs = require('fs');
+const http = require('http');
 const https = require('https');
 
 // RPC command
@@ -12,7 +13,9 @@ const getBlockHeight = (url, command) =>
       },
     };
 
-    const req = https.request(url, options, response => {
+    const protocol = new URL(url).protocol;
+    const lib = protocol === 'https:' ? https : http;
+    const req = lib.request(url, options, response => {
       let result = '';
       response.on('data', chunk => (result += chunk));
       response.on('end', () => resolve(parseInt(JSON.parse(result).result.number, 16)));
