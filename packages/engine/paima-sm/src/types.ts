@@ -277,7 +277,6 @@ export type ChainDataExtensionGeneric = ChainDataExtensionBase &
     cdeType: ChainDataExtensionType.Generic;
     eventName: string;
     eventSignatureHash: string;
-    rawContractAbi: string;
     contract: Contract;
   };
 

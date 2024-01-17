@@ -1,6 +1,6 @@
 import * as fs from 'fs/promises';
 
-import { ChainDataExtensionType, doLog } from '@paima/utils';
+import { doLog } from '@paima/utils';
 
 import type { ChainDataExtension } from '@paima/sm';
 
@@ -25,7 +25,7 @@ export function getEarliestStartSlot(config: ChainDataExtension[]): number {
 }
 
 // returns pair [rawAbiFileData, artifactObject.abi]
-export async function loadAbi(abiPath: string): Promise<[string, any[]]> {
+export async function loadAbi(abiPath: string): Promise<any> {
   let abiFileData: string = '';
   try {
     abiFileData = await fs.readFile(abiPath, 'utf8');
@@ -35,9 +35,15 @@ export async function loadAbi(abiPath: string): Promise<[string, any[]]> {
   }
   try {
     let abiJson = JSON.parse(abiFileData);
+
+    // some tools give the ABI directly
+    if (Array.isArray(abiJson)) {
+      return abiJson;
+    }
+    // but some tools give an object with an `abi` key
     if (typeof abiJson === 'object' && !!abiJson) {
       if (Object.hasOwn(abiJson as object, 'abi') && Array.isArray(abiJson.abi)) {
-        return [abiFileData, abiJson.abi];
+        return abiJson.abi;
       }
     }
   } catch (err) {
