@@ -29,7 +29,7 @@
     "@nomicfoundation/hardhat-toolbox": "^4.0.0",
     "@openzeppelin/contracts": "^4.6.0",
     "hardhat": "^2.19.3",
-    "hardhat-abi-exporter": "^2.10.1",
+    "hardhat-abi-exporter": "github:paimaStudios/hardhat-abi-exporter#export-ts-wrapper",
     "solidity-docgen": "^0.6.0-beta.36",
     "ts-node": "^10.9.2"
   },
