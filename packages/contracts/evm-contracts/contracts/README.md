@@ -42,10 +42,6 @@ Facilitating monetization
 
 {{ERC1967}}
 
-{{NativeProxy}}
-
-{{Proxy}}
-
 {{NativeNftSaleProxy}}
 
 {{GenericPaymentProxy}}

@@ -8,6 +8,8 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 
 /// @dev A standard ERC721 that accepts calldata in the mint function for any initialization data needed in a Paima dApp.
+/// Upon deployment only the contract owner (specified in constructor parameter) is able to mint tokens. Additional
+/// minters (e.g. NativeNftSale contract) need to be added by using the `setMinter` function.
 contract AnnotatedMintNft is ERC165, ERC721, Ownable {
     /// @dev The token ID that will be minted when calling the `mint` function.
     uint256 public currentTokenId;
