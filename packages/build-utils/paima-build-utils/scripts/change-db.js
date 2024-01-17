@@ -49,7 +49,7 @@ const updateDockerFile = async file => {
 };
 
 const start = async () => {
-  await updateEnvFile(`../.env.${process.env.NODE_ENV ?? 'development'}`);
+  await updateEnvFile(`../.env.${process.env.NETWORK ?? 'localhost'}`);
   await updateDockerFile('db/docker/docker-compose.yml');
 };
 

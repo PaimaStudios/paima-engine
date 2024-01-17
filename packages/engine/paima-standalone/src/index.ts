@@ -13,7 +13,7 @@ setLogger(s => {
 });
 
 // Load environment variables
-config({ path: `${process.cwd()}/.env.${process.env.NODE_ENV || 'development'}` });
+config({ path: `${process.cwd()}/.env.${process.env.NETWORK || 'localhost'}` });
 
 async function main(): Promise<void> {
   await parseSecurityYaml();
