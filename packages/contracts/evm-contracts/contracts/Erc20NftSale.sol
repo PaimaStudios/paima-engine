@@ -19,8 +19,8 @@ contract Erc20NftSale is State, ERC1967, Ownable {
     /// @dev Emitted when the `token` is removed from the list of `supportedCurrencies`.
     event RemoveWhitelistedToken(address indexed token);
 
-    /// @dev Emitted when the `token` array is set as the `supportedCurrencies`.
-    event WhitelistTokens(address[] indexed token);
+    /// @dev Emitted when the `tokens` are added as the `supportedCurrencies`.
+    event WhitelistTokens(address[] indexed tokens);
 
     /// @dev Emitted when an NFT of `tokenId` is minted to `receiver` by `buyer` paying `PRICE` in tokens of `supportedCurrencies`.
     event BuyWithToken(
@@ -108,7 +108,7 @@ contract Erc20NftSale is State, ERC1967, Ownable {
         emit RemoveWhitelistedToken(address(_token));
     }
 
-    /// @dev Sets `_tokens` array as the `supportedCurrencies` array.
+    /// @dev Adds `_tokens` to the `supportedCurrencies` array.
     /// Callable only by the contract owner.
     /// Emits the `WhitelistTokens` event.
     function whitelistTokens(ERC20[] memory _tokens) external onlyOwner {
