@@ -1,21 +1,21 @@
 # Solidity Contracts
 
-Solidity contracts provided as part of Paima Engine
+Solidity contracts provided as part of Paima Engine.
 
 Core contracts
 
 <ul>
-  <li>[PaimaL2Contract](#PaimaL2Contract): The main L2 contract for a Paima L2</li>
+  <li>[PaimaL2Contract](#PaimaL2Contract): The main L2 contract for a Paima L2.</li>
 </ul>
 State-annotated contracts
 <ul>
-  <li>[Nft](#Nft): A standard ERC721 that accepts calldata in the mint function for any initialization data needed in a Paima dApp</li>
+  <li>[AnnotatedMintNft](#AnnotatedMintNft): A standard ERC721 that accepts calldata in the mint function for any initialization data needed in a Paima dApp.</li>
 </ul>
 Facilitating monetization
 <ul>
-  <li>[NativeNftSale](#NativeNftSale): Facilitates selling NFTs that accepts extra data when buying for any initialization data needed in a Paima dApp</li>
-  <li>[GenericPayment](#GenericPayment): Facilitates accepting payment that accepts extra data to know what the payment was for inside a Paima dApp</li>
-  <li>[Erc20NftSale](#Erc20NftSale): Facilitates selling NFTs for specific ERC20s that accepts extra data when buying for any initialization data needed in a Paima dApp</li>
+  <li>[NativeNftSale](#NativeNftSale): Facilitates selling NFTs that accepts extra data when buying for any initialization data needed in a Paima dApp.</li>
+  <li>[GenericPayment](#GenericPayment): Facilitates accepting payment that accepts extra data to know what the payment was for inside a Paima dApp.</li>
+  <li>[Erc20NftSale](#Erc20NftSale): Facilitates selling NFTs for specific ERC20s that accepts extra data when buying for any initialization data needed in a Paima dApp.</li>
 </ul>
 
 ## Core contracts
@@ -24,7 +24,7 @@ Facilitating monetization
 
 ## State-annotated contracts
 
-{{Nft}}
+{{AnnotatedMintNft}}
 
 ## Facilitating monetization
 
@@ -42,8 +42,8 @@ Facilitating monetization
 
 {{ERC1967}}
 
-{{NativeProxy}}
-
-{{Proxy}}
+{{NativeNftSaleProxy}}
 
 {{GenericPaymentProxy}}
+
+{{Erc20NftSaleProxy}}

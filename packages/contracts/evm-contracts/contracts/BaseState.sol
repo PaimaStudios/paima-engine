@@ -5,11 +5,12 @@ pragma solidity ^0.8.13;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract BaseState {
-    // Price of NFT
+    /// @dev Required payment for the NFT in sale.
     uint256 public nftPrice;
 
+    /// @dev True if contract has been initialized via `initialize` function.
     bool public initialized;
 
-    // NFT address
+    /// @dev Address of the NFT for sale.
     address public nftAddress;
 }

@@ -5,20 +5,21 @@ pragma solidity ^0.8.13;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract State {
-    // Price of NFT
+    /// @dev Required payment for the NFT in sale.
     uint256 public nftPrice;
 
+    /// @dev True if contract has been initialized via `initialize` function.
     bool public initialized;
 
-    // NFT address
+    /// @dev Address of the NFT for sale.
     address public nftAddress;
 
-    // Array of deposited currencies
+    /// @dev Array of addresses of tokens that have been deposited to the contract via NFT sales.
     ERC20[] public depositedCurrencies;
 
-    // mapping from token address to amount
+    /// @dev Mapping that returns true for address of token that has been deposited to the contract via NFT sale.
     mapping(ERC20 => bool) public depositedCurrenciesMap;
 
-    // Array of supported currencies
+    /// @dev Array of addresses of tokens that are accepted as payment for the NFT sale.
     ERC20[] public supportedCurrencies;
 }
