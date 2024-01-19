@@ -1,4 +1,5 @@
 #!/bin/bash
+set -eu
 
 if [[ ! -f "./paima-batcher-linux" ]]; then
     echo "Error: paima-batcher-linux binary not found. Docker requires the linux binary for the application."
@@ -7,4 +8,7 @@ fi
 
 if [ ! -x ./paima-batcher-linux ]; then chmod +x ./paima-batcher-linux; fi
 
-export ENV_FILE="../.env.${NETWORK:-localhost}"; echo \"ENV FILE: $ENV_FILE\"; docker compose --env-file $ENV_FILE build && docker compose --env-file $ENV_FILE up
+export ENV_FILE="../.env.${NETWORK:-localhost}";
+echo \"ENV FILE: $ENV_FILE\";
+docker compose --env-file $ENV_FILE build
+docker compose --env-file $ENV_FILE up
