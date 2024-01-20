@@ -1,5 +1,9 @@
 import type { VersionString } from './types.js';
 
+/**
+ * Careful: this class uses `process.env`
+ * which might not be set depending on the framework used for the frontend of an app
+ */
 export class ENV {
   static doHealthCheck(): void {
     if (!ENV.CONTRACT_ADDRESS) {

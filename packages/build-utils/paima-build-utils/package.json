@@ -4,7 +4,7 @@
   "publishConfig": {
     "access": "public"
   },
-  "description": "Util functions to build Paima projects for various platforms",
+  "description": "Util functions to build the core parts of Paima projects",
   "exports": {
     "./*": {
       "import": "./build/esm/*.mjs",

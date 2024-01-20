@@ -1,8 +1,8 @@
 # Paima Build Utils
 
-A common place to store utility scripts to help build Paima projects on various platforms
+A common place to store utility scripts to for building core Paima components
 
-These are provided as part of Paima itself to avoid the need for projects depending on Paima to update their build scripts for every internal change in Paima engine
+These are provided as part of Paima itself to avoid the need for projects depending on Paima to know how to update their build scripts for every internal change in Paima engine
 
 **Note**: This module comes with both ESM and CommonJS files, but only the ESM files are exposed through `paima-sdk`. Use this module directly if you need CommonJS.
 
