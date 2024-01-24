@@ -81,10 +81,8 @@ contract AnnotatedMintNft is ERC165, ERC721, Ownable {
     /// @dev Returns true if this contract implements the interface defined by `interfaceID`. See EIP165.
     function supportsInterface(
         bytes4 interfaceID
-    ) public pure override(ERC165, ERC721) returns (bool) {
-        return
-            interfaceID == this.supportsInterface.selector || // ERC165
-            interfaceID == this.mint.selector; // ERC721 Paima-extended
+    ) public view override(ERC165, ERC721) returns (bool) {
+        return super.supportsInterface(interfaceID) || interfaceID == this.mint.selector;
     }
 
     /// @dev Mints a new token to address `_to`, passing `initialData` to be emitted in the event.
