@@ -9,13 +9,13 @@ import { buildEndpointErrorFxn, PaimaMiddlewareErrorCode } from '../errors.js';
 import { awaitBlock } from '../helpers/auxiliary-queries.js';
 import { postConciseData } from '../helpers/posting.js';
 import type { FailedResult, SuccessfulResult, PostDataResponse, LoginInfo } from '../types.js';
-import { WalletMode } from '@paima/providers/src/utils.js';
 import type { IProvider } from '@paima/providers';
 import {
   EvmInjectedConnector,
   CardanoConnector,
   PolkadotConnector,
   AlgorandConnector,
+  WalletMode,
 } from '@paima/providers';
 import { AddressType, ENV } from '@paima/utils';
 import { paimaEndpoints } from '../index.js';

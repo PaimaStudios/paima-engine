@@ -48,6 +48,12 @@ module.exports = [
   {
     files: ['**/*.{ts,tsx,cts,mts}'],
     rules: {
+      'no-restricted-imports': ['error', {
+        patterns: [{
+          group: ['@paima/**/src/*'],
+          message: "When importing from @paima packages, always use public exports instead of reaching into internals of a package using /src/ otherwise it can lead to module duplication and extremely subtle bugs."
+        }]
+      }],
       '@typescript-eslint/no-unsafe-assignment': 'off',
       '@typescript-eslint/no-unsafe-return': 'off',
       '@typescript-eslint/require-await': 'off',

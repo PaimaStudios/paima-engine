@@ -5,7 +5,7 @@ import { timeout, cutAfterFirstRejected, DEFAULT_FUNNEL_TIMEOUT, doLog } from '@
 import type { PaimaL2Contract } from '@paima/utils';
 import { TimeoutError } from '@paima/runtime';
 import type { ChainData } from '@paima/sm';
-import type { PaimaGameInteraction } from '@paima/utils/src/contract-types/PaimaL2Contract.js';
+import type { PaimaGameInteraction } from '@paima/utils';
 
 import { extractSubmittedData } from './paima-l2-processing.js';
 

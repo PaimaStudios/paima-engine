@@ -5,7 +5,7 @@ import type {
   ChainDataExtensionDatum,
   ChainDataExtensionErc721,
 } from '@paima/sm';
-import type { Transfer } from '@paima/utils/src/contract-types/ERC721Contract.js';
+import type { ERC721Transfer as Transfer } from '@paima/utils';
 
 export default async function getCdeData(
   extension: ChainDataExtensionErc721,

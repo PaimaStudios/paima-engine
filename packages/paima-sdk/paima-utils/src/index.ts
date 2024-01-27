@@ -26,6 +26,14 @@ export * from './types.js';
 export type * from './types.js';
 export * from './security/parse.js';
 export type * from './contract-types/index.js';
+export type { PaimaGameInteraction } from './contract-types/PaimaL2Contract.js';
+export type { Transfer as ERC20Transfer } from './contract-types/ERC20Contract.js';
+export type { AccountCreated } from './contract-types/ERC6551RegistryContract.js';
+export type {
+  Minted as PaimaMinted,
+  Transfer as PaimaERC721Transfer,
+} from './contract-types/PaimaERC721Contract.js';
+export type { Transfer as ERC721Transfer } from './contract-types/ERC721Contract.js';
 export * from './constants.js';
 
 export type { Web3, Contract, AbiItem, EventData };

@@ -25,7 +25,7 @@ import getCdeProjectedNFTData from '../../cde/cardanoProjectedNFT.js';
 import getCdeDelayedAsset from '../../cde/delayedAsset.js';
 import { query } from '@dcspark/carp-client/client/src/index';
 import { Routes } from '@dcspark/carp-client/shared/routes';
-import { FUNNEL_PRESYNC_FINISHED, InternalEventType } from '@paima/utils/src/constants';
+import { FUNNEL_PRESYNC_FINISHED, InternalEventType } from '@paima/utils';
 import { CarpFunnelCacheEntry } from '../FunnelCache.js';
 import { getCardanoEpoch } from '@paima/db';
 

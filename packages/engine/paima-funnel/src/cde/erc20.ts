@@ -4,7 +4,7 @@ import type {
   ChainDataExtensionDatum,
   ChainDataExtensionErc20,
 } from '@paima/sm';
-import type { Transfer } from '@paima/utils/src/contract-types/ERC20Contract.js';
+import type { ERC20Transfer } from '@paima/utils';
 import { DEFAULT_FUNNEL_TIMEOUT } from '@paima/utils';
 
 export default async function getCdeData(
@@ -20,11 +20,11 @@ export default async function getCdeData(
       toBlock: toBlock,
     }),
     DEFAULT_FUNNEL_TIMEOUT
-  )) as unknown as Transfer[];
-  return events.map((e: Transfer) => transferToCdeDatum(e, extension.cdeId));
+  )) as unknown as ERC20Transfer[];
+  return events.map((e: ERC20Transfer) => transferToCdeDatum(e, extension.cdeId));
 }
 
-function transferToCdeDatum(event: Transfer, cdeId: number): CdeErc20TransferDatum {
+function transferToCdeDatum(event: ERC20Transfer, cdeId: number): CdeErc20TransferDatum {
   return {
     cdeId: cdeId,
     cdeDatumType: ChainDataExtensionDatumType.ERC20Transfer,

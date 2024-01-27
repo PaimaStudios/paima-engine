@@ -20,7 +20,6 @@
     "paima"
   ],
   "scripts": {
-    "lint:eslint": "eslint .",
     "build:copy": "cp package.json ./build/ && cp README.md ./build/",
     "build": "npx tsc --build tsconfig.json && npm run build:copy"
   },

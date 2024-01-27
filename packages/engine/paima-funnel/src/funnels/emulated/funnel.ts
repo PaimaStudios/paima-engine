@@ -16,8 +16,8 @@ import { calculateBoundaryTimestamp, emulateCde, timestampToBlockNumber } from '
 import { BaseFunnel } from '../BaseFunnel.js';
 import type { FunnelSharedData } from '../BaseFunnel.js';
 import { QueuedBlockCacheEntry, RpcCacheEntry, RpcRequestState } from '../FunnelCache.js';
-import { Network } from '@paima/utils/src/constants';
-import { FUNNEL_PRESYNC_FINISHED } from '@paima/utils/src/constants';
+import { Network } from '@paima/utils';
+import { FUNNEL_PRESYNC_FINISHED } from '@paima/utils';
 
 /**
  * For hash calculation of empty blocks to work,
