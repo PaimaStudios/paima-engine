@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "assert-never": "^1.2.1",
-    "@dcspark/carp-client": "file:../../../tmp-carp-client"
+    "@dcspark/carp-client": "file:../../../tmp-carp-client",
+    "@dcspark/cardano-multiplatform-lib-nodejs": "file:~/Projects/cardano-multiplatform-lib/cml/wasm/pkg/cardano-multiplatform-lib-4.0.1.tgz"
   }
 }
