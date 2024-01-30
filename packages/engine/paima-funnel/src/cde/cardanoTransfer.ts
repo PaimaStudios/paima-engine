@@ -3,8 +3,9 @@ import { ChainDataExtensionDatumType, DEFAULT_FUNNEL_TIMEOUT, timeout } from '@p
 import { Routes, query } from '@dcspark/carp-client/client/src';
 import type { TxAndBlockInfo } from '@dcspark/carp-client/shared/models/TransactionHistory';
 import type { BlockTxPair } from 'tmp-carp-client/shared/models/common';
+import { Transaction } from '@dcspark/cardano-multiplatform-lib-nodejs';
 
-export const PAGINATION_LIMIT = 1000;
+export const PAGINATION_LIMIT = 50;
 
 export default async function getCdeData(
   url: string,
@@ -36,6 +37,7 @@ export default async function getCdeData(
         limit: PAGINATION_LIMIT,
         untilBlock,
         after: fromTx,
+        withInputContext: true,
       }),
       DEFAULT_FUNNEL_TIMEOUT
     );
@@ -76,6 +78,8 @@ function eventToCdeDatum(
     tx: event.transaction.hash,
   };
 
+  const outputs = computeOutputs(event.transaction.payload);
+
   return {
     cdeId: extension.cdeId,
     cdeDatumType: ChainDataExtensionDatumType.CardanoTransfer,
@@ -83,12 +87,87 @@ function eventToCdeDatum(
     payload: {
       rawTx: event.transaction.payload,
       txId: event.transaction.hash,
-      outputs: event.transaction.outputs,
-      inputCredentials: event.transaction.inputCredentials,
-      metadata: event.transaction.metadata,
+      outputs,
+      inputCredentials: event.transaction.inputCredentials || [],
+      metadata: event.transaction.metadata || null,
     },
     scheduledPrefix: extension.scheduledPrefix,
     paginationCursor: { cursor: JSON.stringify(cursor), finished: false },
     network,
   };
+}
+
+function computeOutputs(
+  tx: string
+): { asset: { policyId: string; assetName: string } | null; amount: string; address: string }[] {
+  const transaction = Transaction.from_cbor_hex(tx);
+
+  const rawOutputs = transaction.body().outputs();
+
+  const outputs = [];
+
+  for (let i = 0; i < rawOutputs.len(); i++) {
+    const output = rawOutputs.get(i);
+
+    const rawAddress = output.address();
+    const address = rawAddress.to_bech32();
+    rawAddress.free();
+
+    const amount = output.amount();
+    const ma = amount.multi_asset();
+
+    if (ma) {
+      const policyIds = ma.keys();
+
+      for (let j = 0; j < policyIds.len(); j++) {
+        const policyId = policyIds.get(j);
+
+        const assets = ma.get_assets(policyId);
+
+        if (!assets) {
+          continue;
+        }
+
+        const assetNames = assets.keys();
+
+        for (let k = 0; k < assetNames.len(); k++) {
+          const assetName = assetNames.get(k);
+
+          const amount = assets.get(assetName);
+
+          if (amount === undefined) {
+            continue;
+          }
+
+          outputs.push({
+            amount: amount.toString(),
+            asset: {
+              policyId: policyId.to_hex(),
+              assetName: Buffer.from(assetName.to_cbor_bytes()).toString('hex'),
+            },
+            address,
+          });
+
+          assetName.free();
+        }
+
+        assetNames.free();
+        assets.free();
+        policyId.free();
+      }
+
+      policyIds.free();
+      ma.free();
+    }
+
+    outputs.push({ amount: amount.coin().toString(), asset: null, address });
+
+    amount.free();
+    output.free();
+  }
+
+  rawOutputs.free();
+  transaction.free();
+
+  return outputs;
 }
