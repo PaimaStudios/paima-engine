@@ -31,7 +31,8 @@
       "./contracts/**/*",
       "./batcher/**/*",
       "./documentation/**/*",
-      "./swagger-ui/**/*"
+      "./swagger-ui/**/*",
+      "./cardano_multiplatform_lib_bg.wasm"
     ],
     "targets": [
       "node20-linux-x64",

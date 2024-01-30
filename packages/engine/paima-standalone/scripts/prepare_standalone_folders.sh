@@ -46,3 +46,6 @@ rm -rf $TEMPLATES_PATH/.git
 # Add in swagger static UI
 cp -r ../../../node_modules/swagger-ui-dist/ $SWAGGER_UI
 rm $SWAGGER_UI/index.html # this will get overwriten at runtime by swagger-ui-express
+
+# Copy CML wasm file
+cp ../../../node_modules/@dcspark/cardano-multiplatform-lib-nodejs/cardano_multiplatform_lib_bg.wasm $PACKAGED_PATH
