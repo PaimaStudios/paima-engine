@@ -1,4 +1,4 @@
-import { ENV, Network, doLog, timeout } from '@paima/utils';
+import { ENV, EvmConfig, GlobalConfig, Network, doLog, timeout } from '@paima/utils';
 import type { ChainFunnel, ReadPresyncDataFrom } from '@paima/runtime';
 import type { ChainData, PresyncChainData } from '@paima/sm';
 import { getBaseChainDataMulti, getBaseChainDataSingle } from '../../reading.js';
@@ -13,12 +13,22 @@ import { FUNNEL_PRESYNC_FINISHED } from '@paima/utils';
 const GET_BLOCK_NUMBER_TIMEOUT = 5000;
 
 export class BlockFunnel extends BaseFunnel implements ChainFunnel {
-  protected constructor(sharedData: FunnelSharedData, dbTx: PoolClient) {
+  config: EvmConfig;
+  chainName: string;
+
+  protected constructor(
+    sharedData: FunnelSharedData,
+    dbTx: PoolClient,
+    config: EvmConfig,
+    chainName: string
+  ) {
     super(sharedData, dbTx);
     // TODO: replace once TS5 decorators are better supported
     this.readData.bind(this);
     this.readPresyncData.bind(this);
     this.getDbTx.bind(this);
+    this.config = config;
+    this.chainName = chainName;
   }
 
   public override async readData(blockHeight: number): Promise<ChainData[]> {
@@ -32,10 +42,10 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
     }
 
     if (toBlock === fromBlock) {
-      doLog(`Block funnel ${ENV.CHAIN_ID}: #${toBlock}`);
+      doLog(`Block funnel ${this.config.chainId}: #${toBlock}`);
       return await this.internalReadDataSingle(fromBlock);
     } else {
-      doLog(`Block funnel ${ENV.CHAIN_ID}: #${fromBlock}-${toBlock}`);
+      doLog(`Block funnel ${this.config.chainId}: #${fromBlock}-${toBlock}`);
       return await this.internalReadDataMulti(fromBlock, toBlock);
     }
   }
@@ -53,7 +63,7 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
 
     const latestBlockQueryState = this.sharedData.cacheManager.cacheEntries[
       RpcCacheEntry.SYMBOL
-    ]?.getState(ENV.CHAIN_ID);
+    ]?.getState(this.config.chainId);
     if (latestBlockQueryState?.state !== RpcRequestState.HasResult) {
       throw new Error(`[funnel] latest block cache entry not found`);
     }
@@ -82,7 +92,7 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
         ),
         getUngroupedCdeData(
           this.sharedData.web3,
-          this.sharedData.extensions,
+          this.sharedData.extensions.filter(extension => extension.network === this.chainName),
           blockNumber,
           blockNumber
         ),
@@ -116,7 +126,12 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
           toBlock,
           this.dbTx
         ),
-        getUngroupedCdeData(this.sharedData.web3, this.sharedData.extensions, fromBlock, toBlock),
+        getUngroupedCdeData(
+          this.sharedData.web3,
+          this.sharedData.extensions.filter(extension => extension.network === this.chainName),
+          fromBlock,
+          toBlock
+        ),
       ]);
       const cdeData = groupCdeData(Network.CARDANO, fromBlock, toBlock, ungroupedCdeData);
       return composeChainData(baseChainData, cdeData);
@@ -151,7 +166,7 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
 
       const ungroupedCdeData = await getUngroupedCdeData(
         this.sharedData.web3,
-        this.sharedData.extensions,
+        this.sharedData.extensions.filter(extension => extension.network === this.chainName),
         fromBlock,
         toBlock
       );
@@ -182,8 +197,10 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
       return newEntry;
     })();
 
-    cacheEntry.updateState(ENV.CHAIN_ID, latestBlock);
+    const [chainName, config] = await GlobalConfig.mainEvmConfig();
 
-    return new BlockFunnel(sharedData, dbTx);
+    cacheEntry.updateState(config.chainId, latestBlock);
+
+    return new BlockFunnel(sharedData, dbTx, config, chainName);
   }
 }

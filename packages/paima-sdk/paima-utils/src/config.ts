@@ -5,11 +5,7 @@ import type { VersionString } from './types.js';
  * which might not be set depending on the framework used for the frontend of an app
  */
 export class ENV {
-  static doHealthCheck(): void {
-    if (!ENV.CONTRACT_ADDRESS) {
-      throw new Error(`Please ensure your .env.${ENV.NETWORK} is properly filled out.`);
-    }
-  }
+  static doHealthCheck(): void {}
 
   // System
   static get NETWORK(): string {
@@ -117,15 +113,5 @@ export class ENV {
       return `http://localhost:${process.env.BATCHER_PORT}`;
     }
     return '';
-  }
-
-  static get CARP_URL(): string | undefined {
-    return process.env.CARP_URL;
-  }
-  static get CARDANO_NETWORK(): string | undefined {
-    return process.env.CARDANO_NETWORK;
-  }
-  static get CARDANO_CONFIRMATION_DEPTH(): number | undefined {
-    return Number(process.env.CARDANO_CONFIRMATION_DEPTH);
   }
 }

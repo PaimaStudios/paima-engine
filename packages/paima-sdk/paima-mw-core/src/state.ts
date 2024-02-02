@@ -1,5 +1,5 @@
 import type { ContractAddress, Deployment, URI, VersionString, Web3 } from '@paima/utils';
-import { ENV } from '@paima/utils';
+import { ENV, GlobalConfig } from '@paima/utils';
 import { initWeb3 } from '@paima/utils';
 
 import { PaimaMiddlewareErrorCode, paimaErrorMessageFxn } from './errors.js';
@@ -17,17 +17,18 @@ let gameName: string = '';
 let backendUri: URI = ENV.BACKEND_URI;
 const batcherUri: URI = ENV.BATCHER_URI;
 
-const chainUri: URI = ENV.CHAIN_URI;
-const chainExplorerUri: URI = ENV.CHAIN_EXPLORER_URI;
-const chainId: number = ENV.CHAIN_ID;
-const chainName: string = ENV.CHAIN_NAME;
-const chainCurrencyName: string = ENV.CHAIN_CURRENCY_NAME;
-const chainCurrencySymbol: string = ENV.CHAIN_CURRENCY_SYMBOL;
-const chainCurrencyDecimals: number = ENV.CHAIN_CURRENCY_DECIMALS;
+const [chainName, config] = await GlobalConfig.mainEvmConfig();
 
-const storageAddress: ContractAddress = ENV.CONTRACT_ADDRESS;
+const chainUri: URI = config.chainUri;
+const chainExplorerUri: URI = config.chainExplorerUri;
+const chainId: number = config.chainId;
+const chainCurrencyName: string = config.chainCurrencyName;
+const chainCurrencySymbol: string = config.chainCurrencySymbol;
+const chainCurrencyDecimals: number = config.chainCurrencyDecimals;
 
-const deployment: Deployment = ENV.DEPLOYMENT as Deployment;
+const storageAddress: ContractAddress = config.paimaL2ContractAddress;
+
+const deployment: Deployment = config.deployment as Deployment;
 
 let emulatedBlocksActive: undefined | boolean = undefined;
 

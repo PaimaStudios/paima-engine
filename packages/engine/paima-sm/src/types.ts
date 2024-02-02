@@ -340,15 +340,18 @@ export type ChainDataExtensionCardanoDelayedAsset = ChainDataExtensionBase &
 
 export const CdeConfig = Type.Object({
   extensions: Type.Array(
-    Type.Union([
-      ChainDataExtensionErc20Config,
-      ChainDataExtensionErc721Config,
-      ChainDataExtensionErc20DepositConfig,
-      ChainDataExtensionGenericConfig,
-      ChainDataExtensionErc6551RegistryConfig,
-      ChainDataExtensionCardanoDelegationConfig,
-      ChainDataExtensionCardanoProjectedNFTConfig,
-      ChainDataExtensionCardanoDelayedAssetConfig,
+    Type.Intersect([
+      Type.Union([
+        ChainDataExtensionErc20Config,
+        ChainDataExtensionErc721Config,
+        ChainDataExtensionErc20DepositConfig,
+        ChainDataExtensionGenericConfig,
+        ChainDataExtensionErc6551RegistryConfig,
+        ChainDataExtensionCardanoDelegationConfig,
+        ChainDataExtensionCardanoProjectedNFTConfig,
+        ChainDataExtensionCardanoDelayedAssetConfig,
+      ]),
+      Type.Object({ network: Type.String() }),
     ])
   ),
 });
@@ -366,7 +369,7 @@ export const CdeBaseConfig = Type.Object({
     })
   ),
 });
-export type ChainDataExtension =
+export type ChainDataExtension = (
   | ChainDataExtensionErc20
   | ChainDataExtensionErc721
   | ChainDataExtensionPaimaErc721
@@ -375,7 +378,8 @@ export type ChainDataExtension =
   | ChainDataExtensionErc6551Registry
   | ChainDataExtensionCardanoDelegation
   | ChainDataExtensionCardanoProjectedNFT
-  | ChainDataExtensionCardanoDelayedAsset;
+  | ChainDataExtensionCardanoDelayedAsset
+) & { network: string };
 
 export type GameStateTransitionFunctionRouter = (
   blockHeight: number

@@ -1,9 +1,11 @@
 import {
+  CardanoConfig,
   ChainDataExtensionType,
   DEFAULT_FUNNEL_TIMEOUT,
   delay,
   doLog,
   ENV,
+  GlobalConfig,
   logError,
   Network,
   timeout,
@@ -38,8 +40,8 @@ type Era = {
   timestamp: number;
 };
 
-function shelleyEra(): Era {
-  switch (ENV.CARDANO_NETWORK) {
+function shelleyEra(config: CardanoConfig): Era {
+  switch (config.network) {
     case 'preview':
       return {
         firstSlot: 0,
@@ -109,7 +111,7 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
     private readonly baseFunnel: ChainFunnel,
     private readonly carpUrl: string,
     private cache: CarpFunnelCacheEntry,
-    private readonly confirmationDepth: number
+    private readonly config: CardanoConfig
   ) {
     super(sharedData, dbTx);
     // TODO: replace once TS5 decorators are better supported
@@ -117,7 +119,8 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
     this.readPresyncData.bind(this);
     this.getDbTx.bind(this);
     this.bufferedData = null;
-    this.era = shelleyEra();
+    this.era = shelleyEra(config);
+    this.config = config;
   }
 
   private bufferedData: ChainData[] | null;
@@ -158,7 +161,7 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
       this.sharedData.extensions,
       lastTimestamp,
       this.cache,
-      this.confirmationDepth,
+      this.config.confirmationDepth,
       this.era
     );
 
@@ -170,7 +173,7 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
 
         const epoch = absoluteSlotToEpoch(
           this.era,
-          timestampToAbsoluteSlot(this.era, data.timestamp, this.confirmationDepth)
+          timestampToAbsoluteSlot(this.era, data.timestamp, this.config.confirmationDepth)
         );
 
         const prevEpoch = this.cache.getState().epoch;
@@ -279,14 +282,14 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
     sharedData: FunnelSharedData,
     dbTx: PoolClient,
     baseFunnel: ChainFunnel,
-    carpUrl: string,
+    config: CardanoConfig,
     startingBlockHeight: number
   ): Promise<CarpFunnel> {
-    if (!ENV.CARDANO_CONFIRMATION_DEPTH) {
+    if (!config.confirmationDepth) {
       throw new Error('[carp-funnel] Missing CARDANO_CONFIRMATION_DEPTH setting.');
     }
 
-    const confirmationDepth = ENV.CARDANO_CONFIRMATION_DEPTH;
+    const confirmationDepth = config.confirmationDepth;
 
     const cacheEntry = (async (): Promise<CarpFunnelCacheEntry> => {
       const entry = sharedData.cacheManager.cacheEntries[CarpFunnelCacheEntry.SYMBOL];
@@ -297,7 +300,7 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
 
       newEntry.updateStartingSlot(
         timestampToAbsoluteSlot(
-          shelleyEra(),
+          shelleyEra(config),
           (await sharedData.web3.eth.getBlock(startingBlockHeight)).timestamp as number,
           confirmationDepth
         )
@@ -312,14 +315,7 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
       return newEntry;
     })();
 
-    return new CarpFunnel(
-      sharedData,
-      dbTx,
-      baseFunnel,
-      carpUrl,
-      await cacheEntry,
-      confirmationDepth
-    );
+    return new CarpFunnel(sharedData, dbTx, baseFunnel, config.carpUrl, await cacheEntry, config);
   }
 }
 
@@ -435,10 +431,11 @@ export async function wrapToCarpFunnel(
   chainFunnel: ChainFunnel,
   sharedData: FunnelSharedData,
   dbTx: PoolClient,
-  carpUrl: string | undefined,
   startingBlockHeight: number
 ): Promise<ChainFunnel> {
-  if (!carpUrl) {
+  const config = await GlobalConfig.cardanoConfig();
+
+  if (!config) {
     return chainFunnel;
   }
 
@@ -447,7 +444,7 @@ export async function wrapToCarpFunnel(
       sharedData,
       dbTx,
       chainFunnel,
-      carpUrl,
+      config,
       startingBlockHeight
     );
     return ebp;

@@ -17,12 +17,15 @@ import { connectInjected } from '../wallet-modes.js';
 import { WalletMode } from '@paima/providers';
 import type { ApiForMode, IProvider } from '@paima/providers';
 import { EvmInjectedConnector } from '@paima/providers';
+import { EvmConfig, GlobalConfig } from '@paima/utils';
 
 interface SwitchError {
   code: number;
 }
 
 async function switchChain(): Promise<boolean> {
+  const [chainName, config] = await GlobalConfig.mainEvmConfig();
+
   const errorFxn = buildEndpointErrorFxn('switchChain');
 
   const CHAIN_NOT_ADDED_ERROR_CODE = 4902;
@@ -40,15 +43,15 @@ async function switchChain(): Promise<boolean> {
           .getOrThrowProvider()
           .addChain({
             chainId: hexChainId,
-            chainName: getChainName(),
+            chainName: chainName,
             nativeCurrency: {
-              name: getChainCurrencyName(),
-              symbol: getChainCurrencySymbol(),
-              decimals: getChainCurrencyDecimals(),
+              name: config.chainCurrencyName,
+              symbol: config.chainCurrencySymbol,
+              decimals: config.chainCurrencyDecimals,
             },
             rpcUrls: [getChainUri()],
             // blockExplorerUrls: Chain not added with empty string.
-            blockExplorerUrls: getChainExplorerUri() ? [getChainExplorerUri()] : undefined,
+            blockExplorerUrls: config.chainExplorerUri ? [config.chainExplorerUri] : undefined,
           });
         await EvmInjectedConnector.instance().getOrThrowProvider().switchChain(hexChainId);
         return await verifyWalletChain();

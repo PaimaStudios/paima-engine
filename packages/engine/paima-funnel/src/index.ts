@@ -1,6 +1,12 @@
 import type { PoolClient } from 'pg';
 
-import { ENV, getPaimaL2Contract, initWeb3, validatePaimaL2ContractAddress } from '@paima/utils';
+import {
+  ENV,
+  GlobalConfig,
+  getPaimaL2Contract,
+  initWeb3,
+  validatePaimaL2ContractAddress,
+} from '@paima/utils';
 import { loadChainDataExtensions } from '@paima/runtime';
 import type { ChainFunnel, IFunnelFactory } from '@paima/runtime';
 import type { ChainDataExtension } from '@paima/sm';
@@ -48,13 +54,7 @@ export class FunnelFactory implements IFunnelFactory {
     // and wrap it with dynamic decorators as needed
 
     let chainFunnel: ChainFunnel = await BlockFunnel.recoverState(this.sharedData, dbTx);
-    chainFunnel = await wrapToCarpFunnel(
-      chainFunnel,
-      this.sharedData,
-      dbTx,
-      ENV.CARP_URL,
-      ENV.START_BLOCKHEIGHT
-    );
+    chainFunnel = await wrapToCarpFunnel(chainFunnel, this.sharedData, dbTx, ENV.START_BLOCKHEIGHT);
     chainFunnel = await wrapToEmulatedBlocksFunnel(
       chainFunnel,
       this.sharedData,

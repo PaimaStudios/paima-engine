@@ -35,6 +35,8 @@ export type {
 } from './contract-types/PaimaERC721Contract.js';
 export type { Transfer as ERC721Transfer } from './contract-types/ERC721Contract.js';
 export * from './constants.js';
+export { GlobalConfig } from './config/singleton.js';
+export { EvmConfig, CardanoConfig } from './config/loading.js';
 
 export type { Web3, Contract, AbiItem, EventData };
 export {
