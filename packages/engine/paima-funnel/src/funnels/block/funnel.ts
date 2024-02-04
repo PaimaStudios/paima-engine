@@ -9,7 +9,7 @@ import type { FunnelSharedData } from '../BaseFunnel.js';
 import { RpcCacheEntry, RpcRequestState } from '../FunnelCache.js';
 import type { PoolClient } from 'pg';
 import { FUNNEL_PRESYNC_FINISHED } from '@paima/utils';
-import { BigInt, Transaction } from '@dcspark/cardano-multiplatform-lib-nodejs';
+import { Transaction } from '@dcspark/cardano-multiplatform-lib-nodejs';
 
 const GET_BLOCK_NUMBER_TIMEOUT = 5000;
 
@@ -196,7 +196,7 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
 function computeOutputs(
   tx: Buffer
 ): { asset: { policyId: string; assetName: string } | null; amount: string; address: string }[] {
-  const transaction = Transaction.from_bytes(tx);
+  const transaction = Transaction.from_cbor_bytes(tx);
 
   const rawOutputs = transaction.body().outputs();
 
@@ -207,10 +207,9 @@ function computeOutputs(
 
     const rawAddress = output.address();
     const address = rawAddress.to_bech32();
-    rawAddress.free();
 
     const amount = output.amount();
-    const ma = amount.multiasset();
+    const ma = amount.multi_asset();
 
     if (ma) {
       const policyIds = ma.keys();
@@ -218,10 +217,9 @@ function computeOutputs(
       for (let j = 0; j < policyIds.len(); j++) {
         const policyId = policyIds.get(j);
 
-        const assets = ma.get(policyId);
+        const assets = ma.get_assets(policyId);
 
         if (!assets) {
-          policyId.free();
           continue;
         }
 
@@ -234,35 +232,20 @@ function computeOutputs(
 
           if (amount !== undefined) {
             outputs.push({
-              amount: amount.to_str(),
+              amount: amount.toString(),
               asset: {
                 policyId: policyId.to_hex(),
-                assetName: Buffer.from(assetName.to_bytes()).toString('hex'),
+                assetName: assetName.to_cbor_hex(),
               },
               address,
             });
           }
-
-          assetName.free();
         }
-
-        assetNames.free();
-        assets.free();
-        policyId.free();
       }
-
-      policyIds.free();
-      ma.free();
     }
 
     outputs.push({ amount: amount.coin().toString(), asset: null, address });
-
-    amount.free();
-    output.free();
   }
-
-  rawOutputs.free();
-  transaction.free();
 
   return outputs;
 }
