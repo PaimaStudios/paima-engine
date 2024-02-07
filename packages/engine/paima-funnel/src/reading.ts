@@ -14,10 +14,11 @@ export async function getBaseChainDataMulti(
   paimaL2Contract: PaimaL2Contract,
   fromBlock: number,
   toBlock: number,
-  DBConn: PoolClient
+  DBConn: PoolClient,
+  network: string
 ): Promise<ChainData[]> {
   const [blockData, events] = await Promise.all([
-    getMultipleBlockData(web3, fromBlock, toBlock),
+    getMultipleBlockData(web3, fromBlock, toBlock, network),
     getPaimaEvents(paimaL2Contract, fromBlock, toBlock),
   ]);
   const resultList: ChainData[] = [];
@@ -36,10 +37,11 @@ export async function getBaseChainDataSingle(
   web3: Web3,
   paimaL2Contract: PaimaL2Contract,
   blockNumber: number,
-  DBConn: PoolClient
+  DBConn: PoolClient,
+  network: string
 ): Promise<ChainData> {
   const [blockData, events] = await Promise.all([
-    getBlockData(web3, blockNumber),
+    getBlockData(web3, blockNumber, network),
     getPaimaEvents(paimaL2Contract, blockNumber, blockNumber),
   ]);
   const submittedData = await extractSubmittedData(web3, events, blockData.timestamp, DBConn);
@@ -49,17 +51,17 @@ export async function getBaseChainDataSingle(
   };
 }
 
-async function getBlockData(web3: Web3, blockNumber: number): Promise<ChainData> {
+async function getBlockData(web3: Web3, blockNumber: number, network: string): Promise<ChainData> {
   const block = await timeout(web3.eth.getBlock(blockNumber), DEFAULT_FUNNEL_TIMEOUT);
   if (block == null) {
     throw new Error(
       `Unable to find block number ${blockNumber}. Perhaps it no long exists due to a rollback or load-balancing`
     );
   }
-  return blockDataToChainData(block);
+  return blockDataToChainData(block, network);
 }
 
-function blockDataToChainData(block: BlockTransactionString): ChainData {
+function blockDataToChainData(block: BlockTransactionString, network: string): ChainData {
   const timestamp =
     typeof block.timestamp === 'string' ? parseInt(block.timestamp, 10) : block.timestamp;
   return {
@@ -67,13 +69,15 @@ function blockDataToChainData(block: BlockTransactionString): ChainData {
     blockHash: block.hash,
     blockNumber: block.number,
     submittedData: [], // this will be merged in after
+    network,
   };
 }
 
-async function getMultipleBlockData(
+export async function getMultipleBlockData(
   web3: Web3,
   fromBlock: number,
-  toBlock: number
+  toBlock: number,
+  network: string
 ): Promise<ChainData[]> {
   const batch = new web3.BatchRequest();
 
@@ -86,7 +90,7 @@ async function getMultipleBlockData(
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         web3.eth.getBlock.request(blockNumber, (error, result: BlockTransactionString) => {
           if (error) reject(error);
-          else resolve(blockDataToChainData(result));
+          else resolve(blockDataToChainData(result, network));
         })
       );
     });

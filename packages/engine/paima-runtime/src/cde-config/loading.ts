@@ -1,7 +1,7 @@
 import * as fs from 'fs/promises';
 import YAML from 'yaml';
 import type Web3 from 'web3';
-import type { Static, TSchema } from '@sinclair/typebox';
+import { Type, type Static, type TSchema } from '@sinclair/typebox';
 import { Value, ValueErrorType } from '@sinclair/typebox/value';
 
 import type { AbiItem } from '@paima/utils';
@@ -80,21 +80,71 @@ export function parseCdeConfigFile(configFileData: string): Static<typeof CdeCon
   const checkedConfig = baseConfig.extensions.map(entry => {
     switch (entry.type) {
       case CdeEntryTypeName.ERC20:
-        return checkOrError(entry.name, ChainDataExtensionErc20Config, entry);
+        return checkOrError(
+          entry.name,
+          Type.Intersect([ChainDataExtensionErc20Config, Type.Object({ network: Type.String() })]),
+          entry
+        );
       case CdeEntryTypeName.ERC721:
-        return checkOrError(entry.name, ChainDataExtensionErc721Config, entry);
+        return checkOrError(
+          entry.name,
+          Type.Intersect([ChainDataExtensionErc721Config, Type.Object({ network: Type.String() })]),
+          entry
+        );
       case CdeEntryTypeName.ERC20Deposit:
-        return checkOrError(entry.name, ChainDataExtensionErc20DepositConfig, entry);
+        return checkOrError(
+          entry.name,
+          Type.Intersect([
+            ChainDataExtensionErc20DepositConfig,
+            Type.Object({ network: Type.String() }),
+          ]),
+          entry
+        );
       case CdeEntryTypeName.Generic:
-        return checkOrError(entry.name, ChainDataExtensionGenericConfig, entry);
+        return checkOrError(
+          entry.name,
+          Type.Intersect([
+            ChainDataExtensionGenericConfig,
+            Type.Object({ network: Type.String() }),
+          ]),
+          entry
+        );
       case CdeEntryTypeName.ERC6551Registry:
-        return checkOrError(entry.name, ChainDataExtensionErc6551RegistryConfig, entry);
+        return checkOrError(
+          entry.name,
+          Type.Intersect([
+            ChainDataExtensionErc6551RegistryConfig,
+            Type.Object({ network: Type.String() }),
+          ]),
+          entry
+        );
       case CdeEntryTypeName.CardanoDelegation:
-        return checkOrError(entry.name, ChainDataExtensionCardanoDelegationConfig, entry);
+        return checkOrError(
+          entry.name,
+          Type.Intersect([
+            ChainDataExtensionCardanoDelegationConfig,
+            Type.Object({ network: Type.String() }),
+          ]),
+          entry
+        );
       case CdeEntryTypeName.CardanoProjectedNFT:
-        return checkOrError(entry.name, ChainDataExtensionCardanoProjectedNFTConfig, entry);
+        return checkOrError(
+          entry.name,
+          Type.Intersect([
+            ChainDataExtensionCardanoProjectedNFTConfig,
+            Type.Object({ network: Type.String() }),
+          ]),
+          entry
+        );
       case CdeEntryTypeName.CardanoDelayedAsset:
-        return checkOrError(entry.name, ChainDataExtensionCardanoDelayedAssetConfig, entry);
+        return checkOrError(
+          entry.name,
+          Type.Intersect([
+            ChainDataExtensionCardanoDelayedAssetConfig,
+            Type.Object({ network: Type.String() }),
+          ]),
+          entry
+        );
       default:
         assertNever(entry.type);
     }
@@ -185,7 +235,7 @@ async function instantiateExtension(
         contract: getErc20Contract(config.contractAddress, web3),
       };
     case CdeEntryTypeName.Generic:
-      return await instantiateCdeGeneric(config, index, web3);
+      return { ...(await instantiateCdeGeneric(config, index, web3)), network: config.network };
     case CdeEntryTypeName.ERC6551Registry:
       const contractAddress = config.contractAddress ?? ERC6551_REGISTRY_DEFAULT.New;
       return {

@@ -1,5 +1,5 @@
 import process from 'process';
-import { doLog, logError, delay, Network, ENV } from '@paima/utils';
+import { doLog, logError, delay, ENV, GlobalConfig } from '@paima/utils';
 import { tx, DataMigrations } from '@paima/db';
 import { getEarliestStartBlockheight, getEarliestStartSlot } from './cde-config/utils.js';
 import type { ChainFunnel, IFunnelFactory, ReadPresyncDataFrom } from './types.js';
@@ -15,6 +15,7 @@ import {
 import { cleanNoncesIfTime } from './nonce-gc.js';
 import type { PoolClient } from 'pg';
 import { FUNNEL_PRESYNC_FINISHED } from '@paima/utils';
+import { CardanoConfigSchema, ConfigNetworkType } from '@paima/utils/src/config/loading.js';
 
 // The core logic of paima runtime which polls the funnel and processes the resulting chain data using the game's state machine.
 // Of note, the runtime is designed to continue running/attempting to process the next required block no matter what errors propagate upwards.
@@ -56,15 +57,19 @@ async function runPresync(
   startBlockHeight: number,
   stopBlockHeight: number | null
 ): Promise<void> {
+  const networks = await GlobalConfig.getInstance();
+
   let presyncBlockHeight = await getPresyncStartBlockheight(
     gameStateMachine,
     funnelFactory.getExtensions(),
     startBlockHeight
   );
 
-  if (!ENV.CARP_URL) {
-    if (presyncBlockHeight[Network.CARDANO] === -1) {
-      delete presyncBlockHeight[Network.CARDANO];
+  const cardanoConfig = await GlobalConfig.cardanoConfig();
+  if (!cardanoConfig) {
+    // TODO: unhardcode
+    if (presyncBlockHeight['cardano'] === -1) {
+      delete presyncBlockHeight['cardano'];
     } else {
       throw new Error(
         '[paima-runtime] Detected Cardano CDE sync in progress, but CARP_URL is not set.'
@@ -82,11 +87,12 @@ async function runPresync(
         .map(([network, h]) => [network, h + stepSize - 1])
     );
 
-    if (upper[Network.EVM] > presyncBlockHeight[Network.EVM]) {
-      doLog(`${JSON.stringify(presyncBlockHeight)}-${JSON.stringify(upper)}`);
-    } else {
-      doLog(`${JSON.stringify(presyncBlockHeight)}`);
-    }
+    // TODO: uncomment this
+    // if (upper[Network.EVM] > presyncBlockHeight[Network.EVM]) {
+    //   doLog(`${JSON.stringify(presyncBlockHeight)}-${JSON.stringify(upper)}`);
+    // } else {
+    //   doLog(`${JSON.stringify(presyncBlockHeight)}`);
+    // }
 
     // eslint-disable-next-line @typescript-eslint/no-loop-func
     presyncBlockHeight = await tx(gameStateMachine.getReadWriteDbConn(), async dbTx => {
@@ -96,7 +102,7 @@ async function runPresync(
         chainFunnel,
         pollingPeriod,
         Object.entries(presyncBlockHeight).map(([network, height]) => ({
-          network: Number(network),
+          network: network,
           from: height,
           to: upper[network],
         }))
@@ -104,10 +110,12 @@ async function runPresync(
     });
   }
 
-  await loopIfStopBlockReached(presyncBlockHeight[Network.EVM], stopBlockHeight);
+  for (const network of Object.keys(networks)) {
+    await loopIfStopBlockReached(presyncBlockHeight[network], stopBlockHeight);
 
-  const latestPresyncBlockheight = await gameStateMachine.getPresyncBlockHeight();
-  doLog(`[paima-runtime] Presync finished at ${latestPresyncBlockheight}`);
+    const latestPresyncBlockheight = await gameStateMachine.getPresyncBlockHeight(network);
+    doLog(`[paima-runtime] Presync finished at ${latestPresyncBlockheight}`);
+  }
 
   const latestPresyncSlotHeight = await gameStateMachine.getPresyncCardanoSlotHeight();
   if (latestPresyncSlotHeight > 0) {
@@ -119,23 +127,36 @@ async function getPresyncStartBlockheight(
   gameStateMachine: GameStateMachine,
   CDEs: ChainDataExtension[],
   maximumPresyncBlockheight: number
-): Promise<{ [network: number]: number }> {
-  const earliestCdeSbh = getEarliestStartBlockheight(CDEs);
-  const freshPresyncStart = earliestCdeSbh >= 0 ? earliestCdeSbh : maximumPresyncBlockheight + 1;
+): Promise<{ [network: string]: number }> {
+  const config = await GlobalConfig.getInstance();
+
+  const result: { [network: string]: number } = {};
+
+  for (const network of Object.keys(config)) {
+    if (config[network].type === ConfigNetworkType.CARDANO) {
+      continue;
+    }
+
+    const earliestCdeSbh = getEarliestStartBlockheight(CDEs, network);
+    const freshPresyncStart = earliestCdeSbh >= 0 ? earliestCdeSbh : maximumPresyncBlockheight + 1;
+
+    result[network] = freshPresyncStart;
+
+    const latestPresyncBlockheight = await gameStateMachine.getPresyncBlockHeight(network);
+
+    if (latestPresyncBlockheight > 0) {
+      result[network] = latestPresyncBlockheight + 1;
+    }
+  }
 
   const earliestCdeCardanoSlot = getEarliestStartSlot(CDEs);
 
-  const latestPresyncBlockheight = await gameStateMachine.getPresyncBlockHeight();
   const latestPresyncSlotHeight = await gameStateMachine.getPresyncCardanoSlotHeight();
 
-  const result = { [Network.EVM]: freshPresyncStart, [Network.CARDANO]: earliestCdeCardanoSlot };
-
-  if (latestPresyncBlockheight > 0) {
-    result[Network.EVM] = latestPresyncBlockheight + 1;
-  }
+  result['cardano'] = earliestCdeCardanoSlot;
 
   if (latestPresyncSlotHeight > 0) {
-    result[Network.CARDANO] = latestPresyncSlotHeight + 1;
+    result['cardano'] = latestPresyncSlotHeight + 1;
   }
 
   return result;
@@ -146,13 +167,13 @@ async function runPresyncRound(
   chainFunnel: ChainFunnel,
   pollingPeriod: number,
   from: ReadPresyncDataFrom
-): Promise<{ [network: number]: number }> {
+): Promise<{ [network: string]: number }> {
   const latestPresyncDataList = await chainFunnel.readPresyncData(from);
 
   if (!latestPresyncDataList || Object.values(latestPresyncDataList).every(l => l.length === 0)) {
     await delay(pollingPeriod);
     return Object.fromEntries(from.map(({ network, from }) => [network, from])) as Record<
-      Network,
+      string,
       number
     >;
   }
@@ -167,7 +188,8 @@ async function runPresyncRound(
     await gameStateMachine.presyncProcess(dbTx, presyncData);
   }
 
-  const cardanoFrom = from.find(arg => arg.network === Network.CARDANO);
+  // TODO: use the non-hardcoded name
+  const cardanoFrom = from.find(arg => arg.network === 'cardano');
   if (cardanoFrom) {
     await gameStateMachine.markCardanoPresyncMilestone(dbTx, cardanoFrom.to);
   }

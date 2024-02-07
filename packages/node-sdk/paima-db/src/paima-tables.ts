@@ -83,14 +83,19 @@ const TABLE_DATA_HISTORICAL: TableData = {
 
 const QUERY_CREATE_TABLE_CDE_TRACKING = `
 CREATE TABLE cde_tracking (
-  block_height INTEGER PRIMARY KEY
+  block_height INTEGER NOT NULL,
+  network TEXT NOT NULL,
+  PRIMARY KEY (block_height, network)
 );
 `;
 
 const TABLE_DATA_CDE_TRACKING: TableData = {
   tableName: 'cde_tracking',
-  primaryKeyColumns: ['block_height'],
-  columnData: packTuples([['block_height', 'integer', 'NO', '']]),
+  primaryKeyColumns: ['block_height', 'network'],
+  columnData: packTuples([
+    ['block_height', 'integer', 'NO', ''],
+    ['network', 'text', 'NO', ''],
+  ]),
   serialColumns: [],
   creationQuery: QUERY_CREATE_TABLE_CDE_TRACKING,
 };

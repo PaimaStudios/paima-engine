@@ -1,8 +1,9 @@
 import type { ChainData, ChainDataExtensionDatum, PresyncChainData } from '@paima/sm';
-import type { Network } from '@paima/utils';
+import { ConfigNetworkType } from '@paima/utils/src/config/loading';
 
 export function groupCdeData(
-  network: Network,
+  network: string,
+  networkType: ConfigNetworkType,
   fromBlock: number,
   toBlock: number,
   data: ChainDataExtensionDatum[][]
@@ -22,6 +23,7 @@ export function groupCdeData(
       blockNumber,
       extensionDatums,
       network,
+      networkType,
     });
   }
   return result;

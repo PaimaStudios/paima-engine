@@ -12,6 +12,7 @@ export type CacheMapType = {
   [QueuedBlockCacheEntry.SYMBOL]?: QueuedBlockCacheEntry;
   [RpcCacheEntry.SYMBOL]?: RpcCacheEntry;
   [CarpFunnelCacheEntry.SYMBOL]?: CarpFunnelCacheEntry;
+  [EvmFunnelCacheEntry.SYMBOL]?: EvmFunnelCacheEntry;
 };
 export class FunnelCacheManager {
   public cacheEntries: CacheMapType = {};
@@ -112,5 +113,49 @@ export class CarpFunnelCacheEntry implements FunnelCacheEntry {
 
   clear: FunnelCacheEntry['clear'] = () => {
     this.state = null;
+  };
+}
+
+export class EvmFunnelCacheEntry implements FunnelCacheEntry {
+  private cachedData: Record<
+    number,
+    RpcRequestResult<{
+      bufferedChainData: ChainData[];
+      timestampToBlockNumber: [number, number][];
+      lastBlock: number | undefined;
+      startBlockHeight: number;
+    }>
+  > = {};
+  public static readonly SYMBOL = Symbol('EvmFunnelCacheEntry');
+
+  public updateState = (
+    chainId: number,
+    bufferedChainData: ChainData[],
+    timestampToBlockNumber: [number, number][],
+    startBlockHeight: number
+  ): void => {
+    this.cachedData[chainId] = {
+      state: RpcRequestState.HasResult,
+      result: { bufferedChainData, timestampToBlockNumber, startBlockHeight, lastBlock: undefined },
+    };
+  };
+
+  public getState(chainId: number): Readonly<
+    RpcRequestResult<{
+      bufferedChainData: ChainData[];
+      timestampToBlockNumber: [number, number][];
+      lastBlock: number | undefined;
+      startBlockHeight: number;
+    }>
+  > {
+    return (
+      this.cachedData[chainId] ?? {
+        state: RpcRequestState.NotRequested,
+      }
+    );
+  }
+
+  clear: FunnelCacheEntry['clear'] = () => {
+    this.cachedData = {};
   };
 }

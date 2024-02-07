@@ -12,11 +12,11 @@ import type {
   PaimaERC721Contract,
   OldERC6551RegistryContract,
   ERC6551RegistryContract,
-  Network,
   InternalEventType,
 } from '@paima/utils';
 import { Type } from '@sinclair/typebox';
 import type { Static } from '@sinclair/typebox';
+import { ConfigNetworkType } from '@paima/utils/src/config/loading';
 
 export { SubmittedChainData, SubmittedData };
 
@@ -24,6 +24,7 @@ export interface ChainData {
   timestamp: number;
   blockHash: string;
   blockNumber: number;
+  network: string;
   submittedData: SubmittedData[];
   extensionDatums?: ChainDataExtensionDatum[];
   internalEvents?: InternalEvent[];
@@ -33,7 +34,8 @@ export type InternalEvent = CardanoEpochEvent;
 export type CardanoEpochEvent = { type: InternalEventType.CardanoBestEpoch; epoch: number };
 
 export interface PresyncChainData {
-  network: Network;
+  network: string;
+  networkType: ConfigNetworkType;
   blockNumber: number;
   extensionDatums: ChainDataExtensionDatum[];
 }
@@ -297,14 +299,17 @@ export type ChainDataExtensionErc6551Registry = ChainDataExtensionBase &
     contract: ERC6551RegistryContract | OldERC6551RegistryContract;
   };
 
-export const ChainDataExtensionCardanoDelegationConfig = Type.Object({
-  type: Type.Literal(CdeEntryTypeName.CardanoDelegation),
-  pools: Type.Array(Type.String()),
-  scheduledPrefix: Type.String(),
-  startSlot: Type.Number(),
-  stopSlot: Type.Optional(Type.Number()),
-  name: Type.String(),
-});
+export const ChainDataExtensionCardanoDelegationConfig = Type.Intersect([
+  ChainDataExtensionConfigBase,
+  Type.Object({
+    type: Type.Literal(CdeEntryTypeName.CardanoDelegation),
+    pools: Type.Array(Type.String()),
+    scheduledPrefix: Type.String(),
+    startSlot: Type.Number(),
+    stopSlot: Type.Optional(Type.Number()),
+    name: Type.String(),
+  }),
+]);
 
 export type ChainDataExtensionCardanoDelegation = ChainDataExtensionBase &
   Static<typeof ChainDataExtensionCardanoDelegationConfig> & {
@@ -403,17 +408,17 @@ export interface GameStateMachineInitializer {
 
 export interface GameStateMachine {
   initializeDatabase: (force: boolean) => Promise<boolean>;
-  presyncStarted: () => Promise<boolean>;
+  presyncStarted: (network: string) => Promise<boolean>;
   syncStarted: () => Promise<boolean>;
   latestProcessedBlockHeight: (dbTx?: PoolClient | Pool) => Promise<number>;
-  getPresyncBlockHeight: (dbTx?: PoolClient | Pool) => Promise<number>;
+  getPresyncBlockHeight: (network: string, dbTx?: PoolClient | Pool) => Promise<number>;
   getPresyncCardanoSlotHeight: (dbTx?: PoolClient | Pool) => Promise<number>;
   getReadonlyDbConn: () => Pool;
   getPersistentReadonlyDbConn: () => Client;
   getReadWriteDbConn: () => Pool;
   process: (dbTx: PoolClient, chainData: ChainData) => Promise<void>;
   presyncProcess: (dbTx: PoolClient, latestCdeData: PresyncChainData) => Promise<void>;
-  markPresyncMilestone: (blockHeight: number) => Promise<void>;
+  markPresyncMilestone: (blockHeight: number, network: string) => Promise<void>;
   markCardanoPresyncMilestone: (dbTx: PoolClient, slot: number) => Promise<void>;
   dryRun: (gameInput: string, userAddress: string) => Promise<boolean>;
 }

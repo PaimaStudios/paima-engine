@@ -4,9 +4,9 @@ import { doLog } from '@paima/utils';
 
 import type { ChainDataExtension } from '@paima/sm';
 
-export function getEarliestStartBlockheight(config: ChainDataExtension[]): number {
+export function getEarliestStartBlockheight(config: ChainDataExtension[], network: string): number {
   const minStartBlockheight = config.reduce((min, cde) => {
-    if ('startBlockHeight' in cde) {
+    if ('startBlockHeight' in cde && cde.network === network) {
       return Math.min(min, cde.startBlockHeight);
     }
     return min;

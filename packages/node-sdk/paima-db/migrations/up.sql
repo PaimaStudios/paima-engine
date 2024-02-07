@@ -23,7 +23,9 @@ CREATE TABLE historical_game_inputs (
 );
 
 CREATE TABLE cde_tracking (
-  block_height INTEGER PRIMARY KEY
+  block_height INTEGER NOT NULL,
+  network TEXT NOT NULL,
+  PRIMARY KEY (block_height, network)
 );
 
 CREATE TABLE cde_tracking_cardano (

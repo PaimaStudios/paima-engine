@@ -35,11 +35,6 @@ export const enum ChainDataExtensionDatumType {
   CardanoAssetUtxo,
 }
 
-export const enum Network {
-  EVM = 1,
-  CARDANO = 2,
-}
-
 export const FUNNEL_PRESYNC_FINISHED = 'finished';
 
 export const enum InternalEventType {

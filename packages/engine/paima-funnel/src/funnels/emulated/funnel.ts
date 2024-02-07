@@ -2,7 +2,7 @@ import type { PoolClient } from 'pg';
 import Prando from '@paima/prando';
 import type { ChainFunnel, ReadPresyncDataFrom } from '@paima/runtime';
 import type { ChainData, PresyncChainData } from '@paima/sm';
-import { ENV, doLog } from '@paima/utils';
+import { ENV, GlobalConfig, doLog } from '@paima/utils';
 import {
   emulatedSelectLatestPrior,
   upsertEmulatedBlockheight,
@@ -16,7 +16,6 @@ import { calculateBoundaryTimestamp, emulateCde, timestampToBlockNumber } from '
 import { BaseFunnel } from '../BaseFunnel.js';
 import type { FunnelSharedData } from '../BaseFunnel.js';
 import { QueuedBlockCacheEntry, RpcCacheEntry, RpcRequestState } from '../FunnelCache.js';
-import { Network } from '@paima/utils';
 import { FUNNEL_PRESYNC_FINISHED } from '@paima/utils';
 
 /**
@@ -58,7 +57,8 @@ export class EmulatedBlocksFunnel extends BaseFunnel {
       timestampLowerBound: number;
     },
     /** Blocks queued to be added into the current batch */
-    private readonly processingQueue: ChainData[]
+    private readonly processingQueue: ChainData[],
+    private readonly chainName: string
   ) {
     super(sharedData, dbTx);
     // TODO: replace once TS5 decorators are better supported
@@ -159,15 +159,17 @@ export class EmulatedBlocksFunnel extends BaseFunnel {
 
   public override async readPresyncData(
     args: ReadPresyncDataFrom
-  ): Promise<{ [network: number]: PresyncChainData[] | typeof FUNNEL_PRESYNC_FINISHED }> {
+  ): Promise<{ [network: string]: PresyncChainData[] | typeof FUNNEL_PRESYNC_FINISHED }> {
     // map base funnel data to the right timestamp range
     const baseData = await this.ctorData.baseFunnel.readPresyncData(args);
 
-    if (!baseData[Network.EVM] || baseData[Network.EVM] === FUNNEL_PRESYNC_FINISHED) {
+    const baseDataMainEvm = baseData[this.chainName];
+
+    if (!baseDataMainEvm || baseDataMainEvm === FUNNEL_PRESYNC_FINISHED) {
       return baseData;
     }
 
-    baseData[Network.EVM] = baseData[Network.EVM].map(data => {
+    baseData[this.chainName] = baseDataMainEvm.map(data => {
       const timestamp = calculateBoundaryTimestamp(
         this.ctorData.startTimestamp,
         ENV.BLOCK_TIME,
@@ -249,6 +251,8 @@ export class EmulatedBlocksFunnel extends BaseFunnel {
       return newEntry.processingQueue;
     })();
 
+    const [chainName, _config] = await GlobalConfig.mainEvmConfig();
+
     const [b] = await getLatestProcessedBlockHeight.run(undefined, dbTx);
     if (!b) {
       return new EmulatedBlocksFunnel(
@@ -257,7 +261,8 @@ export class EmulatedBlocksFunnel extends BaseFunnel {
         ctorData,
         dcState,
         emulatedState,
-        processingQueue
+        processingQueue,
+        chainName
       );
     }
 
@@ -289,7 +294,8 @@ export class EmulatedBlocksFunnel extends BaseFunnel {
       ctorData,
       dcState,
       emulatedState,
-      processingQueue
+      processingQueue,
+      chainName
     );
   }
 
@@ -389,6 +395,7 @@ export class EmulatedBlocksFunnel extends BaseFunnel {
       timestamp: nextBlockEndTimestamp,
       submittedData: nextBlockSubmittedData,
       extensionDatums: nextBlockExtensionDatums,
+      network: (await GlobalConfig.mainEvmConfig())[0],
     };
   };
 

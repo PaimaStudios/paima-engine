@@ -18,6 +18,8 @@ import {
   ChainDataExtensionType,
   ChainDataExtensionDatumType,
 } from './constants.js';
+import { GlobalConfig } from './config/singleton.js';
+import { EvmConfig, CardanoConfig } from './config/loading.js';
 
 const { isAddress } = web3UtilsPkg;
 
@@ -35,8 +37,6 @@ export type {
 } from './contract-types/PaimaERC721Contract.js';
 export type { Transfer as ERC721Transfer } from './contract-types/ERC721Contract.js';
 export * from './constants.js';
-export { GlobalConfig } from './config/singleton.js';
-export { EvmConfig, CardanoConfig } from './config/loading.js';
 
 export type { Web3, Contract, AbiItem, EventData };
 export {
@@ -47,6 +47,9 @@ export {
   logError,
   setLogger,
   doLog,
+  GlobalConfig,
+  EvmConfig,
+  CardanoConfig,
 };
 
 export const DEFAULT_GAS_PRICE = '61000000000' as const;

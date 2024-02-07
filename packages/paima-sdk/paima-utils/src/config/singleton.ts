@@ -1,5 +1,11 @@
 import { Static } from '@sinclair/typebox';
-import { BaseConfigWithDefaults, loadConfig, EvmConfigSchema, CardanoConfig } from './loading';
+import {
+  BaseConfigWithDefaults,
+  loadConfig,
+  EvmConfigSchema,
+  CardanoConfig,
+  EvmConfig,
+} from './loading';
 
 export type Config = Static<typeof BaseConfigWithDefaults>;
 
@@ -40,16 +46,24 @@ export class GlobalConfig {
     throw new Error('main config not found');
   }
 
-  public static async cardanoConfig(): Promise<CardanoConfig | undefined> {
+  public static async cardanoConfig(): Promise<[string, CardanoConfig] | undefined> {
     const instance = await GlobalConfig.getInstance();
 
     for (const key of Object.keys(instance)) {
       if (instance[key].type === 'cardano') {
         // TODO: try to remove this cast
-        return instance[key] as CardanoConfig;
+        return [key, instance[key] as CardanoConfig];
       }
     }
 
     return undefined;
+  }
+
+  public static async otherEvmConfig(): Promise<[string, EvmConfig][]> {
+    const instance = await GlobalConfig.getInstance();
+
+    return Object.keys(instance)
+      .filter(key => instance[key].type === 'evm-other')
+      .map(key => [key, instance[key] as EvmConfig]);
   }
 }

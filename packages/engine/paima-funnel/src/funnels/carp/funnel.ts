@@ -7,7 +7,6 @@ import {
   ENV,
   GlobalConfig,
   logError,
-  Network,
   timeout,
 } from '@paima/utils';
 import type { InternalEvent } from '@paima/sm';
@@ -30,6 +29,7 @@ import { Routes } from '@dcspark/carp-client/shared/routes';
 import { FUNNEL_PRESYNC_FINISHED, InternalEventType } from '@paima/utils';
 import { CarpFunnelCacheEntry } from '../FunnelCache.js';
 import { getCardanoEpoch } from '@paima/db';
+import { ConfigNetworkType } from '@paima/utils/src/config/loading.js';
 
 const delayForWaitingForFinalityLoop = 1000;
 
@@ -111,7 +111,8 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
     private readonly baseFunnel: ChainFunnel,
     private readonly carpUrl: string,
     private cache: CarpFunnelCacheEntry,
-    private readonly config: CardanoConfig
+    private readonly config: CardanoConfig,
+    private readonly chainName: string
   ) {
     super(sharedData, dbTx);
     // TODO: replace once TS5 decorators are better supported
@@ -200,7 +201,7 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
   public override async readPresyncData(
     args: ReadPresyncDataFrom
   ): Promise<{ [network: number]: PresyncChainData[] | typeof FUNNEL_PRESYNC_FINISHED }> {
-    const arg = args.find(arg => arg.network == Network.CARDANO);
+    const arg = args.find(arg => arg.network == this.chainName);
 
     let basePromise = this.baseFunnel.readPresyncData(args);
 
@@ -260,10 +261,16 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
         basePromise,
       ]);
 
-      let grouped = groupCdeData(Network.CARDANO, arg.from, arg.to, carpEvents);
+      let grouped = groupCdeData(
+        'cardano',
+        ConfigNetworkType.CARDANO,
+        arg.from,
+        arg.to,
+        carpEvents
+      );
 
       if (grouped.length > 0) {
-        data[Network.CARDANO] = grouped;
+        data[this.chainName] = grouped;
       }
 
       return data;
@@ -271,7 +278,7 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
       const data = await basePromise;
 
       if (arg) {
-        data[Network.CARDANO] = FUNNEL_PRESYNC_FINISHED;
+        data[this.chainName] = FUNNEL_PRESYNC_FINISHED;
       }
 
       return data;
@@ -283,7 +290,8 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
     dbTx: PoolClient,
     baseFunnel: ChainFunnel,
     config: CardanoConfig,
-    startingBlockHeight: number
+    startingBlockHeight: number,
+    chainName: string
   ): Promise<CarpFunnel> {
     if (!config.confirmationDepth) {
       throw new Error('[carp-funnel] Missing CARDANO_CONFIRMATION_DEPTH setting.');
@@ -315,7 +323,15 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
       return newEntry;
     })();
 
-    return new CarpFunnel(sharedData, dbTx, baseFunnel, config.carpUrl, await cacheEntry, config);
+    return new CarpFunnel(
+      sharedData,
+      dbTx,
+      baseFunnel,
+      config.carpUrl,
+      await cacheEntry,
+      config,
+      chainName
+    );
   }
 }
 
@@ -418,7 +434,9 @@ async function readDataInternal(
   );
 
   let grouped = groupCdeData(
-    Network.EVM,
+    // TODO: not really
+    'cardano',
+    ConfigNetworkType.CARDANO,
     data[0].blockNumber,
     data[data.length - 1].blockNumber,
     poolEvents.filter(data => data.length > 0)
@@ -439,13 +457,16 @@ export async function wrapToCarpFunnel(
     return chainFunnel;
   }
 
+  const [chainName, cardanoConfig] = config;
+
   try {
     const ebp = await CarpFunnel.recoverState(
       sharedData,
       dbTx,
       chainFunnel,
-      config,
-      startingBlockHeight
+      cardanoConfig,
+      startingBlockHeight,
+      chainName
     );
     return ebp;
   } catch (err) {
