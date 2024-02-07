@@ -5,6 +5,7 @@ import {
   EvmConfigSchema,
   CardanoConfig,
   EvmConfig,
+  ConfigNetworkType,
 } from './loading';
 
 export type Config = Static<typeof BaseConfigWithDefaults>;
@@ -12,8 +13,6 @@ export type Config = Static<typeof BaseConfigWithDefaults>;
 export class GlobalConfig {
   private static instance: Config;
   private static promise: Promise<void> | null;
-
-  private constructor() {}
 
   public static async getInstance(): Promise<Config> {
     // avoid double initialization/race
@@ -33,13 +32,12 @@ export class GlobalConfig {
     return GlobalConfig.instance;
   }
 
-  public static async mainEvmConfig(): Promise<[string, Static<typeof EvmConfigSchema>]> {
+  public static async mainEvmConfig(): Promise<[string, EvmConfig]> {
     const instance = await GlobalConfig.getInstance();
 
     for (const key of Object.keys(instance)) {
-      if (instance[key].type === 'evm-main') {
-        // TODO: try to remove this cast
-        return [key, instance[key] as Static<typeof EvmConfigSchema>];
+      if (instance[key].type === ConfigNetworkType.EVM) {
+        return [key, instance[key] as EvmConfig];
       }
     }
 
@@ -50,8 +48,7 @@ export class GlobalConfig {
     const instance = await GlobalConfig.getInstance();
 
     for (const key of Object.keys(instance)) {
-      if (instance[key].type === 'cardano') {
-        // TODO: try to remove this cast
+      if (instance[key].type === ConfigNetworkType.CARDANO) {
         return [key, instance[key] as CardanoConfig];
       }
     }
@@ -63,7 +60,7 @@ export class GlobalConfig {
     const instance = await GlobalConfig.getInstance();
 
     return Object.keys(instance)
-      .filter(key => instance[key].type === 'evm-other')
+      .filter(key => instance[key].type === ConfigNetworkType.EVM_OTHER)
       .map(key => [key, instance[key] as EvmConfig]);
   }
 }

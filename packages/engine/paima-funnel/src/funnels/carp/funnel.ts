@@ -163,7 +163,8 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
       lastTimestamp,
       this.cache,
       this.config.confirmationDepth,
-      this.era
+      this.era,
+      this.chainName
     );
 
     const composed = composeChainData(this.bufferedData, grouped);
@@ -342,7 +343,8 @@ async function readDataInternal(
   lastTimestamp: number,
   cache: CarpFunnelCacheEntry,
   confirmationDepth: number,
-  era: Era
+  era: Era,
+  chainName: string
 ): Promise<PresyncChainData[]> {
   // the lower range is exclusive
   const min = timestampToAbsoluteSlot(era, lastTimestamp, confirmationDepth);
@@ -434,8 +436,7 @@ async function readDataInternal(
   );
 
   let grouped = groupCdeData(
-    // TODO: not really
-    'cardano',
+    chainName,
     ConfigNetworkType.CARDANO,
     data[0].blockNumber,
     data[data.length - 1].blockNumber,

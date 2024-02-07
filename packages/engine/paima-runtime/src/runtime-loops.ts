@@ -15,7 +15,11 @@ import {
 import { cleanNoncesIfTime } from './nonce-gc.js';
 import type { PoolClient } from 'pg';
 import { FUNNEL_PRESYNC_FINISHED } from '@paima/utils';
-import { CardanoConfigSchema, ConfigNetworkType } from '@paima/utils/src/config/loading.js';
+import {
+  CardanoConfig,
+  CardanoConfigSchema,
+  ConfigNetworkType,
+} from '@paima/utils/src/config/loading.js';
 
 // The core logic of paima runtime which polls the funnel and processes the resulting chain data using the game's state machine.
 // Of note, the runtime is designed to continue running/attempting to process the next required block no matter what errors propagate upwards.
@@ -59,23 +63,14 @@ async function runPresync(
 ): Promise<void> {
   const networks = await GlobalConfig.getInstance();
 
+  const cardanoConfig = await GlobalConfig.cardanoConfig();
+
   let presyncBlockHeight = await getPresyncStartBlockheight(
     gameStateMachine,
     funnelFactory.getExtensions(),
-    startBlockHeight
+    startBlockHeight,
+    cardanoConfig
   );
-
-  const cardanoConfig = await GlobalConfig.cardanoConfig();
-  if (!cardanoConfig) {
-    // TODO: unhardcode
-    if (presyncBlockHeight['cardano'] === -1) {
-      delete presyncBlockHeight['cardano'];
-    } else {
-      throw new Error(
-        '[paima-runtime] Detected Cardano CDE sync in progress, but CARP_URL is not set.'
-      );
-    }
-  }
 
   if (run) {
     doLog('---------------------------\nBeginning Presync\n---------------------------');
@@ -126,7 +121,8 @@ async function runPresync(
 async function getPresyncStartBlockheight(
   gameStateMachine: GameStateMachine,
   CDEs: ChainDataExtension[],
-  maximumPresyncBlockheight: number
+  maximumPresyncBlockheight: number,
+  cardanoConfig: [string, CardanoConfig] | undefined
 ): Promise<{ [network: string]: number }> {
   const config = await GlobalConfig.getInstance();
 
@@ -138,6 +134,7 @@ async function getPresyncStartBlockheight(
     }
 
     const earliestCdeSbh = getEarliestStartBlockheight(CDEs, network);
+
     const freshPresyncStart = earliestCdeSbh >= 0 ? earliestCdeSbh : maximumPresyncBlockheight + 1;
 
     result[network] = freshPresyncStart;
@@ -149,14 +146,16 @@ async function getPresyncStartBlockheight(
     }
   }
 
-  const earliestCdeCardanoSlot = getEarliestStartSlot(CDEs);
+  if (cardanoConfig) {
+    const earliestCdeCardanoSlot = getEarliestStartSlot(CDEs);
 
-  const latestPresyncSlotHeight = await gameStateMachine.getPresyncCardanoSlotHeight();
+    const latestPresyncSlotHeight = await gameStateMachine.getPresyncCardanoSlotHeight();
 
-  result['cardano'] = earliestCdeCardanoSlot;
+    result[cardanoConfig[0]] = earliestCdeCardanoSlot;
 
-  if (latestPresyncSlotHeight > 0) {
-    result['cardano'] = latestPresyncSlotHeight + 1;
+    if (latestPresyncSlotHeight > 0) {
+      result[cardanoConfig[0]] = latestPresyncSlotHeight + 1;
+    }
   }
 
   return result;
