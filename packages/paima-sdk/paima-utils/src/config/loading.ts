@@ -3,7 +3,7 @@ import YAML from 'yaml';
 import type { Static, TSchema } from '@sinclair/typebox';
 import { Value, ValueErrorType } from '@sinclair/typebox/value';
 import { Type } from '@sinclair/typebox';
-// import { ENV, doLog } from '../index';
+import { ENV, doLog } from '../index';
 
 export enum ConfigNetworkType {
   EVM = 'evm-main',
@@ -77,8 +77,8 @@ export async function loadConfig(): Promise<Static<typeof BaseConfigWithDefaults
   let configFileData: string;
   try {
     // TODO: would be nice to also read .yaml
-    // configFileData = await fs.readFile(`config.${ENV.NETWORK}.yml`, 'utf8');
-    configFileData = await fs.readFile(`config.localhost.yml`, 'utf8');
+    configFileData = await fs.readFile(`config.${ENV.NETWORK}.yml`, 'utf8');
+    // configFileData = await fs.readFile(`config.localhost.yml`, 'utf8');
   } catch (err) {
     throw new Error('config file not found');
   }
