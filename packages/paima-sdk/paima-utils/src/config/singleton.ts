@@ -1,12 +1,6 @@
-import { Static } from '@sinclair/typebox';
-import {
-  BaseConfigWithDefaults,
-  loadConfig,
-  EvmConfigSchema,
-  CardanoConfig,
-  EvmConfig,
-  ConfigNetworkType,
-} from './loading';
+import type { Static } from '@sinclair/typebox';
+import type { CardanoConfig, EvmConfig } from './loading.js';
+import { BaseConfigWithDefaults, loadConfig, ConfigNetworkType } from './loading.js';
 
 export type Config = Static<typeof BaseConfigWithDefaults>;
 
