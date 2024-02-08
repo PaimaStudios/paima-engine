@@ -26,6 +26,7 @@ export const EvmConfigSchema = Type.Object({
   pollingRate: Type.Number({ default: 4 - 0.1 }),
   deployment: Type.String({ default: '' }),
   paimaL2ContractAddress: Type.RegExp(/^0x[0-9a-fA-F]{40}$/i),
+  funnelBlockGroupSize: Type.Number({ default: 100 }),
 });
 
 export const CardanoConfigSchema = Type.Object({
@@ -71,6 +72,7 @@ const evmConfigDefaults = (blockTime: number | undefined) => ({
   blockTime: 4,
   pollingRate: (blockTime || 4) - 0.1,
   deployment: '',
+  funnelBlockGroupSize: 100,
 });
 
 export async function loadConfig(): Promise<Static<typeof BaseConfigWithDefaults> | undefined> {

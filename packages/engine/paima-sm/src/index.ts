@@ -44,6 +44,7 @@ import type {
   InternalEvent,
 } from './types.js';
 import { ConfigNetworkType } from '@paima/utils/src/config/loading.js';
+import assertNever from 'assert-never';
 
 export * from './types.js';
 export type * from './types.js';
@@ -423,6 +424,17 @@ async function processInternalEvents(
       case InternalEventType.CardanoBestEpoch:
         await updateCardanoEpoch.run({ epoch: event.epoch }, dbTx);
         break;
+      case InternalEventType.EvmLastBlock:
+        await markCdeBlockheightProcessed.run(
+          {
+            block_height: event.block,
+            network: event.network,
+          },
+          dbTx
+        );
+        break;
+      default:
+        assertNever(event);
     }
   }
 }

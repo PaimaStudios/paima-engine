@@ -33,10 +33,31 @@ export function composeChainData(
   baseChainData: ChainData[],
   cdeData: PresyncChainData[]
 ): ChainData[] {
-  return baseChainData.map(blockData => ({
-    ...blockData,
-    extensionDatums: cdeData.find(
+  return baseChainData.map(blockData => {
+    const matchingData = cdeData.find(
       blockCdeData => blockCdeData.blockNumber === blockData.blockNumber
-    )?.extensionDatums,
-  }));
+    );
+
+    if (!matchingData) {
+      return blockData;
+    }
+
+    if (blockData.extensionDatums) {
+      if (matchingData.extensionDatums) {
+        blockData.extensionDatums.push(...matchingData.extensionDatums);
+      }
+    } else if (matchingData.extensionDatums) {
+      blockData.extensionDatums = matchingData.extensionDatums;
+    }
+
+    if (blockData.internalEvents) {
+      if (matchingData.internalEvents) {
+        blockData.internalEvents.push(...matchingData.internalEvents);
+      }
+    } else if (matchingData.internalEvents) {
+      blockData.internalEvents = matchingData.internalEvents;
+    }
+
+    return blockData;
+  });
 }

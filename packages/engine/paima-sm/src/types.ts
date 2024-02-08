@@ -30,14 +30,20 @@ export interface ChainData {
   internalEvents?: InternalEvent[];
 }
 
-export type InternalEvent = CardanoEpochEvent;
+export type InternalEvent = CardanoEpochEvent | EvmLastBlockEvent;
 export type CardanoEpochEvent = { type: InternalEventType.CardanoBestEpoch; epoch: number };
+export type EvmLastBlockEvent = {
+  type: InternalEventType.EvmLastBlock;
+  block: number;
+  network: string;
+};
 
 export interface PresyncChainData {
   network: string;
   networkType: ConfigNetworkType;
   blockNumber: number;
-  extensionDatums: ChainDataExtensionDatum[];
+  extensionDatums?: ChainDataExtensionDatum[];
+  internalEvents?: InternalEvent[];
 }
 
 interface CdeDatumErc20TransferPayload {

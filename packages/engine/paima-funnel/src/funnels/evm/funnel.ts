@@ -1,4 +1,14 @@
-import { ENV, EvmConfig, doLog, initWeb3, logError, timeout, Web3, delay } from '@paima/utils';
+import {
+  ENV,
+  EvmConfig,
+  doLog,
+  initWeb3,
+  logError,
+  timeout,
+  Web3,
+  delay,
+  InternalEventType,
+} from '@paima/utils';
 import type { ChainFunnel, ReadPresyncDataFrom } from '@paima/runtime';
 import type { ChainData, PresyncChainData } from '@paima/sm';
 import { getUngroupedCdeData } from '../../cde/reading.js';
@@ -10,6 +20,7 @@ import type { PoolClient } from 'pg';
 import { FUNNEL_PRESYNC_FINISHED } from '@paima/utils';
 import { ConfigNetworkType } from '@paima/utils/src/config/loading.js';
 import { getMultipleBlockData } from '../../reading.js';
+import { getLatestProcessedCdeBlockheight } from '@paima/db';
 
 const GET_BLOCK_NUMBER_TIMEOUT = 5000;
 
@@ -65,10 +76,19 @@ export class EvmFunnel extends BaseFunnel implements ChainFunnel {
     }
 
     if (!cachedState.lastBlock) {
-      const block = await this.sharedData.web3.eth.getBlock(chainData[0].blockNumber - 1);
+      const queryResults = await getLatestProcessedCdeBlockheight.run(
+        { network: this.chainName },
+        this.dbTx
+      );
 
-      const ts = Number(block.timestamp);
-      cachedState.lastBlock = await findBlockByTimestamp(this.web3, ts);
+      if (queryResults[0]) {
+        cachedState.lastBlock = queryResults[0].block_height;
+      } else {
+        const block = await this.sharedData.web3.eth.getBlock(chainData[0].blockNumber - 1);
+
+        const ts = Number(block.timestamp);
+        cachedState.lastBlock = await findBlockByTimestamp(this.web3, ts);
+      }
     }
 
     const minTimestamp = Math.min(...chainData.map(data => data.timestamp));
@@ -84,7 +104,7 @@ export class EvmFunnel extends BaseFunnel implements ChainFunnel {
       const parallelEvmBlocks = await getMultipleBlockData(
         this.web3,
         cachedState.lastBlock + 1,
-        Math.min(latestBlock, cachedState.lastBlock + 1 + ENV.DEFAULT_FUNNEL_GROUP_SIZE),
+        Math.min(latestBlock, cachedState.lastBlock + this.config.funnelBlockGroupSize),
         this.chainName
       );
 
@@ -92,6 +112,10 @@ export class EvmFunnel extends BaseFunnel implements ChainFunnel {
 
       if (blocks.length > 0 && blocks[blocks.length - 1].timestamp >= maxTimestamp) {
         break;
+      }
+
+      if (blocks.length > 0) {
+        cachedState.lastBlock = blocks[blocks.length - 1].blockNumber;
       }
 
       while ((await this.updateLatestBlock()) === latestBlock) {
@@ -104,9 +128,13 @@ export class EvmFunnel extends BaseFunnel implements ChainFunnel {
     }
 
     // After we get the blocks from the parallel evm chain, we need to join them
-    // with the trunk. We need to then assign back the blocks from the side
-    // chain to the main chain.
-    const inverseMapping: { [blockNumber: number]: number } = {};
+    // with the trunk.
+    //
+    // This maps timestamps from the sidechain to the mainchain.
+    const sidechainToMainchainBlockHeightMapping: { [blockNumber: number]: number } = {};
+
+    // Mapping of mainchain to sidechain block heights
+    const mainchainToSidechainBlockHeightMapping: { [blockNumber: number]: number } = {};
 
     // chainData is sorted by timestamp, so we never need to search old entries,
     // we keep this around to know from where to start searching for a block
@@ -119,7 +147,11 @@ export class EvmFunnel extends BaseFunnel implements ChainFunnel {
 
       while (currIndex < chainData.length) {
         if (chainData[currIndex].timestamp >= block.timestamp) {
-          inverseMapping[block.blockNumber] = chainData[currIndex].blockNumber;
+          sidechainToMainchainBlockHeightMapping[block.blockNumber] =
+            chainData[currIndex].blockNumber;
+
+          mainchainToSidechainBlockHeightMapping[chainData[currIndex].blockNumber] =
+            block.blockNumber;
           break;
         } else {
           currIndex++;
@@ -153,18 +185,43 @@ export class EvmFunnel extends BaseFunnel implements ChainFunnel {
       return chainData;
     }
 
+    let data: ChainData[];
+
     if (toBlock === fromBlock) {
       doLog(`EVM CDE funnel ${this.config.chainId}: #${toBlock}`);
-      return await this.internalReadDataSingle(fromBlock, chainData[0]);
+      data = await this.internalReadDataSingle(fromBlock, chainData[0]);
     } else {
       doLog(`EVM CDE funnel ${this.config.chainId}: #${fromBlock}-${toBlock}`);
-      return await this.internalReadDataMulti(
+      data = await this.internalReadDataMulti(
         fromBlock,
         toBlock,
         chainData,
-        blockNumber => inverseMapping[blockNumber]
+        blockNumber => sidechainToMainchainBlockHeightMapping[blockNumber]
       );
     }
+
+    for (const chainData of data) {
+      if (!chainData.internalEvents) {
+        chainData.internalEvents = [];
+      }
+
+      chainData.internalEvents.push({
+        type: InternalEventType.EvmLastBlock,
+        // this is the block number in the original chain, so that we can resume
+        // from that point later.
+        //
+        // there can be more than one block here, for example, if the main chain
+        // produces a block every 10 seconds, and the parallel chain generates a
+        // block every seconds, then there can be 10 blocks here. The block here
+        // will be the last in the range. Losing the information doesn't matter
+        // because there is a transaction per main chain block, so the result
+        // would be the same.
+        block: mainchainToSidechainBlockHeightMapping[chainData.blockNumber],
+        network: this.chainName,
+      });
+    }
+
+    return data;
   }
 
   private internalReadDataSingle = async (
@@ -212,16 +269,34 @@ export class EvmFunnel extends BaseFunnel implements ChainFunnel {
         toBlock
       );
 
-      const cdeData = groupCdeData(
-        this.chainName,
-        ConfigNetworkType.EVM_OTHER,
-        fromBlock,
-        toBlock,
-        ungroupedCdeData
-      );
+      let mappedMin: number | undefined;
+      let mappedMax: number | undefined;
 
-      for (const data of cdeData) {
-        data.blockNumber = sidechainToMainchainNumber(data.blockNumber);
+      // this needs to be done here for groupCdeData to work correctly.
+      for (const extensionData of ungroupedCdeData) {
+        for (const data of extensionData) {
+          const mappedBlockNumber = sidechainToMainchainNumber(data.blockNumber);
+
+          data.blockNumber = mappedBlockNumber;
+
+          if (!mappedMin) {
+            mappedMin = data.blockNumber;
+          }
+
+          mappedMax = data.blockNumber;
+        }
+      }
+
+      let cdeData: PresyncChainData[] = [];
+
+      if (mappedMin && mappedMax) {
+        cdeData = groupCdeData(
+          this.chainName,
+          ConfigNetworkType.EVM_OTHER,
+          mappedMin,
+          mappedMax,
+          ungroupedCdeData
+        );
       }
 
       return composeChainData(baseChainData, cdeData);
@@ -256,12 +331,15 @@ export class EvmFunnel extends BaseFunnel implements ChainFunnel {
         return baseData;
       }
 
+      doLog(`EVM CDE funnel presync ${this.config.chainId}: #${fromBlock}-${toBlock}`);
+
       const ungroupedCdeData = await getUngroupedCdeData(
         this.web3,
         this.sharedData.extensions.filter(extension => extension.network === this.chainName),
         fromBlock,
         toBlock
       );
+
       return {
         ...baseData,
         [this.chainName]: groupCdeData(
@@ -287,8 +365,6 @@ export class EvmFunnel extends BaseFunnel implements ChainFunnel {
     startingBlockHeight: number
   ): Promise<EvmFunnel> {
     const web3 = await initWeb3(config.chainUri);
-    // we always write to this cache instead of reading from it
-    // as other funnels used may want to read from this cached data
 
     const latestBlock: number = await timeout(web3.eth.getBlockNumber(), GET_BLOCK_NUMBER_TIMEOUT);
     const cacheEntry = ((): RpcCacheEntry => {
@@ -395,10 +471,14 @@ async function findBlockByTimestamp(web3: Web3, timestamp: number): Promise<numb
   let low = 0;
   let high = Number(await web3.eth.getBlockNumber()) + 1;
 
+  let requests = 0;
+
   while (low < high) {
     const mid = Math.floor((low + high) / 2);
 
     const block = await web3.eth.getBlock(mid);
+
+    requests++;
 
     if (Number(block.timestamp) < timestamp) {
       low = mid + 1;
@@ -406,6 +486,8 @@ async function findBlockByTimestamp(web3: Web3, timestamp: number): Promise<numb
       high = mid;
     }
   }
+
+  doLog(`EVM CDE funnel: Found block by binary search ${low} with #${requests} requests`);
 
   return low;
 }
