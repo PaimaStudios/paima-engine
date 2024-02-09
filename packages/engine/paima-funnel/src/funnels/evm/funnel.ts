@@ -92,7 +92,7 @@ export class EvmFunnel extends BaseFunnel implements ChainFunnel {
         const block = await this.sharedData.web3.eth.getBlock(chainData[0].blockNumber - 1);
 
         const ts = Number(block.timestamp);
-        cachedState.lastBlock = await findBlockByTimestamp(this.web3, ts);
+        cachedState.lastBlock = (await findBlockByTimestamp(this.web3, ts)) - 1;
       }
     }
 
