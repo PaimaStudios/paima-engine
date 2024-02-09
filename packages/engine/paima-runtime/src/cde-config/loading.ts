@@ -46,7 +46,7 @@ import stableStringify from 'json-stable-stringify';
 type ValidationResult = [config: ChainDataExtension[], validated: boolean];
 
 export async function loadChainDataExtensions(
-  web3: Web3,
+  web3s: { [network: string]: Web3 },
   configFilePath: string
 ): Promise<ValidationResult> {
   let configFileData: string;
@@ -60,7 +60,7 @@ export async function loadChainDataExtensions(
   try {
     const config = parseCdeConfigFile(configFileData);
     const instantiatedExtensions = await Promise.all(
-      config.extensions.map((e, i) => instantiateExtension(e, i, web3))
+      config.extensions.map((e, i) => instantiateExtension(e, i, web3s))
     );
     return [instantiatedExtensions, true];
   } catch (err) {
@@ -197,7 +197,7 @@ function hashConfig(config: any): number {
 async function instantiateExtension(
   config: Static<typeof CdeConfig>['extensions'][0],
   index: number,
-  web3: Web3
+  web3s: { [network: string]: Web3 }
 ): Promise<ChainDataExtension> {
   switch (config.type) {
     case CdeEntryTypeName.ERC20:
@@ -206,16 +206,16 @@ async function instantiateExtension(
         cdeId: index,
         hash: hashConfig(config),
         cdeType: ChainDataExtensionType.ERC20,
-        contract: getErc20Contract(config.contractAddress, web3),
+        contract: getErc20Contract(config.contractAddress, web3s[config.network]),
       };
     case CdeEntryTypeName.ERC721:
-      if (await isPaimaErc721(config, web3)) {
+      if (await isPaimaErc721(config, web3s[config.network])) {
         return {
           ...config,
           cdeId: index,
           hash: hashConfig(config),
           cdeType: ChainDataExtensionType.PaimaERC721,
-          contract: getPaimaErc721Contract(config.contractAddress, web3),
+          contract: getPaimaErc721Contract(config.contractAddress, web3s[config.network]),
         };
       } else {
         return {
@@ -223,7 +223,7 @@ async function instantiateExtension(
           cdeId: index,
           hash: hashConfig(config),
           cdeType: ChainDataExtensionType.ERC721,
-          contract: getErc721Contract(config.contractAddress, web3),
+          contract: getErc721Contract(config.contractAddress, web3s[config.network]),
         };
       }
     case CdeEntryTypeName.ERC20Deposit:
@@ -232,10 +232,13 @@ async function instantiateExtension(
         cdeId: index,
         hash: hashConfig(config),
         cdeType: ChainDataExtensionType.ERC20Deposit,
-        contract: getErc20Contract(config.contractAddress, web3),
+        contract: getErc20Contract(config.contractAddress, web3s[config.network]),
       };
     case CdeEntryTypeName.Generic:
-      return { ...(await instantiateCdeGeneric(config, index, web3)), network: config.network };
+      return {
+        ...(await instantiateCdeGeneric(config, index, web3s[config.network])),
+        network: config.network,
+      };
     case CdeEntryTypeName.ERC6551Registry:
       const contractAddress = config.contractAddress ?? ERC6551_REGISTRY_DEFAULT.New;
       return {
@@ -246,10 +249,10 @@ async function instantiateExtension(
         contractAddress,
         contract: ((): ChainDataExtensionErc6551Registry['contract'] => {
           if (contractAddress === ERC6551_REGISTRY_DEFAULT.Old) {
-            return getOldErc6551RegistryContract(contractAddress, web3);
+            return getOldErc6551RegistryContract(contractAddress, web3s[config.network]);
           }
           // assume everything else is using the new contract
-          return getErc6551RegistryContract(contractAddress, web3);
+          return getErc6551RegistryContract(contractAddress, web3s[config.network]);
         })(),
       };
     case CdeEntryTypeName.CardanoDelegation:

@@ -16,6 +16,8 @@ import type { FunnelSharedData } from './funnels/BaseFunnel.js';
 import { FunnelCacheManager } from './funnels/FunnelCache.js';
 import { wrapToCarpFunnel } from './funnels/carp/funnel.js';
 import { wrapToEvmFunnel } from './funnels/evm/funnel.js';
+import { ConfigNetworkType } from '@paima/utils/src/config/loading.js';
+import type Web3 from 'web3';
 
 export class FunnelFactory implements IFunnelFactory {
   private constructor(public sharedData: FunnelSharedData) {}
@@ -27,7 +29,32 @@ export class FunnelFactory implements IFunnelFactory {
     validatePaimaL2ContractAddress(paimaL2ContractAddress);
     const web3 = await initWeb3(nodeUrl);
     const paimaL2Contract = getPaimaL2Contract(paimaL2ContractAddress, web3);
-    const [extensions, extensionsValid] = await loadChainDataExtensions(web3, ENV.CDE_CONFIG_PATH);
+
+    const configs = await GlobalConfig.getInstance();
+
+    const web3s = await Promise.all(
+      Object.keys(configs).reduce(
+        (result, network) => {
+          const config = configs[network];
+          if (
+            config &&
+            (config.type === ConfigNetworkType.EVM ||
+              config.type === ConfigNetworkType.EVM_OTHER) &&
+            config.chainUri
+          ) {
+            result.push(initWeb3(config.chainUri).then(web3 => [network, web3]));
+          }
+
+          return result;
+        },
+        [] as Promise<[string, Web3]>[]
+      )
+    );
+
+    const [extensions, extensionsValid] = await loadChainDataExtensions(
+      Object.fromEntries(web3s),
+      ENV.CDE_CONFIG_PATH
+    );
 
     return new FunnelFactory({
       web3,
