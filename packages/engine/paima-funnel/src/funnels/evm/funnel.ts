@@ -15,7 +15,12 @@ import { getUngroupedCdeData } from '../../cde/reading.js';
 import { composeChainData, groupCdeData } from '../../utils.js';
 import { BaseFunnel } from '../BaseFunnel.js';
 import type { FunnelSharedData } from '../BaseFunnel.js';
-import { EvmFunnelCacheEntry, RpcCacheEntry, RpcRequestState } from '../FunnelCache.js';
+import {
+  EvmFunnelCacheEntry,
+  EvmFunnelCacheEntryState,
+  RpcCacheEntry,
+  RpcRequestState,
+} from '../FunnelCache.js';
 import type { PoolClient } from 'pg';
 import { FUNNEL_PRESYNC_FINISHED } from '@paima/utils';
 import { ConfigNetworkType } from '@paima/utils/src/config/loading.js';
@@ -174,14 +179,17 @@ export class EvmFunnel extends BaseFunnel implements ChainFunnel {
 
       // this is the timestamp from the previous round, since every block before
       // that point should have been included in the range.
-      if (cachedState.timestampToBlockNumber[0][0] <= cachedState.maxTimestamp) {
+      //
+      // we can't use the minimum timestamp of the current round since there
+      // could be blocks with a timestamp in the middle of both
+      if (cachedState.timestampToBlockNumber[0][0] <= cachedState.lastMaxTimestamp) {
         cachedState.timestampToBlockNumber.shift();
       } else {
         break;
       }
     }
 
-    cachedState.maxTimestamp = maxTimestamp;
+    cachedState.lastMaxTimestamp = maxTimestamp;
 
     if (!cachedState.timestampToBlockNumber[0]) {
       return chainData;
@@ -240,12 +248,12 @@ export class EvmFunnel extends BaseFunnel implements ChainFunnel {
           // this is the block number in the original chain, so that we can resume
           // from that point later.
           //
-          // there can be more than one block here, for example, if the main chain
-          // produces a block every 10 seconds, and the parallel chain generates a
-          // block every seconds, then there can be 10 blocks here. The block here
-          // will be the last in the range. Losing the information doesn't matter
-          // because there is a transaction per main chain block, so the result
-          // would be the same.
+          // there can be more than one block here, for example, if the main
+          // chain produces a block every 10 seconds, and the parallel chain
+          // generates a block every second, then there can be 10 blocks.
+          // The block here will be the last in the range. Losing the
+          // information doesn't matter because there is a transaction per main
+          // chain block, so the result would be the same.
           block: originalBlockNumber,
           network: this.chainName,
         });
@@ -300,32 +308,35 @@ export class EvmFunnel extends BaseFunnel implements ChainFunnel {
         toBlock
       );
 
-      let mappedMin: number | undefined;
-      let mappedMax: number | undefined;
+      let mappedFrom: number | undefined;
+      let mappedTo: number | undefined;
 
-      // this needs to be done here for groupCdeData to work correctly.
+      // This needs to be done here for groupCdeData to work correctly, since
+      // there can be different parallel chain blocks assigned to the same main
+      // chain block, and those need to be grouped together in order for
+      // composeChainData to work.
       for (const extensionData of ungroupedCdeData) {
         for (const data of extensionData) {
           const mappedBlockNumber = sidechainToMainchainNumber(data.blockNumber);
 
           data.blockNumber = mappedBlockNumber;
 
-          if (!mappedMin) {
-            mappedMin = data.blockNumber;
+          if (!mappedFrom) {
+            mappedFrom = data.blockNumber;
           }
 
-          mappedMax = data.blockNumber;
+          mappedTo = data.blockNumber;
         }
       }
 
       let cdeData: PresyncChainData[] = [];
 
-      if (mappedMin && mappedMax) {
+      if (mappedFrom && mappedTo) {
         cdeData = groupCdeData(
           this.chainName,
           ConfigNetworkType.EVM_OTHER,
-          mappedMin,
-          mappedMax,
+          mappedFrom,
+          mappedTo,
           ungroupedCdeData
         );
       }
@@ -433,6 +444,7 @@ export class EvmFunnel extends BaseFunnel implements ChainFunnel {
     return new EvmFunnel(sharedData, dbTx, config, chainName, baseFunnel, web3);
   }
 
+  // this is the latestBlock of the chain synced by this funnel
   private latestBlock(): number {
     const latestBlockQueryState = this.sharedData.cacheManager.cacheEntries[
       RpcCacheEntry.SYMBOL
@@ -445,7 +457,10 @@ export class EvmFunnel extends BaseFunnel implements ChainFunnel {
   }
 
   private async updateLatestBlock(): Promise<number> {
-    const newLatestBlock = await this.web3.eth.getBlockNumber();
+    const newLatestBlock: number = await timeout(
+      this.web3.eth.getBlockNumber(),
+      GET_BLOCK_NUMBER_TIMEOUT
+    );
 
     this.sharedData.cacheManager.cacheEntries[RpcCacheEntry.SYMBOL]?.updateState(
       this.config.chainId,
@@ -455,13 +470,7 @@ export class EvmFunnel extends BaseFunnel implements ChainFunnel {
     return newLatestBlock;
   }
 
-  private getState(): {
-    bufferedChainData: ChainData[];
-    timestampToBlockNumber: [number, number][];
-    lastBlock: number | undefined;
-    startBlockHeight: number;
-    maxTimestamp: number;
-  } {
+  private getState(): EvmFunnelCacheEntryState {
     const bufferedState = this.sharedData.cacheManager.cacheEntries[
       EvmFunnelCacheEntry.SYMBOL
     ]?.getState(this.config.chainId);
@@ -499,6 +508,7 @@ export async function wrapToEvmFunnel(
   }
 }
 
+// performs binary search to find the corresponding block
 async function findBlockByTimestamp(web3: Web3, timestamp: number): Promise<number> {
   let low = 0;
   let high = Number(await web3.eth.getBlockNumber()) + 1;
@@ -519,13 +529,14 @@ async function findBlockByTimestamp(web3: Web3, timestamp: number): Promise<numb
     }
   }
 
-  doLog(`EVM CDE funnel: Found block by binary search ${low} with #${requests} requests`);
+  doLog(`EVM CDE funnel: Found block ${low} by binary search with #${requests} requests`);
 
   return low;
 }
 
 // finds the last block in the timestampToBlockNumber collection that is between
 // the range: (-Infinity, maxTimestamp]
+// PRE: timestampToBlockNumber should be sorted by timestamp (first element of the tuple)
 function getUpperBoundBlock(
   timestampToBlockNumber: [number, number][],
   maxTimestamp: number

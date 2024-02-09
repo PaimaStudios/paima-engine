@@ -116,17 +116,16 @@ export class CarpFunnelCacheEntry implements FunnelCacheEntry {
   };
 }
 
+export type EvmFunnelCacheEntryState = {
+  bufferedChainData: ChainData[];
+  timestampToBlockNumber: [number, number][];
+  lastBlock: number | undefined;
+  startBlockHeight: number;
+  lastMaxTimestamp: number;
+};
+
 export class EvmFunnelCacheEntry implements FunnelCacheEntry {
-  private cachedData: Record<
-    number,
-    RpcRequestResult<{
-      bufferedChainData: ChainData[];
-      timestampToBlockNumber: [number, number][];
-      lastBlock: number | undefined;
-      startBlockHeight: number;
-      maxTimestamp: number;
-    }>
-  > = {};
+  private cachedData: Record<number, RpcRequestResult<EvmFunnelCacheEntryState>> = {};
   public static readonly SYMBOL = Symbol('EvmFunnelCacheEntry');
 
   public updateState = (
@@ -142,20 +141,12 @@ export class EvmFunnelCacheEntry implements FunnelCacheEntry {
         timestampToBlockNumber,
         startBlockHeight,
         lastBlock: undefined,
-        maxTimestamp: 0,
+        lastMaxTimestamp: 0,
       },
     };
   };
 
-  public getState(chainId: number): Readonly<
-    RpcRequestResult<{
-      bufferedChainData: ChainData[];
-      timestampToBlockNumber: [number, number][];
-      lastBlock: number | undefined;
-      startBlockHeight: number;
-      maxTimestamp: number;
-    }>
-  > {
+  public getState(chainId: number): Readonly<RpcRequestResult<EvmFunnelCacheEntryState>> {
     return (
       this.cachedData[chainId] ?? {
         state: RpcRequestState.NotRequested,
