@@ -91,8 +91,7 @@ export class EvmFunnel extends BaseFunnel implements ChainFunnel {
       }
     }
 
-    // TODO: just pick the last item?
-    const maxTimestamp = Math.max(...chainData.map(data => data.timestamp));
+    const maxTimestamp = chainData[chainData.length - 1].timestamp;
 
     const blocks = [];
 
