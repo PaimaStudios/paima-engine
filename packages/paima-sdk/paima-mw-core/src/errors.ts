@@ -85,18 +85,18 @@ export const PAIMA_MIDDLEWARE_ERROR_MESSAGES: Record<PaimaMiddlewareErrorCode, s
   [PaimaMiddlewareErrorCode.ALGORAND_LOGIN]: 'Error while connecting to the Algorand wallet',
   [PaimaMiddlewareErrorCode.TRUFFLE_LOGIN]: 'Error while connecting the Truffle HDWallet',
   [PaimaMiddlewareErrorCode.ERROR_POSTING_TO_CHAIN]:
-    'An error occured while posting data to the blockchain',
+    'An error occurred while posting data to the blockchain',
   [PaimaMiddlewareErrorCode.ERROR_POSTING_TO_BATCHER]:
-    'An error occured while posting data to the batcher',
+    'An error occurred while posting data to the batcher',
   [PaimaMiddlewareErrorCode.BATCHER_REJECTED_INPUT]: 'The input was not accepted by the batcher',
   [PaimaMiddlewareErrorCode.INVALID_RESPONSE_FROM_BATCHER]:
     'Invalid response received from batcher',
   [PaimaMiddlewareErrorCode.FAILURE_VERIFYING_BATCHER_ACCEPTANCE]:
     'Failure verifying if the input was accepted by the batcher',
   [PaimaMiddlewareErrorCode.ERROR_QUERYING_BACKEND_ENDPOINT]:
-    'An error occured while querying a backend endpoint',
+    'An error occurred while querying a backend endpoint',
   [PaimaMiddlewareErrorCode.ERROR_QUERYING_BATCHER_ENDPOINT]:
-    'An error occured while querying a batcher endpoint',
+    'An error occurred while querying a batcher endpoint',
   [PaimaMiddlewareErrorCode.INVALID_RESPONSE_FROM_BACKEND]:
     'Invalid response received from the backend',
   [PaimaMiddlewareErrorCode.INTERNAL_INVALID_DEPLOYMENT]: 'Internal error: Invalid deployment set',
