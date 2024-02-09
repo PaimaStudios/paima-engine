@@ -263,7 +263,7 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
       ]);
 
       let grouped = groupCdeData(
-        'cardano',
+        this.chainName,
         ConfigNetworkType.CARDANO,
         arg.from,
         arg.to,
