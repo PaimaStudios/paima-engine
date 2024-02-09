@@ -67,8 +67,8 @@ export class EvmFunnel extends BaseFunnel implements ChainFunnel {
       }
     }
 
-    // the blocks that are not below the filtered are kept in the cache
-    // TODO: is it fine to do this here, or should it happen at the end?
+    // the blocks that didn't pass the the filter are kept in the cache, so that
+    // the block funnel doesn't get them again.
     chainData.forEach(_ => cachedState.bufferedChainData.shift());
 
     if (chainData.length === 0) {
@@ -91,7 +91,7 @@ export class EvmFunnel extends BaseFunnel implements ChainFunnel {
       }
     }
 
-    const minTimestamp = Math.min(...chainData.map(data => data.timestamp));
+    // TODO: just pick the last item?
     const maxTimestamp = Math.max(...chainData.map(data => data.timestamp));
 
     const blocks = [];
@@ -110,7 +110,9 @@ export class EvmFunnel extends BaseFunnel implements ChainFunnel {
 
       blocks.push(...parallelEvmBlocks);
 
-      if (blocks.length > 0 && blocks[blocks.length - 1].timestamp >= maxTimestamp) {
+      // this has to be > instead of >= because apparently there can be multiple
+      // blocks with the same timestamp (e.g. arbitrum)
+      if (blocks.length > 0 && blocks[blocks.length - 1].timestamp > maxTimestamp) {
         break;
       }
 
@@ -139,47 +141,62 @@ export class EvmFunnel extends BaseFunnel implements ChainFunnel {
     // chainData is sorted by timestamp, so we never need to search old entries,
     // we keep this around to know from where to start searching for a block
     // from the original chain that has a timestamp >= than the current
-    // sidechain block
+    // sidechain block.
     let currIndex = 0;
 
-    for (const block of blocks) {
-      cachedState.timestampToBlockNumber.push([block.timestamp, block.blockNumber]);
+    for (const parallelChainBlock of blocks) {
+      cachedState.timestampToBlockNumber.push([
+        parallelChainBlock.timestamp,
+        parallelChainBlock.blockNumber,
+      ]);
 
       while (currIndex < chainData.length) {
-        if (chainData[currIndex].timestamp >= block.timestamp) {
-          sidechainToMainchainBlockHeightMapping[block.blockNumber] =
+        if (chainData[currIndex].timestamp >= parallelChainBlock.timestamp) {
+          sidechainToMainchainBlockHeightMapping[parallelChainBlock.blockNumber] =
             chainData[currIndex].blockNumber;
 
           mainchainToSidechainBlockHeightMapping[chainData[currIndex].blockNumber] =
-            block.blockNumber;
+            parallelChainBlock.blockNumber;
           break;
         } else {
           currIndex++;
         }
       }
 
-      cachedState.lastBlock = block.blockNumber;
+      cachedState.lastBlock = parallelChainBlock.blockNumber;
     }
 
+    // remove old entries from the timestamp to block mapping, so that it
+    // doesn't grow forever, since it's cached.
     while (true) {
       if (cachedState.timestampToBlockNumber.length === 0) {
         return chainData;
       }
 
-      if (cachedState.timestampToBlockNumber[0][0] < minTimestamp) {
+      // this is the timestamp from the previous round, since every block before
+      // that point should have been included in the range.
+      if (cachedState.timestampToBlockNumber[0][0] <= cachedState.maxTimestamp) {
         cachedState.timestampToBlockNumber.shift();
       } else {
         break;
       }
     }
 
+    cachedState.maxTimestamp = maxTimestamp;
+
     if (!cachedState.timestampToBlockNumber[0]) {
       return chainData;
     }
 
+    // since we removed old entries, the first one has the first block from the
+    // parallel chain that we need to fetch.
     const fromBlock = cachedState.timestampToBlockNumber[0][1];
 
-    let toBlock = getToBlock(cachedState.timestampToBlockNumber, maxTimestamp) || fromBlock;
+    let toBlock =
+      getUpperBoundBlock(cachedState.timestampToBlockNumber, maxTimestamp) ||
+      // this works because we know that there is at least a block in the time
+      // range, because of the previous if/early return.
+      fromBlock;
 
     if (!toBlock || fromBlock < 0 || toBlock < fromBlock) {
       return chainData;
@@ -200,25 +217,40 @@ export class EvmFunnel extends BaseFunnel implements ChainFunnel {
       );
     }
 
+    // This adds the internal even that updates the last block point. This is
+    // mostly to avoid having to do a binary search each time we boot the
+    // engine. Since we need to know from where to start searching for blocks in
+    // the timestamp range.
     for (const chainData of data) {
-      if (!chainData.internalEvents) {
+      const originalBlockNumber = mainchainToSidechainBlockHeightMapping[chainData.blockNumber];
+
+      if (!chainData.internalEvents && originalBlockNumber) {
         chainData.internalEvents = [];
       }
 
-      chainData.internalEvents.push({
-        type: InternalEventType.EvmLastBlock,
-        // this is the block number in the original chain, so that we can resume
-        // from that point later.
-        //
-        // there can be more than one block here, for example, if the main chain
-        // produces a block every 10 seconds, and the parallel chain generates a
-        // block every seconds, then there can be 10 blocks here. The block here
-        // will be the last in the range. Losing the information doesn't matter
-        // because there is a transaction per main chain block, so the result
-        // would be the same.
-        block: mainchainToSidechainBlockHeightMapping[chainData.blockNumber],
-        network: this.chainName,
-      });
+      // it's technically possible for this to be null, because there may not be
+      // a block of the sidechain in between a particular pair of blocks or the
+      // original chain.
+      //
+      // in this case it could be more optimal to set the block number here to
+      // the one in the next block, but it shouldn't make much of a difference.
+      // TODO: is that true?
+      if (originalBlockNumber) {
+        chainData.internalEvents?.push({
+          type: InternalEventType.EvmLastBlock,
+          // this is the block number in the original chain, so that we can resume
+          // from that point later.
+          //
+          // there can be more than one block here, for example, if the main chain
+          // produces a block every 10 seconds, and the parallel chain generates a
+          // block every seconds, then there can be 10 blocks here. The block here
+          // will be the last in the range. Losing the information doesn't matter
+          // because there is a transaction per main chain block, so the result
+          // would be the same.
+          block: originalBlockNumber,
+          network: this.chainName,
+        });
+      }
     }
 
     return data;
@@ -429,6 +461,7 @@ export class EvmFunnel extends BaseFunnel implements ChainFunnel {
     timestampToBlockNumber: [number, number][];
     lastBlock: number | undefined;
     startBlockHeight: number;
+    maxTimestamp: number;
   } {
     const bufferedState = this.sharedData.cacheManager.cacheEntries[
       EvmFunnelCacheEntry.SYMBOL
@@ -492,17 +525,21 @@ async function findBlockByTimestamp(web3: Web3, timestamp: number): Promise<numb
   return low;
 }
 
-function getToBlock(
+// finds the last block in the timestampToBlockNumber collection that is between
+// the range: (-Infinity, maxTimestamp]
+function getUpperBoundBlock(
   timestampToBlockNumber: [number, number][],
   maxTimestamp: number
 ): number | undefined {
   let toBlock: number | undefined = undefined;
 
-  for (let i = timestampToBlockNumber.length; i > 0; i--) {
-    const [ts, toBlockInner] = timestampToBlockNumber[i - 1];
+  for (let i = timestampToBlockNumber.length - 1; i >= 0; i--) {
+    const [ts, toBlockInner] = timestampToBlockNumber[i];
 
-    if (maxTimestamp <= ts) {
+    if (maxTimestamp >= ts) {
       toBlock = toBlockInner;
+      // we are going backwards, so we can stop
+      break;
     }
   }
 

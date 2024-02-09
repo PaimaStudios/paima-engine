@@ -42,7 +42,7 @@ export interface PresyncChainData {
   network: string;
   networkType: ConfigNetworkType;
   blockNumber: number;
-  extensionDatums?: ChainDataExtensionDatum[];
+  extensionDatums: ChainDataExtensionDatum[];
   internalEvents?: InternalEvent[];
 }
 

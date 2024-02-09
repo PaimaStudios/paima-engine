@@ -124,6 +124,7 @@ export class EvmFunnelCacheEntry implements FunnelCacheEntry {
       timestampToBlockNumber: [number, number][];
       lastBlock: number | undefined;
       startBlockHeight: number;
+      maxTimestamp: number;
     }>
   > = {};
   public static readonly SYMBOL = Symbol('EvmFunnelCacheEntry');
@@ -136,7 +137,13 @@ export class EvmFunnelCacheEntry implements FunnelCacheEntry {
   ): void => {
     this.cachedData[chainId] = {
       state: RpcRequestState.HasResult,
-      result: { bufferedChainData, timestampToBlockNumber, startBlockHeight, lastBlock: undefined },
+      result: {
+        bufferedChainData,
+        timestampToBlockNumber,
+        startBlockHeight,
+        lastBlock: undefined,
+        maxTimestamp: 0,
+      },
     };
   };
 
@@ -146,6 +153,7 @@ export class EvmFunnelCacheEntry implements FunnelCacheEntry {
       timestampToBlockNumber: [number, number][];
       lastBlock: number | undefined;
       startBlockHeight: number;
+      maxTimestamp: number;
     }>
   > {
     return (
