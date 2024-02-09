@@ -36,7 +36,15 @@ export class DataMigrations {
     return DataMigrations.pendingMigrations.length;
   }
 
-  public static hasPendingMigration(currentBlock: number): boolean {
+  public static hasPendingMigration(): boolean {
+    return DataMigrations.pendingMigrations.length > 0;
+  }
+
+  public static getPendingMigration(): ReadonlyArray<number> {
+    return DataMigrations.pendingMigrations;
+  }
+
+  public static hasPendingMigrationForBlock(currentBlock: number): boolean {
     if (DataMigrations.pendingMigrations.length === 0) return false;
     // We need only to check the first, pendingMigrations are sorted first to last.
     return DataMigrations.pendingMigrations[0] + ENV.SM_START_BLOCKHEIGHT === currentBlock;

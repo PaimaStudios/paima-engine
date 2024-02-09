@@ -359,7 +359,7 @@ async function blockCoreProcess(
   chainData: ChainData
 ): Promise<boolean> {
   try {
-    if (DataMigrations.hasPendingMigration(chainData.blockNumber)) {
+    if (DataMigrations.hasPendingMigrationForBlock(chainData.blockNumber)) {
       await DataMigrations.applyDataDBMigrations(dbTx, chainData.blockNumber);
     }
     await gameStateMachine.process(dbTx, chainData);
