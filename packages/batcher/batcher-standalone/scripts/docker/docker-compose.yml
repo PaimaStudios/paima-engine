@@ -3,7 +3,7 @@ version: '3.7'
 services:
 
   paima-batcher-db:
-    image: postgres:14
+    image: postgres:16
     container_name: paima-batcher-db
     environment:
       POSTGRES_USER: postgres

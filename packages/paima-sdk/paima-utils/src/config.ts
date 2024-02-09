@@ -110,7 +110,13 @@ export class ENV {
     return process.env.BACKEND_URI || '';
   }
   static get BATCHER_URI(): string {
-    return process.env.BATCHER_URI || '';
+    if (process.env.BATCHER_URI) {
+      return process.env.BATCHER_URI;
+    }
+    if (ENV.NETWORK === 'localhost' && process.env.BATCHER_PORT) {
+      return `http://localhost:${process.env.BATCHER_PORT}`;
+    }
+    return '';
   }
 
   static get CARP_URL(): string | undefined {
