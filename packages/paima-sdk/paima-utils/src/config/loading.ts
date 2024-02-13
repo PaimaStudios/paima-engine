@@ -108,7 +108,7 @@ export async function loadConfig(): Promise<Static<typeof BaseConfigWithDefaults
 
     return config;
   } catch (err) {
-    // doLog(`Invalid config file: ${err}`);
+    doLog(`Invalid config file: ${err}`);
     return undefined;
   }
 }

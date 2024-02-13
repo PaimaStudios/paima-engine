@@ -22,14 +22,12 @@ import {
   RpcRequestState,
 } from '../FunnelCache.js';
 import type { PoolClient } from 'pg';
-import { FUNNEL_PRESYNC_FINISHED } from '@paima/utils';
-import { ConfigNetworkType } from '@paima/utils/src/config/loading.js';
+import { FUNNEL_PRESYNC_FINISHED, ConfigNetworkType } from '@paima/utils';
 import { getMultipleBlockData } from '../../reading.js';
 import { getLatestProcessedCdeBlockheight } from '@paima/db';
 
 const GET_BLOCK_NUMBER_TIMEOUT = 5000;
 
-// INVARIANT:
 export class EvmFunnel extends BaseFunnel implements ChainFunnel {
   config: EvmConfig;
   chainName: string;

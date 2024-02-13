@@ -9,7 +9,7 @@ import type { FunnelSharedData } from '../BaseFunnel.js';
 import { RpcCacheEntry, RpcRequestState } from '../FunnelCache.js';
 import type { PoolClient } from 'pg';
 import { FUNNEL_PRESYNC_FINISHED } from '@paima/utils';
-import { ConfigNetworkType } from '@paima/utils/src/config/loading.js';
+import { ConfigNetworkType } from '@paima/utils';
 
 const GET_BLOCK_NUMBER_TIMEOUT = 5000;
 

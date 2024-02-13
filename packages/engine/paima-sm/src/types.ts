@@ -13,10 +13,10 @@ import type {
   OldERC6551RegistryContract,
   ERC6551RegistryContract,
   InternalEventType,
+  ConfigNetworkType,
 } from '@paima/utils';
 import { Type } from '@sinclair/typebox';
 import type { Static } from '@sinclair/typebox';
-import { ConfigNetworkType } from '@paima/utils/src/config/loading';
 
 export { SubmittedChainData, SubmittedData };
 

@@ -43,7 +43,7 @@ import type {
   GameStateMachineInitializer,
   InternalEvent,
 } from './types.js';
-import { ConfigNetworkType } from '@paima/utils/src/config/loading.js';
+import { ConfigNetworkType } from '@paima/utils';
 import assertNever from 'assert-never';
 
 export * from './types.js';

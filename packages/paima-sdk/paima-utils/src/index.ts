@@ -19,7 +19,7 @@ import {
   ChainDataExtensionDatumType,
 } from './constants.js';
 import { GlobalConfig } from './config/singleton.js';
-import { EvmConfig, CardanoConfig } from './config/loading.js';
+import { EvmConfig, CardanoConfig, ConfigNetworkType } from './config/loading.js';
 
 const { isAddress } = web3UtilsPkg;
 
@@ -50,6 +50,7 @@ export {
   GlobalConfig,
   EvmConfig,
   CardanoConfig,
+  ConfigNetworkType,
 };
 
 export const DEFAULT_GAS_PRICE = '61000000000' as const;

@@ -8,6 +8,7 @@ import {
   GlobalConfig,
   logError,
   timeout,
+  ConfigNetworkType,
 } from '@paima/utils';
 import type { InternalEvent } from '@paima/sm';
 import {
@@ -29,7 +30,6 @@ import { Routes } from '@dcspark/carp-client/shared/routes';
 import { FUNNEL_PRESYNC_FINISHED, InternalEventType } from '@paima/utils';
 import { CarpFunnelCacheEntry } from '../FunnelCache.js';
 import { getCardanoEpoch } from '@paima/db';
-import { ConfigNetworkType } from '@paima/utils/src/config/loading.js';
 
 const delayForWaitingForFinalityLoop = 1000;
 

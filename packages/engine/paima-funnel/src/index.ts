@@ -16,7 +16,7 @@ import type { FunnelSharedData } from './funnels/BaseFunnel.js';
 import { FunnelCacheManager } from './funnels/FunnelCache.js';
 import { wrapToCarpFunnel } from './funnels/carp/funnel.js';
 import { wrapToEvmFunnel } from './funnels/evm/funnel.js';
-import { ConfigNetworkType } from '@paima/utils/src/config/loading.js';
+import { ConfigNetworkType } from '@paima/utils';
 import type Web3 from 'web3';
 
 export class FunnelFactory implements IFunnelFactory {
