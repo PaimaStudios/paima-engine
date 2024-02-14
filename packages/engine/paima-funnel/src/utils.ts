@@ -1,5 +1,5 @@
 import type { ChainData, ChainDataExtensionDatum, PresyncChainData } from '@paima/sm';
-import { ConfigNetworkType } from '@paima/utils';
+import type { ConfigNetworkType } from '@paima/utils';
 
 export function groupCdeData(
   network: string,

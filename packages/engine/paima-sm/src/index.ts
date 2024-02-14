@@ -119,7 +119,9 @@ const SM: GameStateMachineInitializer = {
             dbTx
           );
           if (cdeDataLength > 0) {
-            doLog(`Processed ${cdeDataLength} CDE events in block #${latestCdeData.blockNumber}`);
+            doLog(
+              `[${latestCdeData.network}] Processed ${cdeDataLength} CDE events in block #${latestCdeData.blockNumber}`
+            );
           }
         } else if (latestCdeData.networkType === ConfigNetworkType.CARDANO) {
           const cdeDataLength = await processCardanoCdeData(
@@ -128,7 +130,9 @@ const SM: GameStateMachineInitializer = {
             dbTx
           );
           if (cdeDataLength > 0) {
-            doLog(`Processed ${cdeDataLength} CDE events in slot #${latestCdeData.blockNumber}`);
+            doLog(
+              `[${latestCdeData.network}] Processed ${cdeDataLength} CDE events in slot #${latestCdeData.blockNumber}`
+            );
           }
         }
       },

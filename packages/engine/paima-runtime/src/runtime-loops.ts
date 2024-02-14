@@ -14,9 +14,8 @@ import {
 } from './utils.js';
 import { cleanNoncesIfTime } from './nonce-gc.js';
 import type { PoolClient } from 'pg';
-import { FUNNEL_PRESYNC_FINISHED } from '@paima/utils';
-import type { CardanoConfig } from '@paima/utils/src/config/loading.js';
-import { ConfigNetworkType } from '@paima/utils/src/config/loading.js';
+import { FUNNEL_PRESYNC_FINISHED, ConfigNetworkType } from '@paima/utils';
+import type { CardanoConfig } from '@paima/utils';
 
 // The core logic of paima runtime which polls the funnel and processes the resulting chain data using the game's state machine.
 // Of note, the runtime is designed to continue running/attempting to process the next required block no matter what errors propagate upwards.
@@ -81,11 +80,9 @@ async function runPresync(
 
     for (const network of Object.keys(networks)) {
       if (upper[network] > presyncBlockHeight[network]) {
-        doLog(
-          `${network}: ${JSON.stringify(presyncBlockHeight[network])}-${JSON.stringify(upper[network])}`
-        );
+        doLog(`[presync-round] ${network}: ${presyncBlockHeight[network]}-${upper[network]}`);
       } else {
-        doLog(`${network}: ${JSON.stringify(presyncBlockHeight[network])}`);
+        doLog(`[presync-round] ${network}: ${presyncBlockHeight[network]}`);
       }
     }
 

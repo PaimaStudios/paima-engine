@@ -1,7 +1,6 @@
 import * as fs from 'fs/promises';
 import YAML from 'yaml';
 import type { Static, TSchema } from '@sinclair/typebox';
-import type { ValueErrorType } from '@sinclair/typebox/value';
 import { Value } from '@sinclair/typebox/value';
 import { Type } from '@sinclair/typebox';
 import { ENV, doLog } from '../index.js';
@@ -124,7 +123,6 @@ export function parseConfigFile(configFileData: string): Static<typeof BaseConfi
   return baseConfig;
 }
 
-// TODO: copy pasted code
 function checkOrError<T extends TSchema>(
   name: undefined | string,
   structure: T,
@@ -132,11 +130,9 @@ function checkOrError<T extends TSchema>(
 ): Static<T> {
   // 1) Check if there are any errors since Value.Decode doesn't give error messages
   {
-    const skippableErrors: ValueErrorType[] = [];
-
     const errors = Array.from(Value.Errors(structure, config));
     for (const error of errors) {
-      if (errors.length !== 1 && skippableErrors.find(val => val === error.type) != null) continue;
+      if (errors.length !== 1) continue;
       console.error({
         name: name ?? 'Configuration root',
         path: error.path,
