@@ -360,12 +360,14 @@ export class EvmFunnel extends BaseFunnel implements ChainFunnel {
     let fromBlock = arg.from;
     let toBlock = arg.to;
 
-    if (fromBlock >= this.getState().startBlockHeight) {
+    const startBlockHeight = this.getState().startBlockHeight;
+
+    if (fromBlock >= startBlockHeight) {
       return { ...baseData, [this.chainName]: FUNNEL_PRESYNC_FINISHED };
     }
 
     try {
-      toBlock = Math.min(toBlock, this.getState().startBlockHeight);
+      toBlock = Math.min(toBlock, startBlockHeight - 1);
       fromBlock = Math.max(fromBlock, 0);
       if (fromBlock > toBlock) {
         return baseData;
