@@ -15,7 +15,7 @@ import {
 import { cleanNoncesIfTime } from './nonce-gc.js';
 import type { PoolClient } from 'pg';
 import { FUNNEL_PRESYNC_FINISHED, ConfigNetworkType } from '@paima/utils';
-import type { CardanoConfig } from '@paima/utils';
+import type { CardanoConfig, EvmConfig } from '@paima/utils';
 
 // The core logic of paima runtime which polls the funnel and processes the resulting chain data using the game's state machine.
 // Of note, the runtime is designed to continue running/attempting to process the next required block no matter what errors propagate upwards.
@@ -26,7 +26,6 @@ export async function startRuntime(
   gameStateMachine: GameStateMachine,
   funnelFactory: IFunnelFactory,
   pollingRate: number,
-  presyncStepSize: number,
   startBlockHeight: number,
   stopBlockHeight: number | null,
   emulatedBlocks: boolean
@@ -38,7 +37,6 @@ export async function startRuntime(
     gameStateMachine,
     funnelFactory,
     pollingPeriod,
-    presyncStepSize,
     startBlockHeight,
     emulatedBlocks ? null : stopBlockHeight
   );
@@ -53,7 +51,6 @@ async function runPresync(
   gameStateMachine: GameStateMachine,
   funnelFactory: IFunnelFactory,
   pollingPeriod: number,
-  stepSize: number,
   startBlockHeight: number,
   stopBlockHeight: number | null
 ): Promise<void> {
@@ -75,7 +72,10 @@ async function runPresync(
     const upper = Object.fromEntries(
       Object.entries(presyncBlockHeight)
         .filter(([_network, h]) => h >= 0)
-        .map(([network, h]) => [network, h + stepSize - 1])
+        .map(([network, h]) => [
+          network,
+          h + (networks[network] as EvmConfig | CardanoConfig).presyncStepSize - 1,
+        ])
     );
 
     for (const network of Object.keys(networks)) {
@@ -106,7 +106,7 @@ async function runPresync(
     await loopIfStopBlockReached(presyncBlockHeight[network], stopBlockHeight);
 
     const latestPresyncBlockheight = await gameStateMachine.getPresyncBlockHeight(network);
-    doLog(`[paima-runtime] Presync finished at ${latestPresyncBlockheight}`);
+    doLog(`[paima-runtime] Presync for ${network} finished at ${latestPresyncBlockheight}`);
   }
 
   const latestPresyncSlotHeight = await gameStateMachine.getPresyncCardanoSlotHeight();

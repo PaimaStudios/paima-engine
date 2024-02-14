@@ -139,7 +139,6 @@ async function startSafeRuntime(
         gameStateMachine,
         funnelFactory,
         pollingRate,
-        ENV.DEFAULT_PRESYNC_STEP_SIZE,
         ENV.START_BLOCKHEIGHT,
         stopBlockHeight,
         ENV.EMULATED_BLOCKS

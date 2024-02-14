@@ -27,12 +27,14 @@ export const EvmConfigSchema = Type.Object({
   deployment: Type.String({ default: '' }),
   paimaL2ContractAddress: Type.RegExp(/^0x[0-9a-fA-F]{40}$/i),
   funnelBlockGroupSize: Type.Number({ default: 100 }),
+  presyncStepSize: Type.Number({ default: 1000 }),
 });
 
 export const CardanoConfigSchema = Type.Object({
   carpUrl: Type.String(),
   network: Type.String(),
   confirmationDepth: Type.Number(),
+  presyncStepSize: Type.Number({ default: 1000 }),
 });
 
 export type CardanoConfig = Static<typeof CardanoConfigSchema>;
@@ -51,7 +53,7 @@ export const TaggedConfig = <T extends boolean>(T: T) =>
       ),
     ]),
     Type.Intersect([
-      CardanoConfigSchema,
+      T ? CardanoConfigSchema : Type.Partial(CardanoConfigSchema),
       Type.Object({ type: Type.Literal(ConfigNetworkType.CARDANO) }),
     ]),
   ]);
@@ -73,7 +75,12 @@ const evmConfigDefaults = (blockTime: number | undefined) => ({
   pollingRate: (blockTime || 4) - 0.1,
   deployment: '',
   funnelBlockGroupSize: 100,
+  presyncStepSize: 1000,
 });
+
+const cardanoConfigDefaults = {
+  presyncStepSize: 1000,
+};
 
 export async function loadConfig(): Promise<Static<typeof BaseConfigWithDefaults> | undefined> {
   let configFileData: string;
@@ -100,6 +107,8 @@ export async function loadConfig(): Promise<Static<typeof BaseConfigWithDefaults
           );
           break;
         case ConfigNetworkType.CARDANO:
+          config[network] = Object.assign(cardanoConfigDefaults, networkConfig);
+          break;
         default:
           throw new Error('unknown network type');
       }
