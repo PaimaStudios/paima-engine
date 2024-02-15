@@ -80,9 +80,13 @@ async function runPresync(
 
     for (const network of Object.keys(networks)) {
       if (upper[network] > presyncBlockHeight[network]) {
-        doLog(`[presync-round] ${network}: ${presyncBlockHeight[network]}-${upper[network]}`);
+        doLog(
+          `[paima-runtime] Fetching data from ${network} in range: ${presyncBlockHeight[network]}-${upper[network]}`
+        );
       } else {
-        doLog(`[presync-round] ${network}: ${presyncBlockHeight[network]}`);
+        doLog(
+          `[paima-runtime] Fetching data from ${network} in block: ${presyncBlockHeight[network]}`
+        );
       }
     }
 
