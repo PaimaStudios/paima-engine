@@ -239,7 +239,6 @@ export class EvmFunnel extends BaseFunnel implements ChainFunnel {
       //
       // in this case it could be more optimal to set the block number here to
       // the one in the next block, but it shouldn't make much of a difference.
-      // TODO: is that true?
       if (originalBlockNumber) {
         chainData.internalEvents?.push({
           type: InternalEventType.EvmLastBlock,
