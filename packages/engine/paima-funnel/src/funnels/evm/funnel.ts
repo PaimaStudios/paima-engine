@@ -90,7 +90,7 @@ export class EvmFunnel extends BaseFunnel implements ChainFunnel {
         const block = await this.sharedData.web3.eth.getBlock(chainData[0].blockNumber - 1);
 
         const ts = Number(block.timestamp);
-        cachedState.lastBlock = (await findBlockByTimestamp(this.web3, ts)) - 1;
+        cachedState.lastBlock = (await findBlockByTimestamp(this.web3, ts, this.chainName)) - 1;
       }
     }
 
@@ -434,7 +434,8 @@ export class EvmFunnel extends BaseFunnel implements ChainFunnel {
 
       const mappedStartingBlockHeight = await findBlockByTimestamp(
         web3,
-        Number(startingBlock.timestamp)
+        Number(startingBlock.timestamp),
+        chainName
       );
 
       evmCacheEntry.updateState(config.chainId, [], [], mappedStartingBlockHeight);
@@ -508,7 +509,11 @@ export async function wrapToEvmFunnel(
 }
 
 // performs binary search to find the corresponding block
-async function findBlockByTimestamp(web3: Web3, timestamp: number): Promise<number> {
+async function findBlockByTimestamp(
+  web3: Web3,
+  timestamp: number,
+  chainName: string
+): Promise<number> {
   let low = 0;
   let high = Number(await web3.eth.getBlockNumber()) + 1;
 
@@ -528,7 +533,9 @@ async function findBlockByTimestamp(web3: Web3, timestamp: number): Promise<numb
     }
   }
 
-  doLog(`EVM CDE funnel: Found block ${low} by binary search with #${requests} requests`);
+  doLog(
+    `EVM CDE funnel: Found block #${low} on ${chainName} by binary search with ${requests} requests`
+  );
 
   return low;
 }
