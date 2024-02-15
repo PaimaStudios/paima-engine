@@ -24,7 +24,6 @@ export const EvmConfigSchema = Type.Object({
   //ENV.BLOCK_TIME - 0.1
   blockTime: Type.Number({ default: 4 }),
   pollingRate: Type.Number({ default: 4 - 0.1 }),
-  deployment: Type.String({ default: '' }),
   paimaL2ContractAddress: Type.RegExp(/^0x[0-9a-fA-F]{40}$/i),
   funnelBlockGroupSize: Type.Number({ default: 100 }),
   presyncStepSize: Type.Number({ default: 1000 }),
@@ -73,7 +72,6 @@ const evmConfigDefaults = (blockTime: number | undefined) => ({
   chainCurrencyDecimals: 0,
   blockTime: 4,
   pollingRate: (blockTime || 4) - 0.1,
-  deployment: '',
   funnelBlockGroupSize: 100,
   presyncStepSize: 1000,
 });
