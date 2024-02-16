@@ -10,7 +10,7 @@ export * from './config.js';
 export * from './config-validation.js';
 export * from './types.js';
 export * from './version.js';
-import ethers from 'ethers';
+import { ethers } from 'ethers';
 
 export let keepRunning: boolean;
 
@@ -111,9 +111,9 @@ export async function getWalletWeb3AndAddress(
 
   return await EthersConnector.instance().connectExternal(
     {
-      gameName: "foo",
+      gameName: 'foo',
       gameChainId: undefined,
     },
-    (signer as any) // todo: wallet should be a signer, but this fails for some reason
+    signer as any // todo: wallet should be a signer, but this fails for some reason
   );
 }

@@ -13,7 +13,7 @@ import { estimateGasLimit } from './gas-limit.js';
 import { hashBatchSubunit, buildBatchData } from '@paima/concise';
 import { wait } from '@paima/utils';
 import { utf8ToHex } from 'web3-utils';
-import ethers from 'ethers';
+import { ethers } from 'ethers';
 import paimaL2ContractBuild from './PaimaL2Contract.js';
 
 class BatchedTransactionPoster {
@@ -22,28 +22,29 @@ class BatchedTransactionPoster {
   private maxSize: number;
   private pool: Pool;
   private fee: string;
-  private storage: ethers.ethers.Contract;
+  private storage: ethers.Contract;
 
-  constructor(
-    provider: EthersEvmProvider,
-    contractAddress: string,
-    maxSize: number,
-    pool: Pool
-  ) {
+  constructor(provider: EthersEvmProvider, contractAddress: string, maxSize: number, pool: Pool) {
     this.provider = provider;
     this.contractAddress = contractAddress;
     this.maxSize = maxSize;
     this.pool = pool;
     this.fee = ENV.DEFAULT_FEE;
     // TODO: replace this with something more proper
-    this.storage = new ethers.Contract(contractAddress, paimaL2ContractBuild.abi, 
+    console.log('Proider?');
+    console.log(provider.getConnection().api);
+    this.storage = new ethers.Contract(
+      contractAddress,
+      paimaL2ContractBuild.abi,
       provider.getConnection().api as any
     );
   }
 
   public initialize = async (): Promise<void> => {
     try {
-      this.fee = await this.storage.fee().call();
+      this.fee = await this.storage.fee();
+      console.log('Fetched fee');
+      console.log(this.fee);
     } catch (err) {
       console.log(
         '[batcher-transaction-poster] Error while retrieving fee, reverting to default:',
@@ -90,15 +91,14 @@ class BatchedTransactionPoster {
     const hexMsg = utf8ToHex(msg);
     // todo: @paima/provider should probably return block info instead of just tx hash
     // so we don't have to copy-paste this
-    const nonce = await this.provider.getConnection().api.getTransactionCount(
-      this.provider.getAddress().address
-    );
+    const nonce = await (this.provider.getConnection().api as any).getNonce();
     const result = await this.provider.getConnection().api.sendTransaction({
-      data: this.storage.methods.paimaSubmitGameInput(hexMsg).encodeABI(),
+      data: (await this.storage.paimaSubmitGameInput(hexMsg)).encodeABI(),
       to: this.contractAddress,
-      from: this.provider.getAddress().address,
-      value: '0x' + Number(this.fee).toString(16),
+      // from: this.provider.getAddress().address,
+      value: '200000000000000000', // TODO: don't use a harcoded value for this
       gasLimit: estimateGasLimit(msg.length),
+      gasPrice: 61000000000,
       nonce,
     });
     return [result.blockNumber!, result.hash];

@@ -18,7 +18,7 @@ import { initWeb3, AddressType, getReadNamespaces } from '@paima/utils';
 import assertNever from 'assert-never';
 import { query, getErrorResponse } from '@dcspark/carp-client/client/src/index';
 import { Routes } from '@dcspark/carp-client/shared/routes';
-import ethers from 'ethers';
+import { ethers } from 'ethers';
 
 // todo: should be in @paima/crypto
 export class EthersEvmCrypto implements IVerify {
@@ -44,7 +44,7 @@ export class EthersEvmCrypto implements IVerify {
 }
 
 class PaimaAddressValidator {
-  private web3: ethers.ethers.JsonRpcProvider | undefined;
+  private web3: ethers.JsonRpcProvider | undefined;
   private nodeUrl: string;
   private pool: Pool;
 
@@ -100,7 +100,7 @@ class PaimaAddressValidator {
       case AddressType.EVM: {
         if (this.web3 == null)
           throw new Error(`[address-validator] web3 not initialized before address validations`);
-        return await (new EthersEvmCrypto()).verifyAddress(address);
+        return await new EthersEvmCrypto().verifyAddress(address);
       }
       case AddressType.CARDANO:
         return await CryptoManager.Cardano().verifyAddress(address);
@@ -130,7 +130,7 @@ class PaimaAddressValidator {
           if (!this.web3) {
             throw new Error('[PaimaAddressValidator::verifySignature] web3 not initialized!');
           }
-          return await (new EthersEvmCrypto()).verifySignature(
+          return await new EthersEvmCrypto().verifySignature(
             input.userAddress,
             message,
             input.userSignature
