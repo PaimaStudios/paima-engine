@@ -30,6 +30,11 @@ const bodyParser = express.json();
 server.use(cors());
 server.use(bodyParser);
 
+let blockHeightCache = {
+  height: 0,
+  time: 0,
+};
+
 type TrackUserInputRequest = {
   input_hash: string;
 };
@@ -373,12 +378,20 @@ async function initializeServer(
         // TODO: cache this so we don't end up querying it too often
         let blockHeight = null;
         while (blockHeight == null) {
-          try {
-            blockHeight = await truffleProvider.web3.eth.getBlockNumber();
-          } catch (e) {
-            console.error('getBlockNumber failed. Will retry');
-            console.error(e);
-            await wait(1000);
+          const now = new Date().getTime();
+          if (now - blockHeightCache.time < 60 * 1000) {
+            blockHeight = blockHeightCache.height;
+          } else {
+            console.log('BlockNumber cache miss');
+            try {
+              blockHeight = await truffleProvider.web3.eth.getBlockNumber();
+              blockHeightCache.height = blockHeight;
+              blockHeightCache.time = new Date().getTime();
+            } catch (e) {
+              console.error('getBlockNumber failed. Will retry');
+              console.error(e);
+              await wait(1000);
+            }
           }
         }
         const validity = await addressValidator.validateUserInput(input, blockHeight);
