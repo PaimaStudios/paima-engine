@@ -1,4 +1,3 @@
-import type Web3 from 'web3';
 import type { Pool } from 'pg';
 
 import { addressTypeName, GenericRejectionCode, ENV } from '@paima/batcher-utils';
@@ -13,15 +12,39 @@ import {
 
 import { isSameDay, isSameMinute } from './date-utils.js';
 import type { BatchedSubunit } from '@paima/concise';
-import { CryptoManager } from '@paima/crypto';
+import { CryptoManager, IVerify } from '@paima/crypto';
 import { createMessageForBatcher } from '@paima/concise';
 import { initWeb3, AddressType, getReadNamespaces } from '@paima/utils';
 import assertNever from 'assert-never';
 import { query, getErrorResponse } from '@dcspark/carp-client/client/src/index';
 import { Routes } from '@dcspark/carp-client/shared/routes';
+import ethers from 'ethers';
+
+// todo: should be in @paima/crypto
+export class EthersEvmCrypto implements IVerify {
+  constructor() {}
+
+  verifyAddress = async (address: string): Promise<boolean> => {
+    // TODO: improve
+    return await Promise.resolve(/^0x[0-9A-Fa-f]+$/.test(address));
+  };
+  verifySignature = async (
+    userAddress: string,
+    message: string,
+    signature: string
+  ): Promise<boolean> => {
+    try {
+      const recoveredAddr = ethers.verifyMessage(message, signature);
+      return await Promise.resolve(recoveredAddr.toLowerCase() === userAddress.toLowerCase());
+    } catch (err) {
+      console.error('[address-validator] error verifying cardano signature:', err);
+      return await Promise.resolve(false);
+    }
+  };
+}
 
 class PaimaAddressValidator {
-  private web3: Web3 | undefined;
+  private web3: ethers.ethers.JsonRpcProvider | undefined;
   private nodeUrl: string;
   private pool: Pool;
 
@@ -32,7 +55,7 @@ class PaimaAddressValidator {
   }
 
   public initialize = async (): Promise<void> => {
-    this.web3 = await initWeb3(this.nodeUrl);
+    this.web3 = new ethers.JsonRpcProvider(this.nodeUrl);
   };
 
   public validateUserInput = async (input: BatchedSubunit, height: number): Promise<ErrorCode> => {
@@ -77,7 +100,7 @@ class PaimaAddressValidator {
       case AddressType.EVM: {
         if (this.web3 == null)
           throw new Error(`[address-validator] web3 not initialized before address validations`);
-        return await CryptoManager.Evm(this.web3).verifyAddress(address);
+        return await (new EthersEvmCrypto()).verifyAddress(address);
       }
       case AddressType.CARDANO:
         return await CryptoManager.Cardano().verifyAddress(address);
@@ -107,7 +130,7 @@ class PaimaAddressValidator {
           if (!this.web3) {
             throw new Error('[PaimaAddressValidator::verifySignature] web3 not initialized!');
           }
-          return await CryptoManager.Evm(this.web3).verifySignature(
+          return await (new EthersEvmCrypto()).verifySignature(
             input.userAddress,
             message,
             input.userSignature

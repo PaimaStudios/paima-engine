@@ -14,7 +14,7 @@ import {
 } from '@paima/batcher-db';
 import { ENV, keepRunning, setWebserverClosed, unsetWebserverClosed } from '@paima/batcher-utils';
 import type { ErrorMessageFxn } from '@paima/batcher-utils';
-import type { TruffleEvmProvider } from '@paima/providers';
+import type { EthersEvmProvider } from '@paima/providers';
 import type { BatchedSubunit } from '@paima/concise';
 import { createMessageForBatcher } from '@paima/concise';
 import { AddressType, getWriteNamespace, wait } from '@paima/utils';
@@ -109,7 +109,7 @@ TODO: This will be fixed in express v5 when it comes out
 async function initializeServer(
   pool: Pool,
   errorCodeToMessage: ErrorMessageFxn,
-  truffleProvider: TruffleEvmProvider
+  provider: EthersEvmProvider
 ): Promise<void> {
   const [chainName, config] = await GlobalConfig.mainEvmConfig();
   const addressValidator = new AddressValidator(config.chainUri, pool);
@@ -235,11 +235,11 @@ async function initializeServer(
           gameInput,
           millisecondTimestamp
         );
-        const userSignature = await truffleProvider.signMessage(message);
+        const userSignature = await provider.signMessage(message);
 
         const input: BatchedSubunit = {
           addressType,
-          userAddress: truffleProvider.getAddress().address,
+          userAddress: provider.getAddress().address,
           gameInput,
           millisecondTimestamp,
           userSignature,
@@ -278,7 +278,7 @@ async function initializeServer(
           await insertValidatedInput.run(
             {
               address_type: addressType,
-              user_address: truffleProvider.getAddress().address,
+              user_address: provider.getAddress().address,
               game_input: gameInput,
               millisecond_timestamp: millisecondTimestamp,
               user_signature: userSignature,
@@ -384,7 +384,7 @@ async function initializeServer(
           } else {
             console.log('BlockNumber cache miss');
             try {
-              blockHeight = await truffleProvider.web3.eth.getBlockNumber();
+              blockHeight = await provider.getConnection().api.provider!.getBlockNumber();
               blockHeightCache.height = blockHeight;
               blockHeightCache.time = new Date().getTime();
             } catch (e) {
@@ -455,10 +455,10 @@ async function initializeServer(
 async function startServer(
   _pool: Pool,
   errorCodeToMessage: ErrorMessageFxn,
-  truffleProvider: TruffleEvmProvider
+  provider: EthersEvmProvider
 ): Promise<void> {
   pool = _pool;
-  await initializeServer(pool, errorCodeToMessage, truffleProvider);
+  await initializeServer(pool, errorCodeToMessage, provider);
   setWebserverClosed();
   server.listen(port, () => {
     console.log(`server started at http://localhost:${port}`);

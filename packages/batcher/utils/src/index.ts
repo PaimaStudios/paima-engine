@@ -1,7 +1,5 @@
-import type Web3 from 'web3';
-import HDWalletProvider from '@truffle/hdwallet-provider';
-import type { TruffleEvmProvider } from '@paima/providers';
-import { TruffleConnector } from '@paima/providers';
+import type { EthersEvmProvider } from '@paima/providers';
+import { EthersConnector } from '@paima/providers';
 
 import { GenericRejectionCode } from './types.js';
 
@@ -12,8 +10,7 @@ export * from './config.js';
 export * from './config-validation.js';
 export * from './types.js';
 export * from './version.js';
-
-export type { Web3 };
+import ethers from 'ethers';
 
 export let keepRunning: boolean;
 
@@ -84,13 +81,13 @@ export async function getAndConfirmWeb3(
   nodeUrl: string,
   privateKey: string,
   retryPeriodMs: number
-): Promise<TruffleEvmProvider> {
+): Promise<EthersEvmProvider> {
   while (true) {
     try {
-      const truffleProvider = await getWalletWeb3AndAddress(nodeUrl, privateKey);
+      const provider = await getWalletWeb3AndAddress(nodeUrl, privateKey);
       // just test the connection worked
-      await truffleProvider.web3.eth.getBlockNumber();
-      return truffleProvider;
+      await provider.getConnection().api.provider!.getBlockNumber();
+      return provider;
     } catch (err) {
       console.log('Unable to reinitialize web3:', err);
       console.log(`Retrying in ${retryPeriodMs} ms...`);
@@ -102,40 +99,21 @@ export async function getAndConfirmWeb3(
 export async function getWalletWeb3AndAddress(
   nodeUrl: string,
   privateKey: string
-): Promise<TruffleEvmProvider> {
-  // retyping to any seems to be needed because initialize is private
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const origInit = (HDWalletProvider.prototype as any).initialize;
-  // retyping to any seems to be needed because initialize is private
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (HDWalletProvider.prototype as any).initialize = async function (): Promise<void> {
-    while (true) {
-      try {
-        // eslint-disable-next-line @typescript-eslint/return-await
-        return await origInit.call(this);
-      } catch (e) {
-        console.log('origInit failed');
-        console.log(e);
-      }
-      await wait(1000);
-    }
-  };
+): Promise<EthersEvmProvider> {
+  const wallet = new ethers.Wallet(privateKey);
 
-  const wallet = new HDWalletProvider({
-    privateKeys: [privateKey],
-    providerOrUrl: nodeUrl,
-    pollingInterval: POLLING_INTERVAL,
-  });
-  // retyping to any seems to be needed because initialize is private
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (wallet.engine as any)._blockTracker.on('error', (err: any) => {
-    console.log('BlockTracker error', err);
-  });
-  // retyping to any seems to be needed because initialize is private
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (wallet.engine as any).on('error', (err: any) => {
-    console.log('Web3ProviderEngine error', err);
-  });
+  // To interact with the Ethereum network, you'll need a provider. Here we use ethers' default provider.
+  // Alternatively, you can specify a provider, e.g., connecting to the mainnet or a testnet through Infura
+  const provider = new ethers.JsonRpcProvider(nodeUrl);
 
-  return await TruffleConnector.instance().connectExternal(wallet);
+  // Connect your wallet to the provider to enable network interactions
+  const signer = wallet.connect(provider);
+
+  return await EthersConnector.instance().connectExternal(
+    {
+      gameName: "foo",
+      gameChainId: undefined,
+    },
+    (signer as any) // todo: wallet should be a signer, but this fails for some reason
+  );
 }

@@ -7,38 +7,43 @@ import {
   updateStateRejected,
 } from '@paima/batcher-db';
 import { keepRunning, ENV, gameInputValidatorClosed, webserverClosed } from '@paima/batcher-utils';
-import type { TruffleEvmProvider } from '@paima/providers';
+import type { EthersEvmProvider } from '@paima/providers';
 
 import { estimateGasLimit } from './gas-limit.js';
 import { hashBatchSubunit, buildBatchData } from '@paima/concise';
-import { getPaimaL2Contract, wait } from '@paima/utils';
-import type { PaimaL2Contract } from '@paima/utils';
+import { wait } from '@paima/utils';
+import { utf8ToHex } from 'web3-utils';
+import ethers from 'ethers';
+import paimaL2ContractBuild from './PaimaL2Contract.js';
 
 class BatchedTransactionPoster {
-  private truffleProvider: TruffleEvmProvider;
+  private provider: EthersEvmProvider;
   private contractAddress: string;
   private maxSize: number;
   private pool: Pool;
   private fee: string;
-  private storage: PaimaL2Contract;
+  private storage: ethers.ethers.Contract;
 
   constructor(
-    truffleProvider: TruffleEvmProvider,
+    provider: EthersEvmProvider,
     contractAddress: string,
     maxSize: number,
     pool: Pool
   ) {
-    this.truffleProvider = truffleProvider;
+    this.provider = provider;
     this.contractAddress = contractAddress;
     this.maxSize = maxSize;
     this.pool = pool;
     this.fee = ENV.DEFAULT_FEE;
-    this.storage = getPaimaL2Contract(this.contractAddress, truffleProvider.web3);
+    // TODO: replace this with something more proper
+    this.storage = new ethers.Contract(contractAddress, paimaL2ContractBuild.abi, 
+      provider.getConnection().api as any
+    );
   }
 
   public initialize = async (): Promise<void> => {
     try {
-      this.fee = await this.storage.methods.fee().call();
+      this.fee = await this.storage.fee().call();
     } catch (err) {
       console.log(
         '[batcher-transaction-poster] Error while retrieving fee, reverting to default:',
@@ -77,22 +82,26 @@ class BatchedTransactionPoster {
     }
   };
 
-  public updateWeb3 = (newTruffleProvider: TruffleEvmProvider): void => {
-    this.truffleProvider = newTruffleProvider;
+  public updateWeb3 = (newProvider: EthersEvmProvider): void => {
+    this.provider = newProvider;
   };
 
   private postMessage = async (msg: string): Promise<[number, string]> => {
-    const hexMsg = this.truffleProvider.web3.utils.utf8ToHex(msg);
-    const tx = {
+    const hexMsg = utf8ToHex(msg);
+    // todo: @paima/provider should probably return block info instead of just tx hash
+    // so we don't have to copy-paste this
+    const nonce = await this.provider.getConnection().api.getTransactionCount(
+      this.provider.getAddress().address
+    );
+    const result = await this.provider.getConnection().api.sendTransaction({
       data: this.storage.methods.paimaSubmitGameInput(hexMsg).encodeABI(),
       to: this.contractAddress,
-      from: this.truffleProvider.getAddress().address,
-      value: this.truffleProvider.web3.utils.numberToHex(this.fee),
-      gas: estimateGasLimit(msg.length),
-    };
-    return await this.truffleProvider.web3.eth
-      .sendTransaction(tx)
-      .then(receipt => [receipt.blockNumber, receipt.transactionHash]);
+      from: this.provider.getAddress().address,
+      value: '0x' + Number(this.fee).toString(16),
+      gasLimit: estimateGasLimit(msg.length),
+      nonce,
+    });
+    return [result.blockNumber!, result.hash];
   };
 
   // Returns number of input successfully posted, or a negative number on failure.

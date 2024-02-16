@@ -8,7 +8,7 @@ import GameInputValidator, {
   getErrors,
 } from '@paima/batcher-game-input-validator';
 
-import type { TruffleEvmProvider } from '@paima/providers';
+import type { EthersEvmProvider } from '@paima/providers';
 import {
   ENV,
   getWalletWeb3AndAddress,
@@ -102,13 +102,13 @@ const BatcherRuntime: BatcherRuntimeInitializer = {
       async run(
         gameInputValidator: GameInputValidator,
         batchedTransactionPoster: BatchedTransactionPoster,
-        truffleProvider: TruffleEvmProvider
+        provider: EthersEvmProvider
       ): Promise<void> {
         // pass endpoints to web server and run
 
         // do not await on these as they may run forever
         void Promise.all([
-          startServer(pool, errorCodeToMessage, truffleProvider).catch(e => {
+          startServer(pool, errorCodeToMessage, provider).catch(e => {
             console.log('Uncaught error in startServer');
             console.log(e);
             throw e;
@@ -160,17 +160,17 @@ async function main(): Promise<void> {
   }
 
   const pool = initializePool();
-  const truffleProvider = await getWalletWeb3AndAddress(ENV.CHAIN_URI, privateKey);
+  const provider = await getWalletWeb3AndAddress(ENV.CHAIN_URI, privateKey);
 
   console.log('Chain URI:              ', ENV.CHAIN_URI);
   console.log('Validation type:        ', ENV.GAME_INPUT_VALIDATION_TYPE);
   console.log('PaimaL2Contract address:', ENV.CONTRACT_ADDRESS);
-  console.log('Batcher account address:', truffleProvider.getAddress());
+  console.log('Batcher account address:', provider.getAddress());
 
   const gameInputValidatorCore = await getValidatorCore(ENV.GAME_INPUT_VALIDATION_TYPE);
   const gameInputValidator = new GameInputValidator(gameInputValidatorCore, pool);
   const batchedTransactionPoster = new BatchedTransactionPoster(
-    truffleProvider,
+    provider,
     ENV.CONTRACT_ADDRESS,
     ENV.BATCHED_MESSAGE_SIZE_LIMIT,
     pool
@@ -181,7 +181,7 @@ async function main(): Promise<void> {
   const runtime = BatcherRuntime.initialize(pool);
 
   requestStart();
-  await runtime.run(gameInputValidator, batchedTransactionPoster, truffleProvider);
+  await runtime.run(gameInputValidator, batchedTransactionPoster, provider);
 }
 
 void main();
