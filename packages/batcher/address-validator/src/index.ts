@@ -22,8 +22,6 @@ import { ethers } from 'ethers';
 
 // todo: should be in @paima/crypto
 export class EthersEvmCrypto implements IVerify {
-  constructor() {}
-
   verifyAddress = async (address: string): Promise<boolean> => {
     // TODO: improve
     return await Promise.resolve(/^0x[0-9A-Fa-f]+$/.test(address));
@@ -37,7 +35,7 @@ export class EthersEvmCrypto implements IVerify {
       const recoveredAddr = ethers.verifyMessage(message, signature);
       return await Promise.resolve(recoveredAddr.toLowerCase() === userAddress.toLowerCase());
     } catch (err) {
-      console.error('[address-validator] error verifying cardano signature:', err);
+      console.error('[address-validator] error verifying evm signature:', err);
       return await Promise.resolve(false);
     }
   };

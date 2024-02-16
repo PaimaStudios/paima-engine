@@ -114,6 +114,6 @@ export async function getWalletWeb3AndAddress(
       gameName: 'foo',
       gameChainId: undefined,
     },
-    signer // todo: wallet should be a signer, but this fails for some reason
+    signer
   );
 }
