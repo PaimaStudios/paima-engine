@@ -15,7 +15,7 @@ mv "$STANDALONE_DIR/dev-paima-batcher-macos" "$STANDALONE_DIR/$SUBDIR_BIN/" 2>/d
 cp -r "./scripts/docker/." "$STANDALONE_DIR/$SUBDIR/"
 
 # default env vars
-ENV_TEMPLATE=.env.devnet
+ENV_TEMPLATE=.env.localhost
 cp "../$ENV_TEMPLATE" "$STANDALONE_DIR/$SUBDIR/$ENV_TEMPLATE"
 
 # SQL initialization
