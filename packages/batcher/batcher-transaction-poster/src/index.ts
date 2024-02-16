@@ -144,6 +144,7 @@ class BatchedTransactionPoster {
   private buildBatchedTransaction = async (hashes: string[], ids: number[]): Promise<string> => {
     const validatedInputs = await getValidatedInputs.run(undefined, this.pool);
 
+    console.log('buildBatchedTransaction', validatedInputs, keepRunning);
     if (!keepRunning) {
       return '';
     }
