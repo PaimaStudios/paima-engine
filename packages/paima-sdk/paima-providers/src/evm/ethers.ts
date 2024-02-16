@@ -1,5 +1,5 @@
-import type { Signer } from '@ethersproject/abstract-signer';
-import type { TransactionRequest } from '@ethersproject/abstract-provider';
+import type { Signer } from 'ethers';
+import type { TransactionRequest } from 'ethers';
 import type {
   ActiveConnection,
   AddressAndType,
@@ -78,7 +78,7 @@ export class EthersEvmProvider implements IProvider<EthersApi> {
     return signature;
   };
   sendTransaction = async (tx: TransactionRequest): Promise<string> => {
-    const nonce = await this.conn.api.getTransactionCount(this.address);
+    const nonce = await this.conn.api.getNonce();
     const finalTx = {
       ...tx,
       nonce,

@@ -5,12 +5,12 @@ import { GenericRejectionCode } from './types.js';
 
 import { AddressType, wait } from '@paima/utils';
 import assertNever from 'assert-never';
+import { ethers } from 'ethers';
 
 export * from './config.js';
 export * from './config-validation.js';
 export * from './types.js';
 export * from './version.js';
-import { ethers } from 'ethers';
 
 export let keepRunning: boolean;
 
@@ -114,6 +114,6 @@ export async function getWalletWeb3AndAddress(
       gameName: 'foo',
       gameChainId: undefined,
     },
-    signer as any // todo: wallet should be a signer, but this fails for some reason
+    signer // todo: wallet should be a signer, but this fails for some reason
   );
 }

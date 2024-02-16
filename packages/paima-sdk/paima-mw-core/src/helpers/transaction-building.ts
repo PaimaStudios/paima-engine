@@ -32,7 +32,7 @@ function getTxTemplate<T extends keyof PaimaL2Contract['methods']>(
 type CommonTransactionRequest = {
   to?: string;
   from: string;
-  nonce?: string;
+  nonce?: number;
 
   gasPrice?: string;
 

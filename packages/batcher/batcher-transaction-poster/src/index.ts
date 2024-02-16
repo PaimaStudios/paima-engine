@@ -36,7 +36,7 @@ class BatchedTransactionPoster {
     this.storage = new ethers.Contract(
       contractAddress,
       paimaL2ContractBuild.abi,
-      provider.getConnection().api as any
+      provider.getConnection().api
     );
   }
 
@@ -91,14 +91,17 @@ class BatchedTransactionPoster {
     const hexMsg = utf8ToHex(msg);
     // todo: @paima/provider should probably return block info instead of just tx hash
     // so we don't have to copy-paste this
-    const nonce = await (this.provider.getConnection().api as any).getNonce();
+    const nonce = await this.provider.getConnection().api.getNonce();
+    const iface = new ethers.Interface([
+      'function paimaSubmitGameInput(bytes calldata data) payable',
+    ]);
+    const encodedData = iface.encodeFunctionData('paimaSubmitGameInput', [hexMsg]);
     const result = await this.provider.getConnection().api.sendTransaction({
-      data: (await this.storage.paimaSubmitGameInput(hexMsg)).encodeABI(),
+      data: encodedData,
       to: this.contractAddress,
-      // from: this.provider.getAddress().address,
-      value: '200000000000000000', // TODO: don't use a harcoded value for this
+      from: this.provider.getAddress().address,
+      value: '0x' + Number(this.fee).toString(16),
       gasLimit: estimateGasLimit(msg.length),
-      gasPrice: 61000000000,
       nonce,
     });
     return [result.blockNumber!, result.hash];
