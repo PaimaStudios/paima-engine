@@ -102,15 +102,28 @@ const BatcherRuntime: BatcherRuntimeInitializer = {
       async run(
         gameInputValidator: GameInputValidator,
         batchedTransactionPoster: BatchedTransactionPoster,
-        truffleProivder: TruffleEvmProvider
+        truffleProvider: TruffleEvmProvider
       ): Promise<void> {
         // pass endpoints to web server and run
 
         // do not await on these as they may run forever
         void Promise.all([
-          startServer(pool, errorCodeToMessage, truffleProivder),
-          gameInputValidator.run(ENV.GAME_INPUT_VALIDATOR_PERIOD),
-          batchedTransactionPoster.run(ENV.BATCHED_TRANSACTION_POSTER_PERIOD),
+          startServer(pool, errorCodeToMessage, truffleProvider).catch(e => {
+            console.log('Uncaught error in startServer');
+            console.log(e);
+            throw e;
+          }),
+          gameInputValidator.run(ENV.GAME_INPUT_VALIDATOR_PERIOD).catch(e => {
+            console.log('Uncaught error in gameInputValidator');
+            console.log(e);
+            throw e;
+          }),
+          ,
+          batchedTransactionPoster.run(ENV.BATCHED_TRANSACTION_POSTER_PERIOD).catch(e => {
+            console.log('Uncaught error in batchedTransactionPoster');
+            console.log(e);
+            throw e;
+          }),
         ]);
       },
     };

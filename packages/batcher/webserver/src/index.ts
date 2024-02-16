@@ -17,7 +17,7 @@ import type { ErrorMessageFxn } from '@paima/batcher-utils';
 import type { TruffleEvmProvider } from '@paima/providers';
 import type { BatchedSubunit } from '@paima/concise';
 import { createMessageForBatcher } from '@paima/concise';
-import { AddressType, getWriteNamespace } from '@paima/utils';
+import { AddressType, getWriteNamespace, wait } from '@paima/utils';
 import { hashBatchSubunit } from '@paima/concise';
 import { GlobalConfig } from '@paima/utils';
 
@@ -371,7 +371,16 @@ async function initializeServer(
         }
 
         // TODO: cache this so we don't end up querying it too often
-        const blockHeight = await truffleProvider.web3.eth.getBlockNumber();
+        let blockHeight = null;
+        while (blockHeight == null) {
+          try {
+            blockHeight = await truffleProvider.web3.eth.getBlockNumber();
+          } catch (e) {
+            console.error('getBlockNumber failed. Will retry');
+            console.error(e);
+            await wait(1000);
+          }
+        }
         const validity = await addressValidator.validateUserInput(input, blockHeight);
 
         if (!keepRunning) {

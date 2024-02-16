@@ -51,6 +51,7 @@ class BatchedTransactionPoster {
   public run = async (periodMs: number): Promise<void> => {
     while (keepRunning) {
       try {
+        console.log('[BatchedTransactionPoster::run] posting start');
         const postedInputCount = await this.postingRound();
         if (!keepRunning) {
           break;
@@ -65,6 +66,7 @@ class BatchedTransactionPoster {
         }
         await wait(periodMs);
       }
+      console.log('[BatchedTransactionPoster::run] run end');
     }
 
     while (true) {
@@ -118,6 +120,8 @@ class BatchedTransactionPoster {
         blockHeight = postedMessage[0];
         transactionHash = postedMessage[1];
       } catch (postError) {
+        console.error('Transaction batch failed. Cleaning up...');
+        console.error(postError);
         await this.rejectPostedStates(hashes);
         await this.deletePostedInputs(ids);
         return ids.length;
@@ -144,18 +148,19 @@ class BatchedTransactionPoster {
   private buildBatchedTransaction = async (hashes: string[], ids: number[]): Promise<string> => {
     const validatedInputs = await getValidatedInputs.run(undefined, this.pool);
 
-    console.log('buildBatchedTransaction', validatedInputs, keepRunning);
+    const truncatedInputs = validatedInputs.slice(0, Math.min(10, validatedInputs.length));
+    console.log('buildBatchedTransaction', truncatedInputs, keepRunning);
     if (!keepRunning) {
       return '';
     }
 
-    if (validatedInputs.length === 0) {
+    if (truncatedInputs.length === 0) {
       return '';
     }
 
     const batchData = buildBatchData(
       this.maxSize,
-      validatedInputs.map(dbInput => ({
+      truncatedInputs.map(dbInput => ({
         addressType: dbInput.address_type,
         userAddress: dbInput.user_address,
         gameInput: dbInput.game_input,
@@ -165,7 +170,7 @@ class BatchedTransactionPoster {
     );
     for (let i = 0; i < batchData.selectedInputs.length; i++) {
       hashes.push(hashBatchSubunit(batchData.selectedInputs[i]));
-      ids.push(validatedInputs[i].id);
+      ids.push(truncatedInputs[i].id);
     }
 
     return batchData.data;
