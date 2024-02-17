@@ -83,7 +83,7 @@ async function runPresync(
         doLog(
           `[paima-runtime] Fetching data from ${network} in range: ${presyncBlockHeight[network]}-${upper[network]}`
         );
-      } else {
+      } else if (presyncBlockHeight[network]) {
         doLog(
           `[paima-runtime] Fetching data from ${network} in block: ${presyncBlockHeight[network]}`
         );
