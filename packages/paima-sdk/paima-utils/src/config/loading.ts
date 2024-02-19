@@ -98,7 +98,6 @@ export const BaseConfig = <T extends boolean>(T: T) => Type.Record(Type.String()
 
 export const BaseConfigWithoutDefaults = BaseConfig(false);
 export const BaseConfigWithDefaults = BaseConfig(true);
-export const FullEvmConfig = EvmConfigSchema;
 
 const evmConfigDefaults = (
   blockTime: number | undefined
