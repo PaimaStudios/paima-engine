@@ -1,7 +1,7 @@
 import * as fs from 'fs/promises';
 import YAML from 'yaml';
 import type { Static, TSchema } from '@sinclair/typebox';
-import { Value } from '@sinclair/typebox/value';
+import { Value, ValueErrorType } from '@sinclair/typebox/value';
 import { Type } from '@sinclair/typebox';
 import { ENV, doLog } from '../index.js';
 
@@ -13,21 +13,44 @@ export enum ConfigNetworkType {
 
 export type EvmConfig = Static<typeof EvmConfigSchema>;
 
-export const EvmConfigSchema = Type.Object({
-  chainUri: Type.String({ default: '' }),
-  chainId: Type.Number({ default: 0 }),
+export type MainEvmConfig = Static<typeof MainEvmConfigSchema>;
+
+const EvmConfigSchemaRequiredProperties = Type.Object({
+  chainUri: Type.String(),
+  chainId: Type.Number(),
+  chainCurrencyName: Type.String(),
+  chainCurrencySymbol: Type.String(),
+  chainCurrencyDecimals: Type.Number(),
+  blockTime: Type.Number(),
+});
+
+const PaimaL2ContractType = Type.RegExp(/^0x[0-9a-fA-F]{40}$/i);
+
+const EvmConfigSchemaOptionalProperties = Type.Object({
   chainExplorerUri: Type.String({ default: '' }),
-  chainCurrencyName: Type.String({ default: 'UNKNOWN_CURRENCY_NAME' }),
-  chainCurrencySymbol: Type.String({ default: 'NONAME' }),
-  chainCurrencyDecimals: Type.Number({ default: 0 }),
-  // TODO: this depends on the settings actually, but hard to express that
-  //ENV.BLOCK_TIME - 0.1
-  blockTime: Type.Number({ default: 4 }),
   pollingRate: Type.Number({ default: 4 - 0.1 }),
-  paimaL2ContractAddress: Type.RegExp(/^0x[0-9a-fA-F]{40}$/i),
   funnelBlockGroupSize: Type.Number({ default: 100 }),
   presyncStepSize: Type.Number({ default: 1000 }),
 });
+
+const MainNetworkDiscrimination = Type.Union([
+  Type.Object({
+    paimaL2ContractAddress: PaimaL2ContractType,
+    type: Type.Literal(ConfigNetworkType.EVM),
+  }),
+  Type.Object({ type: Type.Literal(ConfigNetworkType.EVM_OTHER) }),
+]);
+
+export const EvmConfigSchema = Type.Intersect([
+  EvmConfigSchemaRequiredProperties,
+  EvmConfigSchemaOptionalProperties,
+  MainNetworkDiscrimination,
+]);
+
+const MainEvmConfigSchema = Type.Intersect([
+  EvmConfigSchema,
+  Type.Object({ type: Type.Literal(ConfigNetworkType.EVM) }),
+]);
 
 export const CardanoConfigSchema = Type.Object({
   carpUrl: Type.String(),
@@ -38,39 +61,49 @@ export const CardanoConfigSchema = Type.Object({
 
 export type CardanoConfig = Static<typeof CardanoConfigSchema>;
 
-export const TaggedConfig = <T extends boolean>(T: T) =>
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+export const TaggedEvmConfig = <T extends boolean, U extends boolean>(T: T, MAIN_CONFIG: U) =>
   Type.Union([
     Type.Intersect([
-      T ? EvmConfigSchema : Type.Partial(EvmConfigSchema),
-      Type.Required(
-        Type.Object({
-          type: Type.Union([
-            Type.Literal(ConfigNetworkType.EVM),
-            Type.Literal(ConfigNetworkType.EVM_OTHER),
-          ]),
-        })
-      ),
-    ]),
-    Type.Intersect([
-      T ? CardanoConfigSchema : Type.Partial(CardanoConfigSchema),
-      Type.Object({ type: Type.Literal(ConfigNetworkType.CARDANO) }),
+      EvmConfigSchemaRequiredProperties,
+      T ? EvmConfigSchemaOptionalProperties : Type.Partial(EvmConfigSchemaOptionalProperties),
+      MAIN_CONFIG
+        ? Type.Object({
+            paimaL2ContractAddress: PaimaL2ContractType,
+            type: Type.Literal(ConfigNetworkType.EVM),
+          })
+        : Type.Object({ type: Type.Literal(ConfigNetworkType.EVM_OTHER) }),
     ]),
   ]);
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+export const TaggedEvmMainConfig = <T extends boolean>(T: T) => TaggedEvmConfig(T, true);
+
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+export const TaggedEvmOtherConfig = <T extends boolean>(T: T) => TaggedEvmConfig(T, false);
+
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+export const TaggedCardanoConfig = <T extends boolean>(T: T) =>
+  Type.Intersect([
+    T ? CardanoConfigSchema : Type.Partial(CardanoConfigSchema),
+    Type.Object({ type: Type.Literal(ConfigNetworkType.CARDANO) }),
+  ]);
+
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+export const TaggedConfig = <T extends boolean>(T: T) =>
+  Type.Union([TaggedEvmMainConfig(T), TaggedEvmOtherConfig(T), TaggedCardanoConfig(T)]);
+
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const BaseConfig = <T extends boolean>(T: T) => Type.Record(Type.String(), TaggedConfig(T));
 
 export const BaseConfigWithoutDefaults = BaseConfig(false);
 export const BaseConfigWithDefaults = BaseConfig(true);
 export const FullEvmConfig = EvmConfigSchema;
 
-const evmConfigDefaults = (blockTime: number | undefined) => ({
-  chainUri: '',
-  chainId: 0,
+const evmConfigDefaults = (
+  blockTime: number | undefined
+): Static<typeof EvmConfigSchemaOptionalProperties> => ({
   chainExplorerUri: '',
-  chainCurrencyName: 'UNKNOWN_CURRENCY_NAME',
-  chainCurrencySymbol: 'NONAME',
-  chainCurrencyDecimals: 0,
-  blockTime: 4,
   pollingRate: (blockTime || 4) - 0.1,
   funnelBlockGroupSize: 100,
   presyncStepSize: 1000,
@@ -83,8 +116,11 @@ const cardanoConfigDefaults = {
 export async function loadConfig(): Promise<Static<typeof BaseConfigWithDefaults> | undefined> {
   let configFileData: string;
   try {
-    // TODO: would be nice to also read .yaml
-    configFileData = await fs.readFile(`config.${ENV.NETWORK}.yml`, 'utf8');
+    try {
+      configFileData = await fs.readFile(`config.${ENV.NETWORK}.yml`, 'utf8');
+    } catch (error) {
+      configFileData = await fs.readFile(`config.${ENV.NETWORK}.yaml`, 'utf8');
+    }
   } catch (err) {
     throw new Error('config file not found');
   }
@@ -92,13 +128,14 @@ export async function loadConfig(): Promise<Static<typeof BaseConfigWithDefaults
   try {
     const config = parseConfigFile(configFileData);
 
+    validateConfig(config);
+
     for (const network of Object.keys(config)) {
       const networkConfig = config[network];
 
       switch (networkConfig.type) {
         case ConfigNetworkType.EVM_OTHER:
         case ConfigNetworkType.EVM:
-          // TODO: current version of typebox doesn't have Value.Default
           config[network] = Object.assign(
             evmConfigDefaults(networkConfig.blockTime),
             networkConfig
@@ -114,7 +151,7 @@ export async function loadConfig(): Promise<Static<typeof BaseConfigWithDefaults
 
     return config;
   } catch (err) {
-    doLog(`Invalid config file: ${err}`);
+    doLog(`Invalid config file: ${err}.`);
     return undefined;
   }
 }
@@ -124,24 +161,67 @@ export function parseConfigFile(configFileData: string): Static<typeof BaseConfi
   // Parse the YAML content into an object
   const configObject = YAML.parse(configFileData);
 
-  // Validate the YAML object against the schema
-  const baseConfig = checkOrError(undefined, BaseConfigWithoutDefaults, configObject);
+  const baseStructure = checkOrError(
+    'configuration root',
+    Type.Record(Type.String(), Type.Any()),
+    configObject
+  );
+
+  const baseConfig: Static<typeof BaseConfigWithoutDefaults> = {};
+
+  // matching on the discrimination value helps getting better error messages
+  // when there are missing properties.
+  for (const network of Object.keys(baseStructure)) {
+    switch (baseStructure[network].type) {
+      case ConfigNetworkType.EVM:
+        baseConfig[network] = checkOrError(
+          'main evm config entry',
+          TaggedEvmConfig(false, true),
+          baseStructure[network]
+        );
+        break;
+      case ConfigNetworkType.EVM_OTHER:
+        baseConfig[network] = checkOrError(
+          'other evm config entry',
+          TaggedEvmConfig(false, false),
+          baseStructure[network]
+        );
+        break;
+      case ConfigNetworkType.CARDANO:
+        baseConfig[network] = checkOrError(
+          'cardano config entry',
+          TaggedCardanoConfig(false),
+          baseStructure[network]
+        );
+        break;
+      default:
+        throw new Error('Unknown config network type.');
+    }
+  }
 
   return baseConfig;
 }
 
-function checkOrError<T extends TSchema>(
-  name: undefined | string,
-  structure: T,
-  config: unknown
-): Static<T> {
+function validateConfig(configs: Static<typeof BaseConfigWithoutDefaults>): void {
+  const paimaContractEntries = Object.values(configs).filter(
+    config => config.type === ConfigNetworkType.EVM && config.paimaL2ContractAddress
+  );
+
+  if (paimaContractEntries.length > 1) {
+    throw new Error('There can only be a single network with the paimaL2ContractAddress setting');
+  }
+}
+
+function checkOrError<T extends TSchema>(name: string, structure: T, config: unknown): Static<T> {
   // 1) Check if there are any errors since Value.Decode doesn't give error messages
   {
-    const errors = Array.from(Value.Errors(structure, config));
+    const errors = Array.from(Value.Errors(structure, config)).filter(
+      error => error.type !== ValueErrorType.Intersect && error.type !== ValueErrorType.Union
+    );
+
     for (const error of errors) {
-      if (errors.length !== 1) continue;
       console.error({
-        name: name ?? 'Configuration root',
+        name,
         path: error.path,
         valueProvided: error.value,
         message: error.message,

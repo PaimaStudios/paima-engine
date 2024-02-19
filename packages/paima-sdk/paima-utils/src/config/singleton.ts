@@ -1,6 +1,6 @@
 import type { Static } from '@sinclair/typebox';
-import type { CardanoConfig, EvmConfig } from './loading.js';
-import { BaseConfigWithDefaults, loadConfig, ConfigNetworkType } from './loading.js';
+import type { CardanoConfig, EvmConfig, MainEvmConfig, BaseConfigWithDefaults } from './loading.js';
+import { loadConfig, ConfigNetworkType } from './loading.js';
 
 export type Config = Static<typeof BaseConfigWithDefaults>;
 
@@ -26,12 +26,12 @@ export class GlobalConfig {
     return GlobalConfig.instance;
   }
 
-  public static async mainEvmConfig(): Promise<[string, EvmConfig]> {
+  public static async mainEvmConfig(): Promise<[string, MainEvmConfig]> {
     const instance = await GlobalConfig.getInstance();
 
     for (const key of Object.keys(instance)) {
       if (instance[key].type === ConfigNetworkType.EVM) {
-        return [key, instance[key] as EvmConfig];
+        return [key, instance[key] as MainEvmConfig];
       }
     }
 

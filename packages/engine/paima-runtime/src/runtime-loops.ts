@@ -1,5 +1,5 @@
 import process from 'process';
-import { doLog, logError, delay, ENV, GlobalConfig } from '@paima/utils';
+import { doLog, logError, delay, GlobalConfig } from '@paima/utils';
 import { tx, DataMigrations } from '@paima/db';
 import { getEarliestStartBlockheight, getEarliestStartSlot } from './cde-config/utils.js';
 import type { ChainFunnel, IFunnelFactory, ReadPresyncDataFrom } from './types.js';
