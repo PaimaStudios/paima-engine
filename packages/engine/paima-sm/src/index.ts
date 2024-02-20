@@ -123,10 +123,10 @@ const SM: GameStateMachineInitializer = {
           );
           if (cdeDataLength > 0) {
             doLog(
-              `[${latestCdeData.network}] Processed ${cdeDataLength} CDE events at #${
+              `[${latestCdeData.network}] Processed ${cdeDataLength} CDE events in ${
                 latestCdeData.carpCursor.kind === 'paginationCursor'
                   ? latestCdeData.carpCursor.cursor
-                  : latestCdeData.carpCursor.slot
+                  : `slot #${latestCdeData.carpCursor.slot}`
               }`
             );
           }
