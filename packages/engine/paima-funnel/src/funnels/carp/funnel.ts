@@ -204,8 +204,6 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
   public override async readPresyncData(
     args: ReadPresyncDataFrom
   ): Promise<{ [network: number]: PresyncChainData[] | typeof FUNNEL_PRESYNC_FINISHED }> {
-    const arg = args.find(arg => arg.network == this.chainName);
-
     let basePromise = this.baseFunnel.readPresyncData(args);
 
     const stableBlock = await timeout(
@@ -301,6 +299,23 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
                   data,
                 }));
               }
+              case ChainDataExtensionType.CardanoAssetUtxo: {
+                const { from, to } = getSlotRange(extension);
+
+                const data = getCdeDelayedAsset(
+                  this.carpUrl,
+                  extension,
+                  from,
+                  Math.min(to, this.cache.getState().startingSlot - 1),
+                  slot => slot
+                );
+
+                return data.then(data => ({
+                  cdeId: extension.cdeId,
+                  cdeType: extension.cdeType,
+                  data,
+                }));
+              }
               case ChainDataExtensionType.CardanoTransfer: {
                 const cache = this.cache;
                 const cursors = this.cache.getState().cursors;
@@ -344,7 +359,7 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
                 }));
               }
               default:
-                throw new Error('unhandled extension');
+                throw new Error(`[carp funnel] unhandled extension: ${extension.cdeType}`);
             }
           })
       ),
