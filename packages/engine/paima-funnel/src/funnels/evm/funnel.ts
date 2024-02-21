@@ -270,7 +270,9 @@ export class EvmFunnel extends BaseFunnel implements ChainFunnel {
     try {
       const cdeData = await getUngroupedCdeData(
         this.web3,
-        this.sharedData.extensions.filter(extension => extension.network === this.chainName),
+        this.sharedData.extensions.filter(
+          extension => !extension.network || extension.network === this.chainName
+        ),
         blockNumber,
         blockNumber
       );

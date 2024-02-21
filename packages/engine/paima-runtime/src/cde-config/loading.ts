@@ -16,6 +16,8 @@ import {
   getErc6551RegistryContract,
   getOldErc6551RegistryContract,
   ERC6551_REGISTRY_DEFAULT,
+  defaultEvmMainNetworkName,
+  defaultCardanoNetworkName,
 } from '@paima/utils';
 
 import type {
@@ -82,13 +84,19 @@ export function parseCdeConfigFile(configFileData: string): Static<typeof CdeCon
       case CdeEntryTypeName.ERC20:
         return checkOrError(
           entry.name,
-          Type.Intersect([ChainDataExtensionErc20Config, Type.Object({ network: Type.String() })]),
+          Type.Intersect([
+            ChainDataExtensionErc20Config,
+            Type.Partial(Type.Object({ network: Type.String() })),
+          ]),
           entry
         );
       case CdeEntryTypeName.ERC721:
         return checkOrError(
           entry.name,
-          Type.Intersect([ChainDataExtensionErc721Config, Type.Object({ network: Type.String() })]),
+          Type.Intersect([
+            ChainDataExtensionErc721Config,
+            Type.Partial(Type.Object({ network: Type.String() })),
+          ]),
           entry
         );
       case CdeEntryTypeName.ERC20Deposit:
@@ -96,7 +104,7 @@ export function parseCdeConfigFile(configFileData: string): Static<typeof CdeCon
           entry.name,
           Type.Intersect([
             ChainDataExtensionErc20DepositConfig,
-            Type.Object({ network: Type.String() }),
+            Type.Partial(Type.Object({ network: Type.String() })),
           ]),
           entry
         );
@@ -105,7 +113,7 @@ export function parseCdeConfigFile(configFileData: string): Static<typeof CdeCon
           entry.name,
           Type.Intersect([
             ChainDataExtensionGenericConfig,
-            Type.Object({ network: Type.String() }),
+            Type.Partial(Type.Object({ network: Type.String() })),
           ]),
           entry
         );
@@ -114,7 +122,7 @@ export function parseCdeConfigFile(configFileData: string): Static<typeof CdeCon
           entry.name,
           Type.Intersect([
             ChainDataExtensionErc6551RegistryConfig,
-            Type.Object({ network: Type.String() }),
+            Type.Partial(Type.Object({ network: Type.String() })),
           ]),
           entry
         );
@@ -123,7 +131,7 @@ export function parseCdeConfigFile(configFileData: string): Static<typeof CdeCon
           entry.name,
           Type.Intersect([
             ChainDataExtensionCardanoDelegationConfig,
-            Type.Object({ network: Type.String() }),
+            Type.Partial(Type.Object({ network: Type.String() })),
           ]),
           entry
         );
@@ -132,7 +140,7 @@ export function parseCdeConfigFile(configFileData: string): Static<typeof CdeCon
           entry.name,
           Type.Intersect([
             ChainDataExtensionCardanoProjectedNFTConfig,
-            Type.Object({ network: Type.String() }),
+            Type.Partial(Type.Object({ network: Type.String() })),
           ]),
           entry
         );
@@ -141,7 +149,7 @@ export function parseCdeConfigFile(configFileData: string): Static<typeof CdeCon
           entry.name,
           Type.Intersect([
             ChainDataExtensionCardanoDelayedAssetConfig,
-            Type.Object({ network: Type.String() }),
+            Type.Partial(Type.Object({ network: Type.String() })),
           ]),
           entry
         );
@@ -199,65 +207,72 @@ async function instantiateExtension(
   index: number,
   web3s: { [network: string]: Web3 }
 ): Promise<ChainDataExtension> {
+  const network = config.network || defaultEvmMainNetworkName;
   switch (config.type) {
     case CdeEntryTypeName.ERC20:
       return {
         ...config,
+        network,
         cdeId: index,
         hash: hashConfig(config),
         cdeType: ChainDataExtensionType.ERC20,
-        contract: getErc20Contract(config.contractAddress, web3s[config.network]),
+        contract: getErc20Contract(config.contractAddress, web3s[network]),
       };
     case CdeEntryTypeName.ERC721:
-      if (await isPaimaErc721(config, web3s[config.network])) {
+      if (await isPaimaErc721(config, web3s[config.network || defaultEvmMainNetworkName])) {
         return {
           ...config,
+          network,
           cdeId: index,
           hash: hashConfig(config),
           cdeType: ChainDataExtensionType.PaimaERC721,
-          contract: getPaimaErc721Contract(config.contractAddress, web3s[config.network]),
+          contract: getPaimaErc721Contract(config.contractAddress, web3s[network]),
         };
       } else {
         return {
           ...config,
+          network,
           cdeId: index,
           hash: hashConfig(config),
           cdeType: ChainDataExtensionType.ERC721,
-          contract: getErc721Contract(config.contractAddress, web3s[config.network]),
+          contract: getErc721Contract(config.contractAddress, web3s[network]),
         };
       }
     case CdeEntryTypeName.ERC20Deposit:
       return {
         ...config,
+        network,
         cdeId: index,
         hash: hashConfig(config),
         cdeType: ChainDataExtensionType.ERC20Deposit,
-        contract: getErc20Contract(config.contractAddress, web3s[config.network]),
+        contract: getErc20Contract(config.contractAddress, web3s[network]),
       };
     case CdeEntryTypeName.Generic:
       return {
-        ...(await instantiateCdeGeneric(config, index, web3s[config.network])),
-        network: config.network,
+        ...(await instantiateCdeGeneric(config, index, web3s[network])),
+        network,
       };
     case CdeEntryTypeName.ERC6551Registry:
       const contractAddress = config.contractAddress ?? ERC6551_REGISTRY_DEFAULT.New;
       return {
         ...config,
+        network,
         cdeId: index,
         hash: hashConfig(config),
         cdeType: ChainDataExtensionType.ERC6551Registry,
         contractAddress,
         contract: ((): ChainDataExtensionErc6551Registry['contract'] => {
           if (contractAddress === ERC6551_REGISTRY_DEFAULT.Old) {
-            return getOldErc6551RegistryContract(contractAddress, web3s[config.network]);
+            return getOldErc6551RegistryContract(contractAddress, web3s[network]);
           }
           // assume everything else is using the new contract
-          return getErc6551RegistryContract(contractAddress, web3s[config.network]);
+          return getErc6551RegistryContract(contractAddress, web3s[network]);
         })(),
       };
     case CdeEntryTypeName.CardanoDelegation:
       return {
         ...config,
+        network: config.network || defaultCardanoNetworkName,
         cdeId: index,
         hash: hashConfig(config),
         cdeType: ChainDataExtensionType.CardanoPool,
@@ -265,6 +280,7 @@ async function instantiateExtension(
     case CdeEntryTypeName.CardanoProjectedNFT:
       return {
         ...config,
+        network: config.network || defaultCardanoNetworkName,
         cdeId: index,
         hash: hashConfig(config),
         cdeType: ChainDataExtensionType.CardanoProjectedNFT,
@@ -272,6 +288,7 @@ async function instantiateExtension(
     case CdeEntryTypeName.CardanoDelayedAsset:
       return {
         ...config,
+        network: config.network || defaultCardanoNetworkName,
         cdeId: index,
         hash: hashConfig(config),
         cdeType: ChainDataExtensionType.CardanoAssetUtxo,

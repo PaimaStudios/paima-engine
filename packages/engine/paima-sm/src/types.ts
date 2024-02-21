@@ -362,7 +362,7 @@ export const CdeConfig = Type.Object({
         ChainDataExtensionCardanoProjectedNFTConfig,
         ChainDataExtensionCardanoDelayedAssetConfig,
       ]),
-      Type.Object({ network: Type.String() }),
+      Type.Partial(Type.Object({ network: Type.String() })),
     ])
   ),
 });
@@ -390,7 +390,7 @@ export type ChainDataExtension = (
   | ChainDataExtensionCardanoDelegation
   | ChainDataExtensionCardanoProjectedNFT
   | ChainDataExtensionCardanoDelayedAsset
-) & { network: string };
+) & { network: string | undefined };
 
 export type GameStateTransitionFunctionRouter = (
   blockHeight: number

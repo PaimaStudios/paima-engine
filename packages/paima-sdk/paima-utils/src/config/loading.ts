@@ -112,6 +112,11 @@ const cardanoConfigDefaults = {
   presyncStepSize: 1000,
 };
 
+// used as a placeholder name for the ENV fallback mechanism
+// will need to be removed afterwards
+export const defaultEvmMainNetworkName = 'evm';
+export const defaultCardanoNetworkName = 'cardano';
+
 export async function loadConfig(): Promise<Static<typeof BaseConfigWithDefaults> | undefined> {
   let configFileData: string;
   try {
@@ -121,7 +126,37 @@ export async function loadConfig(): Promise<Static<typeof BaseConfigWithDefaults
       configFileData = await fs.readFile(`config.${ENV.NETWORK}.yaml`, 'utf8');
     }
   } catch (err) {
-    throw new Error('config file not found');
+    // fallback to the ENV config for now to keep backwards compatibility
+    const mainConfig: EvmConfig = {
+      chainUri: ENV.CHAIN_URI,
+      chainId: ENV.CHAIN_ID,
+      chainCurrencyName: ENV.CHAIN_CURRENCY_NAME,
+      chainCurrencySymbol: ENV.CHAIN_CURRENCY_SYMBOL,
+      chainCurrencyDecimals: ENV.CHAIN_CURRENCY_DECIMALS,
+      blockTime: ENV.BLOCK_TIME,
+      chainExplorerUri: ENV.CHAIN_EXPLORER_URI,
+      pollingRate: ENV.POLLING_RATE,
+      funnelBlockGroupSize: ENV.DEFAULT_FUNNEL_GROUP_SIZE,
+      presyncStepSize: ENV.DEFAULT_PRESYNC_STEP_SIZE,
+      paimaL2ContractAddress: ENV.CONTRACT_ADDRESS,
+      type: ConfigNetworkType.EVM,
+    };
+
+    const baseConfig: Static<typeof BaseConfigWithDefaults> = {
+      [defaultEvmMainNetworkName]: mainConfig,
+    };
+
+    if (ENV.CARP_URL) {
+      baseConfig[defaultCardanoNetworkName] = {
+        carpUrl: ENV.CARP_URL,
+        network: ENV.CARDANO_NETWORK,
+        confirmationDepth: ENV.CARDANO_CONFIRMATION_DEPTH,
+        presyncStepSize: ENV.DEFAULT_PRESYNC_STEP_SIZE,
+        type: ConfigNetworkType.CARDANO,
+      };
+    }
+
+    return baseConfig;
   }
 
   try {
