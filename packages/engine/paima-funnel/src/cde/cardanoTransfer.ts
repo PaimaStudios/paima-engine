@@ -2,10 +2,8 @@ import type { CdeCardanoTransferDatum, ChainDataExtensionCardanoTransfer } from 
 import { ChainDataExtensionDatumType, DEFAULT_FUNNEL_TIMEOUT, timeout } from '@paima/utils';
 import { Routes, query } from '@dcspark/carp-client/client/src';
 import type { TxAndBlockInfo } from '@dcspark/carp-client/shared/models/TransactionHistory';
-import type { BlockTxPair } from 'tmp-carp-client/shared/models/common';
 import { Transaction } from '@dcspark/cardano-multiplatform-lib-nodejs';
-
-export const PAGINATION_LIMIT = 50;
+import { BlockTxPair } from 'tmp-carp-client/shared/models/common';
 
 export default async function getCdeData(
   url: string,
@@ -21,6 +19,7 @@ export default async function getCdeData(
   // only should be used during the presync phase, to be able to resume from the
   // previous point
   fromTx: BlockTxPair | undefined,
+  paginationLimit: number,
   network: string
 ): Promise<CdeCardanoTransferDatum[]> {
   let result = [] as CdeCardanoTransferDatum[];
@@ -34,7 +33,7 @@ export default async function getCdeData(
           from: fromAbsoluteSlot,
           to: toAbsoluteSlot,
         },
-        limit: PAGINATION_LIMIT,
+        limit: paginationLimit,
         untilBlock,
         after: fromTx,
         withInputContext: true,

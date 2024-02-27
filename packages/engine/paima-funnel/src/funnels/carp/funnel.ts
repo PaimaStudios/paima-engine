@@ -24,7 +24,7 @@ import type { ChainFunnel, ReadPresyncDataFrom } from '@paima/runtime';
 import getCdePoolData from '../../cde/cardanoPool.js';
 import getCdeProjectedNFTData from '../../cde/cardanoProjectedNFT.js';
 import getCdeDelayedAsset from '../../cde/delayedAsset.js';
-import getCdeTransferData, { PAGINATION_LIMIT } from '../../cde/cardanoTransfer.js';
+import getCdeTransferData from '../../cde/cardanoTransfer.js';
 import { query } from '@dcspark/carp-client/client/src/index';
 import { Routes } from '@dcspark/carp-client/shared/routes';
 import { FUNNEL_PRESYNC_FINISHED, InternalEventType } from '@paima/utils';
@@ -166,7 +166,8 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
       this.cache,
       this.config.confirmationDepth,
       this.era,
-      this.chainName
+      this.chainName,
+      this.config.paginationLimit
     );
 
     const composed = composeChainData(this.bufferedData, grouped);
@@ -214,6 +215,13 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
     );
 
     const cursors = this.cache.getState().cursors;
+
+    if (cursors && Object.values(cursors).every(x => x.finished)) {
+      const data = await basePromise;
+      data[this.chainName] = FUNNEL_PRESYNC_FINISHED;
+
+      return data;
+    }
 
     const getSlotRange = ({
       cdeId,
@@ -307,7 +315,8 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
                   extension,
                   from,
                   Math.min(to, this.cache.getState().startingSlot - 1),
-                  slot => slot
+                  slot => slot,
+                  this.chainName
                 );
 
                 return data.then(data => ({
@@ -327,27 +336,33 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
                   this.carpUrl,
                   extension,
                   extension.startSlot,
-                  startingSlot,
+                  Math.min(startingSlot, extension.stopSlot || startingSlot),
                   slot => slot,
                   true,
                   stableBlock.block.hash,
                   cursor && cursor.kind === 'paginationCursor'
                     ? (JSON.parse(cursor.cursor) as BlockTxPair)
                     : undefined,
+                  this.config.paginationLimit,
                   this.chainName
                 ).then(datums => {
                   // we are providing the entire indexed range, so if carp
                   // returns nothing we know the presync is finished for this
                   // CDE.
-                  const finished = datums.length === 0 || datums.length < PAGINATION_LIMIT;
+                  const finished =
+                    datums.length === 0 || datums.length < this.config.paginationLimit;
 
                   cache.updateCursor(extension.cdeId, {
                     kind: 'paginationCursor',
-                    cursor: datums[datums.length - 1].paginationCursor.cursor,
+                    cursor: datums[datums.length - 1]
+                      ? datums[datums.length - 1].paginationCursor.cursor
+                      : '',
                     finished,
                   });
 
-                  datums[datums.length - 1].paginationCursor.finished = finished;
+                  if (datums.length > 0) {
+                    datums[datums.length - 1].paginationCursor.finished = finished;
+                  }
 
                   return datums;
                 });
@@ -438,11 +453,7 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
       }
     }
 
-    if (cursors && Object.values(cursors).every(x => x.finished)) {
-      data[this.chainName] = FUNNEL_PRESYNC_FINISHED;
-    } else {
-      data[this.chainName] = list;
-    }
+    data[this.chainName] = list;
 
     return data;
   }
@@ -527,7 +538,8 @@ async function readDataInternal(
   cache: CarpFunnelCacheEntry,
   confirmationDepth: number,
   era: Era,
-  chainName: string
+  chainName: string,
+  paginationLimit: number
 ): Promise<EvmPresyncChainData[]> {
   // the lower range is exclusive
   const min = timestampToAbsoluteSlot(era, lastTimestamp, confirmationDepth);
@@ -628,6 +640,7 @@ async function readDataInternal(
             false, // not presync
             stableBlockId,
             undefined, // we want everything in the range, so no starting point for the pagination
+            paginationLimit,
             chainName
           );
 
