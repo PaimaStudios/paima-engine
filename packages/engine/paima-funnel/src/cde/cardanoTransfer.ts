@@ -3,7 +3,7 @@ import { ChainDataExtensionDatumType, DEFAULT_FUNNEL_TIMEOUT, timeout } from '@p
 import { Routes, query } from '@dcspark/carp-client/client/src';
 import type { TxAndBlockInfo } from '@dcspark/carp-client/shared/models/TransactionHistory';
 import { Transaction } from '@dcspark/cardano-multiplatform-lib-nodejs';
-import { BlockTxPair } from 'tmp-carp-client/shared/models/common';
+import { BlockTxPair } from '@dcspark/carp-client/shared/models/common';
 
 export default async function getCdeData(
   url: string,
