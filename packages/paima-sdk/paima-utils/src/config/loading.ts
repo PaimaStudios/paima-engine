@@ -55,6 +55,7 @@ export const CardanoConfigSchema = Type.Object({
   network: Type.String(),
   confirmationDepth: Type.Number(),
   presyncStepSize: Type.Number({ default: 1000 }),
+  paginationLimit: Type.Number({ default: 50 }),
 });
 
 export type CardanoConfig = Static<typeof CardanoConfigSchema>;
@@ -105,6 +106,7 @@ const evmConfigDefaults = (): Static<typeof EvmConfigSchemaOptionalProperties> =
 
 const cardanoConfigDefaults = {
   presyncStepSize: 1000,
+  paginationLimits: 50,
 };
 
 // used as a placeholder name for the ENV fallback mechanism
