@@ -333,7 +333,6 @@ export type ChainDataExtensionErc6551Registry = ChainDataExtensionBase &
   };
 
 export const ChainDataExtensionCardanoDelegationConfig = Type.Intersect([
-  ChainDataExtensionConfigBase,
   Type.Object({
     type: Type.Literal(CdeEntryTypeName.CardanoDelegation),
     pools: Type.Array(Type.String()),
