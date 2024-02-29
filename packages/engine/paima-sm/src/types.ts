@@ -188,6 +188,7 @@ export interface CdeCardanoPoolDatum extends CdeDatumBase {
   cdeDatumType: ChainDataExtensionDatumType.CardanoPool;
   payload: CdeDatumCardanoPoolPayload;
   scheduledPrefix: string;
+  paginationCursor: { cursor: string; finished: boolean };
 }
 
 export interface CdeCardanoProjectedNFTDatum extends CdeDatumBase {
