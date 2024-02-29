@@ -284,6 +284,7 @@ async function instantiateExtension(
     case CdeEntryTypeName.CardanoTransfer:
       return {
         ...config,
+        network: config.network || defaultCardanoNetworkName,
         cdeId: index,
         hash: hashConfig(config),
         cdeType: ChainDataExtensionType.CardanoTransfer,
