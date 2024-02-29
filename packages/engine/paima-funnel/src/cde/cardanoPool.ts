@@ -43,6 +43,9 @@ export default async function getCdeData(
     }
 
     events
+      .flatMap(event =>
+        event.payload.map(payload => ({ txId: event.txId, block: event.block, ...payload }))
+      )
       .map(e => eventToCdeDatum(e, extension, getBlockNumber(e.slot), absoluteSlotToEpoch(e.slot)))
       .forEach(element => {
         result.push(element);
@@ -57,7 +60,7 @@ export default async function getCdeData(
 }
 
 function eventToCdeDatum(
-  event: DelegationForPoolResponse[0],
+  event: { txId: string; block: string } & DelegationForPoolResponse[0]['payload'][0],
   extension: ChainDataExtensionCardanoDelegation,
   blockNumber: number,
   epoch: number
