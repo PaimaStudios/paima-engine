@@ -222,7 +222,7 @@ export class EvmFunnel extends BaseFunnel implements ChainFunnel {
       );
     }
 
-    // This adds the internal even that updates the last block point. This is
+    // This adds the internal event that updates the last block point. This is
     // mostly to avoid having to do a binary search each time we boot the
     // engine. Since we need to know from where to start searching for blocks in
     // the timestamp range.
