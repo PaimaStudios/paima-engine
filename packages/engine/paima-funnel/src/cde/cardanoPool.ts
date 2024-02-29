@@ -1,11 +1,8 @@
-import type {
-  CdeCardanoPoolDatum,
-  ChainDataExtensionCardanoDelegation,
-  ChainDataExtensionDatum,
-} from '@paima/sm';
+import type { CdeCardanoPoolDatum, ChainDataExtensionCardanoDelegation } from '@paima/sm';
 import { ChainDataExtensionDatumType, DEFAULT_FUNNEL_TIMEOUT, timeout } from '@paima/utils';
 import { Routes, query } from '@dcspark/carp-client/client/src';
 import type { DelegationForPoolResponse } from '@dcspark/carp-client/shared/models/DelegationForPool';
+import { BlockTxPair } from '@dcspark/carp-client/shared/models/common';
 
 export default async function getCdeData(
   url: string,
@@ -14,19 +11,52 @@ export default async function getCdeData(
   toAbsoluteSlot: number,
   getBlockNumber: (slot: number) => number,
   absoluteSlotToEpoch: (slot: number) => number,
+  isPresync: boolean,
+  untilBlock: string,
+  fromTx: BlockTxPair | undefined,
+  paginationLimit: number,
   network: string
-): Promise<ChainDataExtensionDatum[]> {
-  const events = await timeout(
-    query(url, Routes.delegationForPool, {
-      pools: extension.pools,
-      range: { minSlot: fromAbsoluteSlot, maxSlot: toAbsoluteSlot },
-    }),
-    DEFAULT_FUNNEL_TIMEOUT
-  );
+): Promise<CdeCardanoPoolDatum[]> {
+  let result = [] as CdeCardanoPoolDatum[];
 
-  return events.map(e =>
-    eventToCdeDatum(e, extension, getBlockNumber(e.slot), absoluteSlotToEpoch(e.slot), network)
-  );
+  while (true) {
+    const events = await timeout(
+      query(url, Routes.delegationForPool, {
+        pools: extension.pools,
+        slotLimits: {
+          from: fromAbsoluteSlot,
+          to: toAbsoluteSlot,
+        },
+        limit: paginationLimit,
+        untilBlock,
+        after: fromTx,
+      }),
+      DEFAULT_FUNNEL_TIMEOUT
+    );
+
+    if (events.length > 0) {
+      const last = events[events.length - 1];
+
+      fromTx = {
+        tx: last.txId,
+        block: last.block,
+      };
+    }
+
+    events
+      .map(e =>
+        eventToCdeDatum(e, extension, getBlockNumber(e.slot), absoluteSlotToEpoch(e.slot), network)
+      )
+      .forEach(element => {
+        result.push(element);
+      });
+
+    if (events.length === 0 || isPresync) {
+      break;
+    }
+  }
+
+  return result;
 }
 
 function eventToCdeDatum(
@@ -36,6 +66,11 @@ function eventToCdeDatum(
   epoch: number,
   network: string
 ): CdeCardanoPoolDatum {
+  const cursor: BlockTxPair = {
+    block: event.block,
+    tx: event.txId,
+  };
+
   return {
     cdeId: extension.cdeId,
     cdeDatumType: ChainDataExtensionDatumType.CardanoPool,
@@ -47,5 +82,6 @@ function eventToCdeDatum(
     },
     scheduledPrefix: extension.scheduledPrefix,
     network,
+    paginationCursor: { cursor: JSON.stringify(cursor), finished: false },
   };
 }
