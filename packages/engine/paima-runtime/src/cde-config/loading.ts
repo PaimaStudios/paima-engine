@@ -71,6 +71,8 @@ export async function loadChainDataExtensions(
   }
 }
 
+const networkTagType = Type.Partial(Type.Object({ network: Type.String() }));
+
 // Validate the overall structure of the config file and extract the relevant data
 export function parseCdeConfigFile(configFileData: string): Static<typeof CdeConfig> {
   // Parse the YAML content into an object
@@ -84,73 +86,49 @@ export function parseCdeConfigFile(configFileData: string): Static<typeof CdeCon
       case CdeEntryTypeName.ERC20:
         return checkOrError(
           entry.name,
-          Type.Intersect([
-            ChainDataExtensionErc20Config,
-            Type.Partial(Type.Object({ network: Type.String() })),
-          ]),
+          Type.Intersect([ChainDataExtensionErc20Config, networkTagType]),
           entry
         );
       case CdeEntryTypeName.ERC721:
         return checkOrError(
           entry.name,
-          Type.Intersect([
-            ChainDataExtensionErc721Config,
-            Type.Partial(Type.Object({ network: Type.String() })),
-          ]),
+          Type.Intersect([ChainDataExtensionErc721Config, networkTagType]),
           entry
         );
       case CdeEntryTypeName.ERC20Deposit:
         return checkOrError(
           entry.name,
-          Type.Intersect([
-            ChainDataExtensionErc20DepositConfig,
-            Type.Partial(Type.Object({ network: Type.String() })),
-          ]),
+          Type.Intersect([ChainDataExtensionErc20DepositConfig, networkTagType]),
           entry
         );
       case CdeEntryTypeName.Generic:
         return checkOrError(
           entry.name,
-          Type.Intersect([
-            ChainDataExtensionGenericConfig,
-            Type.Partial(Type.Object({ network: Type.String() })),
-          ]),
+          Type.Intersect([ChainDataExtensionGenericConfig, networkTagType]),
           entry
         );
       case CdeEntryTypeName.ERC6551Registry:
         return checkOrError(
           entry.name,
-          Type.Intersect([
-            ChainDataExtensionErc6551RegistryConfig,
-            Type.Partial(Type.Object({ network: Type.String() })),
-          ]),
+          Type.Intersect([ChainDataExtensionErc6551RegistryConfig, networkTagType]),
           entry
         );
       case CdeEntryTypeName.CardanoDelegation:
         return checkOrError(
           entry.name,
-          Type.Intersect([
-            ChainDataExtensionCardanoDelegationConfig,
-            Type.Partial(Type.Object({ network: Type.String() })),
-          ]),
+          Type.Intersect([ChainDataExtensionCardanoDelegationConfig, networkTagType]),
           entry
         );
       case CdeEntryTypeName.CardanoProjectedNFT:
         return checkOrError(
           entry.name,
-          Type.Intersect([
-            ChainDataExtensionCardanoProjectedNFTConfig,
-            Type.Partial(Type.Object({ network: Type.String() })),
-          ]),
+          Type.Intersect([ChainDataExtensionCardanoProjectedNFTConfig, networkTagType]),
           entry
         );
       case CdeEntryTypeName.CardanoDelayedAsset:
         return checkOrError(
           entry.name,
-          Type.Intersect([
-            ChainDataExtensionCardanoDelayedAssetConfig,
-            Type.Partial(Type.Object({ network: Type.String() })),
-          ]),
+          Type.Intersect([ChainDataExtensionCardanoDelayedAssetConfig, networkTagType]),
           entry
         );
       default:
