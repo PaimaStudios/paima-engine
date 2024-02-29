@@ -101,7 +101,8 @@ async function runPresync(
           network: network,
           from: height,
           to: upper[network],
-        }))
+        })),
+        cardanoConfig
       );
     });
   }
@@ -166,7 +167,8 @@ async function runPresyncRound(
   gameStateMachine: GameStateMachine,
   chainFunnel: ChainFunnel,
   pollingPeriod: number,
-  from: ReadPresyncDataFrom
+  from: ReadPresyncDataFrom,
+  cardanoConfig: [string, CardanoConfig] | undefined
 ): Promise<{ [network: string]: number }> {
   const latestPresyncDataList = await chainFunnel.readPresyncData(from);
 
@@ -188,8 +190,7 @@ async function runPresyncRound(
     await gameStateMachine.presyncProcess(dbTx, presyncData);
   }
 
-  // TODO: use the non-hardcoded name
-  const cardanoFrom = from.find(arg => arg.network === 'cardano');
+  const cardanoFrom = cardanoConfig && from.find(arg => arg.network === cardanoConfig[0]);
   if (cardanoFrom) {
     await gameStateMachine.markCardanoPresyncMilestone(dbTx, cardanoFrom.to);
   }
