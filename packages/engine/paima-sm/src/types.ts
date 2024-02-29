@@ -200,6 +200,7 @@ export interface CdeCardanoProjectedNFTDatum extends CdeDatumBase {
 export interface CdeCardanoAssetUtxoDatum extends CdeDatumBase {
   cdeDatumType: ChainDataExtensionDatumType.CardanoAssetUtxo;
   payload: CdeDatumCardanoAssetUtxoPayload;
+  paginationCursor: { cursor: string; finished: boolean };
 }
 
 export interface CdeCardanoTransferDatum extends CdeDatumBase {

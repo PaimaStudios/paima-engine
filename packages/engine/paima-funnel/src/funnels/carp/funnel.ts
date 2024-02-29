@@ -337,15 +337,24 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
                 }));
               }
               case ChainDataExtensionType.CardanoAssetUtxo: {
-                const { from, to } = getSlotRange(extension);
+                const cursors = this.cache.getState().cursors;
+                const startingSlot = this.cache.getState().startingSlot - 1;
+
+                const cursor = cursors && cursors[extension.cdeId];
 
                 const data = getCdeDelayedAsset(
                   this.carpUrl,
                   extension,
-                  from,
-                  Math.min(to, this.cache.getState().startingSlot - 1),
-                  slot => slot
-                );
+                  extension.startSlot,
+                  Math.min(startingSlot, extension.stopSlot || startingSlot),
+                  slot => slot,
+                  true,
+                  stableBlock.block.hash,
+                  cursor && cursor.kind === 'paginationCursor'
+                    ? (JSON.parse(cursor.cursor) as BlockTxPair)
+                    : undefined,
+                  this.config.paginationLimit
+                ).then(mapCursorPaginatedData(extension.cdeId));
 
                 return data.then(data => ({
                   cdeId: extension.cdeId,
@@ -509,7 +518,8 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
 
         const slotBased =
           kind?.cdeType !== ChainDataExtensionType.CardanoTransfer &&
-          kind?.cdeType !== ChainDataExtensionType.CardanoPool;
+          kind?.cdeType !== ChainDataExtensionType.CardanoPool &&
+          kind?.cdeType !== ChainDataExtensionType.CardanoAssetUtxo;
 
         if (slotBased) {
           newEntry.updateCursor(cursor.cde_id, {
@@ -639,8 +649,13 @@ async function readDataInternal(
             extension,
             min,
             Math.min(max, extension.stopSlot || max),
-            mapSlotToBlockNumber
+            mapSlotToBlockNumber,
+            false, // not presync
+            stableBlockId,
+            undefined, // we want everything in the range, so no starting point for the pagination
+            paginationLimit
           );
+
           return delayedAssetData;
         case ChainDataExtensionType.CardanoTransfer:
           const transferData = getCdeTransferData(
