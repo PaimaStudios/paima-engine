@@ -6,6 +6,7 @@ import type {
 import { ChainDataExtensionDatumType, DEFAULT_FUNNEL_TIMEOUT, timeout } from '@paima/utils';
 import { Routes, query } from '@dcspark/carp-client/client/src';
 import type { AssetUtxosResponse } from '@dcspark/carp-client/shared/models/AssetUtxos';
+import { BlockTxPair } from '@dcspark/carp-client/shared/models/common';
 
 export default async function getCdeData(
   url: string,
@@ -13,18 +14,51 @@ export default async function getCdeData(
   fromAbsoluteSlot: number,
   toAbsoluteSlot: number,
   getBlockNumber: (slot: number) => number,
+  isPresync: boolean,
+  untilBlock: string,
+  fromTx: BlockTxPair | undefined,
+  paginationLimit: number,
   network: string
 ): Promise<ChainDataExtensionDatum[]> {
-  const events = await timeout(
-    query(url, Routes.assetUtxos, {
-      policyIds: extension.policyIds,
-      fingerprints: extension.fingerprints,
-      range: { minSlot: fromAbsoluteSlot, maxSlot: toAbsoluteSlot },
-    }),
-    DEFAULT_FUNNEL_TIMEOUT
-  );
+  let result = [] as ChainDataExtensionDatum[];
 
-  return events.map(e => eventToCdeDatum(e, extension, getBlockNumber(e.slot), network));
+  while (true) {
+    const events = await timeout(
+      query(url, Routes.assetUtxos, {
+        policyIds: extension.policyIds,
+        fingerprints: extension.fingerprints,
+        slotLimits: {
+          from: fromAbsoluteSlot,
+          to: toAbsoluteSlot,
+        },
+        limit: paginationLimit,
+        untilBlock,
+        after: fromTx,
+      }),
+      DEFAULT_FUNNEL_TIMEOUT
+    );
+
+    if (events.length > 0) {
+      const last = events[events.length - 1];
+
+      fromTx = {
+        tx: last.txId,
+        block: last.block,
+      };
+    }
+
+    events
+      .map(e => eventToCdeDatum(e, extension, getBlockNumber(e.slot), network))
+      .forEach(element => {
+        result.push(element);
+      });
+
+    if (events.length === 0 || isPresync) {
+      break;
+    }
+  }
+
+  return result;
 }
 
 function eventToCdeDatum(
@@ -33,6 +67,11 @@ function eventToCdeDatum(
   blockNumber: number,
   network: string
 ): CdeCardanoAssetUtxoDatum {
+  const cursor: BlockTxPair = {
+    block: event.block,
+    tx: event.txId,
+  };
+
   return {
     cdeId: extension.cdeId,
     cdeDatumType: ChainDataExtensionDatumType.CardanoAssetUtxo,
@@ -47,5 +86,6 @@ function eventToCdeDatum(
       assetName: event.assetName,
     },
     network,
+    paginationCursor: { cursor: JSON.stringify(cursor), finished: false },
   };
 }
