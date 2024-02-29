@@ -48,6 +48,9 @@ export default async function getCdeData(
     }
 
     events
+      .flatMap(event =>
+        event.payload.map(payload => ({ txId: event.txId, block: event.block, ...payload }))
+      )
       .map(e => eventToCdeDatum(e, extension, getBlockNumber(e.slot), network))
       .forEach(element => {
         result.push(element);
@@ -62,7 +65,7 @@ export default async function getCdeData(
 }
 
 function eventToCdeDatum(
-  event: AssetUtxosResponse[0],
+  event: { txId: string; block: string } & AssetUtxosResponse[0]['payload'][0],
   extension: ChainDataExtensionCardanoDelayedAsset,
   blockNumber: number,
   network: string
