@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.20;
 
 import "./AnnotatedMintNft.sol";
 import "./BaseState.sol";
 import "./ERC1967.sol";
 
-import "@openzeppelin/contracts/access/Ownable.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 
 /// @dev Facilitates selling NFTs that accepts extra data when buying for any initialization data needed in a Paima dApp.
-contract NativeNftSale is BaseState, ERC1967, Ownable {
+contract NativeNftSale is BaseState, ERC1967, OwnableUpgradeable {
     using Address for address payable;
 
     /// @dev Emitted when the contract is initialized.
@@ -27,17 +27,22 @@ contract NativeNftSale is BaseState, ERC1967, Ownable {
         address buyer
     );
 
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
     /// @dev Initializes the contract with the requested price `_price` in native tokens for specified NFT `_nft`,
     /// transferring ownership to the specified `owner`.
     /// Callable only once.
     /// Emits the `Initialized` event.
-    function initialize(address owner, address _nft, uint256 _price) public virtual {
+    function initialize(address owner, address _nft, uint256 _price) public virtual initializer {
         require(!initialized, "Contract already initialized");
         initialized = true;
 
         nftPrice = _price;
         nftAddress = _nft;
-        _transferOwnership(owner);
+        __Ownable_init(owner);
 
         emit Initialized(owner, _nft);
     }

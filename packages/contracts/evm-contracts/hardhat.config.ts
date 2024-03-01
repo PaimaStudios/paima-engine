@@ -10,7 +10,7 @@ import type { SiteConfig } from 'solidity-docgen/dist/site.js';
 import fs from 'fs';
 
 const config: HardhatUserConfig = {
-  solidity: '0.8.13',
+  solidity: '0.8.20',
   paths: {
     artifacts: './artifacts/hardhat',
     cache: './cache/hardhat',

@@ -27,7 +27,8 @@
   "devDependencies": {
     "@nomicfoundation/hardhat-foundry": "^1.1.1",
     "@nomicfoundation/hardhat-toolbox": "^4.0.0",
-    "@openzeppelin/contracts": "^4.6.0",
+    "@openzeppelin/contracts": "^5.0.2",
+    "@openzeppelin/contracts-upgradeable": "^5.0.2",
     "hardhat": "^2.19.3",
     "hardhat-abi-exporter": "github:paimaStudios/hardhat-abi-exporter#export-ts-wrapper",
     "solidity-docgen": "^0.6.0-beta.36",
@@ -36,7 +37,8 @@
   "peerDependencies": {
     "@nomicfoundation/hardhat-foundry": "^1.1.1",
     "@nomicfoundation/hardhat-toolbox": "^4.0.0",
-    "@openzeppelin/contracts": "^4.6.0",
+    "@openzeppelin/contracts": "^5.0.2",
+    "@openzeppelin/contracts-upgradeable": "^5.0.2",
     "hardhat": "^2.19.3"
   }
 }
