@@ -76,6 +76,10 @@ async function runPresync(
     );
 
     for (const network of Object.keys(networks)) {
+      if (presyncBlockHeight[network] === Number.MAX_SAFE_INTEGER) {
+        continue;
+      }
+
       if (upper[network] > presyncBlockHeight[network]) {
         doLog(
           `[paima-runtime] Fetching data from ${network} in range: ${presyncBlockHeight[network]}-${upper[network]}`
@@ -187,6 +191,11 @@ async function runPresyncRound(
     return Object.fromEntries(
       from.map(from => {
         if (latestPresyncDataList[from.network] === FUNNEL_PRESYNC_FINISHED) {
+          // we need to keep calling the presync function, but the carp funnel
+          // is not using the parameter anymore,since it handles pagination per
+          // cde, instead of a global pace. This is set as placeholder, since
+          // the block funnel will just keep returning that the presync is
+          // finished.
           return [from.network, Number.MAX_SAFE_INTEGER];
         } else {
           return [from.network, from.to + 1];
