@@ -56,13 +56,10 @@ async function runPresync(
 ): Promise<void> {
   const networks = await GlobalConfig.getInstance();
 
-  const cardanoConfig = await GlobalConfig.cardanoConfig();
-
   let presyncBlockHeight = await getPresyncStartBlockheight(
     gameStateMachine,
     funnelFactory.getExtensions(),
-    startBlockHeight,
-    cardanoConfig
+    startBlockHeight
   );
 
   if (run) {
@@ -101,8 +98,7 @@ async function runPresync(
           network: network,
           from: height,
           to: upper[network],
-        })),
-        cardanoConfig
+        }))
       );
     });
 
@@ -124,8 +120,7 @@ async function runPresync(
 async function getPresyncStartBlockheight(
   gameStateMachine: GameStateMachine,
   CDEs: ChainDataExtension[],
-  maximumPresyncBlockheight: number,
-  cardanoConfig: [string, CardanoConfig] | undefined
+  maximumPresyncBlockheight: number
 ): Promise<{ [network: string]: number }> {
   const config = await GlobalConfig.getInstance();
 
@@ -156,8 +151,7 @@ async function runPresyncRound(
   gameStateMachine: GameStateMachine,
   chainFunnel: ChainFunnel,
   pollingPeriod: number,
-  from: ReadPresyncDataFrom,
-  cardanoConfig: [string, CardanoConfig] | undefined
+  from: ReadPresyncDataFrom
 ): Promise<{ [network: string]: number }> {
   const latestPresyncDataList = await chainFunnel.readPresyncData(from);
 
