@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.20;
 
 import "./ERC1967.sol";
 
-import "@openzeppelin/contracts/access/Ownable.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 
 /// @dev Facilitates accepting payment that accepts extra data to know what the payment was for inside a Paima dApp.
-contract GenericPayment is ERC1967, Ownable {
+contract GenericPayment is ERC1967, OwnableUpgradeable {
     /// @dev True if contract has been initialized via the `initialize` function.
     bool public initialized;
 
@@ -20,14 +20,19 @@ contract GenericPayment is ERC1967, Ownable {
     /// @dev Emitted when payment of `amount` if made by `payer` with `message`.
     event Pay(uint256 amount, address payer, string message);
 
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
     /// @dev Initializes the contracts, transferring ownership to the specified `owner`.
     /// Callable only once.
     /// Emits the `Initialized` event.
-    function initialize(address owner) public {
+    function initialize(address owner) public initializer {
         require(!initialized, "Contract already initialized");
         initialized = true;
 
-        _transferOwnership(owner);
+        __Ownable_init(owner);
 
         emit Initialized(owner);
     }

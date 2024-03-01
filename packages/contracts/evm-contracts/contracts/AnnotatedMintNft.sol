@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.20;
 
 import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
@@ -34,12 +34,6 @@ contract AnnotatedMintNft is ERC165, ERC721, Ownable {
         _;
     }
 
-    /// @dev Reverts if the `tokenId` does not exist (has not been minted).
-    modifier onlyExistingTokenId(uint256 tokenId) {
-        require(_exists(tokenId), "AnnotatedMintNft: non-existent tokenId");
-        _;
-    }
-
     /// @dev Reverts if `msg.sender` is not the specified token's owner.
     modifier onlyTokenOwner(uint256 tokenId) {
         require(msg.sender == ownerOf(tokenId), "AnnotatedMintNft: not owner");
@@ -61,8 +55,7 @@ contract AnnotatedMintNft is ERC165, ERC721, Ownable {
     /// @dev Emitted when a new token with ID `tokenId` is minted, with `initialData` provided in the `mint` function parameters.
     event Minted(uint256 indexed tokenId, string initialData);
 
-    /// @dev Sets the NFT's `name`, `symbol`, `maxSupply` to `supply`, and transfers ownership to `owner`.
-    /// Also sets `currentTokenId` to 1 and `baseExtension` to `".json"`.
+    /// @dev Sets the NFT's `name`, `symbol`, `maxSupply` to `supply`, `currentTokenId` to 1 and `baseExtension` to `".json"`.
     /// @param name Collection name.
     /// @param symbol Collection symbol.
     /// @param owner The owner of the contract, who will be able to execute
@@ -71,11 +64,10 @@ contract AnnotatedMintNft is ERC165, ERC721, Ownable {
         string memory symbol,
         uint256 supply,
         address owner
-    ) ERC721(name, symbol) {
+    ) ERC721(name, symbol) Ownable(owner) {
         maxSupply = supply;
         currentTokenId = 1;
         baseExtension = ".json";
-        transferOwnership(owner);
     }
 
     /// @dev Returns true if this contract implements the interface defined by `interfaceID`. See EIP165.
@@ -105,9 +97,7 @@ contract AnnotatedMintNft is ERC165, ERC721, Ownable {
 
     /// @dev Burns token of ID `_tokenId`. Callable only by the owner of the specified token.
     /// Reverts if `_tokenId` is not existing.
-    function burn(
-        uint256 _tokenId
-    ) external onlyExistingTokenId(_tokenId) onlyTokenOwner(_tokenId) {
+    function burn(uint256 _tokenId) external onlyTokenOwner(_tokenId) {
         totalSupply--;
         _burn(_tokenId);
     }
@@ -171,7 +161,7 @@ contract AnnotatedMintNft is ERC165, ERC721, Ownable {
 
     /// @dev Returns true if specified `_tokenId` exists.
     function exists(uint256 _tokenId) external view returns (bool) {
-        return _exists(_tokenId);
+        return _ownerOf(_tokenId) != address(0);
     }
 
     /// @dev Returns true if `_account` is in the mapping of allowed `minters`.
