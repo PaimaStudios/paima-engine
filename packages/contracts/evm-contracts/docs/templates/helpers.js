@@ -1,7 +1,7 @@
 const { version } = require('../../package.json');
 
-module.exports['escapeChars'] = (input) => {
-  if (input == null) return "No description given";
+module.exports['escapeChars'] = input => {
+  if (input == null) return 'No description given';
   return input.replace(/\{([a-zA-Z0-9-]+)\}/g, '\\{$1\\}');
 };
 
@@ -14,7 +14,9 @@ module.exports['readme-path'] = opts => {
 module.exports.names = params => params?.map(p => p.name).join(', ');
 
 module.exports['typed-params'] = params => {
-  return params?.map(p => `${p.type}${p.indexed ? ' indexed' : ''}${p.name ? ' ' + p.name : ''}`).join(', ');
+  return params
+    ?.map(p => `${p.type}${p.indexed ? ' indexed' : ''}${p.name ? ' ' + p.name : ''}`)
+    .join(', ');
 };
 
 const slug = (module.exports.slug = str => {
@@ -34,7 +36,9 @@ function getAllLinks(items) {
   linksCache.set(items, res);
   for (const item of items) {
     res[`xref-${item.anchor}`] = `xref:${item.__item_context.page}#${item.anchor}`;
-    res[slug(item.fullName)] = `pass:normal[xref:${item.__item_context.page}#${item.anchor}[\`${item.fullName}\`]]`;
+    res[
+      slug(item.fullName)
+    ] = `pass:normal[xref:${item.__item_context.page}#${item.anchor}[\`${item.fullName}\`]]`;
   }
   return res;
 }
