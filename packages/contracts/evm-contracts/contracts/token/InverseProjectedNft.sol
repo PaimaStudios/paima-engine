@@ -10,7 +10,7 @@ import {IERC4906} from "@openzeppelin/contracts/interfaces/IERC4906.sol";
 import {IInverseProjectedNft} from "./IInverseProjectedNft.sol";
 
 /// @dev A standard ERC721 that accepts calldata in the mint function for any initialization data needed in a Paima dApp.
-contract InverseProjectedNft is IInverseProjectedNft, ERC721, IERC4906, Ownable {
+contract InverseProjectedNft is IInverseProjectedNft, ERC721, Ownable {
     using Strings for uint256;
 
     /// @dev The token ID that will be minted when calling the `mint` function.
