@@ -7,6 +7,7 @@ import "../test-lib/ctest.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import "@openzeppelin/contracts/interfaces/IERC4906.sol";
 import "../contracts/token/InverseProjectedNft.sol";
 import "../contracts/token/IInverseProjectedNft.sol";
 
@@ -51,6 +52,22 @@ contract InverseProjectedNftTest is CTest {
     function test_SupportsInterface() public {
         assertTrue(nft.supportsInterface(type(IERC165).interfaceId));
         assertTrue(nft.supportsInterface(type(IERC721).interfaceId));
+        assertTrue(nft.supportsInterface(bytes4(0x49064906)));
+    }
+
+    function test_UpdateMetadataEmitsEvent() public {
+        uint256 tokenId = 1;
+        vm.expectEmit(true, true, true, true);
+        emit IERC4906.MetadataUpdate(tokenId);
+        nft.updateMetadata(tokenId);
+    }
+
+    function test_UpdateMetadataBatchEmitsEvent() public {
+        uint256 fromTokenId = 1;
+        uint256 toTokenId = 10;
+        vm.expectEmit(true, true, true, true);
+        emit IERC4906.BatchMetadataUpdate(fromTokenId, toTokenId);
+        nft.updateMetadataBatch(fromTokenId, toTokenId);
     }
 
     function test_CannotMintToZeroAddress() public {

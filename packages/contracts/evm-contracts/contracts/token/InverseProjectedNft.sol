@@ -5,11 +5,12 @@ import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
+import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import {IERC4906} from "@openzeppelin/contracts/interfaces/IERC4906.sol";
 import {IInverseProjectedNft} from "./IInverseProjectedNft.sol";
 
 /// @dev A standard ERC721 that accepts calldata in the mint function for any initialization data needed in a Paima dApp.
-contract InverseProjectedNft is IInverseProjectedNft, ERC165, ERC721, Ownable {
+contract InverseProjectedNft is IInverseProjectedNft, ERC721, IERC4906, Ownable {
     using Strings for uint256;
 
     /// @dev The token ID that will be minted when calling the `mint` function.
@@ -41,9 +42,10 @@ contract InverseProjectedNft is IInverseProjectedNft, ERC165, ERC721, Ownable {
     /// @dev Returns true if this contract implements the interface defined by `interfaceId`. See EIP165.
     function supportsInterface(
         bytes4 interfaceId
-    ) public view override(ERC165, ERC721) returns (bool) {
+    ) public view override(IERC165, ERC721) returns (bool) {
         return
             interfaceId == type(IInverseProjectedNft).interfaceId ||
+            interfaceId == bytes4(0x49064906) ||
             super.supportsInterface(interfaceId);
     }
 
@@ -108,5 +110,17 @@ contract InverseProjectedNft is IInverseProjectedNft, ERC165, ERC721, Ownable {
         string memory oldBaseExtension = baseExtension;
         baseExtension = _newBaseExtension;
         emit SetBaseURI(oldBaseExtension, _newBaseExtension);
+    }
+
+    /// @dev Function that emits an event to notify third-parties (e.g. NFT marketplaces) about
+    /// an update to consecutive range of tokens. Can be overriden in inheriting contract.
+    function updateMetadataBatch(uint256 _fromTokenId, uint256 _toTokenId) public virtual {
+        emit BatchMetadataUpdate(_fromTokenId, _toTokenId);
+    }
+
+    /// @dev Function that emits an event to notify third-parties (e.g. NFT marketplaces) about
+    /// an update to a single token. Can be overriden in inheriting contract.
+    function updateMetadata(uint256 _tokenId) public virtual {
+        emit MetadataUpdate(_tokenId);
     }
 }
