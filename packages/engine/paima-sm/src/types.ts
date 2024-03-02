@@ -51,9 +51,7 @@ export interface EvmPresyncChainData {
 export interface CardanoPresyncChainData {
   network: string;
   networkType: ConfigNetworkType.CARDANO;
-  carpCursor:
-    | { kind: 'paginationCursor'; cdeId: number; cursor: string; finished: boolean }
-    | { kind: 'slot'; cdeId: number; slot: number; finished: boolean };
+  carpCursor: { cdeId: number; cursor: string; finished: boolean };
   extensionDatums: ChainDataExtensionDatum[];
 }
 
@@ -199,6 +197,7 @@ export interface CdeCardanoProjectedNFTDatum extends CdeDatumBase {
   cdeDatumType: ChainDataExtensionDatumType.CardanoProjectedNFT;
   payload: CdeDatumCardanoProjectedNFTPayload;
   scheduledPrefix: string | undefined;
+  paginationCursor: { cursor: string; finished: boolean };
 }
 
 export interface CdeCardanoAssetUtxoDatum extends CdeDatumBase {

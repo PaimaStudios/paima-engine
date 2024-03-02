@@ -30,10 +30,9 @@ import { Routes } from '@dcspark/carp-client/shared/routes';
 import { FUNNEL_PRESYNC_FINISHED, InternalEventType } from '@paima/utils';
 import { CarpFunnelCacheEntry } from '../FunnelCache.js';
 import { getCardanoEpoch, getCarpCursors } from '@paima/db';
-import type { BlockTxPair } from 'tmp-carp-client/shared/models/common';
+import { BlockTxPair } from '@dcspark/carp-client/shared/models/common';
 
 const delayForWaitingForFinalityLoop = 1000;
-const DEFAULT_PRESYNC_SLOT_RANGE = 10000;
 
 type Era = {
   firstSlot: number;
@@ -223,31 +222,6 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
       return data;
     }
 
-    const getSlotRange = ({
-      cdeId,
-      startSlot,
-    }: {
-      cdeId: number;
-      startSlot: number;
-    }): { from: number; to: number } => {
-      const cursors = this.cache.getState().cursors;
-      const from: number = (cursors && (cursors[cdeId] as { slot: number }).slot) || startSlot;
-      const to = from + DEFAULT_PRESYNC_SLOT_RANGE;
-
-      // the cache gets invalidated on error, so we can update the cursor before
-      // even returning the event without risk.
-      this.cache.updateCursor(cdeId, {
-        kind: 'slot',
-        slot: to,
-        finished: to >= this.cache.getState().startingSlot,
-      });
-
-      return {
-        from,
-        to,
-      };
-    };
-
     const cache = this.cache;
     const mapCursorPaginatedData = (cdeId: number) => (datums: any) => {
       // we are providing the entire indexed range, so if carp
@@ -256,7 +230,6 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
       const finished = datums.length === 0 || datums.length < this.config.paginationLimit;
 
       cache.updateCursor(cdeId, {
-        kind: 'paginationCursor',
         cursor: datums[datums.length - 1] ? datums[datums.length - 1].paginationCursor.cursor : '',
         finished,
       });
@@ -296,8 +269,6 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
 
                 const cursor = cursors && cursors[extension.cdeId];
 
-                console.log('min', Math.min(startingSlot, extension.stopSlot || startingSlot));
-
                 const data = getCdePoolData(
                   this.carpUrl,
                   extension,
@@ -307,9 +278,7 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
                   slot => absoluteSlotToEpoch(this.era, slot),
                   true,
                   stableBlock.block.hash,
-                  cursor && cursor.kind === 'paginationCursor'
-                    ? (JSON.parse(cursor.cursor) as BlockTxPair)
-                    : undefined,
+                  cursor ? (JSON.parse(cursor.cursor) as BlockTxPair) : undefined,
                   this.config.paginationLimit,
                   this.chainName
                 ).then(mapCursorPaginatedData(extension.cdeId));
@@ -321,16 +290,24 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
                 }));
               }
               case ChainDataExtensionType.CardanoProjectedNFT: {
-                const { from, to } = getSlotRange(extension);
+                const cursors = this.cache.getState().cursors;
+                const startingSlot = this.cache.getState().startingSlot - 1;
+
+                const cursor = cursors && cursors[extension.cdeId];
 
                 const data = getCdeProjectedNFTData(
                   this.carpUrl,
                   extension,
-                  from,
-                  Math.min(to, this.cache.getState().startingSlot - 1),
+
+                  extension.startSlot,
+                  Math.min(startingSlot, extension.stopSlot || startingSlot),
                   slot => slot,
+                  true,
+                  stableBlock.block.hash,
+                  cursor ? (JSON.parse(cursor.cursor) as BlockTxPair) : undefined,
+                  this.config.paginationLimit,
                   this.chainName
-                );
+                ).then(mapCursorPaginatedData(extension.cdeId));
 
                 return data.then(data => ({
                   cdeId: extension.cdeId,
@@ -352,9 +329,7 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
                   slot => slot,
                   true,
                   stableBlock.block.hash,
-                  cursor && cursor.kind === 'paginationCursor'
-                    ? (JSON.parse(cursor.cursor) as BlockTxPair)
-                    : undefined,
+                  cursor ? (JSON.parse(cursor.cursor) as BlockTxPair) : undefined,
                   this.config.paginationLimit,
                   this.chainName
                 ).then(mapCursorPaginatedData(extension.cdeId));
@@ -379,9 +354,7 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
                   slot => slot,
                   true,
                   stableBlock.block.hash,
-                  cursor && cursor.kind === 'paginationCursor'
-                    ? (JSON.parse(cursor.cursor) as BlockTxPair)
-                    : undefined,
+                  cursor ? (JSON.parse(cursor.cursor) as BlockTxPair) : undefined,
                   this.config.paginationLimit,
                   this.chainName
                 ).then(mapCursorPaginatedData(extension.cdeId));
@@ -403,75 +376,17 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
     const list: CardanoPresyncChainData[] = [];
 
     for (const events of carpEvents) {
-      if (
-        events.cdeType === ChainDataExtensionType.CardanoTransfer ||
-        events.cdeType === ChainDataExtensionType.CardanoPool
-      ) {
-        for (const event of events.data || []) {
-          list.push({
-            extensionDatums: [event],
-            network: this.chainName,
-            networkType: ConfigNetworkType.CARDANO,
-            carpCursor: {
-              kind: 'paginationCursor',
-              cdeId: event.cdeId,
-              cursor: event.paginationCursor.cursor,
-              finished: event.paginationCursor.finished,
-            },
-          });
-        }
-      } else {
-        // handle the cde's that are still on slot range based 'pagination' (not
-        // really pagination, but emulated)
-        const cursor = cursors && cursors[events.cdeId];
-        const finished = (cursor && cursor.kind === 'slot' && cursor.finished) || false;
-
-        // add an empty event so that the slot range gets updated even if there
-        // are no events, since it's not a real pagination cursor
-        if (events.data.length === 0) {
-          const slot = (cursor && cursor.kind === 'slot' && cursor.slot) || 0;
-          list.push({
-            extensionDatums: [],
-            networkType: ConfigNetworkType.CARDANO,
-            network: this.chainName,
-            carpCursor: {
-              kind: 'slot',
-              cdeId: events.cdeId,
-              slot,
-              finished,
-            },
-          });
-        }
-
-        // group by slot by traversing in order, if two consecutive entries have
-        // the same slot then add them to the last entry.
-        //
-        // it's important to group by slot since that's how the 'cursor' is updated.
-        // this code can be removed when we implement pagination by (tx,block).
-        let slot;
-        for (let i = 0; i < events.data.length; i++) {
-          const event = events.data[i];
-          const isLastAndFinished = (i == events.data.length - 1 && finished) || false;
-
-          if (slot && slot === event.blockNumber) {
-            list[list.length - 1].extensionDatums.push(event);
-            list[list.length - 1].carpCursor.finished = isLastAndFinished;
-          } else {
-            slot = event.blockNumber;
-
-            list.push({
-              extensionDatums: [event],
-              networkType: ConfigNetworkType.CARDANO,
-              network: this.chainName,
-              carpCursor: {
-                kind: 'slot',
-                cdeId: event.cdeId,
-                slot: event.blockNumber,
-                finished: isLastAndFinished,
-              },
-            });
-          }
-        }
+      for (const event of events.data || []) {
+        list.push({
+          extensionDatums: [event],
+          network: this.chainName,
+          networkType: ConfigNetworkType.CARDANO,
+          carpCursor: {
+            cdeId: event.cdeId,
+            cursor: event.paginationCursor.cursor,
+            finished: event.paginationCursor.finished,
+          },
+        });
       }
     }
 
@@ -518,26 +433,10 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
       const cursors = await getCarpCursors.run(undefined, dbTx);
 
       for (const cursor of cursors) {
-        const kind = sharedData.extensions.find(extension => extension.cdeId === cursor.cde_id);
-
-        const slotBased =
-          kind?.cdeType !== ChainDataExtensionType.CardanoTransfer &&
-          kind?.cdeType !== ChainDataExtensionType.CardanoPool &&
-          kind?.cdeType !== ChainDataExtensionType.CardanoAssetUtxo;
-
-        if (slotBased) {
-          newEntry.updateCursor(cursor.cde_id, {
-            kind: 'slot',
-            slot: Number(cursor.cursor),
-            finished: cursor.finished,
-          });
-        } else {
-          newEntry.updateCursor(cursor.cde_id, {
-            kind: 'paginationCursor',
-            cursor: cursor.cursor,
-            finished: cursor.finished,
-          });
-        }
+        newEntry.updateCursor(cursor.cde_id, {
+          cursor: cursor.cursor,
+          finished: cursor.finished,
+        });
       }
 
       return newEntry;
@@ -646,6 +545,10 @@ async function readDataInternal(
             min,
             Math.min(max, extension.stopSlot || max),
             mapSlotToBlockNumber,
+            false, // not presync
+            stableBlockId,
+            undefined, // we want everything in the range, so no starting point for the pagination
+            paginationLimit,
             chainName
           );
           return projectedNFTData;
