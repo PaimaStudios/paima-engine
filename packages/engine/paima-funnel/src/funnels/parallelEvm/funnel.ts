@@ -28,7 +28,7 @@ import { getLatestProcessedCdeBlockheight } from '@paima/db';
 
 const GET_BLOCK_NUMBER_TIMEOUT = 5000;
 
-export class EvmFunnel extends BaseFunnel implements ChainFunnel {
+export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
   config: EvmConfig;
   chainName: string;
 
@@ -406,7 +406,7 @@ export class EvmFunnel extends BaseFunnel implements ChainFunnel {
     chainName: string,
     config: EvmConfig,
     startingBlockHeight: number
-  ): Promise<EvmFunnel> {
+  ): Promise<ParallelEvmFunnel> {
     const web3 = await initWeb3(config.chainUri);
 
     const latestBlock: number = await timeout(web3.eth.getBlockNumber(), GET_BLOCK_NUMBER_TIMEOUT);
@@ -443,7 +443,7 @@ export class EvmFunnel extends BaseFunnel implements ChainFunnel {
       evmCacheEntry.updateState(config.chainId, [], [], mappedStartingBlockHeight);
     }
 
-    return new EvmFunnel(sharedData, dbTx, config, chainName, baseFunnel, web3);
+    return new ParallelEvmFunnel(sharedData, dbTx, config, chainName, baseFunnel, web3);
   }
 
   // this is the latestBlock of the chain synced by this funnel
@@ -485,7 +485,7 @@ export class EvmFunnel extends BaseFunnel implements ChainFunnel {
   }
 }
 
-export async function wrapToEvmFunnel(
+export async function wrapToParallelEvmFunnel(
   chainFunnel: ChainFunnel,
   sharedData: FunnelSharedData,
   dbTx: PoolClient,
@@ -494,7 +494,7 @@ export async function wrapToEvmFunnel(
   config: EvmConfig
 ): Promise<ChainFunnel> {
   try {
-    const ebp = await EvmFunnel.recoverState(
+    const ebp = await ParallelEvmFunnel.recoverState(
       sharedData,
       dbTx,
       chainFunnel,

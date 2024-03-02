@@ -15,7 +15,7 @@ import { BlockFunnel } from './funnels/block/funnel.js';
 import type { FunnelSharedData } from './funnels/BaseFunnel.js';
 import { FunnelCacheManager } from './funnels/FunnelCache.js';
 import { wrapToCarpFunnel } from './funnels/carp/funnel.js';
-import { wrapToEvmFunnel } from './funnels/evm/funnel.js';
+import { wrapToParallelEvmFunnel } from './funnels/parallelEvm/funnel.js';
 import { ConfigNetworkType } from '@paima/utils';
 import type Web3 from 'web3';
 
@@ -83,7 +83,7 @@ export class FunnelFactory implements IFunnelFactory {
 
     let chainFunnel: ChainFunnel = await BlockFunnel.recoverState(this.sharedData, dbTx);
     for (const [chainName, config] of await GlobalConfig.otherEvmConfig()) {
-      chainFunnel = await wrapToEvmFunnel(
+      chainFunnel = await wrapToParallelEvmFunnel(
         chainFunnel,
         this.sharedData,
         dbTx,
