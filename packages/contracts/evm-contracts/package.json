@@ -5,7 +5,7 @@
   "main": "index.js",
   "types": "index.d.ts",
   "scripts": {
-    "clean": "rm -rf ./artifacts && rm -rf ./cache && rm -rf ./publish && rm -rf ./build",
+    "clean": "rm -rf ./artifacts && rm -rf ./cache && rm -rf ./publish && rm -rf ./build && rm -rf ./typechain-types",
     "test": "forge test",
     "build:contracts": "forge build && npx hardhat compile && hardhat docgen",
     "build:plugin": "rm -rf ./build && tsc --build .",

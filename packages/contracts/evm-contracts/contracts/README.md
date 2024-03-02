@@ -10,6 +10,7 @@ Core contracts
 State-annotated contracts
 <ul>
   <li>[AnnotatedMintNft](#AnnotatedMintNft): A standard ERC721 that accepts calldata in the mint function for any initialization data needed in a Paima dApp.</li>
+  <li>[InverseProjectedNft](#InverseProjectedNft): Project game state into a ERC721 NFT on an EVM layer.</li>
 </ul>
 Facilitating monetization
 <ul>
@@ -25,6 +26,9 @@ Facilitating monetization
 ## State-annotated contracts
 
 {{AnnotatedMintNft}}
+
+{{IInverseProjectedNft}}
+{{InverseProjectedNft}}
 
 ## Facilitating monetization
 
