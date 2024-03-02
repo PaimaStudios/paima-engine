@@ -19,16 +19,6 @@ if (process.env.SECURITY_NAMESPACE) {
   }
 }
 
-// Verify env file is filled out
-if (
-  !process.env.CONTRACT_ADDRESS ||
-  !process.env.CHAIN_URI ||
-  !process.env.CHAIN_ID ||
-  !process.env.BACKEND_URI
-) {
-  throw new Error('Please ensure you have filled out your .env file');
-}
-
 const config = {
   entryPoints: ['build/index.js'],
   bundle: true,

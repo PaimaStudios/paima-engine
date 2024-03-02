@@ -17,13 +17,7 @@ if (process.env.SECURITY_NAMESPACE) {
 }
 
 // Verify env file is filled out
-if (
-  !process.env.CONTRACT_ADDRESS ||
-  !process.env.CHAIN_URI ||
-  !process.env.CHAIN_ID ||
-  !process.env.BACKEND_URI
-)
-  throw new Error('Please ensure you have filled out your .env file');
+if (!process.env.BACKEND_URI) throw new Error('Please ensure you have filled out your .env file');
 
 export const config: esbuild.BuildOptions = {
   // JS output from previous compilation step used here instead of index.ts to have more control over the TS build process

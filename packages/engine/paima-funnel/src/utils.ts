@@ -1,8 +1,9 @@
 import type { ChainData, ChainDataExtensionDatum, PresyncChainData } from '@paima/sm';
-import type { Network } from '@paima/utils';
+import type { ConfigNetworkType } from '@paima/utils';
 
 export function groupCdeData(
-  network: Network,
+  network: string,
+  networkType: ConfigNetworkType,
   fromBlock: number,
   toBlock: number,
   data: ChainDataExtensionDatum[][]
@@ -22,6 +23,7 @@ export function groupCdeData(
       blockNumber,
       extensionDatums,
       network,
+      networkType,
     });
   }
   return result;
@@ -31,10 +33,31 @@ export function composeChainData(
   baseChainData: ChainData[],
   cdeData: PresyncChainData[]
 ): ChainData[] {
-  return baseChainData.map(blockData => ({
-    ...blockData,
-    extensionDatums: cdeData.find(
+  return baseChainData.map(blockData => {
+    const matchingData = cdeData.find(
       blockCdeData => blockCdeData.blockNumber === blockData.blockNumber
-    )?.extensionDatums,
-  }));
+    );
+
+    if (!matchingData) {
+      return blockData;
+    }
+
+    if (blockData.extensionDatums) {
+      if (matchingData.extensionDatums) {
+        blockData.extensionDatums.push(...matchingData.extensionDatums);
+      }
+    } else if (matchingData.extensionDatums) {
+      blockData.extensionDatums = matchingData.extensionDatums;
+    }
+
+    if (blockData.internalEvents) {
+      if (matchingData.internalEvents) {
+        blockData.internalEvents.push(...matchingData.internalEvents);
+      }
+    } else if (matchingData.internalEvents) {
+      blockData.internalEvents = matchingData.internalEvents;
+    }
+
+    return blockData;
+  });
 }

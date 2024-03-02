@@ -1,6 +1,6 @@
 import { FunnelFactory } from '@paima/funnel';
 import paimaRuntime, { registerDocs, registerValidationErrorHandler } from '@paima/runtime';
-import { ENV, doLog } from '@paima/utils';
+import { ENV, GlobalConfig, doLog } from '@paima/utils';
 import { exec } from 'child_process';
 import { createInterface } from 'readline';
 import { gameSM } from '../sm.js';
@@ -92,20 +92,7 @@ export const initCommand = async (): Promise<void> => {
 // Run command logic
 export const runPaimaEngine = async (): Promise<void> => {
   // Verify env file is filled out before progressing
-  const restrictions = [
-    {
-      name: 'CONTRACT_ADDRESS',
-      val: ENV.CONTRACT_ADDRESS || undefined,
-    },
-    {
-      name: 'CHAIN_URI',
-      val: ENV.CHAIN_URI || undefined,
-    },
-    {
-      name: 'CHAIN_ID',
-      val: ENV.CHAIN_ID || undefined,
-    },
-  ];
+  const restrictions = [];
   // localhost networks start at block 0, so it's easier to just enable a start block of 0 for them
   if (ENV.NETWORK !== 'localhost') {
     restrictions.push({
@@ -121,13 +108,18 @@ export const runPaimaEngine = async (): Promise<void> => {
     process.exit(0);
   }
 
+  const [_, config] = await GlobalConfig.mainEvmConfig();
+
   // Check that packed game code is available
   if (checkForPackedGameCode()) {
     doLog(`Starting Game Node...`);
-    doLog(`Using RPC: ${ENV.CHAIN_URI}`);
-    doLog(`Targeting Smart Contact: ${ENV.CONTRACT_ADDRESS}`);
+    doLog(`Using RPC: ${config.chainUri}`);
+    doLog(`Targeting Smart Contact: ${config.paimaL2ContractAddress}`);
     const stateMachine = gameSM();
-    const funnelFactory = await FunnelFactory.initialize(ENV.CHAIN_URI, ENV.CONTRACT_ADDRESS);
+    const funnelFactory = await FunnelFactory.initialize(
+      config.chainUri,
+      config.paimaL2ContractAddress
+    );
     const engine = paimaRuntime.initialize(funnelFactory, stateMachine, ENV.GAME_NODE_VERSION);
 
     EngineService.INSTANCE.updateSM(stateMachine);

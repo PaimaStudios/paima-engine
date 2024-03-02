@@ -1,4 +1,4 @@
-import { ENV, Network, doLog, timeout } from '@paima/utils';
+import { ENV, EvmConfig, GlobalConfig, doLog, timeout } from '@paima/utils';
 import type { ChainFunnel, ReadPresyncDataFrom } from '@paima/runtime';
 import type { ChainData, PresyncChainData } from '@paima/sm';
 import { getBaseChainDataMulti, getBaseChainDataSingle } from '../../reading.js';
@@ -9,16 +9,27 @@ import type { FunnelSharedData } from '../BaseFunnel.js';
 import { RpcCacheEntry, RpcRequestState } from '../FunnelCache.js';
 import type { PoolClient } from 'pg';
 import { FUNNEL_PRESYNC_FINISHED } from '@paima/utils';
+import { ConfigNetworkType } from '@paima/utils';
 
 const GET_BLOCK_NUMBER_TIMEOUT = 5000;
 
 export class BlockFunnel extends BaseFunnel implements ChainFunnel {
-  protected constructor(sharedData: FunnelSharedData, dbTx: PoolClient) {
+  config: EvmConfig;
+  chainName: string;
+
+  protected constructor(
+    sharedData: FunnelSharedData,
+    dbTx: PoolClient,
+    config: EvmConfig,
+    chainName: string
+  ) {
     super(sharedData, dbTx);
     // TODO: replace once TS5 decorators are better supported
     this.readData.bind(this);
     this.readPresyncData.bind(this);
     this.getDbTx.bind(this);
+    this.config = config;
+    this.chainName = chainName;
   }
 
   public override async readData(blockHeight: number): Promise<ChainData[]> {
@@ -32,10 +43,10 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
     }
 
     if (toBlock === fromBlock) {
-      doLog(`Block funnel ${ENV.CHAIN_ID}: #${toBlock}`);
+      doLog(`Block funnel ${this.config.chainId}: #${toBlock}`);
       return await this.internalReadDataSingle(fromBlock);
     } else {
-      doLog(`Block funnel ${ENV.CHAIN_ID}: #${fromBlock}-${toBlock}`);
+      doLog(`Block funnel ${this.config.chainId}: #${fromBlock}-${toBlock}`);
       return await this.internalReadDataMulti(fromBlock, toBlock);
     }
   }
@@ -53,7 +64,7 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
 
     const latestBlockQueryState = this.sharedData.cacheManager.cacheEntries[
       RpcCacheEntry.SYMBOL
-    ]?.getState(ENV.CHAIN_ID);
+    ]?.getState(this.config.chainId);
     if (latestBlockQueryState?.state !== RpcRequestState.HasResult) {
       throw new Error(`[funnel] latest block cache entry not found`);
     }
@@ -78,11 +89,12 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
           this.sharedData.web3,
           this.sharedData.paimaL2Contract,
           blockNumber,
-          this.dbTx
+          this.dbTx,
+          this.chainName
         ),
         getUngroupedCdeData(
           this.sharedData.web3,
-          this.sharedData.extensions,
+          this.sharedData.extensions.filter(extension => extension.network === this.chainName),
           blockNumber,
           blockNumber
         ),
@@ -114,11 +126,23 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
           this.sharedData.paimaL2Contract,
           fromBlock,
           toBlock,
-          this.dbTx
+          this.dbTx,
+          this.chainName
         ),
-        getUngroupedCdeData(this.sharedData.web3, this.sharedData.extensions, fromBlock, toBlock),
+        getUngroupedCdeData(
+          this.sharedData.web3,
+          this.sharedData.extensions.filter(extension => extension.network === this.chainName),
+          fromBlock,
+          toBlock
+        ),
       ]);
-      const cdeData = groupCdeData(Network.CARDANO, fromBlock, toBlock, ungroupedCdeData);
+      const cdeData = groupCdeData(
+        this.chainName,
+        ConfigNetworkType.EVM,
+        fromBlock,
+        toBlock,
+        ungroupedCdeData
+      );
       return composeChainData(baseChainData, cdeData);
     } catch (err) {
       doLog(`[funnel] at ${fromBlock}-${toBlock} caught ${err}`);
@@ -128,34 +152,42 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
 
   public override async readPresyncData(
     args: ReadPresyncDataFrom
-  ): Promise<{ [network: number]: PresyncChainData[] | typeof FUNNEL_PRESYNC_FINISHED }> {
-    let arg = args.find(arg => arg.network == Network.EVM);
+  ): Promise<{ [network: string]: PresyncChainData[] | typeof FUNNEL_PRESYNC_FINISHED }> {
+    let arg = args.find(arg => arg.network == this.chainName);
 
     if (!arg) {
-      return [];
+      return {};
     }
 
     let fromBlock = arg.from;
     let toBlock = arg.to;
 
     if (fromBlock >= ENV.START_BLOCKHEIGHT) {
-      return { [Network.EVM]: FUNNEL_PRESYNC_FINISHED };
+      return { [this.chainName]: FUNNEL_PRESYNC_FINISHED };
     }
 
     try {
       toBlock = Math.min(toBlock, ENV.START_BLOCKHEIGHT);
       fromBlock = Math.max(fromBlock, 0);
       if (fromBlock > toBlock) {
-        return [];
+        return {};
       }
 
       const ungroupedCdeData = await getUngroupedCdeData(
         this.sharedData.web3,
-        this.sharedData.extensions,
+        this.sharedData.extensions.filter(extension => extension.network === this.chainName),
         fromBlock,
         toBlock
       );
-      return { [Network.EVM]: groupCdeData(Network.EVM, fromBlock, toBlock, ungroupedCdeData) };
+      return {
+        [this.chainName]: groupCdeData(
+          this.chainName,
+          ConfigNetworkType.EVM,
+          fromBlock,
+          toBlock,
+          ungroupedCdeData
+        ),
+      };
     } catch (err) {
       doLog(`[paima-funnel::readPresyncData] Exception occurred while reading blocks: ${err}`);
       throw err;
@@ -182,8 +214,10 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
       return newEntry;
     })();
 
-    cacheEntry.updateState(ENV.CHAIN_ID, latestBlock);
+    const [chainName, config] = await GlobalConfig.mainEvmConfig();
 
-    return new BlockFunnel(sharedData, dbTx);
+    cacheEntry.updateState(config.chainId, latestBlock);
+
+    return new BlockFunnel(sharedData, dbTx, config, chainName);
   }
 }

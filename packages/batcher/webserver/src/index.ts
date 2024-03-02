@@ -19,6 +19,7 @@ import type { BatchedSubunit } from '@paima/concise';
 import { createMessageForBatcher } from '@paima/concise';
 import { AddressType, getWriteNamespace } from '@paima/utils';
 import { hashBatchSubunit } from '@paima/concise';
+import { GlobalConfig } from '@paima/utils';
 
 const port = ENV.BATCHER_PORT;
 
@@ -105,7 +106,8 @@ async function initializeServer(
   errorCodeToMessage: ErrorMessageFxn,
   truffleProvider: TruffleEvmProvider
 ): Promise<void> {
-  const addressValidator = new AddressValidator(ENV.CHAIN_URI, pool);
+  const [chainName, config] = await GlobalConfig.mainEvmConfig();
+  const addressValidator = new AddressValidator(config.chainUri, pool);
   await addressValidator.initialize();
 
   server.get(

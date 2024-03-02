@@ -5,7 +5,6 @@ import {
   doLog,
   ENV,
   InternalEventType,
-  Network,
   SCHEDULED_DATA_ADDRESS,
   SCHEDULED_DATA_ID,
 } from '@paima/utils';
@@ -44,6 +43,8 @@ import type {
   GameStateMachineInitializer,
   InternalEvent,
 } from './types.js';
+import { ConfigNetworkType } from '@paima/utils';
+import assertNever from 'assert-never';
 
 export * from './types.js';
 export type * from './types.js';
@@ -68,8 +69,11 @@ const SM: GameStateMachineInitializer = {
         const blockHeight = b?.block_height ?? start ?? 0;
         return blockHeight;
       },
-      getPresyncBlockHeight: async (dbTx: PoolClient | Pool = readonlyDBConn): Promise<number> => {
-        const [b] = await getLatestProcessedCdeBlockheight.run(undefined, dbTx);
+      getPresyncBlockHeight: async (
+        network: string,
+        dbTx: PoolClient | Pool = readonlyDBConn
+      ): Promise<number> => {
+        const [b] = await getLatestProcessedCdeBlockheight.run({ network }, dbTx);
         const blockHeight = b?.block_height ?? 0;
         return blockHeight;
       },
@@ -80,8 +84,11 @@ const SM: GameStateMachineInitializer = {
         const slot = b?.slot ?? 0;
         return slot;
       },
-      presyncStarted: async (dbTx: PoolClient | Pool = readonlyDBConn): Promise<boolean> => {
-        const res = await getLatestProcessedCdeBlockheight.run(undefined, dbTx);
+      presyncStarted: async (
+        network: string,
+        dbTx: PoolClient | Pool = readonlyDBConn
+      ): Promise<boolean> => {
+        const res = await getLatestProcessedCdeBlockheight.run({ network }, dbTx);
         return res.length > 0;
       },
       syncStarted: async (dbTx: PoolClient | Pool = readonlyDBConn): Promise<boolean> => {
@@ -101,31 +108,40 @@ const SM: GameStateMachineInitializer = {
         return DBConn;
       },
       presyncProcess: async (dbTx: PoolClient, latestCdeData: PresyncChainData): Promise<void> => {
-        if (latestCdeData.network === Network.EVM) {
+        if (
+          latestCdeData.networkType === ConfigNetworkType.EVM ||
+          latestCdeData.networkType === ConfigNetworkType.EVM_OTHER
+        ) {
           const cdeDataLength = await processCdeData(
             latestCdeData.blockNumber,
+            latestCdeData.network,
             latestCdeData.extensionDatums,
             dbTx
           );
           if (cdeDataLength > 0) {
-            doLog(`Processed ${cdeDataLength} CDE events in block #${latestCdeData.blockNumber}`);
+            doLog(
+              `[${latestCdeData.network}] Processed ${cdeDataLength} CDE events in block #${latestCdeData.blockNumber}`
+            );
           }
-        } else if (latestCdeData.network === Network.CARDANO) {
+        } else if (latestCdeData.networkType === ConfigNetworkType.CARDANO) {
           const cdeDataLength = await processCardanoCdeData(
             latestCdeData.blockNumber,
             latestCdeData.extensionDatums,
             dbTx
           );
           if (cdeDataLength > 0) {
-            doLog(`Processed ${cdeDataLength} CDE events in slot #${latestCdeData.blockNumber}`);
+            doLog(
+              `[${latestCdeData.network}] Processed ${cdeDataLength} CDE events in slot #${latestCdeData.blockNumber}`
+            );
           }
         }
       },
       markPresyncMilestone: async (
         blockHeight: number,
+        network: string,
         dbTx: PoolClient | Pool = readonlyDBConn
       ): Promise<void> => {
-        await markCdeBlockheightProcessed.run({ block_height: blockHeight }, dbTx);
+        await markCdeBlockheightProcessed.run({ block_height: blockHeight, network }, dbTx);
       },
       markCardanoPresyncMilestone: async (dbTx: PoolClient, slot: number): Promise<void> => {
         await markCardanoCdeSlotProcessed.run({ slot: slot }, dbTx);
@@ -180,6 +196,7 @@ const SM: GameStateMachineInitializer = {
 
         const cdeDataLength = await processCdeData(
           latestChainData.blockNumber,
+          latestChainData.network,
           latestChainData.extensionDatums,
           dbTx
         );
@@ -256,11 +273,12 @@ async function processCdeDataBase(
 
 async function processCdeData(
   blockHeight: number,
+  network: string,
   cdeData: ChainDataExtensionDatum[] | undefined,
   dbTx: PoolClient
 ): Promise<number> {
   return await processCdeDataBase(cdeData, dbTx, async () => {
-    await markCdeBlockheightProcessed.run({ block_height: blockHeight }, dbTx);
+    await markCdeBlockheightProcessed.run({ block_height: blockHeight, network }, dbTx);
     return;
   });
 }
@@ -410,6 +428,17 @@ async function processInternalEvents(
       case InternalEventType.CardanoBestEpoch:
         await updateCardanoEpoch.run({ epoch: event.epoch }, dbTx);
         break;
+      case InternalEventType.EvmLastBlock:
+        await markCdeBlockheightProcessed.run(
+          {
+            block_height: event.block,
+            network: event.network,
+          },
+          dbTx
+        );
+        break;
+      default:
+        assertNever(event);
     }
   }
 }

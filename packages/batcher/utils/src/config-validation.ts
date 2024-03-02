@@ -5,7 +5,6 @@ export function getInvalidEnvVars(): string[] {
 
   const MANDATORY_TRUTHY_VARS: ReadonlyArray<keyof typeof ENV> = [
     // Blockchain
-    'CHAIN_URI',
     'CONTRACT_ADDRESS',
     'DEFAULT_FEE',
     'BATCHER_PRIVATE_KEY',

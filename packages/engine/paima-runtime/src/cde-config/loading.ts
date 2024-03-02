@@ -1,7 +1,7 @@
 import * as fs from 'fs/promises';
 import YAML from 'yaml';
 import type Web3 from 'web3';
-import type { Static, TSchema } from '@sinclair/typebox';
+import { Type, type Static, type TSchema } from '@sinclair/typebox';
 import { Value, ValueErrorType } from '@sinclair/typebox/value';
 
 import type { AbiItem } from '@paima/utils';
@@ -16,6 +16,8 @@ import {
   getErc6551RegistryContract,
   getOldErc6551RegistryContract,
   ERC6551_REGISTRY_DEFAULT,
+  defaultEvmMainNetworkName,
+  defaultCardanoNetworkName,
 } from '@paima/utils';
 
 import type {
@@ -46,7 +48,7 @@ import stableStringify from 'json-stable-stringify';
 type ValidationResult = [config: ChainDataExtension[], validated: boolean];
 
 export async function loadChainDataExtensions(
-  web3: Web3,
+  web3s: { [network: string]: Web3 },
   configFilePath: string
 ): Promise<ValidationResult> {
   let configFileData: string;
@@ -60,7 +62,7 @@ export async function loadChainDataExtensions(
   try {
     const config = parseCdeConfigFile(configFileData);
     const instantiatedExtensions = await Promise.all(
-      config.extensions.map((e, i) => instantiateExtension(e, i, web3))
+      config.extensions.map((e, i) => instantiateExtension(e, i, web3s))
     );
     return [instantiatedExtensions, true];
   } catch (err) {
@@ -68,6 +70,8 @@ export async function loadChainDataExtensions(
     return [[], false];
   }
 }
+
+const networkTagType = Type.Partial(Type.Object({ network: Type.String() }));
 
 // Validate the overall structure of the config file and extract the relevant data
 export function parseCdeConfigFile(configFileData: string): Static<typeof CdeConfig> {
@@ -80,21 +84,53 @@ export function parseCdeConfigFile(configFileData: string): Static<typeof CdeCon
   const checkedConfig = baseConfig.extensions.map(entry => {
     switch (entry.type) {
       case CdeEntryTypeName.ERC20:
-        return checkOrError(entry.name, ChainDataExtensionErc20Config, entry);
+        return checkOrError(
+          entry.name,
+          Type.Intersect([ChainDataExtensionErc20Config, networkTagType]),
+          entry
+        );
       case CdeEntryTypeName.ERC721:
-        return checkOrError(entry.name, ChainDataExtensionErc721Config, entry);
+        return checkOrError(
+          entry.name,
+          Type.Intersect([ChainDataExtensionErc721Config, networkTagType]),
+          entry
+        );
       case CdeEntryTypeName.ERC20Deposit:
-        return checkOrError(entry.name, ChainDataExtensionErc20DepositConfig, entry);
+        return checkOrError(
+          entry.name,
+          Type.Intersect([ChainDataExtensionErc20DepositConfig, networkTagType]),
+          entry
+        );
       case CdeEntryTypeName.Generic:
-        return checkOrError(entry.name, ChainDataExtensionGenericConfig, entry);
+        return checkOrError(
+          entry.name,
+          Type.Intersect([ChainDataExtensionGenericConfig, networkTagType]),
+          entry
+        );
       case CdeEntryTypeName.ERC6551Registry:
-        return checkOrError(entry.name, ChainDataExtensionErc6551RegistryConfig, entry);
+        return checkOrError(
+          entry.name,
+          Type.Intersect([ChainDataExtensionErc6551RegistryConfig, networkTagType]),
+          entry
+        );
       case CdeEntryTypeName.CardanoDelegation:
-        return checkOrError(entry.name, ChainDataExtensionCardanoDelegationConfig, entry);
+        return checkOrError(
+          entry.name,
+          Type.Intersect([ChainDataExtensionCardanoDelegationConfig, networkTagType]),
+          entry
+        );
       case CdeEntryTypeName.CardanoProjectedNFT:
-        return checkOrError(entry.name, ChainDataExtensionCardanoProjectedNFTConfig, entry);
+        return checkOrError(
+          entry.name,
+          Type.Intersect([ChainDataExtensionCardanoProjectedNFTConfig, networkTagType]),
+          entry
+        );
       case CdeEntryTypeName.CardanoDelayedAsset:
-        return checkOrError(entry.name, ChainDataExtensionCardanoDelayedAssetConfig, entry);
+        return checkOrError(
+          entry.name,
+          Type.Intersect([ChainDataExtensionCardanoDelayedAssetConfig, networkTagType]),
+          entry
+        );
       default:
         assertNever(entry.type);
     }
@@ -147,64 +183,74 @@ function hashConfig(config: any): number {
 async function instantiateExtension(
   config: Static<typeof CdeConfig>['extensions'][0],
   index: number,
-  web3: Web3
+  web3s: { [network: string]: Web3 }
 ): Promise<ChainDataExtension> {
+  const network = config.network || defaultEvmMainNetworkName;
   switch (config.type) {
     case CdeEntryTypeName.ERC20:
       return {
         ...config,
+        network,
         cdeId: index,
         hash: hashConfig(config),
         cdeType: ChainDataExtensionType.ERC20,
-        contract: getErc20Contract(config.contractAddress, web3),
+        contract: getErc20Contract(config.contractAddress, web3s[network]),
       };
     case CdeEntryTypeName.ERC721:
-      if (await isPaimaErc721(config, web3)) {
+      if (await isPaimaErc721(config, web3s[config.network || defaultEvmMainNetworkName])) {
         return {
           ...config,
+          network,
           cdeId: index,
           hash: hashConfig(config),
           cdeType: ChainDataExtensionType.PaimaERC721,
-          contract: getPaimaErc721Contract(config.contractAddress, web3),
+          contract: getPaimaErc721Contract(config.contractAddress, web3s[network]),
         };
       } else {
         return {
           ...config,
+          network,
           cdeId: index,
           hash: hashConfig(config),
           cdeType: ChainDataExtensionType.ERC721,
-          contract: getErc721Contract(config.contractAddress, web3),
+          contract: getErc721Contract(config.contractAddress, web3s[network]),
         };
       }
     case CdeEntryTypeName.ERC20Deposit:
       return {
         ...config,
+        network,
         cdeId: index,
         hash: hashConfig(config),
         cdeType: ChainDataExtensionType.ERC20Deposit,
-        contract: getErc20Contract(config.contractAddress, web3),
+        contract: getErc20Contract(config.contractAddress, web3s[network]),
       };
     case CdeEntryTypeName.Generic:
-      return await instantiateCdeGeneric(config, index, web3);
+      return {
+        ...(await instantiateCdeGeneric(config, index, web3s[network])),
+        network,
+      };
     case CdeEntryTypeName.ERC6551Registry:
       const contractAddress = config.contractAddress ?? ERC6551_REGISTRY_DEFAULT.New;
       return {
         ...config,
+        network,
         cdeId: index,
         hash: hashConfig(config),
         cdeType: ChainDataExtensionType.ERC6551Registry,
         contractAddress,
         contract: ((): ChainDataExtensionErc6551Registry['contract'] => {
           if (contractAddress === ERC6551_REGISTRY_DEFAULT.Old) {
-            return getOldErc6551RegistryContract(contractAddress, web3);
+            return getOldErc6551RegistryContract(contractAddress, web3s[network]);
           }
           // assume everything else is using the new contract
-          return getErc6551RegistryContract(contractAddress, web3);
+          return getErc6551RegistryContract(contractAddress, web3s[network]);
         })(),
       };
     case CdeEntryTypeName.CardanoDelegation:
       return {
         ...config,
+        network: config.network || defaultCardanoNetworkName,
         cdeId: index,
         hash: hashConfig(config),
         cdeType: ChainDataExtensionType.CardanoPool,
@@ -212,6 +258,7 @@ async function instantiateExtension(
     case CdeEntryTypeName.CardanoProjectedNFT:
       return {
         ...config,
+        network: config.network || defaultCardanoNetworkName,
         cdeId: index,
         hash: hashConfig(config),
         cdeType: ChainDataExtensionType.CardanoProjectedNFT,
@@ -219,6 +266,7 @@ async function instantiateExtension(
     case CdeEntryTypeName.CardanoDelayedAsset:
       return {
         ...config,
+        network: config.network || defaultCardanoNetworkName,
         cdeId: index,
         hash: hashConfig(config),
         cdeType: ChainDataExtensionType.CardanoAssetUtxo,
