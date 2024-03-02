@@ -80,9 +80,7 @@ export type CarpFunnelCacheEntryState = {
   epoch: number | undefined;
   cursors:
     | {
-        [cdeId: number]:
-          | { kind: 'paginationCursor'; cursor: string; finished: boolean }
-          | { kind: 'slot'; slot: number; finished: boolean };
+        [cdeId: number]: { cursor: string; finished: boolean };
       }
     | undefined;
 };
@@ -112,12 +110,7 @@ export class CarpFunnelCacheEntry implements FunnelCacheEntry {
     }
   }
 
-  public updateCursor(
-    cdeId: number,
-    presyncCursor:
-      | { kind: 'paginationCursor'; cursor: string; finished: boolean }
-      | { kind: 'slot'; slot: number; finished: boolean }
-  ): void {
+  public updateCursor(cdeId: number, presyncCursor: { cursor: string; finished: boolean }): void {
     if (this.state) {
       if (!this.state.cursors) {
         this.state.cursors = {};

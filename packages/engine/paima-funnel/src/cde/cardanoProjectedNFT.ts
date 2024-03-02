@@ -7,40 +7,77 @@ import { ChainDataExtensionDatumType, DEFAULT_FUNNEL_TIMEOUT, timeout } from '@p
 import { Routes, query } from '@dcspark/carp-client/client/src';
 import { ProjectedNftStatus } from '@dcspark/carp-client/shared/models/ProjectedNftRange';
 import type { ProjectedNftRangeResponse } from '@dcspark/carp-client/shared/models/ProjectedNftRange';
+import { BlockTxPair } from '@dcspark/carp-client/shared/models/common';
 
 export default async function getCdeProjectedNFTData(
   url: string,
   extension: ChainDataExtensionCardanoProjectedNFT,
   fromAbsoluteSlot: number,
   toAbsoluteSlot: number,
-  getBlockNumber: (slot: number) => number
+  getBlockNumber: (slot: number) => number,
+  isPresync: boolean,
+  untilBlock: string,
+  fromTx: BlockTxPair | undefined,
+  paginationLimit: number
 ): Promise<ChainDataExtensionDatum[]> {
-  const events = await timeout(
-    query(url, Routes.projectedNftEventsRange, {
-      range: { minSlot: fromAbsoluteSlot, maxSlot: toAbsoluteSlot },
-      address: undefined,
-    }),
-    DEFAULT_FUNNEL_TIMEOUT
-  );
+  let result = [] as ChainDataExtensionDatum[];
 
-  return events
-    .map(e => eventToCdeDatum(e, extension, getBlockNumber(e.actionSlot)))
-    .filter(e => e != null)
-    .map(e => e!);
+  while (true) {
+    const events = await timeout(
+      query(url, Routes.projectedNftEventsRange, {
+        address: undefined,
+        slotLimits: {
+          from: fromAbsoluteSlot,
+          to: toAbsoluteSlot,
+        },
+        limit: paginationLimit,
+        untilBlock,
+        after: fromTx,
+      }),
+      DEFAULT_FUNNEL_TIMEOUT
+    );
+
+    if (events.length > 0) {
+      const last = events[events.length - 1];
+
+      fromTx = {
+        tx: last.txId,
+        block: last.block,
+      };
+    }
+
+    events
+      .flatMap(event =>
+        event.payload.map(payload => ({ txId: event.txId, block: event.block, ...payload }))
+      )
+      .map(e => eventToCdeDatum(e, extension, getBlockNumber(e.actionSlot)))
+      .filter(e => e != null)
+      .map(e => e!)
+      .forEach(element => {
+        result.push(element);
+      });
+
+    if (events.length === 0 || isPresync) {
+      break;
+    }
+  }
+
+  return result;
 }
 
 function eventToCdeDatum(
-  event: ProjectedNftRangeResponse[0],
+  event: { txId: string; block: string } & ProjectedNftRangeResponse[0]['payload'][0],
   extension: ChainDataExtensionCardanoProjectedNFT,
   blockNumber: number
 ): CdeCardanoProjectedNFTDatum | null {
-  if (
-    event.actionTxId === null ||
-    event.actionTxId == '' ||
-    event.status === ProjectedNftStatus.Invalid
-  ) {
+  if (event.txId === null || event.txId == '' || event.status === ProjectedNftStatus.Invalid) {
     return null;
   }
+
+  const cursor: BlockTxPair = {
+    block: event.block,
+    tx: event.txId,
+  };
 
   return {
     cdeId: extension.cdeId,
@@ -49,7 +86,7 @@ function eventToCdeDatum(
     payload: {
       ownerAddress: event.ownerAddress != null ? event.ownerAddress : '',
 
-      actionTxId: event.actionTxId,
+      actionTxId: event.txId,
       actionOutputIndex: event.actionOutputIndex != null ? event.actionOutputIndex : undefined,
 
       previousTxHash: event.previousTxHash != null ? event.previousTxHash : undefined,
@@ -65,5 +102,6 @@ function eventToCdeDatum(
       forHowLong: event.forHowLong != null ? event.forHowLong : undefined,
     },
     scheduledPrefix: extension.scheduledPrefix,
+    paginationCursor: { cursor: JSON.stringify(cursor), finished: false },
   };
 }
