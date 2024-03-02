@@ -123,7 +123,7 @@ export const runPaimaEngine = async (): Promise<void> => {
     const engine = paimaRuntime.initialize(funnelFactory, stateMachine, ENV.GAME_NODE_VERSION);
 
     EngineService.INSTANCE.updateSM(stateMachine);
-    engine.setPollingRate(config.pollingRate);
+    engine.setPollingRate(ENV.POLLING_RATE);
     engine.addEndpoints(importTsoaFunction());
     engine.addEndpoints(server => {
       RegisterRoutes(server);

@@ -21,14 +21,12 @@ const EvmConfigSchemaRequiredProperties = Type.Object({
   chainCurrencyName: Type.String(),
   chainCurrencySymbol: Type.String(),
   chainCurrencyDecimals: Type.Number(),
-  blockTime: Type.Number(),
 });
 
 const PaimaL2ContractType = Type.RegExp(/^0x[0-9a-fA-F]{40}$/i);
 
 const EvmConfigSchemaOptionalProperties = Type.Object({
   chainExplorerUri: Type.String({ default: '' }),
-  pollingRate: Type.Number({ default: 4 - 0.1 }),
   funnelBlockGroupSize: Type.Number({ default: 100 }),
   presyncStepSize: Type.Number({ default: 1000 }),
 });
@@ -99,11 +97,8 @@ export const BaseConfig = <T extends boolean>(T: T) => Type.Record(Type.String()
 export const BaseConfigWithoutDefaults = BaseConfig(false);
 export const BaseConfigWithDefaults = BaseConfig(true);
 
-const evmConfigDefaults = (
-  blockTime: number | undefined
-): Static<typeof EvmConfigSchemaOptionalProperties> => ({
+const evmConfigDefaults = (): Static<typeof EvmConfigSchemaOptionalProperties> => ({
   chainExplorerUri: '',
-  pollingRate: (blockTime || 4) - 0.1,
   funnelBlockGroupSize: 100,
   presyncStepSize: 1000,
 });
@@ -133,9 +128,7 @@ export async function loadConfig(): Promise<Static<typeof BaseConfigWithDefaults
       chainCurrencyName: ENV.CHAIN_CURRENCY_NAME,
       chainCurrencySymbol: ENV.CHAIN_CURRENCY_SYMBOL,
       chainCurrencyDecimals: ENV.CHAIN_CURRENCY_DECIMALS,
-      blockTime: ENV.BLOCK_TIME,
       chainExplorerUri: ENV.CHAIN_EXPLORER_URI,
-      pollingRate: ENV.POLLING_RATE,
       funnelBlockGroupSize: ENV.DEFAULT_FUNNEL_GROUP_SIZE,
       presyncStepSize: ENV.DEFAULT_PRESYNC_STEP_SIZE,
       paimaL2ContractAddress: ENV.CONTRACT_ADDRESS,
@@ -170,10 +163,7 @@ export async function loadConfig(): Promise<Static<typeof BaseConfigWithDefaults
       switch (networkConfig.type) {
         case ConfigNetworkType.EVM_OTHER:
         case ConfigNetworkType.EVM:
-          config[network] = Object.assign(
-            evmConfigDefaults(networkConfig.blockTime),
-            networkConfig
-          );
+          config[network] = Object.assign(evmConfigDefaults(), networkConfig);
           break;
         case ConfigNetworkType.CARDANO:
           config[network] = Object.assign(cardanoConfigDefaults, networkConfig);
