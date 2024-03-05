@@ -60,6 +60,7 @@ async function getSpecificCdeData(
     case ChainDataExtensionType.CardanoProjectedNFT:
     case ChainDataExtensionType.CardanoAssetUtxo:
     case ChainDataExtensionType.CardanoTransfer:
+    case ChainDataExtensionType.CardanoMintBurn:
       // this is used by the block funnel, which can't get information for this
       // extension
       return [];
