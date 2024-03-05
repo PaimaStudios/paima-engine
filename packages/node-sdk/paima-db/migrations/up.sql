@@ -205,5 +205,6 @@ CREATE TABLE cde_cardano_transfer (
   cde_id INTEGER NOT NULL,
   tx_id TEXT NOT NULL,
   raw_tx TEXT NOT NULL,
+  metadata TEXT,
   PRIMARY KEY (cde_id, tx_id)
 )
