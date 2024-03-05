@@ -25,6 +25,7 @@ import getCdePoolData from '../../cde/cardanoPool.js';
 import getCdeProjectedNFTData from '../../cde/cardanoProjectedNFT.js';
 import getCdeDelayedAsset from '../../cde/delayedAsset.js';
 import getCdeTransferData from '../../cde/cardanoTransfer.js';
+import getCdeMintBurnData from '../../cde/cardanoMintBurn.js';
 import { query } from '@dcspark/carp-client/client/src/index';
 import { Routes } from '@dcspark/carp-client/shared/routes';
 import { FUNNEL_PRESYNC_FINISHED, InternalEventType } from '@paima/utils';
@@ -365,6 +366,31 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
                   data,
                 }));
               }
+              case ChainDataExtensionType.CardanoMintBurn: {
+                const cursors = this.cache.getState().cursors;
+                const startingSlot = this.cache.getState().startingSlot - 1;
+
+                const cursor = cursors && cursors[extension.cdeId];
+
+                const data = getCdeMintBurnData(
+                  this.carpUrl,
+                  extension,
+                  extension.startSlot,
+                  Math.min(startingSlot, extension.stopSlot || startingSlot),
+                  slot => slot,
+                  true,
+                  stableBlock.block.hash,
+                  cursor ? (JSON.parse(cursor.cursor) as BlockTxPair) : undefined,
+                  this.config.paginationLimit,
+                  this.chainName
+                ).then(mapCursorPaginatedData(extension.cdeId));
+
+                return data.then(data => ({
+                  cdeId: extension.cdeId,
+                  cdeType: extension.cdeType,
+                  data,
+                }));
+              }
               default:
                 throw new Error(`[carp funnel] unhandled extension: ${extension.cdeType}`);
             }
@@ -582,6 +608,21 @@ async function readDataInternal(
           );
 
           return transferData;
+        case ChainDataExtensionType.CardanoMintBurn:
+          const mintBurnData = getCdeMintBurnData(
+            carpUrl,
+            extension,
+            min,
+            Math.min(max, extension.stopSlot || max),
+            mapSlotToBlockNumber,
+            false, // not presync
+            stableBlockId,
+            undefined, // we want everything in the range, so no starting point for the pagination
+            paginationLimit,
+            chainName
+          );
+
+          return mintBurnData;
         default:
           return Promise.resolve([]);
       }

@@ -207,4 +207,12 @@ CREATE TABLE cde_cardano_transfer (
   raw_tx TEXT NOT NULL,
   metadata TEXT,
   PRIMARY KEY (cde_id, tx_id)
-)
+);
+
+CREATE TABLE cde_cardano_mint_burn(
+  cde_id INTEGER NOT NULL,
+  tx_id TEXT NOT NULL,
+  metadata TEXT NOT NULL,
+  assets JSONB NOT NULL,
+  PRIMARY KEY (cde_id, tx_id)
+);

@@ -132,6 +132,12 @@ interface CdeDatumCardanoTransferPayload {
   metadata: string | null;
 }
 
+interface CdeDatumCardanoMintBurnPayload {
+  txId: string;
+  metadata: string | null;
+  assets: { [policyId: string]: { [assetName: string]: string } };
+}
+
 type ChainDataExtensionPayload =
   | CdeDatumErc20TransferPayload
   | CdeDatumErc721MintPayload
@@ -213,6 +219,13 @@ export interface CdeCardanoTransferDatum extends CdeDatumBase {
   paginationCursor: { cursor: string; finished: boolean };
 }
 
+export interface CdeCardanoMintBurnDatum extends CdeDatumBase {
+  cdeDatumType: ChainDataExtensionDatumType.CardanoMintBurn;
+  payload: CdeDatumCardanoMintBurnPayload;
+  scheduledPrefix: string | undefined;
+  paginationCursor: { cursor: string; finished: boolean };
+}
+
 export type ChainDataExtensionDatum =
   | CdeErc20TransferDatum
   | CdeErc721MintDatum
@@ -223,7 +236,8 @@ export type ChainDataExtensionDatum =
   | CdeCardanoPoolDatum
   | CdeCardanoProjectedNFTDatum
   | CdeCardanoAssetUtxoDatum
-  | CdeCardanoTransferDatum;
+  | CdeCardanoTransferDatum
+  | CdeCardanoMintBurnDatum;
 
 export enum CdeEntryTypeName {
   Generic = 'generic',
@@ -235,6 +249,7 @@ export enum CdeEntryTypeName {
   CardanoProjectedNFT = 'cardano-projected-nft',
   CardanoDelayedAsset = 'cardano-delayed-asset',
   CardanoTransfer = 'cardano-transfer',
+  CardanoMintBurn = 'cardano-mint-burn',
 }
 
 const EvmAddress = Type.Transform(Type.RegExp('0x[0-9a-fA-F]{40}'))
@@ -394,6 +409,20 @@ export type ChainDataExtensionCardanoTransfer = ChainDataExtensionBase &
     cdeType: ChainDataExtensionType.CardanoTransfer;
   };
 
+export const ChainDataExtensionCardanoMintBurnConfig = Type.Object({
+  type: Type.Literal(CdeEntryTypeName.CardanoMintBurn),
+  policyIds: Type.Array(Type.String()),
+  scheduledPrefix: Type.String(),
+  startSlot: Type.Number(),
+  stopSlot: Type.Optional(Type.Number()),
+  name: Type.String(),
+});
+
+export type ChainDataExtensionCardanoMintBurn = ChainDataExtensionBase &
+  Static<typeof ChainDataExtensionCardanoMintBurnConfig> & {
+    cdeType: ChainDataExtensionType.CardanoMintBurn;
+  };
+
 export const CdeConfig = Type.Object({
   extensions: Type.Array(
     Type.Intersect([
@@ -407,6 +436,7 @@ export const CdeConfig = Type.Object({
         ChainDataExtensionCardanoProjectedNFTConfig,
         ChainDataExtensionCardanoDelayedAssetConfig,
         ChainDataExtensionCardanoTransferConfig,
+        ChainDataExtensionCardanoMintBurnConfig,
       ]),
       Type.Partial(Type.Object({ network: Type.String() })),
     ])
@@ -437,6 +467,7 @@ export type ChainDataExtension = (
   | ChainDataExtensionCardanoProjectedNFT
   | ChainDataExtensionCardanoDelayedAsset
   | ChainDataExtensionCardanoTransfer
+  | ChainDataExtensionCardanoMintBurn
 ) & { network: string | undefined };
 
 export type GameStateTransitionFunctionRouter = (

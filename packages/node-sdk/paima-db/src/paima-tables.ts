@@ -425,6 +425,29 @@ const TABLE_DATA_CDE_CARDANO_TRANSFER: TableData = {
   creationQuery: QUERY_CREATE_TABLE_CDE_CARDANO_TRANSFER,
 };
 
+const QUERY_CREATE_TABLE_CDE_CARDANO_MINT_BURN = `
+CREATE TABLE cde_cardano_mint_burn(
+  cde_id INTEGER NOT NULL,
+  tx_id TEXT NOT NULL,
+  metadata TEXT NOT NULL,
+  assets JSONB NOT NULL,
+  PRIMARY KEY (cde_id, tx_id)
+)
+`;
+
+const TABLE_DATA_CDE_CARDANO_MINT_BURN: TableData = {
+  tableName: 'cde_cardano_mint_burn',
+  primaryKeyColumns: ['cde_id', 'tx_id'],
+  columnData: packTuples([
+    ['cde_id', 'integer', 'NO', ''],
+    ['tx_id', 'text', 'NO', ''],
+    ['metadata', 'text', 'NO', ''],
+    ['assets', 'jsonb', 'NO', ''],
+  ]),
+  serialColumns: [],
+  creationQuery: QUERY_CREATE_TABLE_CDE_CARDANO_MINT_BURN,
+};
+
 const QUERY_CREATE_TABLE_EMULATED = `
 CREATE TABLE emulated_block_heights (
   deployment_chain_block_height INTEGER PRIMARY KEY,
@@ -565,4 +588,5 @@ export const TABLES: TableData[] = [
   TABLE_DATA_CARDANO_LAST_EPOCH,
   TABLE_DATA_CDE_TRACKING_CARDANO_PAGINATION,
   TABLE_DATA_CDE_CARDANO_TRANSFER,
+  TABLE_DATA_CDE_CARDANO_MINT_BURN,
 ];
