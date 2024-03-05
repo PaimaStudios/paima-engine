@@ -407,6 +407,7 @@ CREATE TABLE cde_cardano_transfer (
   cde_id INTEGER NOT NULL,
   tx_id TEXT NOT NULL,
   raw_tx TEXT NOT NULL,
+  metadata TEXT,
   PRIMARY KEY (cde_id, tx_id)
 )
 `;
@@ -418,6 +419,7 @@ const TABLE_DATA_CDE_CARDANO_TRANSFER: TableData = {
     ['cde_id', 'integer', 'NO', ''],
     ['tx_id', 'text', 'NO', ''],
     ['raw_tx', 'text', 'NO', ''],
+    ['metadata', 'text', 'YES', ''],
   ]),
   serialColumns: [],
   creationQuery: QUERY_CREATE_TABLE_CDE_CARDANO_TRANSFER,

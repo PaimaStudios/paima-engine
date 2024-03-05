@@ -25,6 +25,7 @@ export default async function processDatum(
         cde_id: cdeId,
         tx_id: txId,
         raw_tx: rawTx,
+        metadata: metadata
       },
     ],
   ];
