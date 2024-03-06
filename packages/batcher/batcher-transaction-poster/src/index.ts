@@ -30,9 +30,7 @@ class BatchedTransactionPoster {
     this.maxSize = maxSize;
     this.pool = pool;
     this.fee = ENV.DEFAULT_FEE;
-    // TODO: replace this with something more proper
-    console.log('Proider?');
-    console.log(provider.getConnection().api);
+    // todo: replace with a typed version of the contract
     this.storage = new ethers.Contract(
       contractAddress,
       paimaL2ContractBuild.abi,
@@ -43,8 +41,6 @@ class BatchedTransactionPoster {
   public initialize = async (): Promise<void> => {
     try {
       this.fee = await this.storage.fee();
-      console.log('Fetched fee');
-      console.log(this.fee);
     } catch (err) {
       console.log(
         '[batcher-transaction-poster] Error while retrieving fee, reverting to default:',
@@ -57,7 +53,6 @@ class BatchedTransactionPoster {
   public run = async (periodMs: number): Promise<void> => {
     while (keepRunning) {
       try {
-        console.log('[BatchedTransactionPoster::run] posting start');
         const postedInputCount = await this.postingRound();
         if (!keepRunning) {
           break;
@@ -72,7 +67,6 @@ class BatchedTransactionPoster {
         }
         await wait(periodMs);
       }
-      console.log('[BatchedTransactionPoster::run] run end');
     }
 
     while (true) {
@@ -96,7 +90,7 @@ class BatchedTransactionPoster {
       'function paimaSubmitGameInput(bytes calldata data) payable',
     ]);
     const encodedData = iface.encodeFunctionData('paimaSubmitGameInput', [hexMsg]);
-    const result = await this.provider.getConnection().api.sendTransaction({
+    const transaction = await this.provider.getConnection().api.sendTransaction({
       data: encodedData,
       to: this.contractAddress,
       from: this.provider.getAddress().address,
@@ -104,7 +98,8 @@ class BatchedTransactionPoster {
       gasLimit: estimateGasLimit(msg.length),
       nonce,
     });
-    return [result.blockNumber!, result.hash];
+    const receipt = (await transaction.wait())!;
+    return [receipt.blockNumber, receipt.hash];
   };
 
   // Returns number of input successfully posted, or a negative number on failure.
