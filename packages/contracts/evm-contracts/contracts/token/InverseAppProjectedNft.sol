@@ -10,9 +10,9 @@ import {IERC4906} from "@openzeppelin/contracts/interfaces/IERC4906.sol";
 import {IInverseProjectedNft} from "./IInverseProjectedNft.sol";
 import {IInverseAppProjectedNft} from "./IInverseAppProjectedNft.sol";
 
-struct MintEntry { 
-   address minter;
-   uint256 userTokenId;
+struct MintEntry {
+    address minter;
+    uint256 userTokenId;
 }
 
 /// @dev A standard ERC721 that accepts calldata in the mint function for any initialization data needed in a Paima dApp.
@@ -105,7 +105,12 @@ contract InverseAppProjectedNft is IInverseAppProjectedNft, ERC721, Ownable {
         _requireOwned(tokenId);
         MintEntry memory entry = tokenToMint[tokenId];
         string memory URI = bytes(customBaseUri).length > 0
-            ? string.concat(customBaseUri, Strings.toHexString(uint160(entry.minter), 20), "/", entry.userTokenId.toString())
+            ? string.concat(
+                customBaseUri,
+                Strings.toHexString(uint160(entry.minter), 20),
+                "/",
+                entry.userTokenId.toString()
+            )
             : "";
         return string(abi.encodePacked(URI, baseExtension));
     }
