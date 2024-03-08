@@ -8,19 +8,19 @@ import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import "@openzeppelin/contracts/interfaces/IERC4906.sol";
-import "../contracts/token/InverseProjectedNft.sol";
+import "../contracts/token/InverseAppProjectedNft.sol";
 import "../contracts/token/IInverseProjectedNft.sol";
 
-contract InverseProjectedNftTest is CTest {
+contract InverseAppProjectedNftTest is CTest {
     CheatCodes vm = CheatCodes(HEVM_ADDRESS);
-    InverseProjectedNft public nft;
+    InverseAppProjectedNft public nft;
     uint256 ownedTokenId;
     string baseURI = "192.168.0.1/";
     address alice = 0x078D888E40faAe0f32594342c85940AF3949E666;
 
     function setUp() public {
-        nft = new InverseProjectedNft("ABC", "XYZ", address(this));
-        ownedTokenId = nft.mint(address(this), "");
+        nft = new InverseAppProjectedNft("ABC", "XYZ", address(this));
+        ownedTokenId = nft.mint(address(this));
         nft.setBaseURI(baseURI);
     }
 
@@ -31,8 +31,8 @@ contract InverseProjectedNftTest is CTest {
     function test_CanMint() public {
         vm.prank(alice);
         vm.expectEmit(true, true, true, true);
-        emit IInverseProjectedNft.Minted(2, "abcd");
-        nft.mint(address(this), "abcd");
+        emit IInverseAppProjectedNft.Minted(2, address(this), 2);
+        nft.mint(address(this));
     }
 
     function test_CanTransfer() public {
@@ -41,12 +41,12 @@ contract InverseProjectedNftTest is CTest {
 
     function test_TokenUriUsesBaseUriByDefault() public {
         string memory result = nft.tokenURI(ownedTokenId);
-        assertEq(result, "192.168.0.1/1.json");
+        assertEq(result, string.concat("192.168.0.1/", Strings.toHexString(uint160(address(this)), 20), "/", "1.json"));
     }
 
     function test_TokenUriUsingCustomBaseUri() public {
         string memory result = nft.tokenURI(ownedTokenId, "1.1.0.0/");
-        assertEq(result, "1.1.0.0/1.json");
+        assertEq(result, string.concat("1.1.0.0/", Strings.toHexString(uint160(address(this)), 20), "/", "1.json"));
     }
 
     function test_SupportsInterface() public {
@@ -71,13 +71,13 @@ contract InverseProjectedNftTest is CTest {
     }
 
     function test_CannotMintToZeroAddress() public {
-        vm.expectRevert("InverseProjectedNft: zero receiver address");
-        nft.mint(address(0), "");
+        vm.expectRevert("InverseAppProjectedNft: zero receiver address");
+        nft.mint(address(0));
     }
 
     function test_CannotBurnUnauthorized() public {
         vm.prank(alice);
-        vm.expectRevert("InverseProjectedNft: not owner");
+        vm.expectRevert("InverseAppProjectedNft: not owner");
         nft.burn(ownedTokenId);
     }
 
