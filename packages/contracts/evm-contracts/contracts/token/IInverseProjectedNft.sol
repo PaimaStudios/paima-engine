@@ -15,15 +15,6 @@ interface IInverseProjectedNft is IERC4906 {
     /// @dev Emitted when `baseUri` is updated from `oldUri` to `newUri`.
     event SetBaseURI(string oldUri, string newUri);
 
-    /// @dev Emitted when a new token with ID `tokenId` is minted, with `initialData` provided in the `mint` function parameters.
-    event Minted(uint256 indexed tokenId, string initialData);
-
-    /// @dev Mints a new token to address `_to`, passing `initialData` to be emitted in the event.
-    /// Increases the `totalSupply` and `currentTokenId`.
-    /// Reverts if `totalSupply` is not less than `maxSupply` or if `_to` is a zero address.
-    /// Emits the `Minted` event.
-    function mint(address _to, string calldata initialData) external returns (uint256);
-
     /// @dev Burns token of ID `_tokenId`. Callable only by the owner of the specified token.
     /// Reverts if `_tokenId` is not existing.
     function burn(uint256 _tokenId) external;
