@@ -41,12 +41,28 @@ contract InverseAppProjectedNftTest is CTest {
 
     function test_TokenUriUsesBaseUriByDefault() public {
         string memory result = nft.tokenURI(ownedTokenId);
-        assertEq(result, string.concat("192.168.0.1/", Strings.toHexString(uint160(address(this)), 20), "/", "1.json"));
+        assertEq(
+            result,
+            string.concat(
+                "192.168.0.1/",
+                Strings.toHexString(uint160(address(this)), 20),
+                "/",
+                "1.json"
+            )
+        );
     }
 
     function test_TokenUriUsingCustomBaseUri() public {
         string memory result = nft.tokenURI(ownedTokenId, "1.1.0.0/");
-        assertEq(result, string.concat("1.1.0.0/", Strings.toHexString(uint160(address(this)), 20), "/", "1.json"));
+        assertEq(
+            result,
+            string.concat(
+                "1.1.0.0/",
+                Strings.toHexString(uint160(address(this)), 20),
+                "/",
+                "1.json"
+            )
+        );
     }
 
     function test_SupportsInterface() public {
