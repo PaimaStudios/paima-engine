@@ -35,7 +35,7 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
   public override async readData(blockHeight: number): Promise<ChainData[]> {
     const [fromBlock, toBlock] = await this.adjustBlockHeightRange(
       blockHeight,
-      ENV.DEFAULT_FUNNEL_GROUP_SIZE
+      this.config.funnelBlockGroupSize
     );
 
     if (fromBlock < 0 || toBlock < fromBlock) {
