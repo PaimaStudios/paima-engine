@@ -85,7 +85,10 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
       );
 
       if (queryResults[0]) {
-        cachedState.lastBlock = queryResults[0].block_height;
+        cachedState.lastBlock = Math.max(
+          queryResults[0].block_height,
+          cachedState.startBlockHeight - 1
+        );
       } else {
         const block = await this.sharedData.web3.eth.getBlock(chainData[0].blockNumber - 1);
 
@@ -101,12 +104,13 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
     while (true) {
       const latestBlock = this.latestBlock();
 
+      const to = Math.min(latestBlock, cachedState.lastBlock + this.config.funnelBlockGroupSize);
       // we need to fetch the blocks in order to know the timestamps, so that we
       // can make a mapping from the trunk chain to the parallel chain.
       const parallelEvmBlocks = await getMultipleBlockData(
         this.web3,
         cachedState.lastBlock + 1,
-        Math.min(latestBlock, cachedState.lastBlock + this.config.funnelBlockGroupSize),
+        to,
         this.chainName
       );
 
@@ -122,9 +126,15 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
         cachedState.lastBlock = blocks[blocks.length - 1].blockNumber;
       }
 
-      while ((await this.updateLatestBlock()) === latestBlock) {
-        // wait for blocks to be produced
-        await delay(500);
+      // If we didn't break because there are no blocks in the chain then we
+      // need to wait for blocks to be produced.  But otherwise there is not
+      // much point in updating the value, since we may be really far away from
+      // the tip in the sync itself, and this adds a whole round trip.
+      if (to === latestBlock) {
+        while ((await this.updateLatestBlock()) === latestBlock) {
+          // wait for blocks to be produced
+          await delay(500);
+        }
       }
 
       // potentially we didn't fetch enough blocks in a single request in that
