@@ -143,9 +143,6 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
         // wait for blocks to be produced
         await delay(500);
       }
-
-      // potentially we didn't fetch enough blocks in a single request in that
-      // case we get more blocks we loop again
     }
 
     // After we get the blocks from the parallel evm chain, we need to join them
