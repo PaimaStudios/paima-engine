@@ -85,6 +85,11 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
       );
 
       if (queryResults[0]) {
+        // If we are in `readData`, we know that the presync stage finished.
+        // This means `readPresyncData` was actually called with the entire
+        // range up to startBlockHeight - 1 (inclusive), since that's the stop
+        // condition for the presync. So there is no point in starting from
+        // earlier than that, since we know there are no events there.
         cachedState.lastBlock = Math.max(
           queryResults[0].block_height,
           cachedState.startBlockHeight - 1
