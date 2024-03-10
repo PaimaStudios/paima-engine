@@ -131,15 +131,17 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
         cachedState.lastBlock = blocks[blocks.length - 1].blockNumber;
       }
 
-      // If we didn't break because there are no blocks in the chain then we
-      // need to wait for blocks to be produced.  But otherwise there is not
-      // much point in updating the value, since we may be really far away from
-      // the tip in the sync itself, and this adds a whole round trip.
-      if (to === latestBlock) {
-        while ((await this.updateLatestBlock()) === latestBlock) {
-          // wait for blocks to be produced
-          await delay(500);
-        }
+      // We reach this part of the code if after we fetch blocks we still aren't done syncing.
+      // There are 2 cases for this:
+      // 1. We're still far behind the tip and we're catching up
+      // For case (1), we can fetch more blocks right away (no need to update our cached latest block or delay)
+      if (to !== latestBlock) continue;
+      // 2. We're at the tip and we're waiting for more parallel chains blocks to be made to finalize the block
+      // For case (2), we try update our cached latest block number in case it's stale,
+      // and delay if we are truly waiting for more blocks to be made
+      while ((await this.updateLatestBlock()) === latestBlock) {
+        // wait for blocks to be produced
+        await delay(500);
       }
 
       // potentially we didn't fetch enough blocks in a single request in that
