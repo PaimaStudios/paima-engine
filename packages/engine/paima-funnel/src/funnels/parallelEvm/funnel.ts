@@ -85,7 +85,15 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
       );
 
       if (queryResults[0]) {
-        cachedState.lastBlock = queryResults[0].block_height;
+        // If we are in `readData`, we know that the presync stage finished.
+        // This means `readPresyncData` was actually called with the entire
+        // range up to startBlockHeight - 1 (inclusive), since that's the stop
+        // condition for the presync. So there is no point in starting from
+        // earlier than that, since we know there are no events there.
+        cachedState.lastBlock = Math.max(
+          queryResults[0].block_height,
+          cachedState.startBlockHeight - 1
+        );
       } else {
         const block = await this.sharedData.web3.eth.getBlock(chainData[0].blockNumber - 1);
 
@@ -101,12 +109,13 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
     while (true) {
       const latestBlock = this.latestBlock();
 
+      const to = Math.min(latestBlock, cachedState.lastBlock + this.config.funnelBlockGroupSize);
       // we need to fetch the blocks in order to know the timestamps, so that we
       // can make a mapping from the trunk chain to the parallel chain.
       const parallelEvmBlocks = await getMultipleBlockData(
         this.web3,
         cachedState.lastBlock + 1,
-        Math.min(latestBlock, cachedState.lastBlock + this.config.funnelBlockGroupSize),
+        to,
         this.chainName
       );
 
@@ -122,13 +131,18 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
         cachedState.lastBlock = blocks[blocks.length - 1].blockNumber;
       }
 
+      // We reach this part of the code if after we fetch blocks we still aren't done syncing.
+      // There are 2 cases for this:
+      // 1. We're still far behind the tip and we're catching up
+      // For case (1), we can fetch more blocks right away (no need to update our cached latest block or delay)
+      if (to !== latestBlock) continue;
+      // 2. We're at the tip and we're waiting for more parallel chains blocks to be made to finalize the block
+      // For case (2), we try update our cached latest block number in case it's stale,
+      // and delay if we are truly waiting for more blocks to be made
       while ((await this.updateLatestBlock()) === latestBlock) {
         // wait for blocks to be produced
         await delay(500);
       }
-
-      // potentially we didn't fetch enough blocks in a single request in that
-      // case we get more blocks we loop again
     }
 
     // After we get the blocks from the parallel evm chain, we need to join them
