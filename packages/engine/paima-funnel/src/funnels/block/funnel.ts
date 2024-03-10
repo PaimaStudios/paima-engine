@@ -1,4 +1,5 @@
-import { ENV, EvmConfig, GlobalConfig, doLog, timeout } from '@paima/utils';
+import type { EvmConfig } from '@paima/utils';
+import { ENV, GlobalConfig, doLog, timeout } from '@paima/utils';
 import type { ChainFunnel, ReadPresyncDataFrom } from '@paima/runtime';
 import type { ChainData, PresyncChainData } from '@paima/sm';
 import { getBaseChainDataMulti, getBaseChainDataSingle } from '../../reading.js';
