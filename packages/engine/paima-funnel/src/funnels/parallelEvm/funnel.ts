@@ -220,7 +220,11 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
 
     if (toBlock === fromBlock) {
       doLog(`EVM CDE funnel ${this.config.chainId}: #${toBlock}`);
-      data = await this.internalReadDataSingle(fromBlock, chainData[0]);
+      data = await this.internalReadDataSingle(
+        fromBlock,
+        chainData[0],
+        blockNumber => sidechainToMainchainBlockHeightMapping[blockNumber]
+      );
     } else {
       doLog(`EVM CDE funnel ${this.config.chainId}: #${fromBlock}-${toBlock}`);
       data = await this.internalReadDataMulti(
@@ -271,7 +275,8 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
 
   private internalReadDataSingle = async (
     blockNumber: number,
-    baseChainData: ChainData
+    baseChainData: ChainData,
+    sidechainToMainchainNumber: (blockNumber: number) => number
   ): Promise<ChainData[]> => {
     if (blockNumber < 0) {
       return [];
@@ -285,6 +290,14 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
         blockNumber,
         blockNumber
       );
+
+      for (const extensionData of cdeData) {
+        for (const data of extensionData) {
+          const mappedBlockNumber = sidechainToMainchainNumber(data.blockNumber);
+
+          data.blockNumber = mappedBlockNumber;
+        }
+      }
 
       return [
         {
