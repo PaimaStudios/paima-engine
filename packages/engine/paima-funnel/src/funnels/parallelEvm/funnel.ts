@@ -170,7 +170,28 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
 
     cachedState.lastMaxTimestamp = maxTimestamp;
 
-    // Now we need to join the parallel evm chain with the trunk.
+    //  Now we need to join the parallel evm chain with the trunk.
+    //
+    //  We use the cached timestamp to block number mapping to build the
+    // following objects. It's important the we used the cached data and not the
+    // data that we just fetched, since in the previous round we may had fetched
+    // extra blocks.
+    //  For example: if we previously had timestamps:
+    //
+    // Round 1:
+    //    Base chain pull: [1, 2, 3]
+    //    This chain pull: [1, 2, 3, 4]
+    // Round 2:
+    //    Base chain pull: [4]
+    //    This chain pull: [5]
+    //
+    //  We would want to merge this new base block with the last from the
+    // previous round (timestamp 4).
+    //
+    //  We know that this block it's still in the cached state, because we only
+    // removed stuff <= 3 (maxTimestamp). If we used the blocks from the current
+    // call then instead we would map the block to the one with timestamp 5,
+    // breaking the invariant.
     //
     // This maps timestamps from the sidechain to the mainchain.
     const sidechainToMainchainBlockHeightMapping: { [blockNumber: number]: number } = {};
