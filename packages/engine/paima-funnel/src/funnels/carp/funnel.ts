@@ -1,10 +1,9 @@
+import type { CardanoConfig } from '@paima/utils';
 import {
-  CardanoConfig,
   ChainDataExtensionType,
   DEFAULT_FUNNEL_TIMEOUT,
   delay,
   doLog,
-  ENV,
   GlobalConfig,
   logError,
   timeout,

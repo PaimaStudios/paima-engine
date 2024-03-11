@@ -27,6 +27,9 @@ export interface ChainData {
   network: string;
   submittedData: SubmittedData[];
   extensionDatums?: ChainDataExtensionDatum[];
+  /**
+   * Internal events are events related to this block, but that do not contribute to the block hash
+   */
   internalEvents?: InternalEvent[];
 }
 
