@@ -188,8 +188,8 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
     //  We would want to merge this new base block with the last from the
     // previous round (timestamp 4).
     //
-    //  We know that this block it's still in the cached state, because we only
-    // removed stuff <= 3 (maxTimestamp). If we used the blocks from the current
+    //  We know that this block is still in the cached state, because we only
+    // removed blocks with timestamp <= 3 (maxTimestamp). If we used the blocks from the current
     // call then instead we would map the block to the one with timestamp 5,
     // breaking the invariant.
     //
