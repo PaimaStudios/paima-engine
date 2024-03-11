@@ -196,14 +196,27 @@ const SM: GameStateMachineInitializer = {
         // Generate Prando object
         const randomnessGenerator = new Prando(seed);
 
-        console.log('latestChainData', latestChainData);
-        const cdeDataLength = await processCdeData(
-          latestChainData.blockNumber,
-          latestChainData.network,
-          latestChainData.extensionDatums,
-          dbTx,
-          false
-        );
+        const extensionsPerNetwork: { [network: string]: ChainDataExtensionDatum[] } = {};
+
+        for (const extensionData of latestChainData.extensionDatums || []) {
+          if (!extensionsPerNetwork[extensionData.network]) {
+            extensionsPerNetwork[extensionData.network] = [];
+          }
+
+          extensionsPerNetwork[extensionData.network].push(extensionData);
+        }
+
+        let cdeDataLength = 0;
+
+        for (const network of Object.keys(extensionsPerNetwork)) {
+          cdeDataLength += await processCdeData(
+            latestChainData.blockNumber,
+            network,
+            extensionsPerNetwork[network],
+            dbTx,
+            false
+          );
+        }
 
         await processInternalEvents(latestChainData.internalEvents, dbTx);
 

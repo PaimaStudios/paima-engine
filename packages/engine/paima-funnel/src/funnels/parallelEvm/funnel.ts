@@ -318,7 +318,8 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
           extension => !extension.network || extension.network === this.chainName
         ),
         blockNumber,
-        blockNumber
+        blockNumber,
+        this.chainName
       );
 
       for (const extensionData of cdeData) {
@@ -356,7 +357,8 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
         this.web3,
         this.sharedData.extensions.filter(extension => extension.network === this.chainName),
         fromBlock,
-        toBlock
+        toBlock,
+        this.chainName
       );
 
       let mappedFrom: number | undefined;
@@ -432,7 +434,8 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
         this.web3,
         this.sharedData.extensions.filter(extension => extension.network === this.chainName),
         fromBlock,
-        toBlock
+        toBlock,
+        this.chainName
       );
 
       return {

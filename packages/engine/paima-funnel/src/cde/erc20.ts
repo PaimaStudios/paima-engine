@@ -10,7 +10,8 @@ import { DEFAULT_FUNNEL_TIMEOUT } from '@paima/utils';
 export default async function getCdeData(
   extension: ChainDataExtensionErc20,
   fromBlock: number,
-  toBlock: number
+  toBlock: number,
+  network: string
 ): Promise<ChainDataExtensionDatum[]> {
   // TOOD: typechain is missing the proper type generation for getPastEvents
   // https://github.com/dethcrypto/TypeChain/issues/767
@@ -21,10 +22,14 @@ export default async function getCdeData(
     }),
     DEFAULT_FUNNEL_TIMEOUT
   )) as unknown as ERC20Transfer[];
-  return events.map((e: ERC20Transfer) => transferToCdeDatum(e, extension.cdeId));
+  return events.map((e: ERC20Transfer) => transferToCdeDatum(e, extension.cdeId, network));
 }
 
-function transferToCdeDatum(event: ERC20Transfer, cdeId: number): CdeErc20TransferDatum {
+function transferToCdeDatum(
+  event: ERC20Transfer,
+  cdeId: number,
+  network: string
+): CdeErc20TransferDatum {
   return {
     cdeId: cdeId,
     cdeDatumType: ChainDataExtensionDatumType.ERC20Transfer,
@@ -34,5 +39,6 @@ function transferToCdeDatum(event: ERC20Transfer, cdeId: number): CdeErc20Transf
       to: event.returnValues.to.toLowerCase(),
       value: event.returnValues.value,
     },
+    network,
   };
 }

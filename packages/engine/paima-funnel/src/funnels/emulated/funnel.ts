@@ -397,7 +397,6 @@ export class EmulatedBlocksFunnel extends BaseFunnel {
       submittedData: nextBlockSubmittedData,
       extensionDatums: nextBlockExtensionDatums,
       internalEvents: nextBlockInternalEvents,
-      network: (await GlobalConfig.mainEvmConfig())[0],
     };
   };
 

@@ -14,7 +14,8 @@ import type { AccountCreated } from '@paima/utils';
 export default async function getCdeData(
   extension: ChainDataExtensionErc6551Registry,
   fromBlock: number,
-  toBlock: number
+  toBlock: number,
+  network: string
 ): Promise<ChainDataExtensionDatum[]> {
   const { implementation, tokenContract, tokenId } = extension;
 
@@ -61,13 +62,14 @@ export default async function getCdeData(
         : withFilter.filter(e => e.returnValues.tokenId === extension.tokenId);
     return withFilter;
   })();
-  const result = filteredEvents.map((e: AccountCreated) => toDatum(e, extension)).flat();
+  const result = filteredEvents.map((e: AccountCreated) => toDatum(e, extension, network)).flat();
   return result;
 }
 
 function toDatum(
   event: AccountCreated,
-  extension: ChainDataExtensionErc6551Registry
+  extension: ChainDataExtensionErc6551Registry,
+  network: string
 ): CdeErc6551RegistryDatum {
   return {
     cdeId: extension.cdeId,
@@ -81,5 +83,6 @@ function toDatum(
       tokenId: event.returnValues.tokenId,
       salt: event.returnValues.salt,
     },
+    network,
   };
 }

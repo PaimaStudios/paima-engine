@@ -15,7 +15,8 @@ import type { PaimaMinted as Minted, PaimaERC721Transfer as Transfer } from '@pa
 export default async function getCdeData(
   extension: ChainDataExtensionPaimaErc721,
   fromBlock: number,
-  toBlock: number
+  toBlock: number,
+  network: string
 ): Promise<ChainDataExtensionDatum[]> {
   // TOOD: typechain is missing the proper type generation for getPastEvents
   // https://github.com/dethcrypto/TypeChain/issues/767
@@ -23,8 +24,10 @@ export default async function getCdeData(
     fetchTransferEvents(extension, fromBlock, toBlock),
     fetchMintedEvents(extension, fromBlock, toBlock),
   ]);
-  const transferData = transferEvents.map((e: Transfer) => transferToTransferDatum(e, extension));
-  const mintData = mintedEvents.map((e: Minted) => mintedToMintDatum(e, extension));
+  const transferData = transferEvents.map((e: Transfer) =>
+    transferToTransferDatum(e, extension, network)
+  );
+  const mintData = mintedEvents.map((e: Minted) => mintedToMintDatum(e, extension, network));
   return mergeSortedArrays<ChainDataExtensionDatum>(
     mintData,
     transferData,
@@ -62,7 +65,8 @@ async function fetchMintedEvents(
 
 function transferToTransferDatum(
   event: Transfer,
-  extension: ChainDataExtensionPaimaErc721
+  extension: ChainDataExtensionPaimaErc721,
+  network: string
 ): CdeErc721TransferDatum {
   return {
     cdeId: extension.cdeId,
@@ -73,12 +77,14 @@ function transferToTransferDatum(
       to: event.returnValues.to.toLowerCase(),
       tokenId: event.returnValues.tokenId,
     },
+    network,
   };
 }
 
 function mintedToMintDatum(
   event: Minted,
-  extension: ChainDataExtensionPaimaErc721
+  extension: ChainDataExtensionPaimaErc721,
+  network: string
 ): CdeErc721MintDatum {
   return {
     cdeId: extension.cdeId,
@@ -90,5 +96,6 @@ function mintedToMintDatum(
     },
     contractAddress: extension.contractAddress,
     scheduledPrefix: extension.scheduledPrefix,
+    network,
   };
 }

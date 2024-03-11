@@ -24,7 +24,6 @@ export interface ChainData {
   timestamp: number;
   blockHash: string;
   blockNumber: number;
-  network: string;
   submittedData: SubmittedData[];
   extensionDatums?: ChainDataExtensionDatum[];
   /**
@@ -133,6 +132,7 @@ interface CdeDatumBase {
   cdeDatumType: ChainDataExtensionDatumType;
   blockNumber: number;
   payload: ChainDataExtensionPayload;
+  network: string;
 }
 
 export interface CdeErc20TransferDatum extends CdeDatumBase {

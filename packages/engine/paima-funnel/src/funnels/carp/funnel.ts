@@ -219,7 +219,8 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
                   slot => {
                     return slot;
                   },
-                  slot => absoluteSlotToEpoch(this.era, slot)
+                  slot => absoluteSlotToEpoch(this.era, slot),
+                  this.chainName
                 );
 
                 promises.push(data);
@@ -233,7 +234,8 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
                   Math.min(arg.to, this.cache.getState().startingSlot - 1),
                   slot => {
                     return slot;
-                  }
+                  },
+                  this.chainName
                 );
 
                 promises.push(data);
@@ -247,7 +249,8 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
                   Math.min(arg.to, this.cache.getState().startingSlot - 1),
                   slot => {
                     return slot;
-                  }
+                  },
+                  this.chainName
                 );
 
                 promises.push(data);
@@ -407,7 +410,8 @@ async function readDataInternal(
             min,
             Math.min(max, extension.stopSlot || max),
             mapSlotToBlockNumber,
-            slot => absoluteSlotToEpoch(era, slot)
+            slot => absoluteSlotToEpoch(era, slot),
+            chainName
           );
           return poolData;
         case ChainDataExtensionType.CardanoProjectedNFT:
@@ -416,7 +420,8 @@ async function readDataInternal(
             extension,
             min,
             Math.min(max, extension.stopSlot || max),
-            mapSlotToBlockNumber
+            mapSlotToBlockNumber,
+            chainName
           );
           return projectedNFTData;
         case ChainDataExtensionType.CardanoAssetUtxo:
@@ -425,7 +430,8 @@ async function readDataInternal(
             extension,
             min,
             Math.min(max, extension.stopSlot || max),
-            mapSlotToBlockNumber
+            mapSlotToBlockNumber,
+            chainName
           );
           return delayedAssetData;
         default:

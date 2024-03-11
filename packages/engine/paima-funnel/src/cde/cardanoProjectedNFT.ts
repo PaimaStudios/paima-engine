@@ -13,7 +13,8 @@ export default async function getCdeProjectedNFTData(
   extension: ChainDataExtensionCardanoProjectedNFT,
   fromAbsoluteSlot: number,
   toAbsoluteSlot: number,
-  getBlockNumber: (slot: number) => number
+  getBlockNumber: (slot: number) => number,
+  network: string
 ): Promise<ChainDataExtensionDatum[]> {
   const events = await timeout(
     query(url, Routes.projectedNftEventsRange, {
@@ -24,7 +25,7 @@ export default async function getCdeProjectedNFTData(
   );
 
   return events
-    .map(e => eventToCdeDatum(e, extension, getBlockNumber(e.actionSlot)))
+    .map(e => eventToCdeDatum(e, extension, getBlockNumber(e.actionSlot), network))
     .filter(e => e != null)
     .map(e => e!);
 }
@@ -32,7 +33,8 @@ export default async function getCdeProjectedNFTData(
 function eventToCdeDatum(
   event: ProjectedNftRangeResponse[0],
   extension: ChainDataExtensionCardanoProjectedNFT,
-  blockNumber: number
+  blockNumber: number,
+  network: string
 ): CdeCardanoProjectedNFTDatum | null {
   if (
     event.actionTxId === null ||
@@ -65,5 +67,6 @@ function eventToCdeDatum(
       forHowLong: event.forHowLong != null ? event.forHowLong : undefined,
     },
     scheduledPrefix: extension.scheduledPrefix,
+    network,
   };
 }
