@@ -377,6 +377,7 @@ export class EmulatedBlocksFunnel extends BaseFunnel {
       mergedBlocks.map(block => block.extensionDatums ?? []),
       nextBlockBlockNumber
     );
+    const nextBlockInternalEvents = mergedBlocks.map(block => block.internalEvents || []).flat();
 
     // if this emulated block contains multiple blocks in the underlying chain
     if (mergedBlocks.length > 0) {
@@ -395,6 +396,7 @@ export class EmulatedBlocksFunnel extends BaseFunnel {
       timestamp: nextBlockEndTimestamp,
       submittedData: nextBlockSubmittedData,
       extensionDatums: nextBlockExtensionDatums,
+      internalEvents: nextBlockInternalEvents,
       network: (await GlobalConfig.mainEvmConfig())[0],
     };
   };
