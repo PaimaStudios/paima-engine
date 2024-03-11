@@ -12,7 +12,8 @@ import {
 
 export default async function processErc20Datum(
   readonlyDBConn: PoolClient,
-  cdeDatum: CdeErc20DepositDatum
+  cdeDatum: CdeErc20DepositDatum,
+  inPresync: boolean
 ): Promise<SQLUpdate[]> {
   const cdeId = cdeDatum.cdeId;
   const { from, value } = cdeDatum.payload;
@@ -29,9 +30,11 @@ export default async function processErc20Datum(
 
   const updateList: SQLUpdate[] = [];
   try {
-    const scheduledInputData = `${prefix}|${fromAddr}|${value}`;
-    const scheduledBlockHeight = Math.max(cdeDatum.blockNumber, ENV.SM_START_BLOCKHEIGHT + 1);
-    updateList.push(createScheduledData(scheduledInputData, scheduledBlockHeight));
+    if (!inPresync) {
+      const scheduledInputData = `${prefix}|${fromAddr}|${value}`;
+      const scheduledBlockHeight = Math.max(cdeDatum.blockNumber, ENV.SM_START_BLOCKHEIGHT + 1);
+      updateList.push(createScheduledData(scheduledInputData, scheduledBlockHeight));
+    }
 
     if (fromRow.length > 0) {
       const oldTotal = BigInt(fromRow[0].total_deposited);

@@ -3,7 +3,10 @@ import { createScheduledData, cdeCardanoPoolInsertData, removeOldEntries } from 
 import type { SQLUpdate } from '@paima/db';
 import type { CdeCardanoPoolDatum } from './types.js';
 
-export default async function processDatum(cdeDatum: CdeCardanoPoolDatum): Promise<SQLUpdate[]> {
+export default async function processDatum(
+  cdeDatum: CdeCardanoPoolDatum,
+  inPresync: boolean
+): Promise<SQLUpdate[]> {
   const cdeId = cdeDatum.cdeId;
   const prefix = cdeDatum.scheduledPrefix;
   const address = cdeDatum.payload.address;
@@ -12,8 +15,11 @@ export default async function processDatum(cdeDatum: CdeCardanoPoolDatum): Promi
   const scheduledBlockHeight = Math.max(cdeDatum.blockNumber, ENV.SM_START_BLOCKHEIGHT + 1);
   const scheduledInputData = `${prefix}|${address}|${pool}`;
 
-  const updateList: SQLUpdate[] = [
-    createScheduledData(scheduledInputData, scheduledBlockHeight),
+  const updateList: SQLUpdate[] = inPresync
+    ? []
+    : [createScheduledData(scheduledInputData, scheduledBlockHeight)];
+
+  updateList.push(
     [
       cdeCardanoPoolInsertData,
       {
@@ -28,7 +34,7 @@ export default async function processDatum(cdeDatum: CdeCardanoPoolDatum): Promi
       {
         address: cdeDatum.payload.address,
       },
-    ],
-  ];
+    ]
+  );
   return updateList;
 }

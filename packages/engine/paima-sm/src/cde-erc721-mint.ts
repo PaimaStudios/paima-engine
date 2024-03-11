@@ -4,10 +4,11 @@ import { createScheduledData } from '@paima/db';
 import type { SQLUpdate } from '@paima/db';
 
 export default async function processErc721Datum(
-  cdeDatum: CdeErc721MintDatum
+  cdeDatum: CdeErc721MintDatum,
+  inPresync: boolean
 ): Promise<SQLUpdate[]> {
   const [address, prefix] = [cdeDatum.contractAddress, cdeDatum.scheduledPrefix];
-  if (!prefix) {
+  if (!prefix && inPresync) {
     return [];
   }
   const { tokenId, mintData } = cdeDatum.payload;
