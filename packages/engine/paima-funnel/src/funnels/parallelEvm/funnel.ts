@@ -140,39 +140,11 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
       }
     }
 
-    // After we get the blocks from the parallel evm chain, we need to join them
-    // with the trunk.
-    //
-    // This maps timestamps from the sidechain to the mainchain.
-    const sidechainToMainchainBlockHeightMapping: { [blockNumber: number]: number } = {};
-
-    // Mapping of mainchain to sidechain block heights
-    const mainchainToSidechainBlockHeightMapping: { [blockNumber: number]: number } = {};
-
-    // chainData is sorted by timestamp, so we never need to search old entries,
-    // we keep this around to know from where to start searching for a block
-    // from the original chain that has a timestamp >= than the current
-    // sidechain block.
-    let currIndex = 0;
-
     for (const parallelChainBlock of blocks) {
       cachedState.timestampToBlockNumber.push([
         parallelChainBlock.timestamp,
         parallelChainBlock.blockNumber,
       ]);
-
-      while (currIndex < chainData.length) {
-        if (chainData[currIndex].timestamp >= parallelChainBlock.timestamp) {
-          sidechainToMainchainBlockHeightMapping[parallelChainBlock.blockNumber] =
-            chainData[currIndex].blockNumber;
-
-          mainchainToSidechainBlockHeightMapping[chainData[currIndex].blockNumber] =
-            parallelChainBlock.blockNumber;
-          break;
-        } else {
-          currIndex++;
-        }
-      }
 
       cachedState.lastBlock = parallelChainBlock.blockNumber;
     }
@@ -198,7 +170,44 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
 
     cachedState.lastMaxTimestamp = maxTimestamp;
 
+    // Now we need to join the parallel evm chain with the trunk.
+    //
+    // This maps timestamps from the sidechain to the mainchain.
+    const sidechainToMainchainBlockHeightMapping: { [blockNumber: number]: number } = {};
+
+    // Mapping of mainchain to sidechain block heights
+    const mainchainToSidechainBlockHeightMapping: { [blockNumber: number]: number } = {};
+
+    // chainData is sorted by timestamp, so we never need to search old entries,
+    // we keep this around to know from where to start searching for a block
+    // from the original chain that has a timestamp >= than the current
+    // sidechain block.
+    let currIndex = 0;
+
+    for (const parallelChainBlock of cachedState.timestampToBlockNumber) {
+      while (currIndex < chainData.length) {
+        if (chainData[currIndex].timestamp >= parallelChainBlock[0]) {
+          sidechainToMainchainBlockHeightMapping[parallelChainBlock[1]] =
+            chainData[currIndex].blockNumber;
+
+          mainchainToSidechainBlockHeightMapping[chainData[currIndex].blockNumber] =
+            parallelChainBlock[1];
+          break;
+        } else {
+          currIndex++;
+        }
+      }
+    }
+
     if (!cachedState.timestampToBlockNumber[0]) {
+      return chainData;
+    }
+
+    // It's unlikely, but possible, that we did only fetch data outside the main
+    // chain range. In this case the condition below will make us return
+    // directly the base chain data.  If there is at least one block that gets
+    // merged then this gets handled by `getUpperBoundBlock`.
+    if (cachedState.timestampToBlockNumber[0][0] > maxTimestamp) {
       return chainData;
     }
 
