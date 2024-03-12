@@ -8,10 +8,20 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import {IERC4906} from "@openzeppelin/contracts/interfaces/IERC4906.sol";
 import {IInverseProjectedNft} from "./IInverseProjectedNft.sol";
+import {IInverseAppProjectedNft} from "./IInverseAppProjectedNft.sol";
+
+struct MintEntry {
+    address minter;
+    uint256 userTokenId;
+}
 
 /// @dev A standard ERC721 that accepts calldata in the mint function for any initialization data needed in a Paima dApp.
-contract InverseProjectedNft is IInverseProjectedNft, ERC721, Ownable {
+contract InverseAppProjectedNft is IInverseAppProjectedNft, ERC721, Ownable {
     using Strings for uint256;
+
+    /// @dev tokenId => MintEntry.
+    mapping(uint256 => MintEntry) public tokenToMint;
+    mapping(address => uint256) public mintCount;
 
     /// @dev The token ID that will be minted when calling the `mint` function.
     uint256 public currentTokenId;
@@ -24,7 +34,7 @@ contract InverseProjectedNft is IInverseProjectedNft, ERC721, Ownable {
 
     /// @dev Reverts if `msg.sender` is not the specified token's owner.
     modifier onlyTokenOwner(uint256 tokenId) {
-        require(msg.sender == ownerOf(tokenId), "InverseProjectedNft: not owner");
+        require(msg.sender == ownerOf(tokenId), "InverseAppProjectedNft: not owner");
         _;
     }
 
@@ -45,24 +55,28 @@ contract InverseProjectedNft is IInverseProjectedNft, ERC721, Ownable {
     ) public view override(IERC165, ERC721) returns (bool) {
         return
             interfaceId == type(IInverseProjectedNft).interfaceId ||
+            interfaceId == type(IInverseAppProjectedNft).interfaceId ||
             interfaceId == bytes4(0x49064906) ||
             super.supportsInterface(interfaceId);
     }
 
-    /// @dev Mints a new token to address `_to`, passing `initialData` to be emitted in the event.
+    /// @dev Mints a new token to address `_to`.
     /// Increases the `totalSupply` and `currentTokenId`.
     /// Reverts if `_to` is a zero address or if it refers to smart contract but does not implement IERC721Receiver-onERC721Received.
     /// Emits the `Minted` event.
-    function mint(address _to, string calldata initialData) external returns (uint256) {
-        require(_to != address(0), "InverseProjectedNft: zero receiver address");
+    function mint(address _to) external returns (uint256) {
+        require(_to != address(0), "InverseAppProjectedNft: zero receiver address");
 
         uint256 tokenId = currentTokenId;
         _safeMint(_to, tokenId);
+        mintCount[_to] += 1;
+        uint256 userTokenId = mintCount[_to];
+        tokenToMint[tokenId] = MintEntry(_to, userTokenId);
 
         totalSupply++;
         currentTokenId++;
 
-        emit Minted(tokenId, initialData);
+        emit Minted(tokenId, _to, userTokenId);
         return tokenId;
     }
 
@@ -89,8 +103,14 @@ contract InverseProjectedNft is IInverseProjectedNft, ERC721, Ownable {
         string memory customBaseUri
     ) public view returns (string memory) {
         _requireOwned(tokenId);
+        MintEntry memory entry = tokenToMint[tokenId];
         string memory URI = bytes(customBaseUri).length > 0
-            ? string.concat(customBaseUri, tokenId.toString())
+            ? string.concat(
+                customBaseUri,
+                Strings.toHexString(uint160(entry.minter), 20),
+                "/",
+                entry.userTokenId.toString()
+            )
             : "";
         return string(abi.encodePacked(URI, baseExtension));
     }
