@@ -7,7 +7,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import {IERC4906} from "@openzeppelin/contracts/interfaces/IERC4906.sol";
 
-/// @dev A standard ERC721 that accepts calldata in the mint function for any initialization data needed in a Paima dApp.
+/// @dev A standard ERC721 that can be burned and has a special tokenURI function accepting a custom base URI.
 interface IInverseProjectedNft is IERC4906 {
     /// @dev Emitted when `baseExtension` is updated from `oldBaseExtension` to `newBaseExtension`.
     event SetBaseExtension(string oldBaseExtension, string newBaseExtension);
