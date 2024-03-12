@@ -69,7 +69,6 @@ function blockDataToChainData(block: BlockTransactionString, network: string): C
     blockHash: block.hash,
     blockNumber: block.number,
     submittedData: [], // this will be merged in after
-    network,
   };
 }
 

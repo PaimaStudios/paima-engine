@@ -12,7 +12,8 @@ export default async function getCdeData(
   extension: ChainDataExtensionCardanoDelayedAsset,
   fromAbsoluteSlot: number,
   toAbsoluteSlot: number,
-  getBlockNumber: (slot: number) => number
+  getBlockNumber: (slot: number) => number,
+  network: string
 ): Promise<ChainDataExtensionDatum[]> {
   const events = await timeout(
     query(url, Routes.assetUtxos, {
@@ -23,13 +24,14 @@ export default async function getCdeData(
     DEFAULT_FUNNEL_TIMEOUT
   );
 
-  return events.map(e => eventToCdeDatum(e, extension, getBlockNumber(e.slot)));
+  return events.map(e => eventToCdeDatum(e, extension, getBlockNumber(e.slot), network));
 }
 
 function eventToCdeDatum(
   event: AssetUtxosResponse[0],
   extension: ChainDataExtensionCardanoDelayedAsset,
-  blockNumber: number
+  blockNumber: number,
+  network: string
 ): CdeCardanoAssetUtxoDatum {
   return {
     cdeId: extension.cdeId,
@@ -44,5 +46,6 @@ function eventToCdeDatum(
       policyId: event.policyId,
       assetName: event.assetName,
     },
+    network,
   };
 }

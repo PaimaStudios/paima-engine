@@ -116,7 +116,8 @@ const SM: GameStateMachineInitializer = {
             latestCdeData.blockNumber,
             latestCdeData.network,
             latestCdeData.extensionDatums,
-            dbTx
+            dbTx,
+            true
           );
           if (cdeDataLength > 0) {
             doLog(
@@ -127,7 +128,8 @@ const SM: GameStateMachineInitializer = {
           const cdeDataLength = await processCardanoCdeData(
             latestCdeData.blockNumber,
             latestCdeData.extensionDatums,
-            dbTx
+            dbTx,
+            true
           );
           if (cdeDataLength > 0) {
             doLog(
@@ -194,12 +196,27 @@ const SM: GameStateMachineInitializer = {
         // Generate Prando object
         const randomnessGenerator = new Prando(seed);
 
-        const cdeDataLength = await processCdeData(
-          latestChainData.blockNumber,
-          latestChainData.network,
-          latestChainData.extensionDatums,
-          dbTx
-        );
+        const extensionsPerNetwork: { [network: string]: ChainDataExtensionDatum[] } = {};
+
+        for (const extensionData of latestChainData.extensionDatums || []) {
+          if (!extensionsPerNetwork[extensionData.network]) {
+            extensionsPerNetwork[extensionData.network] = [];
+          }
+
+          extensionsPerNetwork[extensionData.network].push(extensionData);
+        }
+
+        let cdeDataLength = 0;
+
+        for (const network of Object.keys(extensionsPerNetwork)) {
+          cdeDataLength += await processCdeData(
+            latestChainData.blockNumber,
+            network,
+            extensionsPerNetwork[network],
+            dbTx,
+            false
+          );
+        }
 
         await processInternalEvents(latestChainData.internalEvents, dbTx);
 
@@ -244,6 +261,7 @@ const SM: GameStateMachineInitializer = {
 async function processCdeDataBase(
   cdeData: ChainDataExtensionDatum[] | undefined,
   dbTx: PoolClient,
+  inPresync: boolean,
   markProcessed: () => Promise<void>
 ): Promise<number> {
   if (!cdeData) {
@@ -251,7 +269,7 @@ async function processCdeDataBase(
   }
 
   for (const datum of cdeData) {
-    const sqlQueries = await cdeTransitionFunction(dbTx, datum);
+    const sqlQueries = await cdeTransitionFunction(dbTx, datum, inPresync);
     try {
       for (const [query, params] of sqlQueries) {
         await query.run(params, dbTx);
@@ -275,9 +293,10 @@ async function processCdeData(
   blockHeight: number,
   network: string,
   cdeData: ChainDataExtensionDatum[] | undefined,
-  dbTx: PoolClient
+  dbTx: PoolClient,
+  inPresync: boolean
 ): Promise<number> {
-  return await processCdeDataBase(cdeData, dbTx, async () => {
+  return await processCdeDataBase(cdeData, dbTx, inPresync, async () => {
     await markCdeBlockheightProcessed.run({ block_height: blockHeight, network }, dbTx);
     return;
   });
@@ -286,9 +305,10 @@ async function processCdeData(
 async function processCardanoCdeData(
   slot: number,
   cdeData: ChainDataExtensionDatum[] | undefined,
-  dbTx: PoolClient
+  dbTx: PoolClient,
+  inPresync: boolean
 ): Promise<number> {
-  return await processCdeDataBase(cdeData, dbTx, async () => {
+  return await processCdeDataBase(cdeData, dbTx, inPresync, async () => {
     await markCardanoCdeSlotProcessed.run({ slot: slot }, dbTx);
     return;
   });

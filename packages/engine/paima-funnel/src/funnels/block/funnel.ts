@@ -97,7 +97,8 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
           this.sharedData.web3,
           this.sharedData.extensions.filter(extension => extension.network === this.chainName),
           blockNumber,
-          blockNumber
+          blockNumber,
+          this.chainName
         ),
       ]);
 
@@ -134,7 +135,8 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
           this.sharedData.web3,
           this.sharedData.extensions.filter(extension => extension.network === this.chainName),
           fromBlock,
-          toBlock
+          toBlock,
+          this.chainName
         ),
       ]);
       const cdeData = groupCdeData(
@@ -178,7 +180,8 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
         this.sharedData.web3,
         this.sharedData.extensions.filter(extension => extension.network === this.chainName),
         fromBlock,
-        toBlock
+        toBlock,
+        this.chainName
       );
       return {
         [this.chainName]: groupCdeData(

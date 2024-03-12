@@ -9,7 +9,8 @@ import type {
 export default async function getCdeData(
   extension: ChainDataExtensionGeneric,
   fromBlock: number,
-  toBlock: number
+  toBlock: number,
+  network: string
 ): Promise<ChainDataExtensionDatum[]> {
   // TOOD: typechain is missing the proper type generation for getPastEvents
   // https://github.com/dethcrypto/TypeChain/issues/767
@@ -23,15 +24,20 @@ export default async function getCdeData(
     }),
     DEFAULT_FUNNEL_TIMEOUT
   );
-  return events.map(e => eventToCdeDatum(e, extension));
+  return events.map(e => eventToCdeDatum(e, extension, network));
 }
 
-function eventToCdeDatum(event: EventData, extension: ChainDataExtensionGeneric): CdeGenericDatum {
+function eventToCdeDatum(
+  event: EventData,
+  extension: ChainDataExtensionGeneric,
+  network: string
+): CdeGenericDatum {
   return {
     cdeId: extension.cdeId,
     cdeDatumType: ChainDataExtensionDatumType.Generic,
     blockNumber: event.blockNumber,
     scheduledPrefix: extension.scheduledPrefix,
     payload: event.returnValues,
+    network,
   };
 }

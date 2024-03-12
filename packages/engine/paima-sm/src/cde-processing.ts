@@ -17,7 +17,8 @@ import type { SQLUpdate } from '@paima/db';
 
 export async function cdeTransitionFunction(
   readonlyDBConn: PoolClient,
-  cdeDatum: ChainDataExtensionDatum
+  cdeDatum: ChainDataExtensionDatum,
+  inPresync: boolean
 ): Promise<SQLUpdate[]> {
   switch (cdeDatum.cdeDatumType) {
     case ChainDataExtensionDatumType.ERC20Transfer:
@@ -25,17 +26,17 @@ export async function cdeTransitionFunction(
     case ChainDataExtensionDatumType.ERC721Transfer:
       return await processErc721TransferDatum(readonlyDBConn, cdeDatum);
     case ChainDataExtensionDatumType.ERC721Mint:
-      return await processErc721MintDatum(cdeDatum);
+      return await processErc721MintDatum(cdeDatum, inPresync);
     case ChainDataExtensionDatumType.ERC20Deposit:
-      return await processErc20DepositDatum(readonlyDBConn, cdeDatum);
+      return await processErc20DepositDatum(readonlyDBConn, cdeDatum, inPresync);
     case ChainDataExtensionDatumType.Generic:
-      return await processGenericDatum(cdeDatum);
+      return await processGenericDatum(cdeDatum, inPresync);
     case ChainDataExtensionDatumType.ERC6551Registry:
       return await processErc6551RegistryDatum(cdeDatum);
     case ChainDataExtensionDatumType.CardanoPool:
-      return await processCardanoDelegationDatum(cdeDatum);
+      return await processCardanoDelegationDatum(cdeDatum, inPresync);
     case ChainDataExtensionDatumType.CardanoProjectedNFT:
-      return await processCardanoProjectedNFT(cdeDatum);
+      return await processCardanoProjectedNFT(cdeDatum, inPresync);
     case ChainDataExtensionDatumType.CardanoAssetUtxo:
       return await processCardanoAssetUtxoDatum(cdeDatum);
     default:

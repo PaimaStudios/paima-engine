@@ -10,7 +10,8 @@ import type { ERC721Transfer as Transfer } from '@paima/utils';
 export default async function getCdeData(
   extension: ChainDataExtensionErc721,
   fromBlock: number,
-  toBlock: number
+  toBlock: number,
+  network: string
 ): Promise<ChainDataExtensionDatum[]> {
   // TOOD: typechain is missing the proper type generation for getPastEvents
   // https://github.com/dethcrypto/TypeChain/issues/767
@@ -21,12 +22,13 @@ export default async function getCdeData(
     }),
     DEFAULT_FUNNEL_TIMEOUT
   )) as unknown as Transfer[];
-  return events.map((e: Transfer) => transferToCdeData(e, extension)).flat();
+  return events.map((e: Transfer) => transferToCdeData(e, extension, network)).flat();
 }
 
 function transferToTransferDatum(
   event: Transfer,
-  extension: ChainDataExtensionErc721
+  extension: ChainDataExtensionErc721,
+  network: string
 ): CdeErc721TransferDatum {
   return {
     cdeId: extension.cdeId,
@@ -37,12 +39,14 @@ function transferToTransferDatum(
       to: event.returnValues.to.toLowerCase(),
       tokenId: event.returnValues.tokenId,
     },
+    network,
   };
 }
 
 function transferToMintDatum(
   event: Transfer,
-  extension: ChainDataExtensionErc721
+  extension: ChainDataExtensionErc721,
+  network: string
 ): CdeErc721MintDatum {
   return {
     cdeId: extension.cdeId,
@@ -54,17 +58,19 @@ function transferToMintDatum(
     },
     contractAddress: extension.contractAddress,
     scheduledPrefix: extension.scheduledPrefix,
+    network,
   };
 }
 
 function transferToCdeData(
   event: Transfer,
-  extension: ChainDataExtensionErc721
+  extension: ChainDataExtensionErc721,
+  network: string
 ): ChainDataExtensionDatum[] {
-  const transferDatum = transferToTransferDatum(event, extension);
+  const transferDatum = transferToTransferDatum(event, extension, network);
   const fromAddr = event.returnValues.from;
   if (fromAddr.match(/^0x0+$/g)) {
-    const mintDatum = transferToMintDatum(event, extension);
+    const mintDatum = transferToMintDatum(event, extension, network);
     return [mintDatum, transferDatum];
   } else {
     return [transferDatum];
