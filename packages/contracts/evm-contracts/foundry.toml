@@ -2,9 +2,9 @@
 src = 'contracts' # the source directory
 test = 'test' # the test directory
 out = 'artifacts/forge' # the output directory (for artifacts)
-libs = ['test-lib'] # a list of library directories    
+libs = ['lib'] # a list of library directories    
 remappings = [ # a list of remappings
-  '@openzeppelin/=../../../node_modules/@openzeppelin/',
+  '@openzeppelin/=../../../node_modules/@openzeppelin/'
 ]
 cache_path = 'cache/forge'
 allow_paths = ["../../../node_modules"]

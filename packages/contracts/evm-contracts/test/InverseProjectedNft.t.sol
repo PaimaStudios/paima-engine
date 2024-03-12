@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.18;
 
-import "../test-lib/cheatcodes.sol";
-import "../test-lib/console.sol";
-import "../test-lib/ctest.sol";
+import "forge-std/Test.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
@@ -11,8 +9,7 @@ import "@openzeppelin/contracts/interfaces/IERC4906.sol";
 import "../contracts/token/InverseProjectedNft.sol";
 import "../contracts/token/IInverseProjectedNft.sol";
 
-contract InverseProjectedNftTest is CTest {
-    CheatCodes vm = CheatCodes(HEVM_ADDRESS);
+contract InverseProjectedNftTest is Test {
     InverseProjectedNft public nft;
     uint256 ownedTokenId;
     string baseURI = "192.168.0.1/";
