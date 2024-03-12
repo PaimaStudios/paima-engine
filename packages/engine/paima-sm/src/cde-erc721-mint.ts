@@ -8,7 +8,7 @@ export default async function processErc721Datum(
   inPresync: boolean
 ): Promise<SQLUpdate[]> {
   const [address, prefix] = [cdeDatum.contractAddress, cdeDatum.scheduledPrefix];
-  if (!prefix && inPresync) {
+  if (!prefix || inPresync) {
     return [];
   }
   const { tokenId, mintData } = cdeDatum.payload;
