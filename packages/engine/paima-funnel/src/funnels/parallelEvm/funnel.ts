@@ -140,39 +140,11 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
       }
     }
 
-    // After we get the blocks from the parallel evm chain, we need to join them
-    // with the trunk.
-    //
-    // This maps timestamps from the sidechain to the mainchain.
-    const sidechainToMainchainBlockHeightMapping: { [blockNumber: number]: number } = {};
-
-    // Mapping of mainchain to sidechain block heights
-    const mainchainToSidechainBlockHeightMapping: { [blockNumber: number]: number } = {};
-
-    // chainData is sorted by timestamp, so we never need to search old entries,
-    // we keep this around to know from where to start searching for a block
-    // from the original chain that has a timestamp >= than the current
-    // sidechain block.
-    let currIndex = 0;
-
     for (const parallelChainBlock of blocks) {
       cachedState.timestampToBlockNumber.push([
         parallelChainBlock.timestamp,
         parallelChainBlock.blockNumber,
       ]);
-
-      while (currIndex < chainData.length) {
-        if (chainData[currIndex].timestamp >= parallelChainBlock.timestamp) {
-          sidechainToMainchainBlockHeightMapping[parallelChainBlock.blockNumber] =
-            chainData[currIndex].blockNumber;
-
-          mainchainToSidechainBlockHeightMapping[chainData[currIndex].blockNumber] =
-            parallelChainBlock.blockNumber;
-          break;
-        } else {
-          currIndex++;
-        }
-      }
 
       cachedState.lastBlock = parallelChainBlock.blockNumber;
     }
@@ -198,7 +170,65 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
 
     cachedState.lastMaxTimestamp = maxTimestamp;
 
+    //  Now we need to join the parallel evm chain with the trunk.
+    //
+    //  We use the cached timestamp to block number mapping to build the
+    // following objects. It's important the we used the cached data and not the
+    // data that we just fetched, since in the previous round we may had fetched
+    // extra blocks.
+    //  For example: if we previously had timestamps:
+    //
+    // Round 1:
+    //    Base chain pull: [1, 2, 3]
+    //    This chain pull: [1, 2, 3, 4]
+    // Round 2:
+    //    Base chain pull: [4]
+    //    This chain pull: [5]
+    //
+    //  We would want to merge this new base block with the last from the
+    // previous round (timestamp 4).
+    //
+    //  We know that this block is still in the cached state, because we only
+    // removed blocks with timestamp <= 3 (maxTimestamp). If we used the blocks from the current
+    // call then instead we would map the block to the one with timestamp 5,
+    // breaking the invariant.
+    //
+    // This maps timestamps from the sidechain to the mainchain.
+    const sidechainToMainchainBlockHeightMapping: { [blockNumber: number]: number } = {};
+
+    // Mapping of mainchain to sidechain block heights
+    const mainchainToSidechainBlockHeightMapping: { [blockNumber: number]: number } = {};
+
+    // chainData is sorted by timestamp, so we never need to search old entries,
+    // we keep this around to know from where to start searching for a block
+    // from the original chain that has a timestamp >= than the current
+    // sidechain block.
+    let currIndex = 0;
+
+    for (const parallelChainBlock of cachedState.timestampToBlockNumber) {
+      while (currIndex < chainData.length) {
+        if (chainData[currIndex].timestamp >= parallelChainBlock[0]) {
+          sidechainToMainchainBlockHeightMapping[parallelChainBlock[1]] =
+            chainData[currIndex].blockNumber;
+
+          mainchainToSidechainBlockHeightMapping[chainData[currIndex].blockNumber] =
+            parallelChainBlock[1];
+          break;
+        } else {
+          currIndex++;
+        }
+      }
+    }
+
     if (!cachedState.timestampToBlockNumber[0]) {
+      return chainData;
+    }
+
+    // It's unlikely, but possible, that we did only fetch data outside the main
+    // chain range. In this case the condition below will make us return
+    // directly the base chain data.  If there is at least one block that gets
+    // merged then this gets handled by `getUpperBoundBlock`.
+    if (cachedState.timestampToBlockNumber[0][0] > maxTimestamp) {
       return chainData;
     }
 
@@ -220,7 +250,11 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
 
     if (toBlock === fromBlock) {
       doLog(`EVM CDE funnel ${this.config.chainId}: #${toBlock}`);
-      data = await this.internalReadDataSingle(fromBlock, chainData[0]);
+      data = await this.internalReadDataSingle(
+        fromBlock,
+        chainData[0],
+        blockNumber => sidechainToMainchainBlockHeightMapping[blockNumber]
+      );
     } else {
       doLog(`EVM CDE funnel ${this.config.chainId}: #${fromBlock}-${toBlock}`);
       data = await this.internalReadDataMulti(
@@ -271,7 +305,8 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
 
   private internalReadDataSingle = async (
     blockNumber: number,
-    baseChainData: ChainData
+    baseChainData: ChainData,
+    sidechainToMainchainNumber: (blockNumber: number) => number
   ): Promise<ChainData[]> => {
     if (blockNumber < 0) {
       return [];
@@ -285,6 +320,14 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
         blockNumber,
         blockNumber
       );
+
+      for (const extensionData of cdeData) {
+        for (const data of extensionData) {
+          const mappedBlockNumber = sidechainToMainchainNumber(data.blockNumber);
+
+          data.blockNumber = mappedBlockNumber;
+        }
+      }
 
       return [
         {
