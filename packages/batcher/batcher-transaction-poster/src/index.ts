@@ -11,10 +11,9 @@ import type { EthersEvmProvider } from '@paima/providers';
 
 import { estimateGasLimit } from './gas-limit.js';
 import { hashBatchSubunit, buildBatchData } from '@paima/concise';
-import { wait } from '@paima/utils';
+import { contractAbis, wait } from '@paima/utils';
 import { utf8ToHex } from 'web3-utils';
 import { ethers } from 'ethers';
-import paimaL2ContractBuild from './PaimaL2Contract.js';
 
 class BatchedTransactionPoster {
   private provider: EthersEvmProvider;
@@ -30,10 +29,11 @@ class BatchedTransactionPoster {
     this.maxSize = maxSize;
     this.pool = pool;
     this.fee = ENV.DEFAULT_FEE;
-    // todo: replace with a typed version of the contract
+    // TODO: this isn't a typed version of the contract
+    //       since paima-utils still uses web3 and we haven't migrated to something like viem
     this.storage = new ethers.Contract(
       contractAddress,
-      paimaL2ContractBuild.abi,
+      contractAbis.paimaL2ContractBuild.abi,
       provider.getConnection().api
     );
   }
