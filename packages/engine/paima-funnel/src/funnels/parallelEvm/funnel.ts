@@ -107,6 +107,9 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
       const to = Math.min(latestBlock, cachedState.lastBlock + this.config.funnelBlockGroupSize);
       // we need to fetch the blocks in order to know the timestamps, so that we
       // can make a mapping from the trunk chain to the parallel chain.
+
+      doLog(`ParallelEvm funnel ${this.config.chainId}: #${cachedState.lastBlock + 1}-${to}`);
+
       const parallelEvmBlocks = await getMultipleBlockData(
         this.web3,
         cachedState.lastBlock + 1,
