@@ -395,14 +395,14 @@ async function processUserInputs(
     const delegateWallet = new DelegateWallet(DBConn);
     if (inputData.inputData.startsWith(DelegateWallet.INTERNAL_COMMAND_PREFIX)) {
       await delegateWallet.process(
-        inputData.realAddress as string,
-        inputData.userAddress as string,
-        inputData.inputData as string
+        inputData.realAddress,
+        inputData.userAddress,
+        inputData.inputData
       );
     } else {
       // If wallet does not exist in address table: create it.
       if (inputData.userId === NO_USER_ID) {
-        const newAddress = await delegateWallet.createAddress(inputData.userAddress as string);
+        const newAddress = await delegateWallet.createAddress(inputData.userAddress);
         inputData.userId = newAddress.id;
       }
       // Trigger STF
