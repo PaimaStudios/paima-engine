@@ -67,6 +67,7 @@ class BatchedTransactionPoster {
         }
         await wait(periodMs);
       }
+      console.log('[BatchedTransactionPoster::run] run end');
     }
 
     while (true) {
@@ -85,6 +86,7 @@ class BatchedTransactionPoster {
     const hexMsg = utf8ToHex(msg);
     // todo: @paima/provider should probably return block info instead of just tx hash
     // so we don't have to copy-paste this
+    // todo: unify with buildDirectTx
     const nonce = await this.provider.getConnection().api.getNonce();
     const iface = new ethers.Interface([
       'function paimaSubmitGameInput(bytes calldata data) payable',
@@ -155,19 +157,17 @@ class BatchedTransactionPoster {
   private buildBatchedTransaction = async (hashes: string[], ids: number[]): Promise<string> => {
     const validatedInputs = await getValidatedInputs.run(undefined, this.pool);
 
-    const truncatedInputs = validatedInputs.slice(0, Math.min(10, validatedInputs.length));
-    console.log('buildBatchedTransaction', truncatedInputs, keepRunning);
     if (!keepRunning) {
       return '';
     }
 
-    if (truncatedInputs.length === 0) {
+    if (validatedInputs.length === 0) {
       return '';
     }
 
     const batchData = buildBatchData(
       this.maxSize,
-      truncatedInputs.map(dbInput => ({
+      validatedInputs.map(dbInput => ({
         addressType: dbInput.address_type,
         userAddress: dbInput.user_address,
         gameInput: dbInput.game_input,
@@ -177,7 +177,7 @@ class BatchedTransactionPoster {
     );
     for (let i = 0; i < batchData.selectedInputs.length; i++) {
       hashes.push(hashBatchSubunit(batchData.selectedInputs[i]));
-      ids.push(truncatedInputs[i].id);
+      ids.push(validatedInputs[i].id);
     }
 
     return batchData.data;

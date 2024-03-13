@@ -34,7 +34,6 @@
     "@metamask/providers": "^10.2.1",
     "@perawallet/connect": "^1.2.3",
     "@polkadot/extension-dapp": "^0.44.9",
-    "@truffle/hdwallet-provider": "^2.1.15",
     "algosdk": "^2.3.0",
     "bech32": "^2.0.0",
     "@paima/utils": "2.2.0",

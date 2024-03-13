@@ -375,7 +375,6 @@ async function initializeServer(
           return;
         }
 
-        // TODO: cache this so we don't end up querying it too often
         let blockHeight = null;
         while (blockHeight == null) {
           const now = new Date().getTime();

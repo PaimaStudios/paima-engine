@@ -1,6 +1,6 @@
 import type { EthersEvmProvider } from '@paima/providers';
-import { EthersConnector } from '@paima/providers';
-
+import { EthersConnector, WalletMode } from '@paima/providers';
+import { paimaEndpoints } from '@paima/mw-core';
 import { GenericRejectionCode } from './types.js';
 
 import { AddressType, wait } from '@paima/utils';
@@ -101,19 +101,27 @@ export async function getWalletWeb3AndAddress(
   privateKey: string
 ): Promise<EthersEvmProvider> {
   const wallet = new ethers.Wallet(privateKey);
-
-  // To interact with the Ethereum network, you'll need a provider. Here we use ethers' default provider.
-  // Alternatively, you can specify a provider, e.g., connecting to the mainnet or a testnet through Infura
-  const provider = new ethers.JsonRpcProvider(nodeUrl);
-
   // Connect your wallet to the provider to enable network interactions
-  const signer = wallet.connect(provider);
+  const signer = wallet.connect(new ethers.JsonRpcProvider(nodeUrl));
 
-  return await EthersConnector.instance().connectExternal(
-    {
-      gameName: 'foo',
-      gameChainId: undefined,
+  const connectedWallet = await paimaEndpoints.userWalletLogin({
+    mode: WalletMode.EvmEthers,
+    preferBatchedMode: false,
+    connection: {
+      api: signer,
+      metadata: {
+        name: 'paima-batcher',
+        displayName: 'Paima Batcher',
+      },
     },
-    signer
-  );
+  });
+  if (!connectedWallet.success) {
+    throw new Error(`Wallet connection failed`);
+  }
+  // we return this instead just to avoid having to port the whole batcher system to use the middleware
+  const provider = EthersConnector.instance().getProvider();
+  if (provider == null) {
+    throw new Error(`Batcher failed to find Ethers provider`);
+  }
+  return provider;
 }

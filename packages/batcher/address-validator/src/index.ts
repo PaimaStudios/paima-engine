@@ -12,34 +12,13 @@ import {
 
 import { isSameDay, isSameMinute } from './date-utils.js';
 import type { BatchedSubunit } from '@paima/concise';
-import { CryptoManager, IVerify } from '@paima/crypto';
+import { CryptoManager } from '@paima/crypto';
 import { createMessageForBatcher } from '@paima/concise';
-import { initWeb3, AddressType, getReadNamespaces } from '@paima/utils';
+import { AddressType, getReadNamespaces } from '@paima/utils';
 import assertNever from 'assert-never';
-import { query, getErrorResponse } from '@dcspark/carp-client/client/src/index';
+import { query } from '@dcspark/carp-client/client/src/index';
 import { Routes } from '@dcspark/carp-client/shared/routes';
 import { ethers } from 'ethers';
-
-// todo: should be in @paima/crypto
-export class EthersEvmCrypto implements IVerify {
-  verifyAddress = async (address: string): Promise<boolean> => {
-    // TODO: improve
-    return await Promise.resolve(/^0x[0-9A-Fa-f]+$/.test(address));
-  };
-  verifySignature = async (
-    userAddress: string,
-    message: string,
-    signature: string
-  ): Promise<boolean> => {
-    try {
-      const recoveredAddr = ethers.verifyMessage(message, signature);
-      return await Promise.resolve(recoveredAddr.toLowerCase() === userAddress.toLowerCase());
-    } catch (err) {
-      console.error('[address-validator] error verifying evm signature:', err);
-      return await Promise.resolve(false);
-    }
-  };
-}
 
 class PaimaAddressValidator {
   private web3: ethers.JsonRpcProvider | undefined;

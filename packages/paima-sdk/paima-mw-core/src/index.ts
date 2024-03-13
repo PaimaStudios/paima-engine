@@ -4,11 +4,7 @@ import { accountsEndpoints } from './endpoints/accounts.js';
 import { queryEndpoints } from './endpoints/queries.js';
 import { utilityEndpoints } from './endpoints/utility.js';
 
-import {
-  userWalletLoginWithoutChecks,
-  automaticWalletLogin,
-  updateBackendUri,
-} from './endpoints/internal.js';
+import { userWalletLoginWithoutChecks, updateBackendUri } from './endpoints/internal.js';
 
 import { getBlockNumber, postDataToEndpoint } from './helpers/general.js';
 import { getRemoteBackendVersion, awaitBlock } from './helpers/auxiliary-queries.js';
@@ -78,9 +74,4 @@ export {
 };
 
 // NOT FOR USE IN PRODUCTION, just internal endpoints and helper functions for easier testing and debugging:
-export {
-  userWalletLoginWithoutChecks,
-  automaticWalletLogin,
-  updateBackendUri,
-  getRemoteBackendVersion,
-};
+export { userWalletLoginWithoutChecks, updateBackendUri, getRemoteBackendVersion };

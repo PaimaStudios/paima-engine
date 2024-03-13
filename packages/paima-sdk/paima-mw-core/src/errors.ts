@@ -42,7 +42,6 @@ export const enum PaimaMiddlewareErrorCode {
   POLKADOT_WALLET_NOT_INSTALLED,
   POLKADOT_LOGIN,
   ALGORAND_LOGIN,
-  TRUFFLE_LOGIN,
   // Input posting related:
   ERROR_POSTING_TO_CHAIN = 2_000,
   ERROR_POSTING_TO_BATCHER,
@@ -83,7 +82,6 @@ export const PAIMA_MIDDLEWARE_ERROR_MESSAGES: Record<PaimaMiddlewareErrorCode, s
   [PaimaMiddlewareErrorCode.POLKADOT_WALLET_NOT_INSTALLED]: 'No Polkadot wallet installed',
   [PaimaMiddlewareErrorCode.POLKADOT_LOGIN]: 'Error while connecting to the Polkadot wallet',
   [PaimaMiddlewareErrorCode.ALGORAND_LOGIN]: 'Error while connecting to the Algorand wallet',
-  [PaimaMiddlewareErrorCode.TRUFFLE_LOGIN]: 'Error while connecting the Truffle HDWallet',
   [PaimaMiddlewareErrorCode.ERROR_POSTING_TO_CHAIN]:
     'An error occurred while posting data to the blockchain',
   [PaimaMiddlewareErrorCode.ERROR_POSTING_TO_BATCHER]:
