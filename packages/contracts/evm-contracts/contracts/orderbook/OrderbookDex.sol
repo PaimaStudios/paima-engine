@@ -15,21 +15,6 @@ contract OrderbookDex is IOrderbookDex, ERC165, ReentrancyGuard {
     mapping(uint256 => Order) public orders;
     uint256 public ordersIndex;
 
-    event OrderCreated(
-        uint256 indexed orderId,
-        address indexed seller,
-        uint256 assetAmount,
-        uint256 price
-    );
-    event OrderFilled(
-        uint256 indexed orderId,
-        address indexed seller,
-        address indexed buyer,
-        uint256 assetAmount,
-        uint256 price
-    );
-    event OrderCancelled(uint256 indexed orderId);
-
     error OrderIsInactive(uint256 orderId);
     error Unauthorized();
 

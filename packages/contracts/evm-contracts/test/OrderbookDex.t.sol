@@ -42,7 +42,7 @@ contract OrderbookDexTest is CTest {
             vm.prank(seller);
 
             vm.expectEmit(true, true, true, true);
-            emit OrderbookDex.OrderCreated(orderId, seller, assetAmount, price);
+            emit IOrderbookDex.OrderCreated(orderId, seller, assetAmount, price);
             dex.createSellOrder(assetAmount, price);
 
             uint256 newOrderId = dex.getOrdersIndex();
@@ -70,7 +70,7 @@ contract OrderbookDexTest is CTest {
                 OrderbookDex.Order memory order = dex.getOrder(firstOrderId + i);
                 sellersBalancesBefore[i] = order.seller.balance;
                 vm.expectEmit(true, true, true, true);
-                emit OrderbookDex.OrderFilled(
+                emit IOrderbookDex.OrderFilled(
                     firstOrderId + i,
                     order.seller,
                     buyer,
