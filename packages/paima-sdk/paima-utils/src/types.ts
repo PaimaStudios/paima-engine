@@ -34,14 +34,18 @@ export type NonceString = string;
 export interface SubmittedData {
   // Address of the wallet that submitted the data.
   realAddress: WalletAddress;
-  // Mapped address to main wallet.
-  userAddress: WalletAddress;
-  // Fixed User ID
-  userId: number;
   inputData: InputDataString;
   inputNonce: NonceString;
   suppliedValue: string;
   scheduled: boolean;
   dryRun?: boolean;
 }
+
+export interface STFSubmittedData extends SubmittedData {
+  // Mapped address to main wallet.
+  userAddress: WalletAddress;
+  // Fixed User ID
+  userId: number;
+}
+
 export type SubmittedChainData = SubmittedData;

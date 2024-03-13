@@ -1,7 +1,7 @@
 import type Web3 from 'web3';
 import { AddressType, doLog, getReadNamespaces } from '@paima/utils';
 import type { SubmittedData } from '@paima/runtime';
-import type { PaimaGameInteraction } from '@paima/utils';
+import type { PaimaGameInteraction, STFSubmittedData } from '@paima/utils';
 import { CryptoManager } from '@paima/crypto';
 import {
   INNER_BATCH_DIVIDER,
@@ -13,7 +13,7 @@ import { toBN, hexToUtf8, sha3 } from 'web3-utils';
 import type { PoolClient } from 'pg';
 import { getMainAddress } from '@paima/db';
 
-interface ValidatedSubmittedData extends SubmittedData {
+interface ValidatedSubmittedData extends STFSubmittedData {
   validated: boolean;
 }
 
@@ -38,13 +38,10 @@ async function eventMapper(
   DBConn: PoolClient
 ): Promise<SubmittedData[]> {
   const decodedData = decodeEventData(e.returnValues.data);
-  const address = await getMainAddress(e.returnValues.userAddress, DBConn);
   return await processDataUnit(
     web3,
     {
-      userId: address.id,
       realAddress: e.returnValues.userAddress,
-      userAddress: address.address,
       inputData: decodedData,
       inputNonce: '', // placeholder that will be filled later
       suppliedValue: e.returnValues.value,
@@ -79,7 +76,7 @@ async function processDataUnit(
   try {
     if (!unit.inputData.includes(OUTER_BATCH_DIVIDER)) {
       // Directly submitted input, prepare nonce and return:
-      const inputNonce = createUnbatchedNonce(blockHeight, unit.userAddress, unit.inputData);
+      const inputNonce = createUnbatchedNonce(blockHeight, unit.realAddress, unit.inputData);
       return [
         {
           ...unit,

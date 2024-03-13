@@ -1,6 +1,7 @@
 import { Pool } from 'pg';
 import type { PoolClient, Client } from 'pg';
 
+import type { STFSubmittedData } from '@paima/utils';
 import {
   doLog,
   ENV,
@@ -328,7 +329,7 @@ async function processScheduledData(
     DBConn
   );
   for (const data of scheduledData) {
-    const inputData: SubmittedData = {
+    const inputData: STFSubmittedData = {
       userId: SCHEDULED_DATA_ID,
       realAddress: SCHEDULED_DATA_ADDRESS,
       userAddress: SCHEDULED_DATA_ADDRESS,
@@ -366,17 +367,24 @@ async function processUserInputs(
   gameStateTransition: GameStateTransitionFunction,
   randomnessGenerator: Prando
 ): Promise<number> {
-  for (const inputData of latestChainData.submittedData) {
+  for (const submittedData of latestChainData.submittedData) {
     // Check nonce is valid
-    if (inputData.inputNonce === '') {
-      doLog(`Skipping inputData with invalid empty nonce: ${JSON.stringify(inputData)}`);
+    if (submittedData.inputNonce === '') {
+      doLog(`Skipping inputData with invalid empty nonce: ${JSON.stringify(submittedData)}`);
       continue;
     }
-    const nonceData = await findNonce.run({ nonce: inputData.inputNonce }, DBConn);
+    const nonceData = await findNonce.run({ nonce: submittedData.inputNonce }, DBConn);
     if (nonceData.length > 0) {
-      doLog(`Skipping inputData with duplicate nonce: ${JSON.stringify(inputData)}`);
+      doLog(`Skipping inputData with duplicate nonce: ${JSON.stringify(submittedData)}`);
       continue;
     }
+    const address = await getMainAddress(submittedData.realAddress, DBConn);
+
+    const inputData: STFSubmittedData = {
+      ...submittedData,
+      userAddress: address.address,
+      userId: address.id,
+    };
 
     // Check if internal Concise Command
     // Internal Concise Commands are prefixed with an ampersand (&)
@@ -387,14 +395,14 @@ async function processUserInputs(
     const delegateWallet = new DelegateWallet(DBConn);
     if (inputData.inputData.startsWith(DelegateWallet.INTERNAL_COMMAND_PREFIX)) {
       await delegateWallet.process(
-        inputData.realAddress,
-        inputData.userAddress,
-        inputData.inputData
+        inputData.realAddress as string,
+        inputData.userAddress as string,
+        inputData.inputData as string
       );
     } else {
       // If wallet does not exist in address table: create it.
       if (inputData.userId === NO_USER_ID) {
-        const newAddress = await delegateWallet.createAddress(inputData.userAddress);
+        const newAddress = await delegateWallet.createAddress(inputData.userAddress as string);
         inputData.userId = newAddress.id;
       }
       // Trigger STF

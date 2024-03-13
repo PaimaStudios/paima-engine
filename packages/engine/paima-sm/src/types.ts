@@ -14,6 +14,7 @@ import type {
   ERC6551RegistryContract,
   InternalEventType,
   ConfigNetworkType,
+  STFSubmittedData,
 } from '@paima/utils';
 import { Type } from '@sinclair/typebox';
 import type { Static } from '@sinclair/typebox';
@@ -400,7 +401,7 @@ export type GameStateTransitionFunctionRouter = (
 ) => GameStateTransitionFunction;
 
 export type GameStateTransitionFunction = (
-  inputData: SubmittedData,
+  inputData: STFSubmittedData,
   blockHeight: number,
   randomnessGenerator: any,
   DBConn: PoolClient
