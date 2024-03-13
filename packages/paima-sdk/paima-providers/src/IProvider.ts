@@ -40,16 +40,17 @@ export type GameInfo = {
 };
 
 export interface IConnector<T> {
+  getProvider(): undefined | IProvider<T>;
+  getOrThrowProvider(): IProvider<T>;
+  isConnected(): boolean;
+}
+export interface IInjectedConnector<T> {
   /** connect while letting Paima pick all the connection logic for you */
   connectSimple(gameInfo: GameInfo): Promise<IProvider<T>>;
   /** connect to an explicit API that Paima supports */
   connectNamed(gameInfo: GameInfo, name: string): Promise<IProvider<T>>;
   /** connect to an API that you've initialized yourself externally */
   connectExternal(gameInfo: GameInfo, conn: ActiveConnection<T>): Promise<IProvider<T>>;
-
-  getProvider(): undefined | IProvider<T>;
-  getOrThrowProvider(): IProvider<T>;
-  isConnected(): boolean;
 }
 
 export type AddressAndType = {

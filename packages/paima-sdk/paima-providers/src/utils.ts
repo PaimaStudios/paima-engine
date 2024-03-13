@@ -1,4 +1,10 @@
-import type { ActiveConnection, GameInfo, IConnector, IProvider } from './IProvider.js';
+import type {
+  ActiveConnection,
+  GameInfo,
+  IConnector,
+  IInjectedConnector,
+  IProvider,
+} from './IProvider.js';
 import assertNever from 'assert-never';
 import { AlgorandConnector } from './algorand.js';
 import { EthersConnector, EvmInjectedConnector } from './evm/index.js';
@@ -48,7 +54,7 @@ export async function allInjectedWallets(gameInfo: GameInfo): Promise<{
 export async function connectInjectedWallet<Api>(
   typeName: string,
   preference: undefined | InjectionPreference<Api>,
-  connector: IConnector<Api>,
+  connector: IInjectedConnector<Api>,
   gameInfo: GameInfo
 ): Promise<IProvider<Api>> {
   if (preference == null) {

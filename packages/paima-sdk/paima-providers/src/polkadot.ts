@@ -5,6 +5,7 @@ import type {
   ConnectionOption,
   GameInfo,
   IConnector,
+  IInjectedConnector,
   IProvider,
   UserSignature,
 } from './IProvider.js';
@@ -23,7 +24,7 @@ declare global {
   }
 }
 
-export class PolkadotConnector implements IConnector<PolkadotApi> {
+export class PolkadotConnector implements IConnector<PolkadotApi>, IInjectedConnector<PolkadotApi> {
   private provider: PolkadotProvider | undefined;
   private static INSTANCE: undefined | PolkadotConnector = undefined;
 

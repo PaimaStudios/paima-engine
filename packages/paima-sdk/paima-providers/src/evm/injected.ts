@@ -3,7 +3,7 @@ import type {
   ActiveConnection,
   ConnectionOption,
   GameInfo,
-  IConnector,
+  IInjectedConnector,
   IProvider,
   UserSignature,
   AddressAndType,
@@ -83,7 +83,7 @@ interface AddEthereumChainParameter {
 
 export type EvmApi = EIP1193Provider;
 
-export class EvmInjectedConnector implements IConnector<EvmApi> {
+export class EvmInjectedConnector implements IInjectedConnector<EvmApi> {
   private provider: EvmInjectedProvider | undefined;
   private static INSTANCE: undefined | EvmInjectedConnector = undefined;
 

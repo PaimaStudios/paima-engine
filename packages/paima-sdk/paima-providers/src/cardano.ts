@@ -7,6 +7,7 @@ import type {
   ConnectionOption,
   GameInfo,
   IConnector,
+  IInjectedConnector,
   IProvider,
 } from './IProvider.js';
 import { bech32 } from 'bech32';
@@ -33,7 +34,7 @@ const NETWORK_TAG_TESTNET = '0';
 const PREFIX_MAINNET = 'addr';
 const PREFIX_TESTNET = 'addr_test';
 
-export class CardanoConnector implements IConnector<CardanoApi> {
+export class CardanoConnector implements IConnector<CardanoApi>, IInjectedConnector<CardanoApi> {
   private provider: CardanoProvider | undefined;
   private static INSTANCE: undefined | CardanoConnector = undefined;
 

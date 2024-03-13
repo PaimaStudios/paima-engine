@@ -4,7 +4,7 @@ import type {
   CardanoApi,
   AlgorandApi,
   PolkadotApi,
-  IConnector,
+  IInjectedConnector,
   IProvider,
   GameInfo,
   EthersApi,
@@ -57,7 +57,7 @@ export async function connectInjected<Api>(
   errorFxn: EndpointErrorFxn,
   errorCode: PaimaMiddlewareErrorCode,
   loginInfo: BaseLoginInfo<Api>,
-  connector: IConnector<Api>,
+  connector: IInjectedConnector<Api>,
   gameInfo: GameInfo
 ): Promise<Result<IProvider<Api>>> {
   try {

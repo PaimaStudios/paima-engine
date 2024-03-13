@@ -77,7 +77,7 @@ class PaimaAddressValidator {
       case AddressType.EVM: {
         if (this.web3 == null)
           throw new Error(`[address-validator] web3 not initialized before address validations`);
-        return await new EthersEvmCrypto().verifyAddress(address);
+        return await CryptoManager.Evm().verifyAddress(address);
       }
       case AddressType.CARDANO:
         return await CryptoManager.Cardano().verifyAddress(address);
@@ -107,7 +107,7 @@ class PaimaAddressValidator {
           if (!this.web3) {
             throw new Error('[PaimaAddressValidator::verifySignature] web3 not initialized!');
           }
-          return await new EthersEvmCrypto().verifySignature(
+          return await CryptoManager.Evm().verifySignature(
             input.userAddress,
             message,
             input.userSignature

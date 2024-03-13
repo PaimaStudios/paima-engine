@@ -24,7 +24,7 @@ export async function getBaseChainDataMulti(
   const resultList: ChainData[] = [];
   for (const block of blockData) {
     const blockEvents = events.filter(e => e.blockNumber === block.blockNumber);
-    const submittedData = await extractSubmittedData(web3, blockEvents, block.timestamp, DBConn);
+    const submittedData = await extractSubmittedData(blockEvents, block.timestamp, DBConn);
     resultList.push({
       ...block,
       submittedData,
@@ -44,7 +44,7 @@ export async function getBaseChainDataSingle(
     getBlockData(web3, blockNumber, network),
     getPaimaEvents(paimaL2Contract, blockNumber, blockNumber),
   ]);
-  const submittedData = await extractSubmittedData(web3, events, blockData.timestamp, DBConn);
+  const submittedData = await extractSubmittedData(events, blockData.timestamp, DBConn);
   return {
     ...blockData,
     submittedData, // merge in the data
