@@ -1,3 +1,4 @@
+import './config.js'; // place at the top to load ENV variables
 import type { EthersEvmProvider } from '@paima/providers';
 import { EthersConnector, WalletMode } from '@paima/providers';
 import { paimaEndpoints } from '@paima/mw-core';

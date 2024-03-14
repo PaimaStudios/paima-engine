@@ -1,14 +1,3 @@
-import type { Pool } from 'pg';
-
-import BatchedTransactionPoster from '@paima/batcher-transaction-poster';
-import { server, startServer } from '@paima/batcher-webserver';
-import GameInputValidator, {
-  DefaultInputValidatorCoreInitializator,
-  EmptyInputValidatorCoreInitializator,
-  getErrors,
-} from '@paima/batcher-game-input-validator';
-
-import type { EthersEvmProvider } from '@paima/providers';
 import {
   ENV,
   getWalletWeb3AndAddress,
@@ -20,7 +9,18 @@ import {
   VERSION_STRING,
   getAndConfirmWeb3,
   getInvalidEnvVars,
-} from '@paima/batcher-utils';
+} from '@paima/batcher-utils'; // load first to load ENV variables
+import type { Pool } from 'pg';
+
+import BatchedTransactionPoster from '@paima/batcher-transaction-poster';
+import { server, startServer } from '@paima/batcher-webserver';
+import GameInputValidator, {
+  DefaultInputValidatorCoreInitializator,
+  EmptyInputValidatorCoreInitializator,
+  getErrors,
+} from '@paima/batcher-game-input-validator';
+
+import type { EthersEvmProvider } from '@paima/providers';
 import type { ErrorCode, ErrorMessageFxn, GameInputValidatorCore } from '@paima/batcher-utils';
 
 import { initializePool } from './pg/pgPool.js';
@@ -28,6 +28,7 @@ import type { BatcherRuntimeInitializer } from './types.js';
 import { setLogger } from '@paima/utils';
 import * as fs from 'fs';
 import { parseSecurityYaml } from '@paima/utils-backend';
+import { getRemoteBackendVersion, initMiddlewareCore } from '@paima/mw-core';
 
 setLogger(s => {
   try {
@@ -160,6 +161,10 @@ async function main(): Promise<void> {
   }
 
   const pool = initializePool();
+  await initMiddlewareCore(
+    'Game Batcher', // TODO: it doesn't matter now, but there is no way for the batcher to get the name of the game
+    await getRemoteBackendVersion()
+  );
   const provider = await getWalletWeb3AndAddress(ENV.CHAIN_URI, privateKey);
 
   console.log('Chain URI:              ', ENV.CHAIN_URI);

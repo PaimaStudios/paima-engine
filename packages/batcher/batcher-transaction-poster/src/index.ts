@@ -67,7 +67,6 @@ class BatchedTransactionPoster {
         }
         await wait(periodMs);
       }
-      console.log('[BatchedTransactionPoster::run] run end');
     }
 
     while (true) {
