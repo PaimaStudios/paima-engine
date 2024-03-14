@@ -401,12 +401,12 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
   public override async readPresyncData(
     args: ReadPresyncDataFrom
   ): Promise<{ [network: string]: PresyncChainData[] | typeof FUNNEL_PRESYNC_FINISHED }> {
-    const baseData = await this.baseFunnel.readPresyncData(args);
+    const basePromise = this.baseFunnel.readPresyncData(args);
 
     let arg = args.find(arg => arg.network == this.chainName);
 
     if (!arg) {
-      return baseData;
+      return await basePromise;
     }
 
     let fromBlock = arg.from;
@@ -415,25 +415,29 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
     const startBlockHeight = this.getState().startBlockHeight;
 
     if (fromBlock >= startBlockHeight) {
-      return { ...baseData, [this.chainName]: FUNNEL_PRESYNC_FINISHED };
+      return { ...(await basePromise), [this.chainName]: FUNNEL_PRESYNC_FINISHED };
+    }
+
+    toBlock = Math.min(toBlock, startBlockHeight - 1);
+    fromBlock = Math.max(fromBlock, 0);
+
+    if (fromBlock > toBlock) {
+      return await basePromise;
     }
 
     try {
-      toBlock = Math.min(toBlock, startBlockHeight - 1);
-      fromBlock = Math.max(fromBlock, 0);
-      if (fromBlock > toBlock) {
-        return baseData;
-      }
-
       doLog(`EVM CDE funnel presync ${this.config.chainId}: #${fromBlock}-${toBlock}`);
 
-      const ungroupedCdeData = await getUngroupedCdeData(
-        this.web3,
-        this.sharedData.extensions.filter(extension => extension.network === this.chainName),
-        fromBlock,
-        toBlock,
-        this.chainName
-      );
+      const [baseData, ungroupedCdeData] = await Promise.all([
+        basePromise,
+        getUngroupedCdeData(
+          this.web3,
+          this.sharedData.extensions.filter(extension => extension.network === this.chainName),
+          fromBlock,
+          toBlock,
+          this.chainName
+        ),
+      ]);
 
       return {
         ...baseData,
