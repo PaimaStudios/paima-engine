@@ -19,6 +19,7 @@ export class GlobalConfig {
 
           GlobalConfig.instance = config;
         }
+        return;
       });
     }
 

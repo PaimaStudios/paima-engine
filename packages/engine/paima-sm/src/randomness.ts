@@ -25,7 +25,7 @@ function chooseData(submittedData: SubmittedData[], seed: string): string[] {
   const chosenData = [];
   for (const dataChunk of submittedData) {
     if (randomSelection()) chosenData.push(dataChunk.inputNonce);
-    if (randomSelection()) chosenData.push(dataChunk.userAddress);
+    if (randomSelection()) chosenData.push(dataChunk.realAddress);
     for (const data of parseInput(dataChunk.inputData)) {
       if (randomSelection()) chosenData.push(data);
     }
@@ -35,7 +35,7 @@ function chooseData(submittedData: SubmittedData[], seed: string): string[] {
   if (submittedData.length > 0 && chosenData.length === 0) {
     const randomIndex = Math.floor(prando.next() * submittedData.length);
     const dataChunk = submittedData[randomIndex];
-    const forcedOptions = [dataChunk.inputNonce, dataChunk.userAddress, dataChunk.inputData];
+    const forcedOptions = [dataChunk.inputNonce, dataChunk.realAddress, dataChunk.inputData];
     const forcedValue = forcedOptions[Math.floor(prando.next() * forcedOptions.length)];
     chosenData.push(forcedValue);
   }
