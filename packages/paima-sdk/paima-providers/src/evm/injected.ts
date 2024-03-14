@@ -319,7 +319,11 @@ export class EvmInjectedProvider implements IProvider<EvmApi> {
       throw new ProviderApiError(`[switchChain] error: ${e?.message}`, e?.code);
     }
   };
-  sendTransaction = async (tx: Web3TransactionRequest): Promise<string> => {
+  sendTransaction = async (
+    tx: Web3TransactionRequest
+  ): Promise<{
+    txHash: string;
+  }> => {
     await this.verifyWalletChain();
     try {
       const hash = await this.conn.api.request({
@@ -330,7 +334,9 @@ export class EvmInjectedProvider implements IProvider<EvmApi> {
         console.log('[sendTransaction] invalid signature:', hash);
         throw new ProviderApiError(`[sendTransaction] Received "hash" of type ${typeof hash}`);
       }
-      return hash;
+      return {
+        txHash: hash,
+      };
     } catch (e: any) {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       throw new ProviderApiError(`[sendTransaction] error: ${e?.message}`, e?.code);

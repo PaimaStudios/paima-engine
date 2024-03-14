@@ -173,7 +173,7 @@ async function postString(
   const tx = buildDirectTx(userAddress, 'paimaSubmitGameInput', dataUtf8);
 
   try {
-    const txHash = await sendWalletTransaction(tx);
+    const { txHash } = await sendWalletTransaction(tx);
     const deploymentChainBlockHeight = await retryPromise(
       () => verifyTx(txHash, TX_VERIFICATION_DELAY),
       TX_VERIFICATION_RETRY_DELAY,

@@ -43,7 +43,7 @@ type CommonTransactionRequest = {
   maxFeePerGas?: string;
 };
 
-export type PostFxn = (tx: CommonTransactionRequest) => Promise<string>;
+export type PostFxn = (tx: CommonTransactionRequest) => Promise<{ txHash: string }>;
 
 export function buildDirectTx(
   userAddress: string,

@@ -83,23 +83,19 @@ class BatchedTransactionPoster {
 
   private postMessage = async (msg: string): Promise<[number, string]> => {
     const hexMsg = utf8ToHex(msg);
-    // todo: @paima/provider should probably return block info instead of just tx hash
-    // so we don't have to copy-paste this
     // todo: unify with buildDirectTx
-    const nonce = await this.provider.getConnection().api.getNonce();
     const iface = new ethers.Interface([
       'function paimaSubmitGameInput(bytes calldata data) payable',
     ]);
     const encodedData = iface.encodeFunctionData('paimaSubmitGameInput', [hexMsg]);
-    const transaction = await this.provider.getConnection().api.sendTransaction({
+    const transaction = await this.provider.sendTransaction({
       data: encodedData,
       to: this.contractAddress,
       from: this.provider.getAddress().address,
       value: '0x' + Number(this.fee).toString(16),
       gasLimit: estimateGasLimit(msg.length),
-      nonce,
     });
-    const receipt = (await transaction.wait())!;
+    const receipt = (await transaction.extra.wait())!;
     return [receipt.blockNumber, receipt.hash];
   };
 
