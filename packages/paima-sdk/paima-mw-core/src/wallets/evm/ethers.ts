@@ -34,7 +34,7 @@ async function connectWallet(
 }
 export async function ethersLoginWrapper(
   loginInfo: LoginInfoMap[WalletMode.EvmEthers]
-): Promise<Result<IProvider<ApiForMode<WalletMode.Cardano>>>> {
+): Promise<Result<IProvider<ApiForMode<WalletMode.EvmEthers>>>> {
   const errorFxn = buildEndpointErrorFxn('ethersLoginWrapper');
 
   const loginResult = await connectWallet(loginInfo);

@@ -3,7 +3,7 @@ import type {
   ActiveConnection,
   ConnectionOption,
   GameInfo,
-  IConnector,
+  IInjectedConnector,
   IProvider,
   UserSignature,
   AddressAndType,
@@ -83,7 +83,7 @@ interface AddEthereumChainParameter {
 
 export type EvmApi = EIP1193Provider;
 
-export class EvmInjectedConnector implements IConnector<EvmApi> {
+export class EvmInjectedConnector implements IInjectedConnector<EvmApi> {
   private provider: EvmInjectedProvider | undefined;
   private static INSTANCE: undefined | EvmInjectedConnector = undefined;
 
@@ -319,7 +319,11 @@ export class EvmInjectedProvider implements IProvider<EvmApi> {
       throw new ProviderApiError(`[switchChain] error: ${e?.message}`, e?.code);
     }
   };
-  sendTransaction = async (tx: Web3TransactionRequest): Promise<string> => {
+  sendTransaction = async (
+    tx: Web3TransactionRequest
+  ): Promise<{
+    txHash: string;
+  }> => {
     await this.verifyWalletChain();
     try {
       const hash = await this.conn.api.request({
@@ -330,7 +334,9 @@ export class EvmInjectedProvider implements IProvider<EvmApi> {
         console.log('[sendTransaction] invalid signature:', hash);
         throw new ProviderApiError(`[sendTransaction] Received "hash" of type ${typeof hash}`);
       }
-      return hash;
+      return {
+        txHash: hash,
+      };
     } catch (e: any) {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       throw new ProviderApiError(`[sendTransaction] error: ${e?.message}`, e?.code);

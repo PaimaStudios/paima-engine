@@ -1,14 +1,19 @@
-import type { ActiveConnection, GameInfo, IConnector, IProvider } from './IProvider.js';
+import type {
+  ActiveConnection,
+  GameInfo,
+  IConnector,
+  IInjectedConnector,
+  IProvider,
+} from './IProvider.js';
 import assertNever from 'assert-never';
 import { AlgorandConnector } from './algorand.js';
-import { EthersConnector, EvmInjectedConnector, TruffleConnector } from './evm/index.js';
+import { EthersConnector, EvmInjectedConnector } from './evm/index.js';
 import { CardanoConnector } from './cardano.js';
 import { PolkadotConnector } from './polkadot.js';
 
 export const enum WalletMode {
   EvmInjected,
   EvmEthers,
-  EvmTruffle,
   Cardano,
   Polkadot,
   Algorand,
@@ -17,7 +22,6 @@ export const enum WalletMode {
 export const WalletModeMap = {
   [WalletMode.EvmInjected]: EvmInjectedConnector.instance(),
   [WalletMode.EvmEthers]: EthersConnector.instance(),
-  [WalletMode.EvmTruffle]: TruffleConnector.instance(),
   [WalletMode.Cardano]: CardanoConnector.instance(),
   [WalletMode.Polkadot]: PolkadotConnector.instance(),
   [WalletMode.Algorand]: AlgorandConnector.instance(),
@@ -50,7 +54,7 @@ export async function allInjectedWallets(gameInfo: GameInfo): Promise<{
 export async function connectInjectedWallet<Api>(
   typeName: string,
   preference: undefined | InjectionPreference<Api>,
-  connector: IConnector<Api>,
+  connector: IInjectedConnector<Api>,
   gameInfo: GameInfo
 ): Promise<IProvider<Api>> {
   if (preference == null) {

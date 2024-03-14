@@ -1,5 +1,5 @@
-import type { Signer } from '@ethersproject/abstract-signer';
-import type { TransactionRequest } from '@ethersproject/abstract-provider';
+import type { Signer } from 'ethers';
+import type { TransactionRequest, TransactionResponse } from 'ethers';
 import type {
   ActiveConnection,
   AddressAndType,
@@ -77,14 +77,22 @@ export class EthersEvmProvider implements IProvider<EthersApi> {
     const signature = await this.conn.api.signMessage(buffer);
     return signature;
   };
-  sendTransaction = async (tx: TransactionRequest): Promise<string> => {
-    const nonce = await this.conn.api.getTransactionCount(this.address);
+  sendTransaction = async (
+    tx: TransactionRequest
+  ): Promise<{
+    txHash: string;
+    extra: TransactionResponse;
+  }> => {
+    const nonce = await this.conn.api.getNonce();
     const finalTx = {
-      ...tx,
       nonce,
       gasLimit: DEFAULT_GAS_LIMIT,
+      ...tx,
     };
     const result = await this.conn.api.sendTransaction(finalTx);
-    return result.hash;
+    return {
+      txHash: result.hash,
+      extra: result,
+    };
   };
 }

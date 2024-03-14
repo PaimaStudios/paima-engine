@@ -7,38 +7,40 @@ import {
   updateStateRejected,
 } from '@paima/batcher-db';
 import { keepRunning, ENV, gameInputValidatorClosed, webserverClosed } from '@paima/batcher-utils';
-import type { TruffleEvmProvider } from '@paima/providers';
+import type { EthersEvmProvider } from '@paima/providers';
 
 import { estimateGasLimit } from './gas-limit.js';
 import { hashBatchSubunit, buildBatchData } from '@paima/concise';
-import { getPaimaL2Contract, wait } from '@paima/utils';
-import type { PaimaL2Contract } from '@paima/utils';
+import { contractAbis, wait } from '@paima/utils';
+import { utf8ToHex } from 'web3-utils';
+import { ethers } from 'ethers';
 
 class BatchedTransactionPoster {
-  private truffleProvider: TruffleEvmProvider;
+  private provider: EthersEvmProvider;
   private contractAddress: string;
   private maxSize: number;
   private pool: Pool;
   private fee: string;
-  private storage: PaimaL2Contract;
+  private storage: ethers.Contract;
 
-  constructor(
-    truffleProvider: TruffleEvmProvider,
-    contractAddress: string,
-    maxSize: number,
-    pool: Pool
-  ) {
-    this.truffleProvider = truffleProvider;
+  constructor(provider: EthersEvmProvider, contractAddress: string, maxSize: number, pool: Pool) {
+    this.provider = provider;
     this.contractAddress = contractAddress;
     this.maxSize = maxSize;
     this.pool = pool;
     this.fee = ENV.DEFAULT_FEE;
-    this.storage = getPaimaL2Contract(this.contractAddress, truffleProvider.web3);
+    // TODO: this isn't a typed version of the contract
+    //       since paima-utils still uses web3 and we haven't migrated to something like viem
+    this.storage = new ethers.Contract(
+      contractAddress,
+      contractAbis.paimaL2ContractBuild.abi,
+      provider.getConnection().api
+    );
   }
 
   public initialize = async (): Promise<void> => {
     try {
-      this.fee = await this.storage.methods.fee().call();
+      this.fee = await this.storage.fee();
     } catch (err) {
       console.log(
         '[batcher-transaction-poster] Error while retrieving fee, reverting to default:',
@@ -75,22 +77,26 @@ class BatchedTransactionPoster {
     }
   };
 
-  public updateWeb3 = (newTruffleProvider: TruffleEvmProvider): void => {
-    this.truffleProvider = newTruffleProvider;
+  public updateWeb3 = (newProvider: EthersEvmProvider): void => {
+    this.provider = newProvider;
   };
 
   private postMessage = async (msg: string): Promise<[number, string]> => {
-    const hexMsg = this.truffleProvider.web3.utils.utf8ToHex(msg);
-    const tx = {
-      data: this.storage.methods.paimaSubmitGameInput(hexMsg).encodeABI(),
+    const hexMsg = utf8ToHex(msg);
+    // todo: unify with buildDirectTx
+    const iface = new ethers.Interface([
+      'function paimaSubmitGameInput(bytes calldata data) payable',
+    ]);
+    const encodedData = iface.encodeFunctionData('paimaSubmitGameInput', [hexMsg]);
+    const transaction = await this.provider.sendTransaction({
+      data: encodedData,
       to: this.contractAddress,
-      from: this.truffleProvider.getAddress().address,
-      value: this.truffleProvider.web3.utils.numberToHex(this.fee),
-      gas: estimateGasLimit(msg.length),
-    };
-    return await this.truffleProvider.web3.eth
-      .sendTransaction(tx)
-      .then(receipt => [receipt.blockNumber, receipt.transactionHash]);
+      from: this.provider.getAddress().address,
+      value: '0x' + Number(this.fee).toString(16),
+      gasLimit: estimateGasLimit(msg.length),
+    });
+    const receipt = (await transaction.extra.wait())!;
+    return [receipt.blockNumber, receipt.hash];
   };
 
   // Returns number of input successfully posted, or a negative number on failure.
@@ -118,6 +124,8 @@ class BatchedTransactionPoster {
         blockHeight = postedMessage[0];
         transactionHash = postedMessage[1];
       } catch (postError) {
+        console.error('Transaction batch failed. Cleaning up...');
+        console.error(postError);
         await this.rejectPostedStates(hashes);
         await this.deletePostedInputs(ids);
         return ids.length;

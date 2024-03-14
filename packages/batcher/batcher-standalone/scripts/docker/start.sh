@@ -11,7 +11,7 @@ fi
 if [ ! -x $executable ]; then chmod +x $executable; fi
 
 export ENV_FILE="../.env.${NETWORK:-localhost}";
-echo \"ENV FILE: $ENV_FILE\";
+echo ENV FILE: $ENV_FILE;
 docker compose --env-file $ENV_FILE build
 
 # running a localhost node on your machine isn't exposed to docker which runs in a container

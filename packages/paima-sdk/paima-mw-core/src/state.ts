@@ -97,7 +97,7 @@ export const getFee = (): undefined | FeeCache => fee;
 
 export const getWeb3 = async (): Promise<Web3> => {
   if (typeof web3 === 'undefined') {
-    web3 = await initWeb3(chainUri);
+    web3 = await initWeb3(getChainUri());
   }
   return web3;
 };

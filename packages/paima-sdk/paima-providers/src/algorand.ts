@@ -4,6 +4,7 @@ import type {
   ConnectionOption,
   GameInfo,
   IConnector,
+  IInjectedConnector,
   IProvider,
   UserSignature,
   AddressAndType,
@@ -22,7 +23,7 @@ import { getWindow } from './window.js';
 export type AlgorandApi = PeraWalletConnect;
 export type AlgorandAddress = string;
 
-export class AlgorandConnector implements IConnector<AlgorandApi> {
+export class AlgorandConnector implements IConnector<AlgorandApi>, IInjectedConnector<AlgorandApi> {
   private provider: AlgorandProvider | undefined;
   private static INSTANCE: undefined | AlgorandConnector = undefined;
 

@@ -32,7 +32,7 @@ function getTxTemplate<T extends keyof PaimaL2Contract['methods']>(
 type CommonTransactionRequest = {
   to?: string;
   from: string;
-  nonce?: string;
+  nonce?: number;
 
   gasPrice?: string;
 
@@ -43,7 +43,7 @@ type CommonTransactionRequest = {
   maxFeePerGas?: string;
 };
 
-export type PostFxn = (tx: CommonTransactionRequest) => Promise<string>;
+export type PostFxn = (tx: CommonTransactionRequest) => Promise<{ txHash: string }>;
 
 export function buildDirectTx(
   userAddress: string,

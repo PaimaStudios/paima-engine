@@ -34,7 +34,7 @@ export async function getRawLatestProcessedBlockHeight(): Promise<Result<number>
 }
 
 // TODO: reworking this to use serverEndpointCall requires the endpoint to return a JSON
-export async function getRemoteBackendVersion(): Promise<string> {
+export async function getRemoteBackendVersion(): Promise<`${number}.${number}.${number}`> {
   const errorFxn = buildEndpointErrorFxn('getRemoteBackendVersion');
 
   let res: Response;
@@ -51,7 +51,7 @@ export async function getRemoteBackendVersion(): Promise<string> {
     if (versionString[0] !== '"' || versionString[versionString.length - 1] !== '"') {
       throw new Error('Invalid version string: ' + versionString);
     }
-    return versionString.slice(1, versionString.length - 1);
+    return versionString.slice(1, versionString.length - 1) as `${number}.${number}.${number}`;
   } catch (err) {
     errorFxn(PaimaMiddlewareErrorCode.INVALID_RESPONSE_FROM_BACKEND, err);
     throw err;

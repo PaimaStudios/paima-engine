@@ -1,4 +1,3 @@
-import type Web3 from 'web3';
 import { AddressType, doLog, getReadNamespaces } from '@paima/utils';
 import type { SubmittedData } from '@paima/runtime';
 import type { PaimaGameInteraction, STFSubmittedData } from '@paima/utils';
@@ -20,26 +19,23 @@ interface ValidatedSubmittedData extends STFSubmittedData {
 const TIMESTAMP_LIMIT = 24 * 3600;
 
 export async function extractSubmittedData(
-  web3: Web3,
   events: PaimaGameInteraction[],
   blockTimestamp: number,
   DBConn: PoolClient
 ): Promise<SubmittedData[]> {
   const unflattenedList = await Promise.all(
-    events.map(e => eventMapper(web3, e, blockTimestamp, DBConn))
+    events.map(e => eventMapper(e, blockTimestamp, DBConn))
   );
   return unflattenedList.flat();
 }
 
 async function eventMapper(
-  web3: Web3,
   e: PaimaGameInteraction,
   blockTimestamp: number,
   DBConn: PoolClient
 ): Promise<SubmittedData[]> {
   const decodedData = decodeEventData(e.returnValues.data);
   return await processDataUnit(
-    web3,
     {
       realAddress: e.returnValues.userAddress,
       inputData: decodedData,
@@ -67,7 +63,6 @@ function decodeEventData(eventData: string): string {
 }
 
 async function processDataUnit(
-  web3: Web3,
   unit: SubmittedData,
   blockHeight: number,
   blockTimestamp: number,
@@ -91,7 +86,7 @@ async function processDataUnit(
     const subunitValue = toBN(unit.suppliedValue).div(toBN(subunits.length)).toString(10);
     const validatedSubUnits = await Promise.all(
       subunits.map(elem =>
-        processBatchedSubunit(web3, elem, subunitValue, blockHeight, blockTimestamp, DBConn)
+        processBatchedSubunit(elem, subunitValue, blockHeight, blockTimestamp, DBConn)
       )
     );
     return validatedSubUnits.filter(item => item.validated).map(unpackValidatedData);
@@ -102,7 +97,6 @@ async function processDataUnit(
 }
 
 async function processBatchedSubunit(
-  web3: Web3,
   input: string,
   suppliedValue: string,
   blockHeight: number,
@@ -131,7 +125,6 @@ async function processBatchedSubunit(
   }
   const addressType = parseInt(addressTypeStr, 10);
   const signatureValidated = await validateSubunitSignature(
-    web3,
     addressType,
     userAddress,
     userSignature,
@@ -165,7 +158,6 @@ function validateSubunitTimestamp(subunitTimestamp: number, blockTimestamp: numb
 }
 
 async function validateSubunitSignature(
-  web3: Web3,
   addressType: AddressType,
   userAddress: string,
   userSignature: string,
@@ -178,7 +170,7 @@ async function validateSubunitSignature(
   const tryVerifySig = async (message: string): Promise<boolean> => {
     switch (addressType) {
       case AddressType.EVM:
-        return await CryptoManager.Evm(web3).verifySignature(userAddress, message, userSignature);
+        return await CryptoManager.Evm().verifySignature(userAddress, message, userSignature);
       case AddressType.CARDANO:
         return await CryptoManager.Cardano().verifySignature(userAddress, message, userSignature);
       case AddressType.POLKADOT:

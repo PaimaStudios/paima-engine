@@ -2,12 +2,11 @@ import { AlgorandCrypto } from './algorand.js';
 import { CardanoCrypto } from './cardano.js';
 import { EvmCrypto } from './evm.js';
 import { PolkadotCrypto } from './polkadot.js';
-import type Web3 from 'web3';
 export { AlgorandCrypto, CardanoCrypto, EvmCrypto, PolkadotCrypto };
 export type * from './IVerify.js';
 
 export class CryptoManager {
-  // TODO: these should be dynamically imported
+  // careful: packages in these classes should be dynamically imported
   // so that we don't have to import a bunch of heavy crypto for games that don't need it
 
   private static algorand: AlgorandCrypto | undefined;
@@ -29,9 +28,9 @@ export class CryptoManager {
     return CryptoManager.cardano;
   }
 
-  static Evm(web3: Web3): EvmCrypto {
+  static Evm(): EvmCrypto {
     if (CryptoManager.evm == null) {
-      CryptoManager.evm = new EvmCrypto(web3);
+      CryptoManager.evm = new EvmCrypto();
     }
     return CryptoManager.evm;
   }

@@ -14,10 +14,10 @@ import {
 } from '@paima/batcher-db';
 import { ENV, keepRunning, setWebserverClosed, unsetWebserverClosed } from '@paima/batcher-utils';
 import type { ErrorMessageFxn } from '@paima/batcher-utils';
-import type { TruffleEvmProvider } from '@paima/providers';
+import type { EthersEvmProvider } from '@paima/providers';
 import type { BatchedSubunit } from '@paima/concise';
 import { createMessageForBatcher } from '@paima/concise';
-import { AddressType, getWriteNamespace } from '@paima/utils';
+import { AddressType, getWriteNamespace, wait } from '@paima/utils';
 import { hashBatchSubunit } from '@paima/concise';
 import { GlobalConfig } from '@paima/utils';
 
@@ -29,6 +29,11 @@ const server = express();
 const bodyParser = express.json();
 server.use(cors());
 server.use(bodyParser);
+
+let blockHeightCache = {
+  height: 0,
+  time: 0,
+};
 
 type TrackUserInputRequest = {
   input_hash: string;
@@ -104,7 +109,7 @@ TODO: This will be fixed in express v5 when it comes out
 async function initializeServer(
   pool: Pool,
   errorCodeToMessage: ErrorMessageFxn,
-  truffleProvider: TruffleEvmProvider
+  provider: EthersEvmProvider
 ): Promise<void> {
   const [chainName, config] = await GlobalConfig.mainEvmConfig();
   const addressValidator = new AddressValidator(config.chainUri, pool);
@@ -230,11 +235,11 @@ async function initializeServer(
           gameInput,
           millisecondTimestamp
         );
-        const userSignature = await truffleProvider.signMessage(message);
+        const userSignature = await provider.signMessage(message);
 
         const input: BatchedSubunit = {
           addressType,
-          userAddress: truffleProvider.getAddress().address,
+          userAddress: provider.getAddress().address,
           gameInput,
           millisecondTimestamp,
           userSignature,
@@ -273,7 +278,7 @@ async function initializeServer(
           await insertValidatedInput.run(
             {
               address_type: addressType,
-              user_address: truffleProvider.getAddress().address,
+              user_address: provider.getAddress().address,
               game_input: gameInput,
               millisecond_timestamp: millisecondTimestamp,
               user_signature: userSignature,
@@ -370,8 +375,24 @@ async function initializeServer(
           return;
         }
 
-        // TODO: cache this so we don't end up querying it too often
-        const blockHeight = await truffleProvider.web3.eth.getBlockNumber();
+        let blockHeight = null;
+        while (blockHeight == null) {
+          const now = new Date().getTime();
+          if (now - blockHeightCache.time < 60 * 1000) {
+            blockHeight = blockHeightCache.height;
+          } else {
+            console.log('BlockNumber cache miss');
+            try {
+              blockHeight = await provider.getConnection().api.provider!.getBlockNumber();
+              blockHeightCache.height = blockHeight;
+              blockHeightCache.time = new Date().getTime();
+            } catch (e) {
+              console.error('getBlockNumber failed. Will retry');
+              console.error(e);
+              await wait(1000);
+            }
+          }
+        }
         const validity = await addressValidator.validateUserInput(input, blockHeight);
 
         if (!keepRunning) {
@@ -433,10 +454,10 @@ async function initializeServer(
 async function startServer(
   _pool: Pool,
   errorCodeToMessage: ErrorMessageFxn,
-  truffleProvider: TruffleEvmProvider
+  provider: EthersEvmProvider
 ): Promise<void> {
   pool = _pool;
-  await initializeServer(pool, errorCodeToMessage, truffleProvider);
+  await initializeServer(pool, errorCodeToMessage, provider);
   setWebserverClosed();
   server.listen(port, () => {
     console.log(`server started at http://localhost:${port}`);

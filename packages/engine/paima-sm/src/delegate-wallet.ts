@@ -90,7 +90,7 @@ export class DelegateWallet {
 
   // Regex must match all possible wallets for the network.
   private static readonly WALLET_VALIDATORS = [
-    CryptoManager.Evm(new Web3()),
+    CryptoManager.Evm(),
     CryptoManager.Cardano(),
     CryptoManager.Algorand(),
     CryptoManager.Polkadot(),
