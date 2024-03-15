@@ -2,7 +2,13 @@ import type { PoolClient } from 'pg';
 
 import { doLog } from '@paima/utils';
 import type { CdeErc721TransferDatum } from './types.js';
-import { cdeErc721GetOwner, cdeErc721InsertOwner, cdeErc721UpdateOwner } from '@paima/db';
+import {
+  cdeErc721BurnInsert,
+  cdeErc721Delete,
+  cdeErc721GetOwner,
+  cdeErc721InsertOwner,
+  cdeErc721UpdateOwner,
+} from '@paima/db';
 import type { SQLUpdate } from '@paima/db';
 
 export default async function processErc721Datum(
@@ -13,6 +19,8 @@ export default async function processErc721Datum(
   const { to, tokenId } = cdeDatum.payload;
   const toAddr = to.toLowerCase();
 
+  const isBurn = Boolean(toAddr.match(/^0x0+$/g));
+
   const updateList: SQLUpdate[] = [];
   try {
     const ownerRow = await cdeErc721GetOwner.run(
@@ -21,7 +29,15 @@ export default async function processErc721Datum(
     );
     const newOwnerData = { cde_id: cdeId, token_id: tokenId, nft_owner: toAddr };
     if (ownerRow.length > 0) {
-      updateList.push([cdeErc721UpdateOwner, newOwnerData]);
+      if (isBurn) {
+        updateList.push([
+          cdeErc721BurnInsert,
+          { cde_id: cdeId, token_id: tokenId, nft_owner: ownerRow[0].nft_owner },
+        ]);
+        updateList.push([cdeErc721Delete, { cde_id: cdeId, token_id: tokenId }]);
+      } else {
+        updateList.push([cdeErc721UpdateOwner, newOwnerData]);
+      }
     } else {
       updateList.push([cdeErc721InsertOwner, newOwnerData]);
     }

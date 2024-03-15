@@ -161,3 +161,66 @@ const cdeErc721GetAllOwnedNftsIR: any = {"usedParamSet":{"nft_owner":true},"para
 export const cdeErc721GetAllOwnedNfts = new PreparedQuery<ICdeErc721GetAllOwnedNftsParams,ICdeErc721GetAllOwnedNftsResult>(cdeErc721GetAllOwnedNftsIR);
 
 
+/** 'CdeErc721Delete' parameters type */
+export interface ICdeErc721DeleteParams {
+  cde_id: number;
+  token_id: string;
+}
+
+/** 'CdeErc721Delete' return type */
+export type ICdeErc721DeleteResult = void;
+
+/** 'CdeErc721Delete' query type */
+export interface ICdeErc721DeleteQuery {
+  params: ICdeErc721DeleteParams;
+  result: ICdeErc721DeleteResult;
+}
+
+const cdeErc721DeleteIR: any = {"usedParamSet":{"cde_id":true,"token_id":true},"params":[{"name":"cde_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":43,"b":50}]},{"name":"token_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":67,"b":76}]}],"statement":"DELETE FROM cde_erc721_data\nWHERE cde_id = :cde_id!\nAND token_id = :token_id!"};
+
+/**
+ * Query generated from SQL:
+ * ```
+ * DELETE FROM cde_erc721_data
+ * WHERE cde_id = :cde_id!
+ * AND token_id = :token_id!
+ * ```
+ */
+export const cdeErc721Delete = new PreparedQuery<ICdeErc721DeleteParams,ICdeErc721DeleteResult>(cdeErc721DeleteIR);
+
+
+/** 'CdeErc721BurnInsert' parameters type */
+export interface ICdeErc721BurnInsertParams {
+  cde_id: number;
+  nft_owner: string;
+  token_id: string;
+}
+
+/** 'CdeErc721BurnInsert' return type */
+export type ICdeErc721BurnInsertResult = void;
+
+/** 'CdeErc721BurnInsert' query type */
+export interface ICdeErc721BurnInsertQuery {
+  params: ICdeErc721BurnInsertParams;
+  result: ICdeErc721BurnInsertResult;
+}
+
+const cdeErc721BurnInsertIR: any = {"usedParamSet":{"cde_id":true,"token_id":true,"nft_owner":true},"params":[{"name":"cde_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":84,"b":91}]},{"name":"token_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":98,"b":107}]},{"name":"nft_owner","required":true,"transform":{"type":"scalar"},"locs":[{"a":114,"b":124}]}],"statement":"INSERT INTO cde_erc721_burn(\n    cde_id,\n    token_id,\n    nft_owner\n) VALUES (\n    :cde_id!,\n    :token_id!,\n    :nft_owner!\n)"};
+
+/**
+ * Query generated from SQL:
+ * ```
+ * INSERT INTO cde_erc721_burn(
+ *     cde_id,
+ *     token_id,
+ *     nft_owner
+ * ) VALUES (
+ *     :cde_id!,
+ *     :token_id!,
+ *     :nft_owner!
+ * )
+ * ```
+ */
+export const cdeErc721BurnInsert = new PreparedQuery<ICdeErc721BurnInsertParams,ICdeErc721BurnInsertResult>(cdeErc721BurnInsertIR);
+
+
