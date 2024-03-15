@@ -206,6 +206,27 @@ const TABLE_DATA_CDE_ERC721: TableData = {
   creationQuery: QUERY_CREATE_TABLE_CDE_ERC721,
 };
 
+const QUERY_CREATE_TABLE_CDE_ERC721_BURN = `
+CREATE TABLE cde_erc721_burn (
+  cde_id INTEGER NOT NULL,
+  token_id TEXT NOT NULL,
+  nft_owner TEXT NOT NULL,
+  PRIMARY KEY (cde_id, token_id)
+);
+`;
+
+const TABLE_DATA_CDE_ERC721_BURN: TableData = {
+  tableName: 'cde_erc721_data_burn',
+  primaryKeyColumns: ['cde_id', 'token_id'],
+  columnData: packTuples([
+    ['cde_id', 'integer', 'NO', ''],
+    ['token_id', 'text', 'NO', ''],
+    ['nft_owner', 'text', 'NO', ''],
+  ]),
+  serialColumns: [],
+  creationQuery: QUERY_CREATE_TABLE_CDE_ERC721_BURN,
+};
+
 const QUERY_CREATE_TABLE_CDE_ERC20_DEPOSIT = `
 CREATE TABLE cde_erc20_deposit_data (
   cde_id INTEGER NOT NULL,
@@ -580,6 +601,7 @@ export const TABLES: TableData[] = [
   TABLE_DATA_CDE,
   TABLE_DATA_CDE_ERC20,
   TABLE_DATA_CDE_ERC721,
+  TABLE_DATA_CDE_ERC721_BURN,
   TABLE_DATA_CDE_ERC20_DEPOSIT,
   TABLE_DATA_CDE_GENERIC_DATA,
   TABLE_DATA_CDE_ERC6551_REGISTRY,
