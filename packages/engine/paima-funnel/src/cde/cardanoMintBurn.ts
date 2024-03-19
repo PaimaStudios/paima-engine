@@ -1,13 +1,6 @@
-import type {
-  CdeCardanoMintBurnDatum,
-  CdeCardanoTransferDatum,
-  ChainDataExtensionCardanoMintBurn,
-  ChainDataExtensionCardanoTransfer,
-} from '@paima/sm';
+import type { CdeCardanoMintBurnDatum, ChainDataExtensionCardanoMintBurn } from '@paima/sm';
 import { ChainDataExtensionDatumType, DEFAULT_FUNNEL_TIMEOUT, timeout } from '@paima/utils';
 import { Routes, query } from '@dcspark/carp-client';
-import type { TxAndBlockInfo } from '@dcspark/carp-client';
-import { Transaction } from '@dcspark/cardano-multiplatform-lib-nodejs';
 import type { BlockTxPair } from '@dcspark/carp-client';
 import type { MintBurnHistoryResponse } from '@dcspark/carp-client';
 
