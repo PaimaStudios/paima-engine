@@ -2,7 +2,7 @@ import type { CdeCardanoPoolDatum, ChainDataExtensionCardanoDelegation } from '@
 import { ChainDataExtensionDatumType, DEFAULT_FUNNEL_TIMEOUT, timeout } from '@paima/utils';
 import { Routes, query } from '@dcspark/carp-client/client/src';
 import type { DelegationForPoolResponse } from '@dcspark/carp-client/shared/models/DelegationForPool';
-import { BlockTxPair } from '@dcspark/carp-client/shared/models/common';
+import type { BlockTxPair } from '@dcspark/carp-client';
 
 export default async function getCdeData(
   url: string,
