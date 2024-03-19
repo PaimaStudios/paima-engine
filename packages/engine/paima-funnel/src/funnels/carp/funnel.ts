@@ -26,12 +26,12 @@ import getCdeProjectedNFTData from '../../cde/cardanoProjectedNFT.js';
 import getCdeDelayedAsset from '../../cde/delayedAsset.js';
 import getCdeTransferData from '../../cde/cardanoTransfer.js';
 import getCdeMintBurnData from '../../cde/cardanoMintBurn.js';
-import { query } from '@dcspark/carp-client/client/src/index';
-import { Routes } from '@dcspark/carp-client/shared/routes';
+import { query } from '@dcspark/carp-client';
+import { Routes } from '@dcspark/carp-client';
 import { FUNNEL_PRESYNC_FINISHED, InternalEventType } from '@paima/utils';
 import { CarpFunnelCacheEntry } from '../FunnelCache.js';
 import { getCardanoEpoch, getCarpCursors } from '@paima/db';
-import { BlockTxPair } from '@dcspark/carp-client/shared/models/common';
+import type { BlockTxPair } from '@dcspark/carp-client';
 
 const delayForWaitingForFinalityLoop = 1000;
 
