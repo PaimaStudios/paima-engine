@@ -110,7 +110,6 @@ function computeOutputs(
 
     const rawAddress = output.address();
     const address = rawAddress.to_bech32();
-    rawAddress.free();
 
     const amount = output.amount();
     const ma = amount.multi_asset();
@@ -146,27 +145,12 @@ function computeOutputs(
             },
             address,
           });
-
-          assetName.free();
         }
-
-        assetNames.free();
-        assets.free();
-        policyId.free();
       }
-
-      policyIds.free();
-      ma.free();
     }
 
     outputs.push({ amount: amount.coin().toString(), asset: null, address });
-
-    amount.free();
-    output.free();
   }
-
-  rawOutputs.free();
-  transaction.free();
 
   return outputs;
 }
