@@ -16,8 +16,8 @@ import { CryptoManager } from '@paima/crypto';
 import { createMessageForBatcher } from '@paima/concise';
 import { AddressType, getReadNamespaces } from '@paima/utils';
 import assertNever from 'assert-never';
-import { query } from '@dcspark/carp-client/client/src/index';
-import { Routes } from '@dcspark/carp-client/shared/routes';
+import { query } from '@dcspark/carp-client';
+import { Routes } from '@dcspark/carp-client';
 import { ethers } from 'ethers';
 
 class PaimaAddressValidator {

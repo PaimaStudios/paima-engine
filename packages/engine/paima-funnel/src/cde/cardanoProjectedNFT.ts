@@ -4,10 +4,10 @@ import type {
   ChainDataExtensionDatum,
 } from '@paima/sm';
 import { ChainDataExtensionDatumType, DEFAULT_FUNNEL_TIMEOUT, timeout } from '@paima/utils';
-import { Routes, query } from '@dcspark/carp-client/client/src';
-import { ProjectedNftStatus } from '@dcspark/carp-client/shared/models/ProjectedNftRange';
-import type { ProjectedNftRangeResponse } from '@dcspark/carp-client/shared/models/ProjectedNftRange';
-import { BlockTxPair } from '@dcspark/carp-client/shared/models/common';
+import { Routes, query } from '@dcspark/carp-client';
+import { ProjectedNftStatus } from '@dcspark/carp-client';
+import type { ProjectedNftRangeResponse } from '@dcspark/carp-client';
+import type { BlockTxPair } from '@dcspark/carp-client';
 
 export default async function getCdeProjectedNFTData(
   url: string,

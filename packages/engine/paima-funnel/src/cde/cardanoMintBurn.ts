@@ -5,11 +5,11 @@ import type {
   ChainDataExtensionCardanoTransfer,
 } from '@paima/sm';
 import { ChainDataExtensionDatumType, DEFAULT_FUNNEL_TIMEOUT, timeout } from '@paima/utils';
-import { Routes, query } from '@dcspark/carp-client/client/src';
-import type { TxAndBlockInfo } from '@dcspark/carp-client/shared/models/TransactionHistory';
+import { Routes, query } from '@dcspark/carp-client';
+import type { TxAndBlockInfo } from '@dcspark/carp-client';
 import { Transaction } from '@dcspark/cardano-multiplatform-lib-nodejs';
-import { BlockTxPair } from '@dcspark/carp-client/shared/models/common';
-import { MintBurnHistoryResponse } from 'tmp-carp-client/shared/models/MintBurn';
+import type { BlockTxPair } from '@dcspark/carp-client';
+import type { MintBurnHistoryResponse } from '@dcspark/carp-client';
 
 export default async function getCdeData(
   url: string,
