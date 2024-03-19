@@ -5,6 +5,7 @@ import type { STFSubmittedData } from '@paima/utils';
 import {
   doLog,
   ENV,
+  GlobalConfig,
   InternalEventType,
   SCHEDULED_DATA_ADDRESS,
   SCHEDULED_DATA_ID,
@@ -297,8 +298,21 @@ async function processCdeData(
   dbTx: PoolClient,
   inPresync: boolean
 ): Promise<number> {
+  const [mainNetwork, _] = await GlobalConfig.mainEvmConfig();
   return await processCdeDataBase(cdeData, dbTx, inPresync, async () => {
-    await markCdeBlockheightProcessed.run({ block_height: blockHeight, network }, dbTx);
+    // During the presync,
+    //     we know that the block_height is for that network in particular,
+    //     since the block heights are not mapped in that phase.
+    // During the sync,
+    //     the blockHeight we are processing here is for the main network instead,
+    //     which doesn't make sense for cde's from other networks.
+    // To tackle this, we have 2 options:
+    //     1. Store the original block in ChainDataExtensionDatum
+    //        and then use it to update here
+    //     2. (what we picked) Through the internal events (see EvmLastBlock)
+    if (inPresync || network == mainNetwork) {
+      await markCdeBlockheightProcessed.run({ block_height: blockHeight, network }, dbTx);
+    }
     return;
   });
 }
