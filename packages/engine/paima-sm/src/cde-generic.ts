@@ -1,10 +1,10 @@
 import { ENV } from '@paima/utils';
-import type { CdeGenericDatum } from './types.js';
+import type { CdeGenericDatum, CdeMinaGenericDatum } from './types.js';
 import { createScheduledData, cdeGenericInsertData } from '@paima/db';
 import type { SQLUpdate } from '@paima/db';
 
 export default async function processDatum(
-  cdeDatum: CdeGenericDatum,
+  cdeDatum: CdeGenericDatum | CdeMinaGenericDatum,
   inPresync: boolean
 ): Promise<SQLUpdate[]> {
   const cdeId = cdeDatum.cdeId;
