@@ -48,6 +48,8 @@ export async function cdeTransitionFunction(
       return await processCardanoTransferDatum(cdeDatum, inPresync);
     case ChainDataExtensionDatumType.CardanoMintBurn:
       return await processCardanoMintBurnDatum(cdeDatum, inPresync);
+    case ChainDataExtensionDatumType.MinaGeneric:
+      return await processGenericDatum(cdeDatum, inPresync);
     default:
       assertNever(cdeDatum);
   }

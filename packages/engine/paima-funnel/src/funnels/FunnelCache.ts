@@ -13,6 +13,7 @@ export type CacheMapType = {
   [RpcCacheEntry.SYMBOL]?: RpcCacheEntry;
   [CarpFunnelCacheEntry.SYMBOL]?: CarpFunnelCacheEntry;
   [EvmFunnelCacheEntry.SYMBOL]?: EvmFunnelCacheEntry;
+  [MinaFunnelCacheEntry.SYMBOL]?: MinaFunnelCacheEntry;
 };
 export class FunnelCacheManager {
   public cacheEntries: CacheMapType = {};
@@ -176,5 +177,61 @@ export class EvmFunnelCacheEntry implements FunnelCacheEntry {
 
   clear: FunnelCacheEntry['clear'] = () => {
     this.cachedData = {};
+  };
+}
+
+export type MinaFunnelCacheEntryState = {
+  startingSlotTimestamp: number;
+  lastPoint: { timestamp: number } | undefined;
+  genesisTime: number;
+  cursors:
+    | {
+        [cdeId: number]: { cursor: string; finished: boolean };
+      }
+    | undefined;
+};
+
+export class MinaFunnelCacheEntry implements FunnelCacheEntry {
+  private state: MinaFunnelCacheEntryState | null = null;
+  public static readonly SYMBOL = Symbol('MinaFunnelStartingSlot');
+
+  public updateStartingSlot(startingSlotTimestamp: number, genesisTime: number): void {
+    this.state = {
+      startingSlotTimestamp,
+      genesisTime,
+      lastPoint: this.state?.lastPoint,
+      cursors: this.state?.cursors,
+    };
+  }
+
+  public updateLastPoint(timestamp: number): void {
+    if (this.state) {
+      this.state.lastPoint = { timestamp };
+    }
+  }
+
+  public updateCursor(cdeId: number, presyncCursor: { cursor: string; finished: boolean }): void {
+    if (this.state) {
+      if (!this.state.cursors) {
+        this.state.cursors = {};
+      }
+
+      this.state.cursors[cdeId] = presyncCursor;
+    }
+  }
+
+  public initialized(): boolean {
+    return !!this.state;
+  }
+
+  public getState(): Readonly<MinaFunnelCacheEntryState> {
+    if (!this.state) {
+      throw new Error('[mina-funnel] Uninitialized cache entry');
+    }
+    return this.state;
+  }
+
+  clear: FunnelCacheEntry['clear'] = () => {
+    this.state = null;
   };
 }

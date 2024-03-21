@@ -130,6 +130,19 @@ const SM: GameStateMachineInitializer = {
               `[${latestCdeData.network}] Processed ${cdeDataLength} CDE events in ${latestCdeData.carpCursor.cursor}`
             );
           }
+        } else if (latestCdeData.networkType === ConfigNetworkType.MINA) {
+          // not really correct, but should work for now. Probably that function should be renamed
+          const cdeDataLength = await processCardanoCdeData(
+            latestCdeData.minaCursor,
+            latestCdeData.extensionDatums,
+            dbTx,
+            true
+          );
+          if (cdeDataLength > 0) {
+            doLog(
+              `[${latestCdeData.network}] Processed ${cdeDataLength} CDE events in ${latestCdeData.minaCursor.cursor}`
+            );
+          }
         }
       },
       markPresyncMilestone: async (
@@ -307,6 +320,38 @@ async function processCdeData(
 }
 
 async function processCardanoCdeData(
+  paginationCursor:
+    | { cdeId: number; cursor: string; finished: boolean }
+    | { cdeId: number; slot: number; finished: boolean },
+  cdeData: ChainDataExtensionDatum[] | undefined,
+  dbTx: PoolClient,
+  inPresync: boolean
+): Promise<number> {
+  return await processCdeDataBase(cdeData, dbTx, inPresync, async () => {
+    if ('cursor' in paginationCursor) {
+      await updateCardanoPaginationCursor.run(
+        {
+          cde_id: paginationCursor.cdeId,
+          cursor: paginationCursor.cursor,
+          finished: paginationCursor.finished,
+        },
+        dbTx
+      );
+    } else {
+      await updateCardanoPaginationCursor.run(
+        {
+          cde_id: paginationCursor.cdeId,
+          cursor: paginationCursor.slot.toString(),
+          finished: paginationCursor.finished,
+        },
+        dbTx
+      );
+    }
+    return;
+  });
+}
+
+async function processMinaCdeData(
   paginationCursor:
     | { cdeId: number; cursor: string; finished: boolean }
     | { cdeId: number; slot: number; finished: boolean },

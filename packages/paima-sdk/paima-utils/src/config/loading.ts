@@ -9,6 +9,7 @@ export enum ConfigNetworkType {
   EVM = 'evm-main',
   EVM_OTHER = 'evm-other',
   CARDANO = 'cardano',
+  MINA = 'mina',
 }
 
 export type EvmConfig = Static<typeof EvmConfigSchema>;
@@ -60,6 +61,15 @@ export const CardanoConfigSchema = Type.Object({
 
 export type CardanoConfig = Static<typeof CardanoConfigSchema>;
 
+export const MinaConfigSchema = Type.Object({
+  archive: Type.String(),
+  graphql: Type.String(),
+  confirmationDepth: Type.Number(),
+  //presyncStepSize: Type.Number({ default: 1000 }),
+});
+
+export type MinaConfig = Static<typeof MinaConfigSchema>;
+
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const TaggedEvmConfig = <T extends boolean, U extends boolean>(T: T, MAIN_CONFIG: U) =>
   Type.Union([
@@ -89,8 +99,20 @@ export const TaggedCardanoConfig = <T extends boolean>(T: T) =>
   ]);
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+export const TaggedMinaConfig = <T extends boolean>(T: T) =>
+  Type.Intersect([
+    T ? MinaConfigSchema : Type.Partial(MinaConfigSchema),
+    Type.Object({ type: Type.Literal(ConfigNetworkType.MINA) }),
+  ]);
+
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const TaggedConfig = <T extends boolean>(T: T) =>
-  Type.Union([TaggedEvmMainConfig(T), TaggedEvmOtherConfig(T), TaggedCardanoConfig(T)]);
+  Type.Union([
+    TaggedEvmMainConfig(T),
+    TaggedEvmOtherConfig(T),
+    TaggedCardanoConfig(T),
+    TaggedMinaConfig(T),
+  ]);
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const BaseConfig = <T extends boolean>(T: T) => Type.Record(Type.String(), TaggedConfig(T));
@@ -107,6 +129,10 @@ const evmConfigDefaults = (): Static<typeof EvmConfigSchemaOptionalProperties> =
 const cardanoConfigDefaults = {
   presyncStepSize: 1000,
   paginationLimits: 50,
+};
+
+const minaConfigDefaults = {
+  confirmationDepth: 15,
 };
 
 // used as a placeholder name for the ENV fallback mechanism
@@ -170,6 +196,9 @@ export async function loadConfig(): Promise<Static<typeof BaseConfigWithDefaults
         case ConfigNetworkType.CARDANO:
           config[network] = Object.assign(cardanoConfigDefaults, networkConfig);
           break;
+        case ConfigNetworkType.MINA:
+          config[network] = Object.assign(minaConfigDefaults, networkConfig);
+          break;
         default:
           throw new Error('unknown network type');
       }
@@ -217,6 +246,13 @@ export function parseConfigFile(configFileData: string): Static<typeof BaseConfi
         baseConfig[network] = checkOrError(
           'cardano config entry',
           TaggedCardanoConfig(false),
+          baseStructure[network]
+        );
+        break;
+      case ConfigNetworkType.MINA:
+        baseConfig[network] = checkOrError(
+          'mina config entry',
+          TaggedMinaConfig(false),
           baseStructure[network]
         );
         break;

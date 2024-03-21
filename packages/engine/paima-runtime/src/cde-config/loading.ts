@@ -43,6 +43,7 @@ import {
   ChainDataExtensionErc6551RegistryConfig,
   ChainDataExtensionErc721Config,
   ChainDataExtensionGenericConfig,
+  ChainDataExtensionMinaGenericConfig,
 } from '@paima/sm';
 import { loadAbi } from './utils.js';
 import assertNever from 'assert-never';
@@ -160,6 +161,12 @@ export function parseCdeConfigFile(configFileData: string): Static<typeof CdeCon
             ChainDataExtensionErc1155Config,
             Type.Object({ network: Type.String() }),
           ]),
+          entry
+        );
+      case CdeEntryTypeName.MinaGeneric:
+        return checkOrError(
+          entry.name,
+          Type.Intersect([ChainDataExtensionMinaGenericConfig, networkTagType]),
           entry
         );
       default:
@@ -327,6 +334,15 @@ async function instantiateExtension(
         cdeId: index,
         hash: hashConfig(config),
         cdeType: ChainDataExtensionType.CardanoMintBurn,
+      };
+    case CdeEntryTypeName.MinaGeneric:
+      return {
+        ...config,
+        // TODO: unhardcode
+        network: config.network || 'mina',
+        cdeId: index,
+        hash: hashConfig(config),
+        cdeType: ChainDataExtensionType.MinaGeneric,
       };
     default:
       assertNever(config);

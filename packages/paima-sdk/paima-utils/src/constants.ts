@@ -24,6 +24,7 @@ export const enum ChainDataExtensionType {
   CardanoTransfer = 10,
   CardanoMintBurn = 11,
   ERC1155 = 12,
+  MinaGeneric = 13,
 }
 
 export const enum ChainDataExtensionDatumType {
@@ -39,6 +40,7 @@ export const enum ChainDataExtensionDatumType {
   CardanoTransfer,
   CardanoMintBurn,
   Erc1155Transfer,
+  MinaGeneric,
 }
 
 export const FUNNEL_PRESYNC_FINISHED = 'finished';

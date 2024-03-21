@@ -57,7 +57,15 @@ export interface CardanoPresyncChainData {
   extensionDatums: ChainDataExtensionDatum[];
 }
 
-export type PresyncChainData = EvmPresyncChainData | CardanoPresyncChainData;
+// TODO: potentially this and Cardano can be collapsed
+export interface MinaPresyncChainData {
+  network: string;
+  networkType: ConfigNetworkType.MINA;
+  minaCursor: { cdeId: number; cursor: string; finished: boolean };
+  extensionDatums: ChainDataExtensionDatum[];
+}
+
+export type PresyncChainData = EvmPresyncChainData | CardanoPresyncChainData | MinaPresyncChainData;
 
 interface CdeDatumErc20TransferPayload {
   from: string;
@@ -247,6 +255,12 @@ export interface CdeCardanoMintBurnDatum extends CdeDatumBase {
   paginationCursor: { cursor: string; finished: boolean };
 }
 
+export interface CdeMinaGenericDatum extends CdeDatumBase {
+  cdeDatumType: ChainDataExtensionDatumType.MinaGeneric;
+  paginationCursor: { cursor: string; finished: boolean };
+  scheduledPrefix: string;
+}
+
 export type ChainDataExtensionDatum =
   | CdeErc20TransferDatum
   | CdeErc721MintDatum
@@ -259,7 +273,8 @@ export type ChainDataExtensionDatum =
   | CdeCardanoProjectedNFTDatum
   | CdeCardanoAssetUtxoDatum
   | CdeCardanoTransferDatum
-  | CdeCardanoMintBurnDatum;
+  | CdeCardanoMintBurnDatum
+  | CdeMinaGenericDatum;
 
 export enum CdeEntryTypeName {
   Generic = 'generic',
@@ -273,6 +288,7 @@ export enum CdeEntryTypeName {
   CardanoDelayedAsset = 'cardano-delayed-asset',
   CardanoTransfer = 'cardano-transfer',
   CardanoMintBurn = 'cardano-mint-burn',
+  MinaGeneric = 'mina-generic',
 }
 
 const EvmAddress = Type.Transform(Type.RegExp('0x[0-9a-fA-F]{40}'))
@@ -462,6 +478,20 @@ export type ChainDataExtensionCardanoMintBurn = ChainDataExtensionBase &
     cdeType: ChainDataExtensionType.CardanoMintBurn;
   };
 
+export const ChainDataExtensionMinaGenericConfig = Type.Object({
+  type: Type.Literal(CdeEntryTypeName.MinaGeneric),
+  // TODO: change?
+  address: Type.String(),
+  scheduledPrefix: Type.String(),
+  startSlot: Type.Number(),
+});
+
+export type TChainDataExtensionMinaGenericConfig = Static<typeof ChainDataExtensionGenericConfig>;
+export type ChainDataExtensionMinaGeneric = ChainDataExtensionBase &
+  Static<typeof ChainDataExtensionMinaGenericConfig> & {
+    cdeType: ChainDataExtensionType.MinaGeneric;
+  };
+
 export const CdeConfig = Type.Object({
   extensions: Type.Array(
     Type.Intersect([
@@ -477,6 +507,7 @@ export const CdeConfig = Type.Object({
         ChainDataExtensionCardanoDelayedAssetConfig,
         ChainDataExtensionCardanoTransferConfig,
         ChainDataExtensionCardanoMintBurnConfig,
+        ChainDataExtensionMinaGenericConfig,
       ]),
       Type.Partial(Type.Object({ network: Type.String() })),
     ])
@@ -509,6 +540,7 @@ export type ChainDataExtension = (
   | ChainDataExtensionCardanoDelayedAsset
   | ChainDataExtensionCardanoTransfer
   | ChainDataExtensionCardanoMintBurn
+  | ChainDataExtensionMinaGeneric
 ) & { network: string | undefined };
 
 export type GameStateTransitionFunctionRouter = (
