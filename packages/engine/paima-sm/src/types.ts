@@ -18,6 +18,7 @@ import type {
 } from '@paima/utils';
 import { Type } from '@sinclair/typebox';
 import type { Static } from '@sinclair/typebox';
+import type { ProjectedNftStatus } from '@dcspark/carp-client';
 
 export { SubmittedChainData, SubmittedData };
 
@@ -108,7 +109,7 @@ interface CdeDatumCardanoProjectedNFTPayload {
   policyId: string;
   assetName: string;
   amount: string;
-  status: string;
+  status: ProjectedNftStatus;
   plutusDatum: string;
 
   forHowLong: string | undefined;
