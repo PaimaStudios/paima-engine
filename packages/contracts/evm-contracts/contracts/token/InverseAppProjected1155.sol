@@ -58,17 +58,38 @@ contract InverseAppProjected1155 is IInverseAppProjected1155, ERC1155Supply, Own
             super.supportsInterface(interfaceId);
     }
 
+    function currentNonce(address user) external view virtual returns (uint256) {
+        return mintCount[user];
+    }
+
+    function validateMint(address, bytes memory) internal virtual returns (bool) {
+        // Base contract allows any mint
+        // Replace this with any custom verification logic
+        return true;
+    }
+
     /// @dev Returns the amount of token with ID `id` that had been initially minted.
     function initialSupply(uint256 id) public view virtual returns (uint256) {
         return _initialSupply[id];
     }
 
-    /// @dev Mints `value` of a new token to transaction sender.
+    /// @dev Mints `value` of a new token to the transaction sender.
     /// Increases the `currentTokenId`.
     /// Reverts if transaction sender is a smart contract that does not implement IERC1155Receiver-onERC1155Received.
     /// Emits the `Minted` event.
-    /// Returns the id of the minted token.
-    function mint(uint256 value, bytes memory data) external virtual returns (uint256) {
+    /// @param value the amount of tokens to mint.
+    /// @param data additional data to pass to the receiver contract.
+    /// @param verificationData any additional data to verify the validity of the mint
+    /// @return id of the minted token.
+    function mint(
+        uint256 value,
+        bytes memory data,
+        bytes calldata verificationData
+    ) external virtual returns (uint256) {
+        require(
+            validateMint(msg.sender, verificationData),
+            "InverseAppProjected1155: invalid verification data"
+        );
         uint256 tokenId = currentTokenId;
         _mint(msg.sender, tokenId, value, data);
         mintCount[msg.sender] += 1;
@@ -80,6 +101,12 @@ contract InverseAppProjected1155 is IInverseAppProjected1155, ERC1155Supply, Own
 
         emit Minted(tokenId, msg.sender, userTokenId, value);
         return tokenId;
+    }
+
+    /// @dev This works identically to the other function with an extra data parameter,
+    ///      except this function just sets data to "".
+    function mint(uint256 value, bytes memory data) external returns (uint256) {
+        return this.mint(value, data, "");
     }
 
     /// @dev Burns `value` amount of token of ID `id` from transaction sender.
