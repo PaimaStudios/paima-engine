@@ -17,10 +17,27 @@ interface IInverseAppProjected1155 is IInverseProjected1155 {
     /// @dev Emitted when supply of globally-enforced `tokenId` in combination with an unique `<minter, userTokenId>` pair goes to zero.
     event BurnedAll(uint256 indexed tokenId, address indexed minter, uint256 indexed userTokenId);
 
+    /// @notice Returns the last nonce used (or 0 if the user has never minted)
+    /// @dev Useful if you need to either needs to
+    ///      1. Check if the nonce matches the expected value, or if more NFTs need to be minted
+    ///      2. Use a nonce algorithm where the next nonce depends on the current nonce
+    function currentNonce(address user) external view returns (uint256);
+
     /// @dev Mints `value` of a new token to the transaction sender.
     /// Increases the `currentTokenId`.
     /// Reverts if transaction sender is a smart contract that does not implement IERC1155Receiver-onERC1155Received.
     /// Emits the `Minted` event.
-    /// Returns the id of the minted token.
+    /// @param value the amount of tokens to mint.
+    /// @param data additional data to pass to the receiver contract.
+    /// @param verificationData any additional data to verify the validity of the mint
+    /// @return id of the minted token.
+    function mint(
+        uint256 value,
+        bytes memory data,
+        bytes memory verificationData
+    ) external returns (uint256);
+
+    /// @dev This works identically to the other function with an extra data parameter,
+    ///      except this function just sets data to "".
     function mint(uint256 value, bytes memory data) external returns (uint256);
 }
