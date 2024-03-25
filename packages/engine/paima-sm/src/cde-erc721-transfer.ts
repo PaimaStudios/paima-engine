@@ -19,7 +19,7 @@ export default async function processErc721Datum(
   const { to, tokenId } = cdeDatum.payload;
   const toAddr = to.toLowerCase();
 
-  const isBurn = Boolean(toAddr.match(/^0x0+$/g));
+  const isBurn = Boolean(toAddr.toLocaleLowerCase().match(/^0x0+(dead)?$/g));
 
   const updateList: SQLUpdate[] = [];
   try {
@@ -30,6 +30,8 @@ export default async function processErc721Datum(
     const newOwnerData = { cde_id: cdeId, token_id: tokenId, nft_owner: toAddr };
     if (ownerRow.length > 0) {
       if (isBurn) {
+        // we do this to keep track of the owner before the asset is sent to the
+        // burn address
         updateList.push([
           cdeErc721BurnInsert,
           { cde_id: cdeId, token_id: tokenId, nft_owner: ownerRow[0].nft_owner },
