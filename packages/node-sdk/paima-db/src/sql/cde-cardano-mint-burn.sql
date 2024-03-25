@@ -3,10 +3,14 @@ INSERT INTO cde_cardano_mint_burn (
   cde_id,
   tx_id,
   metadata,
-  assets
+  assets,
+  inputAddresses,
+  outputAddresses
 ) VALUES (
   :cde_id!,
   :tx_id!,
   :metadata!,
-  :assets!
+  :assets!,
+  :input_addresses!,
+  :output_addresses!
 );

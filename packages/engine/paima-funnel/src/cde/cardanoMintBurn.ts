@@ -80,6 +80,8 @@ function eventToCdeDatum(
       txId: event.txId,
       metadata: event.metadata,
       assets: event.assets,
+      inputAddresses: event.inputAddress,
+      outputAddresses: event.outputAddress,
     },
     scheduledPrefix: extension.scheduledPrefix,
     paginationCursor: { cursor: JSON.stringify(cursor), finished: false },
