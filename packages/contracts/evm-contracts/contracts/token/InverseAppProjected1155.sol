@@ -113,10 +113,6 @@ contract InverseAppProjected1155 is IInverseAppProjected1155, ERC1155Supply, Own
     /// Reverts if transaction sender's balance of `id` is less than `value`.
     function burn(uint256 id, uint256 value) external virtual {
         _burn(msg.sender, id, value);
-        if (totalSupply(id) == 0) {
-            MintEntry memory entry = tokenToMint[id];
-            emit BurnedAll(id, entry.minter, entry.userTokenId);
-        }
     }
 
     /// @dev Returns the token URI of specified `id` using the default set base URI.

@@ -14,9 +14,6 @@ interface IInverseAppProjected1155 is IInverseProjected1155 {
         uint256 value
     );
 
-    /// @dev Emitted when supply of globally-enforced `tokenId` in combination with an unique `<minter, userTokenId>` pair goes to zero.
-    event BurnedAll(uint256 indexed tokenId, address indexed minter, uint256 indexed userTokenId);
-
     /// @notice Returns the last nonce used (or 0 if the user has never minted)
     /// @dev Useful if you need to either needs to
     ///      1. Check if the nonce matches the expected value, or if more NFTs need to be minted
