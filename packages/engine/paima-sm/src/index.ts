@@ -417,50 +417,50 @@ async function processUserInputs(
     // cancelDelegate = &wc|to_signature
     const delegateWallet = new DelegateWallet(DBConn);
     if (inputData.inputData.startsWith(DelegateWallet.INTERNAL_COMMAND_PREFIX)) {
-      await delegateWallet.process(
+      const status = await delegateWallet.process(
         inputData.realAddress,
         inputData.userAddress,
         inputData.inputData
       );
-    } else {
+      if (!status) continue;
+    } else if (inputData.userId === NO_USER_ID) {
       // If wallet does not exist in address table: create it.
-      if (inputData.userId === NO_USER_ID) {
-        const newAddress = await delegateWallet.createAddress(inputData.userAddress);
-        inputData.userId = newAddress.id;
+      const newAddress = await delegateWallet.createAddress(inputData.userAddress);
+      inputData.userId = newAddress.id;
+    }
+
+    // Trigger STF
+    const sqlQueries = await gameStateTransition(
+      inputData,
+      latestChainData.blockNumber,
+      randomnessGenerator,
+      DBConn
+    );
+
+    try {
+      for (const [query, params] of sqlQueries) {
+        await query.run(params, DBConn);
       }
-      // Trigger STF
-      const sqlQueries = await gameStateTransition(
-        inputData,
-        latestChainData.blockNumber,
-        randomnessGenerator,
+      await insertNonce.run(
+        {
+          nonce: inputData.inputNonce,
+          block_height: latestChainData.blockNumber,
+        },
         DBConn
       );
-
-      try {
-        for (const [query, params] of sqlQueries) {
-          await query.run(params, DBConn);
-        }
-        await insertNonce.run(
+      if (ENV.STORE_HISTORICAL_GAME_INPUTS) {
+        await storeGameInput.run(
           {
-            nonce: inputData.inputNonce,
             block_height: latestChainData.blockNumber,
+            input_data: inputData.inputData,
+            user_address: inputData.userAddress,
           },
           DBConn
         );
-        if (ENV.STORE_HISTORICAL_GAME_INPUTS) {
-          await storeGameInput.run(
-            {
-              block_height: latestChainData.blockNumber,
-              input_data: inputData.inputData,
-              user_address: inputData.userAddress,
-            },
-            DBConn
-          );
-        }
-      } catch (err) {
-        doLog(`[paima-sm] Database error on gameStateTransition: ${err}`);
-        throw err;
       }
+    } catch (err) {
+      doLog(`[paima-sm] Database error on gameStateTransition: ${err}`);
+      throw err;
     }
   }
   return latestChainData.submittedData.length;

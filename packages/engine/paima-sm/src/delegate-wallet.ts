@@ -267,8 +267,8 @@ export class DelegateWallet {
   /*
    * Main entry point. Verify if command is valid and execute it.
    *
-   * If returns TRUE this is was an intend as internal command,
-   * and the paima-concise command should not passed into the game STF.
+   * If returns TRUE if execution was valid and should be passed
+   * into the SFT to apply side-effects.
    */
   public async process(
     realAddress: string,
@@ -276,51 +276,50 @@ export class DelegateWallet {
     command: string
   ): Promise<boolean> {
     try {
-      if (!command.startsWith(DelegateWallet.INTERNAL_COMMAND_PREFIX)) return false;
+      if (!command.startsWith(DelegateWallet.INTERNAL_COMMAND_PREFIX)) {
+        return true;
+      }
       const parsed: ParsedDelegateWalletCommand = DelegateWallet.parser.start(
         command
       ) as ParsedDelegateWalletCommand;
       switch (parsed.command) {
-        case 'delegate':
-          {
-            const from = parsed.args.from || realAddress;
-            const to = parsed.args.to || realAddress;
-            this.validateSender(to, from, realAddress);
+        case 'delegate': {
+          const from = parsed.args.from || realAddress;
+          const to = parsed.args.to || realAddress;
+          this.validateSender(to, from, realAddress);
 
-            const { from_signature, to_signature } = parsed.args;
-            await Promise.all([
-              this.verifySignature(from, this.generateMessage(to), from_signature),
-              this.verifySignature(to, this.generateMessage(from), to_signature),
-            ]);
-            await this.cmdDelegate(from.toLocaleLowerCase(), to.toLocaleLowerCase());
-            doLog(`Delegate Wallet ${from.substring(0, 8)}... -> ${to.substring(0, 8)}...`);
-          }
-          break;
-        case 'migrate':
-          {
-            const from = parsed.args.from || realAddress;
-            const to = parsed.args.to || realAddress;
-            this.validateSender(to, from, realAddress);
+          const { from_signature, to_signature } = parsed.args;
+          await Promise.all([
+            this.verifySignature(from, this.generateMessage(to), from_signature),
+            this.verifySignature(to, this.generateMessage(from), to_signature),
+          ]);
+          await this.cmdDelegate(from.toLocaleLowerCase(), to.toLocaleLowerCase());
+          doLog(`Delegate Wallet ${from.substring(0, 8)}... -> ${to.substring(0, 8)}...`);
+          return true;
+        }
+        case 'migrate': {
+          const from = parsed.args.from || realAddress;
+          const to = parsed.args.to || realAddress;
+          this.validateSender(to, from, realAddress);
 
-            const { from_signature, to_signature } = parsed.args;
-            await Promise.all([
-              this.verifySignature(from, this.generateMessage(to), from_signature),
-              this.verifySignature(to, this.generateMessage(from), to_signature),
-            ]);
-            await this.cmdMigrate(from.toLocaleLowerCase(), to.toLocaleLowerCase());
+          const { from_signature, to_signature } = parsed.args;
+          await Promise.all([
+            this.verifySignature(from, this.generateMessage(to), from_signature),
+            this.verifySignature(to, this.generateMessage(from), to_signature),
+          ]);
+          await this.cmdMigrate(from.toLocaleLowerCase(), to.toLocaleLowerCase());
 
-            doLog(`Migrate Wallet ${from.substring(0, 8)}... -> ${to.substring(0, 8)}...`);
-          }
-          break;
-        case 'cancelDelegations':
-          {
-            const to = realAddress;
-            const { to_signature } = parsed.args;
-            await this.verifySignature(to, this.generateMessage(), to_signature);
-            await this.cmdCancelDelegations(to.toLocaleLowerCase());
-            doLog(`Cancel Delegate 'to' ${to.substring(0, 8)}...`);
-          }
-          break;
+          doLog(`Migrate Wallet ${from.substring(0, 8)}... -> ${to.substring(0, 8)}...`);
+          return true;
+        }
+        case 'cancelDelegations': {
+          const to = realAddress;
+          const { to_signature } = parsed.args;
+          await this.verifySignature(to, this.generateMessage(), to_signature);
+          await this.cmdCancelDelegations(to.toLocaleLowerCase());
+          doLog(`Cancel Delegate 'to' ${to.substring(0, 8)}...`);
+          return true;
+        }
         default:
           throw new Error(
             `Delegate Wallet Internal Error : ${JSON.stringify({ parsed, command })}`
@@ -329,6 +328,6 @@ export class DelegateWallet {
     } catch (e) {
       doLog(`Error parsing command: ${command} ${String(e)}`);
     }
-    return true;
+    return false;
   }
 }

@@ -9,3 +9,5 @@ bin
 *.log
 
 .idea/
+local_sdk/
+.DS_Store
