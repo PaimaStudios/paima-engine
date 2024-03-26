@@ -23,7 +23,7 @@ let useAddressCache = false;
 export const addressCache = new Map<string, WalletDelegate>();
 
 // Get Main Wallet and ID for address.
-// If wallet does not exist, It will NOT be created in address, table.
+// If wallet does not exist, It will NOT be created in address table.
 export async function getMainAddress(
   _address: string,
   DBConn: PoolClient
