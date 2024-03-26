@@ -80,8 +80,11 @@ function eventToCdeDatum(
       txId: event.txId,
       metadata: event.metadata,
       assets: event.assets,
-      inputAddresses: event.inputAddress,
-      outputAddresses: event.outputAddress,
+      // TODO: remove these casts to any
+      // keeping them for now because for some reason I can't get the typing to
+      // work with the tmp dependency
+      inputAddresses: (event as any).inputAddresses,
+      outputAddresses: (event as any).outputAddresses,
     },
     scheduledPrefix: extension.scheduledPrefix,
     paginationCursor: { cursor: JSON.stringify(cursor), finished: false },
