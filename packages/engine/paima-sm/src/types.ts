@@ -137,6 +137,8 @@ interface CdeDatumCardanoMintBurnPayload {
   txId: string;
   metadata: string | null;
   assets: { [policyId: string]: { [assetName: string]: string } };
+  inputAddresses: { [address: string]: { policyId: string; assetName: string; amount: string }[] };
+  outputAddresses: { [address: string]: { policyId: string; assetName: string; amount: string }[] };
 }
 
 type ChainDataExtensionPayload =
