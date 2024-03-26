@@ -16,6 +16,10 @@ interface IInverseProjected1155 is IERC1155MetadataURI, IERC4906Agnostic {
     /// Reverts if transaction sender's balance of `id` is less than `value`.
     function burn(uint256 id, uint256 value) external;
 
+    /// @dev Burns batch of `values` amounts of tokens of IDs `ids` from transaction sender.
+    /// Reverts if transaction sender's balance of any `id` is less than `value`.
+    function burnBatch(uint256[] memory ids, uint256[] memory values) external;
+
     /// @dev Sets `_URI` as the `baseURI`.
     /// Callable only by the contract owner.
     /// Emits the `SetBaseURI` event.

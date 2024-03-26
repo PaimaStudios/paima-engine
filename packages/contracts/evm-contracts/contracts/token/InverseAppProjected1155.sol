@@ -7,10 +7,8 @@ import {ERC1155Supply} from "@openzeppelin/contracts/token/ERC1155/extensions/ER
 import {IERC1155MetadataURI} from "@openzeppelin/contracts/token/ERC1155/extensions/IERC1155MetadataURI.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
-import {IERC4906} from "@openzeppelin/contracts/interfaces/IERC4906.sol";
 import {IInverseProjected1155} from "./IInverseProjected1155.sol";
 import {IInverseAppProjected1155} from "./IInverseAppProjected1155.sol";
-import {IERC4906Agnostic} from "./IERC4906Agnostic.sol";
 
 struct MintEntry {
     address minter;
@@ -113,6 +111,12 @@ contract InverseAppProjected1155 is IInverseAppProjected1155, ERC1155Supply, Own
     /// Reverts if transaction sender's balance of `id` is less than `value`.
     function burn(uint256 id, uint256 value) external virtual {
         _burn(msg.sender, id, value);
+    }
+
+    /// @dev Burns batch of `values` amounts of tokens of IDs `ids` from transaction sender.
+    /// Reverts if transaction sender's balance of any `id` is less than `value`.
+    function burnBatch(uint256[] memory ids, uint256[] memory values) external virtual {
+        _burnBatch(msg.sender, ids, values);
     }
 
     /// @dev Returns the token URI of specified `id` using the default set base URI.

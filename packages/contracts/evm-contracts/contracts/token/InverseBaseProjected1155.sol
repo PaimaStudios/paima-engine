@@ -7,10 +7,8 @@ import {ERC1155Supply} from "@openzeppelin/contracts/token/ERC1155/extensions/ER
 import {IERC1155MetadataURI} from "@openzeppelin/contracts/token/ERC1155/extensions/IERC1155MetadataURI.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
-import {IERC4906} from "@openzeppelin/contracts/interfaces/IERC4906.sol";
 import {IInverseProjected1155} from "./IInverseProjected1155.sol";
 import {IInverseBaseProjected1155} from "./IInverseBaseProjected1155.sol";
-import {IERC4906Agnostic} from "./IERC4906Agnostic.sol";
 
 /// @dev A Paima Inverse Projection ERC1155 token where initialization is handled by the base-layer.
 /// A standard ERC1155 that accepts calldata in the mint function for any initialization data needed in a Paima dApp.
@@ -64,7 +62,7 @@ contract InverseBaseProjected1155 is IInverseBaseProjected1155, ERC1155Supply, O
 
         currentTokenId++;
 
-        emit Minted(tokenId, initialData);
+        emit Minted(tokenId, value, initialData);
         return tokenId;
     }
 
@@ -72,6 +70,12 @@ contract InverseBaseProjected1155 is IInverseBaseProjected1155, ERC1155Supply, O
     /// Reverts if transaction sender's balance of `id` is less than `value`.
     function burn(uint256 id, uint256 value) external virtual {
         _burn(msg.sender, id, value);
+    }
+
+    /// @dev Burns batch of `values` amounts of tokens of IDs `ids` from transaction sender.
+    /// Reverts if transaction sender's balance of any `id` is less than `value`.
+    function burnBatch(uint256[] memory ids, uint256[] memory values) external virtual {
+        _burnBatch(msg.sender, ids, values);
     }
 
     /// @dev Returns the token URI of specified `id` using the default set base URI.
