@@ -89,7 +89,10 @@ contract InverseBaseProjected1155Test is CTest, ERC1155Holder {
         uint256 value = 1000;
         uint256 tokenId = token.mint(value, bytes(""), "");
         string memory result = token.uri(tokenId);
-        assertEq(result, string.concat(baseURI, tokenId.toString()));
+        assertEq(
+            result,
+            string.concat(baseURI, "eip155:", block.chainid.toString(), "/", tokenId.toString())
+        );
     }
 
     function test_TokenUriUsingCustomBaseUri() public {
@@ -97,7 +100,10 @@ contract InverseBaseProjected1155Test is CTest, ERC1155Holder {
         uint256 tokenId = token.mint(value, bytes(""), "");
         string memory customUri = "1.1.0.0/";
         string memory result = token.uri(tokenId, customUri);
-        assertEq(result, string.concat(customUri, tokenId.toString()));
+        assertEq(
+            result,
+            string.concat(customUri, "eip155:", block.chainid.toString(), "/", tokenId.toString())
+        );
     }
 
     function test_SupportsInterface() public {
