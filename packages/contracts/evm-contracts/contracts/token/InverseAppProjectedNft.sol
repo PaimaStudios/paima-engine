@@ -107,6 +107,9 @@ contract InverseAppProjectedNft is IInverseAppProjectedNft, ERC721, Ownable {
         string memory URI = bytes(customBaseUri).length > 0
             ? string.concat(
                 customBaseUri,
+                "eip155:",
+                block.chainid.toString(),
+                "/",
                 Strings.toHexString(uint160(entry.minter), 20),
                 "/",
                 entry.userTokenId.toString()

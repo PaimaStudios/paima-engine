@@ -44,7 +44,7 @@ contract InverseAppProjectedNftTest is CTest {
         assertEq(
             result,
             string.concat(
-                "192.168.0.1/",
+                "192.168.0.1/eip155:31337/",
                 Strings.toHexString(uint160(address(this)), 20),
                 "/",
                 "1.json"
@@ -57,7 +57,7 @@ contract InverseAppProjectedNftTest is CTest {
         assertEq(
             result,
             string.concat(
-                "1.1.0.0/",
+                "1.1.0.0/eip155:31337/",
                 Strings.toHexString(uint160(address(this)), 20),
                 "/",
                 "1.json"

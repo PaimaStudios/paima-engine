@@ -92,7 +92,13 @@ contract InverseBaseProjectedNft is IInverseBaseProjectedNft, ERC721, Ownable {
     ) public view virtual returns (string memory) {
         _requireOwned(tokenId);
         string memory URI = bytes(customBaseUri).length > 0
-            ? string.concat(customBaseUri, tokenId.toString())
+            ? string.concat(
+                customBaseUri,
+                "eip155:",
+                block.chainid.toString(),
+                "/",
+                tokenId.toString()
+            )
             : "";
         return string(abi.encodePacked(URI, baseExtension));
     }
