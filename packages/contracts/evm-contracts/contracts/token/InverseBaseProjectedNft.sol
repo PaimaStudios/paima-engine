@@ -43,7 +43,7 @@ contract InverseBaseProjectedNft is IInverseBaseProjectedNft, ERC721, Ownable {
     /// @dev Returns true if this contract implements the interface defined by `interfaceId`. See EIP165.
     function supportsInterface(
         bytes4 interfaceId
-    ) public view override(IERC165, ERC721) returns (bool) {
+    ) public view virtual override(IERC165, ERC721) returns (bool) {
         return
             interfaceId == type(IInverseProjectedNft).interfaceId ||
             interfaceId == type(IInverseBaseProjectedNft).interfaceId ||
@@ -55,7 +55,7 @@ contract InverseBaseProjectedNft is IInverseBaseProjectedNft, ERC721, Ownable {
     /// Increases the `totalSupply` and `currentTokenId`.
     /// Reverts if `_to` is a zero address or if it refers to smart contract but does not implement IERC721Receiver-onERC721Received.
     /// Emits the `Minted` event.
-    function mint(address _to, string calldata initialData) external returns (uint256) {
+    function mint(address _to, string calldata initialData) external virtual returns (uint256) {
         require(_to != address(0), "InverseBaseProjectedNft: zero receiver address");
 
         uint256 tokenId = currentTokenId;
@@ -70,18 +70,18 @@ contract InverseBaseProjectedNft is IInverseBaseProjectedNft, ERC721, Ownable {
 
     /// @dev Burns token of ID `_tokenId`. Callable only by the owner of the specified token.
     /// Reverts if `_tokenId` does not exist.
-    function burn(uint256 _tokenId) external onlyTokenOwner(_tokenId) {
+    function burn(uint256 _tokenId) external virtual onlyTokenOwner(_tokenId) {
         totalSupply--;
         _burn(_tokenId);
     }
 
     /// @dev Returns the `baseURI` of this NFT.
-    function _baseURI() internal view override returns (string memory) {
+    function _baseURI() internal view virtual override returns (string memory) {
         return baseURI;
     }
 
     /// @dev Returns the token URI of specified `tokenId` using the default set base URI.
-    function tokenURI(uint256 tokenId) public view override returns (string memory) {
+    function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
         return tokenURI(tokenId, _baseURI());
     }
 
@@ -89,7 +89,7 @@ contract InverseBaseProjectedNft is IInverseBaseProjectedNft, ERC721, Ownable {
     function tokenURI(
         uint256 tokenId,
         string memory customBaseUri
-    ) public view returns (string memory) {
+    ) public view virtual returns (string memory) {
         _requireOwned(tokenId);
         string memory URI = bytes(customBaseUri).length > 0
             ? string.concat(customBaseUri, tokenId.toString())
@@ -100,7 +100,7 @@ contract InverseBaseProjectedNft is IInverseBaseProjectedNft, ERC721, Ownable {
     /// @dev Sets `_URI` as the `baseURI` of the NFT.
     /// Callable only by the contract owner.
     /// Emits the `SetBaseURI` event.
-    function setBaseURI(string memory _URI) external onlyOwner {
+    function setBaseURI(string memory _URI) external virtual onlyOwner {
         string memory oldURI = baseURI;
         baseURI = _URI;
         emit SetBaseURI(oldURI, _URI);
@@ -108,7 +108,7 @@ contract InverseBaseProjectedNft is IInverseBaseProjectedNft, ERC721, Ownable {
 
     /// @dev Sets `_newBaseExtension` as the `baseExtension` of the NFT.
     /// Callable only by the contract owner.
-    function setBaseExtension(string memory _newBaseExtension) public onlyOwner {
+    function setBaseExtension(string memory _newBaseExtension) public virtual onlyOwner {
         string memory oldBaseExtension = baseExtension;
         baseExtension = _newBaseExtension;
         emit SetBaseURI(oldBaseExtension, _newBaseExtension);
