@@ -41,12 +41,12 @@ contract InverseBaseProjectedNftTest is CTest {
 
     function test_TokenUriUsesBaseUriByDefault() public {
         string memory result = nft.tokenURI(ownedTokenId);
-        assertEq(result, "192.168.0.1/1.json");
+        assertEq(result, "192.168.0.1/eip155:31337/1.json");
     }
 
     function test_TokenUriUsingCustomBaseUri() public {
         string memory result = nft.tokenURI(ownedTokenId, "1.1.0.0/");
-        assertEq(result, "1.1.0.0/1.json");
+        assertEq(result, "1.1.0.0/eip155:31337/1.json");
     }
 
     function test_SupportsInterface() public {
