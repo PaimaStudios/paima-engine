@@ -104,6 +104,9 @@ contract InverseAppProjected1155Test is CTest, ERC1155Holder {
             result,
             string.concat(
                 baseURI,
+                "eip155:",
+                block.chainid.toString(),
+                "/",
                 Strings.toHexString(uint160(user), 20),
                 "/",
                 userTokenId.toString(),
@@ -124,6 +127,9 @@ contract InverseAppProjected1155Test is CTest, ERC1155Holder {
             result,
             string.concat(
                 customUri,
+                "eip155:",
+                block.chainid.toString(),
+                "/",
                 Strings.toHexString(uint160(user), 20),
                 "/",
                 userTokenId.toString(),

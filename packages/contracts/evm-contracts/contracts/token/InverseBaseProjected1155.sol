@@ -92,7 +92,7 @@ contract InverseBaseProjected1155 is IInverseBaseProjected1155, ERC1155Supply, O
     ) public view virtual returns (string memory) {
         require(exists(id), "InverseBaseProjected1155: URI query for nonexistent token");
         string memory URI = bytes(customBaseUri).length > 0
-            ? string.concat(customBaseUri, id.toString())
+            ? string.concat(customBaseUri, "eip155:", block.chainid.toString(), "/", id.toString())
             : "";
         return string(abi.encodePacked(URI, baseExtension));
     }
