@@ -3,12 +3,12 @@ pragma solidity ^0.8.13;
 
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import {IERC721Metadata} from "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
-import {IERC4906} from "@openzeppelin/contracts/interfaces/IERC4906.sol";
 import {IInverseProjectedNft} from "./IInverseProjectedNft.sol";
 import {IInverseAppProjectedNft} from "./IInverseAppProjectedNft.sol";
+import {ITokenUri} from "./ITokenUri.sol";
 
 struct MintEntry {
     address minter;
@@ -64,7 +64,7 @@ contract InverseAppProjectedNft is IInverseAppProjectedNft, ERC721, Ownable {
     /// Increases the `totalSupply` and `currentTokenId`.
     /// Reverts if `_to` is a zero address or if it refers to smart contract but does not implement IERC721Receiver-onERC721Received.
     /// Emits the `Minted` event.
-    function mint(address _to) external virtual returns (uint256) {
+    function mint(address _to) public virtual returns (uint256) {
         require(_to != address(0), "InverseAppProjectedNft: zero receiver address");
 
         uint256 tokenId = currentTokenId;
@@ -82,7 +82,7 @@ contract InverseAppProjectedNft is IInverseAppProjectedNft, ERC721, Ownable {
 
     /// @dev Burns token of ID `_tokenId`. Callable only by the owner of the specified token.
     /// Reverts if `_tokenId` does not exist.
-    function burn(uint256 _tokenId) external virtual onlyTokenOwner(_tokenId) {
+    function burn(uint256 _tokenId) public virtual onlyTokenOwner(_tokenId) {
         totalSupply--;
         _burn(_tokenId);
     }
@@ -93,7 +93,9 @@ contract InverseAppProjectedNft is IInverseAppProjectedNft, ERC721, Ownable {
     }
 
     /// @dev Returns the token URI of specified `tokenId` using the default set base URI.
-    function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
+    function tokenURI(
+        uint256 tokenId
+    ) public view virtual override(ERC721, IERC721Metadata) returns (string memory) {
         return tokenURI(tokenId, _baseURI());
     }
 
@@ -118,10 +120,18 @@ contract InverseAppProjectedNft is IInverseAppProjectedNft, ERC721, Ownable {
         return string(abi.encodePacked(URI, baseExtension));
     }
 
+    /// @dev Returns the token URI of specified `tokenId` using a call to contract implementing `ITokenUri`.
+    function tokenURI(
+        uint256 tokenId,
+        ITokenUri customUriInterface
+    ) public view returns (string memory) {
+        return customUriInterface.tokenURI(tokenId);
+    }
+
     /// @dev Sets `_URI` as the `baseURI` of the NFT.
     /// Callable only by the contract owner.
     /// Emits the `SetBaseURI` event.
-    function setBaseURI(string memory _URI) external virtual onlyOwner {
+    function setBaseURI(string memory _URI) public virtual onlyOwner {
         string memory oldURI = baseURI;
         baseURI = _URI;
         emit SetBaseURI(oldURI, _URI);

@@ -1,14 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
+import {IERC721Metadata} from "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol";
 import {IERC4906} from "@openzeppelin/contracts/interfaces/IERC4906.sol";
+import {ITokenUri} from "./ITokenUri.sol";
 
 /// @dev A standard ERC721 that can be burned and has a special tokenURI function accepting a custom base URI.
-interface IInverseProjectedNft is IERC4906 {
+interface IInverseProjectedNft is IERC4906, IERC721Metadata {
     /// @dev Emitted when `baseExtension` is updated from `oldBaseExtension` to `newBaseExtension`.
     event SetBaseExtension(string oldBaseExtension, string newBaseExtension);
 
@@ -32,5 +30,11 @@ interface IInverseProjectedNft is IERC4906 {
     function tokenURI(
         uint256 tokenId,
         string memory customBaseUri
+    ) external view returns (string memory);
+
+    /// @dev Returns the token URI of specified `tokenId` using a call to contract implementing `ITokenUri`.
+    function tokenURI(
+        uint256 tokenId,
+        ITokenUri customUriInterface
     ) external view returns (string memory);
 }
