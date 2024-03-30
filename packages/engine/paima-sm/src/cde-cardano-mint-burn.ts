@@ -11,9 +11,11 @@ export default async function processDatum(
   const txId = cdeDatum.payload.txId;
   const assets = JSON.stringify(cdeDatum.payload.assets);
   const metadata = cdeDatum.payload.metadata || undefined;
+  const inputAddresses = cdeDatum.payload.inputAddresses;
+  const outputAddresses = cdeDatum.payload.outputAddresses;
 
   const scheduledBlockHeight = Math.max(cdeDatum.blockNumber, ENV.SM_START_BLOCKHEIGHT + 1);
-  const scheduledInputData = `${prefix}|${txId}|${metadata}|${assets}`;
+  const scheduledInputData = `${prefix}|${txId}|${metadata}|${assets}|${JSON.stringify(inputAddresses)}|${JSON.stringify(outputAddresses)}`;
 
   const updateList: SQLUpdate[] = [
     createScheduledData(scheduledInputData, scheduledBlockHeight),
@@ -24,6 +26,8 @@ export default async function processDatum(
         tx_id: txId,
         metadata: metadata,
         assets: cdeDatum.payload.assets,
+        input_addresses: inputAddresses,
+        output_addresses: outputAddresses,
       },
     ],
   ];

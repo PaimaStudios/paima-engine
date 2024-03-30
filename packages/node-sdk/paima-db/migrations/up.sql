@@ -214,5 +214,7 @@ CREATE TABLE cde_cardano_mint_burn(
   tx_id TEXT NOT NULL,
   metadata TEXT NOT NULL,
   assets JSONB NOT NULL,
+  inputAddresses JSONB NOT NULL,
+  outputAddresses JSONB NOT NULL,
   PRIMARY KEY (cde_id, tx_id)
 );
