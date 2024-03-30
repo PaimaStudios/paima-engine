@@ -60,12 +60,26 @@ contract InverseAppProjectedNft is IInverseAppProjectedNft, ERC721, Ownable {
             super.supportsInterface(interfaceId);
     }
 
+    function currentNonce(address user) external view returns (uint256) {
+        return mintCount[user];
+    }
+
+    function validateMint(address, bytes memory) internal virtual returns (bool) {
+        // Base contract allows any mint
+        // Replace this with any custom verification logic
+        return true;
+    }
+
     /// @dev Mints a new token to address `_to`.
     /// Increases the `totalSupply` and `currentTokenId`.
     /// Reverts if `_to` is a zero address or if it refers to smart contract but does not implement IERC721Receiver-onERC721Received.
     /// Emits the `Minted` event.
-    function mint(address _to) public virtual returns (uint256) {
+    function mint(address _to, bytes calldata _verificationData) public virtual returns (uint256) {
         require(_to != address(0), "InverseAppProjectedNft: zero receiver address");
+        require(
+            validateMint(_to, _verificationData),
+            "InverseAppProjectedNft: invalid verification data"
+        );
 
         uint256 tokenId = currentTokenId;
         _safeMint(_to, tokenId);
@@ -78,6 +92,10 @@ contract InverseAppProjectedNft is IInverseAppProjectedNft, ERC721, Ownable {
 
         emit Minted(tokenId, _to, userTokenId);
         return tokenId;
+    }
+
+    function mint(address _to) external returns (uint256) {
+        return this.mint(_to, "");
     }
 
     /// @dev Burns token of ID `_tokenId`. Callable only by the owner of the specified token.
