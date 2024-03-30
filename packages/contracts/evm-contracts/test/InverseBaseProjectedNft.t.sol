@@ -4,14 +4,27 @@ pragma solidity ^0.8.18;
 import "../test-lib/cheatcodes.sol";
 import "../test-lib/console.sol";
 import "../test-lib/ctest.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
-import "@openzeppelin/contracts/interfaces/IERC4906.sol";
-import "../contracts/token/InverseBaseProjectedNft.sol";
-import "../contracts/token/IInverseProjectedNft.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
+import {ERC721Holder} from "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
+import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import {IERC4906} from "@openzeppelin/contracts/interfaces/IERC4906.sol";
+import {InverseBaseProjectedNft} from "../contracts/token/InverseBaseProjectedNft.sol";
+import {IInverseBaseProjectedNft} from "../contracts/token/IInverseBaseProjectedNft.sol";
+import {ITokenUri} from "../contracts/token/ITokenUri.sol";
 
-contract InverseBaseProjectedNftTest is CTest {
+contract MockTokenUri is ITokenUri {
+    using Strings for uint256;
+
+    function tokenURI(uint256 tokenId) external view override returns (string memory) {
+        return string.concat("mock://", tokenId.toString());
+    }
+}
+
+contract InverseBaseProjectedNftTest is CTest, ERC721Holder {
+    using Strings for uint256;
+
     CheatCodes vm = CheatCodes(HEVM_ADDRESS);
     InverseBaseProjectedNft public nft;
     uint256 ownedTokenId;
@@ -41,12 +54,18 @@ contract InverseBaseProjectedNftTest is CTest {
 
     function test_TokenUriUsesBaseUriByDefault() public {
         string memory result = nft.tokenURI(ownedTokenId);
-        assertEq(result, "192.168.0.1/1.json");
+        assertEq(result, "192.168.0.1/eip155:31337/1.json");
     }
 
     function test_TokenUriUsingCustomBaseUri() public {
         string memory result = nft.tokenURI(ownedTokenId, "1.1.0.0/");
-        assertEq(result, "1.1.0.0/1.json");
+        assertEq(result, "1.1.0.0/eip155:31337/1.json");
+    }
+
+    function test_TokenUriUsingCustomUriInterface() public {
+        ITokenUri tokenUriInterface = new MockTokenUri();
+        string memory result = nft.tokenURI(ownedTokenId, tokenUriInterface);
+        assertEq(result, string.concat("mock://", ownedTokenId.toString()));
     }
 
     function test_SupportsInterface() public {
@@ -91,14 +110,5 @@ contract InverseBaseProjectedNftTest is CTest {
         vm.prank(alice);
         vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, alice));
         nft.setBaseExtension("test");
-    }
-
-    function onERC721Received(
-        address,
-        address,
-        uint256,
-        bytes calldata
-    ) external pure returns (bytes4) {
-        return IERC721Receiver.onERC721Received.selector;
     }
 }
