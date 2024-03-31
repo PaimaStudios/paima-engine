@@ -4,6 +4,7 @@ import { Routes, query } from '@dcspark/carp-client';
 import type { TxAndBlockInfo } from '@dcspark/carp-client';
 import { Transaction } from '@dcspark/cardano-multiplatform-lib-nodejs';
 import type { BlockTxPair } from '@dcspark/carp-client';
+import { RelationFilterType } from '@dcspark/carp-client';
 
 export default async function getCdeData(
   url: string,
@@ -24,10 +25,12 @@ export default async function getCdeData(
 ): Promise<CdeCardanoTransferDatum[]> {
   let result = [] as CdeCardanoTransferDatum[];
 
+  const relationFilter = RelationFilterType.Output | RelationFilterType.Witness;
+
   while (true) {
     const event = await timeout(
       query(url, Routes.transactionHistory, {
-        // TODO: maybe it should be Output
+        relationFilter,
         addresses: [extension.credential],
         slotLimits: {
           from: fromAbsoluteSlot,
