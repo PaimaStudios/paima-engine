@@ -50,6 +50,8 @@ Facilitating monetization
 
 {{ERC1967}}
 
+{{ITokenUri}}
+
 {{NativeNftSaleProxy}}
 
 {{GenericPaymentProxy}}

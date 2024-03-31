@@ -6,6 +6,7 @@ import {IERC4906} from "@openzeppelin/contracts/interfaces/IERC4906.sol";
 import {ITokenUri} from "./ITokenUri.sol";
 
 /// @dev A standard ERC721 that can be burned and has a special tokenURI function accepting a custom base URI.
+/// See PRC3 for more.
 interface IInverseProjectedNft is IERC4906, IERC721Metadata {
     /// @dev Emitted when `baseExtension` is updated from `oldBaseExtension` to `newBaseExtension`.
     event SetBaseExtension(string oldBaseExtension, string newBaseExtension);

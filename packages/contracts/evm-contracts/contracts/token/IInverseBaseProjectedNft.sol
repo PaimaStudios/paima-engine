@@ -5,6 +5,7 @@ import {IInverseProjectedNft} from "./IInverseProjectedNft.sol";
 
 /// @dev A Paima Inverse Projection NFT where initialization is handled by the base-layer.
 /// A standard ERC721 that accepts calldata in the mint function for any initialization data needed in a Paima dApp.
+/// See PRC3 for more.
 interface IInverseBaseProjectedNft is IInverseProjectedNft {
     /// @dev Emitted when the globally-enforced tokenId is minted, with `initialData` provided in the `mint` function parameters.
     event Minted(uint256 indexed tokenId, string initialData);

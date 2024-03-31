@@ -11,6 +11,7 @@ import {IInverseBaseProjectedNft} from "./IInverseBaseProjectedNft.sol";
 import {ITokenUri} from "./ITokenUri.sol";
 
 /// @dev A standard ERC721 that accepts calldata in the mint function for any initialization data needed in a Paima dApp.
+/// See PRC3 for more.
 contract InverseBaseProjectedNft is IInverseBaseProjectedNft, ERC721, Ownable {
     using Strings for uint256;
 
