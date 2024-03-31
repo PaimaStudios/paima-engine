@@ -25,13 +25,7 @@ export default async function getCdeData(
 ): Promise<CdeCardanoTransferDatum[]> {
   let result = [] as CdeCardanoTransferDatum[];
 
-  const relationFilter =
-    RelationFilterType.Output |
-    RelationFilterType.Input |
-    RelationFilterType.StakeRegistration |
-    RelationFilterType.StakeDeregistration |
-    RelationFilterType.StakeDelegation |
-    RelationFilterType.Withdrawal;
+  const relationFilter = RelationFilterType.Output | RelationFilterType.Witness;
 
   while (true) {
     const event = await timeout(
