@@ -22,7 +22,7 @@ export interface ICdeCardanoMintBurnInsertQuery {
   result: ICdeCardanoMintBurnInsertResult;
 }
 
-const cdeCardanoMintBurnInsertIR: any = {"usedParamSet":{"cde_id":true,"tx_id":true,"metadata":true,"assets":true,"input_addresses":true,"output_addresses":true},"params":[{"name":"cde_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":126,"b":133}]},{"name":"tx_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":138,"b":144}]},{"name":"metadata","required":true,"transform":{"type":"scalar"},"locs":[{"a":149,"b":158}]},{"name":"assets","required":true,"transform":{"type":"scalar"},"locs":[{"a":163,"b":170}]},{"name":"input_addresses","required":true,"transform":{"type":"scalar"},"locs":[{"a":175,"b":191}]},{"name":"output_addresses","required":true,"transform":{"type":"scalar"},"locs":[{"a":196,"b":213}]}],"statement":"INSERT INTO cde_cardano_mint_burn (\n  cde_id,\n  tx_id,\n  metadata,\n  assets,\n  inputAddresses,\n  outputAddresses\n) VALUES (\n  :cde_id!,\n  :tx_id!,\n  :metadata!,\n  :assets!,\n  :input_addresses!,\n  :output_addresses!\n)"};
+const cdeCardanoMintBurnInsertIR: any = {"usedParamSet":{"cde_id":true,"tx_id":true,"metadata":true,"assets":true,"input_addresses":true,"output_addresses":true},"params":[{"name":"cde_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":128,"b":135}]},{"name":"tx_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":140,"b":146}]},{"name":"metadata","required":true,"transform":{"type":"scalar"},"locs":[{"a":151,"b":160}]},{"name":"assets","required":true,"transform":{"type":"scalar"},"locs":[{"a":165,"b":172}]},{"name":"input_addresses","required":true,"transform":{"type":"scalar"},"locs":[{"a":177,"b":193}]},{"name":"output_addresses","required":true,"transform":{"type":"scalar"},"locs":[{"a":198,"b":215}]}],"statement":"INSERT INTO cde_cardano_mint_burn (\n  cde_id,\n  tx_id,\n  metadata,\n  assets,\n  input_addresses,\n  output_addresses\n) VALUES (\n  :cde_id!,\n  :tx_id!,\n  :metadata!,\n  :assets!,\n  :input_addresses!,\n  :output_addresses!\n)"};
 
 /**
  * Query generated from SQL:
@@ -32,8 +32,8 @@ const cdeCardanoMintBurnInsertIR: any = {"usedParamSet":{"cde_id":true,"tx_id":t
  *   tx_id,
  *   metadata,
  *   assets,
- *   inputAddresses,
- *   outputAddresses
+ *   input_addresses,
+ *   output_addresses
  * ) VALUES (
  *   :cde_id!,
  *   :tx_id!,

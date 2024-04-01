@@ -4,8 +4,8 @@ INSERT INTO cde_cardano_mint_burn (
   tx_id,
   metadata,
   assets,
-  inputAddresses,
-  outputAddresses
+  input_addresses,
+  output_addresses
 ) VALUES (
   :cde_id!,
   :tx_id!,
