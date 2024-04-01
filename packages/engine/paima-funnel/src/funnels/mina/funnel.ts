@@ -11,12 +11,10 @@ import {
 import type { ChainFunnel, ReadPresyncDataFrom } from '@paima/runtime';
 import type {
   ChainData,
-  ChainDataExtension,
   ChainDataExtensionDatum,
   MinaPresyncChainData,
   PresyncChainData,
 } from '@paima/sm';
-import { getUngroupedCdeData } from '../../cde/reading.js';
 import { composeChainData, groupCdeData } from '../../utils.js';
 import { BaseFunnel } from '../BaseFunnel.js';
 import type { FunnelSharedData } from '../BaseFunnel.js';

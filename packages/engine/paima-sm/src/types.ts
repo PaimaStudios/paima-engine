@@ -484,6 +484,7 @@ export const ChainDataExtensionMinaGenericConfig = Type.Object({
   address: Type.String(),
   scheduledPrefix: Type.String(),
   startSlot: Type.Number(),
+  name: Type.String(),
 });
 
 export type TChainDataExtensionMinaGenericConfig = Static<typeof ChainDataExtensionGenericConfig>;
