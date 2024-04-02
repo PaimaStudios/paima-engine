@@ -52,7 +52,10 @@ contract InverseBaseProjected1155 is IInverseBaseProjected1155, ERC1155Supply, O
     /// Increases the `currentTokenId`.
     /// Reverts if transaction sender is a smart contract that does not implement IERC1155Receiver-onERC1155Received.
     /// Emits the `Minted` event.
-    /// Returns the id of the minted token.
+    /// @param value the amount of tokens to mint.
+    /// @param data additional data to pass to the receiver contract.
+    /// @param initialData data that is emitted in the `Minted` event.
+    /// @return id of the minted token.
     function mint(
         uint256 value,
         bytes memory data,
