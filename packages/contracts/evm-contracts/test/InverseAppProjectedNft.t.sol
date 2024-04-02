@@ -45,6 +45,13 @@ contract InverseAppProjectedNftTest is CTest, ERC721Holder {
         vm.prank(alice);
         vm.expectEmit(true, true, true, true);
         emit IInverseAppProjectedNft.Minted(2, address(this), 2);
+        nft.mint(address(this), bytes(""));
+    }
+
+    function test_CanMintNoVerificationData() public {
+        vm.prank(alice);
+        vm.expectEmit(true, true, true, true);
+        emit IInverseAppProjectedNft.Minted(2, address(this), 2);
         nft.mint(address(this));
     }
 
