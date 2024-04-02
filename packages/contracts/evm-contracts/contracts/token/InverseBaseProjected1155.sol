@@ -9,6 +9,7 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import {IInverseProjected1155} from "./IInverseProjected1155.sol";
 import {IInverseBaseProjected1155} from "./IInverseBaseProjected1155.sol";
+import {IUri} from "./IUri.sol";
 
 /// @dev A Paima Inverse Projection ERC1155 token where initialization is handled by the base-layer.
 /// A standard ERC1155 that accepts calldata in the mint function for any initialization data needed in a Paima dApp.
@@ -97,11 +98,8 @@ contract InverseBaseProjected1155 is IInverseBaseProjected1155, ERC1155Supply, O
         return string(abi.encodePacked(URI, baseExtension));
     }
 
-    /// @dev Returns the token URI of specified `id` using a call to contract implementing `IERC1155MetadataURI`.
-    function uri(
-        uint256 id,
-        IERC1155MetadataURI customUriInterface
-    ) public view virtual returns (string memory) {
+    /// @dev Returns the token URI of specified `id` using a call to contract implementing `IUri`.
+    function uri(uint256 id, IUri customUriInterface) public view virtual returns (string memory) {
         return customUriInterface.uri(id);
     }
 

@@ -13,6 +13,15 @@ import {IERC4906Agnostic} from "../contracts/token/IERC4906Agnostic.sol";
 import {InverseBaseProjected1155} from "../contracts/token/InverseBaseProjected1155.sol";
 import {IInverseBaseProjected1155} from "../contracts/token/IInverseBaseProjected1155.sol";
 import {IInverseProjected1155} from "../contracts/token/IInverseProjected1155.sol";
+import {IUri} from "../contracts/token/IUri.sol";
+
+contract MockTokenUri is IUri {
+    using Strings for uint256;
+
+    function uri(uint256 id) external view override returns (string memory) {
+        return string.concat("mock://", id.toString());
+    }
+}
 
 contract InverseBaseProjected1155Test is CTest, ERC1155Holder {
     using Strings for uint256;
@@ -104,6 +113,12 @@ contract InverseBaseProjected1155Test is CTest, ERC1155Holder {
             result,
             string.concat(customUri, "eip155:", block.chainid.toString(), "/", tokenId.toString())
         );
+    }
+
+    function test_TokenUriUsingCustomUriInterface() public {
+        IUri tokenUriInterface = new MockTokenUri();
+        string memory result = token.uri(ownedTokenId, tokenUriInterface);
+        assertEq(result, string.concat("mock://", ownedTokenId.toString()));
     }
 
     function test_SupportsInterface() public {

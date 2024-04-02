@@ -3,6 +3,7 @@ pragma solidity ^0.8.13;
 
 import {IERC1155MetadataURI} from "@openzeppelin/contracts/token/ERC1155/extensions/IERC1155MetadataURI.sol";
 import {IERC4906Agnostic} from "./IERC4906Agnostic.sol";
+import {IUri} from "./IUri.sol";
 
 /// @dev A standard ERC1155 that can be burned and has a special uri function accepting a custom base URI.
 interface IInverseProjected1155 is IERC1155MetadataURI, IERC4906Agnostic {
@@ -32,9 +33,6 @@ interface IInverseProjected1155 is IERC1155MetadataURI, IERC4906Agnostic {
     /// @dev Returns the token URI of specified `id` using a custom base URI.
     function uri(uint256 id, string memory customBaseUri) external view returns (string memory);
 
-    /// @dev Returns the token URI of specified `id` using a call to contract implementing `IERC1155MetadataURI`.
-    function uri(
-        uint256 id,
-        IERC1155MetadataURI customUriInterface
-    ) external view returns (string memory);
+    /// @dev Returns the token URI of specified `id` using a call to contract implementing `IUri`.
+    function uri(uint256 id, IUri customUriInterface) external view returns (string memory);
 }
