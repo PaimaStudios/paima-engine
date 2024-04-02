@@ -149,6 +149,14 @@ contract InverseAppProjected1155 is IInverseAppProjected1155, ERC1155Supply, Own
         return string(abi.encodePacked(URI, baseExtension));
     }
 
+    /// @dev Returns the token URI of specified `id` using a call to contract implementing `IERC1155MetadataURI`.
+    function uri(
+        uint256 id,
+        IERC1155MetadataURI customUriInterface
+    ) public view virtual returns (string memory) {
+        return customUriInterface.uri(id);
+    }
+
     /// @dev Sets `_URI` as the `baseURI` of the NFT.
     /// Callable only by the contract owner.
     /// Emits the `SetBaseURI` event.
