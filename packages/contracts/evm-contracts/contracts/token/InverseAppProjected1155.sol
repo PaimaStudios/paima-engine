@@ -82,8 +82,8 @@ contract InverseAppProjected1155 is IInverseAppProjected1155, ERC1155Supply, Own
     function mint(
         uint256 value,
         bytes memory data,
-        bytes calldata verificationData
-    ) external virtual returns (uint256) {
+        bytes memory verificationData
+    ) public virtual returns (uint256) {
         require(
             validateMint(msg.sender, verificationData),
             "InverseAppProjected1155: invalid verification data"
@@ -104,7 +104,7 @@ contract InverseAppProjected1155 is IInverseAppProjected1155, ERC1155Supply, Own
     /// @dev This works identically to the other function with an extra data parameter,
     ///      except this function just sets data to "".
     function mint(uint256 value, bytes memory data) external returns (uint256) {
-        return this.mint(value, data, "");
+        return mint(value, data, bytes(""));
     }
 
     /// @dev Burns `value` amount of token of ID `id` from transaction sender.

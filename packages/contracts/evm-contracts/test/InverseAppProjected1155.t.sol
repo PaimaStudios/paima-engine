@@ -80,6 +80,21 @@ contract InverseAppProjected1155Test is CTest, ERC1155Holder {
         assertEq(token.balanceOf(minter, tokenId), tokenValueUserBefore + value);
     }
 
+    function test_CanMintNoVerificationData() public {
+        address minter = alice;
+        uint256 userNonce = token.currentNonce(minter) + 1;
+        uint256 tokenId = token.currentTokenId();
+        uint256 value = 500;
+        uint256 tokenValueUserBefore = token.balanceOf(minter, 0);
+
+        vm.prank(minter);
+        vm.expectEmit(true, true, true, true);
+        emit IInverseAppProjected1155.Minted(tokenId, minter, userNonce, value);
+        token.mint(value, bytes(""));
+
+        assertEq(token.balanceOf(minter, tokenId), tokenValueUserBefore + value);
+    }
+
     function test_CanTransfer() public {
         address sender = address(this);
         address recipient = alice;
