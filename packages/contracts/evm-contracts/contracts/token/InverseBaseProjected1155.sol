@@ -56,7 +56,7 @@ contract InverseBaseProjected1155 is IInverseBaseProjected1155, ERC1155Supply, O
         uint256 value,
         bytes memory data,
         string calldata initialData
-    ) external virtual returns (uint256) {
+    ) public virtual returns (uint256) {
         uint256 tokenId = currentTokenId;
         _mint(msg.sender, tokenId, value, data);
 
@@ -68,13 +68,13 @@ contract InverseBaseProjected1155 is IInverseBaseProjected1155, ERC1155Supply, O
 
     /// @dev Burns `value` amount of token of ID `id` from transaction sender.
     /// Reverts if transaction sender's balance of `id` is less than `value`.
-    function burn(uint256 id, uint256 value) external virtual {
+    function burn(uint256 id, uint256 value) public virtual {
         _burn(msg.sender, id, value);
     }
 
     /// @dev Burns batch of `values` amounts of tokens of IDs `ids` from transaction sender.
     /// Reverts if transaction sender's balance of any `id` is less than `value`.
-    function burnBatch(uint256[] memory ids, uint256[] memory values) external virtual {
+    function burnBatch(uint256[] memory ids, uint256[] memory values) public virtual {
         _burnBatch(msg.sender, ids, values);
     }
 
@@ -108,7 +108,7 @@ contract InverseBaseProjected1155 is IInverseBaseProjected1155, ERC1155Supply, O
     /// @dev Sets `_URI` as the `baseURI` of the NFT.
     /// Callable only by the contract owner.
     /// Emits the `SetBaseURI` event.
-    function setBaseURI(string memory _URI) external virtual onlyOwner {
+    function setBaseURI(string memory _URI) public virtual onlyOwner {
         string memory oldURI = baseURI;
         baseURI = _URI;
         emit SetBaseURI(oldURI, _URI);

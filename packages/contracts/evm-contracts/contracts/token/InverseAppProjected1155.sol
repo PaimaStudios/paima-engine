@@ -56,7 +56,7 @@ contract InverseAppProjected1155 is IInverseAppProjected1155, ERC1155Supply, Own
             super.supportsInterface(interfaceId);
     }
 
-    function currentNonce(address user) external view virtual returns (uint256) {
+    function currentNonce(address user) public view virtual returns (uint256) {
         return mintCount[user];
     }
 
@@ -103,19 +103,19 @@ contract InverseAppProjected1155 is IInverseAppProjected1155, ERC1155Supply, Own
 
     /// @dev This works identically to the other function with an extra data parameter,
     ///      except this function just sets data to "".
-    function mint(uint256 value, bytes memory data) external returns (uint256) {
+    function mint(uint256 value, bytes memory data) public returns (uint256) {
         return mint(value, data, bytes(""));
     }
 
     /// @dev Burns `value` amount of token of ID `id` from transaction sender.
     /// Reverts if transaction sender's balance of `id` is less than `value`.
-    function burn(uint256 id, uint256 value) external virtual {
+    function burn(uint256 id, uint256 value) public virtual {
         _burn(msg.sender, id, value);
     }
 
     /// @dev Burns batch of `values` amounts of tokens of IDs `ids` from transaction sender.
     /// Reverts if transaction sender's balance of any `id` is less than `value`.
-    function burnBatch(uint256[] memory ids, uint256[] memory values) external virtual {
+    function burnBatch(uint256[] memory ids, uint256[] memory values) public virtual {
         _burnBatch(msg.sender, ids, values);
     }
 
@@ -160,7 +160,7 @@ contract InverseAppProjected1155 is IInverseAppProjected1155, ERC1155Supply, Own
     /// @dev Sets `_URI` as the `baseURI` of the NFT.
     /// Callable only by the contract owner.
     /// Emits the `SetBaseURI` event.
-    function setBaseURI(string memory _URI) external virtual onlyOwner {
+    function setBaseURI(string memory _URI) public virtual onlyOwner {
         string memory oldURI = baseURI;
         baseURI = _URI;
         emit SetBaseURI(oldURI, _URI);
