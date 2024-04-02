@@ -61,7 +61,7 @@ contract InverseAppProjectedNft is IInverseAppProjectedNft, ERC721, Ownable {
             super.supportsInterface(interfaceId);
     }
 
-    function currentNonce(address user) external view returns (uint256) {
+    function currentNonce(address user) public view returns (uint256) {
         return mintCount[user];
     }
 
@@ -95,7 +95,7 @@ contract InverseAppProjectedNft is IInverseAppProjectedNft, ERC721, Ownable {
         return tokenId;
     }
 
-    function mint(address _to) external returns (uint256) {
+    function mint(address _to) public returns (uint256) {
         return mint(_to, bytes(""));
     }
 
