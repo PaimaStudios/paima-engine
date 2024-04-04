@@ -189,4 +189,7 @@ async function main(): Promise<void> {
   await runtime.run(gameInputValidator, batchedTransactionPoster, provider);
 }
 
-void main();
+main().catch(e => {
+  console.error(e);
+  process.exit(1);
+});
