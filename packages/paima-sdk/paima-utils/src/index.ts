@@ -10,6 +10,7 @@ import { GlobalConfig } from './config/singleton.js';
 import {
   EvmConfig,
   CardanoConfig,
+  MinaConfig,
   ConfigNetworkType,
   defaultEvmMainNetworkName,
   defaultCardanoNetworkName,
@@ -34,6 +35,7 @@ export {
   GlobalConfig,
   EvmConfig,
   CardanoConfig,
+  MinaConfig,
   ConfigNetworkType,
   defaultEvmMainNetworkName,
   defaultCardanoNetworkName,

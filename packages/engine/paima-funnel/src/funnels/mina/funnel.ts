@@ -1,13 +1,4 @@
-import type { EvmConfig, Web3 } from '@paima/utils';
-import {
-  doLog,
-  initWeb3,
-  logError,
-  timeout,
-  delay,
-  InternalEventType,
-  ChainDataExtensionType,
-} from '@paima/utils';
+import { doLog, logError, ChainDataExtensionType } from '@paima/utils';
 import type { ChainFunnel, ReadPresyncDataFrom } from '@paima/runtime';
 import type {
   ChainData,
@@ -22,7 +13,7 @@ import type { PoolClient } from 'pg';
 import { FUNNEL_PRESYNC_FINISHED, ConfigNetworkType } from '@paima/utils';
 import { getCarpCursors } from '@paima/db';
 import getMinaGenericCdeData from '../../cde/minaGeneric.js';
-import { MinaConfig } from '@paima/utils/src/config/loading.js';
+import type { MinaConfig } from '@paima/utils';
 import { MinaFunnelCacheEntry } from '../FunnelCache.js';
 
 async function getGenesisTime(graphql: string): Promise<number> {
@@ -48,9 +39,7 @@ async function getGenesisTime(graphql: string): Promise<number> {
     }),
   })
     .then(res => res.json())
-    .then(
-      res => res['data']['genesisBlock']['protocolState']['blockchainState']['utcDate']
-    )) as string;
+    .then(res => res.data.genesisBlock.protocolState.blockchainState.utcDate)) as string;
 
   return Number.parseInt(genesisTime, 10);
 }
@@ -58,7 +47,6 @@ async function getGenesisTime(graphql: string): Promise<number> {
 const SLOT_DURATION = 3 * 60000;
 
 function slotToTimestamp(slot: number, genesisTime: number): number {
-  console.log('slot', slot, genesisTime);
   return slot * SLOT_DURATION + genesisTime;
 }
 
@@ -97,9 +85,7 @@ async function findMinaConfirmedSlot(graphql: string, confirmationDepth: number)
     body,
   })
     .then(res => res.json())
-    .then(
-      res => res['data']['bestChain'][0]['protocolState']['consensusState']['slotSinceGenesis']
-    );
+    .then(res => res.data.bestChain[0].protocolState.consensusState.slotSinceGenesis);
 
   return Number.parseInt(confirmedSlot, 10);
 }

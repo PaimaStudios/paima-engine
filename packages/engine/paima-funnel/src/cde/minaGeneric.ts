@@ -1,4 +1,4 @@
-import { CdeMinaGenericDatum, ChainDataExtensionMinaGeneric } from '@paima/sm';
+import type { CdeMinaGenericDatum, ChainDataExtensionMinaGeneric } from '@paima/sm';
 import { ChainDataExtensionDatumType } from '@paima/utils';
 
 export default async function getCdeData(
@@ -9,7 +9,6 @@ export default async function getCdeData(
   getBlockNumber: (minaTimestamp: number) => number,
   network: string
 ): Promise<CdeMinaGenericDatum[]> {
-  console.log('from-to', fromTimestamp, toTimestamp);
   const data = await fetch(minaArchive, {
     method: 'POST',
 
@@ -55,7 +54,7 @@ export default async function getCdeData(
     }),
   })
     .then(res => res.json())
-    .then(json => [json['data']['events'], json['data']['actions']]);
+    .then(json => [json.data.events, json.data.actions]);
 
   const events = data[0] as {
     blockInfo: { height: number; timestamp: string };
