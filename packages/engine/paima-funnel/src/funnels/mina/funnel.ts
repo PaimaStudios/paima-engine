@@ -20,11 +20,10 @@ import { BaseFunnel } from '../BaseFunnel.js';
 import type { FunnelSharedData } from '../BaseFunnel.js';
 import type { PoolClient } from 'pg';
 import { FUNNEL_PRESYNC_FINISHED, ConfigNetworkType } from '@paima/utils';
-import { getCarpCursors, getLatestProcessedCdeBlockheight } from '@paima/db';
+import { getCarpCursors } from '@paima/db';
 import getMinaGenericCdeData from '../../cde/minaGeneric.js';
 import { MinaConfig } from '@paima/utils/src/config/loading.js';
 import { MinaFunnelCacheEntry } from '../FunnelCache.js';
-import { timeStamp } from 'console';
 
 async function getGenesisTime(graphql: string): Promise<number> {
   const genesisTime = (await fetch(graphql, {
@@ -67,6 +66,9 @@ function timestampToSlot(ts: number, genesisTime: number): number {
   return Math.max(Math.floor((ts - genesisTime) / SLOT_DURATION), 0);
 }
 
+// TODO: maybe using the node's rpc here it's not really safe? if it's out of
+// sync with the archive db we could end up skipping events
+// it would be better to have an endpoint for this on the archive api
 async function findMinaConfirmedSlot(graphql: string, confirmationDepth: number): Promise<number> {
   const body = JSON.stringify({
     query: `
@@ -135,13 +137,11 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
       this.config.graphql,
       this.config.confirmationDepth
     );
-    console.log('confirmedSlot', confirmedSlot);
+
     const confirmedTimestamp = slotToTimestamp(confirmedSlot, cachedState.genesisTime);
 
     const fromTimestamp =
       this.cache.getState().lastPoint?.timestamp || cachedState.startingSlotTimestamp;
-
-    console.log('baseData', baseData);
 
     const toTimestamp = Math.max(
       confirmedTimestamp,
@@ -150,8 +150,6 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
 
     const fromSlot = timestampToSlot(fromTimestamp, cachedState.genesisTime);
     const toSlot = timestampToSlot(toTimestamp, cachedState.genesisTime);
-
-    console.log('from slot to slot', fromSlot, toSlot);
 
     const mapSlotsToEvmNumbers: { [slot: number]: number } = {};
 
@@ -168,8 +166,6 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
         mapSlotsToEvmNumbers[slot] = baseData[curr].blockNumber;
       }
     }
-
-    console.log('made mapping');
 
     const ungroupedCdeData = await Promise.all(
       this.sharedData.extensions.reduce(
@@ -193,16 +189,12 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
       )
     );
 
-    console.log('grouping cde data');
-
     const grouped = groupCdeData(
       this.chainName,
       baseData[0].blockNumber,
       baseData[baseData.length - 1].blockNumber,
       ungroupedCdeData.filter(data => data.length > 0)
     );
-
-    console.log('composing cde data');
 
     const composed = composeChainData(baseData, grouped);
 
@@ -217,8 +209,6 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
     const cache = this.cache.getState();
 
     const cursors = cache.cursors;
-
-    console.log('cursors', cursors);
 
     if (cursors && Object.values(cursors).every(x => x.finished)) {
       const data = await basePromise;
@@ -256,12 +246,9 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
             .map(extension => {
               switch (extension.cdeType) {
                 case ChainDataExtensionType.MinaGeneric:
-                  console.log('startSlot', extension.startSlot);
                   let cursor =
                     (cursors && Number.parseInt(cursors[extension.cdeId].cursor, 10)) ||
                     slotToTimestamp(extension.startSlot, cache.genesisTime);
-
-                  console.log('cursors', cursor);
 
                   let to = cursor + 10 * 60000;
 
@@ -320,6 +307,8 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
     } catch (err) {
       doLog(`[paima-funnel::readPresyncData] Exception occurred while reading blocks: ${err}`);
 
+      // TODO: remove later, but it's useful for debugging, since otherwise we
+      // just get stuck in a loop with infinite errors sometimes.
       process.exit(1);
       throw err;
     }
@@ -341,6 +330,7 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
       sharedData.cacheManager.cacheEntries[MinaFunnelCacheEntry.SYMBOL] = newEntry;
 
       const genesisTime = await getGenesisTime(config.graphql);
+
       const startingBlockTimestamp = (await sharedData.web3.eth.getBlock(startingBlockHeight))
         .timestamp as number;
 

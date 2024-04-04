@@ -1,8 +1,4 @@
-import {
-  CdeMinaGenericDatum,
-  ChainDataExtensionDatum,
-  ChainDataExtensionMinaGeneric,
-} from '@paima/sm';
+import { CdeMinaGenericDatum, ChainDataExtensionMinaGeneric } from '@paima/sm';
 import { ChainDataExtensionDatumType } from '@paima/utils';
 
 export default async function getCdeData(
@@ -14,7 +10,7 @@ export default async function getCdeData(
   network: string
 ): Promise<CdeMinaGenericDatum[]> {
   console.log('from-to', fromTimestamp, toTimestamp);
-  const data = (await fetch(minaArchive, {
+  const data = await fetch(minaArchive, {
     method: 'POST',
 
     headers: {
@@ -39,30 +35,60 @@ export default async function getCdeData(
               data
             }
           }
+          actions(
+            input: {
+              address: "${extension.address}",
+              fromTimestamp: "${fromTimestamp}",
+              toTimestamp: "${toTimestamp}"
+            }
+          ) {
+            blockInfo {
+              height
+              timestamp
+            }
+            actionData {
+              data
+            }
+          }
         }
       `,
     }),
   })
     .then(res => res.json())
-    .then(res => {
-      return res;
-    })
-    .then(json => json['data']['events'])) as {
+    .then(json => [json['data']['events'], json['data']['actions']]);
+
+  const events = data[0] as {
     blockInfo: { height: number; timestamp: string };
     eventData: { data: string[] }[];
   }[];
 
-  return data.flatMap(singleBlockData =>
-    singleBlockData.eventData.flatMap(perTx =>
-      perTx.data.map(txEvent => ({
-        cdeId: extension.cdeId,
-        cdeDatumType: ChainDataExtensionDatumType.MinaGeneric,
-        blockNumber: getBlockNumber(Number.parseInt(singleBlockData.blockInfo.timestamp, 10)),
-        payload: txEvent,
-        network,
-        scheduledPrefix: extension.scheduledPrefix,
-        paginationCursor: { cursor: singleBlockData.blockInfo.timestamp, finished: false },
-      }))
-    )
+  const actions = data[1] as {
+    blockInfo: { height: number; timestamp: string };
+    actionData: { data: string[] }[];
+  }[];
+
+  const eventsAndActions = [
+    ...events.map(ev => ({
+      blockInfo: ev.blockInfo,
+      data: ev.eventData.map(datum => Object.assign(datum, { kind: 'event' })),
+    })),
+    ...actions.map(act => ({
+      blockInfo: act.blockInfo,
+      data: act.actionData.map(datum => Object.assign(datum, { kind: 'action' })),
+    })),
+  ];
+
+  eventsAndActions.sort((a, b) => a.blockInfo.height - b.blockInfo.height);
+
+  return eventsAndActions.flatMap(perBlock =>
+    perBlock.data.map(txEvent => ({
+      cdeId: extension.cdeId,
+      cdeDatumType: ChainDataExtensionDatumType.MinaGeneric,
+      blockNumber: getBlockNumber(Number.parseInt(perBlock.blockInfo.timestamp, 10)),
+      payload: txEvent,
+      network,
+      scheduledPrefix: extension.scheduledPrefix,
+      paginationCursor: { cursor: perBlock.blockInfo.timestamp, finished: false },
+    }))
   );
 }
