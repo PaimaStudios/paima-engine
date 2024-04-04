@@ -190,6 +190,9 @@ async function main(): Promise<void> {
 }
 
 main().catch(e => {
+  // we catch the error here instead of relying on `uncaughtException` monitoring
+  // because if an exception causes us to reach this line, it means the error was thrown during initalization
+  // which is typically something we cannot recover from
   console.error(e);
   process.exit(1);
 });
