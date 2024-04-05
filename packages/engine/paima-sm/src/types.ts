@@ -169,6 +169,7 @@ export interface CdeErc20TransferDatum extends CdeDatumBase {
 export interface CdeErc721TransferDatum extends CdeDatumBase {
   cdeDatumType: ChainDataExtensionDatumType.ERC721Transfer;
   payload: CdeDatumErc721TransferPayload;
+  burnScheduledPrefix?: string | undefined;
 }
 
 export interface CdeErc721MintDatum extends CdeDatumBase {
@@ -287,6 +288,7 @@ export const ChainDataExtensionErc721Config = Type.Intersect([
     type: Type.Literal(CdeEntryTypeName.ERC721),
     contractAddress: EvmAddress,
     scheduledPrefix: Type.String(),
+    burnScheduledPrefix: Type.Optional(Type.String()),
   }),
 ]);
 export type TChainDataExtensionErc721Config = Static<typeof ChainDataExtensionErc721Config>;

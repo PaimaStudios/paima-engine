@@ -56,6 +56,13 @@ CREATE TABLE cde_erc721_data (
   PRIMARY KEY (cde_id, token_id)
 );
 
+CREATE TABLE cde_erc721_burn (
+  cde_id INTEGER NOT NULL,
+  token_id TEXT NOT NULL,
+  nft_owner TEXT NOT NULL,
+  PRIMARY KEY(cde_id, token_id)
+);
+
 CREATE TABLE cde_erc20_deposit_data (
   cde_id INTEGER NOT NULL,
   wallet_address TEXT NOT NULL,
