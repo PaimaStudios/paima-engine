@@ -39,6 +39,7 @@ function transferToTransferDatum(
       to: event.returnValues.to.toLowerCase(),
       tokenId: event.returnValues.tokenId,
     },
+    burnScheduledPrefix: extension.burnScheduledPrefix,
     network,
   };
 }

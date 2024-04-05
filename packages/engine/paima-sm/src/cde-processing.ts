@@ -26,7 +26,7 @@ export async function cdeTransitionFunction(
     case ChainDataExtensionDatumType.ERC20Transfer:
       return await processErc20TransferDatum(readonlyDBConn, cdeDatum);
     case ChainDataExtensionDatumType.ERC721Transfer:
-      return await processErc721TransferDatum(readonlyDBConn, cdeDatum);
+      return await processErc721TransferDatum(readonlyDBConn, cdeDatum, inPresync);
     case ChainDataExtensionDatumType.ERC721Mint:
       return await processErc721MintDatum(cdeDatum, inPresync);
     case ChainDataExtensionDatumType.ERC20Deposit:

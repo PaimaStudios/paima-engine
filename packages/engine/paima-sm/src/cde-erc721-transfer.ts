@@ -1,6 +1,6 @@
 import type { PoolClient } from 'pg';
 
-import { doLog } from '@paima/utils';
+import { doLog, ENV } from '@paima/utils';
 import type { CdeErc721TransferDatum } from './types.js';
 import {
   cdeErc721BurnInsert,
@@ -8,12 +8,14 @@ import {
   cdeErc721GetOwner,
   cdeErc721InsertOwner,
   cdeErc721UpdateOwner,
+  createScheduledData,
 } from '@paima/db';
 import type { SQLUpdate } from '@paima/db';
 
 export default async function processErc721Datum(
   readonlyDBConn: PoolClient,
-  cdeDatum: CdeErc721TransferDatum
+  cdeDatum: CdeErc721TransferDatum,
+  isPresync: boolean
 ): Promise<SQLUpdate[]> {
   const cdeId = cdeDatum.cdeId;
   const { to, tokenId } = cdeDatum.payload;
@@ -30,6 +32,15 @@ export default async function processErc721Datum(
     const newOwnerData = { cde_id: cdeId, token_id: tokenId, nft_owner: toAddr };
     if (ownerRow.length > 0) {
       if (isBurn) {
+        if (cdeDatum.burnScheduledPrefix) {
+          const scheduledInputData = `${cdeDatum.burnScheduledPrefix}|${ownerRow[0].nft_owner}|${tokenId}`;
+          const scheduledBlockHeight = isPresync
+            ? ENV.SM_START_BLOCKHEIGHT + 1
+            : cdeDatum.blockNumber;
+
+          updateList.push(createScheduledData(scheduledInputData, scheduledBlockHeight));
+        }
+
         // we do this to keep track of the owner before the asset is sent to the
         // burn address
         updateList.push([
