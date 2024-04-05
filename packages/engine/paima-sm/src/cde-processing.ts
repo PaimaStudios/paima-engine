@@ -42,9 +42,9 @@ export async function cdeTransitionFunction(
     case ChainDataExtensionDatumType.CardanoAssetUtxo:
       return await processCardanoAssetUtxoDatum(cdeDatum);
     case ChainDataExtensionDatumType.CardanoTransfer:
-      return await processCardanoTransferDatum(cdeDatum);
+      return await processCardanoTransferDatum(cdeDatum, inPresync);
     case ChainDataExtensionDatumType.CardanoMintBurn:
-      return await processCardanoMintBurnDatum(cdeDatum);
+      return await processCardanoMintBurnDatum(cdeDatum, inPresync);
     default:
       assertNever(cdeDatum);
   }

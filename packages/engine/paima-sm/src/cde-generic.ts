@@ -12,7 +12,7 @@ export default async function processDatum(
   const payload = cdeDatum.payload;
   const prefix = cdeDatum.scheduledPrefix;
 
-  const scheduledBlockHeight = Math.max(cdeDatum.blockNumber, ENV.SM_START_BLOCKHEIGHT + 1);
+  const scheduledBlockHeight = inPresync ? ENV.SM_START_BLOCKHEIGHT + 1 : cdeDatum.blockNumber;
   const stringifiedPayload = JSON.stringify(payload);
   const scheduledInputData = `${prefix}|${stringifiedPayload}`;
 
