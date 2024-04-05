@@ -32,11 +32,9 @@ export default async function processErc721Datum(
     const newOwnerData = { cde_id: cdeId, token_id: tokenId, nft_owner: toAddr };
     if (ownerRow.length > 0) {
       if (isBurn) {
-        if (cdeDatum.burnScheduledPrefix) {
+        if (cdeDatum.burnScheduledPrefix && !isPresync) {
           const scheduledInputData = `${cdeDatum.burnScheduledPrefix}|${ownerRow[0].nft_owner}|${tokenId}`;
-          const scheduledBlockHeight = isPresync
-            ? ENV.SM_START_BLOCKHEIGHT + 1
-            : cdeDatum.blockNumber;
+          const scheduledBlockHeight = cdeDatum.blockNumber;
 
           updateList.push(createScheduledData(scheduledInputData, scheduledBlockHeight));
         }
