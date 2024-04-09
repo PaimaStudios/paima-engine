@@ -16,7 +16,7 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, ReentrancyGuard {
     using Address for address payable;
     using Arrays for uint256[];
 
-    IInverseProjected1155 internal asset;
+    IInverseProjected1155 internal immutable asset;
     mapping(uint256 orderId => Order) internal orders;
     uint256 internal currentOrderId;
 
@@ -68,7 +68,7 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, ReentrancyGuard {
         uint256 orderId = currentOrderId;
         orders[orderId] = newOrder;
         emit OrderCreated(msg.sender, orderId, assetId, assetAmount, pricePerAsset);
-        currentOrderId++;
+        ++currentOrderId;
         return orderId;
     }
 
@@ -84,12 +84,15 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, ReentrancyGuard {
             revert InvalidArrayLength();
         }
         uint256[] memory orderIds = new uint256[](assetIds.length);
-        for (uint256 i = 0; i < assetIds.length; ++i) {
+        for (uint256 i; i < assetIds.length; ) {
             orderIds[i] = createSellOrder(
                 assetIds.unsafeMemoryAccess(i),
                 assetAmounts.unsafeMemoryAccess(i),
                 pricesPerAssets.unsafeMemoryAccess(i)
             );
+            unchecked {
+                ++i;
+            }
         }
         return orderIds;
     }
@@ -109,8 +112,8 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, ReentrancyGuard {
         uint256 length = orderIds.length;
         uint256 remainingEth = msg.value;
         uint256 totalAssetReceived;
-        for (uint256 i = 0; i < length; i++) {
-            uint256 orderId = orderIds[i];
+        for (uint256 i; i < length; ++i) {
+            uint256 orderId = orderIds.unsafeMemoryAccess(i);
             Order storage order = orders[orderId];
             if (order.assetAmount == 0) {
                 continue;
@@ -161,8 +164,8 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, ReentrancyGuard {
         uint256 length = orderIds.length;
         uint256 remainingAsset = assetAmount;
         uint256 remainingEth = msg.value;
-        for (uint256 i = 0; i < length; i++) {
-            uint256 orderId = orderIds[i];
+        for (uint256 i; i < length; ++i) {
+            uint256 orderId = orderIds.unsafeMemoryAccess(i);
             Order storage order = orders[orderId];
             if (order.assetAmount == 0) {
                 continue;
@@ -209,7 +212,7 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, ReentrancyGuard {
             revert Unauthorized();
         }
         uint256 assetAmount = order.assetAmount;
-        order.assetAmount = 0;
+        delete order.assetAmount;
         asset.safeTransferFrom(address(this), msg.sender, order.assetId, assetAmount, bytes(""));
         emit OrderCancelled(msg.sender, orderId);
     }
@@ -217,8 +220,11 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, ReentrancyGuard {
     /// @notice Cancels a batch of sell orders identified by the `orderIds`, transferring the orders' assets back to the seller.
     /// @dev This is a batched version of `cancelSellOrder` that simply iterates through the array to call said function.
     function cancelBatchSellOrder(uint256[] memory orderIds) public virtual {
-        for (uint256 i = 0; i < orderIds.length; ++i) {
+        for (uint256 i; i < orderIds.length; ) {
             cancelSellOrder(orderIds.unsafeMemoryAccess(i));
+            unchecked {
+                ++i;
+            }
         }
     }
 
