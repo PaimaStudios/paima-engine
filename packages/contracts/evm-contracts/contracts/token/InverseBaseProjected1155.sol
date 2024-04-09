@@ -3,7 +3,6 @@ pragma solidity ^0.8.13;
 
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {ERC1155} from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
-import {ERC1155Supply} from "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
 import {IERC1155MetadataURI} from "@openzeppelin/contracts/token/ERC1155/extensions/IERC1155MetadataURI.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
@@ -13,7 +12,7 @@ import {IUri} from "./IUri.sol";
 
 /// @dev A Paima Inverse Projection ERC1155 token where initialization is handled by the base-layer.
 /// A standard ERC1155 that accepts calldata in the mint function for any initialization data needed in a Paima dApp.
-contract InverseBaseProjected1155 is IInverseBaseProjected1155, ERC1155Supply, Ownable {
+contract InverseBaseProjected1155 is IInverseBaseProjected1155, ERC1155, Ownable {
     using Strings for uint256;
 
     string public name;
@@ -25,6 +24,8 @@ contract InverseBaseProjected1155 is IInverseBaseProjected1155, ERC1155Supply, O
     string public baseURI;
     /// @dev Base extension that is used in the `uri` function to form the end of the token URI.
     string public baseExtension;
+
+    mapping(uint256 id => uint256) private _totalSupply;
 
     /// @dev Sets the NFT's `name`, `symbol`, and transfers ownership to `owner`.
     /// Also sets `currentTokenId` to 1.
@@ -46,6 +47,11 @@ contract InverseBaseProjected1155 is IInverseBaseProjected1155, ERC1155Supply, O
             interfaceId == type(IInverseProjected1155).interfaceId ||
             interfaceId == type(IInverseBaseProjected1155).interfaceId ||
             super.supportsInterface(interfaceId);
+    }
+
+    /// @dev Returns the total amount of tokens with ID `id` that currently exists.
+    function totalSupply(uint256 id) public view virtual returns (uint256) {
+        return _totalSupply[id];
     }
 
     /// @dev Mints `value` of a new token to transaction sender, passing `initialData` to be emitted in the event.
@@ -94,7 +100,7 @@ contract InverseBaseProjected1155 is IInverseBaseProjected1155, ERC1155Supply, O
         uint256 id,
         string memory customBaseUri
     ) public view virtual returns (string memory) {
-        require(exists(id), "InverseBaseProjected1155: URI query for nonexistent token");
+        require(_totalSupply[id] > 0, "InverseBaseProjected1155: URI query for nonexistent token");
         string memory URI = bytes(customBaseUri).length > 0
             ? string.concat(customBaseUri, "eip155:", block.chainid.toString(), "/", id.toString())
             : "";
@@ -133,5 +139,31 @@ contract InverseBaseProjected1155 is IInverseBaseProjected1155, ERC1155Supply, O
     /// an update to a single token. Can be overriden in inheriting contract.
     function updateMetadata(uint256 _tokenId) public virtual {
         emit MetadataUpdate(_tokenId);
+    }
+
+    /// @dev See {ERC1155-_update}.
+    function _update(
+        address from,
+        address to,
+        uint256[] memory ids,
+        uint256[] memory values
+    ) internal virtual override {
+        super._update(from, to, ids, values);
+
+        if (from == address(0)) {
+            for (uint256 i = 0; i < ids.length; ++i) {
+                // Overflow check required: The rest of the code assumes that totalSupply never overflows
+                _totalSupply[ids[i]] += values[i];
+            }
+        }
+
+        if (to == address(0)) {
+            for (uint256 i = 0; i < ids.length; ++i) {
+                unchecked {
+                    // Overflow not possible: values[i] <= balanceOf(from, ids[i]) <= totalSupply(ids[i])
+                    _totalSupply[ids[i]] -= values[i];
+                }
+            }
+        }
     }
 }
