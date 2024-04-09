@@ -15,8 +15,8 @@ contract OrderbookDex is IOrderbookDex, ERC165, ReentrancyGuard {
     using Address for address payable;
 
     IInverseProjected1155 asset;
-    mapping(address => mapping(uint256 => Order)) public orders;
-    mapping(address => uint256) public sellersOrderId;
+    mapping(address => mapping(uint256 => Order)) orders;
+    mapping(address => uint256) sellersOrderId;
 
     error OrderDoesNotExist(uint256 orderId);
     error InsufficientEndAmount(uint256 expectedAmount, uint256 actualAmount);
