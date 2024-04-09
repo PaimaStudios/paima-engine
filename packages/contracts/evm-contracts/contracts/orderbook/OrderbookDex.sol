@@ -3,7 +3,7 @@
 pragma solidity ^0.8.20;
 
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
-import {ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
+import {ERC1155Holder} from "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
@@ -11,17 +11,21 @@ import {IInverseProjected1155} from "../token/IInverseProjected1155.sol";
 import {IOrderbookDex} from "./IOrderbookDex.sol";
 
 /// @notice Facilitates trading an asset that is living on a different app-chain.
-contract OrderbookDex is IOrderbookDex, ERC165, ReentrancyGuard {
+contract OrderbookDex is IOrderbookDex, ERC1155Holder, ReentrancyGuard {
     using Address for address payable;
 
-    IInverseProjected1155 asset;
-    mapping(address => mapping(uint256 => Order)) orders;
-    mapping(address => uint256) sellersOrderId;
+    IInverseProjected1155 internal asset;
+    mapping(address => mapping(uint256 => Order)) internal orders;
+    mapping(address => uint256) internal sellersOrderId;
 
     error OrderDoesNotExist(uint256 orderId);
     error InsufficientEndAmount(uint256 expectedAmount, uint256 actualAmount);
     error InvalidInput(uint256 input);
     error InvalidInputArity();
+
+    constructor(IInverseProjected1155 _asset) {
+        asset = _asset;
+    }
 
     /// @notice Returns the address of the asset that is being traded.
     function getAsset() public view virtual returns (address) {
@@ -41,11 +45,17 @@ contract OrderbookDex is IOrderbookDex, ERC165, ReentrancyGuard {
     /// @notice Creates a sell order with incremental seller-specific `orderId` for the specified `assetAmount` at specified `pricePerAsset`.
     /// @dev The order information is saved in a nested mapping `seller address -> orderId -> Order`.
     /// MUST emit `OrderCreated` event.
-    function createSellOrder(uint256 assetAmount, uint256 pricePerAsset) public virtual {
+    function createSellOrder(
+        uint256 assetId,
+        uint256 assetAmount,
+        uint256 pricePerAsset
+    ) public virtual {
         if (assetAmount == 0 || pricePerAsset == 0) {
             revert InvalidInput(0);
         }
+        asset.safeTransferFrom(msg.sender, address(this), assetId, assetAmount, bytes(""));
         Order memory newOrder = Order({
+            assetId: assetId,
             assetAmount: assetAmount,
             pricePerAsset: pricePerAsset,
             cancelled: false
@@ -93,6 +103,13 @@ contract OrderbookDex is IOrderbookDex, ERC165, ReentrancyGuard {
             order.assetAmount -= assetsToBuy;
             remainingEth -= assetsToBuy * order.pricePerAsset;
             totalAssetReceived += assetsToBuy;
+            asset.safeTransferFrom(
+                address(this),
+                msg.sender,
+                order.assetId,
+                assetsToBuy,
+                bytes("")
+            );
             emit OrderFilled(seller, orderId, msg.sender, assetsToBuy, order.pricePerAsset);
             if (remainingEth == 0) {
                 break;
@@ -143,6 +160,13 @@ contract OrderbookDex is IOrderbookDex, ERC165, ReentrancyGuard {
             order.assetAmount -= assetsToBuy;
             remainingEth -= assetsToBuy * order.pricePerAsset;
             remainingAsset -= assetsToBuy;
+            asset.safeTransferFrom(
+                address(this),
+                msg.sender,
+                order.assetId,
+                assetsToBuy,
+                bytes("")
+            );
             emit OrderFilled(seller, orderId, msg.sender, assetsToBuy, order.pricePerAsset);
             if (remainingAsset == 0) {
                 break;
@@ -160,17 +184,25 @@ contract OrderbookDex is IOrderbookDex, ERC165, ReentrancyGuard {
     /// @dev MUST change the `cancelled` parameter for the specified order to `true`.
     /// MUST emit `OrderCancelled` event.
     function cancelSellOrder(uint256 orderId) public virtual {
-        if (orders[msg.sender][orderId].assetAmount == 0) {
+        Order memory order = orders[msg.sender][orderId];
+        if (order.assetAmount == 0) {
             revert OrderDoesNotExist(orderId);
         }
         orders[msg.sender][orderId].cancelled = true;
+        asset.safeTransferFrom(
+            address(this),
+            msg.sender,
+            order.assetId,
+            order.assetAmount,
+            bytes("")
+        );
         emit OrderCancelled(msg.sender, orderId);
     }
 
     /// @dev Returns true if this contract implements the interface defined by `interfaceId`. See EIP165.
     function supportsInterface(
         bytes4 interfaceId
-    ) public view virtual override(ERC165, IERC165) returns (bool) {
+    ) public view virtual override(ERC1155Holder, IERC165) returns (bool) {
         return
             interfaceId == type(IOrderbookDex).interfaceId || super.supportsInterface(interfaceId);
     }

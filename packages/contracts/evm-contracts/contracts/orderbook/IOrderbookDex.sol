@@ -2,12 +2,13 @@
 
 pragma solidity ^0.8.20;
 
-import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import {IERC1155Receiver} from "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 
 /// @notice Facilitates base-chain trading of an asset that is living on a different app-chain.
 /// @dev The contract should never hold any ETH itself.
-interface IOrderbookDex is IERC165 {
+interface IOrderbookDex is IERC1155Receiver {
     struct Order {
+        uint256 assetId;
         uint256 assetAmount;
         uint256 pricePerAsset;
         bool cancelled;
@@ -40,7 +41,7 @@ interface IOrderbookDex is IERC165 {
     /// @notice Creates a sell order with incremental seller-specific `orderId` for the specified `assetAmount` at specified `pricePerAsset`.
     /// @dev The order information is saved in a nested mapping `seller address -> orderId -> Order`.
     /// MUST emit `OrderCreated` event.
-    function createSellOrder(uint256 assetAmount, uint256 pricePerAsset) external;
+    function createSellOrder(uint256 assetId, uint256 assetAmount, uint256 pricePerAsset) external;
 
     /// @notice Consecutively fills an array of orders identified by the combination `<seller, orderId>`,
     /// by providing an exact amount of ETH and requesting a specific minimum amount of asset to receive.
