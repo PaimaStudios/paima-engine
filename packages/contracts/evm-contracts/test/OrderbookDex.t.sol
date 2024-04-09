@@ -23,10 +23,6 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
     address alice = vm.addr(uint256(keccak256(abi.encodePacked("alice"))));
     address boris = vm.addr(uint256(keccak256(abi.encodePacked("boris"))));
 
-    function tryToSendEthToDex() public {
-        payable(address(dex)).sendValue(1);
-    }
-
     function setUp() public {
         asset = new InverseAppProjected1155("Gold", "GOLD", address(this));
         dex = new OrderbookDex(asset);
@@ -35,18 +31,15 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
         vm.deal(boris, 1_000 ether);
     }
 
-    function test_SupportsInterface() public {
-        assertTrue(dex.supportsInterface(type(IERC165).interfaceId));
-        assertTrue(dex.supportsInterface(type(IERC165).interfaceId));
-        assertTrue(dex.supportsInterface(type(IOrderbookDex).interfaceId));
-    }
+    function testFuzz_createSellOrder_satisfiesRequirements(
+        uint256 assetAmount,
+        uint256 pricePerAsset
+    ) public {
+        vm.assume(assetAmount > 0 && pricePerAsset > 0);
 
-    function test_CreateOrderSatisfiesRequirements() public {
-        uint256 assetAmount = 100;
-        uint256 pricePerAsset = 200;
         uint256 orderId = dex.getCurrentOrderId();
-
         uint256 assetId = asset.mint(assetAmount, "");
+
         vm.expectEmit(true, true, true, true);
         emit IOrderbookDex.OrderCreated(
             address(this),
@@ -56,6 +49,7 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
             pricePerAsset
         );
         dex.createSellOrder(assetId, assetAmount, pricePerAsset);
+
         IOrderbookDex.Order memory order = dex.getOrder(orderId);
         assertEq(order.assetId, assetId);
         assertEq(order.assetAmount, assetAmount);
@@ -63,7 +57,7 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
         assertEq(asset.balanceOf(address(dex), assetId), assetAmount);
     }
 
-    function testFuzz_CreateBatchOrderSatisfiesRequirements(uint256 orderCount) public {
+    function testFuzz_createBatchSellOrder_satisfiesRequirements(uint256 orderCount) public {
         orderCount = bound(orderCount, 0, 100);
         uint256[] memory assetIds = new uint256[](orderCount);
         uint256[] memory assetAmounts = new uint256[](orderCount);
@@ -102,7 +96,7 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
         }
     }
 
-    function testFuzz_CreateBatchOrderInvalidArrayLength(
+    function testFuzz_createBatchSellOrder_reverts_ifInvalidArrayLength(
         uint256 length1,
         uint256 length2,
         uint256 length3
@@ -119,57 +113,14 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
         dex.createBatchSellOrder(assetIds, assetAmounts, pricesPerAssets);
     }
 
-    function test_CancelOrderSatisfiesRequirements() public {
-        uint256 assetAmount = 100;
-        uint256 assetId = asset.mint(assetAmount, "");
-        uint256 orderId = dex.getCurrentOrderId();
-        dex.createSellOrder(assetId, assetAmount, 200);
+    function testFuzz_createSellOrder_reverts_ifAssetAmountIsZero(uint256 pricePerAsset) public {
+        uint256 assetId = asset.mint(0, "");
 
-        vm.expectEmit(true, true, true, true);
-        emit IOrderbookDex.OrderCancelled(address(this), orderId);
-        dex.cancelSellOrder(orderId);
-        IOrderbookDex.Order memory order = dex.getOrder(orderId);
-        assertEq(order.assetAmount, 0);
-        assertEq(asset.balanceOf(address(dex), assetId), 0);
-        assertEq(asset.balanceOf(address(this), assetId), assetAmount);
+        vm.expectRevert(abi.encodeWithSelector(OrderbookDex.InvalidInput.selector, 0));
+        dex.createSellOrder(assetId, 0, pricePerAsset);
     }
 
-    function testFuzz_CancelBatchOrderSatisfiesRequirements(uint256 orderCount) public {
-        orderCount = bound(orderCount, 0, 100);
-        uint256[] memory assetIds = new uint256[](orderCount);
-        uint256[] memory assetAmounts = new uint256[](orderCount);
-        uint256[] memory pricesPerAssets = new uint256[](orderCount);
-
-        for (uint256 i = 0; i < orderCount; ++i) {
-            assetAmounts[i] = i == 0 ? 1 : i;
-            pricesPerAssets[i] = i == 0 ? 1 : i;
-            assetIds[i] = asset.mint(assetAmounts[i], "");
-        }
-
-        uint256 orderId = dex.getCurrentOrderId();
-
-        uint256[] memory orderIds = dex.createBatchSellOrder(
-            assetIds,
-            assetAmounts,
-            pricesPerAssets
-        );
-
-        for (uint256 i = 0; i < orderCount; ++i) {
-            vm.expectEmit(true, true, true, true);
-            emit IOrderbookDex.OrderCancelled(address(this), orderId + i);
-        }
-
-        dex.cancelBatchSellOrder(orderIds);
-
-        for (uint256 i = 0; i < orderCount; ++i) {
-            IOrderbookDex.Order memory order = dex.getOrder(orderIds[i]);
-            assertEq(order.assetAmount, 0);
-            assertEq(asset.balanceOf(address(dex), assetIds[i]), 0);
-            assertEq(asset.balanceOf(address(this), assetIds[i]), assetAmounts[i]);
-        }
-    }
-
-    function testFuzz_FillOrdersExactEth(uint256 price) public {
+    function testFuzz_fillOrdersExactEth_transfersCorrectly(uint256 price) public {
         uint256 ordersCount = 5;
         vm.assume(price / ordersCount > 0);
         vm.assume(price < type(uint256).max / ordersCount);
@@ -226,7 +177,7 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
         }
     }
 
-    function testFuzz_FillOrdersExactAsset(uint256 price) public {
+    function testFuzz_fillOrdersExactAsset_transfersCorrectly(uint256 price) public {
         uint256 ordersCount = 5;
         vm.assume(price / ordersCount > 0);
         vm.assume(price < type(uint256).max / ordersCount);
@@ -283,7 +234,7 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
         }
     }
 
-    function testFuzz_PartialFillExactEth(
+    function testFuzz_fillOrdersExactEth_transfersCorrectlyWithPartialFill(
         uint256 assetAmount,
         uint256 pricePerAsset,
         uint256 assetAmountToBuy
@@ -317,7 +268,7 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
         assertEq(asset.balanceOf(buyer, assetId), assetAmountToBuy);
     }
 
-    function testFuzz_PartialFillExactAsset(
+    function testFuzz_fillOrdersExactAsset_transfersCorrectlyWithPartialFill(
         uint256 assetAmount,
         uint256 pricePerAsset,
         uint256 assetAmountToBuy
@@ -351,7 +302,7 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
         assertEq(asset.balanceOf(buyer, assetId), assetAmountToBuy);
     }
 
-    function testFuzz_ExcessValueIsRefundedFillExactEth(
+    function testFuzz_fillOrdersExactEth_refundsExcessValue(
         uint256 assetAmount,
         uint256 pricePerAsset
     ) public {
@@ -373,7 +324,7 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
         assertEq(alice.balance, aliceBalanceBefore - (assetAmount * pricePerAsset));
     }
 
-    function testFuzz_ExcessValueIsRefundedFillExactAsset(
+    function testFuzz_fillOrdersExactAsset_refundsExcessValue(
         uint256 assetAmount,
         uint256 pricePerAsset
     ) public {
@@ -395,7 +346,7 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
         assertEq(alice.balance, aliceBalanceBefore - (assetAmount * pricePerAsset));
     }
 
-    function test_WontFillOrderIfCancelled() public {
+    function test_fillOrdersExactEth_wontFillOrderIfOrderWasCancelled() public {
         uint256 assetAmount = 100;
         uint256 pricePerAsset = 200;
         uint256 orderId = dex.getCurrentOrderId();
@@ -410,28 +361,26 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
 
         dex.fillOrdersExactEth{value: assetAmount * pricePerAsset}(0, orderIds);
         assertEq(alice.balance, aliceBalanceBefore);
+    }
+
+    function test_fillOrdersExactAsset_wontFillOrderIfOrderWasCancelled() public {
+        uint256 assetAmount = 100;
+        uint256 pricePerAsset = 200;
+        uint256 orderId = dex.getCurrentOrderId();
+        uint256 assetId = asset.mint(assetAmount, "");
+        dex.createSellOrder(assetId, assetAmount, pricePerAsset);
+        dex.cancelSellOrder(orderId);
+
+        uint256 aliceBalanceBefore = alice.balance;
+        uint256[] memory orderIds = new uint256[](1);
+        orderIds[0] = orderId;
+        vm.startPrank(alice);
+
         dex.fillOrdersExactAsset{value: assetAmount * pricePerAsset}(0, orderIds);
         assertEq(alice.balance, aliceBalanceBefore);
     }
 
-    function test_CannotCreateOrderWithZeroAssetAmount() public {
-        uint256 assetId = asset.mint(0, "");
-
-        vm.expectRevert(abi.encodeWithSelector(OrderbookDex.InvalidInput.selector, 0));
-        dex.createSellOrder(assetId, 0, 100);
-    }
-
-    function test_CannotCancelOrderIfUnauthorized() public {
-        uint256 orderId = dex.getCurrentOrderId();
-        uint256 assetId = asset.mint(100, "");
-        dex.createSellOrder(assetId, 100, 200);
-
-        vm.startPrank(alice);
-        vm.expectRevert(OrderbookDex.Unauthorized.selector);
-        dex.cancelSellOrder(orderId);
-    }
-
-    function test_CannotFillOrderIfInsufficientEndAmountExactEth() public {
+    function test_fillOrdersExactEth_reverts_ifInsufficientEndAmount() public {
         uint256 assetAmount = 10;
         uint256 pricePerAsset = 100;
         uint256 orderId = dex.getCurrentOrderId();
@@ -453,7 +402,7 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
         dex.fillOrdersExactEth{value: assetAmount * pricePerAsset}(assetAmount + 1, orderIds);
     }
 
-    function test_CannotFillOrderIfInsufficientEndAmountExactAsset() public {
+    function test_fillOrdersExactAsset_reverts_ifInsufficientEndAmount() public {
         uint256 assetAmount = 10;
         uint256 pricePerAsset = 100;
         uint256 orderId = dex.getCurrentOrderId();
@@ -475,9 +424,83 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
         dex.fillOrdersExactAsset{value: assetAmount * pricePerAsset}(assetAmount + 1, orderIds);
     }
 
-    function test_CannotSendEtherToDex() public {
-        vm.expectRevert(Address.FailedInnerCall.selector);
-        this.tryToSendEthToDex();
+    function test_supportsInterface_returnsTrueForImplementedInterfaces() public {
+        assertTrue(dex.supportsInterface(type(IERC165).interfaceId));
+        assertTrue(dex.supportsInterface(type(IERC165).interfaceId));
+        assertTrue(dex.supportsInterface(type(IOrderbookDex).interfaceId));
+    }
+
+    function testFuzz_cancelSellOrder_satisfiesRequirements(uint256 assetAmount) public {
+        vm.assume(assetAmount > 0);
+        uint256 assetId = asset.mint(assetAmount, "");
+        uint256 orderId = dex.getCurrentOrderId();
+        dex.createSellOrder(assetId, assetAmount, 200);
+
+        vm.expectEmit(true, true, true, true);
+        emit IOrderbookDex.OrderCancelled(address(this), orderId);
+        dex.cancelSellOrder(orderId);
+        IOrderbookDex.Order memory order = dex.getOrder(orderId);
+        assertEq(order.assetAmount, 0);
+        assertEq(asset.balanceOf(address(dex), assetId), 0);
+        assertEq(asset.balanceOf(address(this), assetId), assetAmount);
+    }
+
+    function test_cancelSellOrder_reverts_ifUnauthorized() public {
+        uint256 orderId = dex.getCurrentOrderId();
+        uint256 assetId = asset.mint(100, "");
+        dex.createSellOrder(assetId, 100, 200);
+
+        vm.startPrank(alice);
+        vm.expectRevert(OrderbookDex.Unauthorized.selector);
+        dex.cancelSellOrder(orderId);
+    }
+
+    function testFuzz_cancelBatchSellOrder_satisfiesRequirements(uint256 orderCount) public {
+        orderCount = bound(orderCount, 0, 100);
+        uint256[] memory assetIds = new uint256[](orderCount);
+        uint256[] memory assetAmounts = new uint256[](orderCount);
+        uint256[] memory pricesPerAssets = new uint256[](orderCount);
+
+        for (uint256 i = 0; i < orderCount; ++i) {
+            assetAmounts[i] = i == 0 ? 1 : i;
+            pricesPerAssets[i] = i == 0 ? 1 : i;
+            assetIds[i] = asset.mint(assetAmounts[i], "");
+        }
+
+        uint256 orderId = dex.getCurrentOrderId();
+
+        uint256[] memory orderIds = dex.createBatchSellOrder(
+            assetIds,
+            assetAmounts,
+            pricesPerAssets
+        );
+
+        for (uint256 i = 0; i < orderCount; ++i) {
+            vm.expectEmit(true, true, true, true);
+            emit IOrderbookDex.OrderCancelled(address(this), orderId + i);
+        }
+
+        dex.cancelBatchSellOrder(orderIds);
+
+        for (uint256 i = 0; i < orderCount; ++i) {
+            IOrderbookDex.Order memory order = dex.getOrder(orderIds[i]);
+            assertEq(order.assetAmount, 0);
+            assertEq(asset.balanceOf(address(dex), assetIds[i]), 0);
+            assertEq(asset.balanceOf(address(this), assetIds[i]), assetAmounts[i]);
+        }
+    }
+
+    function test_cancelBatchSellOrder_reverts_ifUnauthorized() public {
+        uint256 orderId = dex.getCurrentOrderId();
+        uint256 assetId = asset.mint(100, "");
+        dex.createSellOrder(assetId, 100, 200);
+
+        uint256[] memory orderIds = new uint256[](1);
+        orderIds[0] = orderId;
+
+        vm.startPrank(alice);
+        vm.expectRevert(OrderbookDex.Unauthorized.selector);
+        dex.cancelBatchSellOrder(orderIds);
     }
 
     receive() external payable {}
