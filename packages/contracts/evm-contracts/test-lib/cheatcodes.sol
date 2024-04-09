@@ -52,6 +52,8 @@ interface CheatCodes {
 
     function expectRevert(bytes4) external;
 
+    function expectRevert() external;
+
     // Record all storage reads and writes
     function record() external;
 
@@ -81,4 +83,7 @@ interface CheatCodes {
 
     // Labels an address in call traces
     function label(address, string calldata) external;
+
+    // If the condition is false, discard this run's fuzz inputs and generate new ones.
+    function assume(bool condition) external pure;
 }
