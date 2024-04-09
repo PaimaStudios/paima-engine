@@ -6,12 +6,15 @@ import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+
+import {IInverseProjected1155} from "../token/IInverseProjected1155.sol";
 import {IOrderbookDex} from "./IOrderbookDex.sol";
 
 /// @notice Facilitates trading an asset that is living on a different app-chain.
 contract OrderbookDex is IOrderbookDex, ERC165, ReentrancyGuard {
     using Address for address payable;
 
+    IInverseProjected1155 asset;
     mapping(address => mapping(uint256 => Order)) public orders;
     mapping(address => uint256) public sellersOrderId;
 
@@ -20,20 +23,25 @@ contract OrderbookDex is IOrderbookDex, ERC165, ReentrancyGuard {
     error InvalidInput(uint256 input);
     error InvalidInputArity();
 
+    /// @notice Returns the address of the asset that is being traded.
+    function getAsset() public view virtual returns (address) {
+        return address(asset);
+    }
+
     /// @notice Returns the seller's current `orderId` (index that their new sell order will be mapped to).
-    function getSellerOrderId(address seller) external view returns (uint256) {
+    function getSellerOrderId(address seller) public view virtual returns (uint256) {
         return sellersOrderId[seller];
     }
 
     /// @notice Returns the Order struct information about an order identified by the combination `<seller, orderId>`.
-    function getOrder(address seller, uint256 orderId) external view returns (Order memory) {
+    function getOrder(address seller, uint256 orderId) public view virtual returns (Order memory) {
         return orders[seller][orderId];
     }
 
     /// @notice Creates a sell order with incremental seller-specific `orderId` for the specified `assetAmount` at specified `pricePerAsset`.
     /// @dev The order information is saved in a nested mapping `seller address -> orderId -> Order`.
     /// MUST emit `OrderCreated` event.
-    function createSellOrder(uint256 assetAmount, uint256 pricePerAsset) public {
+    function createSellOrder(uint256 assetAmount, uint256 pricePerAsset) public virtual {
         if (assetAmount == 0 || pricePerAsset == 0) {
             revert InvalidInput(0);
         }
@@ -60,7 +68,7 @@ contract OrderbookDex is IOrderbookDex, ERC165, ReentrancyGuard {
         uint256 minimumAsset,
         address payable[] memory sellers,
         uint256[] memory orderIds
-    ) public payable nonReentrant {
+    ) public payable virtual nonReentrant {
         if (sellers.length != orderIds.length) {
             revert InvalidInputArity();
         }
@@ -110,7 +118,7 @@ contract OrderbookDex is IOrderbookDex, ERC165, ReentrancyGuard {
         uint256 assetAmount,
         address payable[] memory sellers,
         uint256[] memory orderIds
-    ) public payable nonReentrant {
+    ) public payable virtual nonReentrant {
         if (sellers.length != orderIds.length) {
             revert InvalidInputArity();
         }
@@ -151,7 +159,7 @@ contract OrderbookDex is IOrderbookDex, ERC165, ReentrancyGuard {
     /// @notice Cancels the sell order identified by combination `<msg.sender, orderId>`, making it unfillable.
     /// @dev MUST change the `cancelled` parameter for the specified order to `true`.
     /// MUST emit `OrderCancelled` event.
-    function cancelSellOrder(uint256 orderId) public {
+    function cancelSellOrder(uint256 orderId) public virtual {
         if (orders[msg.sender][orderId].assetAmount == 0) {
             revert OrderDoesNotExist(orderId);
         }
@@ -162,7 +170,7 @@ contract OrderbookDex is IOrderbookDex, ERC165, ReentrancyGuard {
     /// @dev Returns true if this contract implements the interface defined by `interfaceId`. See EIP165.
     function supportsInterface(
         bytes4 interfaceId
-    ) public view override(ERC165, IERC165) returns (bool) {
+    ) public view virtual override(ERC165, IERC165) returns (bool) {
         return
             interfaceId == type(IOrderbookDex).interfaceId || super.supportsInterface(interfaceId);
     }

@@ -28,6 +28,9 @@ interface IOrderbookDex is IERC165 {
     );
     event OrderCancelled(address indexed seller, uint256 indexed orderId);
 
+    /// @notice Returns the address of the asset that is being traded.
+    function getAsset() external view returns (address);
+
     /// @notice Returns the seller's current `orderId` (index that their new sell order will be mapped to).
     function getSellerOrderId(address seller) external view returns (uint256);
 
