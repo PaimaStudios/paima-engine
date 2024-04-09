@@ -3,7 +3,6 @@ pragma solidity ^0.8.13;
 
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {ERC1155} from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
-import {ERC1155Supply} from "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
 import {IERC1155MetadataURI} from "@openzeppelin/contracts/token/ERC1155/extensions/IERC1155MetadataURI.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
@@ -18,7 +17,7 @@ struct MintEntry {
 
 /// @dev A Paima Inverse Projection ERC1155 token where initialization is handled by the app-layer.
 /// A standard ERC1155 that can be freely minted and stores an unique `<minter, userTokenId>` pair (used in `tokenURI`) when minted.
-contract InverseAppProjected1155 is IInverseAppProjected1155, ERC1155Supply, Ownable {
+contract InverseAppProjected1155 is IInverseAppProjected1155, ERC1155, Ownable {
     using Strings for uint256;
 
     string public name;
@@ -27,6 +26,7 @@ contract InverseAppProjected1155 is IInverseAppProjected1155, ERC1155Supply, Own
     mapping(uint256 id => MintEntry) public tokenToMint;
     mapping(address minter => uint256) public mintCount;
     mapping(uint256 id => uint256) private _initialSupply;
+    mapping(uint256 id => uint256) private _totalSupply;
 
     /// @dev The token ID that will be minted when calling the `mint` function.
     uint256 public currentTokenId;
@@ -70,6 +70,11 @@ contract InverseAppProjected1155 is IInverseAppProjected1155, ERC1155Supply, Own
     /// @dev Returns the amount of token with ID `id` that had been initially minted.
     function initialSupply(uint256 id) public view virtual returns (uint256) {
         return _initialSupply[id];
+    }
+
+    /// @dev Returns the total amount of tokens with ID `id` that currently exists.
+    function totalSupply(uint256 id) public view virtual returns (uint256) {
+        return _totalSupply[id];
     }
 
     /// @dev Mints `value` of a new token to the transaction sender.
@@ -132,7 +137,7 @@ contract InverseAppProjected1155 is IInverseAppProjected1155, ERC1155Supply, Own
         uint256 id,
         string memory customBaseUri
     ) public view virtual returns (string memory) {
-        require(exists(id), "InverseAppProjected1155: URI query for nonexistent token");
+        require(_totalSupply[id] > 0, "InverseAppProjected1155: URI query for nonexistent token");
         MintEntry memory entry = tokenToMint[id];
         string memory URI = bytes(customBaseUri).length > 0
             ? string.concat(
@@ -144,7 +149,7 @@ contract InverseAppProjected1155 is IInverseAppProjected1155, ERC1155Supply, Own
                 "/",
                 entry.userTokenId.toString(),
                 "/",
-                initialSupply(id).toString()
+                _initialSupply[id].toString()
             )
             : "";
         return string(abi.encodePacked(URI, baseExtension));
@@ -182,5 +187,31 @@ contract InverseAppProjected1155 is IInverseAppProjected1155, ERC1155Supply, Own
     /// an update to a single token. Can be overriden in inheriting contract.
     function updateMetadata(uint256 _tokenId) public virtual {
         emit MetadataUpdate(_tokenId);
+    }
+
+    /// @dev See {ERC1155-_update}.
+    function _update(
+        address from,
+        address to,
+        uint256[] memory ids,
+        uint256[] memory values
+    ) internal virtual override {
+        super._update(from, to, ids, values);
+
+        if (from == address(0)) {
+            for (uint256 i = 0; i < ids.length; ++i) {
+                // Overflow check required: The rest of the code assumes that totalSupply never overflows
+                _totalSupply[ids[i]] += values[i];
+            }
+        }
+
+        if (to == address(0)) {
+            for (uint256 i = 0; i < ids.length; ++i) {
+                unchecked {
+                    // Overflow not possible: values[i] <= balanceOf(from, ids[i]) <= totalSupply(ids[i])
+                    _totalSupply[ids[i]] -= values[i];
+                }
+            }
+        }
     }
 }
