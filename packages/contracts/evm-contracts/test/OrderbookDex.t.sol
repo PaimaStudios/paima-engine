@@ -63,6 +63,62 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
         assertEq(asset.balanceOf(address(dex), assetId), assetAmount);
     }
 
+    function testFuzz_CreateBatchOrderSatisfiesRequirements(uint256 orderCount) public {
+        orderCount = bound(orderCount, 0, 100);
+        uint256[] memory assetIds = new uint256[](orderCount);
+        uint256[] memory assetAmounts = new uint256[](orderCount);
+        uint256[] memory pricesPerAssets = new uint256[](orderCount);
+
+        for (uint256 i = 0; i < orderCount; ++i) {
+            assetAmounts[i] = i == 0 ? 1 : i;
+            pricesPerAssets[i] = i == 0 ? 1 : i;
+            assetIds[i] = asset.mint(assetAmounts[i], "");
+        }
+
+        uint256 orderId = dex.getCurrentOrderId();
+        for (uint256 i = 0; i < orderCount; ++i) {
+            vm.expectEmit(true, true, true, true);
+            emit IOrderbookDex.OrderCreated(
+                address(this),
+                orderId + i,
+                assetIds[i],
+                assetAmounts[i],
+                pricesPerAssets[i]
+            );
+        }
+
+        uint256[] memory orderIds = dex.createBatchSellOrder(
+            assetIds,
+            assetAmounts,
+            pricesPerAssets
+        );
+
+        for (uint256 i = 0; i < orderCount; ++i) {
+            IOrderbookDex.Order memory order = dex.getOrder(orderIds[i]);
+            assertEq(order.assetId, assetIds[i]);
+            assertEq(order.assetAmount, assetAmounts[i]);
+            assertEq(order.pricePerAsset, pricesPerAssets[i]);
+            assertEq(asset.balanceOf(address(dex), assetIds[i]), assetAmounts[i]);
+        }
+    }
+
+    function testFuzz_CreateBatchOrderInvalidArrayLength(
+        uint256 length1,
+        uint256 length2,
+        uint256 length3
+    ) public {
+        length1 = bound(length1, 0, 1000);
+        length2 = bound(length2, 0, 1000);
+        length3 = bound(length3, 0, 1000);
+        vm.assume(length1 != length2 || length2 != length3);
+        uint256[] memory assetIds = new uint256[](length1);
+        uint256[] memory assetAmounts = new uint256[](length2);
+        uint256[] memory pricesPerAssets = new uint256[](length3);
+
+        vm.expectRevert(OrderbookDex.InvalidArrayLength.selector);
+        dex.createBatchSellOrder(assetIds, assetAmounts, pricesPerAssets);
+    }
+
     function test_CancelOrderSatisfiesRequirements() public {
         uint256 assetAmount = 100;
         uint256 assetId = asset.mint(assetAmount, "");
@@ -76,6 +132,41 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
         assertEq(order.assetAmount, 0);
         assertEq(asset.balanceOf(address(dex), assetId), 0);
         assertEq(asset.balanceOf(address(this), assetId), assetAmount);
+    }
+
+    function testFuzz_CancelBatchOrderSatisfiesRequirements(uint256 orderCount) public {
+        orderCount = bound(orderCount, 0, 100);
+        uint256[] memory assetIds = new uint256[](orderCount);
+        uint256[] memory assetAmounts = new uint256[](orderCount);
+        uint256[] memory pricesPerAssets = new uint256[](orderCount);
+
+        for (uint256 i = 0; i < orderCount; ++i) {
+            assetAmounts[i] = i == 0 ? 1 : i;
+            pricesPerAssets[i] = i == 0 ? 1 : i;
+            assetIds[i] = asset.mint(assetAmounts[i], "");
+        }
+
+        uint256 orderId = dex.getCurrentOrderId();
+
+        uint256[] memory orderIds = dex.createBatchSellOrder(
+            assetIds,
+            assetAmounts,
+            pricesPerAssets
+        );
+
+        for (uint256 i = 0; i < orderCount; ++i) {
+            vm.expectEmit(true, true, true, true);
+            emit IOrderbookDex.OrderCancelled(address(this), orderId + i);
+        }
+
+        dex.cancelBatchSellOrder(orderIds);
+
+        for (uint256 i = 0; i < orderCount; ++i) {
+            IOrderbookDex.Order memory order = dex.getOrder(orderIds[i]);
+            assertEq(order.assetAmount, 0);
+            assertEq(asset.balanceOf(address(dex), assetIds[i]), 0);
+            assertEq(asset.balanceOf(address(this), assetIds[i]), assetAmounts[i]);
+        }
     }
 
     function testFuzz_FillOrdersExactEth(uint256 price) public {

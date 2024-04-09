@@ -3,6 +3,7 @@
 pragma solidity ^0.8.20;
 
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
+import {Arrays} from "@openzeppelin/contracts/utils/Arrays.sol";
 import {ERC1155Holder} from "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
@@ -13,6 +14,7 @@ import {IOrderbookDex} from "./IOrderbookDex.sol";
 /// @notice Facilitates base-chain trading of an asset that is living on a different app-chain.
 contract OrderbookDex is IOrderbookDex, ERC1155Holder, ReentrancyGuard {
     using Address for address payable;
+    using Arrays for uint256[];
 
     IInverseProjected1155 internal asset;
     mapping(uint256 orderId => Order) internal orders;
@@ -20,6 +22,7 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, ReentrancyGuard {
 
     error OrderDoesNotExist(uint256 orderId);
     error InsufficientEndAmount(uint256 expectedAmount, uint256 actualAmount);
+    error InvalidArrayLength();
     error InvalidInput(uint256 input);
     error Unauthorized();
 
@@ -67,6 +70,28 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, ReentrancyGuard {
         emit OrderCreated(msg.sender, orderId, assetId, assetAmount, pricePerAsset);
         currentOrderId++;
         return orderId;
+    }
+
+    /// @notice Creates a batch of sell orders for the `assetAmount` of `assetId` at `pricePerAsset`.
+    /// @dev This is a batched version of `createSellOrder` that simply iterates through the arrays to call said function.
+    /// @return The unique identifiers of the created orders.
+    function createBatchSellOrder(
+        uint256[] memory assetIds,
+        uint256[] memory assetAmounts,
+        uint256[] memory pricesPerAssets
+    ) public virtual returns (uint256[] memory) {
+        if (assetIds.length != assetAmounts.length || assetIds.length != pricesPerAssets.length) {
+            revert InvalidArrayLength();
+        }
+        uint256[] memory orderIds = new uint256[](assetIds.length);
+        for (uint256 i = 0; i < assetIds.length; ++i) {
+            orderIds[i] = createSellOrder(
+                assetIds.unsafeMemoryAccess(i),
+                assetAmounts.unsafeMemoryAccess(i),
+                pricesPerAssets.unsafeMemoryAccess(i)
+            );
+        }
+        return orderIds;
     }
 
     /// @notice Consecutively fills an array of orders identified by the `orderId` of each order,
@@ -187,6 +212,14 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, ReentrancyGuard {
         order.assetAmount = 0;
         asset.safeTransferFrom(address(this), msg.sender, order.assetId, assetAmount, bytes(""));
         emit OrderCancelled(msg.sender, orderId);
+    }
+
+    /// @notice Cancels a batch of sell orders identified by the `orderIds`, transferring the orders' assets back to the seller.
+    /// @dev This is a batched version of `cancelSellOrder` that simply iterates through the array to call said function.
+    function cancelBatchSellOrder(uint256[] memory orderIds) public virtual {
+        for (uint256 i = 0; i < orderIds.length; ++i) {
+            cancelSellOrder(orderIds.unsafeMemoryAccess(i));
+        }
     }
 
     /// @dev Returns true if this contract implements the interface defined by `interfaceId`. See EIP165.

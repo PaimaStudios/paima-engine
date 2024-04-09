@@ -68,6 +68,15 @@ interface IOrderbookDex is IERC1155Receiver {
         uint256 pricePerAsset
     ) external returns (uint256);
 
+    /// @notice Creates a batch of sell orders for the `assetAmount` of `assetId` at `pricePerAsset`.
+    /// @dev This is a batched version of `createSellOrder` that simply iterates through the arrays to call said function.
+    /// @return The unique identifiers of the created orders.
+    function createBatchSellOrder(
+        uint256[] memory assetIds,
+        uint256[] memory assetAmounts,
+        uint256[] memory pricesPerAssets
+    ) external returns (uint256[] memory);
+
     /// @notice Consecutively fills an array of orders identified by the `orderId` of each order,
     /// by providing an exact amount of ETH and requesting a specific minimum amount of asset to receive.
     /// @dev Transfers portions of msg.value to the orders' sellers according to the price.
@@ -94,4 +103,8 @@ interface IOrderbookDex is IERC1155Receiver {
     /// MUST emit `OrderCancelled` event.
     /// MUST transfer the `assetAmount` of `assetId` back to the seller.
     function cancelSellOrder(uint256 orderId) external;
+
+    /// @notice Cancels a batch of sell orders identified by the `orderIds`, transferring the orders' assets back to the seller.
+    /// @dev This is a batched version of `cancelSellOrder` that simply iterates through the array to call said function.
+    function cancelBatchSellOrder(uint256[] memory orderIds) external;
 }
