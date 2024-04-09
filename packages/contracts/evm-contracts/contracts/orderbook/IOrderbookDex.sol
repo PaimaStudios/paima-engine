@@ -11,7 +11,6 @@ interface IOrderbookDex is IERC1155Receiver {
         uint256 assetId;
         uint256 assetAmount;
         uint256 pricePerAsset;
-        bool cancelled;
     }
 
     event OrderCreated(
@@ -48,7 +47,6 @@ interface IOrderbookDex is IERC1155Receiver {
     /// @dev Transfers portions of msg.value to the orders' sellers according to the price.
     /// The sum of asset amounts of filled orders MUST be at least `minimumAsset`.
     /// If msg.value is more than the sum of orders' prices, it MUST refund the excess back to msg.sender.
-    /// An order whose `cancelled` parameter has value `true` MUST NOT be filled.
     /// MUST change the `assetAmount` parameter for the specified order according to how much of it was filled.
     /// MUST emit `OrderFilled` event for each order accordingly.
     function fillOrdersExactEth(
@@ -61,7 +59,6 @@ interface IOrderbookDex is IERC1155Receiver {
     /// by providing a possibly surplus amount of ETH and requesting an exact amount of asset to receive.
     /// @dev Transfers portions of msg.value to the orders' sellers according to the price.
     /// The sum of asset amounts of filled orders MUST be exactly `assetAmount`. Excess ETH MUST be returned back to `msg.sender`.
-    /// An order whose `cancelled` parameter has value `true` MUST NOT be filled.
     /// MUST change the `assetAmount` parameter for the specified order according to how much of it was filled.
     /// MUST emit `OrderFilled` event for each order accordingly.
     /// If msg.value is more than the sum of orders' prices, it MUST refund the difference back to msg.sender.
@@ -72,7 +69,7 @@ interface IOrderbookDex is IERC1155Receiver {
     ) external payable;
 
     /// @notice Cancels the sell order identified by combination `<msg.sender, orderId>`, making it unfillable.
-    /// @dev MUST change the `cancelled` parameter for the specified order to `true`.
+    /// @dev MUST change the `assetAmount` parameter for the specified order to `0`.
     /// MUST emit `OrderCancelled` event.
     function cancelSellOrder(uint256 orderId) external;
 }

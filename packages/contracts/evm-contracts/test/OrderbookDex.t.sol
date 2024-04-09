@@ -52,7 +52,6 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
         assertEq(order.assetId, assetId);
         assertEq(order.assetAmount, assetAmount);
         assertEq(order.pricePerAsset, pricePerAsset);
-        assertTrue(!order.cancelled);
         assertEq(asset.balanceOf(address(dex), assetId), assetAmount);
     }
 
@@ -66,7 +65,7 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
         emit IOrderbookDex.OrderCancelled(address(this), orderId);
         dex.cancelSellOrder(orderId);
         IOrderbookDex.Order memory order = dex.getOrder(address(this), orderId);
-        assertTrue(order.cancelled);
+        assertEq(order.assetAmount, 0);
         assertEq(asset.balanceOf(address(dex), assetId), 0);
         assertEq(asset.balanceOf(address(this), assetId), assetAmount);
     }

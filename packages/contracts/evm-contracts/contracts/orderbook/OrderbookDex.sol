@@ -57,8 +57,7 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, ReentrancyGuard {
         Order memory newOrder = Order({
             assetId: assetId,
             assetAmount: assetAmount,
-            pricePerAsset: pricePerAsset,
-            cancelled: false
+            pricePerAsset: pricePerAsset
         });
         uint256 orderId = sellersOrderId[msg.sender];
         orders[msg.sender][orderId] = newOrder;
@@ -71,7 +70,6 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, ReentrancyGuard {
     /// @dev Transfers portions of msg.value to the orders' sellers according to the price.
     /// The sum of asset amounts of filled orders MUST be at least `minimumAsset`.
     /// If msg.value is more than the sum of orders' prices, it MUST refund the excess back to msg.sender.
-    /// An order whose `cancelled` parameter has value `true` MUST NOT be filled.
     /// MUST change the `assetAmount` parameter for the specified order according to how much of it was filled.
     /// MUST emit `OrderFilled` event for each order accordingly.
     function fillOrdersExactEth(
@@ -89,7 +87,7 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, ReentrancyGuard {
             address payable seller = sellers[i];
             uint256 orderId = orderIds[i];
             Order storage order = orders[seller][orderId];
-            if (order.cancelled || order.assetAmount == 0 || order.pricePerAsset == 0) {
+            if (order.assetAmount == 0) {
                 continue;
             }
             uint256 assetsToBuy = remainingEth / order.pricePerAsset;
@@ -127,7 +125,6 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, ReentrancyGuard {
     /// by providing a possibly surplus amount of ETH and requesting an exact amount of asset to receive.
     /// @dev Transfers portions of msg.value to the orders' sellers according to the price.
     /// The sum of asset amounts of filled orders MUST be exactly `assetAmount`. Excess ETH MUST be returned back to `msg.sender`.
-    /// An order whose `cancelled` parameter has value `true` MUST NOT be filled.
     /// MUST change the `assetAmount` parameter for the specified order according to how much of it was filled.
     /// MUST emit `OrderFilled` event for each order accordingly.
     /// If msg.value is more than the sum of orders' prices, it MUST refund the difference back to msg.sender.
@@ -146,7 +143,7 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, ReentrancyGuard {
             address payable seller = sellers[i];
             uint256 orderId = orderIds[i];
             Order storage order = orders[seller][orderId];
-            if (order.cancelled || order.assetAmount == 0 || order.pricePerAsset == 0) {
+            if (order.assetAmount == 0) {
                 continue;
             }
             uint256 assetsToBuy = order.assetAmount;
@@ -181,14 +178,14 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, ReentrancyGuard {
     }
 
     /// @notice Cancels the sell order identified by combination `<msg.sender, orderId>`, making it unfillable.
-    /// @dev MUST change the `cancelled` parameter for the specified order to `true`.
+    /// @dev MUST change the `assetAmount` parameter for the specified order to `0`.
     /// MUST emit `OrderCancelled` event.
     function cancelSellOrder(uint256 orderId) public virtual {
         Order memory order = orders[msg.sender][orderId];
         if (order.assetAmount == 0) {
             revert OrderDoesNotExist(orderId);
         }
-        orders[msg.sender][orderId].cancelled = true;
+        orders[msg.sender][orderId].assetAmount = 0;
         asset.safeTransferFrom(
             address(this),
             msg.sender,
