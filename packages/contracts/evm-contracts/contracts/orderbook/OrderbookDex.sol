@@ -12,69 +12,151 @@ import {IOrderbookDex} from "./IOrderbookDex.sol";
 contract OrderbookDex is IOrderbookDex, ERC165, ReentrancyGuard {
     using Address for address payable;
 
-    mapping(uint256 => Order) public orders;
-    uint256 public ordersIndex;
+    mapping(address => mapping(uint256 => Order)) public orders;
+    mapping(address => uint256) public sellersOrderId;
 
-    error OrderIsInactive(uint256 orderId);
-    error Unauthorized();
+    error OrderDoesNotExist(uint256 orderId);
+    error InsufficientEndAmount(uint256 expectedAmount, uint256 actualAmount);
+    error InvalidInput(uint256 input);
+    error InvalidInputArity();
 
-    /// @notice Returns the current index of orders (index that a new sell order will be mapped to).
-    function getOrdersIndex() public view returns (uint256) {
-        return ordersIndex;
+    /// @notice Returns the seller's current `orderId` (index that their new sell order will be mapped to).
+    function getSellerOrderId(address seller) external view returns (uint256) {
+        return sellersOrderId[seller];
     }
 
-    /// @notice Returns the Order struct information about order of specified `orderId`.
-    function getOrder(uint256 orderId) public view returns (Order memory) {
-        return orders[orderId];
+    /// @notice Returns the Order struct information about an order identified by the combination `<seller, orderId>`.
+    function getOrder(address seller, uint256 orderId) external view returns (Order memory) {
+        return orders[seller][orderId];
     }
 
-    /// @notice Creates a sell order for the specified `assetAmount` at specified `price`.
-    /// @dev The order is saved in a mapping from incremental ID to Order struct.
-    function createSellOrder(uint256 assetAmount, uint256 price) public {
+    /// @notice Creates a sell order with incremental seller-specific `orderId` for the specified `assetAmount` at specified `pricePerAsset`.
+    /// @dev The order information is saved in a nested mapping `seller address -> orderId -> Order`.
+    /// MUST emit `OrderCreated` event.
+    function createSellOrder(uint256 assetAmount, uint256 pricePerAsset) public {
+        if (assetAmount == 0 || pricePerAsset == 0) {
+            revert InvalidInput(0);
+        }
         Order memory newOrder = Order({
-            seller: payable(msg.sender),
             assetAmount: assetAmount,
-            price: price,
-            active: true
+            pricePerAsset: pricePerAsset,
+            cancelled: false
         });
-        orders[ordersIndex] = newOrder;
-        emit OrderCreated(ordersIndex, msg.sender, assetAmount, price);
-        ordersIndex++;
+        uint256 orderId = sellersOrderId[msg.sender];
+        orders[msg.sender][orderId] = newOrder;
+        emit OrderCreated(msg.sender, orderId, assetAmount, pricePerAsset);
+        sellersOrderId[msg.sender]++;
     }
 
-    /// @notice Fills an array of orders specified by `orderIds`.
-    /// @dev Reverts if msg.value is less than the sum of orders' prices.
-    /// If msg.value is more than the sum of orders' prices, it should refund the difference back to msg.sender.
-    function fillSellOrders(uint256[] memory orderIds) public payable nonReentrant {
-        uint256 length = orderIds.length;
-        uint256 totalPaid;
-        for (uint256 i = 0; i < length; ) {
+    /// @notice Consecutively fills an array of orders identified by the combination `<seller, orderId>`,
+    /// by providing an exact amount of ETH and requesting a specific minimum amount of asset to receive.
+    /// @dev Transfers portions of msg.value to the orders' sellers according to the price.
+    /// The sum of asset amounts of filled orders MUST be at least `minimumAsset`.
+    /// If msg.value is more than the sum of orders' prices, it MUST refund the excess back to msg.sender.
+    /// An order whose `cancelled` parameter has value `true` MUST NOT be filled.
+    /// MUST change the `assetAmount` parameter for the specified order according to how much of it was filled.
+    /// MUST emit `OrderFilled` event for each order accordingly.
+    function fillOrdersExactEth(
+        uint256 minimumAsset,
+        address payable[] memory sellers,
+        uint256[] memory orderIds
+    ) public payable nonReentrant {
+        if (sellers.length != orderIds.length) {
+            revert InvalidInputArity();
+        }
+        uint256 length = sellers.length;
+        uint256 remainingEth = msg.value;
+        uint256 totalAssetReceived;
+        for (uint256 i = 0; i < length; i++) {
+            address payable seller = sellers[i];
             uint256 orderId = orderIds[i];
-            Order memory order = orders[orderId];
-            if (!order.active) {
-                revert OrderIsInactive(orderId);
+            Order storage order = orders[seller][orderId];
+            if (order.cancelled || order.assetAmount == 0 || order.pricePerAsset == 0) {
+                continue;
             }
-            order.seller.sendValue(order.price);
-            totalPaid += order.price;
-            orders[orderId].active = false;
-            emit OrderFilled(orderId, order.seller, msg.sender, order.assetAmount, order.price);
-            unchecked {
-                i++;
+            uint256 assetsToBuy = remainingEth / order.pricePerAsset;
+            if (assetsToBuy == 0) {
+                continue;
+            }
+            if (assetsToBuy > order.assetAmount) {
+                assetsToBuy = order.assetAmount;
+            }
+            seller.sendValue(assetsToBuy * order.pricePerAsset);
+            order.assetAmount -= assetsToBuy;
+            remainingEth -= assetsToBuy * order.pricePerAsset;
+            totalAssetReceived += assetsToBuy;
+            emit OrderFilled(seller, orderId, msg.sender, assetsToBuy, order.pricePerAsset);
+            if (remainingEth == 0) {
+                break;
             }
         }
-        if (msg.value > totalPaid) {
-            payable(msg.sender).sendValue(msg.value - totalPaid);
+        if (totalAssetReceived < minimumAsset) {
+            revert InsufficientEndAmount(minimumAsset, totalAssetReceived);
+        }
+        if (remainingEth > 0) {
+            payable(msg.sender).sendValue(remainingEth);
         }
     }
 
-    /// @notice Cancels the sell order specified by `orderId`, making it unfillable.
-    /// @dev Reverts if the msg.sender is not the order's seller.
-    function cancelSellOrder(uint256 orderId) public {
-        if (msg.sender != orders[orderId].seller) {
-            revert Unauthorized();
+    /// @notice Consecutively fills an array of orders identified by the combination `<seller, orderId>`,
+    /// by providing a possibly surplus amount of ETH and requesting an exact amount of asset to receive.
+    /// @dev Transfers portions of msg.value to the orders' sellers according to the price.
+    /// The sum of asset amounts of filled orders MUST be exactly `assetAmount`. Excess ETH MUST be returned back to `msg.sender`.
+    /// An order whose `cancelled` parameter has value `true` MUST NOT be filled.
+    /// MUST change the `assetAmount` parameter for the specified order according to how much of it was filled.
+    /// MUST emit `OrderFilled` event for each order accordingly.
+    /// If msg.value is more than the sum of orders' prices, it MUST refund the difference back to msg.sender.
+    function fillOrdersExactAsset(
+        uint256 assetAmount,
+        address payable[] memory sellers,
+        uint256[] memory orderIds
+    ) public payable nonReentrant {
+        if (sellers.length != orderIds.length) {
+            revert InvalidInputArity();
         }
-        orders[orderId].active = false;
-        emit OrderCancelled(orderId);
+        uint256 length = sellers.length;
+        uint256 remainingAsset = assetAmount;
+        uint256 remainingEth = msg.value;
+        for (uint256 i = 0; i < length; i++) {
+            address payable seller = sellers[i];
+            uint256 orderId = orderIds[i];
+            Order storage order = orders[seller][orderId];
+            if (order.cancelled || order.assetAmount == 0 || order.pricePerAsset == 0) {
+                continue;
+            }
+            uint256 assetsToBuy = order.assetAmount;
+            if (assetsToBuy > remainingAsset) {
+                assetsToBuy = remainingAsset;
+            }
+            if (assetsToBuy == 0) {
+                continue;
+            }
+            seller.sendValue(assetsToBuy * order.pricePerAsset);
+            order.assetAmount -= assetsToBuy;
+            remainingEth -= assetsToBuy * order.pricePerAsset;
+            remainingAsset -= assetsToBuy;
+            emit OrderFilled(seller, orderId, msg.sender, assetsToBuy, order.pricePerAsset);
+            if (remainingAsset == 0) {
+                break;
+            }
+        }
+        if (remainingAsset > 0) {
+            revert InsufficientEndAmount(assetAmount, assetAmount - remainingAsset);
+        }
+        if (remainingEth > 0) {
+            payable(msg.sender).sendValue(remainingEth);
+        }
+    }
+
+    /// @notice Cancels the sell order identified by combination `<msg.sender, orderId>`, making it unfillable.
+    /// @dev MUST change the `cancelled` parameter for the specified order to `true`.
+    /// MUST emit `OrderCancelled` event.
+    function cancelSellOrder(uint256 orderId) public {
+        if (orders[msg.sender][orderId].assetAmount == 0) {
+            revert OrderDoesNotExist(orderId);
+        }
+        orders[msg.sender][orderId].cancelled = true;
+        emit OrderCancelled(msg.sender, orderId);
     }
 
     /// @dev Returns true if this contract implements the interface defined by `interfaceId`. See EIP165.
