@@ -43,7 +43,8 @@ import {
   ChainDataExtensionErc6551RegistryConfig,
   ChainDataExtensionErc721Config,
   ChainDataExtensionGenericConfig,
-  ChainDataExtensionMinaGenericConfig,
+  ChainDataExtensionMinaEventGenericConfig,
+  ChainDataExtensionMinaActionGenericConfig,
 } from '@paima/sm';
 import { loadAbi } from './utils.js';
 import assertNever from 'assert-never';
@@ -163,10 +164,16 @@ export function parseCdeConfigFile(configFileData: string): Static<typeof CdeCon
           ]),
           entry
         );
-      case CdeEntryTypeName.MinaGeneric:
+      case CdeEntryTypeName.MinaEventGeneric:
         return checkOrError(
           entry.name,
-          Type.Intersect([ChainDataExtensionMinaGenericConfig, networkTagType]),
+          Type.Intersect([ChainDataExtensionMinaEventGenericConfig, networkTagType]),
+          entry
+        );
+      case CdeEntryTypeName.MinaActionGeneric:
+        return checkOrError(
+          entry.name,
+          Type.Intersect([ChainDataExtensionMinaActionGenericConfig, networkTagType]),
           entry
         );
       default:
@@ -335,14 +342,23 @@ async function instantiateExtension(
         hash: hashConfig(config),
         cdeType: ChainDataExtensionType.CardanoMintBurn,
       };
-    case CdeEntryTypeName.MinaGeneric:
+    case CdeEntryTypeName.MinaEventGeneric:
       return {
         ...config,
         // TODO: unhardcode
         network: config.network || 'mina',
         cdeId: index,
         hash: hashConfig(config),
-        cdeType: ChainDataExtensionType.MinaGeneric,
+        cdeType: ChainDataExtensionType.MinaEventGeneric,
+      };
+    case CdeEntryTypeName.MinaActionGeneric:
+      return {
+        ...config,
+        // TODO: unhardcode
+        network: config.network || 'mina',
+        cdeId: index,
+        hash: hashConfig(config),
+        cdeType: ChainDataExtensionType.MinaActionGeneric,
       };
     default:
       assertNever(config);

@@ -1,14 +1,30 @@
-import type { CdeMinaGenericDatum, ChainDataExtensionMinaGeneric } from '@paima/sm';
+import type {
+  CdeMinaActionGenericDatum,
+  CdeMinaEventGenericDatum,
+  ChainDataExtensionMinaActionGeneric,
+  ChainDataExtensionMinaEventGeneric,
+} from '@paima/sm';
 import { ChainDataExtensionDatumType } from '@paima/utils';
 
-export default async function getCdeData(
+export async function getEventCdeData(
   minaArchive: string,
-  extension: ChainDataExtensionMinaGeneric,
+  extension: ChainDataExtensionMinaEventGeneric,
   fromTimestamp: number,
   toTimestamp: number,
   getBlockNumber: (minaTimestamp: number) => number,
   network: string
-): Promise<CdeMinaGenericDatum[]> {
+): Promise<CdeMinaEventGenericDatum[]> {
+  console.log('from,to', fromTimestamp, toTimestamp);
+
+  const grouped = [] as {
+    blockInfo: {
+      height: number;
+      timestamp: string;
+    };
+    // TODO: could each data by just a tuple?
+    eventData: { data: string[][]; txHash: string }[];
+  }[];
+
   const data = await fetch(minaArchive, {
     method: 'POST',
 
@@ -32,8 +48,75 @@ export default async function getCdeData(
             }
             eventData {
               data
+              transactionInfo {
+                hash
+              }
             }
           }
+        }
+      `,
+    }),
+  })
+    .then(res => res.json())
+    .then(res => {
+      console.log('res', JSON.stringify(res, undefined, '\t'));
+      return res;
+    })
+    .then(json => json.data.events);
+
+  const events = data as {
+    blockInfo: { height: number; timestamp: string };
+    eventData: { data: string[]; transactionInfo: { hash: string } }[];
+  }[];
+
+  for (const block of events) {
+    const eventData = [] as { data: string[][]; txHash: string }[];
+
+    for (const blockEvent of block.eventData) {
+      if (
+        eventData[eventData.length - 1] &&
+        blockEvent.transactionInfo.hash == eventData[eventData.length - 1].txHash
+      ) {
+        eventData[eventData.length - 1].data.push(blockEvent.data);
+      } else {
+        eventData.push({ txHash: blockEvent.transactionInfo.hash, data: [blockEvent.data] });
+      }
+    }
+
+    grouped.push({ blockInfo: block.blockInfo, eventData });
+  }
+
+  return grouped.flatMap(perBlock =>
+    perBlock.eventData.map(txEvent => ({
+      cdeId: extension.cdeId,
+      cdeDatumType: ChainDataExtensionDatumType.MinaEventGeneric,
+      blockNumber: getBlockNumber(Number.parseInt(perBlock.blockInfo.timestamp, 10)),
+      payload: txEvent,
+      network,
+      scheduledPrefix: extension.scheduledPrefix,
+      paginationCursor: { cursor: txEvent.txHash, finished: false },
+    }))
+  );
+}
+
+export async function getActionCdeData(
+  minaArchive: string,
+  extension: ChainDataExtensionMinaActionGeneric,
+  fromTimestamp: number,
+  toTimestamp: number,
+  getBlockNumber: (minaTimestamp: number) => number,
+  network: string
+): Promise<CdeMinaActionGenericDatum[]> {
+  const data = await fetch(minaArchive, {
+    method: 'POST',
+
+    headers: {
+      'Content-Type': 'application/json',
+    },
+
+    body: JSON.stringify({
+      query: `
+        {
           actions(
             input: {
               address: "${extension.address}",
@@ -47,6 +130,9 @@ export default async function getCdeData(
             }
             actionData {
               data
+              transactionInfo {
+                hash
+              }
             }
           }
         }
@@ -54,40 +140,48 @@ export default async function getCdeData(
     }),
   })
     .then(res => res.json())
-    .then(json => [json.data.events, json.data.actions]);
+    .then(json => json.data.actions);
 
-  const events = data[0] as {
+  const actions = data as {
     blockInfo: { height: number; timestamp: string };
-    eventData: { data: string[] }[];
+    actionData: { data: string[]; hash: string }[];
   }[];
 
-  const actions = data[1] as {
-    blockInfo: { height: number; timestamp: string };
-    actionData: { data: string[] }[];
+  const grouped = [] as {
+    blockInfo: {
+      height: number;
+      timestamp: string;
+    };
+    // TODO: could each data by just a tuple?
+    actionData: { data: string[][]; txHash: string }[];
   }[];
 
-  const eventsAndActions = [
-    ...events.map(ev => ({
-      blockInfo: ev.blockInfo,
-      data: ev.eventData.map(datum => Object.assign(datum, { kind: 'event' })),
-    })),
-    ...actions.map(act => ({
-      blockInfo: act.blockInfo,
-      data: act.actionData.map(datum => Object.assign(datum, { kind: 'action' })),
-    })),
-  ];
+  for (const block of actions) {
+    const actionData = [] as { data: string[][]; txHash: string }[];
 
-  eventsAndActions.sort((a, b) => a.blockInfo.height - b.blockInfo.height);
+    for (const blockEvent of block.actionData) {
+      if (
+        actionData[actionData.length - 1] &&
+        blockEvent.hash == actionData[actionData.length - 1].txHash
+      ) {
+        actionData[actionData.length - 1].data.push(blockEvent.data);
+      } else {
+        actionData.push({ txHash: blockEvent.hash, data: [blockEvent.data] });
+      }
+    }
 
-  return eventsAndActions.flatMap(perBlock =>
-    perBlock.data.map(txEvent => ({
+    grouped.push({ blockInfo: block.blockInfo, actionData });
+  }
+
+  return grouped.flatMap(perBlock =>
+    perBlock.actionData.map(txEvent => ({
       cdeId: extension.cdeId,
-      cdeDatumType: ChainDataExtensionDatumType.MinaGeneric,
+      cdeDatumType: ChainDataExtensionDatumType.MinaActionGeneric,
       blockNumber: getBlockNumber(Number.parseInt(perBlock.blockInfo.timestamp, 10)),
       payload: txEvent,
       network,
       scheduledPrefix: extension.scheduledPrefix,
-      paginationCursor: { cursor: perBlock.blockInfo.timestamp, finished: false },
+      paginationCursor: { cursor: txEvent.txHash, finished: false },
     }))
   );
 }

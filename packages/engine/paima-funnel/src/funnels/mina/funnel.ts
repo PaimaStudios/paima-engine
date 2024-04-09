@@ -12,7 +12,7 @@ import type { FunnelSharedData } from '../BaseFunnel.js';
 import type { PoolClient } from 'pg';
 import { FUNNEL_PRESYNC_FINISHED, ConfigNetworkType } from '@paima/utils';
 import { getCarpCursors } from '@paima/db';
-import getMinaGenericCdeData from '../../cde/minaGeneric.js';
+import { getActionCdeData, getEventCdeData } from '../../cde/minaGeneric.js';
 import type { MinaConfig } from '@paima/utils';
 import { MinaFunnelCacheEntry } from '../FunnelCache.js';
 
@@ -46,12 +46,16 @@ async function getGenesisTime(graphql: string): Promise<number> {
 
 const SLOT_DURATION = 3 * 60000;
 
-function slotToTimestamp(slot: number, genesisTime: number): number {
+function slotToMinaTimestamp(slot: number, genesisTime: number): number {
   return slot * SLOT_DURATION + genesisTime;
 }
 
-function timestampToSlot(ts: number, genesisTime: number): number {
+function minaTimestampToSlot(ts: number, genesisTime: number): number {
   return Math.max(Math.floor((ts - genesisTime) / SLOT_DURATION), 0);
+}
+
+function baseChainTimestampToMina(baseChainTimestamp: number, confirmationDepth: number): number {
+  return Math.max(baseChainTimestamp * 1000 - SLOT_DURATION * confirmationDepth, 0);
 }
 
 // TODO: maybe using the node's rpc here it's not really safe? if it's out of
@@ -124,18 +128,21 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
       this.config.confirmationDepth
     );
 
-    const confirmedTimestamp = slotToTimestamp(confirmedSlot, cachedState.genesisTime);
+    const confirmedTimestamp = slotToMinaTimestamp(confirmedSlot, cachedState.genesisTime);
 
     const fromTimestamp =
       this.cache.getState().lastPoint?.timestamp || cachedState.startingSlotTimestamp;
 
     const toTimestamp = Math.max(
       confirmedTimestamp,
-      baseData[baseData.length - 1].timestamp - 3 * 60000 * this.config.confirmationDepth
+      baseChainTimestampToMina(
+        baseData[baseData.length - 1].timestamp,
+        this.config.confirmationDepth
+      )
     );
 
-    const fromSlot = timestampToSlot(fromTimestamp, cachedState.genesisTime);
-    const toSlot = timestampToSlot(toTimestamp, cachedState.genesisTime);
+    const fromSlot = minaTimestampToSlot(fromTimestamp, cachedState.genesisTime);
+    const toSlot = minaTimestampToSlot(toTimestamp, cachedState.genesisTime);
 
     const mapSlotsToEvmNumbers: { [slot: number]: number } = {};
 
@@ -144,7 +151,10 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
     for (let slot = fromSlot; slot <= toSlot; slot++) {
       while (
         curr < baseData.length &&
-        timestampToSlot(baseData[curr].timestamp * 1000, cachedState.genesisTime) < slot
+        minaTimestampToSlot(
+          baseChainTimestampToMina(baseData[curr].timestamp, this.config.confirmationDepth),
+          cachedState.genesisTime
+        ) < slot
       )
         curr++;
 
@@ -156,13 +166,26 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
     const ungroupedCdeData = await Promise.all(
       this.sharedData.extensions.reduce(
         (promises, extension) => {
-          if (extension.cdeType === ChainDataExtensionType.MinaGeneric) {
-            const promise = getMinaGenericCdeData(
+          if (extension.cdeType === ChainDataExtensionType.MinaEventGeneric) {
+            const promise = getEventCdeData(
               this.config.archive,
               extension,
               fromTimestamp,
               toTimestamp,
-              ts => mapSlotsToEvmNumbers[timestampToSlot(ts, cachedState.genesisTime)],
+              ts => mapSlotsToEvmNumbers[minaTimestampToSlot(ts, cachedState.genesisTime)],
+              this.chainName
+            );
+
+            promises.push(promise);
+          }
+
+          if (extension.cdeType === ChainDataExtensionType.MinaActionGeneric) {
+            const promise = getActionCdeData(
+              this.config.archive,
+              extension,
+              fromTimestamp,
+              toTimestamp,
+              ts => mapSlotsToEvmNumbers[minaTimestampToSlot(ts, cachedState.genesisTime)],
               this.chainName
             );
 
@@ -203,17 +226,30 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
       return data;
     }
 
+    const mapCursorPaginatedData = (cdeId: number) => (datums: any) => {
+      const finished = datums.length === 0 || datums.length < this.config.paginationLimit;
+
+      this.cache.updateCursor(cdeId, {
+        cursor: datums[datums.length - 1] ? datums[datums.length - 1].paginationCursor.cursor : '',
+        finished,
+      });
+
+      if (datums.length > 0) {
+        datums[datums.length - 1].paginationCursor.finished = finished;
+      }
+
+      return datums;
+    };
+
     const startingSlotTimestamp = this.cache.getState().startingSlotTimestamp;
 
     try {
-      // doLog(`Mina funnel presync ${this.chainName}: #${fromTimestamp}-${toTimestamp}`);
-
       const [baseData, ungroupedCdeData] = await Promise.all([
         basePromise,
         Promise.all(
           this.sharedData.extensions
             .filter(extension => {
-              if (extension.cdeType !== ChainDataExtensionType.MinaGeneric) {
+              if (extension.network !== this.chainName) {
                 return false;
               }
 
@@ -230,41 +266,46 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
               }
             })
             .map(extension => {
-              switch (extension.cdeType) {
-                case ChainDataExtensionType.MinaGeneric:
-                  let cursor =
-                    (cursors && Number.parseInt(cursors[extension.cdeId].cursor, 10)) ||
-                    slotToTimestamp(extension.startSlot, cache.genesisTime);
+              if (extension.cdeType === ChainDataExtensionType.MinaEventGeneric) {
+                let from = slotToMinaTimestamp(extension.startSlot, cache.genesisTime);
 
-                  let to = cursor + 10 * 60000;
+                const cursor = cursors && cursors[extension.cdeId];
 
-                  const data = getMinaGenericCdeData(
-                    this.config.archive,
-                    extension,
-                    cursor,
-                    Math.min(to - 1, startingSlotTimestamp - 1),
-                    x => timestampToSlot(x, cache.genesisTime),
-                    this.chainName
-                  ).then(data => {
-                    this.cache.updateCursor(extension.cdeId, {
-                      cursor: to.toString(),
-                      finished: to >= startingSlotTimestamp,
-                    });
+                const data = getEventCdeData(
+                  this.config.archive,
+                  extension,
+                  from,
+                  startingSlotTimestamp - 1,
+                  x => minaTimestampToSlot(x, cache.genesisTime),
+                  this.chainName
+                ).then(mapCursorPaginatedData(extension.cdeId));
 
-                    // if (data.length > 0) {
-                    //   data[data.length - 1].paginationCursor.finished = finished;
-                    // }
+                return data.then(data => ({
+                  cdeId: extension.cdeId,
+                  cdeType: extension.cdeType,
+                  data,
+                }));
+              } else if (extension.cdeType === ChainDataExtensionType.MinaActionGeneric) {
+                let from = slotToMinaTimestamp(extension.startSlot, cache.genesisTime);
 
-                    return data;
-                  });
+                const cursor = cursors && cursors[extension.cdeId];
 
-                  return data.then(data => ({
-                    cdeId: extension.cdeId,
-                    cdeType: extension.cdeType,
-                    data,
-                  }));
-                default:
-                  throw new Error(`[mina funnel] unhandled extension: ${extension.cdeType}`);
+                const data = getActionCdeData(
+                  this.config.archive,
+                  extension,
+                  from,
+                  startingSlotTimestamp - 1,
+                  x => minaTimestampToSlot(x, cache.genesisTime),
+                  this.chainName
+                ).then(mapCursorPaginatedData(extension.cdeId));
+
+                return data.then(data => ({
+                  cdeId: extension.cdeId,
+                  cdeType: extension.cdeType,
+                  data,
+                }));
+              } else {
+                throw new Error(`[mina funnel] unhandled extension: ${extension.cdeType}`);
               }
             })
         ),
@@ -293,9 +334,8 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
     } catch (err) {
       doLog(`[paima-funnel::readPresyncData] Exception occurred while reading blocks: ${err}`);
 
-      // TODO: remove later, but it's useful for debugging, since otherwise we
-      // just get stuck in a loop with infinite errors sometimes.
       process.exit(1);
+
       throw err;
     }
   }
@@ -317,13 +357,24 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
 
       const genesisTime = await getGenesisTime(config.graphql);
 
+      console.log('startingBlockHeight', startingBlockHeight);
       const startingBlockTimestamp = (await sharedData.web3.eth.getBlock(startingBlockHeight))
         .timestamp as number;
 
-      newEntry.updateStartingSlot(
-        slotToTimestamp(timestampToSlot(startingBlockTimestamp * 1000, genesisTime), genesisTime),
+      console.log('startingBlockTimestamp', startingBlockTimestamp);
+
+      const slot = minaTimestampToSlot(
+        baseChainTimestampToMina(startingBlockTimestamp, config.confirmationDepth),
         genesisTime
       );
+
+      const slotAsMinaTimestamp = slotToMinaTimestamp(slot, genesisTime);
+
+      console.log('slot', slot, slotAsMinaTimestamp);
+
+      newEntry.updateStartingSlot(slotAsMinaTimestamp, genesisTime);
+
+      console.log('starting slot timestamp', newEntry.getState().startingSlotTimestamp);
 
       const cursors = await getCarpCursors.run(undefined, dbTx);
 
