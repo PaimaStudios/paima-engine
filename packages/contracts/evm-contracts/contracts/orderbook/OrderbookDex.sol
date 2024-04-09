@@ -10,40 +10,42 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol
 import {IInverseProjected1155} from "../token/IInverseProjected1155.sol";
 import {IOrderbookDex} from "./IOrderbookDex.sol";
 
-/// @notice Facilitates trading an asset that is living on a different app-chain.
+/// @notice Facilitates base-chain trading of an asset that is living on a different app-chain.
 contract OrderbookDex is IOrderbookDex, ERC1155Holder, ReentrancyGuard {
     using Address for address payable;
 
     IInverseProjected1155 internal asset;
-    mapping(address => mapping(uint256 => Order)) internal orders;
-    mapping(address => uint256) internal sellersOrderId;
+    mapping(uint256 orderId => Order) internal orders;
+    mapping(address seller => uint96 nonce) internal sellersOrderNonce;
 
     error OrderDoesNotExist(uint256 orderId);
     error InsufficientEndAmount(uint256 expectedAmount, uint256 actualAmount);
     error InvalidInput(uint256 input);
-    error InvalidInputArity();
+    error Unauthorized();
 
     constructor(IInverseProjected1155 _asset) {
         asset = _asset;
     }
 
-    /// @notice Returns the address of the asset that is being traded.
+    /// @notice Returns the address of the asset that is being traded in this DEX contract.
     function getAsset() public view virtual returns (address) {
         return address(asset);
     }
 
-    /// @notice Returns the seller's current `orderId` (index that their new sell order will be mapped to).
-    function getSellerOrderId(address seller) public view virtual returns (uint256) {
-        return sellersOrderId[seller];
+    /// @notice Returns the `orderId` of the next sell order of `seller`.
+    function getNextOrderId(address seller) public view virtual returns (uint256) {
+        return _getOrderId(seller, sellersOrderNonce[seller]);
     }
 
-    /// @notice Returns the Order struct information about an order identified by the combination `<seller, orderId>`.
-    function getOrder(address seller, uint256 orderId) public view virtual returns (Order memory) {
-        return orders[seller][orderId];
+    /// @notice Returns the Order struct information about an order identified by the `orderId`.
+    function getOrder(uint256 orderId) public view virtual returns (Order memory) {
+        return orders[orderId];
     }
 
-    /// @notice Creates a sell order with incremental seller-specific `orderId` for the specified `assetAmount` at specified `pricePerAsset`.
-    /// @dev The order information is saved in a nested mapping `seller address -> orderId -> Order`.
+    /// @notice Creates a sell order for the `assetAmount` of `assetId` at `pricePerAsset`.
+    /// @dev The order information is saved in a mapping `orderId -> Order`.
+    /// orderId SHOULD be created by packing the seller's address (uint160) and their incremental `sellerOrderNonce` (uint96) into uint256.
+    /// MUST transfer the `assetAmount` of `assetId` from the seller to the contract.
     /// MUST emit `OrderCreated` event.
     function createSellOrder(
         uint256 assetId,
@@ -59,37 +61,34 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, ReentrancyGuard {
             assetAmount: assetAmount,
             pricePerAsset: pricePerAsset
         });
-        uint256 orderId = sellersOrderId[msg.sender];
-        orders[msg.sender][orderId] = newOrder;
-        emit OrderCreated(msg.sender, orderId, assetAmount, pricePerAsset);
-        sellersOrderId[msg.sender]++;
+        uint256 orderId = getNextOrderId(msg.sender);
+        orders[orderId] = newOrder;
+        emit OrderCreated(msg.sender, orderId, assetId, assetAmount, pricePerAsset);
+        sellersOrderNonce[msg.sender]++;
     }
 
-    /// @notice Consecutively fills an array of orders identified by the combination `<seller, orderId>`,
+    /// @notice Consecutively fills an array of orders identified by the `orderId` of each order,
     /// by providing an exact amount of ETH and requesting a specific minimum amount of asset to receive.
     /// @dev Transfers portions of msg.value to the orders' sellers according to the price.
     /// The sum of asset amounts of filled orders MUST be at least `minimumAsset`.
     /// If msg.value is more than the sum of orders' prices, it MUST refund the excess back to msg.sender.
-    /// MUST change the `assetAmount` parameter for the specified order according to how much of it was filled.
+    /// MUST decrease the `assetAmount` parameter for the specified order according to how much of it was filled,
+    /// and transfer that amount of the order's `assetId` to the buyer.
     /// MUST emit `OrderFilled` event for each order accordingly.
     function fillOrdersExactEth(
         uint256 minimumAsset,
-        address payable[] memory sellers,
         uint256[] memory orderIds
     ) public payable virtual nonReentrant {
-        if (sellers.length != orderIds.length) {
-            revert InvalidInputArity();
-        }
-        uint256 length = sellers.length;
+        uint256 length = orderIds.length;
         uint256 remainingEth = msg.value;
         uint256 totalAssetReceived;
         for (uint256 i = 0; i < length; i++) {
-            address payable seller = sellers[i];
             uint256 orderId = orderIds[i];
-            Order storage order = orders[seller][orderId];
+            Order storage order = orders[orderId];
             if (order.assetAmount == 0) {
                 continue;
             }
+            address payable seller = payable(address(uint160(orderId >> 96)));
             uint256 assetsToBuy = remainingEth / order.pricePerAsset;
             if (assetsToBuy == 0) {
                 continue;
@@ -97,7 +96,6 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, ReentrancyGuard {
             if (assetsToBuy > order.assetAmount) {
                 assetsToBuy = order.assetAmount;
             }
-            seller.sendValue(assetsToBuy * order.pricePerAsset);
             order.assetAmount -= assetsToBuy;
             remainingEth -= assetsToBuy * order.pricePerAsset;
             totalAssetReceived += assetsToBuy;
@@ -108,6 +106,7 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, ReentrancyGuard {
                 assetsToBuy,
                 bytes("")
             );
+            seller.sendValue(assetsToBuy * order.pricePerAsset);
             emit OrderFilled(seller, orderId, msg.sender, assetsToBuy, order.pricePerAsset);
             if (remainingEth == 0) {
                 break;
@@ -121,31 +120,28 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, ReentrancyGuard {
         }
     }
 
-    /// @notice Consecutively fills an array of orders identified by the combination `<seller, orderId>`,
+    /// @notice Consecutively fills an array of orders identified by the `orderId` of each order,
     /// by providing a possibly surplus amount of ETH and requesting an exact amount of asset to receive.
     /// @dev Transfers portions of msg.value to the orders' sellers according to the price.
     /// The sum of asset amounts of filled orders MUST be exactly `assetAmount`. Excess ETH MUST be returned back to `msg.sender`.
-    /// MUST change the `assetAmount` parameter for the specified order according to how much of it was filled.
+    /// MUST decrease the `assetAmount` parameter for the specified order according to how much of it was filled,
+    /// and transfer that amount of the order's `assetId` to the buyer.
     /// MUST emit `OrderFilled` event for each order accordingly.
     /// If msg.value is more than the sum of orders' prices, it MUST refund the difference back to msg.sender.
     function fillOrdersExactAsset(
         uint256 assetAmount,
-        address payable[] memory sellers,
         uint256[] memory orderIds
     ) public payable virtual nonReentrant {
-        if (sellers.length != orderIds.length) {
-            revert InvalidInputArity();
-        }
-        uint256 length = sellers.length;
+        uint256 length = orderIds.length;
         uint256 remainingAsset = assetAmount;
         uint256 remainingEth = msg.value;
         for (uint256 i = 0; i < length; i++) {
-            address payable seller = sellers[i];
             uint256 orderId = orderIds[i];
-            Order storage order = orders[seller][orderId];
+            Order storage order = orders[orderId];
             if (order.assetAmount == 0) {
                 continue;
             }
+            address payable seller = payable(address(uint160(orderId >> 96)));
             uint256 assetsToBuy = order.assetAmount;
             if (assetsToBuy > remainingAsset) {
                 assetsToBuy = remainingAsset;
@@ -153,7 +149,6 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, ReentrancyGuard {
             if (assetsToBuy == 0) {
                 continue;
             }
-            seller.sendValue(assetsToBuy * order.pricePerAsset);
             order.assetAmount -= assetsToBuy;
             remainingEth -= assetsToBuy * order.pricePerAsset;
             remainingAsset -= assetsToBuy;
@@ -164,6 +159,7 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, ReentrancyGuard {
                 assetsToBuy,
                 bytes("")
             );
+            seller.sendValue(assetsToBuy * order.pricePerAsset);
             emit OrderFilled(seller, orderId, msg.sender, assetsToBuy, order.pricePerAsset);
             if (remainingAsset == 0) {
                 break;
@@ -177,11 +173,17 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, ReentrancyGuard {
         }
     }
 
-    /// @notice Cancels the sell order identified by combination `<msg.sender, orderId>`, making it unfillable.
-    /// @dev MUST change the `assetAmount` parameter for the specified order to `0`.
+    /// @notice Cancels the sell order identified by the `orderId`, transferring the order's assets back to the seller.
+    /// @dev MUST revert if the seller decoded from the `orderId` is not `msg.sender`.
+    /// MUST change the `assetAmount` parameter for the specified order to `0`.
     /// MUST emit `OrderCancelled` event.
+    /// MUST transfer the `assetAmount` of `assetId` back to the seller.
     function cancelSellOrder(uint256 orderId) public virtual {
-        Order storage order = orders[msg.sender][orderId];
+        address seller = address(uint160(orderId >> 96));
+        if (msg.sender != seller) {
+            revert Unauthorized();
+        }
+        Order storage order = orders[orderId];
         uint256 assetAmount = order.assetAmount;
         if (order.assetAmount == 0) {
             revert OrderDoesNotExist(orderId);
@@ -197,5 +199,9 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, ReentrancyGuard {
     ) public view virtual override(ERC1155Holder, IERC165) returns (bool) {
         return
             interfaceId == type(IOrderbookDex).interfaceId || super.supportsInterface(interfaceId);
+    }
+
+    function _getOrderId(address seller, uint96 orderId) internal view virtual returns (uint256) {
+        return (uint256(uint160(seller)) << 96) ^ orderId;
     }
 }

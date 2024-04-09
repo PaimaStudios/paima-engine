@@ -5,20 +5,34 @@ pragma solidity ^0.8.20;
 import {IERC1155Receiver} from "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 
 /// @notice Facilitates base-chain trading of an asset that is living on a different app-chain.
-/// @dev The contract should never hold any ETH itself.
 interface IOrderbookDex is IERC1155Receiver {
     struct Order {
+        /// @dev The asset's unique token identifier.
         uint256 assetId;
+        /// @dev The amount of the asset that is available to be sold.
         uint256 assetAmount;
+        /// @dev The price per one unit of asset.
         uint256 pricePerAsset;
     }
 
+    /// @param seller The seller's address.
+    /// @param orderId The order's unique identifier.
+    /// @param assetId The asset's unique token identifier.
+    /// @param assetAmount The amount of the asset that has been put for sale.
+    /// @param pricePerAsset The requested price per one unit of asset.
     event OrderCreated(
         address indexed seller,
         uint256 indexed orderId,
+        uint256 indexed assetId,
         uint256 assetAmount,
         uint256 pricePerAsset
     );
+
+    /// @param seller The seller's address.
+    /// @param orderId The order's unique identifier.
+    /// @param buyer The buyer's address.
+    /// @param assetAmount The amount of the asset that was traded.
+    /// @param pricePerAsset The price per one unit of asset that was paid.
     event OrderFilled(
         address indexed seller,
         uint256 indexed orderId,
@@ -26,50 +40,51 @@ interface IOrderbookDex is IERC1155Receiver {
         uint256 assetAmount,
         uint256 pricePerAsset
     );
+
+    /// @param seller The seller's address.
+    /// @param orderId The order's unique identifier.
     event OrderCancelled(address indexed seller, uint256 indexed orderId);
 
-    /// @notice Returns the address of the asset that is being traded.
+    /// @notice Returns the address of the asset that is being traded in this DEX contract.
     function getAsset() external view returns (address);
 
-    /// @notice Returns the seller's current `orderId` (index that their new sell order will be mapped to).
-    function getSellerOrderId(address seller) external view returns (uint256);
+    /// @notice Returns the `orderId` of the next sell order of `seller`.
+    function getNextOrderId(address seller) external view returns (uint256);
 
-    /// @notice Returns the Order struct information about an order identified by the combination `<seller, orderId>`.
-    function getOrder(address seller, uint256 orderId) external view returns (Order memory);
+    /// @notice Returns the Order struct information about an order identified by the `orderId`.
+    function getOrder(uint256 orderId) external view returns (Order memory);
 
-    /// @notice Creates a sell order with incremental seller-specific `orderId` for the specified `assetAmount` at specified `pricePerAsset`.
-    /// @dev The order information is saved in a nested mapping `seller address -> orderId -> Order`.
+    /// @notice Creates a sell order for the `assetAmount` of `assetId` at `pricePerAsset`.
+    /// @dev The order information is saved in a mapping `orderId -> Order`.
+    /// orderId SHOULD be created by packing the seller's address (uint160) and their incremental `sellerOrderNonce` (uint96) into uint256.
+    /// MUST transfer the `assetAmount` of `assetId` from the seller to the contract.
     /// MUST emit `OrderCreated` event.
     function createSellOrder(uint256 assetId, uint256 assetAmount, uint256 pricePerAsset) external;
 
-    /// @notice Consecutively fills an array of orders identified by the combination `<seller, orderId>`,
+    /// @notice Consecutively fills an array of orders identified by the `orderId` of each order,
     /// by providing an exact amount of ETH and requesting a specific minimum amount of asset to receive.
     /// @dev Transfers portions of msg.value to the orders' sellers according to the price.
     /// The sum of asset amounts of filled orders MUST be at least `minimumAsset`.
     /// If msg.value is more than the sum of orders' prices, it MUST refund the excess back to msg.sender.
-    /// MUST change the `assetAmount` parameter for the specified order according to how much of it was filled.
+    /// MUST decrease the `assetAmount` parameter for the specified order according to how much of it was filled,
+    /// and transfer that amount of the order's `assetId` to the buyer.
     /// MUST emit `OrderFilled` event for each order accordingly.
-    function fillOrdersExactEth(
-        uint256 minimumAsset,
-        address payable[] memory sellers,
-        uint256[] memory orderIds
-    ) external payable;
+    function fillOrdersExactEth(uint256 minimumAsset, uint256[] memory orderIds) external payable;
 
-    /// @notice Consecutively fills an array of orders identified by the combination `<seller, orderId>`,
+    /// @notice Consecutively fills an array of orders identified by the `orderId` of each order,
     /// by providing a possibly surplus amount of ETH and requesting an exact amount of asset to receive.
     /// @dev Transfers portions of msg.value to the orders' sellers according to the price.
     /// The sum of asset amounts of filled orders MUST be exactly `assetAmount`. Excess ETH MUST be returned back to `msg.sender`.
-    /// MUST change the `assetAmount` parameter for the specified order according to how much of it was filled.
+    /// MUST decrease the `assetAmount` parameter for the specified order according to how much of it was filled,
+    /// and transfer that amount of the order's `assetId` to the buyer.
     /// MUST emit `OrderFilled` event for each order accordingly.
     /// If msg.value is more than the sum of orders' prices, it MUST refund the difference back to msg.sender.
-    function fillOrdersExactAsset(
-        uint256 assetAmount,
-        address payable[] memory sellers,
-        uint256[] memory orderIds
-    ) external payable;
+    function fillOrdersExactAsset(uint256 assetAmount, uint256[] memory orderIds) external payable;
 
-    /// @notice Cancels the sell order identified by combination `<msg.sender, orderId>`, making it unfillable.
-    /// @dev MUST change the `assetAmount` parameter for the specified order to `0`.
+    /// @notice Cancels the sell order identified by the `orderId`, transferring the order's assets back to the seller.
+    /// @dev MUST revert if the seller decoded from the `orderId` is not `msg.sender`.
+    /// MUST change the `assetAmount` parameter for the specified order to `0`.
     /// MUST emit `OrderCancelled` event.
+    /// MUST transfer the `assetAmount` of `assetId` back to the seller.
     function cancelSellOrder(uint256 orderId) external;
 }

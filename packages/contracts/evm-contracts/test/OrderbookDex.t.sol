@@ -6,6 +6,7 @@ import {CTest} from "../test-lib/ctest.sol";
 
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {ERC1155Holder} from "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
+import {IERC1155Receiver} from "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
 import {IInverseAppProjected1155} from "../contracts/token/IInverseAppProjected1155.sol";
@@ -36,19 +37,26 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
 
     function test_SupportsInterface() public {
         assertTrue(dex.supportsInterface(type(IERC165).interfaceId));
+        assertTrue(dex.supportsInterface(type(IERC165).interfaceId));
         assertTrue(dex.supportsInterface(type(IOrderbookDex).interfaceId));
     }
 
     function test_CreateOrderSatisfiesRequirements() public {
-        uint256 orderId = dex.getSellerOrderId(address(this));
         uint256 assetAmount = 100;
         uint256 pricePerAsset = 200;
+        uint256 orderId = dex.getNextOrderId(address(this));
 
         uint256 assetId = asset.mint(assetAmount, "");
         vm.expectEmit(true, true, true, true);
-        emit IOrderbookDex.OrderCreated(address(this), orderId, assetAmount, pricePerAsset);
+        emit IOrderbookDex.OrderCreated(
+            address(this),
+            orderId,
+            assetId,
+            assetAmount,
+            pricePerAsset
+        );
         dex.createSellOrder(assetId, assetAmount, pricePerAsset);
-        IOrderbookDex.Order memory order = dex.getOrder(address(this), orderId);
+        IOrderbookDex.Order memory order = dex.getOrder(orderId);
         assertEq(order.assetId, assetId);
         assertEq(order.assetAmount, assetAmount);
         assertEq(order.pricePerAsset, pricePerAsset);
@@ -56,15 +64,15 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
     }
 
     function test_CancelOrderSatisfiesRequirements() public {
-        uint256 orderId = dex.getSellerOrderId(address(this));
         uint256 assetAmount = 100;
         uint256 assetId = asset.mint(assetAmount, "");
+        uint256 orderId = dex.getNextOrderId(address(this));
         dex.createSellOrder(assetId, assetAmount, 200);
 
         vm.expectEmit(true, true, true, true);
         emit IOrderbookDex.OrderCancelled(address(this), orderId);
         dex.cancelSellOrder(orderId);
-        IOrderbookDex.Order memory order = dex.getOrder(address(this), orderId);
+        IOrderbookDex.Order memory order = dex.getOrder(orderId);
         assertEq(order.assetAmount, 0);
         assertEq(asset.balanceOf(address(dex), assetId), 0);
         assertEq(asset.balanceOf(address(this), assetId), assetAmount);
@@ -81,9 +89,8 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
         for (uint256 i = 0; i < ordersCount; i++) {
             address payable seller = payable(vm.addr(uint256(keccak256(abi.encodePacked(i)))));
             uint256 assetAmount = price / (ordersCount - i);
-            uint256 orderId = dex.getSellerOrderId(seller);
             uint256 pricePerAsset = price / assetAmount;
-            orderIds[i] = orderId;
+            orderIds[i] = dex.getNextOrderId(seller);
             sellers[i] = seller;
             vm.startPrank(seller);
             uint256 assetId = asset.mint(assetAmount, "");
@@ -100,7 +107,7 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
             uint256[] memory ordersAssetAmounts = new uint256[](ordersCount);
             uint256 totalExpectedPayout;
             for (uint256 i = 0; i < ordersCount; i++) {
-                IOrderbookDex.Order memory order = dex.getOrder(sellers[i], orderIds[i]);
+                IOrderbookDex.Order memory order = dex.getOrder(orderIds[i]);
                 expectedPayouts[i] = order.pricePerAsset * order.assetAmount;
                 ordersAssetAmounts[i] = order.assetAmount;
                 totalExpectedPayout += expectedPayouts[i];
@@ -115,15 +122,11 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
                 );
             }
             vm.startPrank(buyer);
-            dex.fillOrdersExactEth{value: totalExpectedPayout + 1000}(
-                totalAssetAmount,
-                sellers,
-                orderIds
-            );
+            dex.fillOrdersExactEth{value: totalExpectedPayout + 1000}(totalAssetAmount, orderIds);
 
             assertEq(buyer.balance, buyerBalanceBefore - totalExpectedPayout);
             for (uint256 i = 0; i < ordersCount; i++) {
-                IOrderbookDex.Order memory order = dex.getOrder(sellers[i], orderIds[i]);
+                IOrderbookDex.Order memory order = dex.getOrder(orderIds[i]);
                 assertEq(sellers[i].balance, sellersBalancesBefore[i] + expectedPayouts[i]);
                 assertEq(order.assetAmount, 0);
                 assertEq(asset.balanceOf(address(dex), order.assetId), 0);
@@ -143,9 +146,8 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
         for (uint256 i = 0; i < ordersCount; i++) {
             address payable seller = payable(vm.addr(uint256(keccak256(abi.encodePacked(i)))));
             uint256 assetAmount = price / (ordersCount - i);
-            uint256 orderId = dex.getSellerOrderId(seller);
             uint256 pricePerAsset = price / assetAmount;
-            orderIds[i] = orderId;
+            orderIds[i] = dex.getNextOrderId(seller);
             sellers[i] = seller;
             vm.startPrank(seller);
             uint256 assetId = asset.mint(assetAmount, "");
@@ -162,7 +164,7 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
             uint256[] memory ordersAssetAmounts = new uint256[](ordersCount);
             uint256 totalExpectedPayout;
             for (uint256 i = 0; i < ordersCount; i++) {
-                IOrderbookDex.Order memory order = dex.getOrder(sellers[i], orderIds[i]);
+                IOrderbookDex.Order memory order = dex.getOrder(orderIds[i]);
                 expectedPayouts[i] = order.pricePerAsset * order.assetAmount;
                 ordersAssetAmounts[i] = order.assetAmount;
                 totalExpectedPayout += expectedPayouts[i];
@@ -177,15 +179,11 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
                 );
             }
             vm.startPrank(buyer);
-            dex.fillOrdersExactAsset{value: totalExpectedPayout + 1000}(
-                totalAssetAmount,
-                sellers,
-                orderIds
-            );
+            dex.fillOrdersExactAsset{value: totalExpectedPayout + 1000}(totalAssetAmount, orderIds);
 
             assertEq(buyer.balance, buyerBalanceBefore - totalExpectedPayout);
             for (uint256 i = 0; i < ordersCount; i++) {
-                IOrderbookDex.Order memory order = dex.getOrder(sellers[i], orderIds[i]);
+                IOrderbookDex.Order memory order = dex.getOrder(orderIds[i]);
                 assertEq(sellers[i].balance, sellersBalancesBefore[i] + expectedPayouts[i]);
                 assertEq(order.assetAmount, 0);
                 assertEq(asset.balanceOf(address(dex), order.assetId), 0);
@@ -207,28 +205,22 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
         address buyer = alice;
         address payable seller = payable(address(this));
         vm.deal(buyer, assetAmount * pricePerAsset);
-        uint256 orderId = dex.getSellerOrderId(address(this));
+        uint256 orderId = dex.getNextOrderId(seller);
         vm.startPrank(seller);
         uint256 assetId = asset.mint(assetAmount, "");
         asset.setApprovalForAll(address(dex), true);
         dex.createSellOrder(assetId, assetAmount, pricePerAsset);
 
         uint256 buyerBalanceBefore = buyer.balance;
-        uint256 sellerBalanceBefore = address(this).balance;
-        address payable[] memory sellers = new address payable[](1);
-        sellers[0] = seller;
+        uint256 sellerBalanceBefore = seller.balance;
         uint256[] memory orderIds = new uint256[](1);
         orderIds[0] = orderId;
         vm.startPrank(buyer);
-        dex.fillOrdersExactEth{value: assetAmountToBuy * pricePerAsset}(
-            assetAmountToBuy,
-            sellers,
-            orderIds
-        );
+        dex.fillOrdersExactEth{value: assetAmountToBuy * pricePerAsset}(assetAmountToBuy, orderIds);
 
-        IOrderbookDex.Order memory order = dex.getOrder(address(this), orderId);
+        IOrderbookDex.Order memory order = dex.getOrder(orderId);
         assertEq(buyer.balance, buyerBalanceBefore - (assetAmountToBuy * pricePerAsset));
-        assertEq(address(this).balance, sellerBalanceBefore + (assetAmountToBuy * pricePerAsset));
+        assertEq(seller.balance, sellerBalanceBefore + (assetAmountToBuy * pricePerAsset));
         assertEq(order.assetAmount, assetAmount - assetAmountToBuy);
         assertEq(asset.balanceOf(address(dex), assetId), assetAmount - assetAmountToBuy);
         assertEq(asset.balanceOf(buyer, assetId), assetAmountToBuy);
@@ -247,24 +239,22 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
         address buyer = alice;
         address payable seller = payable(address(this));
         vm.deal(buyer, assetAmount * pricePerAsset);
-        uint256 orderId = dex.getSellerOrderId(address(this));
+        uint256 orderId = dex.getNextOrderId(seller);
         vm.startPrank(seller);
         uint256 assetId = asset.mint(assetAmount, "");
         asset.setApprovalForAll(address(dex), true);
         dex.createSellOrder(assetId, assetAmount, pricePerAsset);
 
         uint256 buyerBalanceBefore = buyer.balance;
-        uint256 sellerBalanceBefore = address(this).balance;
-        address payable[] memory sellers = new address payable[](1);
-        sellers[0] = seller;
+        uint256 sellerBalanceBefore = seller.balance;
         uint256[] memory orderIds = new uint256[](1);
         orderIds[0] = orderId;
         vm.startPrank(buyer);
-        dex.fillOrdersExactAsset{value: buyerBalanceBefore}(assetAmountToBuy, sellers, orderIds);
+        dex.fillOrdersExactAsset{value: buyerBalanceBefore}(assetAmountToBuy, orderIds);
 
-        IOrderbookDex.Order memory order = dex.getOrder(address(this), orderId);
+        IOrderbookDex.Order memory order = dex.getOrder(orderId);
         assertEq(buyer.balance, buyerBalanceBefore - (assetAmountToBuy * pricePerAsset));
-        assertEq(address(this).balance, sellerBalanceBefore + (assetAmountToBuy * pricePerAsset));
+        assertEq(seller.balance, sellerBalanceBefore + (assetAmountToBuy * pricePerAsset));
         assertEq(order.assetAmount, assetAmount - assetAmountToBuy);
         assertEq(asset.balanceOf(address(dex), assetId), assetAmount - assetAmountToBuy);
         assertEq(asset.balanceOf(buyer, assetId), assetAmountToBuy);
@@ -280,17 +270,15 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
         vm.assume(pricePerAsset < type(uint256).max / assetAmount / multiplier);
 
         vm.deal(alice, assetAmount * pricePerAsset * multiplier);
-        uint256 orderId = dex.getSellerOrderId(address(this));
+        uint256 orderId = dex.getNextOrderId(address(this));
         uint256 assetId = asset.mint(assetAmount, "");
         dex.createSellOrder(assetId, assetAmount, pricePerAsset);
 
         uint256 aliceBalanceBefore = alice.balance;
-        address payable[] memory sellers = new address payable[](1);
-        sellers[0] = payable(address(this));
         uint256[] memory orderIds = new uint256[](1);
         orderIds[0] = orderId;
         vm.startPrank(alice);
-        dex.fillOrdersExactEth{value: alice.balance}(assetAmount, sellers, orderIds);
+        dex.fillOrdersExactEth{value: alice.balance}(assetAmount, orderIds);
         assertEq(alice.balance, aliceBalanceBefore - (assetAmount * pricePerAsset));
     }
 
@@ -304,38 +292,34 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
         vm.assume(pricePerAsset < type(uint256).max / assetAmount / multiplier);
 
         vm.deal(alice, assetAmount * pricePerAsset * multiplier);
-        uint256 orderId = dex.getSellerOrderId(address(this));
+        uint256 orderId = dex.getNextOrderId(address(this));
         uint256 assetId = asset.mint(assetAmount, "");
         dex.createSellOrder(assetId, assetAmount, pricePerAsset);
 
         uint256 aliceBalanceBefore = alice.balance;
-        address payable[] memory sellers = new address payable[](1);
-        sellers[0] = payable(address(this));
         uint256[] memory orderIds = new uint256[](1);
         orderIds[0] = orderId;
         vm.startPrank(alice);
-        dex.fillOrdersExactAsset{value: alice.balance}(assetAmount, sellers, orderIds);
+        dex.fillOrdersExactAsset{value: alice.balance}(assetAmount, orderIds);
         assertEq(alice.balance, aliceBalanceBefore - (assetAmount * pricePerAsset));
     }
 
     function test_WontFillOrderIfCancelled() public {
         uint256 assetAmount = 100;
         uint256 pricePerAsset = 200;
-        uint256 orderId = dex.getSellerOrderId(address(this));
+        uint256 orderId = dex.getNextOrderId(address(this));
         uint256 assetId = asset.mint(assetAmount, "");
         dex.createSellOrder(assetId, assetAmount, pricePerAsset);
         dex.cancelSellOrder(orderId);
 
         uint256 aliceBalanceBefore = alice.balance;
-        address payable[] memory sellers = new address payable[](1);
-        sellers[0] = payable(address(this));
         uint256[] memory orderIds = new uint256[](1);
         orderIds[0] = orderId;
         vm.startPrank(alice);
 
-        dex.fillOrdersExactEth{value: assetAmount * pricePerAsset}(0, sellers, orderIds);
+        dex.fillOrdersExactEth{value: assetAmount * pricePerAsset}(0, orderIds);
         assertEq(alice.balance, aliceBalanceBefore);
-        dex.fillOrdersExactAsset{value: assetAmount * pricePerAsset}(0, sellers, orderIds);
+        dex.fillOrdersExactAsset{value: assetAmount * pricePerAsset}(0, orderIds);
         assertEq(alice.balance, aliceBalanceBefore);
     }
 
@@ -346,36 +330,33 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
         dex.createSellOrder(assetId, 0, 100);
     }
 
-    function test_CannotCancelOrderIfDoesNotExist() public {
-        uint256 orderId = dex.getSellerOrderId(address(this));
-        vm.expectRevert(abi.encodeWithSelector(OrderbookDex.OrderDoesNotExist.selector, orderId));
+    function test_CannotCancelOrderIfUnauthorized() public {
+        uint256 orderId = dex.getNextOrderId(address(this));
+        uint256 assetId = asset.mint(100, "");
+        dex.createSellOrder(assetId, 100, 200);
+
+        vm.startPrank(alice);
+        vm.expectRevert(OrderbookDex.Unauthorized.selector);
         dex.cancelSellOrder(orderId);
     }
 
-    function testFuzz_CannotFillOrderWithInvalidInputArity(
-        address payable[] memory sellers,
-        uint256[] memory orderIds
-    ) public {
-        vm.assume(sellers.length != orderIds.length);
-
-        vm.expectRevert(OrderbookDex.InvalidInputArity.selector);
-        dex.fillOrdersExactEth(0, sellers, orderIds);
-
-        vm.expectRevert(OrderbookDex.InvalidInputArity.selector);
-        dex.fillOrdersExactAsset(0, sellers, orderIds);
+    function test_CannotCancelOrderIfDoesNotExist() public {
+        uint256 orderId = dex.getNextOrderId(address(this));
+        vm.expectRevert(abi.encodeWithSelector(OrderbookDex.OrderDoesNotExist.selector, orderId));
+        dex.cancelSellOrder(orderId);
     }
 
     function test_CannotFillOrderIfInsufficientEndAmountExactEth() public {
         uint256 assetAmount = 10;
         uint256 pricePerAsset = 100;
-        uint256 orderId = dex.getSellerOrderId(address(this));
+        uint256 orderId = dex.getNextOrderId(address(this));
         uint256 assetId = asset.mint(assetAmount, "");
         dex.createSellOrder(assetId, assetAmount, pricePerAsset);
 
-        uint256[] memory orderIds = new uint256[](1);
-        orderIds[0] = orderId;
         address payable[] memory sellers = new address payable[](1);
         sellers[0] = payable(address(this));
+        uint256[] memory orderIds = new uint256[](1);
+        orderIds[0] = orderId;
         vm.startPrank(alice);
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -384,24 +365,20 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
                 assetAmount
             )
         );
-        dex.fillOrdersExactEth{value: assetAmount * pricePerAsset}(
-            assetAmount + 1,
-            sellers,
-            orderIds
-        );
+        dex.fillOrdersExactEth{value: assetAmount * pricePerAsset}(assetAmount + 1, orderIds);
     }
 
     function test_CannotFillOrderIfInsufficientEndAmountExactAsset() public {
         uint256 assetAmount = 10;
         uint256 pricePerAsset = 100;
-        uint256 orderId = dex.getSellerOrderId(address(this));
+        uint256 orderId = dex.getNextOrderId(address(this));
         uint256 assetId = asset.mint(assetAmount, "");
         dex.createSellOrder(assetId, assetAmount, pricePerAsset);
 
-        uint256[] memory orderIds = new uint256[](1);
-        orderIds[0] = orderId;
         address payable[] memory sellers = new address payable[](1);
         sellers[0] = payable(address(this));
+        uint256[] memory orderIds = new uint256[](1);
+        orderIds[0] = orderId;
         vm.startPrank(alice);
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -410,11 +387,7 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
                 assetAmount
             )
         );
-        dex.fillOrdersExactAsset{value: assetAmount * pricePerAsset}(
-            assetAmount + 1,
-            sellers,
-            orderIds
-        );
+        dex.fillOrdersExactAsset{value: assetAmount * pricePerAsset}(assetAmount + 1, orderIds);
     }
 
     function test_CannotSendEtherToDex() public {
