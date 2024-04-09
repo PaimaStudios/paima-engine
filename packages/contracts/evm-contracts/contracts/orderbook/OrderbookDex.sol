@@ -181,18 +181,13 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, ReentrancyGuard {
     /// @dev MUST change the `assetAmount` parameter for the specified order to `0`.
     /// MUST emit `OrderCancelled` event.
     function cancelSellOrder(uint256 orderId) public virtual {
-        Order memory order = orders[msg.sender][orderId];
+        Order storage order = orders[msg.sender][orderId];
+        uint256 assetAmount = order.assetAmount;
         if (order.assetAmount == 0) {
             revert OrderDoesNotExist(orderId);
         }
-        orders[msg.sender][orderId].assetAmount = 0;
-        asset.safeTransferFrom(
-            address(this),
-            msg.sender,
-            order.assetId,
-            order.assetAmount,
-            bytes("")
-        );
+        order.assetAmount = 0;
+        asset.safeTransferFrom(address(this), msg.sender, order.assetId, assetAmount, bytes(""));
         emit OrderCancelled(msg.sender, orderId);
     }
 
