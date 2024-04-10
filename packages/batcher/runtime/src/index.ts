@@ -148,7 +148,8 @@ function checkConfig(): boolean {
 
 async function main(): Promise<void> {
   if (!checkConfig()) {
-    process.exit(1);
+    process.exitCode = 1;
+    return;
   }
   await parseSecurityYaml();
 
