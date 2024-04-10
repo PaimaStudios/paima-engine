@@ -329,38 +329,7 @@ async function processCardanoCdeData(
 ): Promise<number> {
   return await processCdeDataBase(cdeData, dbTx, inPresync, async () => {
     if ('cursor' in paginationCursor) {
-      await updateCardanoPaginationCursor.run(
-        {
-          cde_id: paginationCursor.cdeId,
-          cursor: paginationCursor.cursor,
-          finished: paginationCursor.finished,
-        },
-        dbTx
-      );
-    } else {
-      await updateCardanoPaginationCursor.run(
-        {
-          cde_id: paginationCursor.cdeId,
-          cursor: paginationCursor.slot.toString(),
-          finished: paginationCursor.finished,
-        },
-        dbTx
-      );
-    }
-    return;
-  });
-}
-
-async function processMinaCdeData(
-  paginationCursor:
-    | { cdeId: number; cursor: string; finished: boolean }
-    | { cdeId: number; slot: number; finished: boolean },
-  cdeData: ChainDataExtensionDatum[] | undefined,
-  dbTx: PoolClient,
-  inPresync: boolean
-): Promise<number> {
-  return await processCdeDataBase(cdeData, dbTx, inPresync, async () => {
-    if ('cursor' in paginationCursor) {
+      console.log('cursor', paginationCursor);
       await updateCardanoPaginationCursor.run(
         {
           cde_id: paginationCursor.cdeId,

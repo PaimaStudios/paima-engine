@@ -12,10 +12,9 @@ export async function getEventCdeData(
   fromTimestamp: number,
   toTimestamp: number,
   getBlockNumber: (minaTimestamp: number) => number,
-  network: string
+  network: string,
+  cursor?: string
 ): Promise<CdeMinaEventGenericDatum[]> {
-  console.log('from,to', fromTimestamp, toTimestamp);
-
   const grouped = [] as {
     blockInfo: {
       height: number;
@@ -24,6 +23,8 @@ export async function getEventCdeData(
     // TODO: could each data by just a tuple?
     eventData: { data: string[][]; txHash: string }[];
   }[];
+
+  const after = cursor ? `after: "${cursor}"` : '';
 
   const data = await fetch(minaArchive, {
     method: 'POST',
@@ -39,7 +40,8 @@ export async function getEventCdeData(
             input: {
               address: "${extension.address}", 
               fromTimestamp: "${fromTimestamp}", 
-              toTimestamp: "${toTimestamp}" 
+              toTimestamp: "${toTimestamp}",
+              ${after}
             }
           ) {
             blockInfo {
@@ -58,10 +60,6 @@ export async function getEventCdeData(
     }),
   })
     .then(res => res.json())
-    .then(res => {
-      console.log('res', JSON.stringify(res, undefined, '\t'));
-      return res;
-    })
     .then(json => json.data.events);
 
   const events = data as {
@@ -105,8 +103,11 @@ export async function getActionCdeData(
   fromTimestamp: number,
   toTimestamp: number,
   getBlockNumber: (minaTimestamp: number) => number,
-  network: string
+  network: string,
+  cursor?: string
 ): Promise<CdeMinaActionGenericDatum[]> {
+  const after = cursor ? `after: "${cursor}"` : '';
+
   const data = await fetch(minaArchive, {
     method: 'POST',
 
@@ -122,6 +123,7 @@ export async function getActionCdeData(
               address: "${extension.address}",
               fromTimestamp: "${fromTimestamp}",
               toTimestamp: "${toTimestamp}"
+              ${after}
             }
           ) {
             blockInfo {
@@ -144,7 +146,7 @@ export async function getActionCdeData(
 
   const actions = data as {
     blockInfo: { height: number; timestamp: string };
-    actionData: { data: string[]; hash: string }[];
+    actionData: { data: string[]; transactionInfo: { hash: string } }[];
   }[];
 
   const grouped = [] as {
@@ -162,11 +164,11 @@ export async function getActionCdeData(
     for (const blockEvent of block.actionData) {
       if (
         actionData[actionData.length - 1] &&
-        blockEvent.hash == actionData[actionData.length - 1].txHash
+        blockEvent.transactionInfo.hash == actionData[actionData.length - 1].txHash
       ) {
         actionData[actionData.length - 1].data.push(blockEvent.data);
       } else {
-        actionData.push({ txHash: blockEvent.hash, data: [blockEvent.data] });
+        actionData.push({ txHash: blockEvent.transactionInfo.hash, data: [blockEvent.data] });
       }
     }
 

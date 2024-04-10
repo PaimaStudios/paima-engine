@@ -61,6 +61,8 @@ function baseChainTimestampToMina(baseChainTimestamp: number, confirmationDepth:
 // TODO: maybe using the node's rpc here it's not really safe? if it's out of
 // sync with the archive db we could end up skipping events
 // it would be better to have an endpoint for this on the archive api
+// either that, or the archive node api should take a block hash, and if it's
+// not there it should return an error.
 async function findMinaConfirmedSlot(graphql: string, confirmationDepth: number): Promise<number> {
   const body = JSON.stringify({
     query: `
@@ -277,7 +279,8 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
                   from,
                   startingSlotTimestamp - 1,
                   x => minaTimestampToSlot(x, cache.genesisTime),
-                  this.chainName
+                  this.chainName,
+                  cursor?.cursor
                 ).then(mapCursorPaginatedData(extension.cdeId));
 
                 return data.then(data => ({
@@ -296,7 +299,8 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
                   from,
                   startingSlotTimestamp - 1,
                   x => minaTimestampToSlot(x, cache.genesisTime),
-                  this.chainName
+                  this.chainName,
+                  cursor?.cursor
                 ).then(mapCursorPaginatedData(extension.cdeId));
 
                 return data.then(data => ({
@@ -333,8 +337,6 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
       return baseData;
     } catch (err) {
       doLog(`[paima-funnel::readPresyncData] Exception occurred while reading blocks: ${err}`);
-
-      process.exit(1);
 
       throw err;
     }
