@@ -359,11 +359,8 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
 
       const genesisTime = await getGenesisTime(config.graphql);
 
-      console.log('startingBlockHeight', startingBlockHeight);
       const startingBlockTimestamp = (await sharedData.web3.eth.getBlock(startingBlockHeight))
         .timestamp as number;
-
-      console.log('startingBlockTimestamp', startingBlockTimestamp);
 
       const slot = minaTimestampToSlot(
         baseChainTimestampToMina(startingBlockTimestamp, config.confirmationDepth),
@@ -372,11 +369,7 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
 
       const slotAsMinaTimestamp = slotToMinaTimestamp(slot, genesisTime);
 
-      console.log('slot', slot, slotAsMinaTimestamp);
-
       newEntry.updateStartingSlot(slotAsMinaTimestamp, genesisTime);
-
-      console.log('starting slot timestamp', newEntry.getState().startingSlotTimestamp);
 
       const cursors = await getCarpCursors.run(undefined, dbTx);
 
