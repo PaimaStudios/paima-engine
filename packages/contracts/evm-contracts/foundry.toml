@@ -2,7 +2,7 @@
 src = 'contracts' # the source directory
 test = 'test' # the test directory
 out = 'artifacts/forge' # the output directory (for artifacts)
-libs = ['test-lib'] # a list of library directories    
+libs = ['test-lib'] # a list of library directories
 remappings = [ # a list of remappings
   '@openzeppelin/=../../../node_modules/@openzeppelin/',
 ]
@@ -31,3 +31,5 @@ evm_version = 'berlin' # the evm version (by hardfork name)
 #block_coinbase = '0x0000000000000000000000000000000000000000' # the address of `block.coinbase` in tests
 #block_timestamp = 0                                           # the value of `block.timestamp` in tests
 #block_difficulty = 0                                          # the value of `block.difficulty` in tests
+[invariant]
+fail_on_revert = true

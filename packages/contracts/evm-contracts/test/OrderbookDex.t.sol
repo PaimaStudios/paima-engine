@@ -451,7 +451,7 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
         dex.createSellOrder(assetId, 100, 200);
 
         vm.startPrank(alice);
-        vm.expectRevert(OrderbookDex.Unauthorized.selector);
+        vm.expectRevert(abi.encodeWithSelector(OrderbookDex.Unauthorized.selector, alice));
         dex.cancelSellOrder(orderId);
     }
 
@@ -499,7 +499,7 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
         orderIds[0] = orderId;
 
         vm.startPrank(alice);
-        vm.expectRevert(OrderbookDex.Unauthorized.selector);
+        vm.expectRevert(abi.encodeWithSelector(OrderbookDex.Unauthorized.selector, alice));
         dex.cancelBatchSellOrder(orderIds);
     }
 

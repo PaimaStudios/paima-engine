@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.5.0;
 
-contract CTest {
+import {StdInvariant} from "./StdInvariant.sol";
+
+contract CTest is StdInvariant {
     event log(string);
     event logs(bytes);
 

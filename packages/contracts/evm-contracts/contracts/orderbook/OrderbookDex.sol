@@ -24,7 +24,7 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, ReentrancyGuard {
     error InsufficientEndAmount(uint256 expectedAmount, uint256 actualAmount);
     error InvalidArrayLength();
     error InvalidInput(uint256 input);
-    error Unauthorized();
+    error Unauthorized(address sender);
 
     constructor(IInverseProjected1155 _asset) {
         asset = _asset;
@@ -209,7 +209,7 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, ReentrancyGuard {
     function cancelSellOrder(uint256 orderId) public virtual {
         Order storage order = orders[orderId];
         if (msg.sender != order.seller) {
-            revert Unauthorized();
+            revert Unauthorized(msg.sender);
         }
         uint256 assetAmount = order.assetAmount;
         delete order.assetAmount;
