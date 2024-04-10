@@ -216,7 +216,7 @@ CREATE TABLE cde_erc721_burn (
 `;
 
 const TABLE_DATA_CDE_ERC721_BURN: TableData = {
-  tableName: 'cde_erc721_data_burn',
+  tableName: 'cde_erc721_burn',
   primaryKeyColumns: ['cde_id', 'token_id'],
   columnData: packTuples([
     ['cde_id', 'integer', 'NO', ''],
