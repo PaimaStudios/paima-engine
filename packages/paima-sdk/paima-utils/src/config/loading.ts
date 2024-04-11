@@ -65,6 +65,7 @@ export const MinaConfigSchema = Type.Object({
   archive: Type.String(),
   graphql: Type.String(),
   confirmationDepth: Type.Number(),
+  paginationLimit: Type.Number({ default: 50 }),
   //presyncStepSize: Type.Number({ default: 1000 }),
 });
 
