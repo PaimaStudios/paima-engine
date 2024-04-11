@@ -44,18 +44,20 @@ async function getGenesisTime(graphql: string): Promise<number> {
   return Number.parseInt(genesisTime, 10);
 }
 
-const SLOT_DURATION = 3 * 60000;
-
-function slotToMinaTimestamp(slot: number, genesisTime: number): number {
-  return slot * SLOT_DURATION + genesisTime;
+function slotToMinaTimestamp(slot: number, genesisTime: number, slotDuration: number): number {
+  return slot * slotDuration * 1000 + genesisTime;
 }
 
-function minaTimestampToSlot(ts: number, genesisTime: number): number {
-  return Math.max(Math.floor((ts - genesisTime) / SLOT_DURATION), 0);
+function minaTimestampToSlot(ts: number, genesisTime: number, slotDuration: number): number {
+  return Math.max(Math.floor((ts - genesisTime) / (slotDuration * 1000)), 0);
 }
 
-function baseChainTimestampToMina(baseChainTimestamp: number, confirmationDepth: number): number {
-  return Math.max(baseChainTimestamp * 1000 - SLOT_DURATION * confirmationDepth, 0);
+function baseChainTimestampToMina(
+  baseChainTimestamp: number,
+  confirmationDepth: number,
+  slotDuration: number
+): number {
+  return Math.max(baseChainTimestamp * 1000 - slotDuration * 1000 * confirmationDepth, 0);
 }
 
 // TODO: maybe using the node's rpc here it's not really safe? if it's out of
@@ -130,7 +132,11 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
       this.config.confirmationDepth
     );
 
-    const confirmedTimestamp = slotToMinaTimestamp(confirmedSlot, cachedState.genesisTime);
+    const confirmedTimestamp = slotToMinaTimestamp(
+      confirmedSlot,
+      cachedState.genesisTime,
+      this.config.slotDuration
+    );
 
     const fromTimestamp =
       this.cache.getState().lastPoint?.timestamp || cachedState.startingSlotTimestamp;
@@ -139,12 +145,21 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
       confirmedTimestamp,
       baseChainTimestampToMina(
         baseData[baseData.length - 1].timestamp,
-        this.config.confirmationDepth
+        this.config.confirmationDepth,
+        this.config.slotDuration
       )
     );
 
-    const fromSlot = minaTimestampToSlot(fromTimestamp, cachedState.genesisTime);
-    const toSlot = minaTimestampToSlot(toTimestamp, cachedState.genesisTime);
+    const fromSlot = minaTimestampToSlot(
+      fromTimestamp,
+      cachedState.genesisTime,
+      this.config.slotDuration
+    );
+    const toSlot = minaTimestampToSlot(
+      toTimestamp,
+      cachedState.genesisTime,
+      this.config.slotDuration
+    );
 
     const mapSlotsToEvmNumbers: { [slot: number]: number } = {};
 
@@ -154,8 +169,13 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
       while (
         curr < baseData.length &&
         minaTimestampToSlot(
-          baseChainTimestampToMina(baseData[curr].timestamp, this.config.confirmationDepth),
-          cachedState.genesisTime
+          baseChainTimestampToMina(
+            baseData[curr].timestamp,
+            this.config.confirmationDepth,
+            this.config.slotDuration
+          ),
+          cachedState.genesisTime,
+          this.config.slotDuration
         ) < slot
       )
         curr++;
@@ -174,7 +194,10 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
               extension,
               fromTimestamp,
               toTimestamp,
-              ts => mapSlotsToEvmNumbers[minaTimestampToSlot(ts, cachedState.genesisTime)],
+              ts =>
+                mapSlotsToEvmNumbers[
+                  minaTimestampToSlot(ts, cachedState.genesisTime, this.config.slotDuration)
+                ],
               this.chainName
             );
 
@@ -187,7 +210,10 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
               extension,
               fromTimestamp,
               toTimestamp,
-              ts => mapSlotsToEvmNumbers[minaTimestampToSlot(ts, cachedState.genesisTime)],
+              ts =>
+                mapSlotsToEvmNumbers[
+                  minaTimestampToSlot(ts, cachedState.genesisTime, this.config.slotDuration)
+                ],
               this.chainName
             );
 
@@ -269,7 +295,11 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
             })
             .map(extension => {
               if (extension.cdeType === ChainDataExtensionType.MinaEventGeneric) {
-                let from = slotToMinaTimestamp(extension.startSlot, cache.genesisTime);
+                let from = slotToMinaTimestamp(
+                  extension.startSlot,
+                  cache.genesisTime,
+                  this.config.slotDuration
+                );
 
                 const cursor = cursors && cursors[extension.cdeId];
 
@@ -278,7 +308,7 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
                   extension,
                   from,
                   startingSlotTimestamp - 1,
-                  x => minaTimestampToSlot(x, cache.genesisTime),
+                  x => minaTimestampToSlot(x, cache.genesisTime, this.config.slotDuration),
                   this.chainName,
                   cursor?.cursor
                 ).then(mapCursorPaginatedData(extension.cdeId));
@@ -289,7 +319,11 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
                   data,
                 }));
               } else if (extension.cdeType === ChainDataExtensionType.MinaActionGeneric) {
-                let from = slotToMinaTimestamp(extension.startSlot, cache.genesisTime);
+                let from = slotToMinaTimestamp(
+                  extension.startSlot,
+                  cache.genesisTime,
+                  this.config.slotDuration
+                );
 
                 const cursor = cursors && cursors[extension.cdeId];
 
@@ -298,7 +332,7 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
                   extension,
                   from,
                   startingSlotTimestamp - 1,
-                  x => minaTimestampToSlot(x, cache.genesisTime),
+                  x => minaTimestampToSlot(x, cache.genesisTime, this.config.slotDuration),
                   this.chainName,
                   cursor?.cursor
                 ).then(mapCursorPaginatedData(extension.cdeId));
@@ -363,11 +397,16 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
         .timestamp as number;
 
       const slot = minaTimestampToSlot(
-        baseChainTimestampToMina(startingBlockTimestamp, config.confirmationDepth),
-        genesisTime
+        baseChainTimestampToMina(
+          startingBlockTimestamp,
+          config.confirmationDepth,
+          config.slotDuration
+        ),
+        genesisTime,
+        config.slotDuration
       );
 
-      const slotAsMinaTimestamp = slotToMinaTimestamp(slot, genesisTime);
+      const slotAsMinaTimestamp = slotToMinaTimestamp(slot, genesisTime, config.slotDuration);
 
       newEntry.updateStartingSlot(slotAsMinaTimestamp, genesisTime);
 
