@@ -11,7 +11,7 @@ import { BaseFunnel } from '../BaseFunnel.js';
 import type { FunnelSharedData } from '../BaseFunnel.js';
 import type { PoolClient } from 'pg';
 import { FUNNEL_PRESYNC_FINISHED, ConfigNetworkType } from '@paima/utils';
-import { getCarpCursors } from '@paima/db';
+import { getPaginationCursors } from '@paima/db';
 import { getActionCdeData, getEventCdeData } from '../../cde/minaGeneric.js';
 import type { MinaConfig } from '@paima/utils';
 import { MinaFunnelCacheEntry } from '../FunnelCache.js';
@@ -371,10 +371,10 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
 
       newEntry.updateStartingSlot(slotAsMinaTimestamp, genesisTime);
 
-      const cursors = await getCarpCursors.run(undefined, dbTx);
+      const cursors = await getPaginationCursors.run(undefined, dbTx);
 
       const extensions = sharedData.extensions
-        .filter(extensions => (extensions.network = chainName))
+        .filter(extensions => extensions.network === chainName)
         .map(extension => extension.cdeId);
 
       for (const cursor of cursors) {

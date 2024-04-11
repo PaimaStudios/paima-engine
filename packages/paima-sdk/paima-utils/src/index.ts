@@ -14,6 +14,7 @@ import {
   ConfigNetworkType,
   defaultEvmMainNetworkName,
   defaultCardanoNetworkName,
+  defaultMinaNetworkName,
 } from './config/loading.js';
 
 export * from './config.js';
@@ -39,6 +40,7 @@ export {
   ConfigNetworkType,
   defaultEvmMainNetworkName,
   defaultCardanoNetworkName,
+  defaultMinaNetworkName,
 };
 
 export const DEFAULT_GAS_PRICE = '61000000000' as const;

@@ -19,6 +19,7 @@ import {
   defaultEvmMainNetworkName,
   defaultCardanoNetworkName,
   getErc1155Contract,
+  defaultMinaNetworkName,
 } from '@paima/utils';
 
 import type {
@@ -345,8 +346,7 @@ async function instantiateExtension(
     case CdeEntryTypeName.MinaEventGeneric:
       return {
         ...config,
-        // TODO: unhardcode
-        network: config.network || 'mina',
+        network: config.network || defaultMinaNetworkName,
         cdeId: index,
         hash: hashConfig(config),
         cdeType: ChainDataExtensionType.MinaEventGeneric,
@@ -354,8 +354,7 @@ async function instantiateExtension(
     case CdeEntryTypeName.MinaActionGeneric:
       return {
         ...config,
-        // TODO: unhardcode
-        network: config.network || 'mina',
+        network: config.network || defaultMinaNetworkName,
         cdeId: index,
         hash: hashConfig(config),
         cdeType: ChainDataExtensionType.MinaActionGeneric,

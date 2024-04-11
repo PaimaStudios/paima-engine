@@ -118,16 +118,16 @@ const TABLE_DATA_CDE_TRACKING_CARDANO: TableData = {
   creationQuery: QUERY_CREATE_TABLE_CDE_TRACKING_CARDANO,
 };
 
-const QUERY_CREATE_TABLE_CDE_TRACKING_CARDANO_PAGINATION = `
-CREATE TABLE cde_tracking_cardano_pagination (
+const QUERY_CREATE_TABLE_CDE_TRACKING_CURSOR_PAGINATION = `
+CREATE TABLE cde_tracking_cursor_pagination (
   cde_id INTEGER PRIMARY KEY,
   cursor TEXT NOT NULL,
   finished BOOLEAN NOT NULL
 );
 `;
 
-const TABLE_DATA_CDE_TRACKING_CARDANO_PAGINATION: TableData = {
-  tableName: 'cde_tracking_cardano_pagination',
+const TABLE_DATA_CDE_TRACKING_CURSOR_PAGINATION: TableData = {
+  tableName: 'cde_tracking_cursor_pagination',
   primaryKeyColumns: ['cde_id'],
   columnData: packTuples([
     ['cde_id', 'integer', 'NO', ''],
@@ -135,7 +135,7 @@ const TABLE_DATA_CDE_TRACKING_CARDANO_PAGINATION: TableData = {
     ['finished', 'boolean', 'NO', ''],
   ]),
   serialColumns: [],
-  creationQuery: QUERY_CREATE_TABLE_CDE_TRACKING_CARDANO_PAGINATION,
+  creationQuery: QUERY_CREATE_TABLE_CDE_TRACKING_CURSOR_PAGINATION,
 };
 
 const QUERY_CREATE_TABLE_CDE = `
@@ -660,7 +660,7 @@ export const TABLES: TableData[] = [
   TABLE_DATA_ADDRESSES,
   TABLE_DATA_DELEGATIONS,
   TABLE_DATA_CARDANO_LAST_EPOCH,
-  TABLE_DATA_CDE_TRACKING_CARDANO_PAGINATION,
+  TABLE_DATA_CDE_TRACKING_CURSOR_PAGINATION,
   TABLE_DATA_CDE_CARDANO_TRANSFER,
   TABLE_DATA_CDE_CARDANO_MINT_BURN,
 ];

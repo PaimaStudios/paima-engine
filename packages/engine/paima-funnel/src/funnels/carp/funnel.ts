@@ -30,7 +30,7 @@ import { query } from '@dcspark/carp-client';
 import { Routes } from '@dcspark/carp-client';
 import { FUNNEL_PRESYNC_FINISHED, InternalEventType } from '@paima/utils';
 import { CarpFunnelCacheEntry } from '../FunnelCache.js';
-import { getCardanoEpoch, getCarpCursors } from '@paima/db';
+import { getCardanoEpoch, getPaginationCursors } from '@paima/db';
 import type { BlockTxPair } from '@dcspark/carp-client';
 
 const delayForWaitingForFinalityLoop = 1000;
@@ -246,7 +246,7 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
       Promise.all(
         this.sharedData.extensions
           .filter(extension => {
-            if (!('startSlot' in extension)) {
+            if (extension.network !== this.chainName) {
               return false;
             }
 
@@ -456,10 +456,10 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
         newEntry.updateEpoch(epoch[0].epoch);
       }
 
-      const cursors = await getCarpCursors.run(undefined, dbTx);
+      const cursors = await getPaginationCursors.run(undefined, dbTx);
 
       const extensions = sharedData.extensions
-        .filter(extensions => (extensions.network = config.network))
+        .filter(extensions => extensions.network === config.network)
         .map(extension => extension.cdeId);
 
       for (const cursor of cursors) {

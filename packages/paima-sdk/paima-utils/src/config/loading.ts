@@ -139,6 +139,7 @@ const minaConfigDefaults = {
 // will need to be removed afterwards
 export const defaultEvmMainNetworkName = 'evm';
 export const defaultCardanoNetworkName = 'cardano';
+export const defaultMinaNetworkName = 'mina';
 
 export async function loadConfig(): Promise<Static<typeof BaseConfigWithDefaults> | undefined> {
   let configFileData: string;

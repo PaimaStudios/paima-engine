@@ -28,7 +28,7 @@ import {
   getMainAddress,
   NO_USER_ID,
   updateCardanoEpoch,
-  updateCardanoPaginationCursor,
+  updatePaginationCursor,
 } from '@paima/db';
 import Prando from '@paima/prando';
 
@@ -329,8 +329,7 @@ async function processCardanoCdeData(
 ): Promise<number> {
   return await processCdeDataBase(cdeData, dbTx, inPresync, async () => {
     if ('cursor' in paginationCursor) {
-      console.log('cursor', paginationCursor);
-      await updateCardanoPaginationCursor.run(
+      await updatePaginationCursor.run(
         {
           cde_id: paginationCursor.cdeId,
           cursor: paginationCursor.cursor,
@@ -339,7 +338,7 @@ async function processCardanoCdeData(
         dbTx
       );
     } else {
-      await updateCardanoPaginationCursor.run(
+      await updatePaginationCursor.run(
         {
           cde_id: paginationCursor.cdeId,
           cursor: paginationCursor.slot.toString(),

@@ -218,7 +218,7 @@ CREATE TABLE cde_cardano_asset_utxos (
   PRIMARY KEY(cde_id,tx_id,output_index,cip14_fingerprint)
 );
 
-CREATE TABLE cde_tracking_cardano_pagination (
+CREATE TABLE cde_tracking_cursor_pagination (
   cde_id INTEGER PRIMARY KEY,
   cursor TEXT NOT NULL,
   finished BOOLEAN NOT NULL
