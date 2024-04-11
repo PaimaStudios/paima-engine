@@ -74,7 +74,11 @@ abstract contract StdInvariant {
         targetedArtifacts_ = _targetedArtifacts;
     }
 
-    function targetArtifactSelectors() public view returns (FuzzSelector[] memory targetedArtifactSelectors_) {
+    function targetArtifactSelectors()
+        public
+        view
+        returns (FuzzSelector[] memory targetedArtifactSelectors_)
+    {
         targetedArtifactSelectors_ = _targetedArtifactSelectors;
     }
 

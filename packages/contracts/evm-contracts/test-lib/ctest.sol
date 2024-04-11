@@ -588,16 +588,24 @@ contract CTest is StdInvariant {
     }
 
     function console2_log(string memory p0, uint256 p1) private view {
-        (bool status,) = address(CONSOLE2_ADDRESS).staticcall(abi.encodeWithSignature("log(string,uint256)", p0, p1));
+        (bool status, ) = address(CONSOLE2_ADDRESS).staticcall(
+            abi.encodeWithSignature("log(string,uint256)", p0, p1)
+        );
         status;
     }
 
     function console2_log(string memory p0, string memory p1) private view {
-        (bool status,) = address(CONSOLE2_ADDRESS).staticcall(abi.encodeWithSignature("log(string,string)", p0, p1));
+        (bool status, ) = address(CONSOLE2_ADDRESS).staticcall(
+            abi.encodeWithSignature("log(string,string)", p0, p1)
+        );
         status;
     }
 
-    function _bound(uint256 x, uint256 min, uint256 max) internal pure virtual returns (uint256 result) {
+    function _bound(
+        uint256 x,
+        uint256 min,
+        uint256 max
+    ) internal pure virtual returns (uint256 result) {
         require(min <= max, "StdUtils bound(uint256,uint256,uint256): Max is less than min.");
         // If x is between min and max, return x directly. This is to ensure that dictionary values
         // do not get shifted if the min is nonzero. More info: https://github.com/foundry-rs/forge-std/issues/188
@@ -624,12 +632,20 @@ contract CTest is StdInvariant {
         }
     }
 
-    function bound(uint256 x, uint256 min, uint256 max) internal view virtual returns (uint256 result) {
+    function bound(
+        uint256 x,
+        uint256 min,
+        uint256 max
+    ) internal view virtual returns (uint256 result) {
         result = _bound(x, min, max);
         console2_log("Bound Result", result);
     }
 
-    function _bound(int256 x, int256 min, int256 max) internal pure virtual returns (int256 result) {
+    function _bound(
+        int256 x,
+        int256 min,
+        int256 max
+    ) internal pure virtual returns (int256 result) {
         require(min <= max, "StdUtils bound(int256,int256,int256): Max is less than min.");
 
         // Shifting all int256 values to uint256 to use _bound function. The range of two types are:
@@ -640,13 +656,19 @@ contract CTest is StdInvariant {
         // If the given integer value is -2**255, we cannot use `-uint256(-x)` because of the overflow.
         // So, use `~uint256(x) + 1` instead.
         uint256 _x = x < 0 ? (INT256_MIN_ABS - ~uint256(x) - 1) : (uint256(x) + INT256_MIN_ABS);
-        uint256 _min = min < 0 ? (INT256_MIN_ABS - ~uint256(min) - 1) : (uint256(min) + INT256_MIN_ABS);
-        uint256 _max = max < 0 ? (INT256_MIN_ABS - ~uint256(max) - 1) : (uint256(max) + INT256_MIN_ABS);
+        uint256 _min = min < 0
+            ? (INT256_MIN_ABS - ~uint256(min) - 1)
+            : (uint256(min) + INT256_MIN_ABS);
+        uint256 _max = max < 0
+            ? (INT256_MIN_ABS - ~uint256(max) - 1)
+            : (uint256(max) + INT256_MIN_ABS);
 
         uint256 y = _bound(_x, _min, _max);
 
         // To move it back to int256 value, subtract INT256_MIN_ABS at here.
-        result = y < INT256_MIN_ABS ? int256(~(INT256_MIN_ABS - y) + 1) : int256(y - INT256_MIN_ABS);
+        result = y < INT256_MIN_ABS
+            ? int256(~(INT256_MIN_ABS - y) + 1)
+            : int256(y - INT256_MIN_ABS);
     }
 
     function bound(int256 x, int256 min, int256 max) internal view virtual returns (int256 result) {
