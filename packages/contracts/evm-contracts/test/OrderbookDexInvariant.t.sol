@@ -109,7 +109,7 @@ contract OrderbookDexHandler is CTest, ERC1155Holder {
         asset.setApprovalForAll(address(dex), true);
 
         // Take note of the previous order id
-        previousOrderId = dex.getCurrentOrderId();
+        previousOrderId = dex.currentOrderId();
 
         // Execute the sell order creation
         return dex.createSellOrder(assetId, assetAmount, price);
@@ -291,7 +291,7 @@ contract OrderbookDexHandler is CTest, ERC1155Holder {
     ) public useActor(actorIndexSeed) {
         // If the order does not exist, get the last order id
         if (dex.getOrder(orderId).assetAmount == 0) {
-            orderId = dex.getCurrentOrderId();
+            orderId = dex.currentOrderId();
             // If there are no orders, return
             if (orderId == 0) {
                 return;
@@ -358,7 +358,7 @@ contract OrderbookDexInvariantTest is CTest, ERC1155Holder {
 
     function setUp() public {
         asset = new InverseAppProjected1155("Gold", "GOLD", address(this));
-        dex = new OrderbookDex(asset);
+        dex = new OrderbookDex(address(asset));
         dexHandler = new OrderbookDexHandler(asset, dex);
         assetHandler = new AssetHandler(asset, dex);
         targetContract(address(assetHandler));
@@ -366,7 +366,7 @@ contract OrderbookDexInvariantTest is CTest, ERC1155Holder {
     }
 
     function invariant_ordersAssetAmountEqualsContractTokenBalance() public {
-        for (uint256 i; i < dex.getCurrentOrderId(); ++i) {
+        for (uint256 i; i < dex.currentOrderId(); ++i) {
             IOrderbookDex.Order memory order = dex.getOrder(i);
             assertEq(order.assetAmount, asset.balanceOf(address(dex), order.assetId));
         }
@@ -377,7 +377,7 @@ contract OrderbookDexInvariantTest is CTest, ERC1155Holder {
     }
 
     function invariant_orderIdIsIncremental() public {
-        uint256 currentId = dex.getCurrentOrderId();
+        uint256 currentId = dex.currentOrderId();
         uint256 previousId = dexHandler.previousOrderId();
         if (currentId == previousId) {
             assertEq(currentId, 0);

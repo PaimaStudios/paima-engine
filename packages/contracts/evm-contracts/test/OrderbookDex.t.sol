@@ -26,7 +26,7 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
 
     function setUp() public {
         asset = new InverseAppProjected1155("Gold", "GOLD", address(this));
-        dex = new OrderbookDex(asset);
+        dex = new OrderbookDex(address(asset));
         asset.setApprovalForAll(address(dex), true);
         vm.deal(alice, 1_000 ether);
         vm.deal(boris, 1_000 ether);
@@ -38,7 +38,7 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
     ) public {
         vm.assume(assetAmount > 0 && pricePerAsset > 0);
 
-        uint256 orderId = dex.getCurrentOrderId();
+        uint256 orderId = dex.currentOrderId();
         uint256 assetId = asset.mint(assetAmount, "");
 
         vm.expectEmit(true, true, true, true);
@@ -70,7 +70,7 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
             assetIds[i] = asset.mint(assetAmounts[i], "");
         }
 
-        uint256 orderId = dex.getCurrentOrderId();
+        uint256 orderId = dex.currentOrderId();
         for (uint256 i = 0; i < orderCount; ++i) {
             vm.expectEmit(true, true, true, true);
             emit IOrderbookDex.OrderCreated(
@@ -133,7 +133,7 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
             address payable seller = payable(vm.addr(uint256(keccak256(abi.encodePacked(i)))));
             uint256 assetAmount = price / (ordersCount - i);
             uint256 pricePerAsset = price / assetAmount;
-            orderIds[i] = dex.getCurrentOrderId();
+            orderIds[i] = dex.currentOrderId();
             sellers[i] = seller;
             vm.startPrank(seller);
             uint256 assetId = asset.mint(assetAmount, "");
@@ -190,7 +190,7 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
             address payable seller = payable(vm.addr(uint256(keccak256(abi.encodePacked(i)))));
             uint256 assetAmount = price / (ordersCount - i);
             uint256 pricePerAsset = price / assetAmount;
-            orderIds[i] = dex.getCurrentOrderId();
+            orderIds[i] = dex.currentOrderId();
             sellers[i] = seller;
             vm.startPrank(seller);
             uint256 assetId = asset.mint(assetAmount, "");
@@ -248,7 +248,7 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
         address buyer = alice;
         address payable seller = payable(address(this));
         vm.deal(buyer, assetAmount * pricePerAsset);
-        uint256 orderId = dex.getCurrentOrderId();
+        uint256 orderId = dex.currentOrderId();
         vm.startPrank(seller);
         uint256 assetId = asset.mint(assetAmount, "");
         asset.setApprovalForAll(address(dex), true);
@@ -282,7 +282,7 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
         address buyer = alice;
         address payable seller = payable(address(this));
         vm.deal(buyer, assetAmount * pricePerAsset);
-        uint256 orderId = dex.getCurrentOrderId();
+        uint256 orderId = dex.currentOrderId();
         vm.startPrank(seller);
         uint256 assetId = asset.mint(assetAmount, "");
         asset.setApprovalForAll(address(dex), true);
@@ -313,7 +313,7 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
         vm.assume(pricePerAsset < type(uint256).max / assetAmount / multiplier);
 
         vm.deal(alice, assetAmount * pricePerAsset * multiplier);
-        uint256 orderId = dex.getCurrentOrderId();
+        uint256 orderId = dex.currentOrderId();
         uint256 assetId = asset.mint(assetAmount, "");
         dex.createSellOrder(assetId, assetAmount, pricePerAsset);
 
@@ -335,7 +335,7 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
         vm.assume(pricePerAsset < type(uint256).max / assetAmount / multiplier);
 
         vm.deal(alice, assetAmount * pricePerAsset * multiplier);
-        uint256 orderId = dex.getCurrentOrderId();
+        uint256 orderId = dex.currentOrderId();
         uint256 assetId = asset.mint(assetAmount, "");
         dex.createSellOrder(assetId, assetAmount, pricePerAsset);
 
@@ -350,7 +350,7 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
     function test_fillOrdersExactEth_wontFillOrderIfOrderWasCancelled() public {
         uint256 assetAmount = 100;
         uint256 pricePerAsset = 200;
-        uint256 orderId = dex.getCurrentOrderId();
+        uint256 orderId = dex.currentOrderId();
         uint256 assetId = asset.mint(assetAmount, "");
         dex.createSellOrder(assetId, assetAmount, pricePerAsset);
         dex.cancelSellOrder(orderId);
@@ -367,7 +367,7 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
     function test_fillOrdersExactAsset_wontFillOrderIfOrderWasCancelled() public {
         uint256 assetAmount = 100;
         uint256 pricePerAsset = 200;
-        uint256 orderId = dex.getCurrentOrderId();
+        uint256 orderId = dex.currentOrderId();
         uint256 assetId = asset.mint(assetAmount, "");
         dex.createSellOrder(assetId, assetAmount, pricePerAsset);
         dex.cancelSellOrder(orderId);
@@ -384,7 +384,7 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
     function test_fillOrdersExactEth_reverts_ifInsufficientEndAmount() public {
         uint256 assetAmount = 10;
         uint256 pricePerAsset = 100;
-        uint256 orderId = dex.getCurrentOrderId();
+        uint256 orderId = dex.currentOrderId();
         uint256 assetId = asset.mint(assetAmount, "");
         dex.createSellOrder(assetId, assetAmount, pricePerAsset);
 
@@ -406,7 +406,7 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
     function test_fillOrdersExactAsset_reverts_ifInsufficientEndAmount() public {
         uint256 assetAmount = 10;
         uint256 pricePerAsset = 100;
-        uint256 orderId = dex.getCurrentOrderId();
+        uint256 orderId = dex.currentOrderId();
         uint256 assetId = asset.mint(assetAmount, "");
         dex.createSellOrder(assetId, assetAmount, pricePerAsset);
 
@@ -434,7 +434,7 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
     function testFuzz_cancelSellOrder_satisfiesRequirements(uint256 assetAmount) public {
         vm.assume(assetAmount > 0);
         uint256 assetId = asset.mint(assetAmount, "");
-        uint256 orderId = dex.getCurrentOrderId();
+        uint256 orderId = dex.currentOrderId();
         dex.createSellOrder(assetId, assetAmount, 200);
 
         vm.expectEmit(true, true, true, true);
@@ -447,7 +447,7 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
     }
 
     function test_cancelSellOrder_reverts_ifUnauthorized() public {
-        uint256 orderId = dex.getCurrentOrderId();
+        uint256 orderId = dex.currentOrderId();
         uint256 assetId = asset.mint(100, "");
         dex.createSellOrder(assetId, 100, 200);
 
@@ -468,7 +468,7 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
             assetIds[i] = asset.mint(assetAmounts[i], "");
         }
 
-        uint256 orderId = dex.getCurrentOrderId();
+        uint256 orderId = dex.currentOrderId();
 
         uint256[] memory orderIds = dex.createBatchSellOrder(
             assetIds,
@@ -492,7 +492,7 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
     }
 
     function test_cancelBatchSellOrder_reverts_ifUnauthorized() public {
-        uint256 orderId = dex.getCurrentOrderId();
+        uint256 orderId = dex.currentOrderId();
         uint256 assetId = asset.mint(100, "");
         dex.createSellOrder(assetId, 100, 200);
 

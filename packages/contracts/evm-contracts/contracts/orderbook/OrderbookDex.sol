@@ -16,9 +16,11 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, ReentrancyGuard {
     using Address for address payable;
     using Arrays for uint256[];
 
-    IInverseProjected1155 internal immutable asset;
+    /// @inheritdoc IOrderbookDex
+    address public immutable override asset;
+    /// @inheritdoc IOrderbookDex
+    uint256 public override currentOrderId;
     mapping(uint256 orderId => Order) internal orders;
-    uint256 internal currentOrderId;
 
     error OrderDoesNotExist(uint256 orderId);
     error InsufficientEndAmount(uint256 expectedAmount, uint256 actualAmount);
@@ -26,30 +28,16 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, ReentrancyGuard {
     error InvalidInput(uint256 input);
     error Unauthorized(address sender);
 
-    constructor(IInverseProjected1155 _asset) {
+    constructor(address _asset) {
         asset = _asset;
     }
 
-    /// @notice Returns the address of the asset that is being traded in this DEX contract.
-    function getAsset() public view virtual returns (address) {
-        return address(asset);
-    }
-
-    /// @notice Returns the `orderId` of the next sell order.
-    function getCurrentOrderId() public view virtual returns (uint256) {
-        return currentOrderId;
-    }
-
-    /// @notice Returns the Order struct information about an order identified by the `orderId`.
+    /// @inheritdoc IOrderbookDex
     function getOrder(uint256 orderId) public view virtual returns (Order memory) {
         return orders[orderId];
     }
 
-    /// @notice Creates a sell order for the `assetAmount` of `assetId` at `pricePerAsset`.
-    /// @dev The order information is saved in a mapping `orderId -> Order`, with `orderId` being a unique incremental identifier.
-    /// MUST transfer the `assetAmount` of `assetId` from the seller to the contract.
-    /// MUST emit `OrderCreated` event.
-    /// @return The unique identifier of the created order.
+    /// @inheritdoc IOrderbookDex
     function createSellOrder(
         uint256 assetId,
         uint256 assetAmount,
@@ -58,7 +46,13 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, ReentrancyGuard {
         if (assetAmount == 0 || pricePerAsset == 0) {
             revert InvalidInput(0);
         }
-        asset.safeTransferFrom(msg.sender, address(this), assetId, assetAmount, bytes(""));
+        IInverseProjected1155(asset).safeTransferFrom(
+            msg.sender,
+            address(this),
+            assetId,
+            assetAmount,
+            bytes("")
+        );
         Order memory newOrder = Order({
             assetId: assetId,
             assetAmount: assetAmount,
@@ -72,9 +66,7 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, ReentrancyGuard {
         return orderId;
     }
 
-    /// @notice Creates a batch of sell orders for the `assetAmount` of `assetId` at `pricePerAsset`.
-    /// @dev This is a batched version of `createSellOrder` that simply iterates through the arrays to call said function.
-    /// @return The unique identifiers of the created orders.
+    /// @inheritdoc IOrderbookDex
     function createBatchSellOrder(
         uint256[] memory assetIds,
         uint256[] memory assetAmounts,
@@ -97,14 +89,7 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, ReentrancyGuard {
         return orderIds;
     }
 
-    /// @notice Consecutively fills an array of orders identified by the `orderId` of each order,
-    /// by providing an exact amount of ETH and requesting a specific minimum amount of asset to receive.
-    /// @dev Transfers portions of msg.value to the orders' sellers according to the price.
-    /// The sum of asset amounts of filled orders MUST be at least `minimumAsset`.
-    /// If msg.value is more than the sum of orders' prices, it MUST refund the excess back to `msg.sender`.
-    /// MUST decrease the `assetAmount` parameter for the specified order according to how much of it was filled,
-    /// and transfer that amount of the order's `assetId` to the buyer.
-    /// MUST emit `OrderFilled` event for each order accordingly.
+    /// @inheritdoc IOrderbookDex
     function fillOrdersExactEth(
         uint256 minimumAsset,
         uint256[] memory orderIds
@@ -128,7 +113,7 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, ReentrancyGuard {
             order.assetAmount -= assetsToBuy;
             remainingEth -= assetsToBuy * order.pricePerAsset;
             totalAssetReceived += assetsToBuy;
-            asset.safeTransferFrom(
+            IInverseProjected1155(asset).safeTransferFrom(
                 address(this),
                 msg.sender,
                 order.assetId,
@@ -149,14 +134,7 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, ReentrancyGuard {
         }
     }
 
-    /// @notice Consecutively fills an array of orders identified by the `orderId` of each order,
-    /// by providing a possibly surplus amount of ETH and requesting an exact amount of asset to receive.
-    /// @dev Transfers portions of msg.value to the orders' sellers according to the price.
-    /// The sum of asset amounts of filled orders MUST be exactly `assetAmount`. Excess ETH MUST be returned back to `msg.sender`.
-    /// MUST decrease the `assetAmount` parameter for the specified order according to how much of it was filled,
-    /// and transfer that amount of the order's `assetId` to the buyer.
-    /// MUST emit `OrderFilled` event for each order accordingly.
-    /// If msg.value is more than the sum of orders' prices, it MUST refund the difference back to `msg.sender`.
+    /// @inheritdoc IOrderbookDex
     function fillOrdersExactAsset(
         uint256 assetAmount,
         uint256[] memory orderIds
@@ -180,7 +158,7 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, ReentrancyGuard {
             order.assetAmount -= assetsToBuy;
             remainingEth -= assetsToBuy * order.pricePerAsset;
             remainingAsset -= assetsToBuy;
-            asset.safeTransferFrom(
+            IInverseProjected1155(asset).safeTransferFrom(
                 address(this),
                 msg.sender,
                 order.assetId,
@@ -201,11 +179,7 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, ReentrancyGuard {
         }
     }
 
-    /// @notice Cancels the sell order identified by the `orderId`, transferring the order's assets back to the seller.
-    /// @dev MUST revert if the order's seller is not `msg.sender`.
-    /// MUST change the `assetAmount` parameter for the specified order to `0`.
-    /// MUST emit `OrderCancelled` event.
-    /// MUST transfer the `assetAmount` of `assetId` back to the seller.
+    /// @inheritdoc IOrderbookDex
     function cancelSellOrder(uint256 orderId) public virtual {
         Order storage order = orders[orderId];
         if (msg.sender != order.seller) {
@@ -213,12 +187,17 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, ReentrancyGuard {
         }
         uint256 assetAmount = order.assetAmount;
         delete order.assetAmount;
-        asset.safeTransferFrom(address(this), msg.sender, order.assetId, assetAmount, bytes(""));
+        IInverseProjected1155(asset).safeTransferFrom(
+            address(this),
+            msg.sender,
+            order.assetId,
+            assetAmount,
+            bytes("")
+        );
         emit OrderCancelled(msg.sender, orderId);
     }
 
-    /// @notice Cancels a batch of sell orders identified by the `orderIds`, transferring the orders' assets back to the seller.
-    /// @dev This is a batched version of `cancelSellOrder` that simply iterates through the array to call said function.
+    /// @inheritdoc IOrderbookDex
     function cancelBatchSellOrder(uint256[] memory orderIds) public virtual {
         for (uint256 i; i < orderIds.length; ) {
             cancelSellOrder(orderIds.unsafeMemoryAccess(i));
@@ -234,9 +213,5 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, ReentrancyGuard {
     ) public view virtual override(ERC1155Holder, IERC165) returns (bool) {
         return
             interfaceId == type(IOrderbookDex).interfaceId || super.supportsInterface(interfaceId);
-    }
-
-    function _getOrderId(address seller, uint96 orderId) internal view virtual returns (uint256) {
-        return (uint256(uint160(seller)) << 96) ^ orderId;
     }
 }

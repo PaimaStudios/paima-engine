@@ -48,11 +48,11 @@ interface IOrderbookDex is IERC1155Receiver {
     /// @param id The order's unique identifier.
     event OrderCancelled(address indexed seller, uint256 indexed id);
 
-    /// @notice Returns the address of the asset that is being traded in this DEX contract.
-    function getAsset() external view returns (address);
+    /// @notice The address of the asset that is being traded in this DEX contract.
+    function asset() external view returns (address);
 
-    /// @notice Returns the `orderId` of the next sell order.
-    function getCurrentOrderId() external view returns (uint256);
+    /// @notice The `orderId` of the next sell order.
+    function currentOrderId() external view returns (uint256);
 
     /// @notice Returns the Order struct information about an order identified by the `orderId`.
     function getOrder(uint256 orderId) external view returns (Order memory);
