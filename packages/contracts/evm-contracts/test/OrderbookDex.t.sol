@@ -3,6 +3,7 @@ pragma solidity ^0.8.18;
 
 import {CheatCodes} from "../test-lib/cheatcodes.sol";
 import {CTest} from "../test-lib/ctest.sol";
+import "../test-lib/console.sol";
 
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {ERC1155Holder} from "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
@@ -501,6 +502,35 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
         vm.startPrank(alice);
         vm.expectRevert(abi.encodeWithSelector(OrderbookDex.Unauthorized.selector, alice));
         dex.cancelBatchSellOrder(orderIds);
+    }
+
+    // Not really a test, was used to measure gas usage
+    function test_fillOrders_getGasUsage() public {
+        uint256 orderCount = 500;
+        uint256[] memory assetIds = new uint256[](orderCount);
+        uint256[] memory assetAmounts = new uint256[](orderCount);
+        uint256[] memory pricesPerAssets = new uint256[](orderCount);
+
+        for (uint256 i = 0; i < orderCount; ++i) {
+            assetAmounts[i] = i == 0 ? 1 : i;
+            pricesPerAssets[i] = i == 0 ? 1 : i;
+            assetIds[i] = asset.mint(assetAmounts[i], "");
+        }
+        uint256[] memory orderIds = dex.createBatchSellOrder(
+            assetIds,
+            assetAmounts,
+            pricesPerAssets
+        );
+
+        assertEq(orderIds.length, orderCount);
+
+        uint256 minimumAsset = 1;
+        uint256 value = type(uint256).max;
+        vm.deal(address(this), value);
+
+        uint256 startGas = gasleft();
+        dex.fillOrdersExactEth{value: value}(minimumAsset, orderIds);
+        console.log("fill orders gas used", startGas - gasleft());
     }
 
     receive() external payable {}
