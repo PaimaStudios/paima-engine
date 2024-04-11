@@ -37,6 +37,7 @@ contract InverseBaseProjected1155 is IInverseBaseProjected1155, ERC1155, Ownable
         name = _name;
         symbol = _symbol;
         currentTokenId = 1;
+        baseExtension = ".json";
     }
 
     /// @dev Returns true if this contract implements the interface defined by `interfaceId`. See EIP165.

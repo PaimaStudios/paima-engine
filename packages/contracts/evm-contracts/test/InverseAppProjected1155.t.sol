@@ -135,7 +135,8 @@ contract InverseAppProjected1155Test is CTest, ERC1155Holder {
                 "/",
                 userTokenId.toString(),
                 "/",
-                value.toString()
+                value.toString(),
+                ".json"
             )
         );
     }
@@ -158,7 +159,8 @@ contract InverseAppProjected1155Test is CTest, ERC1155Holder {
                 "/",
                 userTokenId.toString(),
                 "/",
-                value.toString()
+                value.toString(),
+                ".json"
             )
         );
     }
