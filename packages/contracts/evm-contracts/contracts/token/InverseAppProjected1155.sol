@@ -45,6 +45,7 @@ contract InverseAppProjected1155 is IInverseAppProjected1155, ERC1155Supply, Own
         name = _name;
         symbol = _symbol;
         currentTokenId = 1;
+        baseExtension = ".json";
     }
 
     /// @dev Returns true if this contract implements the interface defined by `interfaceId`. See EIP165.

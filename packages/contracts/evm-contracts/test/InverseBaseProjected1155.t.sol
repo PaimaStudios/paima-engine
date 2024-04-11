@@ -100,7 +100,14 @@ contract InverseBaseProjected1155Test is CTest, ERC1155Holder {
         string memory result = token.uri(tokenId);
         assertEq(
             result,
-            string.concat(baseURI, "eip155:", block.chainid.toString(), "/", tokenId.toString())
+            string.concat(
+                baseURI,
+                "eip155:",
+                block.chainid.toString(),
+                "/",
+                tokenId.toString(),
+                ".json"
+            )
         );
     }
 
@@ -111,7 +118,14 @@ contract InverseBaseProjected1155Test is CTest, ERC1155Holder {
         string memory result = token.uri(tokenId, customUri);
         assertEq(
             result,
-            string.concat(customUri, "eip155:", block.chainid.toString(), "/", tokenId.toString())
+            string.concat(
+                customUri,
+                "eip155:",
+                block.chainid.toString(),
+                "/",
+                tokenId.toString(),
+                ".json"
+            )
         );
     }
 
