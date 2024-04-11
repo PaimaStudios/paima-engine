@@ -71,11 +71,19 @@ contract InverseAppProjectedNft is IInverseAppProjectedNft, ERC721, Ownable {
         return true;
     }
 
-    /// @dev Mints a new token to address `_to`.
+    /// @dev Mints a new token to address `_to`
     /// Increases the `totalSupply` and `currentTokenId`.
     /// Reverts if `_to` is a zero address or if it refers to smart contract but does not implement IERC721Receiver-onERC721Received.
     /// Emits the `Minted` event.
-    function mint(address _to, bytes memory _verificationData) public virtual returns (uint256) {
+    /// @param _to where to send the NFT to
+    /// @param _verificationData any additional data to verify the validity of the mint
+    /// @param _data any additional data to pass to the receiver contract
+    /// @return id of the minted token
+    function mint(
+        address _to,
+        bytes memory _verificationData,
+        bytes memory _data
+    ) public virtual returns (uint256) {
         require(_to != address(0), "InverseAppProjectedNft: zero receiver address");
         require(
             validateMint(_to, _verificationData),
@@ -83,7 +91,7 @@ contract InverseAppProjectedNft is IInverseAppProjectedNft, ERC721, Ownable {
         );
 
         uint256 tokenId = currentTokenId;
-        _safeMint(_to, tokenId);
+        _safeMint(_to, tokenId, _data);
         mintCount[_to] += 1;
         uint256 userTokenId = mintCount[_to];
         tokenToMint[tokenId] = MintEntry(_to, userTokenId);
@@ -95,8 +103,14 @@ contract InverseAppProjectedNft is IInverseAppProjectedNft, ERC721, Ownable {
         return tokenId;
     }
 
+    /// @dev Shorthand function that calls the `mint` function with empty `_data`.
+    function mint(address _to, bytes memory _verificationData) public virtual returns (uint256) {
+        return mint(_to, _verificationData, bytes(""));
+    }
+
+    /// @dev Shorthand function that calls the `mint` function with empty `_verificationData` and empty `_data`.
     function mint(address _to) public returns (uint256) {
-        return mint(_to, bytes(""));
+        return mint(_to, bytes(""), bytes(""));
     }
 
     /// @dev Burns token of ID `_tokenId`. Callable only by the owner of the specified token.

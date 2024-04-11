@@ -22,6 +22,19 @@ contract MockTokenUri is ITokenUri {
     }
 }
 
+contract MockDataReceiver {
+    bytes public dataReceived;
+    function onERC721Received(
+        address,
+        address,
+        uint256,
+        bytes calldata data
+    ) public returns (bytes4) {
+        dataReceived = data;
+        return this.onERC721Received.selector;
+    }
+}
+
 contract InverseBaseProjectedNftTest is CTest, ERC721Holder {
     using Strings for uint256;
 
@@ -45,7 +58,21 @@ contract InverseBaseProjectedNftTest is CTest, ERC721Holder {
         vm.prank(alice);
         vm.expectEmit(true, true, true, true);
         emit IInverseBaseProjectedNft.Minted(2, "abcd");
+        nft.mint(address(this), "abcd", bytes(""));
+    }
+
+    function test_CanMintNoData() public {
+        vm.prank(alice);
+        vm.expectEmit(true, true, true, true);
+        emit IInverseBaseProjectedNft.Minted(2, "abcd");
         nft.mint(address(this), "abcd");
+    }
+
+    function test_MintPassesDataToReceiver() public {
+        MockDataReceiver receiver = new MockDataReceiver();
+        bytes memory data = bytes("data");
+        nft.mint(address(receiver), "", data);
+        assertEq(keccak256(receiver.dataReceived()), keccak256(data));
     }
 
     function test_CanTransfer() public {
