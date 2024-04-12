@@ -27,7 +27,7 @@ cp -r ../../batcher/batcher-standalone/packaged/@standalone/batcher-bin $BATCHER
 # Fetch documentation
 echo $DOC_PATH
 rm -rf $DOC_PATH
-git clone --depth=1 git@github.com:PaimaStudios/paima-engine-docs.git $DOC_PATH
+git clone --depth=1 https://github.com/PaimaStudios/paima-engine-docs.git $DOC_PATH
 # Remove everything except docs/home
 find $DOC_PATH/* -not -path "$DOC_PATH/docs*" -delete
 # Move the contents of docs/home to the root of $DOC_PATH
@@ -40,7 +40,7 @@ rm -rf $DOC_PATH/.git*
 
 # Fetch templates
 rm -rf $TEMPLATES_PATH
-git clone --depth=1 git@github.com:PaimaStudios/paima-standalone-templates.git $TEMPLATES_PATH
+git clone --depth=1 https://github.com/PaimaStudios/paima-standalone-templates.git $TEMPLATES_PATH
 rm -rf $TEMPLATES_PATH/.git
 
 # Add in swagger static UI
