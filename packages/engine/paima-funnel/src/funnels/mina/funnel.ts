@@ -135,7 +135,7 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
         (promises, extension) => {
           if (extension.cdeType === ChainDataExtensionType.MinaEventGeneric) {
             const promise = getEventCdeData(
-              this.config.archive,
+              cachedState.pg,
               extension,
               fromTimestamp,
               toTimestamp,
@@ -151,7 +151,7 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
 
           if (extension.cdeType === ChainDataExtensionType.MinaActionGeneric) {
             const promise = getActionCdeData(
-              this.config.archive,
+              cachedState.pg,
               extension,
               fromTimestamp,
               toTimestamp,
@@ -249,7 +249,7 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
                 const cursor = cursors && cursors[extension.cdeId];
 
                 const data = getEventCdeData(
-                  this.config.archive,
+                  cache.pg,
                   extension,
                   from,
                   startingSlotTimestamp - 1,
@@ -273,7 +273,7 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
                 const cursor = cursors && cursors[extension.cdeId];
 
                 const data = getActionCdeData(
-                  this.config.archive,
+                  cache.pg,
                   extension,
                   from,
                   startingSlotTimestamp - 1,

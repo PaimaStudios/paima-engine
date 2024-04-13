@@ -63,12 +63,10 @@ export type CardanoConfig = Static<typeof CardanoConfigSchema>;
 
 export const MinaConfigSchema = Type.Object({
   archiveConnectionString: Type.String(),
-  archive: Type.String(),
   // k
   confirmationDepth: Type.Number(),
   paginationLimit: Type.Number({ default: 50 }),
   slotDuration: Type.Number(),
-  //presyncStepSize: Type.Number({ default: 1000 }),
 });
 
 export type MinaConfig = Static<typeof MinaConfigSchema>;
