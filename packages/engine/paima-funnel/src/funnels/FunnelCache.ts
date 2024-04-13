@@ -1,4 +1,5 @@
 import type { ChainData } from '@paima/sm';
+import postgres from 'postgres';
 
 export interface FunnelCacheEntry {
   /**
@@ -184,6 +185,7 @@ export type MinaFunnelCacheEntryState = {
   startingSlotTimestamp: number;
   lastPoint: { timestamp: number } | undefined;
   genesisTime: number;
+  pg: postgres.Sql;
   cursors:
     | {
         [cdeId: number]: { cursor: string; finished: boolean };
@@ -195,12 +197,17 @@ export class MinaFunnelCacheEntry implements FunnelCacheEntry {
   private state: MinaFunnelCacheEntryState | null = null;
   public static readonly SYMBOL = Symbol('MinaFunnelStartingSlot');
 
-  public updateStartingSlot(startingSlotTimestamp: number, genesisTime: number): void {
+  public updateStartingSlot(
+    startingSlotTimestamp: number,
+    genesisTime: number,
+    pg: postgres.Sql
+  ): void {
     this.state = {
       startingSlotTimestamp,
       genesisTime,
       lastPoint: this.state?.lastPoint,
       cursors: this.state?.cursors,
+      pg,
     };
   }
 

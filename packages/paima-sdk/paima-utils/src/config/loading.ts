@@ -62,8 +62,8 @@ export const CardanoConfigSchema = Type.Object({
 export type CardanoConfig = Static<typeof CardanoConfigSchema>;
 
 export const MinaConfigSchema = Type.Object({
+  archiveConnectionString: Type.String(),
   archive: Type.String(),
-  graphql: Type.String(),
   // k
   confirmationDepth: Type.Number(),
   paginationLimit: Type.Number({ default: 50 }),

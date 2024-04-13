@@ -15,33 +15,19 @@ import { getPaginationCursors } from '@paima/db';
 import { getActionCdeData, getEventCdeData } from '../../cde/minaGeneric.js';
 import type { MinaConfig } from '@paima/utils';
 import { MinaFunnelCacheEntry } from '../FunnelCache.js';
+import postgres from 'postgres';
 
-async function getGenesisTime(graphql: string): Promise<number> {
-  const genesisTime = (await fetch(graphql, {
-    method: 'POST',
+async function getGenesisTime(pg: postgres.Sql): Promise<number> {
+  const row = await pg`select timestamp from blocks where height = 1;`;
 
-    headers: {
-      'Content-Type': 'application/json',
-    },
+  return Number.parseInt(row[0]['timestamp'], 10);
+}
 
-    body: JSON.stringify({
-      query: `
-        {
-          genesisBlock {
-            protocolState {
-              blockchainState {
-                utcDate
-              }
-            }
-          }
-        }
-      `,
-    }),
-  })
-    .then(res => res.json())
-    .then(res => res.data.genesisBlock.protocolState.blockchainState.utcDate)) as string;
+async function findMinaConfirmedSlot(pg: postgres.Sql): Promise<number> {
+  const row =
+    await pg`select global_slot_since_genesis from blocks where chain_status = 'canonical' order by height desc limit 1;`;
 
-  return Number.parseInt(genesisTime, 10);
+  return Number.parseInt(row[0]['global_slot_since_genesis'], 10);
 }
 
 function slotToMinaTimestamp(slot: number, genesisTime: number, slotDuration: number): number {
@@ -58,44 +44,6 @@ function baseChainTimestampToMina(
   slotDuration: number
 ): number {
   return Math.max(baseChainTimestamp * 1000 - slotDuration * 1000 * confirmationDepth, 0);
-}
-
-// TODO: maybe using the node's rpc here it's not really safe? if it's out of
-// sync with the archive db we could end up skipping events
-// it would be better to have an endpoint for this on the archive api
-// either that, or the archive node api should take a block hash, and if it's
-// not there it should return an error.
-async function findMinaConfirmedSlot(graphql: string, confirmationDepth: number): Promise<number> {
-  const body = JSON.stringify({
-    query: `
-        {
-          bestChain(maxLength: ${confirmationDepth}) {
-            stateHash
-            protocolState {
-              consensusState {
-                blockHeight
-                slotSinceGenesis
-              }
-              previousStateHash
-            }
-          }
-        }
-      `,
-  });
-
-  const confirmedSlot = await fetch(graphql, {
-    method: 'POST',
-
-    headers: {
-      'Content-Type': 'application/json',
-    },
-
-    body,
-  })
-    .then(res => res.json())
-    .then(res => res.data.bestChain[0].protocolState.consensusState.slotSinceGenesis);
-
-  return Number.parseInt(confirmedSlot, 10);
 }
 
 export class MinaFunnel extends BaseFunnel implements ChainFunnel {
@@ -127,10 +75,7 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
 
     let cachedState = this.cache.getState();
 
-    const confirmedSlot = await findMinaConfirmedSlot(
-      this.config.graphql,
-      this.config.confirmationDepth
-    );
+    const confirmedSlot = await findMinaConfirmedSlot(cachedState.pg);
 
     const confirmedTimestamp = slotToMinaTimestamp(
       confirmedSlot,
@@ -391,7 +336,9 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
       const newEntry = new MinaFunnelCacheEntry();
       sharedData.cacheManager.cacheEntries[MinaFunnelCacheEntry.SYMBOL] = newEntry;
 
-      const genesisTime = await getGenesisTime(config.graphql);
+      const pg = postgres(config.archiveConnectionString);
+
+      const genesisTime = await getGenesisTime(pg);
 
       const startingBlockTimestamp = (await sharedData.web3.eth.getBlock(startingBlockHeight))
         .timestamp as number;
@@ -408,7 +355,7 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
 
       const slotAsMinaTimestamp = slotToMinaTimestamp(slot, genesisTime, config.slotDuration);
 
-      newEntry.updateStartingSlot(slotAsMinaTimestamp, genesisTime);
+      newEntry.updateStartingSlot(slotAsMinaTimestamp, genesisTime, pg);
 
       const cursors = await getPaginationCursors.run(undefined, dbTx);
 
