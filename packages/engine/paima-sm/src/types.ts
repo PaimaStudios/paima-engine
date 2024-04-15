@@ -15,7 +15,7 @@ import type {
   InternalEventType,
   ConfigNetworkType,
   STFSubmittedData,
-  IInverseAppProjected1055Contract,
+  IInverseAppProjected1155Contract,
 } from '@paima/utils';
 import { Type } from '@sinclair/typebox';
 import type { Static } from '@sinclair/typebox';
@@ -351,7 +351,7 @@ export const ChainDataExtensionInverseAppProjected1155MintConfig = Type.Intersec
 export type ChainDataExtensionInverseAppProjected1155Mint = ChainDataExtensionBase &
   Static<typeof ChainDataExtensionInverseAppProjected1155MintConfig> & {
     cdeType: ChainDataExtensionType.InverseAppProjected1155;
-    contract: IInverseAppProjected1055Contract;
+    contract: IInverseAppProjected1155Contract;
   };
 
 export const ChainDataExtensionGenericConfig = Type.Intersect([

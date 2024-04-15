@@ -41,7 +41,7 @@ export type {
   Minted as InverseAppProjected1155Minted,
   TransferSingle as InverseAppProjected1155TransferSingle,
   TransferBatch as InverseAppProjected1155TransferBatch,
-} from './contract-types/IInverseAppProjected1055Contract.js';
+} from './contract-types/IInverseAppProjected1155Contract.js';
 
 export type { Web3, Contract, AbiItem, EventData };
 export { AddressType, ChainDataExtensionType, ChainDataExtensionDatumType };
@@ -116,12 +116,12 @@ export function getPaimaErc721Contract(
 export function getInverseAppProjected1155Contract(
   address: string,
   web3?: Web3
-): Contracts.IInverseAppProjected1055Contract {
+): Contracts.IInverseAppProjected1155Contract {
   return getAbiContract(
     address,
     inverseAppProjected1155ContractBuild.abi as AbiItem[],
     web3
-  ) as unknown as Contracts.IInverseAppProjected1055Contract;
+  ) as unknown as Contracts.IInverseAppProjected1155Contract;
 }
 
 export function getErc165Contract(address: string, web3?: Web3): Contracts.ERC165Contract {
