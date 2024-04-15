@@ -1,4 +1,4 @@
-import { doLog, logError, ChainDataExtensionType } from '@paima/utils';
+import { doLog, logError, ChainDataExtensionType, delay } from '@paima/utils';
 import type { ChainFunnel, ReadPresyncDataFrom } from '@paima/runtime';
 import type {
   ChainData,
@@ -16,6 +16,8 @@ import { getActionCdeData, getEventCdeData } from '../../cde/minaGeneric.js';
 import type { MinaConfig } from '@paima/utils';
 import { MinaFunnelCacheEntry } from '../FunnelCache.js';
 import postgres from 'postgres';
+
+const delayForWaitingForFinalityLoop = 1000;
 
 async function getGenesisTime(pg: postgres.Sql): Promise<number> {
   const row = await pg`select timestamp from blocks where height = 1;`;
@@ -75,25 +77,33 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
 
     let cachedState = this.cache.getState();
 
-    const confirmedSlot = await findMinaConfirmedSlot(cachedState.pg);
-
-    const confirmedTimestamp = slotToMinaTimestamp(
-      confirmedSlot,
-      cachedState.genesisTime,
+    const maxBaseTimestamp = baseChainTimestampToMina(
+      baseData[baseData.length - 1].timestamp,
+      this.config.confirmationDepth,
       this.config.slotDuration
     );
+
+    let confirmedTimestamp;
+    while (true) {
+      const confirmedSlot = await findMinaConfirmedSlot(cachedState.pg);
+
+      confirmedTimestamp = slotToMinaTimestamp(
+        confirmedSlot,
+        cachedState.genesisTime,
+        this.config.slotDuration
+      );
+
+      if (confirmedTimestamp >= maxBaseTimestamp) {
+        break;
+      }
+
+      await delay(delayForWaitingForFinalityLoop);
+    }
 
     const fromTimestamp =
       this.cache.getState().lastPoint?.timestamp || cachedState.startingSlotTimestamp;
 
-    const toTimestamp = Math.max(
-      confirmedTimestamp,
-      baseChainTimestampToMina(
-        baseData[baseData.length - 1].timestamp,
-        this.config.confirmationDepth,
-        this.config.slotDuration
-      )
-    );
+    const toTimestamp = Math.max(confirmedTimestamp, maxBaseTimestamp);
 
     const fromSlot = minaTimestampToSlot(
       fromTimestamp,

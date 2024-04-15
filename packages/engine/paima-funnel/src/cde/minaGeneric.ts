@@ -75,7 +75,7 @@ export async function getCdeData(
   cursor?: string,
   limit?: number
 ): Promise<(CdeMinaActionGenericDatum | CdeMinaEventGenericDatum)[]> {
-  const result = [] as ChainDataExtensionDatum[];
+  const result = [] as (CdeMinaActionGenericDatum | CdeMinaEventGenericDatum)[];
 
   console.log('outside', cursor, limit, fromTimestamp, toTimestamp);
   while (true) {
