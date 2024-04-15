@@ -1,7 +1,6 @@
 import type {
   CdeMinaActionGenericDatum,
   CdeMinaEventGenericDatum,
-  ChainDataExtensionDatum,
   ChainDataExtensionMinaActionGeneric,
   ChainDataExtensionMinaEventGeneric,
 } from '@paima/sm';
@@ -77,10 +76,7 @@ export async function getCdeData(
 ): Promise<(CdeMinaActionGenericDatum | CdeMinaEventGenericDatum)[]> {
   const result = [] as (CdeMinaActionGenericDatum | CdeMinaEventGenericDatum)[];
 
-  console.log('outside', cursor, limit, fromTimestamp, toTimestamp);
   while (true) {
-    console.log('inside', cursor, limit, fromTimestamp, toTimestamp);
-
     const unmapped = await f(
       pg,
       extension.address,
