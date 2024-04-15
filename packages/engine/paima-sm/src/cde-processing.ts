@@ -9,6 +9,7 @@ import processErc721MintDatum from './cde-erc721-mint.js';
 import processErc20DepositDatum from './cde-erc20-deposit.js';
 import processErc6551RegistryDatum from './cde-erc6551-registry.js';
 import processInverseAppProjected1155MintDatum from './cde-erc1155-mint.js';
+import processInverseAppProjected1155TransferDatum from './cde-erc1155-transfer.js';
 import processGenericDatum from './cde-generic.js';
 import processCardanoDelegationDatum from './cde-cardano-pool.js';
 import processCardanoProjectedNFT from './cde-cardano-projected-nft.js';
@@ -34,6 +35,8 @@ export async function cdeTransitionFunction(
       return await processErc20DepositDatum(readonlyDBConn, cdeDatum, inPresync);
     case ChainDataExtensionDatumType.InverseAppProjected1155Mint:
       return await processInverseAppProjected1155MintDatum(cdeDatum, inPresync);
+    case ChainDataExtensionDatumType.InverseAppProjected1155Transfer:
+      return await processInverseAppProjected1155TransferDatum(cdeDatum, inPresync);
     case ChainDataExtensionDatumType.Generic:
       return await processGenericDatum(cdeDatum, inPresync);
     case ChainDataExtensionDatumType.ERC6551Registry:

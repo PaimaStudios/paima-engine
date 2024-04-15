@@ -7,12 +7,12 @@ export default async function processInverseAppProjected1155MintDatum(
   cdeDatum: CdeInverseAppProjected1155MintDatum,
   inPresync: boolean
 ): Promise<SQLUpdate[]> {
-  const { scheduledPrefix, contractAddress, payload, blockNumber } = cdeDatum;
-  if (!scheduledPrefix || inPresync) {
+  const { mintScheduledPrefix, contractAddress, payload, blockNumber } = cdeDatum;
+  if (!mintScheduledPrefix || inPresync) {
     return [];
   }
   const { tokenId, minter, userTokenId } = payload;
   const scheduledBlockHeight = Math.max(blockNumber, ENV.SM_START_BLOCKHEIGHT + 1);
-  const scheduledInputData = `${scheduledPrefix}|${contractAddress}|${tokenId}|${minter}|${userTokenId}`;
+  const scheduledInputData = `${mintScheduledPrefix}|${contractAddress}|${tokenId}|${minter}|${userTokenId}`;
   return [createScheduledData(scheduledInputData, scheduledBlockHeight)];
 }

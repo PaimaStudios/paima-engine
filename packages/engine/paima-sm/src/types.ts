@@ -88,6 +88,14 @@ interface CdeDatumInverseAppProjected1155MintPayload {
   value: string;  // uint256, the amount
 }
 
+interface CdeDatumInverseAppProjected1155TransferPayload {
+  operator: string;  // address
+  from: string;  // address
+  to: string;  // address
+  id: string;  // uint256, batch already flattened
+  value: string;  // uint256, batch already flattened
+}
+
 type CdeDatumGenericPayload = any;
 
 interface CdeDatumErc6551RegistryPayload {
@@ -198,7 +206,14 @@ export interface CdeInverseAppProjected1155MintDatum extends CdeDatumBase {
   cdeDatumType: ChainDataExtensionDatumType.InverseAppProjected1155Mint;
   payload: CdeDatumInverseAppProjected1155MintPayload;
   contractAddress: string;
-  scheduledPrefix: string;
+  mintScheduledPrefix: string;
+}
+
+export interface CdeInverseAppProjected1155TransferDatum extends CdeDatumBase {
+  cdeDatumType: ChainDataExtensionDatumType.InverseAppProjected1155Transfer;
+  payload: CdeDatumInverseAppProjected1155TransferPayload;
+  contractAddress: string;
+  transferScheduledPrefix: string;
 }
 
 export interface CdeGenericDatum extends CdeDatumBase {
@@ -252,6 +267,7 @@ export type ChainDataExtensionDatum =
   | CdeErc721TransferDatum
   | CdeErc20DepositDatum
   | CdeInverseAppProjected1155MintDatum
+  | CdeInverseAppProjected1155TransferDatum
   | CdeGenericDatum
   | CdeErc6551RegistryDatum
   | CdeCardanoPoolDatum
@@ -344,7 +360,8 @@ export const ChainDataExtensionInverseAppProjected1155Config = Type.Intersect([
   Type.Object({
     type: Type.Literal(CdeEntryTypeName.InverseAppProjected1155),
     contractAddress: EvmAddress,
-    scheduledPrefix: Type.String(),
+    mintScheduledPrefix: Type.String(),
+    transferScheduledPrefix: Type.String(),
     depositAddress: EvmAddress,
   })
 ]);
