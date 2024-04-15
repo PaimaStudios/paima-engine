@@ -15,7 +15,7 @@ import type { SQLUpdate } from '@paima/db';
 export default async function processErc721Datum(
   readonlyDBConn: PoolClient,
   cdeDatum: CdeErc721TransferDatum,
-  isPresync: boolean
+  inPresync: boolean
 ): Promise<SQLUpdate[]> {
   const cdeId = cdeDatum.cdeId;
   const { to, tokenId } = cdeDatum.payload;
@@ -32,9 +32,12 @@ export default async function processErc721Datum(
     const newOwnerData = { cde_id: cdeId, token_id: tokenId, nft_owner: toAddr };
     if (ownerRow.length > 0) {
       if (isBurn) {
-        if (cdeDatum.burnScheduledPrefix && !isPresync) {
+        if (cdeDatum.burnScheduledPrefix) {
           const scheduledInputData = `${cdeDatum.burnScheduledPrefix}|${ownerRow[0].nft_owner}|${tokenId}`;
-          const scheduledBlockHeight = cdeDatum.blockNumber;
+
+          const scheduledBlockHeight = inPresync
+            ? ENV.SM_START_BLOCKHEIGHT + 1
+            : cdeDatum.blockNumber;
 
           updateList.push(createScheduledData(scheduledInputData, scheduledBlockHeight));
         }
