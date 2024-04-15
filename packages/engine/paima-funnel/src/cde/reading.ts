@@ -9,8 +9,8 @@ import getCdePaimaErc721Data from './paimaErc721.js';
 import getCdeErc20DepositData from './erc20Deposit.js';
 import getCdeGenericData from './generic.js';
 import getCdeErc6551RegistryData from './erc6551Registry.js';
+import getCdeInverseAppProjected1155Data from './inverseAppProjected1155.js';
 import assertNever from 'assert-never';
-import { networkInterfaces } from 'os';
 
 export async function getUngroupedCdeData(
   web3: Web3,
@@ -52,6 +52,8 @@ async function getSpecificCdeData(
       return await getCdePaimaErc721Data(extension, fromBlock, toBlock, network);
     case ChainDataExtensionType.ERC20Deposit:
       return await getCdeErc20DepositData(extension, fromBlock, toBlock, network);
+    case ChainDataExtensionType.InverseAppProjected1155:
+      return await getCdeInverseAppProjected1155Data(extension, fromBlock, toBlock, network);
     case ChainDataExtensionType.Generic:
       return await getCdeGenericData(extension, fromBlock, toBlock, network);
     case ChainDataExtensionType.ERC6551Registry:
