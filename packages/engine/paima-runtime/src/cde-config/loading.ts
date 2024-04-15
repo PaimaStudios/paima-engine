@@ -264,7 +264,7 @@ async function instantiateExtension(
         hash: hashConfig(config),
         cdeType: ChainDataExtensionType.InverseAppProjected1155,
         contract: getInverseAppProjected1155Contract(config.contractAddress, web3s[network]),
-      }
+      };
     case CdeEntryTypeName.Generic:
       return {
         ...(await instantiateCdeGeneric(config, index, web3s[network])),

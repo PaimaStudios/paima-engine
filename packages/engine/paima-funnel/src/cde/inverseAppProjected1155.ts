@@ -15,7 +15,7 @@ export default async function getCdeInverseAppProjected1155Data(
   extension: ChainDataExtensionInverseAppProjected1155,
   fromBlock: number,
   toBlock: number,
-  network: string,
+  network: string
 ): Promise<ChainDataExtensionDatum[]> {
   // TOOD: typechain is missing the proper type generation for getPastEvents
   // https://github.com/dethcrypto/TypeChain/issues/767

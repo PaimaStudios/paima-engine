@@ -82,18 +82,18 @@ interface CdeDatumErc20DepositPayload {
 }
 
 interface CdeDatumInverseAppProjected1155MintPayload {
-  tokenId: string;  // uint256
-  minter: string;  // address
-  userTokenId: string;  // uint256
-  value: string;  // uint256, the amount
+  tokenId: string; // uint256
+  minter: string; // address
+  userTokenId: string; // uint256
+  value: string; // uint256, the amount
 }
 
 interface CdeDatumInverseAppProjected1155TransferPayload {
-  operator: string;  // address
-  from: string;  // address
-  to: string;  // address
-  id: string;  // uint256, batch already flattened
-  value: string;  // uint256, batch already flattened
+  operator: string; // address
+  from: string; // address
+  to: string; // address
+  id: string; // uint256, batch already flattened
+  value: string; // uint256, batch already flattened
 }
 
 type CdeDatumGenericPayload = any;
@@ -363,7 +363,7 @@ export const ChainDataExtensionInverseAppProjected1155Config = Type.Intersect([
     mintScheduledPrefix: Type.String(),
     transferScheduledPrefix: Type.String(),
     depositAddress: EvmAddress,
-  })
+  }),
 ]);
 export type ChainDataExtensionInverseAppProjected1155 = ChainDataExtensionBase &
   Static<typeof ChainDataExtensionInverseAppProjected1155Config> & {
