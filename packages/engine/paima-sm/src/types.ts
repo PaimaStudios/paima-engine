@@ -339,7 +339,7 @@ export type ChainDataExtensionErc20Deposit = ChainDataExtensionBase &
     contract: ERC20Contract;
   };
 
-export const ChainDataExtensionInverseAppProjected1155MintConfig = Type.Intersect([
+export const ChainDataExtensionInverseAppProjected1155Config = Type.Intersect([
   ChainDataExtensionConfigBase,
   Type.Object({
     type: Type.Literal(CdeEntryTypeName.InverseAppProjected1155),
@@ -348,8 +348,8 @@ export const ChainDataExtensionInverseAppProjected1155MintConfig = Type.Intersec
     depositAddress: EvmAddress,
   })
 ]);
-export type ChainDataExtensionInverseAppProjected1155Mint = ChainDataExtensionBase &
-  Static<typeof ChainDataExtensionInverseAppProjected1155MintConfig> & {
+export type ChainDataExtensionInverseAppProjected1155 = ChainDataExtensionBase &
+  Static<typeof ChainDataExtensionInverseAppProjected1155Config> & {
     cdeType: ChainDataExtensionType.InverseAppProjected1155;
     contract: IInverseAppProjected1155Contract;
   };
@@ -468,6 +468,7 @@ export const CdeConfig = Type.Object({
         ChainDataExtensionErc20Config,
         ChainDataExtensionErc721Config,
         ChainDataExtensionErc20DepositConfig,
+        ChainDataExtensionInverseAppProjected1155Config,
         ChainDataExtensionGenericConfig,
         ChainDataExtensionErc6551RegistryConfig,
         ChainDataExtensionCardanoDelegationConfig,
@@ -499,6 +500,7 @@ export type ChainDataExtension = (
   | ChainDataExtensionErc721
   | ChainDataExtensionPaimaErc721
   | ChainDataExtensionErc20Deposit
+  | ChainDataExtensionInverseAppProjected1155
   | ChainDataExtensionGeneric
   | ChainDataExtensionErc6551Registry
   | ChainDataExtensionCardanoDelegation
