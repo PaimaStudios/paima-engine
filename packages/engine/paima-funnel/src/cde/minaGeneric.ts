@@ -1,37 +1,136 @@
 import type {
   CdeMinaActionGenericDatum,
   CdeMinaEventGenericDatum,
+  ChainDataExtensionDatum,
   ChainDataExtensionMinaActionGeneric,
   ChainDataExtensionMinaEventGeneric,
 } from '@paima/sm';
 import { ChainDataExtensionDatumType } from '@paima/utils';
 import postgres from 'postgres';
 
-export async function getEventCdeData(
+export async function getEventCdeData(args: {
+  pg: postgres.Sql;
+  extension: ChainDataExtensionMinaEventGeneric;
+  fromTimestamp: number;
+  toTimestamp: number;
+  getBlockNumber: (minaTimestamp: number) => number;
+  network: string;
+  isPresync: boolean;
+  cursor?: string;
+  limit?: number;
+}): Promise<(CdeMinaActionGenericDatum | CdeMinaEventGenericDatum)[]> {
+  return getCdeData(
+    getEventsQuery,
+    ChainDataExtensionDatumType.MinaEventGeneric,
+    args.pg,
+    args.extension,
+    args.fromTimestamp,
+    args.toTimestamp,
+    args.getBlockNumber,
+    args.network,
+    args.isPresync,
+    args.cursor,
+    args.limit
+  );
+}
+
+export async function getActionCdeData(args: {
+  pg: postgres.Sql;
+  extension: ChainDataExtensionMinaActionGeneric;
+  fromTimestamp: number;
+  toTimestamp: number;
+  getBlockNumber: (minaTimestamp: number) => number;
+  network: string;
+  isPresync: boolean;
+  cursor?: string;
+  limit?: number;
+}): Promise<(CdeMinaActionGenericDatum | CdeMinaEventGenericDatum)[]> {
+  return getCdeData(
+    getActionsQuery,
+    ChainDataExtensionDatumType.MinaActionGeneric,
+    args.pg,
+    args.extension,
+    args.fromTimestamp,
+    args.toTimestamp,
+    args.getBlockNumber,
+    args.network,
+    args.isPresync,
+    args.cursor,
+    args.limit
+  );
+}
+
+export async function getCdeData(
+  f: typeof getEventsQuery | typeof getActionsQuery,
+  cdeDatumType:
+    | ChainDataExtensionDatumType.MinaActionGeneric
+    | ChainDataExtensionDatumType.MinaEventGeneric,
   pg: postgres.Sql,
-  extension: ChainDataExtensionMinaEventGeneric,
+  extension: ChainDataExtensionMinaEventGeneric | ChainDataExtensionMinaActionGeneric,
   fromTimestamp: number,
   toTimestamp: number,
   getBlockNumber: (minaTimestamp: number) => number,
   network: string,
-  cursor?: string
-): Promise<CdeMinaEventGenericDatum[]> {
+  isPresync: boolean,
+  cursor?: string,
+  limit?: number
+): Promise<(CdeMinaActionGenericDatum | CdeMinaEventGenericDatum)[]> {
+  const result = [] as ChainDataExtensionDatum[];
+
+  console.log('outside', cursor, limit, fromTimestamp, toTimestamp);
+  while (true) {
+    console.log('inside', cursor, limit, fromTimestamp, toTimestamp);
+
+    const unmapped = await f(
+      pg,
+      extension.address,
+      toTimestamp.toString(),
+      fromTimestamp.toString(),
+      cursor,
+      limit?.toString()
+    );
+
+    const grouped = groupByTx(unmapped);
+
+    const events = grouped.flatMap(perBlock =>
+      perBlock.eventsData.map(txEvent => ({
+        cdeId: extension.cdeId,
+        cdeDatumType,
+        blockNumber: getBlockNumber(Number.parseInt(perBlock.blockInfo.timestamp, 10)),
+        payload: txEvent,
+        network,
+        scheduledPrefix: extension.scheduledPrefix,
+        paginationCursor: { cursor: txEvent.txHash, finished: false },
+      }))
+    );
+
+    if (events.length > 0) {
+      const last = events[events.length - 1];
+
+      cursor = last.paginationCursor.cursor;
+    }
+
+    events.forEach(element => {
+      result.push(element);
+    });
+
+    if (events.length === 0 || isPresync) {
+      break;
+    }
+  }
+
+  return result;
+}
+
+function groupByTx(events: postgres.RowList<PerBlock[]>) {
   const grouped = [] as {
     blockInfo: {
       height: number;
       timestamp: string;
     };
     // TODO: could each data by just a tuple?
-    eventData: { data: string[][]; txHash: string }[];
+    eventsData: { data: string[][]; txHash: string }[];
   }[];
-
-  const events = await getEventsQuery(
-    pg,
-    extension.address,
-    toTimestamp.toString(),
-    fromTimestamp.toString(),
-    cursor
-  );
 
   for (const block of events) {
     const eventData = [] as { data: string[][]; txHash: string }[];
@@ -47,76 +146,13 @@ export async function getEventCdeData(
       }
     }
 
-    grouped.push({ blockInfo: { height: block.height, timestamp: block.timestamp }, eventData });
+    grouped.push({
+      blockInfo: { height: block.height, timestamp: block.timestamp },
+      eventsData: eventData,
+    });
   }
 
-  return grouped.flatMap(perBlock =>
-    perBlock.eventData.map(txEvent => ({
-      cdeId: extension.cdeId,
-      cdeDatumType: ChainDataExtensionDatumType.MinaEventGeneric,
-      blockNumber: getBlockNumber(Number.parseInt(perBlock.blockInfo.timestamp, 10)),
-      payload: txEvent,
-      network,
-      scheduledPrefix: extension.scheduledPrefix,
-      paginationCursor: { cursor: txEvent.txHash, finished: false },
-    }))
-  );
-}
-
-export async function getActionCdeData(
-  pg: postgres.Sql,
-  extension: ChainDataExtensionMinaActionGeneric,
-  fromTimestamp: number,
-  toTimestamp: number,
-  getBlockNumber: (minaTimestamp: number) => number,
-  network: string,
-  cursor?: string
-): Promise<CdeMinaActionGenericDatum[]> {
-  const grouped = [] as {
-    blockInfo: {
-      height: number;
-      timestamp: string;
-    };
-    // TODO: could each data by just a tuple?
-    actionData: { data: string[][]; txHash: string }[];
-  }[];
-
-  const actions = await getActionsQuery(
-    pg,
-    extension.address,
-    toTimestamp.toString(),
-    fromTimestamp.toString(),
-    cursor
-  );
-
-  for (const block of actions) {
-    const actionData = [] as { data: string[][]; txHash: string }[];
-
-    for (const blockEvent of block.actions) {
-      if (
-        actionData[actionData.length - 1] &&
-        blockEvent.hash == actionData[actionData.length - 1].txHash
-      ) {
-        actionData[actionData.length - 1].data.push(blockEvent.data);
-      } else {
-        actionData.push({ txHash: blockEvent.hash, data: [blockEvent.data] });
-      }
-    }
-
-    grouped.push({ blockInfo: { height: block.height, timestamp: block.timestamp }, actionData });
-  }
-
-  return grouped.flatMap(perBlock =>
-    perBlock.actionData.map(txEvent => ({
-      cdeId: extension.cdeId,
-      cdeDatumType: ChainDataExtensionDatumType.MinaActionGeneric,
-      blockNumber: getBlockNumber(Number.parseInt(perBlock.blockInfo.timestamp, 10)),
-      payload: txEvent,
-      network,
-      scheduledPrefix: extension.scheduledPrefix,
-      paginationCursor: { cursor: txEvent.txHash, finished: false },
-    }))
-  );
+  return grouped;
 }
 
 function fullChainCTE(db_client: postgres.Sql, toTimestamp?: string, fromTimestamp?: string) {
@@ -230,11 +266,7 @@ function emittedActionsCTE(db_client: postgres.Sql) {
   `;
 }
 
-function emittedActionStateCTE(
-  db_client: postgres.Sql,
-  fromActionState?: string,
-  endActionState?: string
-) {
+function emittedActionStateCTE(db_client: postgres.Sql) {
   return db_client`
   emitted_action_state AS (
     SELECT
@@ -253,29 +285,18 @@ function emittedActionStateCTE(
       INNER JOIN zkapp_field zkf2 ON zkf2.id = zks.element2
       INNER JOIN zkapp_field zkf3 ON zkf3.id = zks.element3
       INNER JOIN zkapp_field zkf4 ON zkf4.id = zks.element4
-    WHERE
-      1 = 1
-    ${
-      fromActionState
-        ? db_client`AND zkf0.id >= (SELECT id FROM zkapp_field WHERE field = ${fromActionState})`
-        : db_client``
-    }
-    ${
-      endActionState
-        ? db_client`AND zkf0.id <= (SELECT id FROM zkapp_field WHERE field = ${endActionState})`
-        : db_client``
-    }
   )`;
 }
 
-interface EventsPerBlock {
+type PerBlock = {
   timestamp: string;
   height: number;
+
   events: {
     hash: string;
     data: string[];
   }[];
-}
+};
 
 export function getEventsQuery(
   db_client: postgres.Sql,
@@ -285,7 +306,7 @@ export function getEventsQuery(
   after?: string,
   limit?: string
 ) {
-  return db_client<EventsPerBlock[]>`
+  return db_client<PerBlock[]>`
   WITH 
   ${fullChainCTE(db_client, toTimestamp, fromTimestamp)},
   ${accountIdentifierCTE(db_client, address)},
@@ -312,16 +333,8 @@ export function getEventsQuery(
   FROM grouped_events
   GROUP BY height
   ORDER BY height
+  ${limit ? db_client`LIMIT ${limit}` : db_client``}
   `;
-}
-
-interface ActionsPerBlock {
-  timestamp: string;
-  height: number;
-  actions: {
-    hash: string;
-    data: string[];
-  }[];
 }
 
 export function getActionsQuery(
@@ -332,7 +345,7 @@ export function getActionsQuery(
   after?: string,
   limit?: string
 ) {
-  return db_client<ActionsPerBlock[]>`
+  return db_client<PerBlock[]>`
   WITH
   ${fullChainCTE(db_client, toTimestamp, fromTimestamp)},
   ${accountIdentifierCTE(db_client, address)},
@@ -356,9 +369,10 @@ export function getActionsQuery(
   SELECT
     MAX(timestamp) timestamp,
     height,
-    JSON_AGG(JSON_BUILD_OBJECT('hash', hash, 'data', actions_data)) actions
+    JSON_AGG(JSON_BUILD_OBJECT('hash', hash, 'data', actions_data)) events
   FROM grouped_events
   GROUP BY height
   ORDER BY height
+  ${limit ? db_client`LIMIT ${limit}` : db_client``}
   `;
 }

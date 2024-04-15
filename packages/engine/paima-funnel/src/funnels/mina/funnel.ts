@@ -134,33 +134,39 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
       this.sharedData.extensions.reduce(
         (promises, extension) => {
           if (extension.cdeType === ChainDataExtensionType.MinaEventGeneric) {
-            const promise = getEventCdeData(
-              cachedState.pg,
+            const promise = getEventCdeData({
+              pg: cachedState.pg,
               extension,
               fromTimestamp,
               toTimestamp,
-              ts =>
+              getBlockNumber: ts =>
                 mapSlotsToEvmNumbers[
                   minaTimestampToSlot(ts, cachedState.genesisTime, this.config.slotDuration)
                 ],
-              this.chainName
-            );
+              network: this.chainName,
+              isPresync: false,
+              cursor: undefined,
+              limit: this.config.paginationLimit,
+            });
 
             promises.push(promise);
           }
 
           if (extension.cdeType === ChainDataExtensionType.MinaActionGeneric) {
-            const promise = getActionCdeData(
-              cachedState.pg,
+            const promise = getActionCdeData({
+              pg: cachedState.pg,
               extension,
               fromTimestamp,
               toTimestamp,
-              ts =>
+              getBlockNumber: ts =>
                 mapSlotsToEvmNumbers[
                   minaTimestampToSlot(ts, cachedState.genesisTime, this.config.slotDuration)
                 ],
-              this.chainName
-            );
+              network: this.chainName,
+              isPresync: false,
+              cursor: undefined,
+              limit: this.config.paginationLimit,
+            });
 
             promises.push(promise);
           }
@@ -248,15 +254,18 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
 
                 const cursor = cursors && cursors[extension.cdeId];
 
-                const data = getEventCdeData(
-                  cache.pg,
+                const data = getEventCdeData({
+                  pg: cache.pg,
                   extension,
-                  from,
-                  startingSlotTimestamp - 1,
-                  x => minaTimestampToSlot(x, cache.genesisTime, this.config.slotDuration),
-                  this.chainName,
-                  cursor?.cursor
-                ).then(mapCursorPaginatedData(extension.cdeId));
+                  fromTimestamp: from,
+                  toTimestamp: startingSlotTimestamp - 1,
+                  getBlockNumber: x =>
+                    minaTimestampToSlot(x, cache.genesisTime, this.config.slotDuration),
+                  network: this.chainName,
+                  isPresync: true,
+                  cursor: cursor?.cursor,
+                  limit: this.config.paginationLimit,
+                }).then(mapCursorPaginatedData(extension.cdeId));
 
                 return data.then(data => ({
                   cdeId: extension.cdeId,
@@ -272,15 +281,18 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
 
                 const cursor = cursors && cursors[extension.cdeId];
 
-                const data = getActionCdeData(
-                  cache.pg,
+                const data = getActionCdeData({
+                  pg: cache.pg,
                   extension,
-                  from,
-                  startingSlotTimestamp - 1,
-                  x => minaTimestampToSlot(x, cache.genesisTime, this.config.slotDuration),
-                  this.chainName,
-                  cursor?.cursor
-                ).then(mapCursorPaginatedData(extension.cdeId));
+                  fromTimestamp: from,
+                  toTimestamp: startingSlotTimestamp - 1,
+                  getBlockNumber: x =>
+                    minaTimestampToSlot(x, cache.genesisTime, this.config.slotDuration),
+                  network: this.chainName,
+                  isPresync: true,
+                  cursor: cursor?.cursor,
+                  limit: this.config.paginationLimit,
+                }).then(mapCursorPaginatedData(extension.cdeId));
 
                 return data.then(data => ({
                   cdeId: extension.cdeId,
