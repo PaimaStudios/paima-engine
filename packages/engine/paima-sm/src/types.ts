@@ -15,6 +15,7 @@ import type {
   InternalEventType,
   ConfigNetworkType,
   STFSubmittedData,
+  IInverseAppProjected1055Contract,
 } from '@paima/utils';
 import { Type } from '@sinclair/typebox';
 import type { Static } from '@sinclair/typebox';
@@ -78,6 +79,13 @@ interface CdeDatumErc721MintPayload {
 interface CdeDatumErc20DepositPayload {
   from: string;
   value: string;
+}
+
+interface CdeDatumInverseAppProjected1155MintPayload {
+  tokenId: string;  // uint256
+  minter: string;  // address
+  userTokenId: string;  // uint256
+  value: string;  // uint256, the amount
 }
 
 type CdeDatumGenericPayload = any;
@@ -146,6 +154,7 @@ type ChainDataExtensionPayload =
   | CdeDatumErc721MintPayload
   | CdeDatumErc721TransferPayload
   | CdeDatumErc20DepositPayload
+  | CdeDatumInverseAppProjected1155MintPayload
   // TODO: better type definition to avoid this issue
   // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
   | CdeDatumGenericPayload
@@ -182,6 +191,13 @@ export interface CdeErc721MintDatum extends CdeDatumBase {
 export interface CdeErc20DepositDatum extends CdeDatumBase {
   cdeDatumType: ChainDataExtensionDatumType.ERC20Deposit;
   payload: CdeDatumErc20DepositPayload;
+  scheduledPrefix: string;
+}
+
+export interface CdeInverseAppProjected1155MintDatum extends CdeDatumBase {
+  cdeDatumType: ChainDataExtensionDatumType.InverseAppProjected1155Mint;
+  payload: CdeDatumInverseAppProjected1155MintPayload;
+  contractAddress: string;
   scheduledPrefix: string;
 }
 
@@ -235,6 +251,7 @@ export type ChainDataExtensionDatum =
   | CdeErc721MintDatum
   | CdeErc721TransferDatum
   | CdeErc20DepositDatum
+  | CdeInverseAppProjected1155MintDatum
   | CdeGenericDatum
   | CdeErc6551RegistryDatum
   | CdeCardanoPoolDatum
@@ -249,6 +266,7 @@ export enum CdeEntryTypeName {
   ERC20Deposit = 'erc20-deposit',
   ERC721 = 'erc721',
   ERC6551Registry = 'erc6551-registry',
+  InverseAppProjected1155 = 'erc1155-app',
   CardanoDelegation = 'cardano-stake-delegation',
   CardanoProjectedNFT = 'cardano-projected-nft',
   CardanoDelayedAsset = 'cardano-delayed-asset',
@@ -319,6 +337,21 @@ export type ChainDataExtensionErc20Deposit = ChainDataExtensionBase &
   Static<typeof ChainDataExtensionErc20DepositConfig> & {
     cdeType: ChainDataExtensionType.ERC20Deposit;
     contract: ERC20Contract;
+  };
+
+export const ChainDataExtensionInverseAppProjected1155MintConfig = Type.Intersect([
+  ChainDataExtensionConfigBase,
+  Type.Object({
+    type: Type.Literal(CdeEntryTypeName.InverseAppProjected1155),
+    contractAddress: EvmAddress,
+    scheduledPrefix: Type.String(),
+    depositAddress: EvmAddress,
+  })
+]);
+export type ChainDataExtensionInverseAppProjected1155Mint = ChainDataExtensionBase &
+  Static<typeof ChainDataExtensionInverseAppProjected1155MintConfig> & {
+    cdeType: ChainDataExtensionType.InverseAppProjected1155;
+    contract: IInverseAppProjected1055Contract;
   };
 
 export const ChainDataExtensionGenericConfig = Type.Intersect([
