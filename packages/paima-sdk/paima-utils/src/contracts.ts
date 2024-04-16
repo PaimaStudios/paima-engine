@@ -11,37 +11,42 @@ export type * from './contract-types/index.js';
 // Export contract ABIs.
 import paimaL2ContractBuild from './artifacts/PaimaL2Contract.js';
 import erc20ContractBuild from './artifacts/ERC20Contract.js';
+import erc165ContractBuild from './artifacts/ERC165Contract.js';
 import erc721ContractBuild from './artifacts/ERC721Contract.js';
 import paimaErc721ContractBuild from './artifacts/PaimaERC721Contract.js';
-import erc165ContractBuild from './artifacts/ERC165Contract.js';
+import erc1155ContractBuild from './artifacts/IERC1155Contract.js';
+import inverseAppProjected1155ContractBuild from './artifacts/IInverseAppProjected1155Contract.js';
 import erc6551RegistryContractBuild from './artifacts/ERC6551RegistryContract.js';
 import oldErc6551RegistryContractBuild from './artifacts/OldERC6551RegistryContract.js';
-import inverseAppProjected1155ContractBuild from './artifacts/IInverseAppProjected1155Contract.js';
 export const contractAbis = {
   paimaL2ContractBuild,
   erc20ContractBuild,
+  erc165ContractBuild,
   erc721ContractBuild,
   paimaErc721ContractBuild,
-  erc165ContractBuild,
+  erc1155ContractBuild,
+  inverseAppProjected1155ContractBuild,
   erc6551RegistryContractBuild,
   oldErc6551RegistryContractBuild,
-  inverseAppProjected1155ContractBuild,
 };
 
 // Re-export contract types.
 export type { PaimaGameInteraction } from './contract-types/PaimaL2Contract.js';
 export type { Transfer as ERC20Transfer } from './contract-types/ERC20Contract.js';
-export type { AccountCreated } from './contract-types/ERC6551RegistryContract.js';
 export type {
   Minted as PaimaMinted,
   Transfer as PaimaERC721Transfer,
 } from './contract-types/PaimaERC721Contract.js';
 export type { Transfer as ERC721Transfer } from './contract-types/ERC721Contract.js';
 export type {
-  Minted as InverseAppProjected1155Minted,
   TransferSingle as Erc1155TransferSingle,
   TransferBatch as Erc1155TransferBatch,
+} from './contract-types/ERC1155Contract.js';
+export type {
+  Minted as InverseAppProjected1155Minted,
+  // TransferSingle and TransferBatch are presumed to match base Erc1155 above.
 } from './contract-types/IInverseAppProjected1155Contract.js';
+export type { AccountCreated } from './contract-types/ERC6551RegistryContract.js';
 
 export type { Web3, Contract, AbiItem, EventData };
 export { AddressType, ChainDataExtensionType, ChainDataExtensionDatumType };
@@ -111,6 +116,17 @@ export function getPaimaErc721Contract(
     paimaErc721ContractBuild.abi as AbiItem[],
     web3
   ) as unknown as Contracts.PaimaERC721Contract;
+}
+
+export function getErc1155Contract(
+  address: string,
+  web3?: Web3
+): Contracts.IERC1155Contract {
+  return getAbiContract(
+    address,
+    erc1155ContractBuild.abi as AbiItem[],
+    web3
+  ) as unknown as Contracts.IERC1155Contract;
 }
 
 export function getInverseAppProjected1155Contract(
