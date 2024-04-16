@@ -1,4 +1,4 @@
-import { doLog, logError, ChainDataExtensionType, delay } from '@paima/utils';
+import { doLog, logError, ChainDataExtensionType, delay, ENV } from '@paima/utils';
 import type { ChainFunnel, ReadPresyncDataFrom } from '@paima/runtime';
 import type {
   ChainData,
@@ -269,8 +269,11 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
                   extension,
                   fromTimestamp,
                   toTimestamp: startingSlotTimestamp - 1,
-                  getBlockNumber: x =>
-                    minaTimestampToSlot(x, cache.genesisTime, this.config.slotDuration),
+                  // the handler for this cde stores the block height unmodified
+                  // (even if the event is scheduled at the correct height), so
+                  // handle this special case here, to have the events properly
+                  // sorted.
+                  getBlockNumber: _x => ENV.SM_START_BLOCKHEIGHT + 1,
                   network: this.chainName,
                   isPresync: true,
                   cursor: cursor?.cursor,
@@ -296,8 +299,7 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
                   extension,
                   fromTimestamp,
                   toTimestamp: startingSlotTimestamp - 1,
-                  getBlockNumber: x =>
-                    minaTimestampToSlot(x, cache.genesisTime, this.config.slotDuration),
+                  getBlockNumber: _x => ENV.SM_START_BLOCKHEIGHT + 1,
                   network: this.chainName,
                   isPresync: true,
                   cursor: cursor?.cursor,
