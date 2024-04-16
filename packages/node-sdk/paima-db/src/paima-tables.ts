@@ -227,6 +227,52 @@ const TABLE_DATA_CDE_ERC721_BURN: TableData = {
   creationQuery: QUERY_CREATE_TABLE_CDE_ERC721_BURN,
 };
 
+const QUERY_CREATE_TABLE_CDE_ERC1155_DATA = `
+CREATE TABLE cde_erc1155_data (
+  cde_id INTEGER NOT NULL,
+  token_id INTEGER NOT NULL,
+  wallet_address TEXT NOT NULL,
+  balance INTEGER NOT NULL,
+  PRIMARY KEY (cde_id, token_id, wallet_address)
+);
+`;
+
+const TABLE_DATA_CDE_ERC1155_DATA: TableData = {
+  tableName: 'cde_erc1155_data',
+  primaryKeyColumns: ['cde_id', 'token_id'],
+  columnData: packTuples([
+    ['cde_id', 'integer', 'NO', ''],
+    ['token_id', 'integer', 'NO', ''],
+    ['wallet_address', 'text', 'NO', ''],
+    ['balance', 'integer', 'NO', ''],
+  ]),
+  serialColumns: [],
+  creationQuery: QUERY_CREATE_TABLE_CDE_ERC1155_DATA,
+};
+
+const QUERY_CREATE_TABLE_CDE_ERC1155_BURN = `
+CREATE TABLE cde_erc1155_burn (
+  cde_id INTEGER NOT NULL,
+  token_id INTEGER NOT NULL,
+  wallet_address TEXT NOT NULL,
+  balance INTEGER NOT NULL,
+  PRIMARY KEY (cde_id, token_id, wallet_address)
+);
+`;
+
+const TABLE_DATA_CDE_ERC1155_BURN: TableData = {
+  tableName: 'cde_erc1155_burn',
+  primaryKeyColumns: ['cde_id', 'token_id'],
+  columnData: packTuples([
+    ['cde_id', 'integer', 'NO', ''],
+    ['token_id', 'integer', 'NO', ''],
+    ['wallet_address', 'text', 'NO', ''],
+    ['balance', 'integer', 'NO', ''],
+  ]),
+  serialColumns: [],
+  creationQuery: QUERY_CREATE_TABLE_CDE_ERC1155_BURN,
+};
+
 const QUERY_CREATE_TABLE_CDE_ERC20_DEPOSIT = `
 CREATE TABLE cde_erc20_deposit_data (
   cde_id INTEGER NOT NULL,
@@ -602,6 +648,8 @@ export const TABLES: TableData[] = [
   TABLE_DATA_CDE_ERC20,
   TABLE_DATA_CDE_ERC721,
   TABLE_DATA_CDE_ERC721_BURN,
+  TABLE_DATA_CDE_ERC1155_DATA,
+  TABLE_DATA_CDE_ERC1155_BURN,
   TABLE_DATA_CDE_ERC20_DEPOSIT,
   TABLE_DATA_CDE_GENERIC_DATA,
   TABLE_DATA_CDE_ERC6551_REGISTRY,

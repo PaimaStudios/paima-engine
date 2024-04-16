@@ -63,6 +63,22 @@ CREATE TABLE cde_erc721_burn (
   PRIMARY KEY(cde_id, token_id)
 );
 
+CREATE TABLE cde_erc1155_data (
+  cde_id INTEGER NOT NULL,
+  token_id INTEGER NOT NULL,
+  wallet_address TEXT NOT NULL,
+  balance INTEGER NOT NULL,
+  PRIMARY KEY (cde_id, token_id, wallet_address)
+);
+
+CREATE TABLE cde_erc1155_burn (
+  cde_id INTEGER NOT NULL,
+  token_id INTEGER NOT NULL,
+  wallet_address TEXT NOT NULL,
+  balance INTEGER NOT NULL,
+  PRIMARY KEY (cde_id, token_id, wallet_address)
+);
+
 CREATE TABLE cde_erc20_deposit_data (
   cde_id INTEGER NOT NULL,
   wallet_address TEXT NOT NULL,

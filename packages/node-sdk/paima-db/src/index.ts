@@ -26,6 +26,8 @@ export * from './sql/cde-erc20-deposit.queries.js';
 export type * from './sql/cde-erc20-deposit.queries.js';
 export * from './sql/cde-generic.queries.js';
 export type * from './sql/cde-generic.queries.js';
+export * from './sql/cde-erc1155.queries.js';
+export type * from './sql/cde-erc1155.queries.js';
 export * from './sql/cde-erc6551-registry.queries.js';
 export type * from './sql/cde-erc6551-registry.queries.js';
 export * from './sql/emulated.queries.js';
