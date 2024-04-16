@@ -84,6 +84,7 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
     );
 
     let confirmedTimestamp;
+
     while (true) {
       const confirmedSlot = await findMinaConfirmedSlot(cachedState.pg);
 
@@ -103,7 +104,7 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
     const fromTimestamp =
       this.cache.getState().lastPoint?.timestamp || cachedState.startingSlotTimestamp;
 
-    const toTimestamp = Math.max(confirmedTimestamp, maxBaseTimestamp);
+    const toTimestamp = maxBaseTimestamp;
 
     const fromSlot = minaTimestampToSlot(
       fromTimestamp,
