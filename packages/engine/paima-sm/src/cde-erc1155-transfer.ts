@@ -1,10 +1,10 @@
 import { ENV } from '@paima/utils';
-import type { CdeInverseAppProjected1155TransferDatum } from './types.js';
+import type { CdeErc1155TransferDatum } from './types.js';
 import { createScheduledData } from '@paima/db';
 import type { SQLUpdate } from '@paima/db';
 
-export default async function processInverseAppProjected1155TransferDatum(
-  cdeDatum: CdeInverseAppProjected1155TransferDatum,
+export default async function processErc1155TransferDatum(
+  cdeDatum: CdeErc1155TransferDatum,
   inPresync: boolean
 ): Promise<SQLUpdate[]> {
   const { transferScheduledPrefix, contractAddress, payload, blockNumber } = cdeDatum;

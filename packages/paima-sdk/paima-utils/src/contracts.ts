@@ -39,8 +39,8 @@ export type {
 export type { Transfer as ERC721Transfer } from './contract-types/ERC721Contract.js';
 export type {
   Minted as InverseAppProjected1155Minted,
-  TransferSingle as InverseAppProjected1155TransferSingle,
-  TransferBatch as InverseAppProjected1155TransferBatch,
+  TransferSingle as Erc1155TransferSingle,
+  TransferBatch as Erc1155TransferBatch,
 } from './contract-types/IInverseAppProjected1155Contract.js';
 
 export type { Web3, Contract, AbiItem, EventData };

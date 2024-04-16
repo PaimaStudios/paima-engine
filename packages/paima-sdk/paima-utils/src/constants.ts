@@ -39,7 +39,7 @@ export const enum ChainDataExtensionDatumType {
   CardanoTransfer,
   CardanoMintBurn,
   InverseAppProjected1155Mint,
-  InverseAppProjected1155Transfer,
+  Erc1155Transfer,
 }
 
 export const FUNNEL_PRESYNC_FINISHED = 'finished';

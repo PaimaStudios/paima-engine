@@ -88,7 +88,7 @@ interface CdeDatumInverseAppProjected1155MintPayload {
   value: string; // uint256, the amount
 }
 
-interface CdeDatumInverseAppProjected1155TransferPayload {
+interface CdeDatumErc1155TransferPayload {
   operator: string; // address
   from: string; // address
   to: string; // address
@@ -209,9 +209,9 @@ export interface CdeInverseAppProjected1155MintDatum extends CdeDatumBase {
   mintScheduledPrefix: string;
 }
 
-export interface CdeInverseAppProjected1155TransferDatum extends CdeDatumBase {
-  cdeDatumType: ChainDataExtensionDatumType.InverseAppProjected1155Transfer;
-  payload: CdeDatumInverseAppProjected1155TransferPayload;
+export interface CdeErc1155TransferDatum extends CdeDatumBase {
+  cdeDatumType: ChainDataExtensionDatumType.Erc1155Transfer;
+  payload: CdeDatumErc1155TransferPayload;
   contractAddress: string;
   transferScheduledPrefix: string;
 }
@@ -267,7 +267,7 @@ export type ChainDataExtensionDatum =
   | CdeErc721TransferDatum
   | CdeErc20DepositDatum
   | CdeInverseAppProjected1155MintDatum
-  | CdeInverseAppProjected1155TransferDatum
+  | CdeErc1155TransferDatum
   | CdeGenericDatum
   | CdeErc6551RegistryDatum
   | CdeCardanoPoolDatum
@@ -282,7 +282,7 @@ export enum CdeEntryTypeName {
   ERC20Deposit = 'erc20-deposit',
   ERC721 = 'erc721',
   ERC6551Registry = 'erc6551-registry',
-  InverseAppProjected1155 = 'erc1155-app',
+  ERC1155 = 'erc1155',
   CardanoDelegation = 'cardano-stake-delegation',
   CardanoProjectedNFT = 'cardano-projected-nft',
   CardanoDelayedAsset = 'cardano-delayed-asset',
@@ -358,7 +358,7 @@ export type ChainDataExtensionErc20Deposit = ChainDataExtensionBase &
 export const ChainDataExtensionInverseAppProjected1155Config = Type.Intersect([
   ChainDataExtensionConfigBase,
   Type.Object({
-    type: Type.Literal(CdeEntryTypeName.InverseAppProjected1155),
+    type: Type.Literal(CdeEntryTypeName.ERC1155),
     contractAddress: EvmAddress,
     mintScheduledPrefix: Type.String(),
     transferScheduledPrefix: Type.String(),

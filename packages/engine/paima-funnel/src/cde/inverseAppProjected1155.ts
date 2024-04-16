@@ -1,14 +1,14 @@
 import { ChainDataExtensionDatumType, DEFAULT_FUNNEL_TIMEOUT, timeout } from '@paima/utils';
 import type {
   CdeInverseAppProjected1155MintDatum,
-  CdeInverseAppProjected1155TransferDatum,
+  CdeErc1155TransferDatum,
   ChainDataExtensionDatum,
   ChainDataExtensionInverseAppProjected1155,
 } from '@paima/sm';
 import type {
   InverseAppProjected1155Minted as Minted,
-  InverseAppProjected1155TransferSingle as TransferSingle,
-  InverseAppProjected1155TransferBatch as TransferBatch,
+  Erc1155TransferSingle as TransferSingle,
+  Erc1155TransferBatch as TransferBatch,
 } from '@paima/utils';
 
 export default async function getCdeInverseAppProjected1155Data(
@@ -73,10 +73,10 @@ function transferSingleToDatum(
   event: TransferSingle,
   extension: ChainDataExtensionInverseAppProjected1155,
   network: string
-): CdeInverseAppProjected1155TransferDatum {
+): CdeErc1155TransferDatum {
   return {
     cdeId: extension.cdeId,
-    cdeDatumType: ChainDataExtensionDatumType.InverseAppProjected1155Transfer,
+    cdeDatumType: ChainDataExtensionDatumType.Erc1155Transfer,
     blockNumber: event.blockNumber,
     payload: {
       operator: event.returnValues.operator,
@@ -95,13 +95,13 @@ function transferBatchToDatums(
   event: TransferBatch,
   extension: ChainDataExtensionInverseAppProjected1155,
   network: string
-): CdeInverseAppProjected1155TransferDatum[] {
+): CdeErc1155TransferDatum[] {
   // NOTE: assumes that ids and values have the same length
-  const result: CdeInverseAppProjected1155TransferDatum[] = [];
+  const result: CdeErc1155TransferDatum[] = [];
   for (let i = 0; i < event.returnValues.ids.length; ++i) {
     result.push({
       cdeId: extension.cdeId,
-      cdeDatumType: ChainDataExtensionDatumType.InverseAppProjected1155Transfer,
+      cdeDatumType: ChainDataExtensionDatumType.Erc1155Transfer,
       blockNumber: event.blockNumber,
       payload: {
         operator: event.returnValues.operator,
