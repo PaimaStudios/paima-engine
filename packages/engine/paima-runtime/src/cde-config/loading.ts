@@ -18,7 +18,7 @@ import {
   ERC6551_REGISTRY_DEFAULT,
   defaultEvmMainNetworkName,
   defaultCardanoNetworkName,
-  getInverseAppProjected1155Contract,
+  getErc1155Contract,
 } from '@paima/utils';
 
 import type {
@@ -37,12 +37,12 @@ import {
   ChainDataExtensionCardanoMintBurnConfig,
   ChainDataExtensionCardanoProjectedNFTConfig,
   ChainDataExtensionCardanoTransferConfig,
+  ChainDataExtensionErc1155Config,
   ChainDataExtensionErc20Config,
   ChainDataExtensionErc20DepositConfig,
   ChainDataExtensionErc6551RegistryConfig,
   ChainDataExtensionErc721Config,
   ChainDataExtensionGenericConfig,
-  ChainDataExtensionInverseAppProjected1155Config,
 } from '@paima/sm';
 import { loadAbi } from './utils.js';
 import assertNever from 'assert-never';
@@ -153,11 +153,11 @@ export function parseCdeConfigFile(configFileData: string): Static<typeof CdeCon
           ]),
           entry
         );
-      case CdeEntryTypeName.InverseAppProjected1155:
+      case CdeEntryTypeName.ERC1155:
         return checkOrError(
           entry.name,
           Type.Intersect([
-            ChainDataExtensionInverseAppProjected1155Config,
+            ChainDataExtensionErc1155Config,
             Type.Object({ network: Type.String() }),
           ]),
           entry
@@ -256,14 +256,14 @@ async function instantiateExtension(
         cdeType: ChainDataExtensionType.ERC20Deposit,
         contract: getErc20Contract(config.contractAddress, web3s[network]),
       };
-    case CdeEntryTypeName.InverseAppProjected1155:
+    case CdeEntryTypeName.ERC1155:
       return {
         ...config,
         network,
         cdeId: index,
         hash: hashConfig(config),
-        cdeType: ChainDataExtensionType.InverseAppProjected1155,
-        contract: getInverseAppProjected1155Contract(config.contractAddress, web3s[network]),
+        cdeType: ChainDataExtensionType.ERC1155,
+        contract: getErc1155Contract(config.contractAddress, web3s[network]),
       };
     case CdeEntryTypeName.Generic:
       return {

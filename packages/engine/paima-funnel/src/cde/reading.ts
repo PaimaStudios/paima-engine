@@ -3,13 +3,13 @@ import type Web3 from 'web3';
 import { ChainDataExtensionType } from '@paima/utils';
 import type { ChainDataExtensionDatum, ChainDataExtension } from '@paima/sm';
 
+import getCdeGenericData from './generic.js';
 import getCdeErc20Data from './erc20.js';
+import getCdeErc20DepositData from './erc20Deposit.js';
 import getCdeErc721Data from './erc721.js';
 import getCdePaimaErc721Data from './paimaErc721.js';
-import getCdeErc20DepositData from './erc20Deposit.js';
-import getCdeGenericData from './generic.js';
 import getCdeErc6551RegistryData from './erc6551Registry.js';
-import getCdeInverseAppProjected1155Data from './inverseAppProjected1155.js';
+import getCdeErc1155Data from './erc1155.js';
 import assertNever from 'assert-never';
 
 export async function getUngroupedCdeData(
@@ -44,18 +44,18 @@ async function getSpecificCdeData(
     fromBlock = extension.startBlockHeight;
   }
   switch (extension.cdeType) {
+    case ChainDataExtensionType.Generic:
+      return await getCdeGenericData(extension, fromBlock, toBlock, network);
     case ChainDataExtensionType.ERC20:
       return await getCdeErc20Data(extension, fromBlock, toBlock, network);
+    case ChainDataExtensionType.ERC20Deposit:
+      return await getCdeErc20DepositData(extension, fromBlock, toBlock, network);
     case ChainDataExtensionType.ERC721:
       return await getCdeErc721Data(extension, fromBlock, toBlock, network);
     case ChainDataExtensionType.PaimaERC721:
       return await getCdePaimaErc721Data(extension, fromBlock, toBlock, network);
-    case ChainDataExtensionType.ERC20Deposit:
-      return await getCdeErc20DepositData(extension, fromBlock, toBlock, network);
-    case ChainDataExtensionType.InverseAppProjected1155:
-      return await getCdeInverseAppProjected1155Data(extension, fromBlock, toBlock, network);
-    case ChainDataExtensionType.Generic:
-      return await getCdeGenericData(extension, fromBlock, toBlock, network);
+    case ChainDataExtensionType.ERC1155:
+      return await getCdeErc1155Data(extension, fromBlock, toBlock, network);
     case ChainDataExtensionType.ERC6551Registry:
       return await getCdeErc6551RegistryData(extension, fromBlock, toBlock, network);
     case ChainDataExtensionType.CardanoPool:

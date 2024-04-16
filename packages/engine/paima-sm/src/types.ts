@@ -16,6 +16,7 @@ import type {
   ConfigNetworkType,
   STFSubmittedData,
   IInverseAppProjected1155Contract,
+  IERC1155Contract,
 } from '@paima/utils';
 import { Type } from '@sinclair/typebox';
 import type { Static } from '@sinclair/typebox';
@@ -92,8 +93,8 @@ interface CdeDatumErc1155TransferPayload {
   operator: string; // address
   from: string; // address
   to: string; // address
-  id: string; // uint256, batch already flattened
-  value: string; // uint256, batch already flattened
+  ids: string[]; // uint256, might have just one entry
+  values: string[]; // uint256, might have just one entry
 }
 
 type CdeDatumGenericPayload = any;
@@ -202,18 +203,18 @@ export interface CdeErc20DepositDatum extends CdeDatumBase {
   scheduledPrefix: string;
 }
 
+export interface CdeErc1155TransferDatum extends CdeDatumBase {
+  cdeDatumType: ChainDataExtensionDatumType.Erc1155Transfer;
+  payload: CdeDatumErc1155TransferPayload;
+  contractAddress: string;
+  scheduledPrefix: string;
+}
+
 export interface CdeInverseAppProjected1155MintDatum extends CdeDatumBase {
   cdeDatumType: ChainDataExtensionDatumType.InverseAppProjected1155Mint;
   payload: CdeDatumInverseAppProjected1155MintPayload;
   contractAddress: string;
   mintScheduledPrefix: string;
-}
-
-export interface CdeErc1155TransferDatum extends CdeDatumBase {
-  cdeDatumType: ChainDataExtensionDatumType.Erc1155Transfer;
-  payload: CdeDatumErc1155TransferPayload;
-  contractAddress: string;
-  transferScheduledPrefix: string;
 }
 
 export interface CdeGenericDatum extends CdeDatumBase {
@@ -266,8 +267,8 @@ export type ChainDataExtensionDatum =
   | CdeErc721MintDatum
   | CdeErc721TransferDatum
   | CdeErc20DepositDatum
-  | CdeInverseAppProjected1155MintDatum
   | CdeErc1155TransferDatum
+  | CdeInverseAppProjected1155MintDatum
   | CdeGenericDatum
   | CdeErc6551RegistryDatum
   | CdeCardanoPoolDatum
@@ -355,14 +356,26 @@ export type ChainDataExtensionErc20Deposit = ChainDataExtensionBase &
     contract: ERC20Contract;
   };
 
-export const ChainDataExtensionInverseAppProjected1155Config = Type.Intersect([
+export const ChainDataExtensionErc1155Config = Type.Intersect([
   ChainDataExtensionConfigBase,
   Type.Object({
     type: Type.Literal(CdeEntryTypeName.ERC1155),
     contractAddress: EvmAddress,
-    mintScheduledPrefix: Type.String(),
-    transferScheduledPrefix: Type.String(),
+    scheduledPrefix: Type.String(),
     depositAddress: EvmAddress,
+  }),
+]);
+export type ChainDataExtensionErc1155 = ChainDataExtensionBase &
+  Static<typeof ChainDataExtensionErc1155Config> & {
+    cdeType: ChainDataExtensionType.ERC1155;
+    contract: IERC1155Contract;
+  };
+
+/*
+export const ChainDataExtensionInverseAppProjected1155Config = Type.Intersect([
+  ChainDataExtensionErc1155Config,
+  Type.Object({
+    mintScheduledPrefix: Type.String(),
   }),
 ]);
 export type ChainDataExtensionInverseAppProjected1155 = ChainDataExtensionBase &
@@ -370,6 +383,7 @@ export type ChainDataExtensionInverseAppProjected1155 = ChainDataExtensionBase &
     cdeType: ChainDataExtensionType.InverseAppProjected1155;
     contract: IInverseAppProjected1155Contract;
   };
+*/
 
 export const ChainDataExtensionGenericConfig = Type.Intersect([
   ChainDataExtensionConfigBase,
@@ -483,11 +497,12 @@ export const CdeConfig = Type.Object({
     Type.Intersect([
       Type.Union([
         ChainDataExtensionErc20Config,
-        ChainDataExtensionErc721Config,
         ChainDataExtensionErc20DepositConfig,
-        ChainDataExtensionInverseAppProjected1155Config,
-        ChainDataExtensionGenericConfig,
+        ChainDataExtensionErc721Config,
+        ChainDataExtensionErc1155Config,
+        //ChainDataExtensionInverseAppProjected1155Config,
         ChainDataExtensionErc6551RegistryConfig,
+        ChainDataExtensionGenericConfig,
         ChainDataExtensionCardanoDelegationConfig,
         ChainDataExtensionCardanoProjectedNFTConfig,
         ChainDataExtensionCardanoDelayedAssetConfig,
@@ -514,12 +529,13 @@ export const CdeBaseConfig = Type.Object({
 });
 export type ChainDataExtension = (
   | ChainDataExtensionErc20
+  | ChainDataExtensionErc20Deposit
   | ChainDataExtensionErc721
   | ChainDataExtensionPaimaErc721
-  | ChainDataExtensionErc20Deposit
-  | ChainDataExtensionInverseAppProjected1155
-  | ChainDataExtensionGeneric
+  | ChainDataExtensionErc1155
+  //| ChainDataExtensionInverseAppProjected1155
   | ChainDataExtensionErc6551Registry
+  | ChainDataExtensionGeneric
   | ChainDataExtensionCardanoDelegation
   | ChainDataExtensionCardanoProjectedNFT
   | ChainDataExtensionCardanoDelayedAsset

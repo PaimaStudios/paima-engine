@@ -23,7 +23,7 @@ export const enum ChainDataExtensionType {
   CardanoAssetUtxo = 9,
   CardanoTransfer = 10,
   CardanoMintBurn = 11,
-  InverseAppProjected1155 = 12,
+  ERC1155 = 12,
 }
 
 export const enum ChainDataExtensionDatumType {
@@ -38,7 +38,6 @@ export const enum ChainDataExtensionDatumType {
   CardanoAssetUtxo,
   CardanoTransfer,
   CardanoMintBurn,
-  InverseAppProjected1155Mint,
   Erc1155Transfer,
 }
 
