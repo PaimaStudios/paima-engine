@@ -210,12 +210,14 @@ export interface CdeErc1155TransferDatum extends CdeDatumBase {
   scheduledPrefix: string;
 }
 
+/*
 export interface CdeInverseAppProjected1155MintDatum extends CdeDatumBase {
   cdeDatumType: ChainDataExtensionDatumType.InverseAppProjected1155Mint;
   payload: CdeDatumInverseAppProjected1155MintPayload;
   contractAddress: string;
   mintScheduledPrefix: string;
 }
+*/
 
 export interface CdeGenericDatum extends CdeDatumBase {
   cdeDatumType: ChainDataExtensionDatumType.Generic;
@@ -268,7 +270,7 @@ export type ChainDataExtensionDatum =
   | CdeErc721TransferDatum
   | CdeErc20DepositDatum
   | CdeErc1155TransferDatum
-  | CdeInverseAppProjected1155MintDatum
+  //| CdeInverseAppProjected1155MintDatum
   | CdeGenericDatum
   | CdeErc6551RegistryDatum
   | CdeCardanoPoolDatum

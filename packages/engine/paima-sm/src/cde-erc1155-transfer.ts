@@ -11,8 +11,16 @@ export default async function processErc1155TransferDatum(
   if (!scheduledPrefix || inPresync) {
     return [];
   }
-  const { operator, from, to, id, value } = payload;
+  const { operator, from, to, ids, values } = payload;
   const scheduledBlockHeight = Math.max(blockNumber, ENV.SM_START_BLOCKHEIGHT + 1);
-  const scheduledInputData = `${scheduledPrefix}|${contractAddress}|${operator}|${from}|${to}|${id}|${value}`;
+  const scheduledInputData = [
+    scheduledPrefix,
+    contractAddress,
+    operator,
+    from,
+    to,
+    JSON.stringify(ids),
+    JSON.stringify(values),
+  ].join("|");
   return [createScheduledData(scheduledInputData, scheduledBlockHeight)];
 }
