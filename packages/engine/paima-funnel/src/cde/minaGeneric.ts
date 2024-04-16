@@ -60,7 +60,7 @@ export async function getActionCdeData(args: {
 }
 
 export async function getCdeData(
-  f: typeof getEventsQuery | typeof getActionsQuery,
+  query: typeof getEventsQuery | typeof getActionsQuery,
   cdeDatumType:
     | ChainDataExtensionDatumType.MinaActionGeneric
     | ChainDataExtensionDatumType.MinaEventGeneric,
@@ -77,7 +77,7 @@ export async function getCdeData(
   const result = [] as (CdeMinaActionGenericDatum | CdeMinaEventGenericDatum)[];
 
   while (true) {
-    const unmapped = await f(
+    const unmapped = await query(
       pg,
       extension.address,
       toTimestamp.toString(),

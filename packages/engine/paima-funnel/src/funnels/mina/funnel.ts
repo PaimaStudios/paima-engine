@@ -254,9 +254,9 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
                 return true;
               }
             })
-            .map(extension => {
+            .map(async extension => {
               if (extension.cdeType === ChainDataExtensionType.MinaEventGeneric) {
-                let from = slotToMinaTimestamp(
+                let fromTimestamp = slotToMinaTimestamp(
                   extension.startSlot,
                   cache.genesisTime,
                   this.config.slotDuration
@@ -264,10 +264,10 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
 
                 const cursor = cursors && cursors[extension.cdeId];
 
-                const data = getEventCdeData({
+                const data = await getEventCdeData({
                   pg: cache.pg,
                   extension,
-                  fromTimestamp: from,
+                  fromTimestamp,
                   toTimestamp: startingSlotTimestamp - 1,
                   getBlockNumber: x =>
                     minaTimestampToSlot(x, cache.genesisTime, this.config.slotDuration),
@@ -277,13 +277,13 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
                   limit: this.config.paginationLimit,
                 }).then(mapCursorPaginatedData(extension.cdeId));
 
-                return data.then(data => ({
+                return {
                   cdeId: extension.cdeId,
                   cdeType: extension.cdeType,
                   data,
-                }));
+                };
               } else if (extension.cdeType === ChainDataExtensionType.MinaActionGeneric) {
-                let from = slotToMinaTimestamp(
+                let fromTimestamp = slotToMinaTimestamp(
                   extension.startSlot,
                   cache.genesisTime,
                   this.config.slotDuration
@@ -291,10 +291,10 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
 
                 const cursor = cursors && cursors[extension.cdeId];
 
-                const data = getActionCdeData({
+                const data = await getActionCdeData({
                   pg: cache.pg,
                   extension,
-                  fromTimestamp: from,
+                  fromTimestamp,
                   toTimestamp: startingSlotTimestamp - 1,
                   getBlockNumber: x =>
                     minaTimestampToSlot(x, cache.genesisTime, this.config.slotDuration),
@@ -304,11 +304,11 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
                   limit: this.config.paginationLimit,
                 }).then(mapCursorPaginatedData(extension.cdeId));
 
-                return data.then(data => ({
+                return {
                   cdeId: extension.cdeId,
                   cdeType: extension.cdeType,
                   data,
-                }));
+                };
               } else {
                 throw new Error(`[mina funnel] unhandled extension: ${extension.cdeType}`);
               }
