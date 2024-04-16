@@ -7,7 +7,7 @@ export default async function processErc1155TransferDatum(
   cdeDatum: CdeErc1155TransferDatum,
   inPresync: boolean
 ): Promise<SQLUpdate[]> {
-  const { scheduledPrefix, contractAddress, payload, blockNumber } = cdeDatum;
+  const { scheduledPrefix, payload, blockNumber } = cdeDatum;
   if (!scheduledPrefix || inPresync) {
     return [];
   }
@@ -15,7 +15,6 @@ export default async function processErc1155TransferDatum(
   const scheduledBlockHeight = Math.max(blockNumber, ENV.SM_START_BLOCKHEIGHT + 1);
   const scheduledInputData = [
     scheduledPrefix,
-    contractAddress,
     operator,
     from,
     to,
