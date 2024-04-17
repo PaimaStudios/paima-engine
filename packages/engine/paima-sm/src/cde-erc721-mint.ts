@@ -8,11 +8,11 @@ export default async function processErc721Datum(
   inPresync: boolean
 ): Promise<SQLUpdate[]> {
   const [address, prefix] = [cdeDatum.contractAddress, cdeDatum.scheduledPrefix];
-  if (!prefix || inPresync) {
+  if (!prefix) {
     return [];
   }
   const { tokenId, mintData } = cdeDatum.payload;
-  const scheduledBlockHeight = Math.max(cdeDatum.blockNumber, ENV.SM_START_BLOCKHEIGHT + 1);
+  const scheduledBlockHeight = inPresync ? ENV.SM_START_BLOCKHEIGHT + 1 : cdeDatum.blockNumber;
   const scheduledInputData = `${prefix}|${address}|${tokenId}|${mintData}`;
   return [createScheduledData(scheduledInputData, scheduledBlockHeight)];
 }

@@ -4,7 +4,8 @@ import type { SQLUpdate } from '@paima/db';
 import type { CdeCardanoMintBurnDatum } from './types.js';
 
 export default async function processDatum(
-  cdeDatum: CdeCardanoMintBurnDatum
+  cdeDatum: CdeCardanoMintBurnDatum,
+  inPresync: boolean
 ): Promise<SQLUpdate[]> {
   const cdeId = cdeDatum.cdeId;
   const prefix = cdeDatum.scheduledPrefix;
@@ -14,7 +15,7 @@ export default async function processDatum(
   const inputAddresses = cdeDatum.payload.inputAddresses;
   const outputAddresses = cdeDatum.payload.outputAddresses;
 
-  const scheduledBlockHeight = Math.max(cdeDatum.blockNumber, ENV.SM_START_BLOCKHEIGHT + 1);
+  const scheduledBlockHeight = inPresync ? ENV.SM_START_BLOCKHEIGHT + 1 : cdeDatum.blockNumber;
   const scheduledInputData = `${prefix}|${txId}|${metadata}|${assets}|${JSON.stringify(inputAddresses)}|${JSON.stringify(outputAddresses)}`;
 
   const updateList: SQLUpdate[] = [

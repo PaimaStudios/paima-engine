@@ -12,14 +12,11 @@ export default async function processDatum(
   const address = cdeDatum.payload.address;
   const pool = cdeDatum.payload.pool;
 
-  const scheduledBlockHeight = Math.max(cdeDatum.blockNumber, ENV.SM_START_BLOCKHEIGHT + 1);
+  const scheduledBlockHeight = inPresync ? ENV.SM_START_BLOCKHEIGHT + 1 : cdeDatum.blockNumber;
   const scheduledInputData = `${prefix}|${address}|${pool}`;
 
-  const updateList: SQLUpdate[] = inPresync
-    ? []
-    : [createScheduledData(scheduledInputData, scheduledBlockHeight)];
-
-  updateList.push(
+  const updateList: SQLUpdate[] = [
+    createScheduledData(scheduledInputData, scheduledBlockHeight),
     [
       cdeCardanoPoolInsertData,
       {
@@ -34,7 +31,8 @@ export default async function processDatum(
       {
         address: cdeDatum.payload.address,
       },
-    ]
-  );
+    ],
+  ];
+
   return updateList;
 }
