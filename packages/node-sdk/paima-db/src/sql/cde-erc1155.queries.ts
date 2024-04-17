@@ -114,3 +114,100 @@ const cdeErc1155BurnIR: any = {"usedParamSet":{"cde_id":true,"token_id":true,"wa
 export const cdeErc1155Burn = new PreparedQuery<ICdeErc1155BurnParams,ICdeErc1155BurnResult>(cdeErc1155BurnIR);
 
 
+/** 'CdeErc1155GetTotalBalanceAllTokens' parameters type */
+export interface ICdeErc1155GetTotalBalanceAllTokensParams {
+  cde_id: number;
+  wallet_address: string;
+}
+
+/** 'CdeErc1155GetTotalBalanceAllTokens' return type */
+export interface ICdeErc1155GetTotalBalanceAllTokensResult {
+  total: string | null;
+}
+
+/** 'CdeErc1155GetTotalBalanceAllTokens' query type */
+export interface ICdeErc1155GetTotalBalanceAllTokensQuery {
+  params: ICdeErc1155GetTotalBalanceAllTokensParams;
+  result: ICdeErc1155GetTotalBalanceAllTokensResult;
+}
+
+const cdeErc1155GetTotalBalanceAllTokensIR: any = {"usedParamSet":{"cde_id":true,"wallet_address":true},"params":[{"name":"cde_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":83,"b":90}]},{"name":"wallet_address","required":true,"transform":{"type":"scalar"},"locs":[{"a":113,"b":128}]}],"statement":"SELECT sum(CAST(balance AS NUMERIC)) as total from cde_erc1155_data\nWHERE cde_id = :cde_id!\nAND wallet_address = :wallet_address!"};
+
+/**
+ * Query generated from SQL:
+ * ```
+ * SELECT sum(CAST(balance AS NUMERIC)) as total from cde_erc1155_data
+ * WHERE cde_id = :cde_id!
+ * AND wallet_address = :wallet_address!
+ * ```
+ */
+export const cdeErc1155GetTotalBalanceAllTokens = new PreparedQuery<ICdeErc1155GetTotalBalanceAllTokensParams,ICdeErc1155GetTotalBalanceAllTokensResult>(cdeErc1155GetTotalBalanceAllTokensIR);
+
+
+/** 'CdeErc1155GetAllTokens' parameters type */
+export interface ICdeErc1155GetAllTokensParams {
+  cde_id: number;
+  wallet_address: string;
+}
+
+/** 'CdeErc1155GetAllTokens' return type */
+export interface ICdeErc1155GetAllTokensResult {
+  balance: string;
+  cde_id: number;
+  token_id: string;
+  wallet_address: string;
+}
+
+/** 'CdeErc1155GetAllTokens' query type */
+export interface ICdeErc1155GetAllTokensQuery {
+  params: ICdeErc1155GetAllTokensParams;
+  result: ICdeErc1155GetAllTokensResult;
+}
+
+const cdeErc1155GetAllTokensIR: any = {"usedParamSet":{"cde_id":true,"wallet_address":true},"params":[{"name":"cde_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":46,"b":53}]},{"name":"wallet_address","required":true,"transform":{"type":"scalar"},"locs":[{"a":76,"b":91}]}],"statement":"SELECT * from cde_erc1155_data\nWHERE cde_id = :cde_id!\nAND wallet_address = :wallet_address!\nAND CAST(balance AS NUMERIC) > 0"};
+
+/**
+ * Query generated from SQL:
+ * ```
+ * SELECT * from cde_erc1155_data
+ * WHERE cde_id = :cde_id!
+ * AND wallet_address = :wallet_address!
+ * AND CAST(balance AS NUMERIC) > 0
+ * ```
+ */
+export const cdeErc1155GetAllTokens = new PreparedQuery<ICdeErc1155GetAllTokensParams,ICdeErc1155GetAllTokensResult>(cdeErc1155GetAllTokensIR);
+
+
+/** 'CdeErc1155GetByTokenId' parameters type */
+export interface ICdeErc1155GetByTokenIdParams {
+  cde_id: number;
+  token_id: string;
+  wallet_address: string;
+}
+
+/** 'CdeErc1155GetByTokenId' return type */
+export interface ICdeErc1155GetByTokenIdResult {
+  balance: string;
+  cde_id: number;
+  token_id: string;
+  wallet_address: string;
+}
+
+/** 'CdeErc1155GetByTokenId' query type */
+export interface ICdeErc1155GetByTokenIdQuery {
+  params: ICdeErc1155GetByTokenIdParams;
+  result: ICdeErc1155GetByTokenIdResult;
+}
+
+const cdeErc1155GetByTokenIdIR: any = {"usedParamSet":{"cde_id":true,"wallet_address":true,"token_id":true},"params":[{"name":"cde_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":46,"b":53}]},{"name":"wallet_address","required":true,"transform":{"type":"scalar"},"locs":[{"a":76,"b":91}]},{"name":"token_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":108,"b":117}]}],"statement":"SELECT * from cde_erc1155_data\nWHERE cde_id = :cde_id!\nAND wallet_address = :wallet_address!\nAND token_id = :token_id!"};
+
+/**
+ * Query generated from SQL:
+ * ```
+ * SELECT * from cde_erc1155_data
+ * WHERE cde_id = :cde_id!
+ * AND wallet_address = :wallet_address!
+ * AND token_id = :token_id!
+ * ```
+ */
+export const cdeErc1155GetByTokenId = new PreparedQuery<ICdeErc1155GetByTokenIdParams,ICdeErc1155GetByTokenIdResult>(cdeErc1155GetByTokenIdIR);
