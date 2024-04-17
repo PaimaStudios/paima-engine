@@ -1,6 +1,6 @@
 import * as fs from 'fs/promises';
 import YAML from 'yaml';
-import Web3 from 'web3';
+import type Web3 from 'web3';
 import { Type, type Static, type TSchema } from '@sinclair/typebox';
 import { Value, ValueErrorType } from '@sinclair/typebox/value';
 
@@ -332,51 +332,19 @@ async function instantiateExtension(
   }
 }
 
-interface Eip165Query {
-  name: string, // for logging
-  id: string, // actual EIP-165 ID, in format '0x00000000'
-}
-
-async function contractSupportsInterface(
-  iface: Eip165Query,
-  cdeConfig: {
-    contractAddress: string,
-  },
-  web3: Web3
-): Promise<boolean> {
-  try {
-    const erc165Contract = getErc165Contract(cdeConfig.contractAddress, web3);
-    return await erc165Contract.methods.supportsInterface(iface.id).call();
-  } catch (err) {
-    doLog(`[cde-config] ${cdeConfig.contractAddress} check for interface ${iface.id} (${iface.name}) failed:`, err);
-    return false;
-  }
-}
-
-/** Assert that the hardcoded interface ID and a freshly computed one match. */
-function interfaceId(expected: string, methods: string[]): string {
-  let id = 0;
-  for (const method of methods) {
-    id ^= Web3.utils.toDecimal(Web3.utils.keccak256(method));
-  }
-  const computed = Web3.utils.toHex(id);
-  if (expected != computed) {
-    throw new Error(`interfaceId expected ${expected}, computed ${computed}`);
-  }
-  return expected;
-}
-const IInverseBaseProjectedNft: Eip165Query = {
-  name: 'IInverseBaseProjectedNft',
-  id: interfaceId('0xd0def521', [
-    'mint(address,string)',
-  ]),
-};
-
 export async function isPaimaErc721(
   cdeConfig: TChainDataExtensionErc721Config,
   web3: Web3
 ): Promise<boolean> {
-  return await contractSupportsInterface(IInverseBaseProjectedNft, cdeConfig, web3);
+  const PAIMA_EXTENDED_MINT_SIGNATURE = 'mint(address,string)';
+  const interfaceId = web3.utils.keccak256(PAIMA_EXTENDED_MINT_SIGNATURE).substring(0, 10);
+  try {
+    const erc165Contract = getErc165Contract(cdeConfig.contractAddress, web3);
+    return await erc165Contract.methods.supportsInterface(interfaceId).call();
+  } catch (err) {
+    doLog(`[cde-config] ${cdeConfig.contractAddress} is probably not PaimaERC721: ${err}`);
+    return false;
+  }
 }
 
 async function instantiateCdeGeneric(
