@@ -70,7 +70,7 @@ export async function loadChainDataExtensions(
     );
     return [instantiatedExtensions, true];
   } catch (err) {
-    doLog(`[cde-config] Invalid config file: ${err}`);
+    doLog(`[cde-config] Invalid config file:`, err);
     return [[], false];
   }
 }
@@ -177,16 +177,18 @@ function checkOrError<T extends TSchema>(
 ): Static<T> {
   // 1) Check if there are any errors since Value.Decode doesn't give error messages
   {
-    const skippableErrors: ValueErrorType[] = [ValueErrorType.Intersect, ValueErrorType.Union];
+    const lowPriorityErrors = new Set([ValueErrorType.Intersect, ValueErrorType.Union]);
 
     const errors = Array.from(Value.Errors(structure, config));
+    const allErrorsLowPriority = errors.every(e => lowPriorityErrors.has(e.type));
     for (const error of errors) {
       // there are many useless errors in this library
       // ex: 1st error: "foo" should be "bar" in struct Foo
       //     2nd error: struct Foo is invalid inside struct Config
       //     in this case, the 2nd error is useless as we only care about the 1st error
       // However, we always want to show the error if for some reason it's the only error
-      if (errors.length !== 1 && skippableErrors.find(val => val === error.type) != null) continue;
+      if (!allErrorsLowPriority && lowPriorityErrors.has(error.type))
+        continue;
       console.error({
         name: name ?? 'Configuration root',
         path: error.path,
@@ -228,7 +230,7 @@ async function instantiateExtension(
         contract: getErc20Contract(config.contractAddress, web3s[network]),
       };
     case CdeEntryTypeName.ERC721:
-      if (await isPaimaErc721(config, web3s[config.network || defaultEvmMainNetworkName])) {
+      if (await isPaimaErc721(config, web3s[network])) {
         return {
           ...config,
           network,
@@ -378,7 +380,7 @@ async function instantiateCdeGeneric(
       eventSignatureHash,
     };
   } catch (err) {
-    doLog(`[cde-config]: Fail to initialize Web3 contract with ABI ${config.abiPath}`);
+    doLog(`[cde-config] Failed to initialize Web3 contract ${config.name} with ABI ${config.abiPath}`);
     throw err;
   }
 }
