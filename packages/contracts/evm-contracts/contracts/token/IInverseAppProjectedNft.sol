@@ -16,10 +16,18 @@ interface IInverseAppProjectedNft is IInverseProjectedNft {
     /// Emits the `Minted` event.
     /// @param _to where to send the NFT to
     /// @param _verificationData any additional data to verify the validity of the mint
+    /// @param _data any additional data to pass to the receiver contract
+    /// @return id of the minted token
+    function mint(
+        address _to,
+        bytes memory _verificationData,
+        bytes memory _data
+    ) external returns (uint256);
+
+    /// @dev Shorthand function that calls the `mint` function with empty `_data`.
     function mint(address _to, bytes memory _verificationData) external returns (uint256);
 
-    /// @dev This works identically to the other function with an extra data parameter,
-    ///      except this function just sets data to "".
+    /// @dev Shorthand function that calls the `mint` function with empty `_verificationData` and empty `_data`.
     function mint(address _to) external returns (uint256);
 
     /// @notice Returns the last nonce used (or 0 if the user has never minted)

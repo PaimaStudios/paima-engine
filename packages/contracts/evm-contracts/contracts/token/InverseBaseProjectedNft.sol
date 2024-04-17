@@ -56,17 +56,30 @@ contract InverseBaseProjectedNft is IInverseBaseProjectedNft, ERC721, Ownable {
     /// Increases the `totalSupply` and `currentTokenId`.
     /// Reverts if `_to` is a zero address or if it refers to smart contract but does not implement IERC721Receiver-onERC721Received.
     /// Emits the `Minted` event.
-    function mint(address _to, string calldata initialData) public virtual returns (uint256) {
+    /// @param _to where to send the NFT to
+    /// @param initialData data that is emitted in the `Minted` event
+    /// @param data any additional data to pass to the receiver contract
+    /// @return id of the minted token
+    function mint(
+        address _to,
+        string calldata initialData,
+        bytes memory data
+    ) public virtual returns (uint256) {
         require(_to != address(0), "InverseBaseProjectedNft: zero receiver address");
 
         uint256 tokenId = currentTokenId;
-        _safeMint(_to, tokenId);
+        _safeMint(_to, tokenId, data);
 
         totalSupply++;
         currentTokenId++;
 
         emit Minted(tokenId, initialData);
         return tokenId;
+    }
+
+    /// @dev Shorthand function that calls the `mint` function with empty `data`.
+    function mint(address _to, string calldata initialData) public virtual returns (uint256) {
+        return mint(_to, initialData, bytes(""));
     }
 
     /// @dev Burns token of ID `_tokenId`. Callable only by the owner of the specified token.
