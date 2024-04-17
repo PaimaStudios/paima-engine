@@ -118,10 +118,7 @@ export function getPaimaErc721Contract(
   ) as unknown as Contracts.PaimaERC721Contract;
 }
 
-export function getErc1155Contract(
-  address: string,
-  web3?: Web3
-): Contracts.IERC1155Contract {
+export function getErc1155Contract(address: string, web3?: Web3): Contracts.IERC1155Contract {
   return getAbiContract(
     address,
     erc1155ContractBuild.abi as AbiItem[],
