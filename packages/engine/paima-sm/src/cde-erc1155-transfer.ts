@@ -32,8 +32,8 @@ export default async function processErc1155TransferDatum(
   const scheduledInputData = [
     scheduledPrefix,
     operator,
-    from,
-    to,
+    from.toLowerCase(),
+    to.toLowerCase(),
     JSON.stringify(ids),
     JSON.stringify(values),
   ].join('|');
