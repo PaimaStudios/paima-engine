@@ -57,6 +57,7 @@ function transferSingleToDatum(
     },
     contractAddress: extension.contractAddress,
     scheduledPrefix: extension.scheduledPrefix,
+    burnScheduledPrefix: extension.burnScheduledPrefix,
     network,
   };
 }
@@ -79,6 +80,7 @@ function transferBatchToDatum(
     },
     contractAddress: extension.contractAddress,
     scheduledPrefix: extension.scheduledPrefix,
+    burnScheduledPrefix: extension.burnScheduledPrefix,
     network,
   };
 }

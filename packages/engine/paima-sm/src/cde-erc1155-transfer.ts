@@ -17,10 +17,7 @@ export default async function processErc1155TransferDatum(
   cdeDatum: CdeErc1155TransferDatum,
   inPresync: boolean
 ): Promise<SQLUpdate[]> {
-  const { cdeId, scheduledPrefix, payload, blockNumber } = cdeDatum;
-  if (!scheduledPrefix) {
-    return [];
-  }
+  const { cdeId, scheduledPrefix, burnScheduledPrefix, payload, blockNumber } = cdeDatum;
   const { operator, from, to, ids, values } = payload;
   const isMint = from == '0x0000000000000000000000000000000000000000';
   const isBurn = /^0x0+(dead)?$/i.test(to);
@@ -29,15 +26,29 @@ export default async function processErc1155TransferDatum(
 
   // Always schedule the plain old transfer event.
   const scheduledBlockHeight = inPresync ? ENV.SM_START_BLOCKHEIGHT + 1 : blockNumber;
-  const scheduledInputData = [
-    scheduledPrefix,
-    operator,
-    from.toLowerCase(),
-    to.toLowerCase(),
-    JSON.stringify(ids),
-    JSON.stringify(values),
-  ].join('|');
-  updateList.push(createScheduledData(scheduledInputData, scheduledBlockHeight));
+  if (scheduledPrefix) {
+    const scheduledInputData = [
+      scheduledPrefix,
+      operator,
+      from.toLowerCase(),
+      to.toLowerCase(),
+      JSON.stringify(ids),
+      JSON.stringify(values),
+    ].join('|');
+    updateList.push(createScheduledData(scheduledInputData, scheduledBlockHeight));
+  }
+
+  if (isBurn && burnScheduledPrefix) {
+    const burnData = [
+      burnScheduledPrefix,
+      operator,
+      from.toLowerCase(),
+      // to is excluded because it's presumed 0
+      JSON.stringify(ids),
+      JSON.stringify(values),
+    ].join('|');
+    updateList.push(createScheduledData(burnData, scheduledBlockHeight));
+  }
 
   // Update balance + burn tables.
   for (let i = 0; i < ids.length; ++i) {

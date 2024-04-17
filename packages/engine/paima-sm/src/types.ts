@@ -198,7 +198,8 @@ export interface CdeErc1155TransferDatum extends CdeDatumBase {
   cdeDatumType: ChainDataExtensionDatumType.Erc1155Transfer;
   payload: CdeDatumErc1155TransferPayload;
   contractAddress: string;
-  scheduledPrefix: string;
+  scheduledPrefix?: string | undefined;
+  burnScheduledPrefix?: string | undefined;
 }
 
 export interface CdeGenericDatum extends CdeDatumBase {
@@ -344,7 +345,8 @@ export const ChainDataExtensionErc1155Config = Type.Intersect([
   Type.Object({
     type: Type.Literal(CdeEntryTypeName.ERC1155),
     contractAddress: EvmAddress,
-    scheduledPrefix: Type.String(),
+    scheduledPrefix: Type.Optional(Type.String()),
+    burnScheduledPrefix: Type.Optional(Type.String()),
   }),
 ]);
 export type ChainDataExtensionErc1155 = ChainDataExtensionBase &
