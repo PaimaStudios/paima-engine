@@ -15,7 +15,6 @@ import erc165ContractBuild from './artifacts/ERC165Contract.js';
 import erc721ContractBuild from './artifacts/ERC721Contract.js';
 import paimaErc721ContractBuild from './artifacts/PaimaERC721Contract.js';
 import erc1155ContractBuild from './artifacts/IERC1155Contract.js';
-import inverseAppProjected1155ContractBuild from './artifacts/IInverseAppProjected1155Contract.js';
 import erc6551RegistryContractBuild from './artifacts/ERC6551RegistryContract.js';
 import oldErc6551RegistryContractBuild from './artifacts/OldERC6551RegistryContract.js';
 export const contractAbis = {
@@ -25,7 +24,6 @@ export const contractAbis = {
   erc721ContractBuild,
   paimaErc721ContractBuild,
   erc1155ContractBuild,
-  inverseAppProjected1155ContractBuild,
   erc6551RegistryContractBuild,
   oldErc6551RegistryContractBuild,
 };
@@ -42,10 +40,6 @@ export type {
   TransferSingle as Erc1155TransferSingle,
   TransferBatch as Erc1155TransferBatch,
 } from './contract-types/ERC1155Contract.js';
-export type {
-  Minted as InverseAppProjected1155Minted,
-  // TransferSingle and TransferBatch are presumed to match base Erc1155 above.
-} from './contract-types/IInverseAppProjected1155Contract.js';
 export type { AccountCreated } from './contract-types/ERC6551RegistryContract.js';
 
 export type { Web3, Contract, AbiItem, EventData };
@@ -124,17 +118,6 @@ export function getErc1155Contract(address: string, web3?: Web3): Contracts.IERC
     erc1155ContractBuild.abi as AbiItem[],
     web3
   ) as unknown as Contracts.IERC1155Contract;
-}
-
-export function getInverseAppProjected1155Contract(
-  address: string,
-  web3?: Web3
-): Contracts.IInverseAppProjected1155Contract {
-  return getAbiContract(
-    address,
-    inverseAppProjected1155ContractBuild.abi as AbiItem[],
-    web3
-  ) as unknown as Contracts.IInverseAppProjected1155Contract;
 }
 
 export function getErc165Contract(address: string, web3?: Web3): Contracts.ERC165Contract {

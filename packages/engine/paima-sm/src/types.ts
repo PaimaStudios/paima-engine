@@ -15,7 +15,6 @@ import type {
   InternalEventType,
   ConfigNetworkType,
   STFSubmittedData,
-  IInverseAppProjected1155Contract,
   IERC1155Contract,
 } from '@paima/utils';
 import { Type } from '@sinclair/typebox';
@@ -80,13 +79,6 @@ interface CdeDatumErc721MintPayload {
 interface CdeDatumErc20DepositPayload {
   from: string;
   value: string;
-}
-
-interface CdeDatumInverseAppProjected1155MintPayload {
-  tokenId: string; // uint256
-  minter: string; // address
-  userTokenId: string; // uint256
-  value: string; // uint256, the amount
 }
 
 interface CdeDatumErc1155TransferPayload {
@@ -163,7 +155,6 @@ type ChainDataExtensionPayload =
   | CdeDatumErc721MintPayload
   | CdeDatumErc721TransferPayload
   | CdeDatumErc20DepositPayload
-  | CdeDatumInverseAppProjected1155MintPayload
   // TODO: better type definition to avoid this issue
   // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
   | CdeDatumGenericPayload
@@ -209,15 +200,6 @@ export interface CdeErc1155TransferDatum extends CdeDatumBase {
   contractAddress: string;
   scheduledPrefix: string;
 }
-
-/*
-export interface CdeInverseAppProjected1155MintDatum extends CdeDatumBase {
-  cdeDatumType: ChainDataExtensionDatumType.InverseAppProjected1155Mint;
-  payload: CdeDatumInverseAppProjected1155MintPayload;
-  contractAddress: string;
-  mintScheduledPrefix: string;
-}
-*/
 
 export interface CdeGenericDatum extends CdeDatumBase {
   cdeDatumType: ChainDataExtensionDatumType.Generic;
@@ -270,7 +252,6 @@ export type ChainDataExtensionDatum =
   | CdeErc721TransferDatum
   | CdeErc20DepositDatum
   | CdeErc1155TransferDatum
-  //| CdeInverseAppProjected1155MintDatum
   | CdeGenericDatum
   | CdeErc6551RegistryDatum
   | CdeCardanoPoolDatum
@@ -372,20 +353,6 @@ export type ChainDataExtensionErc1155 = ChainDataExtensionBase &
     cdeType: ChainDataExtensionType.ERC1155;
     contract: IERC1155Contract;
   };
-
-/*
-export const ChainDataExtensionInverseAppProjected1155Config = Type.Intersect([
-  ChainDataExtensionErc1155Config,
-  Type.Object({
-    mintScheduledPrefix: Type.String(),
-  }),
-]);
-export type ChainDataExtensionInverseAppProjected1155 = ChainDataExtensionBase &
-  Static<typeof ChainDataExtensionInverseAppProjected1155Config> & {
-    cdeType: ChainDataExtensionType.InverseAppProjected1155;
-    contract: IInverseAppProjected1155Contract;
-  };
-*/
 
 export const ChainDataExtensionGenericConfig = Type.Intersect([
   ChainDataExtensionConfigBase,
@@ -502,7 +469,6 @@ export const CdeConfig = Type.Object({
         ChainDataExtensionErc20DepositConfig,
         ChainDataExtensionErc721Config,
         ChainDataExtensionErc1155Config,
-        //ChainDataExtensionInverseAppProjected1155Config,
         ChainDataExtensionErc6551RegistryConfig,
         ChainDataExtensionGenericConfig,
         ChainDataExtensionCardanoDelegationConfig,
@@ -535,7 +501,6 @@ export type ChainDataExtension = (
   | ChainDataExtensionErc721
   | ChainDataExtensionPaimaErc721
   | ChainDataExtensionErc1155
-  //| ChainDataExtensionInverseAppProjected1155
   | ChainDataExtensionErc6551Registry
   | ChainDataExtensionGeneric
   | ChainDataExtensionCardanoDelegation
