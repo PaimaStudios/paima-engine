@@ -187,8 +187,7 @@ function checkOrError<T extends TSchema>(
       //     2nd error: struct Foo is invalid inside struct Config
       //     in this case, the 2nd error is useless as we only care about the 1st error
       // However, we always want to show the error if for some reason it's the only error
-      if (!allErrorsLowPriority && lowPriorityErrors.has(error.type))
-        continue;
+      if (!allErrorsLowPriority && lowPriorityErrors.has(error.type)) continue;
       console.error({
         name: name ?? 'Configuration root',
         path: error.path,
@@ -380,7 +379,9 @@ async function instantiateCdeGeneric(
       eventSignatureHash,
     };
   } catch (err) {
-    doLog(`[cde-config] Failed to initialize Web3 contract ${config.name} with ABI ${config.abiPath}`);
+    doLog(
+      `[cde-config] Failed to initialize Web3 contract ${config.name} with ABI ${config.abiPath}`
+    );
     throw err;
   }
 }
