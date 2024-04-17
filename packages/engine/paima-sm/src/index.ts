@@ -119,7 +119,7 @@ const SM: GameStateMachineInitializer = {
             );
           }
         } else if (latestCdeData.networkType === ConfigNetworkType.CARDANO) {
-          const cdeDataLength = await processCardanoCdeData(
+          const cdeDataLength = await processPaginatedCdeData(
             latestCdeData.carpCursor,
             latestCdeData.extensionDatums,
             dbTx,
@@ -131,8 +131,7 @@ const SM: GameStateMachineInitializer = {
             );
           }
         } else if (latestCdeData.networkType === ConfigNetworkType.MINA) {
-          // not really correct, but should work for now. Probably that function should be renamed
-          const cdeDataLength = await processCardanoCdeData(
+          const cdeDataLength = await processPaginatedCdeData(
             latestCdeData.minaCursor,
             latestCdeData.extensionDatums,
             dbTx,
@@ -319,34 +318,22 @@ async function processCdeData(
   });
 }
 
-async function processCardanoCdeData(
-  paginationCursor:
-    | { cdeId: number; cursor: string; finished: boolean }
-    | { cdeId: number; slot: number; finished: boolean },
+async function processPaginatedCdeData(
+  paginationCursor: { cdeId: number; cursor: string; finished: boolean },
   cdeData: ChainDataExtensionDatum[] | undefined,
   dbTx: PoolClient,
   inPresync: boolean
 ): Promise<number> {
   return await processCdeDataBase(cdeData, dbTx, inPresync, async () => {
-    if ('cursor' in paginationCursor) {
-      await updatePaginationCursor.run(
-        {
-          cde_id: paginationCursor.cdeId,
-          cursor: paginationCursor.cursor,
-          finished: paginationCursor.finished,
-        },
-        dbTx
-      );
-    } else {
-      await updatePaginationCursor.run(
-        {
-          cde_id: paginationCursor.cdeId,
-          cursor: paginationCursor.slot.toString(),
-          finished: paginationCursor.finished,
-        },
-        dbTx
-      );
-    }
+    await updatePaginationCursor.run(
+      {
+        cde_id: paginationCursor.cdeId,
+        cursor: paginationCursor.cursor,
+        finished: paginationCursor.finished,
+      },
+      dbTx
+    );
+
     return;
   });
 }
