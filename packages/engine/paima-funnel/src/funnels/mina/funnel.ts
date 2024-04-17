@@ -25,11 +25,11 @@ async function getGenesisTime(pg: postgres.Sql): Promise<number> {
   return Number.parseInt(row[0]['timestamp'], 10);
 }
 
-async function findMinaConfirmedSlot(pg: postgres.Sql): Promise<number> {
+async function findMinaConfirmedTimestamp(pg: postgres.Sql): Promise<number> {
   const row =
-    await pg`select global_slot_since_genesis from blocks where chain_status = 'canonical' order by height desc limit 1;`;
+    await pg`select timestamp from blocks where chain_status = 'canonical' order by height desc limit 1;`;
 
-  return Number.parseInt(row[0]['global_slot_since_genesis'], 10);
+  return Number.parseInt(row[0]['timestamp'], 10);
 }
 
 function slotToMinaTimestamp(slot: number, genesisTime: number, slotDuration: number): number {
@@ -83,16 +83,8 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
       this.config.slotDuration
     );
 
-    let confirmedTimestamp;
-
     while (true) {
-      const confirmedSlot = await findMinaConfirmedSlot(cachedState.pg);
-
-      confirmedTimestamp = slotToMinaTimestamp(
-        confirmedSlot,
-        cachedState.genesisTime,
-        this.config.slotDuration
-      );
+      const confirmedTimestamp = await findMinaConfirmedTimestamp(cachedState.pg);
 
       if (confirmedTimestamp >= maxBaseTimestamp) {
         break;
