@@ -345,7 +345,6 @@ export const ChainDataExtensionErc1155Config = Type.Intersect([
     type: Type.Literal(CdeEntryTypeName.ERC1155),
     contractAddress: EvmAddress,
     scheduledPrefix: Type.String(),
-    depositAddress: EvmAddress,
   }),
 ]);
 export type ChainDataExtensionErc1155 = ChainDataExtensionBase &
