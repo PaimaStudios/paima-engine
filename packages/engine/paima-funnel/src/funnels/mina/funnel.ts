@@ -32,14 +32,7 @@ async function findMinaConfirmedTimestamp(pg: postgres.Sql): Promise<number> {
   return Number.parseInt(row[0]['timestamp'], 10);
 }
 
-function slotToMinaTimestamp(slot: number, genesisTime: number, slotDuration: number): number {
-  return slot * slotDuration * 1000 + genesisTime;
-}
-
-function minaTimestampToSlot(ts: number, genesisTime: number, slotDuration: number): number {
-  return Math.max(Math.floor((ts - genesisTime) / (slotDuration * 1000)), 0);
-}
-
+// mina timestamps are in milliseconds, while evm timestamps are in seconds.
 function baseChainTimestampToMina(
   baseChainTimestamp: number,
   confirmationDepth: number,
@@ -226,18 +219,13 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
             })
             .map(async extension => {
               if (extension.cdeType === ChainDataExtensionType.MinaEventGeneric) {
-                let fromTimestamp = slotToMinaTimestamp(
-                  extension.startSlot,
-                  cache.genesisTime,
-                  this.config.slotDuration
-                );
-
                 const cursor = cursors && cursors[extension.cdeId];
 
                 const data = await getEventCdeData({
                   pg: cache.pg,
                   extension,
-                  fromTimestamp,
+                  fromTimestamp: 0,
+                  fromBlockHeight: extension.startBlockHeight,
                   toTimestamp: startingSlotTimestamp - 1,
                   // the handler for this cde stores the block height unmodified
                   // (even if the event is scheduled at the correct height), so
@@ -256,18 +244,13 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
                   data,
                 };
               } else if (extension.cdeType === ChainDataExtensionType.MinaActionGeneric) {
-                let fromTimestamp = slotToMinaTimestamp(
-                  extension.startSlot,
-                  cache.genesisTime,
-                  this.config.slotDuration
-                );
-
                 const cursor = cursors && cursors[extension.cdeId];
 
                 const data = await getActionCdeData({
                   pg: cache.pg,
                   extension,
-                  fromTimestamp,
+                  fromTimestamp: 0,
+                  fromBlockHeight: extension.startBlockHeight,
                   toTimestamp: startingSlotTimestamp - 1,
                   getBlockNumber: _x => ENV.SM_START_BLOCKHEIGHT + 1,
                   network: this.chainName,
@@ -337,19 +320,13 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
       const startingBlockTimestamp = (await sharedData.web3.eth.getBlock(startingBlockHeight))
         .timestamp as number;
 
-      const slot = minaTimestampToSlot(
-        baseChainTimestampToMina(
-          startingBlockTimestamp,
-          config.confirmationDepth,
-          config.slotDuration
-        ),
-        genesisTime,
+      const minaTimestamp = baseChainTimestampToMina(
+        startingBlockTimestamp,
+        config.confirmationDepth,
         config.slotDuration
       );
 
-      const slotAsMinaTimestamp = slotToMinaTimestamp(slot, genesisTime, config.slotDuration);
-
-      newEntry.updateStartingSlot(slotAsMinaTimestamp, genesisTime, pg);
+      newEntry.updateStartingTimestamp(minaTimestamp, genesisTime, pg);
 
       const cursors = await getPaginationCursors.run(undefined, dbTx);
 

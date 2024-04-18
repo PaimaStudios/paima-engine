@@ -197,7 +197,7 @@ export class MinaFunnelCacheEntry implements FunnelCacheEntry {
   private state: MinaFunnelCacheEntryState | null = null;
   public static readonly SYMBOL = Symbol('MinaFunnelStartingSlot');
 
-  public updateStartingSlot(
+  public updateStartingTimestamp(
     startingSlotTimestamp: number,
     genesisTime: number,
     pg: postgres.Sql

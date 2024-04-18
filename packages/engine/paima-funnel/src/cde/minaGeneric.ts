@@ -17,6 +17,7 @@ export async function getEventCdeData(args: {
   isPresync: boolean;
   cursor?: string;
   limit?: number;
+  fromBlockHeight?: number;
 }): Promise<(CdeMinaActionGenericDatum | CdeMinaEventGenericDatum)[]> {
   return getCdeData(
     getEventsQuery,
@@ -29,7 +30,8 @@ export async function getEventCdeData(args: {
     args.network,
     args.isPresync,
     args.cursor,
-    args.limit
+    args.limit,
+    args.fromBlockHeight
   );
 }
 
@@ -43,6 +45,7 @@ export async function getActionCdeData(args: {
   isPresync: boolean;
   cursor?: string;
   limit?: number;
+  fromBlockHeight?: number;
 }): Promise<(CdeMinaActionGenericDatum | CdeMinaEventGenericDatum)[]> {
   return getCdeData(
     getActionsQuery,
@@ -55,7 +58,8 @@ export async function getActionCdeData(args: {
     args.network,
     args.isPresync,
     args.cursor,
-    args.limit
+    args.limit,
+    args.fromBlockHeight
   );
 }
 
@@ -72,7 +76,8 @@ export async function getCdeData(
   network: string,
   isPresync: boolean,
   cursor?: string,
-  limit?: number
+  limit?: number,
+  fromBlockHeight?: number
 ): Promise<(CdeMinaActionGenericDatum | CdeMinaEventGenericDatum)[]> {
   const result = [] as (CdeMinaActionGenericDatum | CdeMinaEventGenericDatum)[];
 
@@ -83,7 +88,8 @@ export async function getCdeData(
       toTimestamp.toString(),
       fromTimestamp.toString(),
       cursor,
-      limit?.toString()
+      limit?.toString(),
+      fromBlockHeight?.toString()
     );
 
     const grouped = groupByTx(unmapped);
@@ -151,9 +157,14 @@ function groupByTx(events: postgres.RowList<PerBlock[]>) {
   return grouped;
 }
 
-function fullChainCTE(db_client: postgres.Sql, toTimestamp?: string, fromTimestamp?: string) {
+function canonicalChainCTE(
+  db_client: postgres.Sql,
+  toTimestamp?: string,
+  fromTimestamp?: string,
+  fromBlockHeight?: string
+) {
   return db_client`
-  full_chain AS (
+  canonical_chain AS (
     SELECT
       id, state_hash, height, global_slot_since_genesis, timestamp
     FROM
@@ -162,6 +173,7 @@ function fullChainCTE(db_client: postgres.Sql, toTimestamp?: string, fromTimesta
       chain_status = 'canonical'
     ${fromTimestamp ? db_client`AND b.timestamp::decimal >= ${fromTimestamp}::decimal` : db_client``}
     ${toTimestamp ? db_client`AND b.timestamp::decimal <= ${toTimestamp}::decimal` : db_client``}
+    ${fromBlockHeight ? db_client`AND b.height::decimal >= ${fromBlockHeight}::decimal` : db_client``}
     ORDER BY height
   )
   `;
@@ -196,7 +208,7 @@ function blocksAccessedCTE(db_client: postgres.Sql) {
   FROM
     account_identifier ai
     INNER JOIN accounts_accessed aa ON ai.requesting_zkapp_account_identifier_id = aa.account_identifier_id
-    INNER JOIN full_chain b ON aa.block_id = b.id
+    INNER JOIN canonical_chain b ON aa.block_id = b.id
   )`;
 }
 
@@ -290,11 +302,12 @@ export function getEventsQuery(
   toTimestamp?: string,
   fromTimestamp?: string,
   after?: string,
-  limit?: string
+  limit?: string,
+  fromBlockHeight?: string
 ) {
   return db_client<PerBlock[]>`
   WITH 
-  ${fullChainCTE(db_client, toTimestamp, fromTimestamp)},
+  ${canonicalChainCTE(db_client, toTimestamp, fromTimestamp, fromBlockHeight)},
   ${accountIdentifierCTE(db_client, address)},
   ${blocksAccessedCTE(db_client)},
   ${emittedZkAppCommandsCTE(db_client, after)},
@@ -329,11 +342,12 @@ export function getActionsQuery(
   toTimestamp?: string,
   fromTimestamp?: string,
   after?: string,
-  limit?: string
+  limit?: string,
+  fromBlockHeight?: string
 ) {
   return db_client<PerBlock[]>`
   WITH
-  ${fullChainCTE(db_client, toTimestamp, fromTimestamp)},
+  ${canonicalChainCTE(db_client, toTimestamp, fromTimestamp, fromBlockHeight)},
   ${accountIdentifierCTE(db_client, address)},
   ${blocksAccessedCTE(db_client)},
   ${emittedZkAppCommandsCTE(db_client, after)},

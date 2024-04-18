@@ -489,7 +489,7 @@ export const ChainDataExtensionMinaEventGenericConfig = Type.Object({
   type: Type.Literal(CdeEntryTypeName.MinaEventGeneric),
   address: Type.String(),
   scheduledPrefix: Type.String(),
-  startSlot: Type.Number(),
+  startBlockHeight: Type.Number(),
   name: Type.String(),
 });
 
@@ -505,7 +505,7 @@ export const ChainDataExtensionMinaActionGenericConfig = Type.Object({
   type: Type.Literal(CdeEntryTypeName.MinaActionGeneric),
   address: Type.String(),
   scheduledPrefix: Type.String(),
-  startSlot: Type.Number(),
+  startBlockHeight: Type.Number(),
   name: Type.String(),
 });
 
