@@ -39,7 +39,7 @@ export type { Transfer as ERC721Transfer } from './contract-types/ERC721Contract
 export type {
   TransferSingle as Erc1155TransferSingle,
   TransferBatch as Erc1155TransferBatch,
-} from './contract-types/ERC1155Contract.js';
+} from './contract-types/IERC1155Contract.js';
 export type { AccountCreated } from './contract-types/ERC6551RegistryContract.js';
 
 export type { Web3, Contract, AbiItem, EventData };
