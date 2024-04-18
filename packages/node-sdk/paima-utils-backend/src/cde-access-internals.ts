@@ -31,6 +31,7 @@ import type {
 import type {
   ICdeCardanoAssetUtxosByAddressParams,
   ICdeErc1155GetAllTokensResult,
+  ICdeErc1155GetByTokenIdAndWalletResult,
   ICdeErc1155GetByTokenIdResult,
 } from '@paima/db';
 
@@ -201,7 +202,7 @@ export async function internalGetErc1155ByTokenIdAndWallet(
   cde_id: number,
   wallet_address: string,
   token_id: bigint
-): Promise<ICdeErc1155GetByTokenIdResult | null> {
+): Promise<ICdeErc1155GetByTokenIdAndWalletResult | null> {
   return (
     await cdeErc1155GetByTokenIdAndWallet.run(
       { cde_id, wallet_address, token_id: String(token_id) },

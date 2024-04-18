@@ -23,6 +23,7 @@ import {
 import type {
   ICdeCardanoGetProjectedNftResult,
   ICdeErc1155GetAllTokensResult,
+  ICdeErc1155GetByTokenIdAndWalletResult,
   ICdeErc1155GetByTokenIdResult,
 } from '@paima/db/src';
 export type { ICdeErc1155GetAllTokensResult };
@@ -196,7 +197,7 @@ export async function getErc1155ByTokenIdAndWallet(
   cdeName: string,
   wallet: string,
   tokenId: bigint
-): Promise<ICdeErc1155GetByTokenIdResult | null> {
+): Promise<ICdeErc1155GetByTokenIdAndWalletResult | null> {
   const cdeId = await getCdeIdByName(readonlyDBConn, cdeName);
   if (cdeId === null) return null;
   return await internalGetErc1155ByTokenIdAndWallet(readonlyDBConn, cdeId, wallet, tokenId);
