@@ -98,40 +98,23 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
 
     const toTimestamp = maxBaseTimestamp;
 
-    const fromSlot = minaTimestampToSlot(
-      fromTimestamp,
-      cachedState.genesisTime,
-      this.config.slotDuration
-    );
-    const toSlot = minaTimestampToSlot(
-      toTimestamp,
-      cachedState.genesisTime,
-      this.config.slotDuration
-    );
-
-    const mapSlotsToEvmNumbers: { [slot: number]: number } = {};
-
-    let curr = 0;
-
-    for (let slot = fromSlot; slot <= toSlot; slot++) {
+    const getBlockNumber = (state: { curr: number }) => (ts: number) => {
       while (
-        curr < baseData.length &&
-        minaTimestampToSlot(
-          baseChainTimestampToMina(
-            baseData[curr].timestamp,
-            this.config.confirmationDepth,
-            this.config.slotDuration
-          ),
-          cachedState.genesisTime,
+        state.curr < baseData.length &&
+        baseChainTimestampToMina(
+          baseData[state.curr].timestamp,
+          this.config.confirmationDepth,
           this.config.slotDuration
-        ) < slot
+        ) <= ts
       )
-        curr++;
+        state.curr++;
 
-      if (curr < baseData.length) {
-        mapSlotsToEvmNumbers[slot] = baseData[curr].blockNumber;
+      if (state.curr < baseData.length) {
+        return baseData[state.curr].blockNumber;
+      } else {
+        throw new Error('got event out of the expected range');
       }
-    }
+    };
 
     const ungroupedCdeData = await Promise.all(
       this.sharedData.extensions.reduce(
@@ -142,10 +125,7 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
               extension,
               fromTimestamp,
               toTimestamp,
-              getBlockNumber: ts =>
-                mapSlotsToEvmNumbers[
-                  minaTimestampToSlot(ts, cachedState.genesisTime, this.config.slotDuration)
-                ],
+              getBlockNumber: getBlockNumber({ curr: 0 }),
               network: this.chainName,
               isPresync: false,
               cursor: undefined,
@@ -161,10 +141,7 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
               extension,
               fromTimestamp,
               toTimestamp,
-              getBlockNumber: ts =>
-                mapSlotsToEvmNumbers[
-                  minaTimestampToSlot(ts, cachedState.genesisTime, this.config.slotDuration)
-                ],
+              getBlockNumber: getBlockNumber({ curr: 0 }),
               network: this.chainName,
               isPresync: false,
               cursor: undefined,
