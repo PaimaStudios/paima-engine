@@ -53,6 +53,12 @@ AND CAST(balance AS NUMERIC) > 0
 /* @name cdeErc1155GetByTokenId */
 SELECT * from cde_erc1155_data
 WHERE cde_id = :cde_id!
+AND token_id = :token_id!
+;
+
+/* @name cdeErc1155GetByTokenIdAndWallet */
+SELECT * from cde_erc1155_data
+WHERE cde_id = :cde_id!
 AND wallet_address = :wallet_address!
 AND token_id = :token_id!
 ;
