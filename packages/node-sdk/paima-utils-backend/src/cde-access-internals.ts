@@ -20,6 +20,7 @@ import {
   cdeErc1155GetTotalBalanceAllTokens,
   cdeErc1155GetAllTokens,
   cdeErc1155GetByTokenId,
+  cdeErc1155GetByTokenIdAndWallet,
 } from '@paima/db';
 import type {
   OwnedNftsResponse,
@@ -30,6 +31,7 @@ import type {
 import type {
   ICdeCardanoAssetUtxosByAddressParams,
   ICdeErc1155GetAllTokensResult,
+  ICdeErc1155GetByTokenIdAndWalletResult,
   ICdeErc1155GetByTokenIdResult,
 } from '@paima/db';
 
@@ -188,11 +190,21 @@ export async function internalGetErc1155AllTokens(
 export async function internalGetErc1155ByTokenId(
   readonlyDBConn: Pool,
   cde_id: number,
-  wallet_address: string,
   token_id: bigint
 ): Promise<ICdeErc1155GetByTokenIdResult | null> {
   return (
-    await cdeErc1155GetByTokenId.run(
+    await cdeErc1155GetByTokenId.run({ cde_id, token_id: String(token_id) }, readonlyDBConn)
+  )[0];
+}
+
+export async function internalGetErc1155ByTokenIdAndWallet(
+  readonlyDBConn: Pool,
+  cde_id: number,
+  wallet_address: string,
+  token_id: bigint
+): Promise<ICdeErc1155GetByTokenIdAndWalletResult | null> {
+  return (
+    await cdeErc1155GetByTokenIdAndWallet.run(
       { cde_id, wallet_address, token_id: String(token_id) },
       readonlyDBConn
     )
