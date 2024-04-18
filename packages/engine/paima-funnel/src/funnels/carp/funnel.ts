@@ -459,17 +459,21 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
       const cursors = await getPaginationCursors.run(undefined, dbTx);
 
       const extensions = sharedData.extensions
-        .filter(extensions => extensions.network === config.network)
-        .map(extension => extension.cdeId);
+        .filter(extensions => extensions.network === chainName)
+        .map(extension => extension.cdeId)
+        .reduce((set, cdeId) => {
+          set.add(cdeId);
+          return set;
+        }, new Set());
 
-      for (const cursor of cursors) {
-        // TODO: performance concern? but not likely
-        if (extensions.find(cdeId => cdeId === cursor.cde_id))
+      cursors
+        .filter(cursor => extensions.has(cursor.cde_id))
+        .forEach(cursor => {
           newEntry.updateCursor(cursor.cde_id, {
             cursor: cursor.cursor,
             finished: cursor.finished,
           });
-      }
+        });
 
       return newEntry;
     })();
