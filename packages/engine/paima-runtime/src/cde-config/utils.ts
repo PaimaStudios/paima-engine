@@ -24,7 +24,11 @@ export function getEarliestStartSlot(config: ChainDataExtension[]): number {
   return isFinite(minStartSlot) ? minStartSlot : -1;
 }
 
-// returns pair [rawAbiFileData, artifactObject.abi]
+/**
+ * Read a contract ABI from a JSON file into an array.
+ * @param abiPath The JSON file path to read from.
+ * @returns The root if it is an array, the `abi` field if the root is an object, or `[]` on error.
+ */
 export async function loadAbi(abiPath: string): Promise<any[]> {
   let abiFileData: string;
   try {
