@@ -17,6 +17,9 @@ import {
   type ICdeCardanoGetProjectedNftResult,
   getCardanoEpoch,
   cdeCardanoAssetUtxosByAddress,
+  cdeErc1155GetAllTokens,
+  cdeErc1155GetByTokenId,
+  cdeErc1155GetByTokenIdAndWallet,
 } from '@paima/db';
 import type {
   OwnedNftsResponse,
@@ -24,7 +27,12 @@ import type {
   TokenIdPair,
   CardanoAssetUtxo,
 } from './types.js';
-import type { ICdeCardanoAssetUtxosByAddressParams } from '@paima/db';
+import type {
+  ICdeCardanoAssetUtxosByAddressParams,
+  ICdeErc1155GetAllTokensResult,
+  ICdeErc1155GetByTokenIdAndWalletResult,
+  ICdeErc1155GetByTokenIdResult,
+} from '@paima/db';
 
 /* Functions to retrieve CDE ID: */
 
@@ -156,6 +164,38 @@ export async function internalGetGenericDataBlockheightRange(
     blockHeight: res.block_height,
     payload: res.event_data,
   }));
+}
+
+export async function internalGetErc1155AllTokens(
+  readonlyDBConn: Pool,
+  cde_id: number,
+  wallet_address: string
+): Promise<ICdeErc1155GetAllTokensResult[]> {
+  return await cdeErc1155GetAllTokens.run({ cde_id, wallet_address }, readonlyDBConn);
+}
+
+export async function internalGetErc1155ByTokenId(
+  readonlyDBConn: Pool,
+  cde_id: number,
+  token_id: bigint
+): Promise<ICdeErc1155GetByTokenIdResult | null> {
+  return (
+    await cdeErc1155GetByTokenId.run({ cde_id, token_id: String(token_id) }, readonlyDBConn)
+  )[0];
+}
+
+export async function internalGetErc1155ByTokenIdAndWallet(
+  readonlyDBConn: Pool,
+  cde_id: number,
+  wallet_address: string,
+  token_id: bigint
+): Promise<ICdeErc1155GetByTokenIdAndWalletResult | null> {
+  return (
+    await cdeErc1155GetByTokenIdAndWallet.run(
+      { cde_id, wallet_address, token_id: String(token_id) },
+      readonlyDBConn
+    )
+  )[0];
 }
 
 export async function internalGetErc6551AccountOwner(

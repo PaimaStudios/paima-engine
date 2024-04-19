@@ -18,6 +18,7 @@ import {
   ERC6551_REGISTRY_DEFAULT,
   defaultEvmMainNetworkName,
   defaultCardanoNetworkName,
+  getErc1155Contract,
 } from '@paima/utils';
 
 import type {
@@ -36,6 +37,7 @@ import {
   ChainDataExtensionCardanoMintBurnConfig,
   ChainDataExtensionCardanoProjectedNFTConfig,
   ChainDataExtensionCardanoTransferConfig,
+  ChainDataExtensionErc1155Config,
   ChainDataExtensionErc20Config,
   ChainDataExtensionErc20DepositConfig,
   ChainDataExtensionErc6551RegistryConfig,
@@ -68,7 +70,7 @@ export async function loadChainDataExtensions(
     );
     return [instantiatedExtensions, true];
   } catch (err) {
-    doLog(`[cde-config] Invalid config file: ${err}`);
+    doLog(`[cde-config] Invalid config file:`, err);
     return [[], false];
   }
 }
@@ -151,6 +153,15 @@ export function parseCdeConfigFile(configFileData: string): Static<typeof CdeCon
           ]),
           entry
         );
+      case CdeEntryTypeName.ERC1155:
+        return checkOrError(
+          entry.name,
+          Type.Intersect([
+            ChainDataExtensionErc1155Config,
+            Type.Object({ network: Type.String() }),
+          ]),
+          entry
+        );
       default:
         assertNever(entry.type);
     }
@@ -166,16 +177,17 @@ function checkOrError<T extends TSchema>(
 ): Static<T> {
   // 1) Check if there are any errors since Value.Decode doesn't give error messages
   {
-    const skippableErrors: ValueErrorType[] = [ValueErrorType.Intersect, ValueErrorType.Union];
+    const lowPriorityErrors = new Set([ValueErrorType.Intersect, ValueErrorType.Union]);
 
     const errors = Array.from(Value.Errors(structure, config));
+    const allErrorsLowPriority = errors.every(e => lowPriorityErrors.has(e.type));
     for (const error of errors) {
       // there are many useless errors in this library
       // ex: 1st error: "foo" should be "bar" in struct Foo
       //     2nd error: struct Foo is invalid inside struct Config
       //     in this case, the 2nd error is useless as we only care about the 1st error
       // However, we always want to show the error if for some reason it's the only error
-      if (errors.length !== 1 && skippableErrors.find(val => val === error.type) != null) continue;
+      if (!allErrorsLowPriority && lowPriorityErrors.has(error.type)) continue;
       console.error({
         name: name ?? 'Configuration root',
         path: error.path,
@@ -217,7 +229,7 @@ async function instantiateExtension(
         contract: getErc20Contract(config.contractAddress, web3s[network]),
       };
     case CdeEntryTypeName.ERC721:
-      if (await isPaimaErc721(config, web3s[config.network || defaultEvmMainNetworkName])) {
+      if (await isPaimaErc721(config, web3s[network])) {
         return {
           ...config,
           network,
@@ -244,6 +256,15 @@ async function instantiateExtension(
         hash: hashConfig(config),
         cdeType: ChainDataExtensionType.ERC20Deposit,
         contract: getErc20Contract(config.contractAddress, web3s[network]),
+      };
+    case CdeEntryTypeName.ERC1155:
+      return {
+        ...config,
+        network,
+        cdeId: index,
+        hash: hashConfig(config),
+        cdeType: ChainDataExtensionType.ERC1155,
+        contract: getErc1155Contract(config.contractAddress, web3s[network]),
       };
     case CdeEntryTypeName.Generic:
       return {
@@ -358,7 +379,9 @@ async function instantiateCdeGeneric(
       eventSignatureHash,
     };
   } catch (err) {
-    doLog(`[cde-config]: Fail to initialize Web3 contract with ABI ${config.abiPath}`);
+    doLog(
+      `[cde-config] Failed to initialize Web3 contract ${config.name} with ABI ${config.abiPath}`
+    );
     throw err;
   }
 }

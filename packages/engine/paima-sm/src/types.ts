@@ -15,6 +15,7 @@ import type {
   InternalEventType,
   ConfigNetworkType,
   STFSubmittedData,
+  IERC1155Contract,
 } from '@paima/utils';
 import { Type } from '@sinclair/typebox';
 import type { Static } from '@sinclair/typebox';
@@ -78,6 +79,14 @@ interface CdeDatumErc721MintPayload {
 interface CdeDatumErc20DepositPayload {
   from: string;
   value: string;
+}
+
+interface CdeDatumErc1155TransferPayload {
+  operator: string; // address
+  from: string; // address
+  to: string; // address
+  ids: string[]; // uint256, might have just one entry
+  values: string[]; // uint256, might have just one entry
 }
 
 type CdeDatumGenericPayload = any;
@@ -185,6 +194,14 @@ export interface CdeErc20DepositDatum extends CdeDatumBase {
   scheduledPrefix: string;
 }
 
+export interface CdeErc1155TransferDatum extends CdeDatumBase {
+  cdeDatumType: ChainDataExtensionDatumType.Erc1155Transfer;
+  payload: CdeDatumErc1155TransferPayload;
+  contractAddress: string;
+  scheduledPrefix?: string | undefined;
+  burnScheduledPrefix?: string | undefined;
+}
+
 export interface CdeGenericDatum extends CdeDatumBase {
   cdeDatumType: ChainDataExtensionDatumType.Generic;
   payload: CdeDatumGenericPayload;
@@ -235,6 +252,7 @@ export type ChainDataExtensionDatum =
   | CdeErc721MintDatum
   | CdeErc721TransferDatum
   | CdeErc20DepositDatum
+  | CdeErc1155TransferDatum
   | CdeGenericDatum
   | CdeErc6551RegistryDatum
   | CdeCardanoPoolDatum
@@ -249,6 +267,7 @@ export enum CdeEntryTypeName {
   ERC20Deposit = 'erc20-deposit',
   ERC721 = 'erc721',
   ERC6551Registry = 'erc6551-registry',
+  ERC1155 = 'erc1155',
   CardanoDelegation = 'cardano-stake-delegation',
   CardanoProjectedNFT = 'cardano-projected-nft',
   CardanoDelayedAsset = 'cardano-delayed-asset',
@@ -319,6 +338,21 @@ export type ChainDataExtensionErc20Deposit = ChainDataExtensionBase &
   Static<typeof ChainDataExtensionErc20DepositConfig> & {
     cdeType: ChainDataExtensionType.ERC20Deposit;
     contract: ERC20Contract;
+  };
+
+export const ChainDataExtensionErc1155Config = Type.Intersect([
+  ChainDataExtensionConfigBase,
+  Type.Object({
+    type: Type.Literal(CdeEntryTypeName.ERC1155),
+    contractAddress: EvmAddress,
+    scheduledPrefix: Type.Optional(Type.String()),
+    burnScheduledPrefix: Type.Optional(Type.String()),
+  }),
+]);
+export type ChainDataExtensionErc1155 = ChainDataExtensionBase &
+  Static<typeof ChainDataExtensionErc1155Config> & {
+    cdeType: ChainDataExtensionType.ERC1155;
+    contract: IERC1155Contract;
   };
 
 export const ChainDataExtensionGenericConfig = Type.Intersect([
@@ -433,10 +467,11 @@ export const CdeConfig = Type.Object({
     Type.Intersect([
       Type.Union([
         ChainDataExtensionErc20Config,
-        ChainDataExtensionErc721Config,
         ChainDataExtensionErc20DepositConfig,
-        ChainDataExtensionGenericConfig,
+        ChainDataExtensionErc721Config,
+        ChainDataExtensionErc1155Config,
         ChainDataExtensionErc6551RegistryConfig,
+        ChainDataExtensionGenericConfig,
         ChainDataExtensionCardanoDelegationConfig,
         ChainDataExtensionCardanoProjectedNFTConfig,
         ChainDataExtensionCardanoDelayedAssetConfig,
@@ -463,11 +498,12 @@ export const CdeBaseConfig = Type.Object({
 });
 export type ChainDataExtension = (
   | ChainDataExtensionErc20
+  | ChainDataExtensionErc20Deposit
   | ChainDataExtensionErc721
   | ChainDataExtensionPaimaErc721
-  | ChainDataExtensionErc20Deposit
-  | ChainDataExtensionGeneric
+  | ChainDataExtensionErc1155
   | ChainDataExtensionErc6551Registry
+  | ChainDataExtensionGeneric
   | ChainDataExtensionCardanoDelegation
   | ChainDataExtensionCardanoProjectedNFT
   | ChainDataExtensionCardanoDelayedAsset

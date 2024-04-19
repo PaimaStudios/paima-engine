@@ -15,8 +15,17 @@ import {
   internalGetCardanoAddressDelegation,
   internalGetCardanoProjectedNft,
   internalGetCardanoAssetUtxos,
+  internalGetErc1155AllTokens,
+  internalGetErc1155ByTokenId,
+  internalGetErc1155ByTokenIdAndWallet,
 } from './cde-access-internals.js';
-import type { ICdeCardanoGetProjectedNftResult } from '@paima/db/src';
+import type {
+  ICdeCardanoGetProjectedNftResult,
+  ICdeErc1155GetAllTokensResult,
+  ICdeErc1155GetByTokenIdAndWalletResult,
+  ICdeErc1155GetByTokenIdResult,
+} from '@paima/db';
+export type { ICdeErc1155GetAllTokensResult };
 import type {
   OwnedNftsResponse,
   GenericCdeDataUnit,
@@ -138,6 +147,46 @@ export async function getGenericDataBlockheightRange(
   const cdeId = await getCdeIdByName(readonlyDBConn, cdeName);
   if (cdeId === null) return [];
   return await internalGetGenericDataBlockheightRange(readonlyDBConn, cdeId, fromBlock, toBlock);
+}
+
+/**
+ * Get a listing of all tokens owned by a wallet within a single ERC-1155 contract.
+ */
+export async function getErc1155AllTokens(
+  readonlyDBConn: Pool,
+  cdeName: string,
+  wallet: string
+): Promise<ICdeErc1155GetAllTokensResult[]> {
+  const cdeId = await getCdeIdByName(readonlyDBConn, cdeName);
+  if (cdeId === null) return [];
+  return await internalGetErc1155AllTokens(readonlyDBConn, cdeId, wallet);
+}
+
+/**
+ * Get info on a specific token within a single ERC-1155 contract.
+ */
+export async function getErc1155ByTokenId(
+  readonlyDBConn: Pool,
+  cdeName: string,
+  tokenId: bigint
+): Promise<ICdeErc1155GetByTokenIdResult | null> {
+  const cdeId = await getCdeIdByName(readonlyDBConn, cdeName);
+  if (cdeId === null) return null;
+  return await internalGetErc1155ByTokenId(readonlyDBConn, cdeId, tokenId);
+}
+
+/**
+ * Get info on a specific token owned by a wallet within a single ERC-1155 contract.
+ */
+export async function getErc1155ByTokenIdAndWallet(
+  readonlyDBConn: Pool,
+  cdeName: string,
+  wallet: string,
+  tokenId: bigint
+): Promise<ICdeErc1155GetByTokenIdAndWalletResult | null> {
+  const cdeId = await getCdeIdByName(readonlyDBConn, cdeName);
+  if (cdeId === null) return null;
+  return await internalGetErc1155ByTokenIdAndWallet(readonlyDBConn, cdeId, wallet, tokenId);
 }
 
 /**
