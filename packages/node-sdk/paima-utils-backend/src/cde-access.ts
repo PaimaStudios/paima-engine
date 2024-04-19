@@ -25,7 +25,7 @@ import type {
   ICdeErc1155GetAllTokensResult,
   ICdeErc1155GetByTokenIdAndWalletResult,
   ICdeErc1155GetByTokenIdResult,
-} from '@paima/db/src';
+} from '@paima/db';
 export type { ICdeErc1155GetAllTokensResult };
 import type {
   OwnedNftsResponse,
