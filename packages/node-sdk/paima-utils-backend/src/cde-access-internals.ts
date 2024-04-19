@@ -17,7 +17,6 @@ import {
   type ICdeCardanoGetProjectedNftResult,
   getCardanoEpoch,
   cdeCardanoAssetUtxosByAddress,
-  cdeErc1155GetTotalBalanceAllTokens,
   cdeErc1155GetAllTokens,
   cdeErc1155GetByTokenId,
   cdeErc1155GetByTokenIdAndWallet,
@@ -165,18 +164,6 @@ export async function internalGetGenericDataBlockheightRange(
     blockHeight: res.block_height,
     payload: res.event_data,
   }));
-}
-
-export async function internalGetErc1155TotalBalanceAllTokens(
-  readonlyDBConn: Pool,
-  cde_id: number,
-  wallet_address: string
-): Promise<bigint> {
-  const results = await cdeErc1155GetTotalBalanceAllTokens.run(
-    { cde_id, wallet_address },
-    readonlyDBConn
-  );
-  return BigInt(results[0].total ?? '0');
 }
 
 export async function internalGetErc1155AllTokens(

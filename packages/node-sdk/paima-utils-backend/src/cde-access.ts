@@ -15,7 +15,6 @@ import {
   internalGetCardanoAddressDelegation,
   internalGetCardanoProjectedNft,
   internalGetCardanoAssetUtxos,
-  internalGetErc1155TotalBalanceAllTokens,
   internalGetErc1155AllTokens,
   internalGetErc1155ByTokenId,
   internalGetErc1155ByTokenIdAndWallet,
@@ -148,19 +147,6 @@ export async function getGenericDataBlockheightRange(
   const cdeId = await getCdeIdByName(readonlyDBConn, cdeName);
   if (cdeId === null) return [];
   return await internalGetGenericDataBlockheightRange(readonlyDBConn, cdeId, fromBlock, toBlock);
-}
-
-/**
- * Get the sum of the `value` of all tokens owned by a wallet within a single ERC-1155 contract.
- */
-export async function getErc1155TotalBalanceAllTokens(
-  readonlyDBConn: Pool,
-  cdeName: string,
-  wallet: string
-): Promise<bigint> {
-  const cdeId = await getCdeIdByName(readonlyDBConn, cdeName);
-  if (cdeId === null) return 0n;
-  return await internalGetErc1155TotalBalanceAllTokens(readonlyDBConn, cdeId, wallet);
 }
 
 /**

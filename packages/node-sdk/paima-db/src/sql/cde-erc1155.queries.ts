@@ -114,36 +114,6 @@ const cdeErc1155BurnIR: any = {"usedParamSet":{"cde_id":true,"token_id":true,"wa
 export const cdeErc1155Burn = new PreparedQuery<ICdeErc1155BurnParams,ICdeErc1155BurnResult>(cdeErc1155BurnIR);
 
 
-/** 'CdeErc1155GetTotalBalanceAllTokens' parameters type */
-export interface ICdeErc1155GetTotalBalanceAllTokensParams {
-  cde_id: number;
-  wallet_address: string;
-}
-
-/** 'CdeErc1155GetTotalBalanceAllTokens' return type */
-export interface ICdeErc1155GetTotalBalanceAllTokensResult {
-  total: string | null;
-}
-
-/** 'CdeErc1155GetTotalBalanceAllTokens' query type */
-export interface ICdeErc1155GetTotalBalanceAllTokensQuery {
-  params: ICdeErc1155GetTotalBalanceAllTokensParams;
-  result: ICdeErc1155GetTotalBalanceAllTokensResult;
-}
-
-const cdeErc1155GetTotalBalanceAllTokensIR: any = {"usedParamSet":{"cde_id":true,"wallet_address":true},"params":[{"name":"cde_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":83,"b":90}]},{"name":"wallet_address","required":true,"transform":{"type":"scalar"},"locs":[{"a":113,"b":128}]}],"statement":"SELECT sum(CAST(balance AS NUMERIC)) as total from cde_erc1155_data\nWHERE cde_id = :cde_id!\nAND wallet_address = :wallet_address!"};
-
-/**
- * Query generated from SQL:
- * ```
- * SELECT sum(CAST(balance AS NUMERIC)) as total from cde_erc1155_data
- * WHERE cde_id = :cde_id!
- * AND wallet_address = :wallet_address!
- * ```
- */
-export const cdeErc1155GetTotalBalanceAllTokens = new PreparedQuery<ICdeErc1155GetTotalBalanceAllTokensParams,ICdeErc1155GetTotalBalanceAllTokensResult>(cdeErc1155GetTotalBalanceAllTokensIR);
-
-
 /** 'CdeErc1155GetAllTokens' parameters type */
 export interface ICdeErc1155GetAllTokensParams {
   cde_id: number;
