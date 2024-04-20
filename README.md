@@ -28,7 +28,7 @@ While `Paima Engine SDK` refers to these modules:
 
 - `Paima Executors` (The library which enables building `RoundExecutor`s and `MatchExecutor`s)
 - `Paima Middleware Core` (The library which aids connecting frontends to Paima logic)
-- `Paima Utils` (The Library which holds auxillary functions between the other modules)
+- `Paima Utils` (The Library which holds auxiliary functions between the other modules)
 - `Paima Utils Backend` (Utils which are purely for backend (and may not work in a browser environment))
 - `Paima Build Utils` (Helps build the Paima components used user projects - not included as part of the `@paima/sdk` package)
 - `Paima Prando` (Custom fork of a deterministic pseudo-RNG generator library)

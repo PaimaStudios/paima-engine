@@ -57,7 +57,7 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
       }
     }
 
-    // the blocks that didn't pass the the filter are kept in the cache, so that
+    // the blocks that didn't pass the filter are kept in the cache, so that
     // the block funnel doesn't get them again.
     chainData.forEach(_ => cachedState.bufferedChainData.shift());
 
