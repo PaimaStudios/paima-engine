@@ -12,6 +12,8 @@ State-annotated contracts
   <li>[AnnotatedMintNft](#AnnotatedMintNft): A standard ERC721 that accepts calldata in the mint function for any initialization data needed in a Paima dApp.</li>
   <li>[InverseBaseProjectedNft](#InverseBaseProjectedNft): Project game state into a ERC721 NFT on an EVM layer initiated on said base layer.</li>
   <li>[InverseAppProjectedNft](#InverseAppProjectedNft): Project game state into a ERC721 NFT on an EVM layer initiated on the app layer.</li>
+  <li>[InverseBaseProjected1155](#InverseBaseProjected1155): Project game state into a ERC1155 on an EVM layer initiated on said base layer.</li>
+  <li>[InverseAppProjected1155](#InverseAppProjected1155): Project game state into a ERC1155 on an EVM layer initiated on the app layer.</li>
 </ul>
 Facilitating monetization
 <ul>
@@ -34,6 +36,12 @@ Facilitating monetization
 {{IInverseAppProjectedNft}}
 {{InverseAppProjectedNft}}
 
+{{IInverseProjected1155}}
+{{IInverseBaseProjected1155}}
+{{InverseBaseProjected1155}}
+{{IInverseAppProjected1155}}
+{{InverseAppProjected1155}}
+
 ## Facilitating monetization
 
 {{NativeNftSale}}
@@ -48,8 +56,10 @@ Facilitating monetization
 
 {{State}}
 
+{{IERC4906Agnostic}}
 {{ERC1967}}
 
+{{IUri}}
 {{ITokenUri}}
 
 {{NativeNftSaleProxy}}

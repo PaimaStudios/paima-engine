@@ -4,7 +4,7 @@ module.exports['escapeChars'] = input => {
   if (input == null) return 'No description given';
   // escape the curly braces (replace them with \{ )
   // useful to escape cases like {IERC721Receiver-onERC721Received}
-  return input.replace(/\{([a-zA-Z0-9-]+)\}/g, '\\{$1\\}');
+  return input.replace(/\{([a-zA-Z0-9_-]+)\}/g, '\\{$1\\}');
 };
 
 module.exports['oz-version'] = () => version;
