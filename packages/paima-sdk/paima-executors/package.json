@@ -1,6 +1,6 @@
 {
   "name": "@paima/executors",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "publishConfig": {
     "access": "public"
   },
@@ -26,6 +26,6 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
-    "@paima/prando": "2.2.0"
+    "@paima/prando": "2.3.0"
   }
 }
