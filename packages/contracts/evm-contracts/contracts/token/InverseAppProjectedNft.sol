@@ -179,13 +179,13 @@ contract InverseAppProjectedNft is IInverseAppProjectedNft, ERC721, Ownable {
     }
 
     /// @dev Function that emits an event to notify third-parties (e.g. NFT marketplaces) about
-    /// an update to consecutive range of tokens. Can be overriden in inheriting contract.
+    /// an update to consecutive range of tokens. Can be overridden in inheriting contract.
     function updateMetadataBatch(uint256 _fromTokenId, uint256 _toTokenId) public virtual {
         emit BatchMetadataUpdate(_fromTokenId, _toTokenId);
     }
 
     /// @dev Function that emits an event to notify third-parties (e.g. NFT marketplaces) about
-    /// an update to a single token. Can be overriden in inheriting contract.
+    /// an update to a single token. Can be overridden in inheriting contract.
     function updateMetadata(uint256 _tokenId) public virtual {
         emit MetadataUpdate(_tokenId);
     }
