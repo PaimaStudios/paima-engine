@@ -241,3 +241,9 @@ CREATE TABLE cde_cardano_mint_burn(
   output_addresses JSONB NOT NULL,
   PRIMARY KEY (cde_id, tx_id)
 );
+
+CREATE TABLE mina_checkpoint (
+  timestamp TEXT NOT NULL,
+  network TEXT NOT NULL,
+  PRIMARY KEY (network)
+);

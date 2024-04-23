@@ -29,6 +29,7 @@ import {
   NO_USER_ID,
   updateCardanoEpoch,
   updatePaginationCursor,
+  updateMinaCheckpoint,
 } from '@paima/db';
 import Prando from '@paima/prando';
 
@@ -483,6 +484,15 @@ async function processInternalEvents(
         await markCdeBlockheightProcessed.run(
           {
             block_height: event.block,
+            network: event.network,
+          },
+          dbTx
+        );
+        break;
+      case InternalEventType.MinaLastTimestamp:
+        await updateMinaCheckpoint.run(
+          {
+            timestamp: event.timestamp,
             network: event.network,
           },
           dbTx

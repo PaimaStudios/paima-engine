@@ -576,6 +576,25 @@ const TABLE_DATA_DELEGATIONS: TableData = {
   creationQuery: QUERY_CREATE_TABLE_DELEGATIONS,
 };
 
+const QUERY_CREATE_TABLE_MINA_CHECKPOINT = `
+CREATE TABLE mina_checkpoint (
+  timestamp TEXT NOT NULL,
+  network TEXT NOT NULL,
+  PRIMARY KEY (network)
+);
+`;
+
+const TABLE_DATA_MINA_CHECKPOINT: TableData = {
+  tableName: 'mina_checkpoint',
+  primaryKeyColumns: ['network'],
+  columnData: packTuples([
+    ['timestamp', 'text', 'NO', ''],
+    ['network', 'text', 'NO', ''],
+  ]),
+  serialColumns: [],
+  creationQuery: QUERY_CREATE_TABLE_MINA_CHECKPOINT,
+};
+
 const FUNCTION_NOTIFY_WALLET_CONNECT: string = `
 create or replace function public.notify_wallet_connect()
   returns trigger
@@ -663,4 +682,5 @@ export const TABLES: TableData[] = [
   TABLE_DATA_CDE_TRACKING_CURSOR_PAGINATION,
   TABLE_DATA_CDE_CARDANO_TRANSFER,
   TABLE_DATA_CDE_CARDANO_MINT_BURN,
+  TABLE_DATA_MINA_CHECKPOINT,
 ];

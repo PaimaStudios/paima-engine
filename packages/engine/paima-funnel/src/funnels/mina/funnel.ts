@@ -1,4 +1,11 @@
-import { doLog, logError, ChainDataExtensionType, delay, ENV } from '@paima/utils';
+import {
+  doLog,
+  logError,
+  ChainDataExtensionType,
+  delay,
+  ENV,
+  InternalEventType,
+} from '@paima/utils';
 import type { ChainFunnel, ReadPresyncDataFrom } from '@paima/runtime';
 import type {
   ChainData,
@@ -11,7 +18,7 @@ import { BaseFunnel } from '../BaseFunnel.js';
 import type { FunnelSharedData } from '../BaseFunnel.js';
 import type { PoolClient } from 'pg';
 import { FUNNEL_PRESYNC_FINISHED, ConfigNetworkType } from '@paima/utils';
-import { getPaginationCursors } from '@paima/db';
+import { getMinaCheckpoint, getPaginationCursors } from '@paima/db';
 import { getActionCdeData, getEventCdeData } from '../../cde/minaGeneric.js';
 import type { MinaConfig } from '@paima/utils';
 import { MinaFunnelCacheEntry } from '../FunnelCache.js';
@@ -86,8 +93,10 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
       await delay(delayForWaitingForFinalityLoop);
     }
 
-    const fromTimestamp =
-      this.cache.getState().lastPoint?.timestamp || cachedState.startingSlotTimestamp;
+    const lastRoundTimestamp = this.cache.getState().lastPoint?.timestamp;
+    const fromTimestamp = lastRoundTimestamp
+      ? lastRoundTimestamp + 1
+      : cachedState.startingSlotTimestamp;
 
     const toTimestamp = maxBaseTimestamp;
 
@@ -158,6 +167,23 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
     );
 
     const composed = composeChainData(baseData, grouped);
+
+    for (const chainData of composed) {
+      if (!chainData.internalEvents) {
+        chainData.internalEvents = [];
+      }
+
+      chainData.internalEvents.push({
+        type: InternalEventType.MinaLastTimestamp,
+
+        timestamp: baseChainTimestampToMina(
+          chainData.timestamp,
+          this.config.confirmationDepth,
+          this.config.slotDuration
+        ).toString(),
+        network: this.chainName,
+      });
+    }
 
     return composed;
   }
@@ -346,6 +372,11 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
             finished: cursor.finished,
           });
         });
+
+      const checkpoint = await getMinaCheckpoint.run({ network: chainName }, dbTx);
+      if (checkpoint.length > 0) {
+        newEntry.updateLastPoint(Number.parseInt(checkpoint[0].timestamp, 10));
+      }
 
       return newEntry;
     })();
