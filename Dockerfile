@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------------
-FROM alpine:3.18.6 AS build
+FROM --platform=linux/amd64 alpine:3.18.6 AS build
 RUN apk add --no-cache \
     gcompat \
     bash \
@@ -39,7 +39,7 @@ COPY --link --from=build /src/packages/contracts/evm-contracts/ /node_modules/@p
 
 # -----------------------------------------------------------------------------
 # paima-batcher binary
-FROM alpine:3.18.6 AS paima-batcher
+FROM --platform=linux/amd64 alpine:3.18.6 AS paima-batcher
 RUN apk add --no-cache \
     gcompat \
     libstdc++
@@ -53,7 +53,7 @@ ENTRYPOINT [ "/usr/local/bin/paima-batcher" ]
 
 # -----------------------------------------------------------------------------
 # paima-engine binary, defaults to "run" subcommand
-FROM alpine:3.18.6 AS paima-engine
+FROM --platform=linux/amd64 alpine:3.18.6 AS paima-engine
 RUN apk add --no-cache \
     gcompat \
     libstdc++
