@@ -26,12 +26,6 @@ import postgres from 'postgres';
 
 const delayForWaitingForFinalityLoop = 1000;
 
-async function getGenesisTime(pg: postgres.Sql): Promise<number> {
-  const row = await pg`select timestamp from blocks where height = 1;`;
-
-  return Number.parseInt(row[0]['timestamp'], 10);
-}
-
 async function findMinaConfirmedTimestamp(pg: postgres.Sql): Promise<number> {
   const row =
     await pg`select timestamp from blocks where chain_status = 'canonical' order by height desc limit 1;`;
@@ -341,8 +335,6 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
 
       const pg = postgres(config.archiveConnectionString);
 
-      const genesisTime = await getGenesisTime(pg);
-
       const startingBlockTimestamp = (await sharedData.web3.eth.getBlock(startingBlockHeight))
         .timestamp as number;
 
@@ -352,7 +344,7 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
         config.slotDuration
       );
 
-      newEntry.updateStartingTimestamp(minaTimestamp, genesisTime, pg);
+      newEntry.updateStartingTimestamp(minaTimestamp, pg);
 
       const cursors = await getPaginationCursors.run(undefined, dbTx);
 

@@ -184,7 +184,6 @@ export class EvmFunnelCacheEntry implements FunnelCacheEntry {
 export type MinaFunnelCacheEntryState = {
   startingSlotTimestamp: number;
   lastPoint: { timestamp: number } | undefined;
-  genesisTime: number;
   pg: postgres.Sql;
   cursors:
     | {
@@ -197,14 +196,9 @@ export class MinaFunnelCacheEntry implements FunnelCacheEntry {
   private state: MinaFunnelCacheEntryState | null = null;
   public static readonly SYMBOL = Symbol('MinaFunnelStartingSlot');
 
-  public updateStartingTimestamp(
-    startingSlotTimestamp: number,
-    genesisTime: number,
-    pg: postgres.Sql
-  ): void {
+  public updateStartingTimestamp(startingSlotTimestamp: number, pg: postgres.Sql): void {
     this.state = {
       startingSlotTimestamp,
-      genesisTime,
       lastPoint: this.state?.lastPoint,
       cursors: this.state?.cursors,
       pg,
