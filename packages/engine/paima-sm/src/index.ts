@@ -414,7 +414,7 @@ async function processUserInputs(
     //
     // delegate       = &wd|from?|to?|from_signature|to_signature
     // migrate        = &wm|from?|to?|from_signature|to_signature
-    // cancelDelegate = &wc|to_signature
+    // cancelDelegate = &wc|to?
     const delegateWallet = new DelegateWallet(DBConn);
     if (inputData.inputData.startsWith(DelegateWallet.INTERNAL_COMMAND_PREFIX)) {
       const status = await delegateWallet.process(

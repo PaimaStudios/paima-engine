@@ -1,7 +1,7 @@
 /*
  * delegate            =   &wd|from?|to?|from_signature|to_signature
  * migrate             =   &wm|from?|to?|from_signature|to_signature
- * cancelDelegations   =   &wc|to_signature
+ * cancelDelegations   =   &wc|to?
  */
 
 import { builder } from '@paima/concise';
@@ -78,14 +78,14 @@ export async function walletConnectMigrate(
 }
 
 export async function walletConnectCancelDelegations(
-  to_signature: string
+  to: string | null
 ): Promise<SuccessfulResult<PostDataResponse> | FailedResult> {
   const errorFxn = buildEndpointErrorFxn('delegate-wallet-cancel');
 
-  // walletConnect = &wc|to_signature
+  // walletConnect = &wc|to?
   const conciseBuilder = builder.initialize();
   conciseBuilder.setPrefix('&wc');
-  conciseBuilder.addValue({ value: to_signature });
+  conciseBuilder.addValue({ value: to ?? '' });
   try {
     const result = await postConciseData(conciseBuilder.build(), errorFxn);
     if (!result.success) {
