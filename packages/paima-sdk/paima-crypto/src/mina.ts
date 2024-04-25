@@ -12,16 +12,14 @@ export class MinaCrypto implements IVerify {
     sigStruct: string
   ): Promise<boolean> => {
     try {
-      const [field, scalar, ...remainder] = sigStruct.split(';');
-      if (!field || !scalar || remainder.length > 0) {
+      const [field, scalar, network, ...remainder] = sigStruct.split(';');
+      if (!field || !scalar || !network || remainder.length > 0) {
         return false;
       }
 
       const Client = require('mina-signer');
 
-      // type Network = 'mainnet' | 'testnet'
-      // TODO: unhardcode, but not sure yet where to get this
-      const signerClient = new Client({ network: 'testnet' });
+      const signerClient = new Client({ network });
 
       const verifyBody = {
         data: message,

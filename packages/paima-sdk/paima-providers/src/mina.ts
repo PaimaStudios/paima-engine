@@ -16,34 +16,11 @@ import {
   WalletNotFound,
 } from './errors.js';
 import { getWindow } from './window.js';
+import AuroMinaApi from '@aurowallet/mina-provider';
+
+export type MinaApi = AuroMinaApi;
 
 type MinaAddress = any;
-
-// TODO: import the provider package instead
-type SignMessageArgs = {
-  readonly message: string;
-};
-
-interface SignedData {
-  publicKey: string;
-  data: string;
-  signature: {
-    field: string;
-    scalar: string;
-  };
-}
-
-interface ProviderError extends Error {
-  message: string;
-  code: number;
-  data?: unknown;
-}
-
-Promise<SignedData | ProviderError>;
-export interface MinaApi {
-  signMessage: (args: SignMessageArgs) => Promise<SignedData>;
-  requestAccounts: () => Promise<string[]>;
-}
 
 declare global {
   interface Window {
@@ -157,15 +134,31 @@ export class MinaProvider implements IProvider<MinaApi> {
   signMessage = async (message: string): Promise<UserSignature> => {
     // There is no way of choosing the signing account here. At most we could
     // monitor the changed events and erroring out if it changed.
-    const { signature } = await this.conn.api.signMessage({ message: message });
-    return `${signature.field};${signature.scalar}`;
+    const signed = await this.conn.api.signMessage({ message: message });
+
+    if ('signature' in signed) {
+      const { signature } = signed;
+
+      const networkKind = await this.conn.api.requestNetwork();
+
+      // only these two options are used
+      // https://github.com/aurowallet/auro-wallet-browser-extension/blob/624de322dd99baaa09617bbad4a4a838f0a88edc/src/background/lib/index.js#L17
+      // this is part of the hashed message
+      const network = networkKind.chainId === 'mainnet' ? 'mainnet' : 'testnet';
+
+      return `${signature.field};${signature.scalar};${network}`;
+    } else {
+      throw new ProviderApiError('Failed to sign message');
+    }
   };
 
   static fetchAddress = async (conn: ActiveConnection<MinaApi>): Promise<string> => {
     try {
       const addresses = await conn.api.requestAccounts();
-      if (addresses.length > 0) {
+      if ('length' in addresses && addresses.length > 0) {
         return addresses[0];
+      } else {
+        throw new ProviderApiError('requestAccounts request failed');
       }
     } catch (err) {
       console.log('[pickMinaAddress] error calling requestAccounts:', err);
