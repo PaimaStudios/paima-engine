@@ -1,14 +1,13 @@
-import Web3 from 'web3';
 import type { PoolClient } from 'pg';
 
 import { PaimaParser } from '@paima/concise';
 import { ENV, doLog } from '@paima/utils';
-import type { IVerify } from '@paima/crypto';
 import { CryptoManager } from '@paima/crypto';
 import type { IGetAddressFromAddressResult } from '@paima/db';
 import {
   addressCache,
   deleteDelegationTo,
+  deleteDelegationsFrom,
   enableManualCache,
   getAddressFromAddress,
   getDelegation,
@@ -32,7 +31,7 @@ type ParsedDelegateWalletCommand =
       command: 'migrate';
       args: { from: string; to: string; from_signature: string; to_signature: string };
     }
-  | { command: 'cancelDelegations'; args: { to_signature: string } };
+  | { command: 'cancelDelegations'; args: { to: string } };
 
 // Delegate Wallet manages cache cleanup.
 enableManualCache();
@@ -47,7 +46,7 @@ export class DelegateWallet {
   private static readonly delegationGrammar = `
     delegate            =   &wd|from?|to?|from_signature|to_signature
     migrate             =   &wm|from?|to?|from_signature|to_signature
-    cancelDelegations   =   &wc|to_signature
+    cancelDelegations   =   &wc|to?
     `;
 
   private static readonly parserCommands = {
@@ -64,7 +63,7 @@ export class DelegateWallet {
       to_signature: PaimaParser.NCharsParser(0, 1024),
     },
     cancelDelegations: {
-      to_signature: PaimaParser.NCharsParser(0, 1024),
+      to: PaimaParser.OptionalParser('', PaimaParser.WalletAddress()),
     },
   };
 
@@ -77,9 +76,7 @@ export class DelegateWallet {
 
   /* Generate Plaintext Message */
   private generateMessage(internalMessage: string = ''): string {
-    return `${DelegateWallet.DELEGATE_WALLET_PREFIX}${
-      DelegateWallet.SEP
-    }${internalMessage.toLocaleLowerCase()}${DelegateWallet.SEP}${ENV.CONTRACT_ADDRESS}`;
+    return `${DelegateWallet.DELEGATE_WALLET_PREFIX}${DelegateWallet.SEP}${internalMessage.toLocaleLowerCase()}`;
   }
 
   private validateSender(to: string, from: string, realAddress: string): void {
@@ -255,11 +252,26 @@ export class DelegateWallet {
   }
 
   // Cancel Delegations.
-  // Delete all delegations from where TO=to
-  private async cmdCancelDelegations(to: string): Promise<void> {
-    const [toAddress] = await getAddressFromAddress.run({ address: to }, this.DBConn);
-    if (!toAddress) throw new Error('Invalid Address');
-    await deleteDelegationTo.run({ to_id: toAddress.id }, this.DBConn);
+  // if "to" is provided, delete delegations for "from" -> "to"
+  // if "to" is not provided, delete all delegations for "from" -> *
+  private async cmdCancelDelegations(from: string, to: string): Promise<void> {
+    const [fromAddress] = await getAddressFromAddress.run({ address: from }, this.DBConn);
+    if (!fromAddress) throw new Error('Invalid Address');
+
+    if (to) {
+      const [toAddress] = await getAddressFromAddress.run({ address: to }, this.DBConn);
+      if (!toAddress) throw new Error('Invalid Address');
+
+      await deleteDelegationTo.run(
+        {
+          to_id: toAddress.id,
+          from_id: fromAddress.id,
+        },
+        this.DBConn
+      );
+    } else {
+      await deleteDelegationsFrom.run({ from_id: fromAddress.id }, this.DBConn);
+    }
 
     addressCache.clear();
   }
@@ -313,11 +325,11 @@ export class DelegateWallet {
           return true;
         }
         case 'cancelDelegations': {
-          const to = realAddress;
-          const { to_signature } = parsed.args;
-          await this.verifySignature(to, this.generateMessage(), to_signature);
-          await this.cmdCancelDelegations(to.toLocaleLowerCase());
-          doLog(`Cancel Delegate 'to' ${to.substring(0, 8)}...`);
+          const { to } = parsed.args;
+          await this.cmdCancelDelegations(userAddress.toLocaleLowerCase(), to.toLocaleLowerCase());
+          doLog(
+            `Cancel Delegate ${userAddress.substring(0, 8)}... -> ${to ? to.substring(0, 8) + '...' : '*'}`
+          );
           return true;
         }
         default:
