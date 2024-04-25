@@ -5,6 +5,7 @@ export const enum AddressType {
   CARDANO = 2,
   POLKADOT = 3,
   ALGORAND = 4,
+  MINA = 5,
 }
 
 export const DEFAULT_FUNNEL_TIMEOUT = 5000;

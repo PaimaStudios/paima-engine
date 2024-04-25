@@ -57,6 +57,7 @@ export const enum PaimaMiddlewareErrorCode {
   INTERNAL_INVALID_POSTING_MODE,
   // only to be used as a counter
   FINAL_PAIMA_GENERIC_ERROR = 1_000_000,
+  MINA_LOGIN,
 }
 
 export const PAIMA_MIDDLEWARE_ERROR_MESSAGES: Record<PaimaMiddlewareErrorCode, string> = {
@@ -102,6 +103,7 @@ export const PAIMA_MIDDLEWARE_ERROR_MESSAGES: Record<PaimaMiddlewareErrorCode, s
     'Internal error: Invalid posting mode set',
   [PaimaMiddlewareErrorCode.FINAL_PAIMA_GENERIC_ERROR]:
     'Internal error: unknown generic paima error (FINAL_PAIMA_GENERIC_ERROR)',
+  [PaimaMiddlewareErrorCode.MINA_LOGIN]: 'Error while connecting to the Mina wallet',
 };
 
 export const paimaErrorMessageFxn: ErrorMessageFxn = buildErrorCodeTranslator(

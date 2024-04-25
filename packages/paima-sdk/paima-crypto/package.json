@@ -33,6 +33,7 @@
     "@polkadot/util": "^10.4.2",
     "@polkadot/util-crypto": "^10.4.2",
     "bech32": "^2.0.0",
-    "@paima/utils": "2.3.0"
+    "@paima/utils": "2.3.0",
+    "mina-signer": "2.1.1"
   }
 }
