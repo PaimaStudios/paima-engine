@@ -3,8 +3,12 @@ import type { IVerify } from './IVerify.js';
 
 export class MinaCrypto implements IVerify {
   verifyAddress = async (address: string): Promise<boolean> => {
-    // TODO: improve
-    return await Promise.resolve(/^[a-zA-Z0-9]+$/.test(address));
+    // base58 alphabet
+    return await Promise.resolve(
+      /^[1|2|3|4|5|6|7|8|9|A|B|C|D|E|F|G|H|J|K|L|M|N|P|Q|R|S|T|U|V|W|X|Y|Z|a|b|c|d|e|f|g|h|i|j|k|m|n|o|p|q|r|s|t|u|v|w|x|y|z]/.test(
+        address
+      )
+    );
   };
   verifySignature = async (
     userAddress: string,
