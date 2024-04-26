@@ -106,7 +106,7 @@ class AchievementService {
     return {
       chainId: ENV.CHAIN_ID,
       block: await EngineService.INSTANCE.getSM().latestProcessedBlockHeight(),
-      // TODO? time
+      time: new Date().toISOString(),
     };
   }
 
