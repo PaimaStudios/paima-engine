@@ -125,9 +125,7 @@ export const runPaimaEngine = async (): Promise<void> => {
     EngineService.INSTANCE.updateSM(stateMachine);
     engine.setPollingRate(ENV.POLLING_RATE);
     engine.addEndpoints(importTsoaFunction());
-    engine.addEndpoints(server => {
-      RegisterRoutes(server);
-    });
+    engine.addEndpoints(RegisterRoutes);
     registerDocs(importOpenApiJson());
     registerValidationErrorHandler();
 
