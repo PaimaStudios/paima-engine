@@ -162,6 +162,8 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
 
     const composed = composeChainData(baseData, grouped);
 
+    this.cache.updateLastPoint(toTimestamp);
+
     for (const chainData of composed) {
       if (!chainData.internalEvents) {
         chainData.internalEvents = [];
