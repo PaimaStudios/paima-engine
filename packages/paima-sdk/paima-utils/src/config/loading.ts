@@ -63,10 +63,9 @@ export type CardanoConfig = Static<typeof CardanoConfigSchema>;
 
 export const MinaConfigSchema = Type.Object({
   archiveConnectionString: Type.String(),
-  // k
-  confirmationDepth: Type.Number(),
+  delay: Type.Number(),
   paginationLimit: Type.Number({ default: 50 }),
-  slotDuration: Type.Number(),
+  confirmationDepth: Type.Optional(Type.Number()),
 });
 
 export type MinaConfig = Static<typeof MinaConfigSchema>;
@@ -135,7 +134,7 @@ const cardanoConfigDefaults = {
 const minaConfigDefaults = {
   // lightnet defaults
   confirmationDepth: 30,
-  slotDuration: 20,
+  delay: 30 * 40,
 };
 
 // used as a placeholder name for the ENV fallback mechanism

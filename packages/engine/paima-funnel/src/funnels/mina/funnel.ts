@@ -26,20 +26,39 @@ import postgres from 'postgres';
 
 const delayForWaitingForFinalityLoop = 1000;
 
-async function findMinaConfirmedTimestamp(pg: postgres.Sql): Promise<number> {
-  const row =
-    await pg`select timestamp from blocks where chain_status = 'canonical' order by height desc limit 1;`;
+async function findMinaConfirmedTimestamp(
+  pg: postgres.Sql,
+  confirmationDepth?: number,
+): Promise<number> {
+  let row;
+  if (confirmationDepth) {
+    row = await pg`
+    WITH RECURSIVE chain AS (
+      (SELECT parent_id, id, timestamp, height FROM blocks b WHERE height = (select MAX(height) from blocks)
+      ORDER BY timestamp ASC
+      LIMIT 1)
+      UNION ALL
+      SELECT b.parent_id, b.id, b.timestamp, b.height FROM blocks b
+      INNER JOIN chain
+      ON b.id = chain.parent_id AND chain.id <> chain.parent_id
+    ) SELECT timestamp FROM chain c
+    LIMIT 1
+    OFFSET ${confirmationDepth};
+  `;
+  } else {
+    row =
+      await pg`select timestamp from blocks where chain_status = 'canonical' order by height desc limit 1;`;
+  }
 
-  return Number.parseInt(row[0]['timestamp'], 10);
+  return Number.parseInt(row[0]["timestamp"], 10);
 }
 
 // mina timestamps are in milliseconds, while evm timestamps are in seconds.
 function baseChainTimestampToMina(
   baseChainTimestamp: number,
-  confirmationDepth: number,
-  slotDuration: number
+  delay: number,
 ): number {
-  return Math.max(baseChainTimestamp * 1000 - slotDuration * 1000 * confirmationDepth, 0);
+  return Math.max((baseChainTimestamp - delay) * 1000, 0);
 }
 
 export class MinaFunnel extends BaseFunnel implements ChainFunnel {
@@ -73,12 +92,14 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
 
     const maxBaseTimestamp = baseChainTimestampToMina(
       baseData[baseData.length - 1].timestamp,
-      this.config.confirmationDepth,
-      this.config.slotDuration
+      this.config.delay,
     );
 
     while (true) {
-      const confirmedTimestamp = await findMinaConfirmedTimestamp(cachedState.pg);
+      const confirmedTimestamp = await findMinaConfirmedTimestamp(
+        cachedState.pg,
+        this.config.confirmationDepth,
+      );
 
       if (confirmedTimestamp >= maxBaseTimestamp) {
         break;
@@ -99,8 +120,7 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
         state.curr < baseData.length &&
         baseChainTimestampToMina(
           baseData[state.curr].timestamp,
-          this.config.confirmationDepth,
-          this.config.slotDuration
+          this.config.delay,
         ) <= ts
       )
         state.curr++;
@@ -174,8 +194,7 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
 
         timestamp: baseChainTimestampToMina(
           chainData.timestamp,
-          this.config.confirmationDepth,
-          this.config.slotDuration
+          this.config.delay,
         ).toString(),
         network: this.chainName,
       });
@@ -342,8 +361,7 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
 
       const minaTimestamp = baseChainTimestampToMina(
         startingBlockTimestamp,
-        config.confirmationDepth,
-        config.slotDuration
+        config.delay,
       );
 
       newEntry.updateStartingTimestamp(minaTimestamp, pg);

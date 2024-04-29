@@ -170,7 +170,7 @@ function canonicalChainCTE(
     FROM
       blocks b
     WHERE
-      chain_status = 'canonical'
+      1=1
     ${fromTimestamp ? db_client`AND b.timestamp::decimal >= ${fromTimestamp}::decimal` : db_client``}
     ${toTimestamp ? db_client`AND b.timestamp::decimal <= ${toTimestamp}::decimal` : db_client``}
     ${fromBlockHeight ? db_client`AND b.height::decimal >= ${fromBlockHeight}::decimal` : db_client``}
