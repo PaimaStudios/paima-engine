@@ -14,7 +14,7 @@ import {
   prepareDocumentation,
   prepareTemplate,
 } from './file.js';
-import { importOpenApiJson, importTsoaFunction } from './import.js';
+import { importOpenApiJson, importEndpoints } from './import.js';
 import type { Template } from './types.js';
 import RegisterRoutes, { EngineService } from '@paima/rest';
 
@@ -123,8 +123,14 @@ export const runPaimaEngine = async (): Promise<void> => {
     const engine = paimaRuntime.initialize(funnelFactory, stateMachine, ENV.GAME_NODE_VERSION);
 
     EngineService.INSTANCE.updateSM(stateMachine);
+
+    const endpoints = importEndpoints();
+    if (endpoints.AchievementService) {
+      EngineService.INSTANCE.achievementService = new endpoints.AchievementService();
+    }
+
     engine.setPollingRate(ENV.POLLING_RATE);
-    engine.addEndpoints(importTsoaFunction());
+    engine.addEndpoints(endpoints.default);
     engine.addEndpoints(RegisterRoutes);
     registerDocs(importOpenApiJson());
     registerValidationErrorHandler();
