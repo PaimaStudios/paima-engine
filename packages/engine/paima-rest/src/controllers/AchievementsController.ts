@@ -1,7 +1,7 @@
 import { Controller, Get, Path, Query, Route } from 'tsoa';
-import { EngineService } from '../EngineService';
+import { EngineService } from '../EngineService.js';
 import { ENV } from '@paima/utils';
-import {
+import type {
   AchievementService,
   AchievementPublicList,
   PlayerAchievements,
@@ -65,6 +65,6 @@ export class AchievementsController extends Controller {
     @Query() name?: string
   ): Promise<PlayerAchievements> {
     const wallet = await service().getNftOwner(nft_address);
-    return this.wallet(wallet, name);
+    return await this.wallet(wallet, name);
   }
 }

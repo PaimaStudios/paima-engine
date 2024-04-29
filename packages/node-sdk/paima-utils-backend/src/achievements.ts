@@ -26,7 +26,7 @@ export interface Player {
   /** e.g. addr1234... or 0x1234... */
   wallet: string;
   /** Optional wallet-type */
-  walletType?: 'cardano' | 'evm' | 'polkadot' | 'algorand' | string;
+  walletType?: string; // ex: 'cardano' | 'evm' | 'polkadot' | 'algorand'
   /** If data for specific user: e.g., "1", "player-1", "unique-name", etc. */
   userId?: string;
   /** Player display name */

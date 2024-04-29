@@ -108,7 +108,7 @@ export const runPaimaEngine = async (): Promise<void> => {
     process.exit(0);
   }
 
-  const [_, config] = await GlobalConfig.mainEvmConfig();
+  const [, config] = await GlobalConfig.mainEvmConfig();
 
   // Check that packed game code is available
   if (checkForPackedGameCode()) {

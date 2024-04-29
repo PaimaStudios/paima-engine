@@ -7,9 +7,11 @@ interface GameCodeCjs {
   default: GameStateTransitionFunctionRouter;
 }
 /**
- * Reads repackaged user's code placed next to the executable in `gameCode.cjs` file
+ * Reads packaged user's code placed next to the executable in `gameCode.cjs` file.
  */
 export function importGameStateTransitionRouter(): GameStateTransitionFunctionRouter {
+  // dynamic import cannot be used here due to PKG limitations
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
   return (require(`${process.cwd()}/${ROUTER_FILENAME}`) as GameCodeCjs).default;
 }
 
@@ -19,7 +21,7 @@ export interface EndpointsCjs {
   AchievementService?: new () => AchievementService;
 }
 /**
- * Reads repackaged user's code placed next to the executable in `endpoints.cjs` file
+ * Reads packaged user's code placed next to the executable in `endpoints.cjs` file.
  */
 export function importEndpoints(): EndpointsCjs {
   return require(`${process.cwd()}/${API_FILENAME}`);
@@ -28,7 +30,7 @@ export function importEndpoints(): EndpointsCjs {
 export const GAME_OPENAPI_FILENAME = 'packaged/openapi.json';
 export type OpenApiJson = object;
 /**
- * Reads repackaged user's code placed next to the executable in `endpoints.cjs` file
+ * Reads packaged user's OpenAPI definitions placed next to the executable in `openapi.json` file.
  */
 export function importOpenApiJson(): OpenApiJson | undefined {
   try {
