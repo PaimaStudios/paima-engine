@@ -42,6 +42,7 @@ export const enum PaimaMiddlewareErrorCode {
   POLKADOT_WALLET_NOT_INSTALLED,
   POLKADOT_LOGIN,
   ALGORAND_LOGIN,
+  MINA_LOGIN,
   // Input posting related:
   ERROR_POSTING_TO_CHAIN = 2_000,
   ERROR_POSTING_TO_BATCHER,
@@ -57,7 +58,6 @@ export const enum PaimaMiddlewareErrorCode {
   INTERNAL_INVALID_POSTING_MODE,
   // only to be used as a counter
   FINAL_PAIMA_GENERIC_ERROR = 1_000_000,
-  MINA_LOGIN,
 }
 
 export const PAIMA_MIDDLEWARE_ERROR_MESSAGES: Record<PaimaMiddlewareErrorCode, string> = {
