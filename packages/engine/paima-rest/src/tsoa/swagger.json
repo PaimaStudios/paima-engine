@@ -312,20 +312,7 @@
 						"description": "e.g. addr1234... or 0x1234..."
 					},
 					"walletType": {
-						"anyOf": [
-							{
-								"type": "string"
-							},
-							{
-								"type": "string",
-								"enum": [
-									"cardano",
-									"evm",
-									"polkadot",
-									"algorand"
-								]
-							}
-						],
+						"type": "string",
 						"description": "Optional wallet-type"
 					},
 					"userId": {

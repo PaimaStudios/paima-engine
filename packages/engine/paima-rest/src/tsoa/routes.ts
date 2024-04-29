@@ -142,7 +142,7 @@ const models: TsoaRoute.Models = {
             "chainId": {"dataType":"double","required":true},
             "time": {"dataType":"string"},
             "wallet": {"dataType":"string","required":true},
-            "walletType": {"dataType":"union","subSchemas":[{"dataType":"enum","enums":["cardano"]},{"dataType":"enum","enums":["evm"]},{"dataType":"enum","enums":["polkadot"]},{"dataType":"enum","enums":["algorand"]},{"dataType":"string"}]},
+            "walletType": {"dataType":"string"},
             "userId": {"dataType":"string"},
             "userName": {"dataType":"string"},
             "completed": {"dataType":"double","required":true},
