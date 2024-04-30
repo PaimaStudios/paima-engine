@@ -91,6 +91,13 @@ export class MinaConnector implements IConnector<MinaApi>, IInjectedConnector<Mi
     }
 
     this.provider = await MinaProvider.init(gameInfo, conn);
+
+    conn.api.on('accountsChanged', accounts => {
+      if (!accounts || !accounts[0] || accounts[0] !== this.provider?.address) {
+        this.provider = undefined;
+      }
+    });
+
     return this.provider;
   };
   getProvider = (): undefined | MinaProvider => {
