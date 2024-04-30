@@ -6,6 +6,11 @@ import { DataMigrations } from './data-migrations.js';
 
 export * from './delegate-wallet.js';
 
+// resolve ambiguity because pgtyped generates multiple Json types
+export type { Json } from './sql/cde-generic.queries.js';
+
+export * from './sql/achievements.queries.js';
+export type * from './sql/achievements.queries.js';
 export * from './sql/block-heights.queries.js';
 export type * from './sql/block-heights.queries.js';
 export * from './sql/scheduled.queries.js';
