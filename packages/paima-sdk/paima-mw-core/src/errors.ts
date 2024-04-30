@@ -42,6 +42,7 @@ export const enum PaimaMiddlewareErrorCode {
   POLKADOT_WALLET_NOT_INSTALLED,
   POLKADOT_LOGIN,
   ALGORAND_LOGIN,
+  MINA_LOGIN,
   // Input posting related:
   ERROR_POSTING_TO_CHAIN = 2_000,
   ERROR_POSTING_TO_BATCHER,
@@ -102,6 +103,7 @@ export const PAIMA_MIDDLEWARE_ERROR_MESSAGES: Record<PaimaMiddlewareErrorCode, s
     'Internal error: Invalid posting mode set',
   [PaimaMiddlewareErrorCode.FINAL_PAIMA_GENERIC_ERROR]:
     'Internal error: unknown generic paima error (FINAL_PAIMA_GENERIC_ERROR)',
+  [PaimaMiddlewareErrorCode.MINA_LOGIN]: 'Error while connecting to the Mina wallet',
 };
 
 export const paimaErrorMessageFxn: ErrorMessageFxn = buildErrorCodeTranslator(

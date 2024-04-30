@@ -2,6 +2,7 @@ import { AlgorandCrypto } from './algorand.js';
 import { CardanoCrypto } from './cardano.js';
 import { EvmCrypto } from './evm.js';
 import { PolkadotCrypto } from './polkadot.js';
+import { MinaCrypto } from './mina.js';
 export { AlgorandCrypto, CardanoCrypto, EvmCrypto, PolkadotCrypto };
 export type * from './IVerify.js';
 
@@ -13,6 +14,7 @@ export class CryptoManager {
   private static cardano: CardanoCrypto | undefined;
   private static evm: EvmCrypto | undefined;
   private static polkadot: PolkadotCrypto | undefined;
+  private static mina: MinaCrypto | undefined;
 
   static Algorand(): AlgorandCrypto {
     if (CryptoManager.algorand == null) {
@@ -40,5 +42,12 @@ export class CryptoManager {
       CryptoManager.polkadot = new PolkadotCrypto();
     }
     return CryptoManager.polkadot;
+  }
+
+  static Mina(): MinaCrypto {
+    if (CryptoManager.mina == null) {
+      CryptoManager.mina = new MinaCrypto();
+    }
+    return CryptoManager.mina;
   }
 }

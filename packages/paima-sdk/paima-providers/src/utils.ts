@@ -10,6 +10,7 @@ import { AlgorandConnector } from './algorand.js';
 import { EthersConnector, EvmInjectedConnector } from './evm/index.js';
 import { CardanoConnector } from './cardano.js';
 import { PolkadotConnector } from './polkadot.js';
+import { MinaConnector } from './mina.js';
 
 export const enum WalletMode {
   EvmInjected,
@@ -17,6 +18,7 @@ export const enum WalletMode {
   Cardano,
   Polkadot,
   Algorand,
+  Mina,
 }
 
 export const WalletModeMap = {
@@ -25,6 +27,7 @@ export const WalletModeMap = {
   [WalletMode.Cardano]: CardanoConnector.instance(),
   [WalletMode.Polkadot]: PolkadotConnector.instance(),
   [WalletMode.Algorand]: AlgorandConnector.instance(),
+  [WalletMode.Mina]: MinaConnector.instance(),
 };
 
 type ExtractGeneric<T> = T extends IConnector<infer U> ? U : never;
@@ -43,12 +46,14 @@ export async function allInjectedWallets(gameInfo: GameInfo): Promise<{
   [WalletMode.Cardano]: ReturnType<typeof CardanoConnector.getWalletOptions>;
   [WalletMode.Polkadot]: Awaited<ReturnType<typeof PolkadotConnector.getWalletOptions>>;
   [WalletMode.Algorand]: ReturnType<typeof AlgorandConnector.getWalletOptions>;
+  [WalletMode.Mina]: ReturnType<typeof MinaConnector.getWalletOptions>;
 }> {
   return {
     [WalletMode.EvmInjected]: EvmInjectedConnector.getWalletOptions(),
     [WalletMode.Cardano]: CardanoConnector.getWalletOptions(),
     [WalletMode.Polkadot]: await PolkadotConnector.getWalletOptions(gameInfo.gameName),
     [WalletMode.Algorand]: AlgorandConnector.getWalletOptions(),
+    [WalletMode.Mina]: MinaConnector.getWalletOptions(),
   };
 }
 export async function connectInjectedWallet<Api>(

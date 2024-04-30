@@ -16,6 +16,7 @@ import {
   PolkadotConnector,
   AlgorandConnector,
   WalletMode,
+  MinaConnector,
 } from '@paima/providers';
 import { AddressType, ENV } from '@paima/utils';
 import { paimaEndpoints } from '../index.js';
@@ -122,6 +123,9 @@ export class WalletConnectHelper {
       case AddressType.ALGORAND:
         provider = AlgorandConnector.instance().getProvider();
         break;
+      case AddressType.MINA:
+        provider = MinaConnector.instance().getProvider();
+        break;
     }
     if (!provider) throw new Error('Cannot get provider ' + walletType);
     return provider;
@@ -157,6 +161,9 @@ export class WalletConnectHelper {
         break;
       case AddressType.ALGORAND:
         loginInfo = { mode: WalletMode.Algorand };
+        break;
+      case AddressType.MINA:
+        loginInfo = { mode: WalletMode.Mina };
         break;
       case AddressType.UNKNOWN:
         throw new Error('AddressTypes cannot be Unknown.');

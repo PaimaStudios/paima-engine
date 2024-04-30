@@ -30,6 +30,7 @@
     "@paima/utils": "2.3.0",
     "@perawallet/connect": "^1.2.3",
     "@polkadot/extension-dapp": "^0.44.9",
+    "@aurowallet/mina-provider": "^1.0.2",
     "bech32": "^2.0.0",
     "web3": "1.10.0",
     "web3-utils": "1.10.0",

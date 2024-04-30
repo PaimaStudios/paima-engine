@@ -56,6 +56,7 @@ export const SUPPORTED_CHAIN_NAMES: string[] = [
   addressTypeName(AddressType.POLKADOT),
   addressTypeName(AddressType.CARDANO),
   addressTypeName(AddressType.ALGORAND),
+  addressTypeName(AddressType.MINA),
 ];
 
 const POLLING_INTERVAL = 10000;
@@ -70,6 +71,8 @@ export function addressTypeName(addressType: AddressType): string {
       return 'Astar / Polkadot';
     case AddressType.ALGORAND:
       return 'Algorand';
+    case AddressType.MINA:
+      return 'Mina';
     case AddressType.UNKNOWN:
       return 'Unknown address type';
     default:

@@ -177,6 +177,8 @@ async function validateSubunitSignature(
         return await CryptoManager.Polkadot().verifySignature(userAddress, message, userSignature);
       case AddressType.ALGORAND:
         return await CryptoManager.Algorand().verifySignature(userAddress, message, userSignature);
+      case AddressType.MINA:
+        return await CryptoManager.Mina().verifySignature(userAddress, message, userSignature);
       default:
         return false;
     }
