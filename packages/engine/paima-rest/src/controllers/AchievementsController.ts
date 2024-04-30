@@ -1,12 +1,13 @@
 import { Controller, Get, Path, Query, Route } from 'tsoa';
 import { EngineService } from '../EngineService.js';
 import { ENV } from '@paima/utils';
-import type {
-  AchievementPublicList,
-  PlayerAchievements,
-  Validity,
-  Game,
-  Player,
+import {
+  type AchievementPublicList,
+  type PlayerAchievements,
+  type Validity,
+  type Game,
+  type Player,
+  getNftOwner,
 } from '@paima/utils-backend';
 import { getAchievementTypes, getAchievementProgress } from '@paima/db';
 
@@ -16,12 +17,12 @@ import { getAchievementTypes, getAchievementProgress } from '@paima/db';
 @Route('achievements')
 export class AchievementsController extends Controller {
   private async game(): Promise<Game> {
-    return { id: 'DERP' };
+    return { id: 'TODO' };
   }
 
   private async validity(): Promise<Validity> {
     return {
-      chainId: ENV.CHAIN_ID,
+      caip2: ENV.CHAIN_ID,
       block: await EngineService.INSTANCE.getSM().latestProcessedBlockHeight(),
       time: new Date().toISOString(),
     };
@@ -35,6 +36,7 @@ export class AchievementsController extends Controller {
     const db = EngineService.INSTANCE.getSM().getReadonlyDbConn();
     const rows = await getAchievementTypes.run({ category, is_active: isActive }, db);
 
+    this.setHeader('Content-Language', 'en');
     return {
       ...(await this.validity()),
       ...(await this.game()),
@@ -61,6 +63,7 @@ export class AchievementsController extends Controller {
     const db = EngineService.INSTANCE.getSM().getReadonlyDbConn();
     const rows = await getAchievementProgress.run({ wallet, names }, db);
 
+    this.setHeader('Content-Language', 'en');
     return {
       ...(await this.validity()),
       ...player,
@@ -79,15 +82,29 @@ export class AchievementsController extends Controller {
     };
   }
 
-  /* TODO
-  @Get('nft/{nft_address}')
+  @Get('erc/{erc}/{cde}/{token_id}')
   public async nft(
-    @Path() nft_address: string,
-    Comma-separated list.
+    @Path() erc: string,
+    @Path() cde: string,
+    @Path() token_id: string,
     @Query() name?: string
   ): Promise<PlayerAchievements> {
-    const wallet = await service().getNftOwner(nft_address);
-    return await this.wallet(wallet, name);
+    const db = EngineService.INSTANCE.getSM().getReadonlyDbConn();
+    this.setHeader('Content-Language', 'en');
+
+    switch (erc) {
+      case 'erc721':
+        const wallet = await getNftOwner(db, cde, BigInt(token_id));
+        if (wallet) {
+          return await this.wallet(wallet, name);
+        }
+        break;
+      case 'erc6551':
+        // TODO
+        break;
+    }
+
+    this.setStatus(404);
+    throw new Error('Not found');
   }
-  */
 }

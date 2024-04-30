@@ -15,8 +15,8 @@ export interface Game {
 export interface Validity {
   /** Data block height (0 always valid) */
   block: number;
-  /** Data chain ID */
-  chainId: number;
+  /** CAIP-2 blockchain identifier */
+  caip2: number;
   /** Optional date. ISO8601, like YYYY-MM-DDTHH:mm:ss.sssZ */
   time?: string;
 }
@@ -25,11 +25,13 @@ export interface Validity {
 export interface Player {
   /** e.g. addr1234... or 0x1234... */
   wallet: string;
-  /** Optional wallet-type */
+  /** (Optional) Wallet-type */
   walletType?: string; // ex: 'cardano' | 'evm' | 'polkadot' | 'algorand'
-  /** If data for specific user: e.g., "1", "player-1", "unique-name", etc. */
+  /** (Optional) User ID for a specific player account. This value should be
+   * immutable and define a specific account, as the wallet might be migrated
+   * or updated. */
   userId?: string;
-  /** Player display name */
+  /** (Optional) Player display name */
   userName?: string;
 }
 

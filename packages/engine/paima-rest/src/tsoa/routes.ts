@@ -14,6 +14,8 @@ import { EmulatedBlockActiveController } from './../controllers/BasicControllers
 import { DeploymentBlockheightToEmulatedController } from './../controllers/BasicControllers';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { ConfirmInputAcceptanceController } from './../controllers/BasicControllers';
+// WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+import { AchievementsController } from './../controllers/AchievementsController';
 import type { Request as ExRequest, Response as ExResponse, RequestHandler, Router } from 'express';
 
 
@@ -87,6 +89,66 @@ const models: TsoaRoute.Models = {
     "ConfirmInputAcceptanceResponse": {
         "dataType": "refAlias",
         "type": {"ref":"Result_boolean_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "Achievement": {
+        "dataType": "refObject",
+        "properties": {
+            "name": {"dataType":"string","required":true},
+            "score": {"dataType":"double"},
+            "category": {"dataType":"string"},
+            "percentCompleted": {"dataType":"double"},
+            "isActive": {"dataType":"boolean","required":true},
+            "displayName": {"dataType":"string","required":true},
+            "description": {"dataType":"string","required":true},
+            "spoiler": {"dataType":"union","subSchemas":[{"dataType":"enum","enums":["all"]},{"dataType":"enum","enums":["description"]}]},
+            "iconURI": {"dataType":"string"},
+            "iconGreyURI": {"dataType":"string"},
+            "startDate": {"dataType":"string"},
+            "endDate": {"dataType":"string"},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "AchievementPublicList": {
+        "dataType": "refObject",
+        "properties": {
+            "id": {"dataType":"string","required":true},
+            "name": {"dataType":"string"},
+            "version": {"dataType":"string"},
+            "block": {"dataType":"double","required":true},
+            "caip2": {"dataType":"double","required":true},
+            "time": {"dataType":"string"},
+            "achievements": {"dataType":"array","array":{"dataType":"refObject","ref":"Achievement"},"required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "PlayerAchievement": {
+        "dataType": "refObject",
+        "properties": {
+            "name": {"dataType":"string","required":true},
+            "completed": {"dataType":"boolean","required":true},
+            "completedDate": {"dataType":"datetime"},
+            "completedRate": {"dataType":"nestedObjectLiteral","nestedProperties":{"total":{"dataType":"double","required":true},"progress":{"dataType":"double","required":true}}},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "PlayerAchievements": {
+        "dataType": "refObject",
+        "properties": {
+            "block": {"dataType":"double","required":true},
+            "caip2": {"dataType":"double","required":true},
+            "time": {"dataType":"string"},
+            "wallet": {"dataType":"string","required":true},
+            "walletType": {"dataType":"string"},
+            "userId": {"dataType":"string"},
+            "userName": {"dataType":"string"},
+            "completed": {"dataType":"double","required":true},
+            "achievements": {"dataType":"array","array":{"dataType":"refObject","ref":"PlayerAchievement"},"required":true},
+        },
+        "additionalProperties": false,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 };
@@ -268,6 +330,101 @@ export function RegisterRoutes(app: Router) {
 
               templateService.apiHandler({
                 methodName: 'get',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        app.get('/achievements/public/list',
+            ...(fetchMiddlewares<RequestHandler>(AchievementsController)),
+            ...(fetchMiddlewares<RequestHandler>(AchievementsController.prototype.public_list)),
+
+            function AchievementsController_public_list(request: ExRequest, response: ExResponse, next: any) {
+            const args: Record<string, TsoaRoute.ParameterSchema> = {
+                    category: {"in":"query","name":"category","dataType":"string"},
+                    isActive: {"in":"query","name":"isActive","dataType":"boolean"},
+            };
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args, request, response });
+
+                const controller = new AchievementsController();
+
+              templateService.apiHandler({
+                methodName: 'public_list',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        app.get('/achievements/wallet/:wallet',
+            ...(fetchMiddlewares<RequestHandler>(AchievementsController)),
+            ...(fetchMiddlewares<RequestHandler>(AchievementsController.prototype.wallet)),
+
+            function AchievementsController_wallet(request: ExRequest, response: ExResponse, next: any) {
+            const args: Record<string, TsoaRoute.ParameterSchema> = {
+                    wallet: {"in":"path","name":"wallet","required":true,"dataType":"string"},
+                    name: {"in":"query","name":"name","dataType":"string"},
+            };
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args, request, response });
+
+                const controller = new AchievementsController();
+
+              templateService.apiHandler({
+                methodName: 'wallet',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        app.get('/achievements/erc/:erc/:cde/:token_id',
+            ...(fetchMiddlewares<RequestHandler>(AchievementsController)),
+            ...(fetchMiddlewares<RequestHandler>(AchievementsController.prototype.nft)),
+
+            function AchievementsController_nft(request: ExRequest, response: ExResponse, next: any) {
+            const args: Record<string, TsoaRoute.ParameterSchema> = {
+                    erc: {"in":"path","name":"erc","required":true,"dataType":"string"},
+                    cde: {"in":"path","name":"cde","required":true,"dataType":"string"},
+                    token_id: {"in":"path","name":"token_id","required":true,"dataType":"string"},
+                    name: {"in":"query","name":"name","dataType":"string"},
+            };
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args, request, response });
+
+                const controller = new AchievementsController();
+
+              templateService.apiHandler({
+                methodName: 'nft',
                 controller,
                 response,
                 next,
