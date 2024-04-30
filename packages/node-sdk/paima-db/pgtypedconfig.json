@@ -19,7 +19,7 @@
     "user": "postgres",
     "password": "postgres",
     "host": "localhost",
-    "port": 5432,
+    "port": 54322,
     "ssl": false
   }
 }
