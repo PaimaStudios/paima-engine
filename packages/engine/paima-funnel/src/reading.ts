@@ -80,6 +80,8 @@ export async function getMultipleBlockData(
 ): Promise<ChainData[]> {
   const batch = new web3.BatchRequest();
 
+  // console.log('getting multiple block data', fromBlock, toBlock);
+
   const blockRange = Array.from({ length: toBlock - fromBlock + 1 }, (_, i) => i + fromBlock);
   const blockPromises = blockRange.map(blockNumber => {
     return new Promise<ChainData>((resolve, reject) => {

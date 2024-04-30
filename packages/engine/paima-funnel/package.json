@@ -20,6 +20,6 @@
     "assert-never": "^1.2.1",
     "@dcspark/carp-client": "^3.1.0",
     "@dcspark/cardano-multiplatform-lib-nodejs": "5.2.0",
-    "postgres": "^3.3.5"
+    "pg": "^8.11.3"
   }
 }

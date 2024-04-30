@@ -22,17 +22,19 @@ import { getMinaCheckpoint, getPaginationCursors } from '@paima/db';
 import { getActionCdeData, getEventCdeData } from '../../cde/minaGeneric.js';
 import type { MinaConfig } from '@paima/utils';
 import { MinaFunnelCacheEntry } from '../FunnelCache.js';
-import postgres from 'postgres';
+import pg from 'pg';
+const { Client } = pg;
 
 const delayForWaitingForFinalityLoop = 1000;
 
 async function findMinaConfirmedTimestamp(
-  pg: postgres.Sql,
-  confirmationDepth?: number,
+  db: pg.Client,
+  confirmationDepth?: number
 ): Promise<number> {
   let row;
   if (confirmationDepth) {
-    row = await pg`
+    row = (
+      await db.query(`
     WITH RECURSIVE chain AS (
       (SELECT parent_id, id, timestamp, height FROM blocks b WHERE height = (select MAX(height) from blocks)
       ORDER BY timestamp ASC
@@ -44,20 +46,21 @@ async function findMinaConfirmedTimestamp(
     ) SELECT timestamp FROM chain c
     LIMIT 1
     OFFSET ${confirmationDepth};
-  `;
+  `)
+    ).rows;
   } else {
-    row =
-      await pg`select timestamp from blocks where chain_status = 'canonical' order by height desc limit 1;`;
+    const res = await db.query(
+      `select timestamp from blocks where chain_status = 'canonical' order by height desc limit 1;`
+    );
+
+    row = res.rows;
   }
 
-  return Number.parseInt(row[0]["timestamp"], 10);
+  return Number.parseInt(row[0]['timestamp'], 10);
 }
 
 // mina timestamps are in milliseconds, while evm timestamps are in seconds.
-function baseChainTimestampToMina(
-  baseChainTimestamp: number,
-  delay: number,
-): number {
+function baseChainTimestampToMina(baseChainTimestamp: number, delay: number): number {
   return Math.max((baseChainTimestamp - delay) * 1000, 0);
 }
 
@@ -92,13 +95,13 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
 
     const maxBaseTimestamp = baseChainTimestampToMina(
       baseData[baseData.length - 1].timestamp,
-      this.config.delay,
+      this.config.delay
     );
 
     while (true) {
       const confirmedTimestamp = await findMinaConfirmedTimestamp(
         cachedState.pg,
-        this.config.confirmationDepth,
+        this.config.confirmationDepth
       );
 
       if (confirmedTimestamp >= maxBaseTimestamp) {
@@ -118,10 +121,7 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
     const getBlockNumber = (state: { curr: number }) => (ts: number) => {
       while (
         state.curr < baseData.length &&
-        baseChainTimestampToMina(
-          baseData[state.curr].timestamp,
-          this.config.delay,
-        ) <= ts
+        baseChainTimestampToMina(baseData[state.curr].timestamp, this.config.delay) <= ts
       )
         state.curr++;
 
@@ -192,10 +192,7 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
       chainData.internalEvents.push({
         type: InternalEventType.MinaLastTimestamp,
 
-        timestamp: baseChainTimestampToMina(
-          chainData.timestamp,
-          this.config.delay,
-        ).toString(),
+        timestamp: baseChainTimestampToMina(chainData.timestamp, this.config.delay).toString(),
         network: this.chainName,
       });
     }
@@ -203,9 +200,9 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
     return composed;
   }
 
-  public override async readPresyncData(
-    args: ReadPresyncDataFrom
-  ): Promise<{ [network: string]: PresyncChainData[] | typeof FUNNEL_PRESYNC_FINISHED }> {
+  public override async readPresyncData(args: ReadPresyncDataFrom): Promise<{
+    [network: string]: PresyncChainData[] | typeof FUNNEL_PRESYNC_FINISHED;
+  }> {
     const basePromise = this.baseFunnel.readPresyncData(args);
 
     const cache = this.cache.getState();
@@ -354,15 +351,13 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
       const newEntry = new MinaFunnelCacheEntry();
       sharedData.cacheManager.cacheEntries[MinaFunnelCacheEntry.SYMBOL] = newEntry;
 
-      const pg = postgres(config.archiveConnectionString);
+      const pg = new Client({ connectionString: config.archiveConnectionString });
+      await pg.connect();
 
-      const startingBlockTimestamp = (await sharedData.web3.eth.getBlock(startingBlockHeight))
-        .timestamp as number;
+      const startingBlock = await sharedData.web3.eth.getBlock(startingBlockHeight);
+      const startingBlockTimestamp = startingBlock.timestamp as number;
 
-      const minaTimestamp = baseChainTimestampToMina(
-        startingBlockTimestamp,
-        config.delay,
-      );
+      const minaTimestamp = baseChainTimestampToMina(startingBlockTimestamp, config.delay);
 
       newEntry.updateStartingTimestamp(minaTimestamp, pg);
 
