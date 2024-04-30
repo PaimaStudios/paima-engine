@@ -1,41 +1,35 @@
 import type { GameStateTransitionFunctionRouter } from '@paima/sm';
 import type { TsoaFunction } from '@paima/runtime';
-import type { AchievementService } from '@paima/utils-backend';
 
-export const ROUTER_FILENAME = 'packaged/gameCode.cjs';
-interface GameCodeCjs {
-  default: GameStateTransitionFunctionRouter;
-}
-/**
- * Reads packaged user's code placed next to the executable in `gameCode.cjs` file.
- */
-export function importGameStateTransitionRouter(): GameStateTransitionFunctionRouter {
+function importFile<T>(file: string): T {
   // dynamic import cannot be used here due to PKG limitations
   // eslint-disable-next-line @typescript-eslint/no-var-requires
-  return (require(`${process.cwd()}/${ROUTER_FILENAME}`) as GameCodeCjs).default;
+  const { default: defaultExport } = require(`${process.cwd()}/${file}`);
+
+  return defaultExport;
 }
+
+export const ROUTER_FILENAME = 'packaged/gameCode.cjs';
+/**
+ * Reads repackaged user's code placed next to the executable in `gameCode.cjs` file
+ */
+export const importGameStateTransitionRouter = (): GameStateTransitionFunctionRouter =>
+  importFile<GameStateTransitionFunctionRouter>(ROUTER_FILENAME);
 
 export const API_FILENAME = 'packaged/endpoints.cjs';
-export interface EndpointsCjs {
-  default: TsoaFunction;
-  AchievementService?: new () => AchievementService;
-}
 /**
- * Reads packaged user's code placed next to the executable in `endpoints.cjs` file.
+ * Reads repackaged user's code placed next to the executable in `endpoints.cjs` file
  */
-export function importEndpoints(): EndpointsCjs {
-  return require(`${process.cwd()}/${API_FILENAME}`);
-}
+export const importTsoaFunction = (): TsoaFunction => importFile<TsoaFunction>(API_FILENAME);
 
 export const GAME_OPENAPI_FILENAME = 'packaged/openapi.json';
-export type OpenApiJson = object;
 /**
- * Reads packaged user's OpenAPI definitions placed next to the executable in `openapi.json` file.
+ * Reads repackaged user's code placed next to the executable in `endpoints.cjs` file
  */
-export function importOpenApiJson(): OpenApiJson | undefined {
+export const importOpenApiJson = (): undefined | object => {
   try {
     return require(`${process.cwd()}/${GAME_OPENAPI_FILENAME}`);
   } catch (e) {
     return undefined;
   }
-}
+};
