@@ -81,10 +81,7 @@ export async function getCdeData(
 ): Promise<(CdeMinaActionGenericDatum | CdeMinaEventGenericDatum)[]> {
   const result = [] as (CdeMinaActionGenericDatum | CdeMinaEventGenericDatum)[];
 
-  console.log('fromTo', fromTimestamp, toTimestamp);
-
   while (true) {
-    console.log('making query');
     const unmapped = await query(
       pg,
       extension.address,
@@ -94,8 +91,6 @@ export async function getCdeData(
       limit?.toString(),
       fromBlockHeight?.toString()
     );
-
-    console.log('unmapped', console.log(unmapped));
 
     const grouped = groupByTx(unmapped.rows);
 
