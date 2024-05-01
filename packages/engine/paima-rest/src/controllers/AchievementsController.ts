@@ -9,7 +9,7 @@ import {
   type Player,
   getNftOwner,
 } from '@paima/utils-backend';
-import { getAchievementTypes, getAchievementProgress } from '@paima/db';
+import { getAchievementTypes, getAchievementProgress, getMainAddress } from '@paima/db';
 
 // ----------------------------------------------------------------------------
 // Controller and routes per PRC-1
@@ -60,10 +60,16 @@ export class AchievementsController extends Controller {
     /** Comma-separated list. */
     @Query() name?: string
   ): Promise<PlayerAchievements> {
-    const names = name ? name.split(',') : ['*'];
-    const player: Player = { wallet }; // TODO: walletType, userId, userName
-
     const db = EngineService.INSTANCE.getSM().getReadonlyDbConn();
+    const { address, id } = await getMainAddress(wallet, db);
+
+    const player: Player = {
+      wallet: address,
+      userId: String(id),
+      // TODO: walletType, userName
+    };
+
+    const names = name ? name.split(',') : ['*'];
     const rows = await getAchievementProgress.run({ wallet, names }, db);
 
     this.setHeader('Content-Language', 'en');
@@ -100,14 +106,15 @@ export class AchievementsController extends Controller {
         const wallet = await getNftOwner(db, cde, BigInt(token_id));
         if (wallet) {
           return await this.wallet(wallet, name);
+        } else {
+          // TODO: throw a different error if no CDE with that name exists
+          this.setStatus(404);
+          throw new Error('No owner for that NFT');
         }
-        break;
-      case 'erc6551':
-        // TODO
-        break;
+      // Future expansion: erc6551
+      default:
+        this.setStatus(404);
+        throw new Error(`No support for /erc/${erc}`);
     }
-
-    this.setStatus(404);
-    throw new Error('Not found');
   }
 }
