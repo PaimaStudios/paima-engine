@@ -554,6 +554,14 @@
 						"schema": {
 							"type": "boolean"
 						}
+					},
+					{
+						"in": "header",
+						"name": "Accept-Language",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
 					}
 				]
 			}

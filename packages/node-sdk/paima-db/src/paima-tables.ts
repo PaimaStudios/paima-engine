@@ -600,6 +600,29 @@ const TABLE_DATA_ACHIEVEMENT_TYPE: TableData = {
   creationQuery: QUERY_CREATE_TABLE_ACHIEVEMENT_TYPE,
 };
 
+const QUERY_CREATE_TABLE_ACHIEVEMENT_LANGUAGE = `
+CREATE TABLE achievement_language(
+  name TEXT NOT NULL,
+  language TEXT NOT NULL,
+  display_name TEXT,
+  description TEXT,
+  PRIMARY KEY (name, language)
+);
+`;
+
+const TABLE_DATA_ACHIEVEMENT_LANGUAGE: TableData = {
+  tableName: 'achievement_language',
+  primaryKeyColumns: ['name', 'language'],
+  columnData: packTuples([
+    ['name', 'text', 'NO', ''],
+    ['language', 'text', 'NO', ''],
+    ['display_name', 'text', 'YES', ''],
+    ['description', 'text', 'YES', ''],
+  ]),
+  serialColumns: [],
+  creationQuery: QUERY_CREATE_TABLE_ACHIEVEMENT_LANGUAGE,
+};
+
 const QUERY_CREATE_TABLE_ACHIEVEMENT_PROGRESS = `
 CREATE TABLE achievement_progress(
   wallet TEXT NOT NULL,
@@ -713,5 +736,6 @@ export const TABLES: TableData[] = [
   TABLE_DATA_CDE_CARDANO_TRANSFER,
   TABLE_DATA_CDE_CARDANO_MINT_BURN,
   TABLE_DATA_ACHIEVEMENT_TYPE,
+  TABLE_DATA_ACHIEVEMENT_LANGUAGE,
   TABLE_DATA_ACHIEVEMENT_PROGRESS,
 ];

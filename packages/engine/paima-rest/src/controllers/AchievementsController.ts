@@ -1,4 +1,4 @@
-import { Controller, Get, Path, Query, Route } from 'tsoa';
+import { Controller, Get, Header, Path, Query, Route } from 'tsoa';
 import { EngineService } from '../EngineService.js';
 import { ENV } from '@paima/utils';
 import {
@@ -34,12 +34,15 @@ export class AchievementsController extends Controller {
   @Get('public/list')
   public async public_list(
     @Query() category?: string,
-    @Query() isActive?: boolean
+    @Query() isActive?: boolean,
+    @Header('Accept-Language') acceptLanguage?: string
   ): Promise<AchievementPublicList> {
     const db = EngineService.INSTANCE.getSM().getReadonlyDbConn();
-    const rows = await getAchievementTypes.run({ category, is_active: isActive }, db);
+    // Future expansion: import a real Accept-Language parser so user can provide more than one, handle 'pt-BR' also implying 'pt', etc.
+    const languages = acceptLanguage ? [acceptLanguage] : [];
+    const rows = await getAchievementTypes.run({ category, is_active: isActive, languages }, db);
 
-    this.setHeader('Content-Language', 'en');
+    this.setHeader('Content-Language', languages[0]);
     return {
       ...(await this.validity()),
       ...(await this.game()),
@@ -48,8 +51,8 @@ export class AchievementsController extends Controller {
         // Splat metadata first so that it can't override these:
         name: row.name,
         isActive: row.is_active,
-        displayName: row.display_name,
-        description: row.description,
+        displayName: row.display_name ?? '',
+        description: row.description ?? '',
       })),
     };
   }
@@ -72,7 +75,6 @@ export class AchievementsController extends Controller {
     const names = name ? name.split(',') : ['*'];
     const rows = await getAchievementProgress.run({ wallet, names }, db);
 
-    this.setHeader('Content-Language', 'en');
     return {
       ...(await this.validity()),
       ...player,
@@ -99,7 +101,6 @@ export class AchievementsController extends Controller {
     @Query() name?: string
   ): Promise<PlayerAchievements> {
     const db = EngineService.INSTANCE.getSM().getReadonlyDbConn();
-    this.setHeader('Content-Language', 'en');
 
     switch (erc) {
       case 'erc721':

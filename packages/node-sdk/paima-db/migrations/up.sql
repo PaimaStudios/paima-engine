@@ -250,6 +250,14 @@ CREATE TABLE achievement_type(
   metadata JSONB NOT NULL DEFAULT '{}'
 );
 
+CREATE TABLE achievement_language(
+  name TEXT NOT NULL,
+  language TEXT NOT NULL,
+  display_name TEXT,
+  description TEXT,
+  PRIMARY KEY (name, language)
+);
+
 CREATE TABLE achievement_progress(
   wallet TEXT NOT NULL,
   name TEXT NOT NULL,
