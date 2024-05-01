@@ -576,6 +576,55 @@ const TABLE_DATA_DELEGATIONS: TableData = {
   creationQuery: QUERY_CREATE_TABLE_DELEGATIONS,
 };
 
+const QUERY_CREATE_TABLE_ACHIEVEMENT_TYPE = `
+CREATE TABLE achievement_type(
+  name TEXT NOT NULL PRIMARY KEY,
+  is_active BOOLEAN NOT NULL DEFAULT true,
+  display_name TEXT NOT NULL,
+  description TEXT NOT NULL DEFAULT '',
+  metadata JSONB NOT NULL DEFAULT '{}'
+);
+`;
+
+const TABLE_DATA_ACHIEVEMENT_TYPE: TableData = {
+  tableName: 'achievement_type',
+  primaryKeyColumns: ['name'],
+  columnData: packTuples([
+    ['name', 'text', 'NO', ''],
+    ['is_active', 'boolean', 'NO', 'true'],
+    ['display_name', 'text', 'NO', ''],
+    ['description', 'text', 'NO', "''"],
+    ['metadata', 'jsonb', 'NO', "'{}'"],
+  ]),
+  serialColumns: [],
+  creationQuery: QUERY_CREATE_TABLE_ACHIEVEMENT_TYPE,
+};
+
+const QUERY_CREATE_TABLE_ACHIEVEMENT_PROGRESS = `
+CREATE TABLE achievement_progress(
+  wallet TEXT NOT NULL,
+  name TEXT NOT NULL,
+  completed_date TIMESTAMP,
+  progress INTEGER,
+  total INTEGER,
+  PRIMARY KEY (wallet, name)
+);
+`;
+
+const TABLE_DATA_ACHIEVEMENT_PROGRESS: TableData = {
+  tableName: 'achievement_progress',
+  primaryKeyColumns: ['wallet', 'name'],
+  columnData: packTuples([
+    ['wallet', 'text', 'NO', ''],
+    ['name', 'text', 'NO', ''],
+    ['completed_date', 'timestamp', 'YES', ''],
+    ['progress', 'integer', 'YES', ''],
+    ['total', 'integer', 'YES', ''],
+  ]),
+  serialColumns: [],
+  creationQuery: QUERY_CREATE_TABLE_ACHIEVEMENT_PROGRESS,
+};
+
 const FUNCTION_NOTIFY_WALLET_CONNECT: string = `
 create or replace function public.notify_wallet_connect()
   returns trigger
@@ -663,4 +712,6 @@ export const TABLES: TableData[] = [
   TABLE_DATA_CDE_TRACKING_CARDANO_PAGINATION,
   TABLE_DATA_CDE_CARDANO_TRANSFER,
   TABLE_DATA_CDE_CARDANO_MINT_BURN,
+  TABLE_DATA_ACHIEVEMENT_TYPE,
+  TABLE_DATA_ACHIEVEMENT_PROGRESS,
 ];

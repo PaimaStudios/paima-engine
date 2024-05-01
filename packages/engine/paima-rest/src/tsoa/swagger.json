@@ -223,8 +223,7 @@
 						"description": "Data block height (0 always valid)"
 					},
 					"caip2": {
-						"type": "number",
-						"format": "double",
+						"type": "string",
 						"description": "CAIP-2 blockchain identifier"
 					},
 					"time": {
@@ -299,8 +298,7 @@
 						"description": "Data block height (0 always valid)"
 					},
 					"caip2": {
-						"type": "number",
-						"format": "double",
+						"type": "string",
 						"description": "CAIP-2 blockchain identifier"
 					},
 					"time": {

@@ -17,12 +17,15 @@ import { getAchievementTypes, getAchievementProgress } from '@paima/db';
 @Route('achievements')
 export class AchievementsController extends Controller {
   private async game(): Promise<Game> {
-    return { id: 'TODO' };
+    return {
+      id: 'TODO',
+      // TODO: name, version
+    };
   }
 
   private async validity(): Promise<Validity> {
     return {
-      caip2: ENV.CHAIN_ID,
+      caip2: `eip155:${ENV.CHAIN_ID}`,
       block: await EngineService.INSTANCE.getSM().latestProcessedBlockHeight(),
       time: new Date().toISOString(),
     };
@@ -57,8 +60,8 @@ export class AchievementsController extends Controller {
     /** Comma-separated list. */
     @Query() name?: string
   ): Promise<PlayerAchievements> {
-    const names = name ? name.split(',') : [];
-    const player: Player = { wallet };
+    const names = name ? name.split(',') : ['*'];
+    const player: Player = { wallet }; // TODO: walletType, userId, userName
 
     const db = EngineService.INSTANCE.getSM().getReadonlyDbConn();
     const rows = await getAchievementProgress.run({ wallet, names }, db);

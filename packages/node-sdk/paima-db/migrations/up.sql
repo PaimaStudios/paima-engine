@@ -257,4 +257,4 @@ CREATE TABLE achievement_progress(
   progress INTEGER,
   total INTEGER,
   PRIMARY KEY (wallet, name)
-);--
+);

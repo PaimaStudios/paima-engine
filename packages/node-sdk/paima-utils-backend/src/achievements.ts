@@ -16,7 +16,7 @@ export interface Validity {
   /** Data block height (0 always valid) */
   block: number;
   /** CAIP-2 blockchain identifier */
-  caip2: number;
+  caip2: string;
   /** Optional date. ISO8601, like YYYY-MM-DDTHH:mm:ss.sssZ */
   time?: string;
 }

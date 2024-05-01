@@ -117,7 +117,7 @@ const models: TsoaRoute.Models = {
             "name": {"dataType":"string"},
             "version": {"dataType":"string"},
             "block": {"dataType":"double","required":true},
-            "caip2": {"dataType":"double","required":true},
+            "caip2": {"dataType":"string","required":true},
             "time": {"dataType":"string"},
             "achievements": {"dataType":"array","array":{"dataType":"refObject","ref":"Achievement"},"required":true},
         },
@@ -139,7 +139,7 @@ const models: TsoaRoute.Models = {
         "dataType": "refObject",
         "properties": {
             "block": {"dataType":"double","required":true},
-            "caip2": {"dataType":"double","required":true},
+            "caip2": {"dataType":"string","required":true},
             "time": {"dataType":"string"},
             "wallet": {"dataType":"string","required":true},
             "walletType": {"dataType":"string"},
