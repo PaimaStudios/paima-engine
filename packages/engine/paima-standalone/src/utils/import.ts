@@ -3,9 +3,10 @@
  * `packaged/` directory. The game code itself may load what it will, or
  * configuration may also refer to file paths within `packaged/`.
  */
+import fs from 'fs';
 import type { GameStateTransitionFunctionRouter } from '@paima/sm';
 import type { TsoaFunction } from '@paima/runtime';
-import fs from 'fs';
+import type { AchievementMetadata } from '@paima/utils-backend';
 
 /**
  * Checks that the user packed their game code and it is available for Paima Engine to use to run
@@ -35,6 +36,7 @@ export function importGameStateTransitionRouter(): GameStateTransitionFunctionRo
 
 export interface EndpointsImport {
   default: TsoaFunction;
+  achievements?: Promise<AchievementMetadata>;
 }
 const API_FILENAME = 'packaged/endpoints.cjs';
 /**

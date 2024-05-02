@@ -1,26 +1,47 @@
-import { Controller, Get, Header, Path, Query, Route } from 'tsoa';
-import { EngineService } from '../EngineService.js';
+import { getAchievementProgress, getMainAddress } from '@paima/db';
 import { ENV } from '@paima/utils';
 import {
+  getNftOwner,
+  type Achievement,
+  type AchievementMetadata,
   type AchievementPublicList,
+  type Player,
   type PlayerAchievements,
   type Validity,
-  type Game,
-  type Player,
-  getNftOwner,
 } from '@paima/utils-backend';
-import { getAchievementTypes, getAchievementProgress, getMainAddress } from '@paima/db';
+import { Controller, Get, Header, Path, Query, Route } from 'tsoa';
+import { EngineService } from '../EngineService.js';
 
 // ----------------------------------------------------------------------------
 // Controller and routes per PRC-1
 
+function applyLanguage(
+  achievement: Achievement,
+  languages: AchievementMetadata['languages'],
+  accept: string[]
+): Achievement {
+  for (const acceptLang of accept) {
+    const override = languages?.[acceptLang]?.[achievement.name];
+    if (override) {
+      return {
+        ...achievement,
+        displayName: override.displayName || achievement.displayName,
+        description: override.description || achievement.description,
+      };
+    }
+  }
+  return achievement;
+}
+
 @Route('achievements')
 export class AchievementsController extends Controller {
-  private async game(): Promise<Game> {
-    return {
-      id: 'TODO',
-      // TODO: name, version
-    };
+  private async meta(): Promise<AchievementMetadata> {
+    const meta = EngineService.INSTANCE.achievements;
+    if (!meta) {
+      this.setStatus(501);
+      throw new Error('Achievements are not supported by this game');
+    }
+    return await meta;
   }
 
   private async validity(): Promise<Validity> {
@@ -38,23 +59,22 @@ export class AchievementsController extends Controller {
     @Query() isActive?: boolean,
     @Header('Accept-Language') acceptLanguage?: string
   ): Promise<AchievementPublicList> {
-    const db = EngineService.INSTANCE.getSM().getReadonlyDbConn();
-    // Future expansion: import a real Accept-Language parser so user can provide more than one, handle 'pt-BR' also implying 'pt', etc.
-    const languages = acceptLanguage ? [acceptLanguage] : [];
-    const rows = await getAchievementTypes.run({ category, is_active: isActive, languages }, db);
+    // Future expansion: import a real Accept-Language parser so user can
+    // ask for more than one, handle 'pt-BR' also implying 'pt', etc.
+    const acceptLanguages = acceptLanguage ? [acceptLanguage] : [];
 
-    this.setHeader('Content-Language', languages[0]);
+    const meta = await this.meta();
+    const filtered = meta.list
+      .filter(ach => category === undefined || category === ach.category)
+      .filter(ach => isActive === null || isActive === ach.isActive);
+
+    this.setHeader('Content-Language', acceptLanguages[0]);
     return {
       ...(await this.validity()),
-      ...(await this.game()),
-      achievements: rows.map(row => ({
-        ...(typeof row.metadata === 'object' ? row.metadata : {}),
-        // Splat metadata first so that it can't override these:
-        name: row.name,
-        isActive: row.is_active,
-        displayName: row.display_name ?? '',
-        description: row.description ?? '',
-      })),
+      ...meta.game,
+      achievements: meta.languages
+        ? filtered.map(ach => applyLanguage(ach, meta.languages, acceptLanguages))
+        : filtered,
     };
   }
 

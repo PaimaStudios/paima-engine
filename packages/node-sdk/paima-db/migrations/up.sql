@@ -242,22 +242,6 @@ CREATE TABLE cde_cardano_mint_burn(
   PRIMARY KEY (cde_id, tx_id)
 );
 
-CREATE TABLE achievement_type(
-  name TEXT NOT NULL PRIMARY KEY,
-  is_active BOOLEAN NOT NULL DEFAULT true,
-  display_name TEXT NOT NULL,
-  description TEXT NOT NULL DEFAULT '',
-  metadata JSONB NOT NULL DEFAULT '{}'
-);
-
-CREATE TABLE achievement_language(
-  name TEXT NOT NULL,
-  language TEXT NOT NULL,
-  display_name TEXT,
-  description TEXT,
-  PRIMARY KEY (name, language)
-);
-
 CREATE TABLE achievement_progress(
   wallet TEXT NOT NULL,
   name TEXT NOT NULL,

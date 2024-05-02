@@ -576,53 +576,6 @@ const TABLE_DATA_DELEGATIONS: TableData = {
   creationQuery: QUERY_CREATE_TABLE_DELEGATIONS,
 };
 
-const QUERY_CREATE_TABLE_ACHIEVEMENT_TYPE = `
-CREATE TABLE achievement_type(
-  name TEXT NOT NULL PRIMARY KEY,
-  is_active BOOLEAN NOT NULL DEFAULT true,
-  display_name TEXT NOT NULL,
-  description TEXT NOT NULL DEFAULT '',
-  metadata JSONB NOT NULL DEFAULT '{}'
-);
-`;
-
-const TABLE_DATA_ACHIEVEMENT_TYPE: TableData = {
-  tableName: 'achievement_type',
-  primaryKeyColumns: ['name'],
-  columnData: packTuples([
-    ['name', 'text', 'NO', ''],
-    ['is_active', 'boolean', 'NO', 'true'],
-    ['display_name', 'text', 'NO', ''],
-    ['description', 'text', 'NO', "''"],
-    ['metadata', 'jsonb', 'NO', "'{}'"],
-  ]),
-  serialColumns: [],
-  creationQuery: QUERY_CREATE_TABLE_ACHIEVEMENT_TYPE,
-};
-
-const QUERY_CREATE_TABLE_ACHIEVEMENT_LANGUAGE = `
-CREATE TABLE achievement_language(
-  name TEXT NOT NULL,
-  language TEXT NOT NULL,
-  display_name TEXT,
-  description TEXT,
-  PRIMARY KEY (name, language)
-);
-`;
-
-const TABLE_DATA_ACHIEVEMENT_LANGUAGE: TableData = {
-  tableName: 'achievement_language',
-  primaryKeyColumns: ['name', 'language'],
-  columnData: packTuples([
-    ['name', 'text', 'NO', ''],
-    ['language', 'text', 'NO', ''],
-    ['display_name', 'text', 'YES', ''],
-    ['description', 'text', 'YES', ''],
-  ]),
-  serialColumns: [],
-  creationQuery: QUERY_CREATE_TABLE_ACHIEVEMENT_LANGUAGE,
-};
-
 const QUERY_CREATE_TABLE_ACHIEVEMENT_PROGRESS = `
 CREATE TABLE achievement_progress(
   wallet TEXT NOT NULL,
@@ -735,7 +688,5 @@ export const TABLES: TableData[] = [
   TABLE_DATA_CDE_TRACKING_CARDANO_PAGINATION,
   TABLE_DATA_CDE_CARDANO_TRANSFER,
   TABLE_DATA_CDE_CARDANO_MINT_BURN,
-  TABLE_DATA_ACHIEVEMENT_TYPE,
-  TABLE_DATA_ACHIEVEMENT_LANGUAGE,
   TABLE_DATA_ACHIEVEMENT_PROGRESS,
 ];

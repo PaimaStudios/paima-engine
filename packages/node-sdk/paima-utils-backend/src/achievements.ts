@@ -89,3 +89,26 @@ export interface PlayerAchievements extends Validity, Player {
   completed: number;
   achievements: PlayerAchievement[];
 }
+
+// ----------------------------------------------------------------------------
+// Paima Engine types
+
+/** The type of the `achievements` export of `endpoints.cjs`. */
+export interface AchievementMetadata {
+  /** Game ID, name, and version. */
+  game: Game;
+  /** Achievement types. */
+  list: Achievement[];
+  /**
+   * Per-language overrides for achievement display names and descriptions.
+   * Falls back to base definition whenever absent.
+   */
+  languages?: {
+    [language: string]: {
+      [name: string]: {
+        displayName?: string;
+        description?: string;
+      };
+    };
+  };
+}

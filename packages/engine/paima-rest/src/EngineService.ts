@@ -1,18 +1,30 @@
 import type { GameStateMachine } from '@paima/sm';
+import type { AchievementMetadata } from '@paima/utils-backend';
 
 export class EngineService {
-  public static INSTANCE = new EngineService();
+  // Useful stuff
+  readonly stateMachine: GameStateMachine;
+  readonly achievements: Promise<AchievementMetadata> | null;
 
-  private runtime: GameStateMachine | undefined = undefined;
+  constructor(alike: {
+    readonly stateMachine: GameStateMachine;
+    readonly achievements: Promise<AchievementMetadata> | null;
+  }) {
+    this.stateMachine = alike.stateMachine;
+    this.achievements = alike.achievements;
+  }
 
-  getSM = (): GameStateMachine => {
-    if (this.runtime == null) {
-      throw new Error('EngineService: SM not initialized');
+  getSM = () => this.stateMachine;
+
+  // Singleton
+  private static _instance?: EngineService;
+  static get INSTANCE(): EngineService {
+    if (!this._instance) {
+      throw new Error('EngineService not initialized');
     }
-    return this.runtime;
-  };
-
-  updateSM = (runtime: GameStateMachine): void => {
-    this.runtime = runtime;
-  };
+    return this._instance;
+  }
+  static set INSTANCE(value: EngineService) {
+    this._instance = value;
+  }
 }

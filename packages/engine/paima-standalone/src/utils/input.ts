@@ -114,6 +114,8 @@ export const runPaimaEngine = async (): Promise<void> => {
     doLog(`Starting Game Node...`);
     doLog(`Using RPC: ${config.chainUri}`);
     doLog(`Targeting Smart Contact: ${config.paimaL2ContractAddress}`);
+
+    // Import & initialize state machine
     const stateMachine = gameSM();
     const funnelFactory = await FunnelFactory.initialize(
       config.chainUri,
@@ -121,9 +123,12 @@ export const runPaimaEngine = async (): Promise<void> => {
     );
     const engine = paimaRuntime.initialize(funnelFactory, stateMachine, ENV.GAME_NODE_VERSION);
 
-    EngineService.INSTANCE.updateSM(stateMachine);
-
+    // Import & initialize REST server
     const endpointsJs = importEndpoints();
+    EngineService.INSTANCE = new EngineService({
+      stateMachine,
+      achievements: endpointsJs.achievements || null,
+    });
 
     engine.setPollingRate(ENV.POLLING_RATE);
     engine.addEndpoints(endpointsJs.default);
