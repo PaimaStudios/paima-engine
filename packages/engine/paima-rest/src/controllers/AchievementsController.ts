@@ -25,6 +25,7 @@ export class AchievementsController extends Controller {
 
   private async validity(): Promise<Validity> {
     return {
+      // Note: will need updating when we support non-EVM data availability layers.
       caip2: `eip155:${ENV.CHAIN_ID}`,
       block: await EngineService.INSTANCE.getSM().latestProcessedBlockHeight(),
       time: new Date().toISOString(),
@@ -69,7 +70,8 @@ export class AchievementsController extends Controller {
     const player: Player = {
       wallet: address,
       userId: String(id),
-      // TODO: walletType, userName
+      // walletType and userName aren't fulfilled here because Paima Engine's
+      // own DB tables don't include them at the moment.
     };
 
     const names = name ? name.split(',') : ['*'];
@@ -108,11 +110,11 @@ export class AchievementsController extends Controller {
         if (wallet) {
           return await this.wallet(wallet, name);
         } else {
-          // TODO: throw a different error if no CDE with that name exists
+          // Future improvement: throw a different error if no CDE with that name exists
           this.setStatus(404);
           throw new Error('No owner for that NFT');
         }
-      // Future expansion: erc6551
+      // Future improvement: erc6551
       default:
         this.setStatus(404);
         throw new Error(`No support for /erc/${erc}`);
