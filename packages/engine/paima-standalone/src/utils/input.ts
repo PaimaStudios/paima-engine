@@ -6,7 +6,6 @@ import { createInterface } from 'readline';
 import { gameSM } from '../sm.js';
 import {
   PACKAGED_TEMPLATES_PATH,
-  checkForPackedGameCode,
   getFolderNames,
   getPaimaEngineVersion,
   prepareBatcher,
@@ -14,7 +13,7 @@ import {
   prepareDocumentation,
   prepareTemplate,
 } from './file.js';
-import { importOpenApiJson, importTsoaFunction } from './import.js';
+import { checkForPackedGameCode, importOpenApiJson, importEndpoints } from './import.js';
 import type { Template } from './types.js';
 import RegisterRoutes, { EngineService } from '@paima/rest';
 
@@ -123,8 +122,11 @@ export const runPaimaEngine = async (): Promise<void> => {
     const engine = paimaRuntime.initialize(funnelFactory, stateMachine, ENV.GAME_NODE_VERSION);
 
     EngineService.INSTANCE.updateSM(stateMachine);
+
+    const endpointsJs = importEndpoints();
+
     engine.setPollingRate(ENV.POLLING_RATE);
-    engine.addEndpoints(importTsoaFunction());
+    engine.addEndpoints(endpointsJs.default);
     engine.addEndpoints(RegisterRoutes);
     registerDocs(importOpenApiJson());
     registerValidationErrorHandler();

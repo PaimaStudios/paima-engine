@@ -5,6 +5,16 @@
  */
 import type { GameStateTransitionFunctionRouter } from '@paima/sm';
 import type { TsoaFunction } from '@paima/runtime';
+import fs from 'fs';
+
+/**
+ * Checks that the user packed their game code and it is available for Paima Engine to use to run
+ */
+export function checkForPackedGameCode(): boolean {
+  const GAME_CODE_PATH = `${process.cwd()}/${ROUTER_FILENAME}`;
+  const ENDPOINTS_PATH = `${process.cwd()}/${API_FILENAME}`;
+  return fs.existsSync(ENDPOINTS_PATH) && fs.existsSync(GAME_CODE_PATH);
+}
 
 function importFile<T>(path: string): T {
   // dynamic import cannot be used here due to PKG limitations
@@ -15,7 +25,7 @@ function importFile<T>(path: string): T {
 export interface GameCodeImport {
   default: GameStateTransitionFunctionRouter;
 }
-export const ROUTER_FILENAME = 'packaged/gameCode.cjs';
+const ROUTER_FILENAME = 'packaged/gameCode.cjs';
 /**
  * Reads repackaged user's code placed next to the executable in `gameCode.cjs` file
  */
@@ -26,16 +36,16 @@ export function importGameStateTransitionRouter(): GameStateTransitionFunctionRo
 export interface EndpointsImport {
   default: TsoaFunction;
 }
-export const API_FILENAME = 'packaged/endpoints.cjs';
+const API_FILENAME = 'packaged/endpoints.cjs';
 /**
  * Reads repackaged user's code placed next to the executable in `endpoints.cjs` file
  */
-export function importTsoaFunction(): TsoaFunction {
-  return importFile<EndpointsImport>(API_FILENAME).default;
+export function importEndpoints(): EndpointsImport {
+  return importFile<EndpointsImport>(API_FILENAME);
 }
 
 export type OpenApiImport = object;
-export const GAME_OPENAPI_FILENAME = 'packaged/openapi.json';
+const GAME_OPENAPI_FILENAME = 'packaged/openapi.json';
 /**
  * Reads OpenAPI definitions placed next to the executable in `openapi.json` file
  */
