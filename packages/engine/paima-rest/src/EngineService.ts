@@ -14,7 +14,7 @@ export class EngineService {
     this.achievements = alike.achievements;
   }
 
-  getSM = () => this.stateMachine;
+  getSM = (): GameStateMachine => this.stateMachine;
 
   // Singleton
   private static _instance?: EngineService;

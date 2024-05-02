@@ -66,7 +66,7 @@ export class AchievementsController extends Controller {
     const meta = await this.meta();
     const filtered = meta.list
       .filter(ach => category === undefined || category === ach.category)
-      .filter(ach => isActive === null || isActive === ach.isActive);
+      .filter(ach => isActive === undefined || isActive === ach.isActive);
 
     this.setHeader('Content-Language', acceptLanguages[0]);
     return {

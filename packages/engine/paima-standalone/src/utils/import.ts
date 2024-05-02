@@ -20,7 +20,7 @@ export function checkForPackedGameCode(): boolean {
 function importFile<T>(path: string): T {
   // dynamic import cannot be used here due to PKG limitations
   // eslint-disable-next-line @typescript-eslint/no-var-requires
-  return require(`${process.cwd}/${path}`);
+  return require(`${process.cwd()}/${path}`);
 }
 
 export interface GameCodeImport {
