@@ -15,6 +15,10 @@ import { getLatestProcessedCdeBlockheight } from '@paima/db';
 
 const GET_BLOCK_NUMBER_TIMEOUT = 5000;
 
+function applyDelay(config: OtherEvmConfig, baseTimestamp: number): number {
+  return Math.max(baseTimestamp - (config.delay ?? 0), 0);
+}
+
 export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
   config: OtherEvmConfig;
   chainName: string;
@@ -52,7 +56,7 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
 
     // filter the data so that we are sure we can get all the blocks in the range
     for (const data of cachedState.bufferedChainData) {
-      if (data.timestamp - (this.config.delay ?? 0) <= Number(latestBlock.timestamp)) {
+      if (applyDelay(this.config, data.timestamp) <= Number(latestBlock.timestamp)) {
         chainData.push(data);
       }
     }
@@ -88,7 +92,7 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
         const ts = Number(block.timestamp);
         const earliestParallelChainBlock = await findBlockByTimestamp(
           this.web3,
-          ts - (this.config.delay ?? 0),
+          applyDelay(this.config, ts),
           this.chainName
         );
         // earliestParallelChainBlock is the earliest block that we might need to include
@@ -97,7 +101,7 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
       }
     }
 
-    const maxTimestamp = chainData[chainData.length - 1].timestamp - (this.config.delay ?? 0);
+    const maxTimestamp = applyDelay(this.config, chainData[chainData.length - 1].timestamp);
 
     const blocks = [];
 
@@ -210,7 +214,7 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
 
     for (const parallelChainBlock of cachedState.timestampToBlockNumber) {
       while (currIndex < chainData.length) {
-        if (chainData[currIndex].timestamp - (this.config.delay ?? 0) >= parallelChainBlock[0]) {
+        if (applyDelay(this.config, chainData[currIndex].timestamp) >= parallelChainBlock[0]) {
           sidechainToMainchainBlockHeightMapping[parallelChainBlock[1]] =
             chainData[currIndex].blockNumber;
 
@@ -481,7 +485,7 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
       const startingBlock = await sharedData.web3.eth.getBlock(startingBlockHeight);
       const mappedStartingBlockHeight = await findBlockByTimestamp(
         web3,
-        Number(startingBlock.timestamp) - (config.delay ?? 0),
+        applyDelay(config, Number(startingBlock.timestamp)),
         chainName
       );
 
