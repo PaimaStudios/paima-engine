@@ -593,7 +593,7 @@ const TABLE_DATA_ACHIEVEMENT_PROGRESS: TableData = {
   columnData: packTuples([
     ['wallet', 'text', 'NO', ''],
     ['name', 'text', 'NO', ''],
-    ['completed_date', 'timestamp', 'YES', ''],
+    ['completed_date', 'timestamp without time zone', 'YES', ''],
     ['progress', 'integer', 'YES', ''],
     ['total', 'integer', 'YES', ''],
   ]),
