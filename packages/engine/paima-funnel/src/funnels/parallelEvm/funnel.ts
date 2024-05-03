@@ -469,7 +469,7 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
       return newEntry;
     })();
 
-    cacheEntry.updateState(config.chainId, latestBlock);
+    cacheEntry.updateState(config.chainId, latestBlock - (config.confirmationDepth ?? 0));
 
     const evmCacheEntry = ((): EvmFunnelCacheEntry => {
       const entry = sharedData.cacheManager.cacheEntries[EvmFunnelCacheEntry.SYMBOL];
@@ -513,12 +513,14 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
       GET_BLOCK_NUMBER_TIMEOUT
     );
 
+    const delayedBlock = newLatestBlock - Math.max(this.config.confirmationDepth ?? 0, 0);
+
     this.sharedData.cacheManager.cacheEntries[RpcCacheEntry.SYMBOL]?.updateState(
       this.config.chainId,
-      newLatestBlock
+      delayedBlock
     );
 
-    return newLatestBlock;
+    return delayedBlock;
   }
 
   private getState(): EvmFunnelCacheEntryState {

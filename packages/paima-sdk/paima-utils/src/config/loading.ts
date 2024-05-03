@@ -40,6 +40,7 @@ const MainNetworkDiscrimination = Type.Union([
   }),
   Type.Object({
     delay: Type.Optional(Type.Number()),
+    confirmationDepth: Type.Optional(Type.Number()),
     type: Type.Literal(ConfigNetworkType.EVM_OTHER),
   }),
 ]);
