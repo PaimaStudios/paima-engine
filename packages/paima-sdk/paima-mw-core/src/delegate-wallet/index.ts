@@ -1,7 +1,7 @@
 /*
  * delegate            =   &wd|from?|to?|from_signature|to_signature
  * migrate             =   &wm|from?|to?|from_signature|to_signature
- * cancelDelegations   =   &wc|to_signature
+ * cancelDelegations   =   &wc|to?
  */
 
 import { builder } from '@paima/concise';
@@ -16,6 +16,7 @@ import {
   PolkadotConnector,
   AlgorandConnector,
   WalletMode,
+  MinaConnector,
 } from '@paima/providers';
 import { AddressType, ENV } from '@paima/utils';
 import { paimaEndpoints } from '../index.js';
@@ -78,14 +79,14 @@ export async function walletConnectMigrate(
 }
 
 export async function walletConnectCancelDelegations(
-  to_signature: string
+  to: string | null
 ): Promise<SuccessfulResult<PostDataResponse> | FailedResult> {
   const errorFxn = buildEndpointErrorFxn('delegate-wallet-cancel');
 
-  // walletConnect = &wc|to_signature
+  // walletConnect = &wc|to?
   const conciseBuilder = builder.initialize();
   conciseBuilder.setPrefix('&wc');
-  conciseBuilder.addValue({ value: to_signature });
+  conciseBuilder.addValue({ value: to ?? '' });
   try {
     const result = await postConciseData(conciseBuilder.build(), errorFxn);
     if (!result.success) {
@@ -104,9 +105,7 @@ export class WalletConnectHelper {
   private static readonly SEP = ':';
 
   public buildMessageToSign(subMessage: string): string {
-    return `${WalletConnectHelper.DELEGATE_WALLET_PREFIX}${
-      WalletConnectHelper.SEP
-    }${subMessage.toLocaleLowerCase()}${WalletConnectHelper.SEP}${ENV.CONTRACT_ADDRESS}`;
+    return `${WalletConnectHelper.DELEGATE_WALLET_PREFIX}${WalletConnectHelper.SEP}${subMessage.toLocaleLowerCase()}`;
   }
 
   private getProvider(walletType: AddressType): IProvider<unknown> {
@@ -123,6 +122,9 @@ export class WalletConnectHelper {
         break;
       case AddressType.ALGORAND:
         provider = AlgorandConnector.instance().getProvider();
+        break;
+      case AddressType.MINA:
+        provider = MinaConnector.instance().getProvider();
         break;
     }
     if (!provider) throw new Error('Cannot get provider ' + walletType);
@@ -159,6 +161,9 @@ export class WalletConnectHelper {
         break;
       case AddressType.ALGORAND:
         loginInfo = { mode: WalletMode.Algorand };
+        break;
+      case AddressType.MINA:
+        loginInfo = { mode: WalletMode.Mina };
         break;
       case AddressType.UNKNOWN:
         throw new Error('AddressTypes cannot be Unknown.');

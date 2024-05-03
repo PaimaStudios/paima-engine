@@ -58,13 +58,14 @@ async function getSpecificCdeData(
       return await getCdeErc1155Data(extension, fromBlock, toBlock, network);
     case ChainDataExtensionType.ERC6551Registry:
       return await getCdeErc6551RegistryData(extension, fromBlock, toBlock, network);
+    // these are not used by the block funnel
     case ChainDataExtensionType.CardanoPool:
     case ChainDataExtensionType.CardanoProjectedNFT:
     case ChainDataExtensionType.CardanoAssetUtxo:
     case ChainDataExtensionType.CardanoTransfer:
     case ChainDataExtensionType.CardanoMintBurn:
-      // this is used by the block funnel, which can't get information for this
-      // extension
+    case ChainDataExtensionType.MinaEventGeneric:
+    case ChainDataExtensionType.MinaActionGeneric:
       return [];
     default:
       assertNever(extension);

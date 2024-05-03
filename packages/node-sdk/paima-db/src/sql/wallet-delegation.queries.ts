@@ -320,6 +320,7 @@ export const deleteDelegationsFrom = new PreparedQuery<IDeleteDelegationsFromPar
 
 /** 'DeleteDelegationTo' parameters type */
 export interface IDeleteDelegationToParams {
+  from_id: number;
   to_id: number;
 }
 
@@ -332,13 +333,14 @@ export interface IDeleteDelegationToQuery {
   result: IDeleteDelegationToResult;
 }
 
-const deleteDelegationToIR: any = {"usedParamSet":{"to_id":true},"params":[{"name":"to_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":38,"b":44}]}],"statement":"DELETE FROM delegations\nWHERE to_id = :to_id!"};
+const deleteDelegationToIR: any = {"usedParamSet":{"to_id":true,"from_id":true},"params":[{"name":"to_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":38,"b":44}]},{"name":"from_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":60,"b":68}]}],"statement":"DELETE FROM delegations\nWHERE to_id = :to_id!\nand from_id = :from_id!"};
 
 /**
  * Query generated from SQL:
  * ```
  * DELETE FROM delegations
  * WHERE to_id = :to_id!
+ * and from_id = :from_id!
  * ```
  */
 export const deleteDelegationTo = new PreparedQuery<IDeleteDelegationToParams,IDeleteDelegationToResult>(deleteDelegationToIR);
