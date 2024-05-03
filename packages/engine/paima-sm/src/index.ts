@@ -28,7 +28,8 @@ import {
   getMainAddress,
   NO_USER_ID,
   updateCardanoEpoch,
-  updateCardanoPaginationCursor,
+  updatePaginationCursor,
+  updateMinaCheckpoint,
 } from '@paima/db';
 import Prando from '@paima/prando';
 
@@ -119,7 +120,7 @@ const SM: GameStateMachineInitializer = {
             );
           }
         } else if (latestCdeData.networkType === ConfigNetworkType.CARDANO) {
-          const cdeDataLength = await processCardanoCdeData(
+          const cdeDataLength = await processPaginatedCdeData(
             latestCdeData.carpCursor,
             latestCdeData.extensionDatums,
             dbTx,
@@ -128,6 +129,18 @@ const SM: GameStateMachineInitializer = {
           if (cdeDataLength > 0) {
             doLog(
               `[${latestCdeData.network}] Processed ${cdeDataLength} CDE events in ${latestCdeData.carpCursor.cursor}`
+            );
+          }
+        } else if (latestCdeData.networkType === ConfigNetworkType.MINA) {
+          const cdeDataLength = await processPaginatedCdeData(
+            latestCdeData.minaCursor,
+            latestCdeData.extensionDatums,
+            dbTx,
+            true
+          );
+          if (cdeDataLength > 0) {
+            doLog(
+              `[${latestCdeData.network}] Processed ${cdeDataLength} CDE events in ${latestCdeData.minaCursor.cursor}`
             );
           }
         }
@@ -306,34 +319,22 @@ async function processCdeData(
   });
 }
 
-async function processCardanoCdeData(
-  paginationCursor:
-    | { cdeId: number; cursor: string; finished: boolean }
-    | { cdeId: number; slot: number; finished: boolean },
+async function processPaginatedCdeData(
+  paginationCursor: { cdeId: number; cursor: string; finished: boolean },
   cdeData: ChainDataExtensionDatum[] | undefined,
   dbTx: PoolClient,
   inPresync: boolean
 ): Promise<number> {
   return await processCdeDataBase(cdeData, dbTx, inPresync, async () => {
-    if ('cursor' in paginationCursor) {
-      await updateCardanoPaginationCursor.run(
-        {
-          cde_id: paginationCursor.cdeId,
-          cursor: paginationCursor.cursor,
-          finished: paginationCursor.finished,
-        },
-        dbTx
-      );
-    } else {
-      await updateCardanoPaginationCursor.run(
-        {
-          cde_id: paginationCursor.cdeId,
-          cursor: paginationCursor.slot.toString(),
-          finished: paginationCursor.finished,
-        },
-        dbTx
-      );
-    }
+    await updatePaginationCursor.run(
+      {
+        cde_id: paginationCursor.cdeId,
+        cursor: paginationCursor.cursor,
+        finished: paginationCursor.finished,
+      },
+      dbTx
+    );
+
     return;
   });
 }
@@ -483,6 +484,15 @@ async function processInternalEvents(
         await markCdeBlockheightProcessed.run(
           {
             block_height: event.block,
+            network: event.network,
+          },
+          dbTx
+        );
+        break;
+      case InternalEventType.MinaLastTimestamp:
+        await updateMinaCheckpoint.run(
+          {
+            timestamp: event.timestamp,
             network: event.network,
           },
           dbTx

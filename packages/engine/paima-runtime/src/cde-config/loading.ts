@@ -19,6 +19,7 @@ import {
   defaultEvmMainNetworkName,
   defaultCardanoNetworkName,
   getErc1155Contract,
+  defaultMinaNetworkName,
 } from '@paima/utils';
 
 import type {
@@ -43,6 +44,8 @@ import {
   ChainDataExtensionErc6551RegistryConfig,
   ChainDataExtensionErc721Config,
   ChainDataExtensionGenericConfig,
+  ChainDataExtensionMinaEventGenericConfig,
+  ChainDataExtensionMinaActionGenericConfig,
 } from '@paima/sm';
 import { loadAbi } from './utils.js';
 import assertNever from 'assert-never';
@@ -160,6 +163,18 @@ export function parseCdeConfigFile(configFileData: string): Static<typeof CdeCon
             ChainDataExtensionErc1155Config,
             Type.Object({ network: Type.String() }),
           ]),
+          entry
+        );
+      case CdeEntryTypeName.MinaEventGeneric:
+        return checkOrError(
+          entry.name,
+          Type.Intersect([ChainDataExtensionMinaEventGenericConfig, networkTagType]),
+          entry
+        );
+      case CdeEntryTypeName.MinaActionGeneric:
+        return checkOrError(
+          entry.name,
+          Type.Intersect([ChainDataExtensionMinaActionGenericConfig, networkTagType]),
           entry
         );
       default:
@@ -327,6 +342,22 @@ async function instantiateExtension(
         cdeId: index,
         hash: hashConfig(config),
         cdeType: ChainDataExtensionType.CardanoMintBurn,
+      };
+    case CdeEntryTypeName.MinaEventGeneric:
+      return {
+        ...config,
+        network: config.network || defaultMinaNetworkName,
+        cdeId: index,
+        hash: hashConfig(config),
+        cdeType: ChainDataExtensionType.MinaEventGeneric,
+      };
+    case CdeEntryTypeName.MinaActionGeneric:
+      return {
+        ...config,
+        network: config.network || defaultMinaNetworkName,
+        cdeId: index,
+        hash: hashConfig(config),
+        cdeType: ChainDataExtensionType.MinaActionGeneric,
       };
     default:
       assertNever(config);

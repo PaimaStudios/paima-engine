@@ -48,11 +48,13 @@ export {
   cdeSpendCardanoAssetUtxo,
   ICdeCardanoAssetUtxosByAddressParams,
 } from './sql/cde-cardano-asset-utxos.queries.js';
-export * from './sql/cde-cardano-tracking-pagination.queries.js';
-export type * from './sql/cde-cardano-tracking-pagination.queries.js';
+export * from './sql/cde-cursor-tracking-pagination.queries.js';
+export type * from './sql/cde-cursor-tracking-pagination.queries.js';
 export * from './sql/cde-cardano-transfer.queries.js';
 export type * from './sql/cde-cardano-transfer.queries.js';
 export { cdeCardanoMintBurnInsert } from './sql/cde-cardano-mint-burn.queries.js';
+export type * from './sql/mina-checkpoints.queries.js';
+export * from './sql/mina-checkpoints.queries.js';
 
 export {
   tx,
