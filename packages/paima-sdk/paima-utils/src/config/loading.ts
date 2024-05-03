@@ -15,6 +15,7 @@ export enum ConfigNetworkType {
 export type EvmConfig = Static<typeof EvmConfigSchema>;
 
 export type MainEvmConfig = Static<typeof MainEvmConfigSchema>;
+export type OtherEvmConfig = Static<typeof OtherEvmConfigSchema>;
 
 const EvmConfigSchemaRequiredProperties = Type.Object({
   chainUri: Type.String(),
@@ -37,7 +38,10 @@ const MainNetworkDiscrimination = Type.Union([
     paimaL2ContractAddress: PaimaL2ContractType,
     type: Type.Literal(ConfigNetworkType.EVM),
   }),
-  Type.Object({ type: Type.Literal(ConfigNetworkType.EVM_OTHER) }),
+  Type.Object({
+    delay: Type.Optional(Type.Number()),
+    type: Type.Literal(ConfigNetworkType.EVM_OTHER),
+  }),
 ]);
 
 export const EvmConfigSchema = Type.Intersect([
@@ -49,6 +53,11 @@ export const EvmConfigSchema = Type.Intersect([
 const MainEvmConfigSchema = Type.Intersect([
   EvmConfigSchema,
   Type.Object({ type: Type.Literal(ConfigNetworkType.EVM) }),
+]);
+
+const OtherEvmConfigSchema = Type.Intersect([
+  EvmConfigSchema,
+  Type.Object({ type: Type.Literal(ConfigNetworkType.EVM_OTHER) }),
 ]);
 
 export const CardanoConfigSchema = Type.Object({

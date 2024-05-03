@@ -1,4 +1,4 @@
-import type { EvmConfig, Web3 } from '@paima/utils';
+import type { OtherEvmConfig, Web3 } from '@paima/utils';
 import { doLog, initWeb3, logError, timeout, delay, InternalEventType } from '@paima/utils';
 import type { ChainFunnel, ReadPresyncDataFrom } from '@paima/runtime';
 import type { ChainData, EvmPresyncChainData, PresyncChainData } from '@paima/sm';
@@ -9,20 +9,20 @@ import type { FunnelSharedData } from '../BaseFunnel.js';
 import type { EvmFunnelCacheEntryState } from '../FunnelCache.js';
 import { EvmFunnelCacheEntry, RpcCacheEntry, RpcRequestState } from '../FunnelCache.js';
 import type { PoolClient } from 'pg';
-import { FUNNEL_PRESYNC_FINISHED, ConfigNetworkType } from '@paima/utils';
+import { FUNNEL_PRESYNC_FINISHED } from '@paima/utils';
 import { getMultipleBlockData } from '../../reading.js';
 import { getLatestProcessedCdeBlockheight } from '@paima/db';
 
 const GET_BLOCK_NUMBER_TIMEOUT = 5000;
 
 export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
-  config: EvmConfig;
+  config: OtherEvmConfig;
   chainName: string;
 
   protected constructor(
     sharedData: FunnelSharedData,
     dbTx: PoolClient,
-    config: EvmConfig,
+    config: OtherEvmConfig,
     chainName: string,
     private readonly baseFunnel: ChainFunnel,
     private readonly web3: Web3
@@ -52,7 +52,7 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
 
     // filter the data so that we are sure we can get all the blocks in the range
     for (const data of cachedState.bufferedChainData) {
-      if (data.timestamp <= Number(latestBlock.timestamp)) {
+      if (data.timestamp - (this.config.delay ?? 0) <= Number(latestBlock.timestamp)) {
         chainData.push(data);
       }
     }
@@ -88,7 +88,7 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
         const ts = Number(block.timestamp);
         const earliestParallelChainBlock = await findBlockByTimestamp(
           this.web3,
-          ts,
+          ts - (this.config.delay ?? 0),
           this.chainName
         );
         // earliestParallelChainBlock is the earliest block that we might need to include
@@ -97,7 +97,7 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
       }
     }
 
-    const maxTimestamp = chainData[chainData.length - 1].timestamp;
+    const maxTimestamp = chainData[chainData.length - 1].timestamp - (this.config.delay ?? 0);
 
     const blocks = [];
 
@@ -210,7 +210,7 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
 
     for (const parallelChainBlock of cachedState.timestampToBlockNumber) {
       while (currIndex < chainData.length) {
-        if (chainData[currIndex].timestamp >= parallelChainBlock[0]) {
+        if (chainData[currIndex].timestamp - (this.config.delay ?? 0) >= parallelChainBlock[0]) {
           sidechainToMainchainBlockHeightMapping[parallelChainBlock[1]] =
             chainData[currIndex].blockNumber;
 
@@ -450,7 +450,7 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
     dbTx: PoolClient,
     baseFunnel: ChainFunnel,
     chainName: string,
-    config: EvmConfig,
+    config: OtherEvmConfig,
     startingBlockHeight: number
   ): Promise<ParallelEvmFunnel> {
     const web3 = await initWeb3(config.chainUri);
@@ -481,7 +481,7 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
       const startingBlock = await sharedData.web3.eth.getBlock(startingBlockHeight);
       const mappedStartingBlockHeight = await findBlockByTimestamp(
         web3,
-        Number(startingBlock.timestamp),
+        Number(startingBlock.timestamp) - (config.delay ?? 0),
         chainName
       );
 
@@ -536,7 +536,7 @@ export async function wrapToParallelEvmFunnel(
   dbTx: PoolClient,
   startingBlockHeight: number,
   chainName: string,
-  config: EvmConfig
+  config: OtherEvmConfig
 ): Promise<ChainFunnel> {
   try {
     const ebp = await ParallelEvmFunnel.recoverState(
