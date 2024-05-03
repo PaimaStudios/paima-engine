@@ -62,7 +62,6 @@ export interface CardanoPresyncChainData {
   extensionDatums: ChainDataExtensionDatum[];
 }
 
-// TODO: potentially this and Cardano can be collapsed
 export interface MinaPresyncChainData {
   network: string;
   networkType: ConfigNetworkType.MINA;

@@ -130,7 +130,6 @@ function groupByTx(events: PerBlock[]) {
       height: number;
       timestamp: string;
     };
-    // TODO: could each data by just a tuple?
     eventsData: { data: string[][]; txHash: string }[];
   }[];
 
