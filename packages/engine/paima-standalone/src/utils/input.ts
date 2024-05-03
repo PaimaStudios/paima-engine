@@ -17,6 +17,7 @@ import {
 import { importOpenApiJson, importTsoaFunction } from './import.js';
 import type { Template } from './types.js';
 import RegisterRoutes, { EngineService } from '@paima/rest';
+import { BaseConfigWithoutDefaults } from '@paima/utils/src/config/loading.js';
 
 // Prompt user for input in the CLI
 export const userPrompt = (query: string): Promise<string> => {
@@ -62,6 +63,10 @@ export const argumentRouter = async (): Promise<void> => {
 
     case 'batcher':
       batcherCommand();
+      break;
+
+    case 'gen-config-json-schema':
+      genConfigSchemaCommand();
       break;
 
     default:
@@ -167,11 +172,16 @@ export const helpCommand = (): void => {
   doLog(`   help      Shows list of commands currently available.`);
   doLog(`   version   Shows the version of used paima-engine.`);
   doLog(`   batcher   Saves the bundled batcher project to your local filesystem.`);
+  doLog(`   gen-config-json-schema   Prints the JSON Schema for the engine configuration.`);
 };
 
 // Batcher command logic
 export const batcherCommand = (): void => {
   prepareBatcher();
+};
+
+export const configJsonSchema = (): void => {
+  genConfigSchemaCommand();
 };
 
 // Build middleware for specific .env file and launch webserver:
@@ -249,3 +259,7 @@ const pickGameTemplate = async (templateArg: string): Promise<Template> => {
   doLog(`Unknown selection, ${defaultTemplate} will be used.`);
   return defaultTemplate;
 };
+
+function genConfigSchemaCommand() {
+  doLog(JSON.stringify(BaseConfigWithoutDefaults));
+}
