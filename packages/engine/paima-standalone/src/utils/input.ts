@@ -1,6 +1,6 @@
 import { FunnelFactory } from '@paima/funnel';
 import paimaRuntime, { registerDocs, registerValidationErrorHandler } from '@paima/runtime';
-import { ENV, GlobalConfig, doLog } from '@paima/utils';
+import { ENV, GlobalConfig, doLog, BaseConfigWithoutDefaults } from '@paima/utils';
 import { exec } from 'child_process';
 import { createInterface } from 'readline';
 import { gameSM } from '../sm.js';
@@ -17,7 +17,6 @@ import {
 import { importOpenApiJson, importTsoaFunction } from './import.js';
 import type { Template } from './types.js';
 import RegisterRoutes, { EngineService } from '@paima/rest';
-import { BaseConfigWithoutDefaults } from '@paima/utils/src/config/loading.js';
 
 // Prompt user for input in the CLI
 export const userPrompt = (query: string): Promise<string> => {
