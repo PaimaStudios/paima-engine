@@ -597,7 +597,7 @@ const TABLE_DATA_MINA_CHECKPOINT: TableData = {
 
 const QUERY_CREATE_TABLE_ACHIEVEMENT_PROGRESS = `
 CREATE TABLE achievement_progress(
-  wallet TEXT NOT NULL,
+  wallet INTEGER NOT NULL REFERENCES addresses(id),
   name TEXT NOT NULL,
   completed_date TIMESTAMP,
   progress INTEGER,
@@ -610,7 +610,7 @@ const TABLE_DATA_ACHIEVEMENT_PROGRESS: TableData = {
   tableName: 'achievement_progress',
   primaryKeyColumns: ['wallet', 'name'],
   columnData: packTuples([
-    ['wallet', 'text', 'NO', ''],
+    ['wallet', 'integer', 'NO', ''],
     ['name', 'text', 'NO', ''],
     ['completed_date', 'timestamp without time zone', 'YES', ''],
     ['progress', 'integer', 'YES', ''],

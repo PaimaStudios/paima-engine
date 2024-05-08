@@ -95,7 +95,7 @@ export class AchievementsController extends Controller {
     };
 
     const names = name ? name.split(',') : ['*'];
-    const rows = await getAchievementProgress.run({ wallet, names }, db);
+    const rows = await getAchievementProgress.run({ wallet: id, names }, db);
 
     return {
       ...(await this.validity()),

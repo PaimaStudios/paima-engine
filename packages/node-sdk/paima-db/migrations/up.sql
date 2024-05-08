@@ -249,7 +249,7 @@ CREATE TABLE mina_checkpoint (
 );
 
 CREATE TABLE achievement_progress(
-  wallet TEXT NOT NULL,
+  wallet INTEGER NOT NULL REFERENCES addresses(id),
   name TEXT NOT NULL,
   completed_date TIMESTAMP,
   progress INTEGER,

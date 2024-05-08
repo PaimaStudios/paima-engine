@@ -6,7 +6,7 @@ export type DateOrString = Date | string;
 /** 'GetAchievementProgress' parameters type */
 export interface IGetAchievementProgressParams {
   names: readonly (string | null | void)[];
-  wallet: string;
+  wallet: number;
 }
 
 /** 'GetAchievementProgress' return type */
@@ -15,7 +15,7 @@ export interface IGetAchievementProgressResult {
   name: string;
   progress: number | null;
   total: number | null;
-  wallet: string;
+  wallet: number;
 }
 
 /** 'GetAchievementProgress' query type */
@@ -43,7 +43,7 @@ export interface ISetAchievementProgressParams {
   name: string;
   progress?: number | null | void;
   total?: number | null | void;
-  wallet: string;
+  wallet: number;
 }
 
 /** 'SetAchievementProgress' return type */
