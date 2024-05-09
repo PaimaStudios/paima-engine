@@ -6,7 +6,7 @@ export type IGetChainDataExtensionsParams = void;
 
 /** 'GetChainDataExtensions' return type */
 export interface IGetChainDataExtensionsResult {
-  cde_hash: number;
+  cde_hash: number | null;
   cde_id: number;
   cde_name: string;
   cde_type: number;
@@ -38,7 +38,7 @@ export interface IGetSpecificChainDataExtensionParams {
 
 /** 'GetSpecificChainDataExtension' return type */
 export interface IGetSpecificChainDataExtensionResult {
-  cde_hash: number;
+  cde_hash: number | null;
   cde_id: number;
   cde_name: string;
   cde_type: number;
@@ -71,7 +71,7 @@ export interface ISelectChainDataExtensionsByNameParams {
 
 /** 'SelectChainDataExtensionsByName' return type */
 export interface ISelectChainDataExtensionsByNameResult {
-  cde_hash: number;
+  cde_hash: number | null;
   cde_id: number;
   cde_name: string;
   cde_type: number;

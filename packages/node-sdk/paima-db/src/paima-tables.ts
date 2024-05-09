@@ -143,7 +143,7 @@ CREATE TABLE chain_data_extensions (
   cde_id INTEGER PRIMARY KEY,
   cde_type INTEGER NOT NULL,
   cde_name TEXT NOT NULL,
-  cde_hash integer NOT NULL,
+  cde_hash INTEGER,
   start_blockheight INTEGER NOT NULL,
   scheduled_prefix TEXT
 );
@@ -156,7 +156,7 @@ const TABLE_DATA_CDE: TableData = {
     ['cde_id', 'integer', 'NO', ''],
     ['cde_type', 'integer', 'NO', ''],
     ['cde_name', 'text', 'NO', ''],
-    ['cde_hash', 'integer', 'NO', ''],
+    ['cde_hash', 'integer', 'YES', ''],
     ['start_blockheight', 'integer', 'NO', ''],
     ['scheduled_prefix', 'text', 'YES', ''],
   ]),

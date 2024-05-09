@@ -37,7 +37,7 @@ export async function validatePersistentCdeConfig(
     if (!persistent) {
       return false;
     }
-    if (persistent.cde_hash !== cde.hash) {
+    if (persistent.cde_hash && persistent.cde_hash !== cde.hash) {
       return false;
     }
   }

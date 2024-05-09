@@ -261,7 +261,7 @@ function checkOrError<T extends TSchema>(
   return decoded;
 }
 
-function hashConfig(config: any): number {
+export function hashConfig(config: any): number {
   // fnv returns an unsigned int, but postgres doesn't support unsigned ints
   const unsignedInt = fnv.fast1a32(stableStringify(config));
   // map unsigned into signed in. Obviously this isn't lossless, but it's still good enough for collision avoidance

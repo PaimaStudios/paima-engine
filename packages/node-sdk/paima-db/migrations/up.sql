@@ -37,7 +37,7 @@ CREATE TABLE chain_data_extensions (
   cde_id INTEGER PRIMARY KEY,
   cde_type INTEGER NOT NULL,
   cde_name TEXT NOT NULL,
-  cde_hash integer NOT NULL,
+  cde_hash INTEGER,
   start_blockheight INTEGER NOT NULL,
   scheduled_prefix TEXT
 );
