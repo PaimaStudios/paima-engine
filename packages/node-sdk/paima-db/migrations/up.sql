@@ -256,3 +256,9 @@ CREATE TABLE achievement_progress(
   total INTEGER,
   PRIMARY KEY (wallet, name)
 );
+
+CREATE TABLE cde_dynamic_primitive_config (
+  cde_id INTEGER NOT NULL,
+  config TEXT NOT NULL,
+  PRIMARY KEY(cde_id)
+);

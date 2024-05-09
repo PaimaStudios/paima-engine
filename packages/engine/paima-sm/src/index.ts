@@ -102,7 +102,11 @@ const SM: GameStateMachineInitializer = {
       getReadWriteDbConn: (): Pool => {
         return DBConn;
       },
-      presyncProcess: async (dbTx: PoolClient, latestCdeData: PresyncChainData): Promise<void> => {
+      presyncProcess: async (
+        dbTx: PoolClient,
+        latestCdeData: PresyncChainData,
+        reloadExtensions: () => void
+      ): Promise<void> => {
         if (
           latestCdeData.networkType === ConfigNetworkType.EVM ||
           latestCdeData.networkType === ConfigNetworkType.EVM_OTHER
@@ -112,7 +116,8 @@ const SM: GameStateMachineInitializer = {
             latestCdeData.network,
             latestCdeData.extensionDatums,
             dbTx,
-            true
+            true,
+            reloadExtensions
           );
           if (cdeDataLength > 0) {
             doLog(
@@ -124,7 +129,8 @@ const SM: GameStateMachineInitializer = {
             latestCdeData.carpCursor,
             latestCdeData.extensionDatums,
             dbTx,
-            true
+            true,
+            reloadExtensions
           );
           if (cdeDataLength > 0) {
             doLog(
@@ -136,7 +142,8 @@ const SM: GameStateMachineInitializer = {
             latestCdeData.minaCursor,
             latestCdeData.extensionDatums,
             dbTx,
-            true
+            true,
+            reloadExtensions
           );
           if (cdeDataLength > 0) {
             doLog(
@@ -187,7 +194,11 @@ const SM: GameStateMachineInitializer = {
         }
       },
       // Core function which triggers state transitions
-      process: async (dbTx: PoolClient, latestChainData: ChainData): Promise<void> => {
+      process: async (
+        dbTx: PoolClient,
+        latestChainData: ChainData,
+        reloadExtensions: () => void
+      ): Promise<void> => {
         // Acquire correct STF based on router (based on block height)
         const gameStateTransition = gameStateTransitionRouter(latestChainData.blockNumber);
         // Save blockHeight and randomness seed
@@ -218,7 +229,8 @@ const SM: GameStateMachineInitializer = {
             network,
             extensionsPerNetwork[network],
             dbTx,
-            false
+            false,
+            reloadExtensions
           );
         }
 
@@ -266,14 +278,15 @@ async function processCdeDataBase(
   cdeData: ChainDataExtensionDatum[] | undefined,
   dbTx: PoolClient,
   inPresync: boolean,
-  markProcessed: () => Promise<void>
+  markProcessed: () => Promise<void>,
+  reloadExtensions: () => void
 ): Promise<number> {
   if (!cdeData) {
     return 0;
   }
 
   for (const datum of cdeData) {
-    const sqlQueries = await cdeTransitionFunction(dbTx, datum, inPresync);
+    const sqlQueries = await cdeTransitionFunction(dbTx, datum, inPresync, reloadExtensions);
     try {
       for (const [query, params] of sqlQueries) {
         await query.run(params, dbTx);
@@ -298,45 +311,59 @@ async function processCdeData(
   network: string,
   cdeData: ChainDataExtensionDatum[] | undefined,
   dbTx: PoolClient,
-  inPresync: boolean
+  inPresync: boolean,
+  reloadExtensions: () => void
 ): Promise<number> {
   const [mainNetwork, _] = await GlobalConfig.mainEvmConfig();
-  return await processCdeDataBase(cdeData, dbTx, inPresync, async () => {
-    // During the presync,
-    //     we know that the block_height is for that network in particular,
-    //     since the block heights are not mapped in that phase.
-    // During the sync,
-    //     the blockHeight we are processing here is for the main network instead,
-    //     which doesn't make sense for cde's from other networks.
-    // To tackle this, we have 2 options:
-    //     1. Store the original block in ChainDataExtensionDatum
-    //        and then use it to update here
-    //     2. (what we picked) Through the internal events (see EvmLastBlock)
-    if (inPresync || network == mainNetwork) {
-      await markCdeBlockheightProcessed.run({ block_height: blockHeight, network }, dbTx);
-    }
-    return;
-  });
+  return await processCdeDataBase(
+    cdeData,
+    dbTx,
+    inPresync,
+    async () => {
+      // During the presync,
+      //     we know that the block_height is for that network in particular,
+      //     since the block heights are not mapped in that phase.
+      // During the sync,
+      //     the blockHeight we are processing here is for the main network instead,
+      //     which doesn't make sense for cde's from other networks.
+      // To tackle this, we have 2 options:
+      //     1. Store the original block in ChainDataExtensionDatum
+      //        and then use it to update here
+      //     2. (what we picked) Through the internal events (see EvmLastBlock)
+      if (inPresync || network == mainNetwork) {
+        await markCdeBlockheightProcessed.run({ block_height: blockHeight, network }, dbTx);
+      }
+      return;
+    },
+    reloadExtensions
+  );
 }
 
 async function processPaginatedCdeData(
   paginationCursor: { cdeId: number; cursor: string; finished: boolean },
   cdeData: ChainDataExtensionDatum[] | undefined,
   dbTx: PoolClient,
-  inPresync: boolean
+  inPresync: boolean,
+  reloadExtensions: () => void
 ): Promise<number> {
-  return await processCdeDataBase(cdeData, dbTx, inPresync, async () => {
-    await updatePaginationCursor.run(
-      {
-        cde_id: paginationCursor.cdeId,
-        cursor: paginationCursor.cursor,
-        finished: paginationCursor.finished,
-      },
-      dbTx
-    );
+  return await processCdeDataBase(
+    cdeData,
+    dbTx,
+    inPresync,
+    async () => {
+      await updatePaginationCursor.run(
+        {
+          cde_id: paginationCursor.cdeId,
+          cursor: paginationCursor.cursor,
+          finished: paginationCursor.finished,
+        },
+        dbTx
+      );
 
-    return;
-  });
+      return;
+    },
+    reloadExtensions
+  );
 }
 
 // Process all of the scheduled data inputs by running each of them through the game STF,

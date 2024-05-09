@@ -162,6 +162,10 @@ interface CdeDatumCardanoMintBurnPayload {
   outputAddresses: { [address: string]: { policyId: string; assetName: string; amount: string }[] };
 }
 
+interface CdeDatumDynamicPrimitivePayload {
+  contractAddress: string;
+}
+
 type ChainDataExtensionPayload =
   | CdeDatumErc20TransferPayload
   | CdeDatumErc721MintPayload
@@ -172,7 +176,8 @@ type ChainDataExtensionPayload =
   | CdeDatumGenericPayload
   | CdeDatumErc6551RegistryPayload
   | CdeDatumCardanoPoolPayload
-  | CdeDatumCardanoProjectedNFTPayload;
+  | CdeDatumCardanoProjectedNFTPayload
+  | CdeDatumDynamicPrimitivePayload;
 
 interface CdeDatumBase {
   cdeId: number;
@@ -269,6 +274,12 @@ export interface CdeMinaActionGenericDatum extends CdeDatumBase {
   paginationCursor: { cursor: string; finished: boolean };
   scheduledPrefix: string;
 }
+export interface CdeDynamicPrimitiveDatum extends CdeDatumBase {
+  cdeDatumType: ChainDataExtensionDatumType.DynamicPrimitive;
+  payload: CdeDatumDynamicPrimitivePayload;
+  scheduledPrefix: string;
+  cdeName: string;
+}
 
 export type ChainDataExtensionDatum =
   | CdeErc20TransferDatum
@@ -284,7 +295,8 @@ export type ChainDataExtensionDatum =
   | CdeCardanoTransferDatum
   | CdeCardanoMintBurnDatum
   | CdeMinaEventGenericDatum
-  | CdeMinaActionGenericDatum;
+  | CdeMinaActionGenericDatum
+  | CdeDynamicPrimitiveDatum;
 
 export enum CdeEntryTypeName {
   Generic = 'generic',
@@ -300,6 +312,7 @@ export enum CdeEntryTypeName {
   CardanoMintBurn = 'cardano-mint-burn',
   MinaEventGeneric = 'mina-event-generic',
   MinaActionGeneric = 'mina-action-generic',
+  DynamicPrimitive = 'dynamic-primitive',
 }
 
 const EvmAddress = Type.Transform(Type.RegExp('0x[0-9a-fA-F]{40}'))
@@ -521,6 +534,27 @@ export type ChainDataExtensionMinaActionGeneric = ChainDataExtensionBase &
     cdeType: ChainDataExtensionType.MinaActionGeneric;
   };
 
+export const ChainDataExtensionDynamicPrimitiveConfig = Type.Intersect([
+  ChainDataExtensionConfigBase,
+  Type.Object({
+    type: Type.Literal(CdeEntryTypeName.DynamicPrimitive),
+    contractAddress: EvmAddress,
+    scheduledPrefix: Type.String(),
+    abiPath: Type.String(),
+    eventSignature: Type.String(),
+  }),
+]);
+export type TChainDataExtensionDynamicPrimitiveConfig = Static<
+  typeof ChainDataExtensionDynamicPrimitiveConfig
+>;
+export type ChainDataExtensionDynamicPrimitive = ChainDataExtensionBase &
+  Omit<Static<typeof ChainDataExtensionDynamicPrimitiveConfig>, 'abiPath'> & {
+    cdeType: ChainDataExtensionType.DynamicPrimitive;
+    contract: Contract;
+    eventSignatureHash: string;
+    eventName: string;
+  };
+
 export const CdeConfig = Type.Object({
   extensions: Type.Array(
     Type.Intersect([
@@ -538,6 +572,7 @@ export const CdeConfig = Type.Object({
         ChainDataExtensionCardanoMintBurnConfig,
         ChainDataExtensionMinaEventGenericConfig,
         ChainDataExtensionMinaActionGenericConfig,
+        ChainDataExtensionDynamicPrimitiveConfig,
       ]),
       Type.Partial(Type.Object({ network: Type.String() })),
     ])
@@ -572,6 +607,7 @@ export type ChainDataExtension = (
   | ChainDataExtensionCardanoMintBurn
   | ChainDataExtensionMinaEventGeneric
   | ChainDataExtensionMinaActionGeneric
+  | ChainDataExtensionDynamicPrimitive
 ) & { network: string | undefined };
 
 export type GameStateTransitionFunctionRouter = (
@@ -603,8 +639,12 @@ export interface GameStateMachine {
   getReadonlyDbConn: () => Pool;
   getPersistentReadonlyDbConn: () => Client;
   getReadWriteDbConn: () => Pool;
-  process: (dbTx: PoolClient, chainData: ChainData) => Promise<void>;
-  presyncProcess: (dbTx: PoolClient, latestCdeData: PresyncChainData) => Promise<void>;
+  process: (dbTx: PoolClient, chainData: ChainData, reloadExtensions: () => void) => Promise<void>;
+  presyncProcess: (
+    dbTx: PoolClient,
+    latestCdeData: PresyncChainData,
+    reloadExtensions: () => void
+  ) => Promise<void>;
   markPresyncMilestone: (blockHeight: number, network: string) => Promise<void>;
   dryRun: (gameInput: string, userAddress: string) => Promise<boolean>;
 }

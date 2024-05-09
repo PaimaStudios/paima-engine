@@ -58,6 +58,7 @@ async function runPresync(
 
   let presyncBlockHeight = await getPresyncStartBlockheight(
     gameStateMachine,
+    // TODO: may need to change this?
     funnelFactory.getExtensions(),
     startBlockHeight
   );
@@ -102,7 +103,10 @@ async function runPresync(
           network: network,
           from: height,
           to: upper[network],
-        }))
+        })),
+        () => {
+          funnelFactory.markExtensionsAsDirty();
+        }
       );
     });
 
@@ -158,7 +162,8 @@ async function runPresyncRound(
   gameStateMachine: GameStateMachine,
   chainFunnel: ChainFunnel,
   pollingPeriod: number,
-  from: ReadPresyncDataFrom
+  from: ReadPresyncDataFrom,
+  reloadExtensions: () => void
 ): Promise<{ [network: string]: number }> {
   const latestPresyncDataList = await chainFunnel.readPresyncData(from);
 
@@ -187,7 +192,7 @@ async function runPresyncRound(
   const dbTx = chainFunnel.getDbTx();
 
   for (const presyncData of filteredPresyncDataList) {
-    await gameStateMachine.presyncProcess(dbTx, presyncData);
+    await gameStateMachine.presyncProcess(dbTx, presyncData, reloadExtensions);
   }
 
   if (!finished) {
@@ -265,7 +270,13 @@ async function runSync(
     try {
       for (const chainData of latestChainDataList) {
         if (
-          !(await processSyncBlockData(gameStateMachine, chainData, pollingPeriod, stopBlockHeight))
+          !(await processSyncBlockData(
+            gameStateMachine,
+            chainData,
+            pollingPeriod,
+            stopBlockHeight,
+            () => funnelFactory.markExtensionsAsDirty()
+          ))
         ) {
           break;
         }
@@ -329,7 +340,8 @@ async function processSyncBlockData(
   gameStateMachine: GameStateMachine,
   chainData: ChainData,
   pollingPeriod: number,
-  stopBlockHeight: number | null
+  stopBlockHeight: number | null,
+  reloadExtensions: () => void
 ): Promise<boolean> {
   // Checking if should safely close in between processing blocks
   exitIfStopped(run);
@@ -343,7 +355,7 @@ async function processSyncBlockData(
     }
 
     // Processing proper -- data migrations and passing chain data to SM
-    if (!(await blockCoreProcess(dbTx, gameStateMachine, chainData))) {
+    if (!(await blockCoreProcess(dbTx, gameStateMachine, chainData, reloadExtensions))) {
       return false;
     }
 
@@ -387,13 +399,14 @@ async function blockPreProcess(
 async function blockCoreProcess(
   dbTx: PoolClient,
   gameStateMachine: GameStateMachine,
-  chainData: ChainData
+  chainData: ChainData,
+  reloadExtensions: () => void
 ): Promise<boolean> {
   try {
     if (DataMigrations.hasPendingMigrationForBlock(chainData.blockNumber)) {
       await DataMigrations.applyDataDBMigrations(dbTx, chainData.blockNumber);
     }
-    await gameStateMachine.process(dbTx, chainData);
+    await gameStateMachine.process(dbTx, chainData, reloadExtensions);
     exitIfStopped(run);
   } catch (err) {
     doLog(`[paima-runtime] Error occurred while SM processing of block ${chainData.blockNumber}:`);

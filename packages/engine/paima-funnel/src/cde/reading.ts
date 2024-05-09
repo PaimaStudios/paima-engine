@@ -10,6 +10,7 @@ import getCdeErc721Data from './erc721.js';
 import getCdePaimaErc721Data from './paimaErc721.js';
 import getCdeErc6551RegistryData from './erc6551Registry.js';
 import getCdeErc1155Data from './erc1155.js';
+import getCdeDynamicPrimitive from './dynamic.js';
 import assertNever from 'assert-never';
 
 export async function getUngroupedCdeData(
@@ -58,6 +59,8 @@ async function getSpecificCdeData(
       return await getCdeErc1155Data(extension, fromBlock, toBlock, network);
     case ChainDataExtensionType.ERC6551Registry:
       return await getCdeErc6551RegistryData(extension, fromBlock, toBlock, network);
+    case ChainDataExtensionType.DynamicPrimitive:
+      return await getCdeDynamicPrimitive(extension, fromBlock, toBlock, network);
     // these are not used by the block funnel
     case ChainDataExtensionType.CardanoPool:
     case ChainDataExtensionType.CardanoProjectedNFT:

@@ -21,17 +21,24 @@ import type Web3 from 'web3';
 import { wrapToMinaFunnel } from './funnels/mina/funnel.js';
 
 export class FunnelFactory implements IFunnelFactory {
+  private dirtyExtensions = false;
+
   private constructor(public sharedData: FunnelSharedData) {}
 
-  public static async initialize(
-    nodeUrl: string,
-    paimaL2ContractAddress: string
-  ): Promise<FunnelFactory> {
+  public static async initialize(db: PoolClient): Promise<FunnelFactory> {
+    return new FunnelFactory(await FunnelFactory.initializeSharedData(db));
+  }
+
+  public static async initializeSharedData(db: PoolClient): Promise<FunnelSharedData> {
+    const configs = await GlobalConfig.getInstance();
+    const [_, mainConfig] = await GlobalConfig.mainEvmConfig();
+
+    const nodeUrl = mainConfig.chainUri;
+    const paimaL2ContractAddress = mainConfig.paimaL2ContractAddress;
+
     validatePaimaL2ContractAddress(paimaL2ContractAddress);
     const web3 = await initWeb3(nodeUrl);
     const paimaL2Contract = getPaimaL2Contract(paimaL2ContractAddress, web3);
-
-    const configs = await GlobalConfig.getInstance();
 
     const web3s = await Promise.all(
       Object.keys(configs).reduce(
@@ -54,16 +61,17 @@ export class FunnelFactory implements IFunnelFactory {
 
     const [extensions, extensionsValid] = await loadChainDataExtensions(
       Object.fromEntries(web3s),
-      ENV.CDE_CONFIG_PATH
+      ENV.CDE_CONFIG_PATH,
+      db
     );
 
-    return new FunnelFactory({
+    return {
       web3,
       paimaL2Contract,
       extensions,
       extensionsValid,
       cacheManager: new FunnelCacheManager(),
-    });
+    };
   }
 
   public clearCache(): void {
@@ -78,7 +86,20 @@ export class FunnelFactory implements IFunnelFactory {
     return this.sharedData.extensionsValid;
   }
 
+  public extensionsNeedReload(): boolean {
+    return this.dirtyExtensions;
+  }
+
+  async markExtensionsAsDirty(): Promise<void> {
+    this.dirtyExtensions = true;
+  }
+
   async generateFunnel(dbTx: PoolClient): Promise<ChainFunnel> {
+    if (this.dirtyExtensions) {
+      this.sharedData = await FunnelFactory.initializeSharedData(dbTx);
+      this.dirtyExtensions = false;
+    }
+
     // start with a base funnel
     // and wrap it with dynamic decorators as needed
 

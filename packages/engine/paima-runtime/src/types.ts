@@ -32,6 +32,7 @@ export interface IFunnelFactory {
   clearCache: () => void;
 
   generateFunnel(dbTx: PoolClient): Promise<ChainFunnel>;
+  markExtensionsAsDirty(): Promise<void>;
 }
 
 export interface PaimaRuntime {

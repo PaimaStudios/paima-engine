@@ -122,8 +122,7 @@ export const runPaimaEngine = async (): Promise<void> => {
     // Import & initialize state machine
     const stateMachine = gameSM();
     const funnelFactory = await FunnelFactory.initialize(
-      config.chainUri,
-      config.paimaL2ContractAddress
+      await stateMachine.getReadonlyDbConn().connect()
     );
     const engine = paimaRuntime.initialize(funnelFactory, stateMachine, ENV.GAME_NODE_VERSION);
 

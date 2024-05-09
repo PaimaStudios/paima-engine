@@ -60,6 +60,8 @@ export type * from './sql/cde-cardano-transfer.queries.js';
 export { cdeCardanoMintBurnInsert } from './sql/cde-cardano-mint-burn.queries.js';
 export type * from './sql/mina-checkpoints.queries.js';
 export * from './sql/mina-checkpoints.queries.js';
+export type * from './sql/dynamic-primitives.queries.js';
+export * from './sql/dynamic-primitives.queries.js';
 
 export {
   tx,

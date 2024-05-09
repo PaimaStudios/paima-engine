@@ -676,6 +676,25 @@ CREATE OR REPLACE TRIGGER wallet_connect_insert_or_update
   for each row execute procedure notify_wallet_connect('from_id', 'to_id');
 `;
 
+const QUERY_CREATE_TABLE_CDE_DYNAMIC_PRIMITIVE_CONFIG = `
+CREATE TABLE cde_dynamic_primitive_config (
+  cde_id INTEGER NOT NULL,
+  config TEXT NOT NULL,
+  PRIMARY KEY(cde_id)
+);
+`;
+
+const TABLE_DATA_CDE_DYNAMIC_PRIMITIVE_CONFIG: TableData = {
+  tableName: 'cde_dynamic_primitive_config',
+  primaryKeyColumns: ['cde_id'],
+  columnData: packTuples([
+    ['cde_id', 'integer', 'NO', ''],
+    ['config', 'text', 'NO', ''],
+  ]),
+  serialColumns: [],
+  creationQuery: QUERY_CREATE_TABLE_CDE_DYNAMIC_PRIMITIVE_CONFIG,
+};
+
 export const FUNCTIONS: string[] = [
   FUNCTION_NOTIFY_WALLET_CONNECT,
   FUNCTION_TRIGGER_ADDRESSES,
@@ -709,4 +728,5 @@ export const TABLES: TableData[] = [
   TABLE_DATA_CDE_CARDANO_MINT_BURN,
   TABLE_DATA_MINA_CHECKPOINT,
   TABLE_DATA_ACHIEVEMENT_PROGRESS,
+  TABLE_DATA_CDE_DYNAMIC_PRIMITIVE_CONFIG,
 ];
