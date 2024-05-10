@@ -91,7 +91,7 @@ export class FunnelFactory implements IFunnelFactory {
     return this.dirtyExtensions;
   }
 
-  async markExtensionsAsDirty(): Promise<void> {
+  public markExtensionsAsDirty(): void {
     this.dirtyExtensions = true;
   }
 
