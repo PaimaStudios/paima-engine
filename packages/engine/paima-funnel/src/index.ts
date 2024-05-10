@@ -1,6 +1,7 @@
 import type { PoolClient } from 'pg';
 
 import {
+  ChainDataExtensionDatumType,
   ENV,
   GlobalConfig,
   getPaimaL2Contract,
@@ -9,7 +10,7 @@ import {
 } from '@paima/utils';
 import { loadChainDataExtensions } from '@paima/runtime';
 import type { ChainFunnel, IFunnelFactory } from '@paima/runtime';
-import type { ChainDataExtension } from '@paima/sm';
+import type { ChainData, ChainDataExtension, ChainDataExtensionDatum } from '@paima/sm';
 import { wrapToEmulatedBlocksFunnel } from './funnels/emulated/utils.js';
 import { BlockFunnel } from './funnels/block/funnel.js';
 import type { FunnelSharedData } from './funnels/BaseFunnel.js';
@@ -135,4 +136,40 @@ export class FunnelFactory implements IFunnelFactory {
     );
     return chainFunnel;
   }
+}
+
+// If we have a dynamic primitive, then technically we may have missed an
+// event in the range.
+//
+// Here we invalidate everything after that point, so that in the next
+// funnel call we start from that point.
+//
+// TODO: there are two possible ways of optimizing this:
+//
+//  1. Cache this information for the next request.
+//  2. Build the dynamic contract here and get the extra data for the new extensions.
+//
+// First option is probably much easier to implement. Second option
+// has the issue that we can't update the shared data here, so it probably would
+// inovlve duplicating the logic.
+export function filterResultsAfterDynamicPrimitive(
+  ungroupedCdeData: ChainDataExtensionDatum[][],
+  baseChainData: ChainData[],
+  toBlock: number
+) {
+  const firstDynamicBlock = ungroupedCdeData
+    .filter(
+      extData =>
+        extData.length > 0 &&
+        extData[0].cdeDatumType === ChainDataExtensionDatumType.DynamicPrimitive
+    )
+    // we just get the first one, since these are sorted.
+    .reduce((min, extData) => Math.min(min, extData[0].blockNumber), toBlock + 1);
+
+  let filteredBaseChainData = baseChainData;
+
+  if (firstDynamicBlock <= toBlock) {
+    filteredBaseChainData = baseChainData.filter(ext => ext.blockNumber <= firstDynamicBlock);
+  }
+  return filteredBaseChainData;
 }

@@ -12,6 +12,7 @@ import type { PoolClient } from 'pg';
 import { FUNNEL_PRESYNC_FINISHED } from '@paima/utils';
 import { getMultipleBlockData } from '../../reading.js';
 import { getLatestProcessedCdeBlockheight } from '@paima/db';
+import { filterResultsAfterDynamicPrimitive } from '../../index.js';
 
 const GET_BLOCK_NUMBER_TIMEOUT = 5000;
 
@@ -395,7 +396,13 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
         cdeData = groupCdeData(this.chainName, mappedFrom, mappedTo, ungroupedCdeData);
       }
 
-      return composeChainData(baseChainData, cdeData);
+      let filteredBaseChainData = filterResultsAfterDynamicPrimitive(
+        ungroupedCdeData,
+        baseChainData,
+        toBlock
+      );
+
+      return composeChainData(filteredBaseChainData, cdeData);
     } catch (err) {
       doLog(`[funnel] at ${fromBlock}-${toBlock} caught ${err}`);
       throw err;
