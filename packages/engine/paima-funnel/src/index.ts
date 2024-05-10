@@ -1,5 +1,4 @@
 import type { PoolClient } from 'pg';
-
 import {
   ChainDataExtensionDatumType,
   ENV,
@@ -32,6 +31,7 @@ export class FunnelFactory implements IFunnelFactory {
 
   public static async initializeSharedData(db: PoolClient): Promise<FunnelSharedData> {
     const configs = await GlobalConfig.getInstance();
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [_, mainConfig] = await GlobalConfig.mainEvmConfig();
 
     const nodeUrl = mainConfig.chainUri;
@@ -156,7 +156,7 @@ export function filterResultsAfterDynamicPrimitive(
   ungroupedCdeData: ChainDataExtensionDatum[][],
   baseChainData: ChainData[],
   toBlock: number
-) {
+): ChainData[] {
   const firstDynamicBlock = ungroupedCdeData
     .filter(
       extData =>

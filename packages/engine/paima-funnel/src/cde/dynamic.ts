@@ -1,5 +1,4 @@
-import { ChainDataExtensionDynamicPrimitive } from '@paima/sm';
-import type { ChainDataExtensionDatum } from '@paima/sm';
+import type { ChainDataExtensionDynamicPrimitive, ChainDataExtensionDatum } from '@paima/sm';
 import { ChainDataExtensionDatumType, DEFAULT_FUNNEL_TIMEOUT, timeout } from '@paima/utils';
 
 export default async function getCdeDynamicPrimitive(
