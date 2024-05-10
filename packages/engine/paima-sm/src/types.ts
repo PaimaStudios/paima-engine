@@ -542,6 +542,9 @@ export const ChainDataExtensionDynamicPrimitiveConfig = Type.Intersect([
     scheduledPrefix: Type.String(),
     abiPath: Type.String(),
     eventSignature: Type.String(),
+    fields: Type.Object({
+      contractAddress: Type.String(),
+    }),
   }),
 ]);
 export type TChainDataExtensionDynamicPrimitiveConfig = Static<

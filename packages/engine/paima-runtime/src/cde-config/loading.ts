@@ -54,7 +54,7 @@ import { loadAbi } from './utils.js';
 import assertNever from 'assert-never';
 import fnv from 'fnv-plus';
 import stableStringify from 'json-stable-stringify';
-import { PoolClient } from 'pg';
+import type { PoolClient } from 'pg';
 import { getDynamicExtensions } from '@paima/db';
 
 type ValidationResult = [config: ChainDataExtension[], validated: boolean];
@@ -93,10 +93,7 @@ export async function loadChainDataExtensions(
   }
 
   try {
-    const config = parseCdeConfigFile(
-      configFileData,
-      dynamicExtensions as any as (typeof CdeBaseConfig)['extensions']
-    );
+    const config = parseCdeConfigFile(configFileData, dynamicExtensions);
     const instantiatedExtensions = await Promise.all(
       config.extensions.map((e, i) => instantiateExtension(e, i, web3s))
     );

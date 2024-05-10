@@ -25,9 +25,7 @@ export default async function getCdeDynamicPrimitive(
     cdeDatumType: ChainDataExtensionDatumType.DynamicPrimitive,
     blockNumber: event.blockNumber,
     payload: {
-      contractAddress:
-        // TODO: change the name of this (or make this more generic)
-        event.returnValues.value,
+      contractAddress: event.returnValues[extension.fields.contractAddress],
     },
     network,
     scheduledPrefix: extension.scheduledPrefix,
