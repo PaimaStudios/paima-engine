@@ -5,7 +5,9 @@ SELECT * FROM cde_dynamic_primitive_config;
 INSERT INTO cde_dynamic_primitive_config(
     cde_id,
     config
-) VALUES (
-    :cde_id!,
+) 
+SELECT 
+    MAX(chain_data_extensions.cde_id),
     :config!
-);
+FROM
+    chain_data_extensions;

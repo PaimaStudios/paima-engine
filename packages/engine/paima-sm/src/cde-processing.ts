@@ -55,7 +55,7 @@ export async function cdeTransitionFunction(
     case ChainDataExtensionDatumType.MinaActionGeneric:
       return await processGenericDatum(cdeDatum, inPresync);
     case ChainDataExtensionDatumType.DynamicPrimitive:
-      return await processDynamicPrimitive(readonlyDBConn, cdeDatum, inPresync, reloadExtensions);
+      return await processDynamicPrimitive(cdeDatum, inPresync, reloadExtensions);
     default:
       assertNever(cdeDatum);
   }

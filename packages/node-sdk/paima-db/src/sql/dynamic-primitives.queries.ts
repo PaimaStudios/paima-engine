@@ -29,7 +29,6 @@ export const getDynamicExtensions = new PreparedQuery<IGetDynamicExtensionsParam
 
 /** 'InsertDynamicExtension' parameters type */
 export interface IInsertDynamicExtensionParams {
-  cde_id: number;
   config: string;
 }
 
@@ -42,7 +41,7 @@ export interface IInsertDynamicExtensionQuery {
   result: IInsertDynamicExtensionResult;
 }
 
-const insertDynamicExtensionIR: any = {"usedParamSet":{"cde_id":true,"config":true},"params":[{"name":"cde_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":80,"b":87}]},{"name":"config","required":true,"transform":{"type":"scalar"},"locs":[{"a":94,"b":101}]}],"statement":"INSERT INTO cde_dynamic_primitive_config(\n    cde_id,\n    config\n) VALUES (\n    :cde_id!,\n    :config!\n)"};
+const insertDynamicExtensionIR: any = {"usedParamSet":{"config":true},"params":[{"name":"config","required":true,"transform":{"type":"scalar"},"locs":[{"a":119,"b":126}]}],"statement":"INSERT INTO cde_dynamic_primitive_config(\n    cde_id,\n    config\n) \nSELECT \n    MAX(chain_data_extensions.cde_id),\n    :config!\nFROM\n    chain_data_extensions"};
 
 /**
  * Query generated from SQL:
@@ -50,10 +49,12 @@ const insertDynamicExtensionIR: any = {"usedParamSet":{"cde_id":true,"config":tr
  * INSERT INTO cde_dynamic_primitive_config(
  *     cde_id,
  *     config
- * ) VALUES (
- *     :cde_id!,
+ * ) 
+ * SELECT 
+ *     MAX(chain_data_extensions.cde_id),
  *     :config!
- * )
+ * FROM
+ *     chain_data_extensions
  * ```
  */
 export const insertDynamicExtension = new PreparedQuery<IInsertDynamicExtensionParams,IInsertDynamicExtensionResult>(insertDynamicExtensionIR);
