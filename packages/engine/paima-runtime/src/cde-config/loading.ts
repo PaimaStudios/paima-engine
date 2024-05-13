@@ -72,7 +72,7 @@ export async function loadChainDataExtensions(
     return [[], true];
   }
 
-  let dynamicExtensions: (typeof CdeBaseConfig)['extensions'];
+  let dynamicExtensions: { name: string; type: CdeEntryTypeName }[];
 
   try {
     const dbResult = await getDynamicExtensions.run(undefined, db);
@@ -109,7 +109,7 @@ const networkTagType = Type.Partial(Type.Object({ network: Type.String() }));
 // Validate the overall structure of the config file and extract the relevant data
 export function parseCdeConfigFile(
   configFileData: string,
-  extraExtensions: (typeof CdeBaseConfig)['extensions']
+  extraExtensions: { name: string; type: CdeEntryTypeName }[]
 ): Static<typeof CdeConfig> {
   // Parse the YAML content into an object
   const configObject = YAML.parse(configFileData);
