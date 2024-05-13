@@ -164,6 +164,7 @@ interface CdeDatumCardanoMintBurnPayload {
 
 interface CdeDatumDynamicPrimitivePayload {
   contractAddress: string;
+  type: CdeEntryTypeName;
 }
 
 type ChainDataExtensionPayload =
@@ -538,6 +539,10 @@ export const ChainDataExtensionDynamicPrimitiveConfig = Type.Intersect([
   ChainDataExtensionConfigBase,
   Type.Object({
     type: Type.Literal(CdeEntryTypeName.DynamicPrimitive),
+    targetType: Type.Union([
+      Type.Literal(CdeEntryTypeName.ERC721),
+      Type.Literal(CdeEntryTypeName.ERC20),
+    ]),
     contractAddress: EvmAddress,
     scheduledPrefix: Type.String(),
     abiPath: Type.String(),

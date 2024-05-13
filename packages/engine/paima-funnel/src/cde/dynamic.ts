@@ -26,6 +26,7 @@ export default async function getCdeDynamicPrimitive(
     blockNumber: event.blockNumber,
     payload: {
       contractAddress: event.returnValues[extension.fields.contractAddress],
+      type: extension.targetType,
     },
     network,
     scheduledPrefix: extension.scheduledPrefix,
