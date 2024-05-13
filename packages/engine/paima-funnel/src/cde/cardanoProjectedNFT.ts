@@ -85,6 +85,7 @@ function eventToCdeDatum(
     cdeId: extension.cdeId,
     cdeDatumType: ChainDataExtensionDatumType.CardanoProjectedNFT,
     blockNumber,
+    transactionHash: event.txId,
     payload: {
       ownerAddress: event.ownerAddress != null ? event.ownerAddress : '',
 
