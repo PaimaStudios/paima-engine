@@ -122,17 +122,18 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
     try {
       const dynamicPrimitives = await getUngroupedCdeData(
         this.sharedData.web3,
-        this.sharedData.extensions.filter(extension => extension.network === this.chainName && extension.cdeType === ChainDataExtensionType.DynamicPrimitive),
+        this.sharedData.extensions.filter(
+          extension =>
+            extension.network === this.chainName &&
+            extension.cdeType === ChainDataExtensionType.DynamicPrimitive
+        ),
         fromBlock,
         toBlock,
         this.chainName
       );
 
       const firstDynamicBlock = dynamicPrimitives
-        .filter(
-          extData =>
-            extData.length > 0
-        )
+        .filter(extData => extData.length > 0)
         // we just get the first one, since these are sorted.
         .reduce((min, extData) => Math.min(min, extData[0].blockNumber), toBlock + 1);
 
@@ -151,7 +152,11 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
         ),
         getUngroupedCdeData(
           this.sharedData.web3,
-          this.sharedData.extensions.filter(extension => extension.network === this.chainName && extension.cdeType !== ChainDataExtensionType.DynamicPrimitive),
+          this.sharedData.extensions.filter(
+            extension =>
+              extension.network === this.chainName &&
+              extension.cdeType !== ChainDataExtensionType.DynamicPrimitive
+          ),
           fromBlock,
           toBlock,
           this.chainName
@@ -159,7 +164,6 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
       ]);
 
       ungroupedCdeData.push(...dynamicPrimitives);
-
 
       const cdeData = groupCdeData(this.chainName, fromBlock, toBlock, ungroupedCdeData);
       return composeChainData(baseChainData, cdeData);

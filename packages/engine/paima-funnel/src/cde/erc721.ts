@@ -17,7 +17,8 @@ export default async function getCdeData(
   // https://github.com/dethcrypto/TypeChain/issues/767
   const events = (await timeout(
     extension.contract.getPastEvents('Transfer', {
-      fromBlock: extension.dynamic && extension.startBlockHeight == fromBlock ? fromBlock - 1 : fromBlock,
+      fromBlock:
+        extension.dynamic && extension.startBlockHeight == fromBlock ? fromBlock - 1 : fromBlock,
       toBlock: toBlock,
     }),
     DEFAULT_FUNNEL_TIMEOUT
@@ -29,7 +30,7 @@ function transferToTransferDatum(
   event: Transfer,
   extension: ChainDataExtensionErc721,
   network: string,
-  fromBlock: number,
+  fromBlock: number
 ): CdeErc721TransferDatum {
   return {
     cdeId: extension.cdeId,
@@ -69,7 +70,7 @@ function transferToCdeData(
   event: Transfer,
   extension: ChainDataExtensionErc721,
   network: string,
-  fromBlock: number,
+  fromBlock: number
 ): ChainDataExtensionDatum[] {
   const transferDatum = transferToTransferDatum(event, extension, network, fromBlock);
   const fromAddr = event.returnValues.from;

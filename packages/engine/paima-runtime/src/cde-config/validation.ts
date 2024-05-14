@@ -14,7 +14,7 @@ export async function validatePersistentCdeConfig(
   DBConn: Pool,
   smStarted: boolean
 ): Promise<boolean> {
-  const persistentConfig = (await getChainDataExtensions.run(undefined, DBConn));
+  const persistentConfig = await getChainDataExtensions.run(undefined, DBConn);
 
   // Checking cases if config is specified and if it needs to be saved
   if (persistentConfig.length === 0 && config.length > 0) {
