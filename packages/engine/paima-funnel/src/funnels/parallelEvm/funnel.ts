@@ -1,5 +1,13 @@
 import type { OtherEvmConfig, Web3 } from '@paima/utils';
-import { doLog, initWeb3, logError, timeout, delay, InternalEventType } from '@paima/utils';
+import {
+  doLog,
+  initWeb3,
+  logError,
+  timeout,
+  delay,
+  InternalEventType,
+  ChainDataExtensionType,
+} from '@paima/utils';
 import type { ChainFunnel, ReadPresyncDataFrom } from '@paima/runtime';
 import type { ChainData, EvmPresyncChainData, PresyncChainData } from '@paima/sm';
 import { getUngroupedCdeData } from '../../cde/reading.js';
@@ -12,7 +20,6 @@ import type { PoolClient } from 'pg';
 import { FUNNEL_PRESYNC_FINISHED } from '@paima/utils';
 import { getMultipleBlockData } from '../../reading.js';
 import { getLatestProcessedCdeBlockheight } from '@paima/db';
-import { filterResultsAfterDynamicPrimitive } from '../../index.js';
 
 const GET_BLOCK_NUMBER_TIMEOUT = 5000;
 
@@ -264,7 +271,6 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
         blockNumber => sidechainToMainchainBlockHeightMapping[blockNumber]
       );
     } else {
-      doLog(`EVM CDE funnel ${this.config.chainId}: #${fromBlock}-${toBlock}`);
       data = await this.internalReadDataMulti(
         fromBlock,
         toBlock,
@@ -361,6 +367,27 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
     }
 
     try {
+      const dynamicPrimitives = await getUngroupedCdeData(
+        this.sharedData.web3,
+        this.sharedData.extensions.filter(
+          extension =>
+            extension.network === this.chainName &&
+            extension.cdeType === ChainDataExtensionType.DynamicPrimitive
+        ),
+        fromBlock,
+        toBlock,
+        this.chainName
+      );
+
+      const firstDynamicBlock = dynamicPrimitives
+        .filter(extData => extData.length > 0)
+        // we just get the first one, since these are sorted.
+        .reduce((min, extData) => Math.min(min, extData[0].blockNumber), toBlock + 1);
+
+      toBlock = Math.min(toBlock, firstDynamicBlock);
+
+      doLog(`EVM CDE funnel ${this.config.chainId}: #${fromBlock}-${toBlock}`);
+
       const ungroupedCdeData = await getUngroupedCdeData(
         this.web3,
         this.sharedData.extensions.filter(extension => extension.network === this.chainName),
@@ -396,13 +423,7 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
         cdeData = groupCdeData(this.chainName, mappedFrom, mappedTo, ungroupedCdeData);
       }
 
-      let filteredBaseChainData = filterResultsAfterDynamicPrimitive(
-        ungroupedCdeData,
-        baseChainData,
-        toBlock
-      );
-
-      return composeChainData(filteredBaseChainData, cdeData);
+      return composeChainData(baseChainData, cdeData);
     } catch (err) {
       doLog(`[funnel] at ${fromBlock}-${toBlock} caught ${err}`);
       throw err;
