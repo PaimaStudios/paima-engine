@@ -23,7 +23,7 @@ export default async function processDatum(
 
   const config = {
     name: cdeDatum.cdeName,
-    type: type,
+    type: cdeDatum.payload.type,
     contractAddress: cdeDatum.payload.contractAddress,
     startBlockHeight: cdeDatum.blockNumber + 1,
     scheduledPrefix: cdeDatum.scheduledPrefix,

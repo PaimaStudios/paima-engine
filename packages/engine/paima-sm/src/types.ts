@@ -340,6 +340,7 @@ export type ChainDataExtensionErc20 = ChainDataExtensionBase &
   Static<typeof ChainDataExtensionErc20Config> & {
     cdeType: ChainDataExtensionType.ERC20;
     contract: ERC20Contract;
+    dynamic: boolean;
   };
 
 export const ChainDataExtensionErc721Config = Type.Intersect([
@@ -357,6 +358,7 @@ export type ChainDataExtensionErc721 = ChainDataExtensionBase &
   Static<typeof ChainDataExtensionErc721Config> & {
     cdeType: ChainDataExtensionType.ERC721;
     contract: ERC721Contract;
+    dynamic: boolean;
   };
 
 /** same as ERC721, but with a different type flag (see isPaimaErc721) */
