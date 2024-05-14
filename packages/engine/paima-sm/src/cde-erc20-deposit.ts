@@ -32,7 +32,9 @@ export default async function processErc20Datum(
   try {
     const scheduledInputData = `${prefix}|${fromAddr}|${value}`;
     const scheduledBlockHeight = inPresync ? ENV.SM_START_BLOCKHEIGHT + 1 : cdeDatum.blockNumber;
-    updateList.push(createScheduledData(scheduledInputData, scheduledBlockHeight));
+    updateList.push(
+      createScheduledData(scheduledInputData, scheduledBlockHeight, cdeDatum.transactionHash)
+    );
 
     if (fromRow.length > 0) {
       const oldTotal = BigInt(fromRow[0].total_deposited);

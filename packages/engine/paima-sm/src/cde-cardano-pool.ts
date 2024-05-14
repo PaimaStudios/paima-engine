@@ -16,7 +16,7 @@ export default async function processDatum(
   const scheduledInputData = `${prefix}|${address}|${pool}`;
 
   const updateList: SQLUpdate[] = [
-    createScheduledData(scheduledInputData, scheduledBlockHeight),
+    createScheduledData(scheduledInputData, scheduledBlockHeight, cdeDatum.transactionHash),
     [
       cdeCardanoPoolInsertData,
       {
