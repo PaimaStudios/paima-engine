@@ -58,7 +58,10 @@ async function runPresync(
 
   let presyncBlockHeight = await getPresyncStartBlockheight(
     gameStateMachine,
-    // TODO: may need to change this?
+    // If there is a dynamic primitive created in the presync, this collection
+    // won't have it since the reload has not happened yet.  That said, if this
+    // is the case then the earliest cde doesn't matter since we just continue
+    // from the previous point, so it doesn't make any difference.
     funnelFactory.getExtensions(),
     startBlockHeight
   );
