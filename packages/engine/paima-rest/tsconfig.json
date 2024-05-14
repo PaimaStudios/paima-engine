@@ -8,6 +8,7 @@
   "references": [
     { "path": "../../paima-sdk/paima-utils/tsconfig.build.json" },
     { "path": "../../node-sdk/paima-db" },
+    { "path": "../../node-sdk/paima-utils-backend" },
     { "path": "../paima-sm" },
   ]
 }

@@ -7,9 +7,9 @@
   "types": "build/index.d.ts",
   "scripts": {
     "lint:eslint": "eslint .",
-    "build": "tsc --build tsconfig.build.json",
-    "prebuild": "npm run compile:api",
-    "compile:api": "npx tsoa spec-and-routes"
+    "build": "npm run compile:api && tsc --build tsconfig.build.json",
+    "prebuild": "",
+    "compile:api": "tsoa spec-and-routes"
   },
   "author": "Paima Studios",
   "dependencies": {

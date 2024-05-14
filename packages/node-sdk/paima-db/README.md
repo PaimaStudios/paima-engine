@@ -15,6 +15,4 @@ Specific game databases do not need to contain these tables, as they will be cre
 
 ## Development
 
-To re-generate the queries, you will need a database running with the same connection info as [the config](./pgtypedconfig.json) and then run `npm run compile`.
-
-Before running `npm run compile`, you will need to initialize the DB using `sudo -u postgres psql -d postgres -a -f migrations/up.sql`
+To re-generate the queries, run `npm run compile`, which will use Docker to run a temporary Postgres database initialized with `migrations/up.sql` and then watch for query changes. Ctrl+C and restart to reflect changes to `up.sql`.
