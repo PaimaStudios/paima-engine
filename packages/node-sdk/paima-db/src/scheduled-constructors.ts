@@ -27,6 +27,7 @@ export function createScheduledData(
   const nsdParams: INewScheduledDataParams = {
     block_height: blockHeight,
     input_data: inputData,
+    tx_hash: txHash,
   };
   const newScheduledDataTuple: SQLUpdate = [newScheduledData, nsdParams];
   return newScheduledDataTuple;

@@ -10,6 +10,11 @@ CREATE TABLE scheduled_data (
   input_data TEXT NOT NULL
 );
 
+CREATE TABLE scheduled_data_tx_hash (
+  id INTEGER PRIMARY KEY REFERENCES scheduled_data(id),
+  tx_hash TEXT NOT NULL
+);
+
 CREATE TABLE nonces (
   nonce TEXT PRIMARY KEY,
   block_height INTEGER NOT NULL
