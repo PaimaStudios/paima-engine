@@ -11,7 +11,7 @@ CREATE TABLE scheduled_data (
 );
 
 CREATE TABLE scheduled_data_tx_hash (
-  id INTEGER PRIMARY KEY REFERENCES scheduled_data(id),
+  id INTEGER PRIMARY KEY REFERENCES scheduled_data(id) ON DELETE CASCADE,
   tx_hash TEXT NOT NULL
 );
 

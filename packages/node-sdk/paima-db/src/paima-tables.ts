@@ -61,7 +61,7 @@ const TABLE_DATA_SCHEDULED_DATA: TableData = {
 
 const QUERY_CREATE_TABLE_SCHEDULED_DATA_TX_HASH = `
 CREATE TABLE scheduled_data_tx_hash (
-  id INTEGER PRIMARY KEY REFERENCES scheduled_data(id),
+  id INTEGER PRIMARY KEY REFERENCES scheduled_data(id) ON DELETE CASCADE,
   tx_hash TEXT NOT NULL
 );
 `;
