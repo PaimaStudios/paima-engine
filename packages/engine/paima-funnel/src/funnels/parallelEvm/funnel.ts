@@ -7,19 +7,9 @@ import {
   delay,
   InternalEventType,
   ChainDataExtensionType,
-  getErc721Contract,
 } from '@paima/utils';
 import type { ChainFunnel, ReadPresyncDataFrom } from '@paima/runtime';
-import {
-  CdeDynamicPrimitiveDatum,
-  CdeEntryTypeName,
-  ChainDataExtensionDatum,
-  ChainDataExtensionDynamicPrimitive,
-  type ChainData,
-  type ChainDataExtension,
-  type EvmPresyncChainData,
-  type PresyncChainData,
-} from '@paima/sm';
+import { type ChainData, type EvmPresyncChainData, type PresyncChainData } from '@paima/sm';
 import { getUngroupedCdeData } from '../../cde/reading.js';
 import { composeChainData, groupCdeData } from '../../utils.js';
 import { BaseFunnel } from '../BaseFunnel.js';
