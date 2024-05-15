@@ -45,6 +45,7 @@ export interface IGetScheduledDataByBlockHeightResult {
   block_height: number;
   id: number;
   input_data: string;
+  tx_hash: string;
 }
 
 /** 'GetScheduledDataByBlockHeight' query type */
@@ -53,14 +54,17 @@ export interface IGetScheduledDataByBlockHeightQuery {
   result: IGetScheduledDataByBlockHeightResult;
 }
 
-const getScheduledDataByBlockHeightIR: any = {"usedParamSet":{"block_height":true},"params":[{"name":"block_height","required":true,"transform":{"type":"scalar"},"locs":[{"a":50,"b":63}]}],"statement":"SELECT * from scheduled_data\nWHERE block_height = :block_height!\nORDER BY id ASC"};
+const getScheduledDataByBlockHeightIR: any = {"usedParamSet":{"block_height":true},"params":[{"name":"block_height","required":true,"transform":{"type":"scalar"},"locs":[{"a":183,"b":196}]}],"statement":"SELECT scheduled_data.id, block_height, input_data, tx_hash\nFROM scheduled_data\nLEFT JOIN scheduled_data_tx_hash\nON scheduled_data.id = scheduled_data_tx_hash.id\nWHERE block_height = :block_height!\nORDER BY scheduled_data.id ASC"};
 
 /**
  * Query generated from SQL:
  * ```
- * SELECT * from scheduled_data
+ * SELECT scheduled_data.id, block_height, input_data, tx_hash
+ * FROM scheduled_data
+ * LEFT JOIN scheduled_data_tx_hash
+ * ON scheduled_data.id = scheduled_data_tx_hash.id
  * WHERE block_height = :block_height!
- * ORDER BY id ASC
+ * ORDER BY scheduled_data.id ASC
  * ```
  */
 export const getScheduledDataByBlockHeight = new PreparedQuery<IGetScheduledDataByBlockHeightParams,IGetScheduledDataByBlockHeightResult>(getScheduledDataByBlockHeightIR);
