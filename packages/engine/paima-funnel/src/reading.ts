@@ -177,6 +177,7 @@ export async function fetchDynamicPrimitives(
   for (const exts of dynamicPrimitives) {
     for (const _ext of exts) {
       const ext: CdeDynamicPrimitiveDatum = _ext as CdeDynamicPrimitiveDatum;
+
       // this would propagate the change to further funnels in the pipeline,
       // which is needed to set the proper cdeId.
       sharedData.extensions.push({
@@ -185,7 +186,7 @@ export async function fetchDynamicPrimitives(
         type: CdeEntryTypeName.ERC721,
         contractAddress: ext.payload.contractAddress,
         scheduledPrefix: ext.scheduledPrefix,
-        burnScheduledPrefix: ext.scheduledPrefix,
+        burnScheduledPrefix: ext.burnScheduledPrefix,
         cdeId: sharedData.extensions.length,
         network: network,
         // not relevant

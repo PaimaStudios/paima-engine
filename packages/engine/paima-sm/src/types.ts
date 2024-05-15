@@ -279,6 +279,7 @@ export interface CdeDynamicPrimitiveDatum extends CdeDatumBase {
   cdeDatumType: ChainDataExtensionDatumType.DynamicPrimitive;
   payload: CdeDatumDynamicPrimitivePayload;
   scheduledPrefix: string;
+  burnScheduledPrefix?: string | undefined;
   cdeName: string;
 }
 
@@ -542,6 +543,7 @@ export const ChainDataExtensionDynamicPrimitiveConfig = Type.Intersect([
     targetType: Type.Literal(CdeEntryTypeName.ERC721),
     contractAddress: EvmAddress,
     scheduledPrefix: Type.String(),
+    burnScheduledPrefix: Type.Optional(Type.String()),
     abiPath: Type.String(),
     eventSignature: Type.String(),
     fields: Type.Object({

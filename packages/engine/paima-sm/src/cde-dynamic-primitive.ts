@@ -23,6 +23,7 @@ export default async function processDatum(
     contractAddress: cdeDatum.payload.contractAddress,
     startBlockHeight: cdeDatum.blockNumber,
     scheduledPrefix: cdeDatum.scheduledPrefix,
+    burnScheduledPrefix: cdeDatum.burnScheduledPrefix,
     network: cdeDatum.network,
   };
 

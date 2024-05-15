@@ -30,6 +30,7 @@ export default async function getCdeDynamicPrimitive(
     },
     network,
     scheduledPrefix: extension.scheduledPrefix,
+    burnScheduledPrefix: extension.burnScheduledPrefix,
     cdeName: '',
   }));
 }
