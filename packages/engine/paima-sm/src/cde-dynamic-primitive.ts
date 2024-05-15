@@ -10,9 +10,6 @@ export default async function processDatum(
 ): Promise<SQLUpdate[]> {
   let type;
   switch (cdeDatum.payload.type) {
-    case CdeEntryTypeName.ERC20:
-      type = ChainDataExtensionType.ERC20;
-      break;
     case CdeEntryTypeName.ERC721:
       type = ChainDataExtensionType.ERC721;
       break;
