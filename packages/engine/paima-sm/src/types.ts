@@ -340,7 +340,6 @@ export type ChainDataExtensionErc20 = ChainDataExtensionBase &
   Static<typeof ChainDataExtensionErc20Config> & {
     cdeType: ChainDataExtensionType.ERC20;
     contract: ERC20Contract;
-    dynamic: boolean;
   };
 
 export const ChainDataExtensionErc721Config = Type.Intersect([
@@ -358,7 +357,6 @@ export type ChainDataExtensionErc721 = ChainDataExtensionBase &
   Static<typeof ChainDataExtensionErc721Config> & {
     cdeType: ChainDataExtensionType.ERC721;
     contract: ERC721Contract;
-    dynamic: boolean;
   };
 
 /** same as ERC721, but with a different type flag (see isPaimaErc721) */
@@ -649,12 +647,8 @@ export interface GameStateMachine {
   getReadonlyDbConn: () => Pool;
   getPersistentReadonlyDbConn: () => Client;
   getReadWriteDbConn: () => Pool;
-  process: (dbTx: PoolClient, chainData: ChainData, reloadExtensions: () => void) => Promise<void>;
-  presyncProcess: (
-    dbTx: PoolClient,
-    latestCdeData: PresyncChainData,
-    reloadExtensions: () => void
-  ) => Promise<void>;
+  process: (dbTx: PoolClient, chainData: ChainData) => Promise<void>;
+  presyncProcess: (dbTx: PoolClient, latestCdeData: PresyncChainData) => Promise<void>;
   markPresyncMilestone: (blockHeight: number, network: string) => Promise<void>;
   dryRun: (gameInput: string, userAddress: string) => Promise<boolean>;
 }

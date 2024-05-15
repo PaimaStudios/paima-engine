@@ -22,8 +22,7 @@ import type { SQLUpdate } from '@paima/db';
 export async function cdeTransitionFunction(
   readonlyDBConn: PoolClient,
   cdeDatum: ChainDataExtensionDatum,
-  inPresync: boolean,
-  reloadExtensions: () => void
+  inPresync: boolean
 ): Promise<SQLUpdate[]> {
   switch (cdeDatum.cdeDatumType) {
     case ChainDataExtensionDatumType.ERC20Transfer:
@@ -55,7 +54,7 @@ export async function cdeTransitionFunction(
     case ChainDataExtensionDatumType.MinaActionGeneric:
       return await processGenericDatum(cdeDatum, inPresync);
     case ChainDataExtensionDatumType.DynamicPrimitive:
-      return await processDynamicPrimitive(cdeDatum, inPresync, reloadExtensions);
+      return await processDynamicPrimitive(cdeDatum, inPresync);
     default:
       assertNever(cdeDatum);
   }

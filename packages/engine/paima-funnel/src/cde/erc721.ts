@@ -17,25 +17,23 @@ export default async function getCdeData(
   // https://github.com/dethcrypto/TypeChain/issues/767
   const events = (await timeout(
     extension.contract.getPastEvents('Transfer', {
-      fromBlock:
-        extension.dynamic && extension.startBlockHeight == fromBlock ? fromBlock - 1 : fromBlock,
+      fromBlock: fromBlock,
       toBlock: toBlock,
     }),
     DEFAULT_FUNNEL_TIMEOUT
   )) as unknown as Transfer[];
-  return events.map((e: Transfer) => transferToCdeData(e, extension, network, fromBlock)).flat();
+  return events.map((e: Transfer) => transferToCdeData(e, extension, network)).flat();
 }
 
 function transferToTransferDatum(
   event: Transfer,
   extension: ChainDataExtensionErc721,
-  network: string,
-  fromBlock: number
+  network: string
 ): CdeErc721TransferDatum {
   return {
     cdeId: extension.cdeId,
     cdeDatumType: ChainDataExtensionDatumType.ERC721Transfer,
-    blockNumber: event.blockNumber === fromBlock - 1 ? fromBlock : event.blockNumber,
+    blockNumber: event.blockNumber,
     payload: {
       from: event.returnValues.from.toLowerCase(),
       to: event.returnValues.to.toLowerCase(),
@@ -49,13 +47,12 @@ function transferToTransferDatum(
 function transferToMintDatum(
   event: Transfer,
   extension: ChainDataExtensionErc721,
-  network: string,
-  fromBlock: number
+  network: string
 ): CdeErc721MintDatum {
   return {
     cdeId: extension.cdeId,
     cdeDatumType: ChainDataExtensionDatumType.ERC721Mint,
-    blockNumber: event.blockNumber === fromBlock - 1 ? fromBlock : event.blockNumber,
+    blockNumber: event.blockNumber,
     payload: {
       tokenId: event.returnValues.tokenId,
       mintData: '',
@@ -69,13 +66,12 @@ function transferToMintDatum(
 function transferToCdeData(
   event: Transfer,
   extension: ChainDataExtensionErc721,
-  network: string,
-  fromBlock: number
+  network: string
 ): ChainDataExtensionDatum[] {
-  const transferDatum = transferToTransferDatum(event, extension, network, fromBlock);
+  const transferDatum = transferToTransferDatum(event, extension, network);
   const fromAddr = event.returnValues.from;
   if (fromAddr.match(/^0x0+$/g)) {
-    const mintDatum = transferToMintDatum(event, extension, network, fromBlock);
+    const mintDatum = transferToMintDatum(event, extension, network);
     return [mintDatum, transferDatum];
   } else {
     return [transferDatum];

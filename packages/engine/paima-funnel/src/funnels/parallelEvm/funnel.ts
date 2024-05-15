@@ -7,9 +7,19 @@ import {
   delay,
   InternalEventType,
   ChainDataExtensionType,
+  getErc721Contract,
 } from '@paima/utils';
 import type { ChainFunnel, ReadPresyncDataFrom } from '@paima/runtime';
-import type { ChainData, EvmPresyncChainData, PresyncChainData } from '@paima/sm';
+import {
+  CdeDynamicPrimitiveDatum,
+  CdeEntryTypeName,
+  ChainDataExtensionDatum,
+  ChainDataExtensionDynamicPrimitive,
+  type ChainData,
+  type ChainDataExtension,
+  type EvmPresyncChainData,
+  type PresyncChainData,
+} from '@paima/sm';
 import { getUngroupedCdeData } from '../../cde/reading.js';
 import { composeChainData, groupCdeData } from '../../utils.js';
 import { BaseFunnel } from '../BaseFunnel.js';
@@ -271,6 +281,7 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
         blockNumber => sidechainToMainchainBlockHeightMapping[blockNumber]
       );
     } else {
+      doLog(`EVM CDE funnel ${this.config.chainId}: #${fromBlock}-${toBlock}`);
       data = await this.internalReadDataMulti(
         fromBlock,
         toBlock,
@@ -326,15 +337,21 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
       return [];
     }
     try {
-      const cdeData = await getUngroupedCdeData(
-        this.web3,
-        this.sharedData.extensions.filter(
-          extension => !extension.network || extension.network === this.chainName
-        ),
-        blockNumber,
-        blockNumber,
-        this.chainName
-      );
+      const dynamicPrimitives = await this.fetchDynamicPrimitives(blockNumber, blockNumber);
+
+      const cdeData = (
+        await getUngroupedCdeData(
+          this.web3,
+          this.sharedData.extensions.filter(
+            extension =>
+              extension.network === this.chainName &&
+              extension.cdeType !== ChainDataExtensionType.DynamicPrimitive
+          ),
+          blockNumber,
+          blockNumber,
+          this.chainName
+        )
+      ).concat(dynamicPrimitives);
 
       for (const extensionData of cdeData) {
         for (const data of extensionData) {
@@ -367,34 +384,21 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
     }
 
     try {
-      const dynamicPrimitives = await getUngroupedCdeData(
-        this.sharedData.web3,
-        this.sharedData.extensions.filter(
-          extension =>
-            extension.network === this.chainName &&
-            extension.cdeType === ChainDataExtensionType.DynamicPrimitive
-        ),
-        fromBlock,
-        toBlock,
-        this.chainName
-      );
+      const dynamicPrimitives = await this.fetchDynamicPrimitives(fromBlock, toBlock);
 
-      const firstDynamicBlock = dynamicPrimitives
-        .filter(extData => extData.length > 0)
-        // we just get the first one, since these are sorted.
-        .reduce((min, extData) => Math.min(min, extData[0].blockNumber), toBlock + 1);
-
-      toBlock = Math.min(toBlock, firstDynamicBlock);
-
-      doLog(`EVM CDE funnel ${this.config.chainId}: #${fromBlock}-${toBlock}`);
-
-      const ungroupedCdeData = await getUngroupedCdeData(
-        this.web3,
-        this.sharedData.extensions.filter(extension => extension.network === this.chainName),
-        fromBlock,
-        toBlock,
-        this.chainName
-      );
+      const ungroupedCdeData = (
+        await getUngroupedCdeData(
+          this.web3,
+          this.sharedData.extensions.filter(
+            extension =>
+              extension.network === this.chainName &&
+              extension.cdeType !== ChainDataExtensionType.DynamicPrimitive
+          ),
+          fromBlock,
+          toBlock,
+          this.chainName
+        )
+      ).concat(dynamicPrimitives);
 
       let mappedFrom: number | undefined;
       let mappedTo: number | undefined;
@@ -459,13 +463,21 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
 
       doLog(`EVM CDE funnel presync ${this.config.chainId}: #${fromBlock}-${toBlock}`);
 
-      const ungroupedCdeData = await getUngroupedCdeData(
-        this.web3,
-        this.sharedData.extensions.filter(extension => extension.network === this.chainName),
-        fromBlock,
-        toBlock,
-        this.chainName
-      );
+      const dynamicDatums = await this.fetchDynamicPrimitives(fromBlock, toBlock);
+
+      const ungroupedCdeData = (
+        await getUngroupedCdeData(
+          this.web3,
+          this.sharedData.extensions.filter(
+            extension =>
+              extension.network === this.chainName &&
+              extension.cdeType !== ChainDataExtensionType.DynamicPrimitive
+          ),
+          fromBlock,
+          toBlock,
+          this.chainName
+        )
+      ).concat(dynamicDatums);
 
       return {
         ...baseData,
@@ -475,6 +487,47 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
       doLog(`[paima-funnel::readPresyncData] Exception occurred while reading blocks: ${err}`);
       throw err;
     }
+  }
+
+  private async fetchDynamicPrimitives(
+    fromBlock: number,
+    toBlock: number
+  ): Promise<ChainDataExtensionDatum[][]> {
+    const dynamicPrimitives = await getUngroupedCdeData(
+      this.web3,
+      this.sharedData.extensions.filter(
+        extension =>
+          extension.network === this.chainName &&
+          extension.cdeType === ChainDataExtensionType.DynamicPrimitive
+      ),
+      fromBlock,
+      toBlock,
+      this.chainName
+    );
+
+    for (const exts of dynamicPrimitives) {
+      for (const _ext of exts) {
+        const ext: CdeDynamicPrimitiveDatum = _ext as CdeDynamicPrimitiveDatum;
+        // this would propagate the change to further funnels in the pipeline,
+        // which is needed to set the proper cdeId.
+        this.sharedData.extensions.push({
+          name: '',
+          startBlockHeight: ext.blockNumber,
+          type: CdeEntryTypeName.ERC721,
+          contractAddress: ext.payload.contractAddress,
+          scheduledPrefix: ext.scheduledPrefix,
+          burnScheduledPrefix: ext.scheduledPrefix,
+          cdeId: this.sharedData.extensions.length,
+          network: this.chainName,
+          // not relevant
+          hash: 0,
+          cdeType: ChainDataExtensionType.ERC721,
+          contract: getErc721Contract(ext.payload.contractAddress, this.web3),
+        });
+      }
+    }
+
+    return dynamicPrimitives;
   }
 
   public static async recoverState(

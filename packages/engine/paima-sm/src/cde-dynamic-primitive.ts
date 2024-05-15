@@ -6,8 +6,7 @@ import YAML from 'yaml';
 
 export default async function processDatum(
   cdeDatum: CdeDynamicPrimitiveDatum,
-  _inPresync: boolean,
-  reloadExtensions: () => void
+  _inPresync: boolean
 ): Promise<SQLUpdate[]> {
   let type;
   switch (cdeDatum.payload.type) {
@@ -25,7 +24,7 @@ export default async function processDatum(
     name: cdeDatum.cdeName,
     type: cdeDatum.payload.type,
     contractAddress: cdeDatum.payload.contractAddress,
-    startBlockHeight: cdeDatum.blockNumber + 1,
+    startBlockHeight: cdeDatum.blockNumber,
     scheduledPrefix: cdeDatum.scheduledPrefix,
     network: cdeDatum.network,
   };
@@ -36,7 +35,7 @@ export default async function processDatum(
       {
         cde_type: type,
         cde_name: cdeDatum.cdeName,
-        start_blockheight: cdeDatum.blockNumber + 1,
+        start_blockheight: cdeDatum.blockNumber,
         scheduled_prefix: cdeDatum.scheduledPrefix,
       },
     ],
@@ -47,8 +46,6 @@ export default async function processDatum(
       },
     ],
   ];
-
-  reloadExtensions();
 
   return updateList;
 }

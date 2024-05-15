@@ -84,7 +84,7 @@ export async function loadChainDataExtensions(
           name: Type.String(),
           type: Type.Enum(CdeEntryTypeName),
         }),
-        { ...YAML.parse(ext.config), dynamic: true }
+        { ...YAML.parse(ext.config) }
       )
     );
   } catch (err) {
@@ -267,7 +267,7 @@ export function hashConfig(config: any): number {
 
 // Do type-specific initialization and construct contract objects
 async function instantiateExtension(
-  config: Static<typeof CdeConfig>['extensions'][0] & { dynamic?: boolean },
+  config: Static<typeof CdeConfig>['extensions'][0],
   index: number,
   web3s: { [network: string]: Web3 }
 ): Promise<ChainDataExtension> {
@@ -281,7 +281,6 @@ async function instantiateExtension(
         hash: hashConfig(config),
         cdeType: ChainDataExtensionType.ERC20,
         contract: getErc20Contract(config.contractAddress, web3s[network]),
-        dynamic: config.dynamic ?? false,
       };
     case CdeEntryTypeName.ERC721:
       if (await isPaimaErc721(config, web3s[network])) {
@@ -301,7 +300,6 @@ async function instantiateExtension(
           hash: hashConfig(config),
           cdeType: ChainDataExtensionType.ERC721,
           contract: getErc721Contract(config.contractAddress, web3s[network]),
-          dynamic: config.dynamic ?? false,
         };
       }
     case CdeEntryTypeName.ERC20Deposit:
