@@ -1,16 +1,12 @@
 import type { EvmConfig } from '@paima/utils';
-import {
-  ChainDataExtensionType,
-  ENV,
-  GlobalConfig,
-  doLog,
-  getErc721Contract,
-  timeout,
-} from '@paima/utils';
+import { ChainDataExtensionType, ENV, GlobalConfig, doLog, timeout } from '@paima/utils';
 import type { ChainFunnel, ReadPresyncDataFrom } from '@paima/runtime';
-import type { CdeDynamicPrimitiveDatum, ChainDataExtensionDatum } from '@paima/sm';
-import { CdeEntryTypeName, type ChainData, type PresyncChainData } from '@paima/sm';
-import { getBaseChainDataMulti, getBaseChainDataSingle } from '../../reading.js';
+import { type ChainData, type PresyncChainData } from '@paima/sm';
+import {
+  fetchDynamicPrimitives,
+  getBaseChainDataMulti,
+  getBaseChainDataSingle,
+} from '../../reading.js';
 import { getUngroupedCdeData } from '../../cde/reading.js';
 import { composeChainData, groupCdeData } from '../../utils.js';
 import { BaseFunnel } from '../BaseFunnel.js';
@@ -92,7 +88,13 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
       return [];
     }
     try {
-      const dynamicPrimitives = await this.fetchDynamicPrimitives(blockNumber, blockNumber);
+      const dynamicDatums = await fetchDynamicPrimitives(
+        blockNumber,
+        blockNumber,
+        this.sharedData.web3,
+        this.sharedData,
+        this.chainName
+      );
 
       const [baseChainData, cdeData] = await Promise.all([
         getBaseChainDataSingle(
@@ -119,7 +121,7 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
       return [
         {
           ...baseChainData,
-          extensionDatums: cdeData.concat(dynamicPrimitives).flat(),
+          extensionDatums: cdeData.concat(dynamicDatums).flat(),
         },
       ];
     } catch (err) {
@@ -136,7 +138,13 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
       return [];
     }
     try {
-      const dynamicPrimitives = await this.fetchDynamicPrimitives(fromBlock, toBlock);
+      const dynamicDatums = await fetchDynamicPrimitives(
+        fromBlock,
+        toBlock,
+        this.sharedData.web3,
+        this.sharedData,
+        this.chainName
+      );
 
       const [baseChainData, ungroupedCdeData] = await Promise.all([
         getBaseChainDataMulti(
@@ -161,7 +169,7 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
         ),
       ]);
 
-      ungroupedCdeData.push(...dynamicPrimitives);
+      ungroupedCdeData.push(...dynamicDatums);
 
       const cdeData = groupCdeData(this.chainName, fromBlock, toBlock, ungroupedCdeData);
       return composeChainData(baseChainData, cdeData);
@@ -194,7 +202,13 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
         return {};
       }
 
-      const dynamicDatums = await this.fetchDynamicPrimitives(fromBlock, toBlock);
+      const dynamicDatums = await fetchDynamicPrimitives(
+        fromBlock,
+        toBlock,
+        this.sharedData.web3,
+        this.sharedData,
+        this.chainName
+      );
 
       const ungroupedCdeData = (
         await getUngroupedCdeData(
@@ -213,47 +227,6 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
       doLog(`[paima-funnel::readPresyncData] Exception occurred while reading blocks: ${err}`);
       throw err;
     }
-  }
-
-  private async fetchDynamicPrimitives(
-    fromBlock: number,
-    toBlock: number
-  ): Promise<ChainDataExtensionDatum[][]> {
-    const dynamicPrimitives = await getUngroupedCdeData(
-      this.sharedData.web3,
-      this.sharedData.extensions.filter(
-        extension =>
-          extension.network === this.chainName &&
-          extension.cdeType === ChainDataExtensionType.DynamicPrimitive
-      ),
-      fromBlock,
-      toBlock,
-      this.chainName
-    );
-
-    for (const exts of dynamicPrimitives) {
-      for (const _ext of exts) {
-        const ext: CdeDynamicPrimitiveDatum = _ext as CdeDynamicPrimitiveDatum;
-        // this would propagate the change to further funnels in the pipeline,
-        // which is needed to set the proper cdeId.
-        this.sharedData.extensions.push({
-          name: '',
-          startBlockHeight: ext.blockNumber,
-          type: CdeEntryTypeName.ERC721,
-          contractAddress: ext.payload.contractAddress,
-          scheduledPrefix: ext.scheduledPrefix,
-          burnScheduledPrefix: ext.scheduledPrefix,
-          cdeId: this.sharedData.extensions.length,
-          network: this.chainName,
-          // not relevant
-          hash: 0,
-          cdeType: ChainDataExtensionType.ERC721,
-          contract: getErc721Contract(ext.payload.contractAddress, this.sharedData.web3),
-        });
-      }
-    }
-
-    return dynamicPrimitives;
   }
 
   public static async recoverState(

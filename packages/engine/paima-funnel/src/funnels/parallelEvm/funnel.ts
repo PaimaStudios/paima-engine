@@ -28,7 +28,7 @@ import type { EvmFunnelCacheEntryState } from '../FunnelCache.js';
 import { EvmFunnelCacheEntry, RpcCacheEntry, RpcRequestState } from '../FunnelCache.js';
 import type { PoolClient } from 'pg';
 import { FUNNEL_PRESYNC_FINISHED } from '@paima/utils';
-import { getMultipleBlockData } from '../../reading.js';
+import { fetchDynamicPrimitives, getMultipleBlockData } from '../../reading.js';
 import { getLatestProcessedCdeBlockheight } from '@paima/db';
 
 const GET_BLOCK_NUMBER_TIMEOUT = 5000;
@@ -337,7 +337,13 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
       return [];
     }
     try {
-      const dynamicPrimitives = await this.fetchDynamicPrimitives(blockNumber, blockNumber);
+      const dynamicPrimitives = await fetchDynamicPrimitives(
+        blockNumber,
+        blockNumber,
+        this.web3,
+        this.sharedData,
+        this.chainName
+      );
 
       const cdeData = (
         await getUngroupedCdeData(
@@ -384,7 +390,13 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
     }
 
     try {
-      const dynamicPrimitives = await this.fetchDynamicPrimitives(fromBlock, toBlock);
+      const dynamicPrimitives = await fetchDynamicPrimitives(
+        fromBlock,
+        toBlock,
+        this.web3,
+        this.sharedData,
+        this.chainName
+      );
 
       const ungroupedCdeData = (
         await getUngroupedCdeData(
@@ -463,7 +475,13 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
 
       doLog(`EVM CDE funnel presync ${this.config.chainId}: #${fromBlock}-${toBlock}`);
 
-      const dynamicDatums = await this.fetchDynamicPrimitives(fromBlock, toBlock);
+      const dynamicDatums = await fetchDynamicPrimitives(
+        fromBlock,
+        toBlock,
+        this.web3,
+        this.sharedData,
+        this.chainName
+      );
 
       const ungroupedCdeData = (
         await getUngroupedCdeData(
@@ -487,47 +505,6 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
       doLog(`[paima-funnel::readPresyncData] Exception occurred while reading blocks: ${err}`);
       throw err;
     }
-  }
-
-  private async fetchDynamicPrimitives(
-    fromBlock: number,
-    toBlock: number
-  ): Promise<ChainDataExtensionDatum[][]> {
-    const dynamicPrimitives = await getUngroupedCdeData(
-      this.web3,
-      this.sharedData.extensions.filter(
-        extension =>
-          extension.network === this.chainName &&
-          extension.cdeType === ChainDataExtensionType.DynamicPrimitive
-      ),
-      fromBlock,
-      toBlock,
-      this.chainName
-    );
-
-    for (const exts of dynamicPrimitives) {
-      for (const _ext of exts) {
-        const ext: CdeDynamicPrimitiveDatum = _ext as CdeDynamicPrimitiveDatum;
-        // this would propagate the change to further funnels in the pipeline,
-        // which is needed to set the proper cdeId.
-        this.sharedData.extensions.push({
-          name: '',
-          startBlockHeight: ext.blockNumber,
-          type: CdeEntryTypeName.ERC721,
-          contractAddress: ext.payload.contractAddress,
-          scheduledPrefix: ext.scheduledPrefix,
-          burnScheduledPrefix: ext.scheduledPrefix,
-          cdeId: this.sharedData.extensions.length,
-          network: this.chainName,
-          // not relevant
-          hash: 0,
-          cdeType: ChainDataExtensionType.ERC721,
-          contract: getErc721Contract(ext.payload.contractAddress, this.web3),
-        });
-      }
-    }
-
-    return dynamicPrimitives;
   }
 
   public static async recoverState(
