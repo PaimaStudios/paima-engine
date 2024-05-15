@@ -247,3 +247,12 @@ CREATE TABLE mina_checkpoint (
   network TEXT NOT NULL,
   PRIMARY KEY (network)
 );
+
+CREATE TABLE achievement_progress(
+  wallet INTEGER NOT NULL REFERENCES addresses(id),
+  name TEXT NOT NULL,
+  completed_date TIMESTAMP,
+  progress INTEGER,
+  total INTEGER,
+  PRIMARY KEY (wallet, name)
+);

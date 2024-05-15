@@ -1,7 +1,6 @@
 import { doLog } from '@paima/utils';
 import fs from 'fs';
 import path from 'path';
-import { API_FILENAME, ROUTER_FILENAME } from './import.js';
 import type { Template } from './types.js';
 
 export const PACKAGED_TEMPLATES_PATH = `${__dirname}/templates`;
@@ -110,13 +109,6 @@ export const prepareDocumentation = (): void => {
   const failure = `Documentation Already Exists: ${FOLDER_PATH}.`;
 
   prepareFolder([packagedPath], FOLDER_PATH, success, failure);
-};
-
-// Checks that the user packed their game code and it is available for Paima Engine to use to run
-export const checkForPackedGameCode = (): boolean => {
-  const GAME_CODE_PATH = `${process.cwd()}/${ROUTER_FILENAME}`;
-  const ENDPOINTS_PATH = `${process.cwd()}/${API_FILENAME}`;
-  return fs.existsSync(ENDPOINTS_PATH) && fs.existsSync(GAME_CODE_PATH);
 };
 
 export const getPaimaEngineVersion = (): string => {

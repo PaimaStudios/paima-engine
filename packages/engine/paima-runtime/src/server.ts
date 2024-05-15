@@ -53,6 +53,9 @@ function registerValidationErrorHandler(): void {
       });
     }
     if (err instanceof Error) {
+      // Log rather than swallowing silently, otherwise difficult to debug.
+      console.warn(`${req.method} ${req.path}:`, err);
+
       return res.status(500).json({
         message: 'Internal Server Error',
       });

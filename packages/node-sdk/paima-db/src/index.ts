@@ -6,6 +6,11 @@ import { DataMigrations } from './data-migrations.js';
 
 export * from './delegate-wallet.js';
 
+// https://github.com/adelsz/pgtyped/issues/565
+export type { Json } from './sql/cde-generic.queries.js';
+
+export * from './sql/achievements.queries.js';
+export type * from './sql/achievements.queries.js';
 export * from './sql/block-heights.queries.js';
 export type * from './sql/block-heights.queries.js';
 export * from './sql/scheduled.queries.js';

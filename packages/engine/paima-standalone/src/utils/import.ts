@@ -1,35 +1,60 @@
+/**
+ * Canonical definition of what Paima Engine directly imports from the
+ * `packaged/` directory. The game code itself may load what it will, or
+ * configuration may also refer to file paths within `packaged/`.
+ */
+import fs from 'fs';
 import type { GameStateTransitionFunctionRouter } from '@paima/sm';
 import type { TsoaFunction } from '@paima/runtime';
+import type { AchievementMetadata } from '@paima/utils-backend';
 
-function importFile<T>(file: string): T {
-  // dynamic import cannot be used here due to PKG limitations
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const { default: defaultExport } = require(`${process.cwd()}/${file}`);
-
-  return defaultExport;
+/**
+ * Checks that the user packed their game code and it is available for Paima Engine to use to run
+ */
+export function checkForPackedGameCode(): boolean {
+  const GAME_CODE_PATH = `${process.cwd()}/${ROUTER_FILENAME}`;
+  const ENDPOINTS_PATH = `${process.cwd()}/${API_FILENAME}`;
+  return fs.existsSync(ENDPOINTS_PATH) && fs.existsSync(GAME_CODE_PATH);
 }
 
-export const ROUTER_FILENAME = 'packaged/gameCode.cjs';
+function importFile<T>(path: string): T {
+  // dynamic import cannot be used here due to PKG limitations
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  return require(`${process.cwd()}/${path}`);
+}
+
+export interface GameCodeImport {
+  default: GameStateTransitionFunctionRouter;
+}
+const ROUTER_FILENAME = 'packaged/gameCode.cjs';
 /**
  * Reads repackaged user's code placed next to the executable in `gameCode.cjs` file
  */
-export const importGameStateTransitionRouter = (): GameStateTransitionFunctionRouter =>
-  importFile<GameStateTransitionFunctionRouter>(ROUTER_FILENAME);
+export function importGameStateTransitionRouter(): GameStateTransitionFunctionRouter {
+  return importFile<GameCodeImport>(ROUTER_FILENAME).default;
+}
 
-export const API_FILENAME = 'packaged/endpoints.cjs';
+export interface EndpointsImport {
+  default: TsoaFunction;
+  achievements?: Promise<AchievementMetadata>;
+}
+const API_FILENAME = 'packaged/endpoints.cjs';
 /**
  * Reads repackaged user's code placed next to the executable in `endpoints.cjs` file
  */
-export const importTsoaFunction = (): TsoaFunction => importFile<TsoaFunction>(API_FILENAME);
+export function importEndpoints(): EndpointsImport {
+  return importFile<EndpointsImport>(API_FILENAME);
+}
 
-export const GAME_OPENAPI_FILENAME = 'packaged/openapi.json';
+export type OpenApiImport = object;
+const GAME_OPENAPI_FILENAME = 'packaged/openapi.json';
 /**
- * Reads repackaged user's code placed next to the executable in `endpoints.cjs` file
+ * Reads OpenAPI definitions placed next to the executable in `openapi.json` file
  */
-export const importOpenApiJson = (): undefined | object => {
+export function importOpenApiJson(): OpenApiImport | undefined {
   try {
-    return require(`${process.cwd()}/${GAME_OPENAPI_FILENAME}`);
+    return importFile(GAME_OPENAPI_FILENAME);
   } catch (e) {
     return undefined;
   }
-};
+}

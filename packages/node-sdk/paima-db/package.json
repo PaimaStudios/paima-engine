@@ -20,7 +20,7 @@
   "homepage": "https://docs.paimastudios.com",
   "scripts": {
     "lint:eslint": "eslint .",
-    "compile": "npx pgtyped -w -c pgtypedconfig.json",
+    "compile": "./docker-pgtyped.sh -w -c pgtypedconfig.json",
     "build": "tsc"
   },
   "devDependencies": {

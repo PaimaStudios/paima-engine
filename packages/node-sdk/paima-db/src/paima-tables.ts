@@ -595,6 +595,31 @@ const TABLE_DATA_MINA_CHECKPOINT: TableData = {
   creationQuery: QUERY_CREATE_TABLE_MINA_CHECKPOINT,
 };
 
+const QUERY_CREATE_TABLE_ACHIEVEMENT_PROGRESS = `
+CREATE TABLE achievement_progress(
+  wallet INTEGER NOT NULL REFERENCES addresses(id),
+  name TEXT NOT NULL,
+  completed_date TIMESTAMP,
+  progress INTEGER,
+  total INTEGER,
+  PRIMARY KEY (wallet, name)
+);
+`;
+
+const TABLE_DATA_ACHIEVEMENT_PROGRESS: TableData = {
+  tableName: 'achievement_progress',
+  primaryKeyColumns: ['wallet', 'name'],
+  columnData: packTuples([
+    ['wallet', 'integer', 'NO', ''],
+    ['name', 'text', 'NO', ''],
+    ['completed_date', 'timestamp without time zone', 'YES', ''],
+    ['progress', 'integer', 'YES', ''],
+    ['total', 'integer', 'YES', ''],
+  ]),
+  serialColumns: [],
+  creationQuery: QUERY_CREATE_TABLE_ACHIEVEMENT_PROGRESS,
+};
+
 const FUNCTION_NOTIFY_WALLET_CONNECT: string = `
 create or replace function public.notify_wallet_connect()
   returns trigger
@@ -683,4 +708,5 @@ export const TABLES: TableData[] = [
   TABLE_DATA_CDE_CARDANO_TRANSFER,
   TABLE_DATA_CDE_CARDANO_MINT_BURN,
   TABLE_DATA_MINA_CHECKPOINT,
+  TABLE_DATA_ACHIEVEMENT_PROGRESS,
 ];
