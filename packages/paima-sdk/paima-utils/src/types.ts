@@ -52,7 +52,7 @@ export interface STFSubmittedData extends SubmittedData {
   userAddress: WalletAddress;
   /** Fixed User ID */
   userId: number;
-  /** Transaction hash of CDE primitive that triggered this scheduled data, if known. */
+  /** Transaction hash of Primitive that triggered this scheduled data, if known. */
   scheduledTxHash?: string;
 }
 

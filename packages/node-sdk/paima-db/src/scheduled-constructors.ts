@@ -16,7 +16,7 @@ import type {
  *
  * @param inputData The input to pass to the STF, generally in Paima Concise format.
  * @param blockHeight The future block height at which to post the input to the STF.
- * @param txHash Transaction hash of the CDE event that triggered this input, for possible later use.
+ * @param txHash Transaction hash of the Primitive event that triggered this input, for possible later use.
  * @returns
  */
 export function createScheduledData(
