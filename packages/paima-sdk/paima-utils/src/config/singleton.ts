@@ -1,5 +1,11 @@
 import type { Static } from '@sinclair/typebox';
-import type { CardanoConfig, EvmConfig, MainEvmConfig, BaseConfigWithDefaults } from './loading.js';
+import type {
+  CardanoConfig,
+  MainEvmConfig,
+  BaseConfigWithDefaults,
+  MinaConfig,
+  OtherEvmConfig,
+} from './loading.js';
 import { loadConfig, ConfigNetworkType } from './loading.js';
 
 export type Config = Static<typeof BaseConfigWithDefaults>;
@@ -51,11 +57,19 @@ export class GlobalConfig {
     return undefined;
   }
 
-  public static async otherEvmConfig(): Promise<[string, EvmConfig][]> {
+  public static async otherEvmConfig(): Promise<[string, OtherEvmConfig][]> {
     const instance = await GlobalConfig.getInstance();
 
     return Object.keys(instance)
       .filter(key => instance[key].type === ConfigNetworkType.EVM_OTHER)
-      .map(key => [key, instance[key] as EvmConfig]);
+      .map(key => [key, instance[key] as OtherEvmConfig]);
+  }
+
+  public static async minaConfig(): Promise<[string, MinaConfig][]> {
+    const instance = await GlobalConfig.getInstance();
+
+    return Object.keys(instance)
+      .filter(key => instance[key].type === ConfigNetworkType.MINA)
+      .map(key => [key, instance[key] as MinaConfig]);
   }
 }

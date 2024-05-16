@@ -10,9 +10,13 @@ import { GlobalConfig } from './config/singleton.js';
 import {
   EvmConfig,
   CardanoConfig,
+  MinaConfig,
   ConfigNetworkType,
+  OtherEvmConfig,
   defaultEvmMainNetworkName,
   defaultCardanoNetworkName,
+  defaultMinaNetworkName,
+  BaseConfigWithoutDefaults,
 } from './config/loading.js';
 
 export * from './config.js';
@@ -33,10 +37,14 @@ export {
   doLog,
   GlobalConfig,
   EvmConfig,
+  OtherEvmConfig,
   CardanoConfig,
+  MinaConfig,
   ConfigNetworkType,
   defaultEvmMainNetworkName,
   defaultCardanoNetworkName,
+  defaultMinaNetworkName,
+  BaseConfigWithoutDefaults,
 };
 
 export const DEFAULT_GAS_PRICE = '61000000000' as const;

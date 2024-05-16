@@ -47,7 +47,8 @@ WHERE from_id = :from_id!;
 
 /* @name deleteDelegationTo */
 DELETE FROM delegations
-WHERE to_id = :to_id!;
+WHERE to_id = :to_id!
+and from_id = :from_id!;
 
 /* @name deleteAddress */
 DELETE FROM addresses

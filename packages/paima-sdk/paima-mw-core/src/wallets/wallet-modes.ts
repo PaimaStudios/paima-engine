@@ -10,6 +10,7 @@ import type {
   EthersApi,
   InjectionPreference,
   WalletMode,
+  MinaApi,
 } from '@paima/providers';
 import { WalletNotFound, UnsupportedWallet, connectInjectedWallet } from '@paima/providers';
 import type { EndpointErrorFxn } from '../errors.js';
@@ -37,6 +38,7 @@ export type LoginInfoMap = {
   [WalletMode.Cardano]: BaseLoginInfo<CardanoApi>;
   [WalletMode.Polkadot]: BaseLoginInfo<PolkadotApi>;
   [WalletMode.Algorand]: BaseLoginInfo<AlgorandApi>;
+  [WalletMode.Mina]: BaseLoginInfo<MinaApi>;
 };
 
 type ToUnion<T> = {

@@ -5,6 +5,7 @@ export const enum AddressType {
   CARDANO = 2,
   POLKADOT = 3,
   ALGORAND = 4,
+  MINA = 5,
 }
 
 export const DEFAULT_FUNNEL_TIMEOUT = 5000;
@@ -24,6 +25,8 @@ export const enum ChainDataExtensionType {
   CardanoTransfer = 10,
   CardanoMintBurn = 11,
   ERC1155 = 12,
+  MinaEventGeneric = 13,
+  MinaActionGeneric = 14,
 }
 
 export const enum ChainDataExtensionDatumType {
@@ -39,6 +42,8 @@ export const enum ChainDataExtensionDatumType {
   CardanoTransfer,
   CardanoMintBurn,
   Erc1155Transfer,
+  MinaEventGeneric,
+  MinaActionGeneric,
 }
 
 export const FUNNEL_PRESYNC_FINISHED = 'finished';
@@ -46,4 +51,5 @@ export const FUNNEL_PRESYNC_FINISHED = 'finished';
 export const enum InternalEventType {
   CardanoBestEpoch,
   EvmLastBlock,
+  MinaLastTimestamp,
 }

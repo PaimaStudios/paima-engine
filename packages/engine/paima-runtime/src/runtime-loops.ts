@@ -131,7 +131,10 @@ async function getPresyncStartBlockheight(
   const result: { [network: string]: number } = {};
 
   for (const network of Object.keys(config)) {
-    if (config[network].type === ConfigNetworkType.CARDANO) {
+    if (
+      config[network].type === ConfigNetworkType.CARDANO ||
+      config[network].type === ConfigNetworkType.MINA
+    ) {
       continue;
     }
 
