@@ -1,11 +1,11 @@
 import { insertDynamicExtension, registerChainDataExtension } from '@paima/db';
 import type { SQLUpdate } from '@paima/db';
-import { CdeEntryTypeName, type CdeDynamicPrimitiveDatum } from './types.js';
+import { CdeEntryTypeName, type CdeDynamicEvmPrimitiveDatum } from './types.js';
 import { ChainDataExtensionType } from '@paima/utils';
 import YAML from 'yaml';
 
 export default async function processDatum(
-  cdeDatum: CdeDynamicPrimitiveDatum,
+  cdeDatum: CdeDynamicEvmPrimitiveDatum,
   _inPresync: boolean
 ): Promise<SQLUpdate[]> {
   let type;

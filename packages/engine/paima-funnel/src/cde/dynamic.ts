@@ -1,8 +1,8 @@
-import type { ChainDataExtensionDynamicPrimitive, ChainDataExtensionDatum } from '@paima/sm';
+import type { ChainDataExtensionDynamicEvmPrimitive, ChainDataExtensionDatum } from '@paima/sm';
 import { ChainDataExtensionDatumType, DEFAULT_FUNNEL_TIMEOUT, timeout } from '@paima/utils';
 
-export default async function getCdeDynamicPrimitive(
-  extension: ChainDataExtensionDynamicPrimitive,
+export default async function getCdeDynamicEvmPrimitive(
+  extension: ChainDataExtensionDynamicEvmPrimitive,
   fromBlock: number,
   toBlock: number,
   network: string
@@ -22,7 +22,7 @@ export default async function getCdeDynamicPrimitive(
 
   return events.map(event => ({
     cdeId: extension.cdeId,
-    cdeDatumType: ChainDataExtensionDatumType.DynamicPrimitive,
+    cdeDatumType: ChainDataExtensionDatumType.DynamicEvmPrimitive,
     blockNumber: event.blockNumber,
     payload: {
       contractAddress: event.returnValues[extension.dynamicFields.contractAddress],

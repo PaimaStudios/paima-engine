@@ -13,7 +13,7 @@ import type { PaimaL2Contract } from '@paima/utils';
 import { TimeoutError } from '@paima/runtime';
 import {
   CdeEntryTypeName,
-  type CdeDynamicPrimitiveDatum,
+  type CdeDynamicEvmPrimitiveDatum,
   type ChainData,
   type ChainDataExtensionDatum,
 } from '@paima/sm';
@@ -155,28 +155,28 @@ async function getPaimaEvents(
 // change the set of primitives. Otherwise we would miss the events for those.
 // If there is an event that triggers a dynamic primitive here, then an
 // extension will be added to the list with a starting block at that point.
-export async function fetchDynamicPrimitives(
+export async function fetchDynamicEvmPrimitives(
   fromBlock: number,
   toBlock: number,
   web3: Web3,
   sharedData: FunnelSharedData,
   network: string
 ): Promise<ChainDataExtensionDatum[][]> {
-  const dynamicPrimitives = await getUngroupedCdeData(
+  const DynamicEvmPrimitives = await getUngroupedCdeData(
     web3,
     sharedData.extensions.filter(
       extension =>
         extension.network === network &&
-        extension.cdeType === ChainDataExtensionType.DynamicPrimitive
+        extension.cdeType === ChainDataExtensionType.DynamicEvmPrimitive
     ),
     fromBlock,
     toBlock,
     network
   );
 
-  for (const exts of dynamicPrimitives) {
+  for (const exts of DynamicEvmPrimitives) {
     for (const _ext of exts) {
-      const ext: CdeDynamicPrimitiveDatum = _ext as CdeDynamicPrimitiveDatum;
+      const ext: CdeDynamicEvmPrimitiveDatum = _ext as CdeDynamicEvmPrimitiveDatum;
 
       // this would propagate the change to further funnels in the pipeline,
       // which is needed to set the proper cdeId.
@@ -197,5 +197,5 @@ export async function fetchDynamicPrimitives(
     }
   }
 
-  return dynamicPrimitives;
+  return DynamicEvmPrimitives;
 }

@@ -3,7 +3,7 @@ import { ChainDataExtensionType, ENV, GlobalConfig, doLog, timeout } from '@paim
 import type { ChainFunnel, ReadPresyncDataFrom } from '@paima/runtime';
 import { type ChainData, type PresyncChainData } from '@paima/sm';
 import {
-  fetchDynamicPrimitives,
+  fetchDynamicEvmPrimitives,
   getBaseChainDataMulti,
   getBaseChainDataSingle,
 } from '../../reading.js';
@@ -88,7 +88,7 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
       return [];
     }
     try {
-      const dynamicDatums = await fetchDynamicPrimitives(
+      const dynamicDatums = await fetchDynamicEvmPrimitives(
         blockNumber,
         blockNumber,
         this.sharedData.web3,
@@ -110,7 +110,7 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
             extension =>
               extension.network === this.chainName &&
               // these are fetched above
-              extension.cdeType !== ChainDataExtensionType.DynamicPrimitive
+              extension.cdeType !== ChainDataExtensionType.DynamicEvmPrimitive
           ),
           blockNumber,
           blockNumber,
@@ -138,7 +138,7 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
       return [];
     }
     try {
-      const dynamicDatums = await fetchDynamicPrimitives(
+      const dynamicDatums = await fetchDynamicEvmPrimitives(
         fromBlock,
         toBlock,
         this.sharedData.web3,
@@ -161,7 +161,7 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
             extension =>
               extension.network === this.chainName &&
               // these are fetched above
-              extension.cdeType !== ChainDataExtensionType.DynamicPrimitive
+              extension.cdeType !== ChainDataExtensionType.DynamicEvmPrimitive
           ),
           fromBlock,
           toBlock,
@@ -202,7 +202,7 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
         return {};
       }
 
-      const dynamicDatums = await fetchDynamicPrimitives(
+      const dynamicDatums = await fetchDynamicEvmPrimitives(
         fromBlock,
         toBlock,
         this.sharedData.web3,

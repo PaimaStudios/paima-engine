@@ -18,7 +18,7 @@ import type { EvmFunnelCacheEntryState } from '../FunnelCache.js';
 import { EvmFunnelCacheEntry, RpcCacheEntry, RpcRequestState } from '../FunnelCache.js';
 import type { PoolClient } from 'pg';
 import { FUNNEL_PRESYNC_FINISHED } from '@paima/utils';
-import { fetchDynamicPrimitives, getMultipleBlockData } from '../../reading.js';
+import { fetchDynamicEvmPrimitives, getMultipleBlockData } from '../../reading.js';
 import { getLatestProcessedCdeBlockheight } from '@paima/db';
 
 const GET_BLOCK_NUMBER_TIMEOUT = 5000;
@@ -327,7 +327,7 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
       return [];
     }
     try {
-      const dynamicPrimitives = await fetchDynamicPrimitives(
+      const DynamicEvmPrimitives = await fetchDynamicEvmPrimitives(
         blockNumber,
         blockNumber,
         this.web3,
@@ -341,13 +341,13 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
           this.sharedData.extensions.filter(
             extension =>
               extension.network === this.chainName &&
-              extension.cdeType !== ChainDataExtensionType.DynamicPrimitive
+              extension.cdeType !== ChainDataExtensionType.DynamicEvmPrimitive
           ),
           blockNumber,
           blockNumber,
           this.chainName
         )
-      ).concat(dynamicPrimitives);
+      ).concat(DynamicEvmPrimitives);
 
       for (const extensionData of cdeData) {
         for (const data of extensionData) {
@@ -380,7 +380,7 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
     }
 
     try {
-      const dynamicPrimitives = await fetchDynamicPrimitives(
+      const DynamicEvmPrimitives = await fetchDynamicEvmPrimitives(
         fromBlock,
         toBlock,
         this.web3,
@@ -394,13 +394,13 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
           this.sharedData.extensions.filter(
             extension =>
               extension.network === this.chainName &&
-              extension.cdeType !== ChainDataExtensionType.DynamicPrimitive
+              extension.cdeType !== ChainDataExtensionType.DynamicEvmPrimitive
           ),
           fromBlock,
           toBlock,
           this.chainName
         )
-      ).concat(dynamicPrimitives);
+      ).concat(DynamicEvmPrimitives);
 
       let mappedFrom: number | undefined;
       let mappedTo: number | undefined;
@@ -465,7 +465,7 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
 
       doLog(`EVM CDE funnel presync ${this.config.chainId}: #${fromBlock}-${toBlock}`);
 
-      const dynamicDatums = await fetchDynamicPrimitives(
+      const dynamicDatums = await fetchDynamicEvmPrimitives(
         fromBlock,
         toBlock,
         this.web3,
@@ -479,7 +479,7 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
           this.sharedData.extensions.filter(
             extension =>
               extension.network === this.chainName &&
-              extension.cdeType !== ChainDataExtensionType.DynamicPrimitive
+              extension.cdeType !== ChainDataExtensionType.DynamicEvmPrimitive
           ),
           fromBlock,
           toBlock,

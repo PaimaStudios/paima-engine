@@ -15,7 +15,7 @@ import processCardanoProjectedNFT from './cde-cardano-projected-nft.js';
 import processCardanoAssetUtxoDatum from './cde-cardano-delayed-asset.js';
 import processCardanoTransferDatum from './cde-cardano-transfer.js';
 import processCardanoMintBurnDatum from './cde-cardano-mint-burn.js';
-import processDynamicPrimitive from './cde-dynamic-primitive.js';
+import processDynamicEvmPrimitive from './cde-evm-dynamic-primitive.js';
 import assertNever from 'assert-never';
 import type { SQLUpdate } from '@paima/db';
 
@@ -53,8 +53,8 @@ export async function cdeTransitionFunction(
       return await processGenericDatum(cdeDatum, inPresync);
     case ChainDataExtensionDatumType.MinaActionGeneric:
       return await processGenericDatum(cdeDatum, inPresync);
-    case ChainDataExtensionDatumType.DynamicPrimitive:
-      return await processDynamicPrimitive(cdeDatum, inPresync);
+    case ChainDataExtensionDatumType.DynamicEvmPrimitive:
+      return await processDynamicEvmPrimitive(cdeDatum, inPresync);
     default:
       assertNever(cdeDatum);
   }

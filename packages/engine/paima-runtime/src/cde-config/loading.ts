@@ -29,8 +29,8 @@ import type {
   TChainDataExtensionErc721Config,
   TChainDataExtensionGenericConfig,
   CdeConfig,
-  TChainDataExtensionDynamicPrimitiveConfig,
-  ChainDataExtensionDynamicPrimitive,
+  TChainDataExtensionDynamicEvmPrimitiveConfig,
+  ChainDataExtensionDynamicEvmPrimitive,
 } from '@paima/sm';
 import {
   CdeBaseConfig,
@@ -48,7 +48,7 @@ import {
   ChainDataExtensionGenericConfig,
   ChainDataExtensionMinaEventGenericConfig,
   ChainDataExtensionMinaActionGenericConfig,
-  ChainDataExtensionDynamicPrimitiveConfig,
+  ChainDataExtensionDynamicEvmPrimitiveConfig,
 } from '@paima/sm';
 import { loadAbi } from './utils.js';
 import assertNever from 'assert-never';
@@ -153,10 +153,10 @@ export function parseCdeConfigFile(
           Type.Intersect([ChainDataExtensionErc6551RegistryConfig, networkTagType]),
           entry
         );
-      case CdeEntryTypeName.DynamicPrimitive:
+      case CdeEntryTypeName.DynamicEvmPrimitive:
         return checkOrError(
           entry.name,
-          Type.Intersect([ChainDataExtensionDynamicPrimitiveConfig, networkTagType]),
+          Type.Intersect([ChainDataExtensionDynamicEvmPrimitiveConfig, networkTagType]),
           entry
         );
       case CdeEntryTypeName.CardanoDelegation:
@@ -342,9 +342,9 @@ async function instantiateExtension(
           return getErc6551RegistryContract(contractAddress, web3s[network]);
         })(),
       };
-    case CdeEntryTypeName.DynamicPrimitive:
+    case CdeEntryTypeName.DynamicEvmPrimitive:
       return {
-        ...(await instantiateCdeDynamicPrimitive(config, index, web3s[network])),
+        ...(await instantiateCdeDynamicEvmPrimitive(config, index, web3s[network])),
         network,
       };
     case CdeEntryTypeName.CardanoDelegation:
@@ -461,11 +461,11 @@ async function instantiateCdeGeneric(
   }
 }
 
-async function instantiateCdeDynamicPrimitive(
-  config: TChainDataExtensionDynamicPrimitiveConfig,
+async function instantiateCdeDynamicEvmPrimitive(
+  config: TChainDataExtensionDynamicEvmPrimitiveConfig,
   index: number,
   web3: Web3
-): Promise<ChainDataExtensionDynamicPrimitive> {
+): Promise<ChainDataExtensionDynamicEvmPrimitive> {
   const eventSignature = config.eventSignature;
   const eventMatch = eventSignature.match(/^[A-Za-z0-9_]+/); // ex: MyEvent(address,uint256) → "MyEvent"
   if (!eventMatch) {
@@ -485,7 +485,7 @@ async function instantiateCdeDynamicPrimitive(
       ...rest,
       cdeId: index,
       hash: hashConfig(config),
-      cdeType: ChainDataExtensionType.DynamicPrimitive,
+      cdeType: ChainDataExtensionType.DynamicEvmPrimitive,
       contract,
       eventSignature,
       eventName,
