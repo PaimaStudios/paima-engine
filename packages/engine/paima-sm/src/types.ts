@@ -540,13 +540,15 @@ export const ChainDataExtensionDynamicPrimitiveConfig = Type.Intersect([
   ChainDataExtensionConfigBase,
   Type.Object({
     type: Type.Literal(CdeEntryTypeName.DynamicPrimitive),
-    targetType: Type.Literal(CdeEntryTypeName.ERC721),
     contractAddress: EvmAddress,
-    scheduledPrefix: Type.String(),
-    burnScheduledPrefix: Type.Optional(Type.String()),
     abiPath: Type.String(),
     eventSignature: Type.String(),
-    fields: Type.Object({
+    targetConfig: Type.Pick(ChainDataExtensionErc721Config, [
+      'scheduledPrefix',
+      'burnScheduledPrefix',
+      'type',
+    ]),
+    dynamicFields: Type.Object({
       contractAddress: Type.String(),
     }),
   }),

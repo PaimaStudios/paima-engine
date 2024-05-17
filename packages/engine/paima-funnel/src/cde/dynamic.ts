@@ -25,12 +25,12 @@ export default async function getCdeDynamicPrimitive(
     cdeDatumType: ChainDataExtensionDatumType.DynamicPrimitive,
     blockNumber: event.blockNumber,
     payload: {
-      contractAddress: event.returnValues[extension.fields.contractAddress],
-      type: extension.targetType,
+      contractAddress: event.returnValues[extension.dynamicFields.contractAddress],
+      type: extension.targetConfig.type,
     },
     network,
-    scheduledPrefix: extension.scheduledPrefix,
-    burnScheduledPrefix: extension.burnScheduledPrefix,
+    scheduledPrefix: extension.targetConfig.scheduledPrefix,
+    burnScheduledPrefix: extension.targetConfig.burnScheduledPrefix,
     cdeName: '',
   }));
 }
