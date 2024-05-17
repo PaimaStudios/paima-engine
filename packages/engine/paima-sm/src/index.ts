@@ -44,6 +44,7 @@ import type {
   GameStateTransitionFunction,
   GameStateMachineInitializer,
   InternalEvent,
+  GameStateSubmittedDataReorderFunction,
 } from './types.js';
 import { ConfigNetworkType } from '@paima/utils';
 import assertNever from 'assert-never';
@@ -160,23 +161,43 @@ const SM: GameStateMachineInitializer = {
         const internal = async (dbTx: PoolClient): Promise<boolean> => {
           const [b] = await getLatestProcessedBlockHeight.run(undefined, dbTx);
           const blockHeight = b?.block_height ?? startBlockHeight ?? 0;
-          const gameStateTransition = gameStateTransitionRouter(blockHeight);
+          const gameRouter = gameStateTransitionRouter(blockHeight);
+          const game: {
+            stateTransition: GameStateTransitionFunction;
+            submittedDataReordering: GameStateSubmittedDataReorderFunction;
+          } =
+            typeof gameRouter === 'function'
+              ? {
+                  stateTransition: gameRouter,
+                  submittedDataReordering: undefined,
+                }
+              : {
+                  stateTransition: gameRouter.stateTransition,
+                  submittedDataReordering: gameRouter.submittedDataReordering,
+                };
           const address = await getMainAddress(userAddress, dbTx);
 
-          const data = await gameStateTransition(
-            {
-              realAddress: userAddress,
-              userAddress: address.address,
-              userId: address.id,
-              inputData: gameInput,
-              inputNonce: '',
-              suppliedValue: '0',
-              scheduled: false,
-              dryRun: true,
-            },
+          const submittedData: STFSubmittedData = {
+            realAddress: userAddress,
+            userAddress: address.address,
+            userId: address.id,
+            inputData: gameInput,
+            inputNonce: '',
+            suppliedValue: '0',
+            scheduled: false,
+            dryRun: true,
+          };
+          const data = await game.stateTransition(
+            submittedData,
             blockHeight,
             new Prando('1234567890'),
-            dbTx
+            dbTx,
+            {
+              timestamp: 0,
+              blockHash: '0x0',
+              blockNumber: blockHeight,
+              submittedData: [submittedData],
+            }
           );
           return data && data.length > 0;
         };
@@ -189,7 +210,21 @@ const SM: GameStateMachineInitializer = {
       // Core function which triggers state transitions
       process: async (dbTx: PoolClient, latestChainData: ChainData): Promise<void> => {
         // Acquire correct STF based on router (based on block height)
-        const gameStateTransition = gameStateTransitionRouter(latestChainData.blockNumber);
+        const gameRouter = gameStateTransitionRouter(latestChainData.blockNumber);
+        const game: {
+          stateTransition: GameStateTransitionFunction;
+          submittedDataReordering: GameStateSubmittedDataReorderFunction;
+        } =
+          typeof gameRouter === 'function'
+            ? {
+                stateTransition: gameRouter,
+                submittedDataReordering: undefined,
+              }
+            : {
+                stateTransition: gameRouter.stateTransition,
+                submittedDataReordering: gameRouter.submittedDataReordering,
+              };
+
         // Save blockHeight and randomness seed
         const getSeed = randomnessRouter(randomnessProtocolEnum);
         const seed = await getSeed(latestChainData, dbTx);
@@ -231,7 +266,7 @@ const SM: GameStateMachineInitializer = {
           const scheduledInputsLength = await processScheduledData(
             latestChainData,
             dbTx,
-            gameStateTransition,
+            game,
             randomnessGenerator
           );
 
@@ -239,7 +274,7 @@ const SM: GameStateMachineInitializer = {
           const userInputsLength = await processUserInputs(
             latestChainData,
             dbTx,
-            gameStateTransition,
+            game,
             randomnessGenerator
           );
 
@@ -345,7 +380,10 @@ async function processPaginatedCdeData(
 async function processScheduledData(
   latestChainData: ChainData,
   DBConn: PoolClient,
-  gameStateTransition: GameStateTransitionFunction,
+  game: {
+    stateTransition: GameStateTransitionFunction;
+    submittedDataReordering: GameStateSubmittedDataReorderFunction;
+  },
   randomnessGenerator: Prando
 ): Promise<number> {
   const scheduledData = await getScheduledDataByBlockHeight.run(
@@ -363,11 +401,12 @@ async function processScheduledData(
       scheduled: true,
     };
     // Trigger STF
-    const sqlQueries = await gameStateTransition(
+    const sqlQueries = await game.stateTransition(
       inputData,
       data.block_height,
       randomnessGenerator,
-      DBConn
+      DBConn,
+      latestChainData
     );
     try {
       for (const [query, params] of sqlQueries) {
@@ -382,88 +421,266 @@ async function processScheduledData(
   return scheduledData.length;
 }
 
+async function processSingleUserInput(
+  submittedData: SubmittedData,
+  latestChainData: ChainData,
+  DBConn: PoolClient,
+  game: {
+    stateTransition: GameStateTransitionFunction;
+    submittedDataReordering: GameStateSubmittedDataReorderFunction;
+  },
+  randomnessGenerator: Prando
+): Promise<void> {
+  // Check nonce is valid
+  if (submittedData.inputNonce === '') {
+    doLog(`Skipping inputData with invalid empty nonce: ${JSON.stringify(submittedData)}`);
+    return;
+  }
+  const nonceData = await findNonce.run({ nonce: submittedData.inputNonce }, DBConn);
+  if (nonceData.length > 0) {
+    doLog(`Skipping inputData with duplicate nonce: ${JSON.stringify(submittedData)}`);
+    return;
+  }
+  const address = await getMainAddress(submittedData.realAddress, DBConn);
+
+  const inputData: STFSubmittedData = {
+    ...submittedData,
+    userAddress: address.address,
+    userId: address.id,
+  };
+
+  // Check if internal Concise Command
+  // Internal Concise Commands are prefixed with an ampersand (&)
+  //
+  // delegate       = &wd|from?|to?|from_signature|to_signature
+  // migrate        = &wm|from?|to?|from_signature|to_signature
+  // cancelDelegate = &wc|to?
+  const delegateWallet = new DelegateWallet(DBConn);
+  if (inputData.inputData.startsWith(DelegateWallet.INTERNAL_COMMAND_PREFIX)) {
+    const status = await delegateWallet.process(
+      inputData.realAddress,
+      inputData.userAddress,
+      inputData.inputData
+    );
+    if (!status) return;
+  } else if (inputData.userId === NO_USER_ID) {
+    // If wallet does not exist in address table: create it.
+    const newAddress = await delegateWallet.createAddress(inputData.userAddress);
+    inputData.userId = newAddress.id;
+  }
+
+  // Trigger STF
+  const sqlQueries = await game.stateTransition(
+    inputData,
+    latestChainData.blockNumber,
+    randomnessGenerator,
+    DBConn,
+    latestChainData
+  );
+
+  try {
+    for (const [query, params] of sqlQueries) {
+      await query.run(params, DBConn);
+    }
+    await insertNonce.run(
+      {
+        nonce: inputData.inputNonce,
+        block_height: latestChainData.blockNumber,
+      },
+      DBConn
+    );
+    if (ENV.STORE_HISTORICAL_GAME_INPUTS) {
+      await storeGameInput.run(
+        {
+          block_height: latestChainData.blockNumber,
+          input_data: inputData.inputData,
+          user_address: inputData.userAddress,
+        },
+        DBConn
+      );
+    }
+  } catch (err) {
+    doLog(`[paima-sm] Database error on gameStateTransition: ${err}`);
+    throw err;
+  }
+}
+
+// Extract execution hints that define prerequisites for the execution.
+// @x| -> execution hint for the address the sender
+// z|*abc -> execution hint is the literal key 'abc'
+// NOTE: @x and *wallet can match as the same address
+function extractKeys(submittedData: SubmittedData): string[] {
+  const keys = [];
+  const args = submittedData.inputData.split('|');
+  const header = args.shift() as string;
+  if (header.match(/^@/)) {
+    keys.push(submittedData.realAddress.toLocaleLowerCase());
+  }
+  args.forEach(arg => {
+    if (arg.match(/^\*/)) {
+      const key = arg.replace(/^\*/, '').toLocaleLowerCase();
+      if (key) keys.push(key);
+    }
+  });
+  return keys;
+}
+
+type ExecutionNode = {
+  parents: ExecutionNode[];
+  keys: string[];
+  input: SubmittedData | null;
+  children: ExecutionNode[];
+  executed: boolean;
+};
+type BlockingLeaf = { key: string; node: ExecutionNode };
+
+/* Generate a serial tree (list) of execution nodes based on the submitted data. */
+function generateSerialExecutionTree(latestChainData: ChainData): ExecutionNode {
+  const treeRoot: ExecutionNode = {
+    parents: [],
+    keys: [],
+    input: null, // root has not input
+    children: [],
+    executed: false,
+  };
+  let currentNode = treeRoot;
+  for (const submittedData of latestChainData.submittedData) {
+    const node: ExecutionNode = {
+      keys: extractKeys(submittedData),
+      input: submittedData,
+      children: [],
+      parents: [currentNode],
+      executed: false,
+    };
+    currentNode.children = [node];
+    currentNode = node;
+  }
+  return treeRoot;
+}
+
+/* Generate a parallel tree of execution nodes based on the submitted data. */
+function generateParallelExecutionTree(latestChainData: ChainData): ExecutionNode {
+  const treeRoot: ExecutionNode = {
+    parents: [],
+    keys: [],
+    input: null, // root has not input
+    children: [],
+    executed: false,
+  };
+
+  const treeEndNodes: BlockingLeaf[] = [];
+  for (const submittedData of latestChainData.submittedData) {
+    const keys = extractKeys(submittedData);
+    const node: ExecutionNode = {
+      keys,
+      input: submittedData,
+      children: [],
+      parents: [],
+      executed: false,
+    };
+
+    if (!keys.length) {
+      node.parents = [treeRoot];
+      treeRoot.children.push(node);
+    } else {
+      const blocked = node.keys
+        .map(k => treeEndNodes.find(e => e.key === k))
+        .filter((e): e is BlockingLeaf => !!e);
+      const newKeys = node.keys
+        .map(k => (treeEndNodes.find(e => e.key === k) ? null : k))
+        .filter((k): k is string => !!k);
+
+      newKeys.forEach(k => treeEndNodes.push({ key: k, node }));
+      if (!blocked.length) {
+        node.parents = [treeRoot];
+        treeRoot.children.push(node);
+      } else {
+        node.parents = blocked.map(b => b && b.node).filter((b): b is ExecutionNode => !!b);
+        blocked.forEach(b => {
+          b.node.children.push(node);
+          b.node = node; // move pointer to new node
+        });
+      }
+    }
+  }
+  return treeRoot;
+}
+
+/* Return the tree info in reference array. */
+function printTree(node: ExecutionNode, depth: number, logRef: string[]): void {
+  if (node.input) {
+    const data = node.input.inputData;
+    const key = node.keys.length ? `(${node.keys.join(',')})` : '';
+    logRef.push(`|${'  '.repeat(depth)} ${data} ${key}`);
+  }
+  node.children.forEach(c => printTree(c, depth + 1, logRef));
+}
+
 // Process all of the user inputs data inputs by running each of them through the game STF,
 // saving the results to the DB with the nonces, all together in one postgres tx.
 // Function returns number of user inputs that were processed.
 async function processUserInputs(
   latestChainData: ChainData,
   DBConn: PoolClient,
-  gameStateTransition: GameStateTransitionFunction,
+  game: {
+    stateTransition: GameStateTransitionFunction;
+    submittedDataReordering: GameStateSubmittedDataReorderFunction;
+  },
   randomnessGenerator: Prando
 ): Promise<number> {
-  for (const submittedData of latestChainData.submittedData) {
-    // Check nonce is valid
-    if (submittedData.inputNonce === '') {
-      doLog(`Skipping inputData with invalid empty nonce: ${JSON.stringify(submittedData)}`);
-      continue;
-    }
-    const nonceData = await findNonce.run({ nonce: submittedData.inputNonce }, DBConn);
-    if (nonceData.length > 0) {
-      doLog(`Skipping inputData with duplicate nonce: ${JSON.stringify(submittedData)}`);
-      continue;
-    }
-    const address = await getMainAddress(submittedData.realAddress, DBConn);
-
-    const inputData: STFSubmittedData = {
-      ...submittedData,
-      userAddress: address.address,
-      userId: address.id,
-    };
-
-    // Check if internal Concise Command
-    // Internal Concise Commands are prefixed with an ampersand (&)
-    //
-    // delegate       = &wd|from?|to?|from_signature|to_signature
-    // migrate        = &wm|from?|to?|from_signature|to_signature
-    // cancelDelegate = &wc|to?
-    const delegateWallet = new DelegateWallet(DBConn);
-    if (inputData.inputData.startsWith(DelegateWallet.INTERNAL_COMMAND_PREFIX)) {
-      const status = await delegateWallet.process(
-        inputData.realAddress,
-        inputData.userAddress,
-        inputData.inputData
-      );
-      if (!status) continue;
-    } else if (inputData.userId === NO_USER_ID) {
-      // If wallet does not exist in address table: create it.
-      const newAddress = await delegateWallet.createAddress(inputData.userAddress);
-      inputData.userId = newAddress.id;
-    }
-
-    // Trigger STF
-    const sqlQueries = await gameStateTransition(
-      inputData,
-      latestChainData.blockNumber,
-      randomnessGenerator,
-      DBConn
-    );
-
-    try {
-      for (const [query, params] of sqlQueries) {
-        await query.run(params, DBConn);
-      }
-      await insertNonce.run(
-        {
-          nonce: inputData.inputNonce,
-          block_height: latestChainData.blockNumber,
-        },
-        DBConn
-      );
-      if (ENV.STORE_HISTORICAL_GAME_INPUTS) {
-        await storeGameInput.run(
-          {
-            block_height: latestChainData.blockNumber,
-            input_data: inputData.inputData,
-            user_address: inputData.userAddress,
-          },
-          DBConn
-        );
-      }
-    } catch (err) {
-      doLog(`[paima-sm] Database error on gameStateTransition: ${err}`);
-      throw err;
-    }
+  /** TODO CUSTOM GAME REORDERING OF INPUTS */
+  if (game.submittedDataReordering && latestChainData.submittedData.length) {
+    latestChainData.submittedData = await game.submittedDataReordering(latestChainData, DBConn);
   }
+
+  const mode = ENV.GAME_STF_EXECUTION_MODE;
+  const executionTree =
+    mode === 'parallel'
+      ? generateParallelExecutionTree(latestChainData)
+      : generateSerialExecutionTree(latestChainData);
+
+  const logs: string[] = [];
+  printTree(executionTree, 0, logs);
+  if (logs.length) {
+    doLog(`${'-'.repeat(40)}\n| Execution Plan (${mode}):\n${logs.join('\n')}\n${'-'.repeat(40)}`);
+  }
+
+  const processNode = (targetNode: ExecutionNode): ExecutionNode[] => {
+    let currentStepNodes: ExecutionNode[] = [];
+    targetNode.children.forEach(node => {
+      if (node.executed) return;
+      if (node.parents.every(p => p.executed)) {
+        currentStepNodes.push(node);
+        node.executed = true;
+      }
+    });
+    return currentStepNodes;
+  };
+
+  // mark root as executed.
+  // no command is stored in the root node.
+  executionTree.executed = true;
+  let step = [executionTree];
+  while (step.length) {
+    const run: ExecutionNode[] = [];
+    step.forEach(node => {
+      run.push(...processNode(node));
+    });
+    await Promise.all(
+      run.map(node => {
+        doLog('Processing:', node.input);
+        return processSingleUserInput(
+          node.input as SubmittedData,
+          latestChainData,
+          DBConn,
+          game,
+          randomnessGenerator
+        );
+      })
+    );
+    step = run;
+  }
+
   return latestChainData.submittedData.length;
 }
 

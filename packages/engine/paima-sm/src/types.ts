@@ -20,6 +20,7 @@ import type {
 import { Type } from '@sinclair/typebox';
 import type { Static } from '@sinclair/typebox';
 import type { ProjectedNftStatus } from '@dcspark/carp-client';
+import type Prando from '@paima/prando';
 
 export { SubmittedChainData, SubmittedData };
 
@@ -574,16 +575,24 @@ export type ChainDataExtension = (
   | ChainDataExtensionMinaActionGeneric
 ) & { network: string | undefined };
 
-export type GameStateTransitionFunctionRouter = (
-  blockHeight: number
-) => GameStateTransitionFunction;
+export type GameStateTransitionFunctionRouter = (blockHeight: number) =>
+  | GameStateTransitionFunction
+  | {
+      stateTransition: GameStateTransitionFunction;
+      submittedDataReordering: GameStateSubmittedDataReorderFunction;
+    };
 
 export type GameStateTransitionFunction = (
   inputData: STFSubmittedData,
   blockHeight: number,
-  randomnessGenerator: any,
-  DBConn: PoolClient
+  randomnessGenerator: Prando,
+  DBConn: PoolClient,
+  chainData: ChainData
 ) => Promise<SQLUpdate[]>;
+
+export type GameStateSubmittedDataReorderFunction =
+  | ((chainData: ChainData, DBConn: PoolClient) => Promise<SubmittedChainData[]>)
+  | undefined;
 
 export interface GameStateMachineInitializer {
   initialize: (
