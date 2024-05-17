@@ -99,6 +99,7 @@ export async function getCdeData(
         cdeId: extension.cdeId,
         cdeDatumType,
         blockNumber: getBlockNumber(Number.parseInt(perBlock.blockInfo.timestamp, 10)),
+        transactionHash: txEvent.txHash,
         payload: txEvent,
         network,
         scheduledPrefix: extension.scheduledPrefix,
@@ -112,9 +113,7 @@ export async function getCdeData(
       cursor = last.paginationCursor.cursor;
     }
 
-    events.forEach(element => {
-      result.push(element);
-    });
+    result.push(...events);
 
     if (events.length === 0 || isPresync) {
       break;

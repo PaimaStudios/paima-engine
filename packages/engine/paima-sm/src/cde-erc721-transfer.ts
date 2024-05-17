@@ -39,7 +39,9 @@ export default async function processErc721Datum(
             ? ENV.SM_START_BLOCKHEIGHT + 1
             : cdeDatum.blockNumber;
 
-          updateList.push(createScheduledData(scheduledInputData, scheduledBlockHeight));
+          updateList.push(
+            createScheduledData(scheduledInputData, scheduledBlockHeight, cdeDatum.transactionHash)
+          );
         }
 
         // we do this to keep track of the owner before the asset is sent to the

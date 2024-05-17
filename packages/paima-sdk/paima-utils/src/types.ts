@@ -38,7 +38,7 @@ export type TransactionTemplate = {
 export type NonceString = string;
 
 export interface SubmittedData {
-  // Address of the wallet that submitted the data.
+  /** Address of the wallet that submitted the data. */
   realAddress: WalletAddress;
   inputData: InputDataString;
   inputNonce: NonceString;
@@ -48,10 +48,12 @@ export interface SubmittedData {
 }
 
 export interface STFSubmittedData extends SubmittedData {
-  // Mapped address to main wallet.
+  /** Mapped address to main wallet. */
   userAddress: WalletAddress;
-  // Fixed User ID
+  /** Fixed User ID */
   userId: number;
+  /** Transaction hash of Primitive that triggered this scheduled data, if known. */
+  scheduledTxHash?: string;
 }
 
 export type SubmittedChainData = SubmittedData;

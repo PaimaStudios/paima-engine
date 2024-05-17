@@ -78,6 +78,7 @@ function eventToCdeDatum(
     cdeId: extension.cdeId,
     cdeDatumType: ChainDataExtensionDatumType.CardanoPool,
     blockNumber,
+    transactionHash: event.txId,
     payload: {
       address: event.credential,
       pool: event.pool || undefined,

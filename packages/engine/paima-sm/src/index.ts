@@ -361,6 +361,7 @@ async function processScheduledData(
       inputNonce: '',
       suppliedValue: '0',
       scheduled: true,
+      scheduledTxHash: data.tx_hash,
     };
     // Trigger STF
     const sqlQueries = await gameStateTransition(

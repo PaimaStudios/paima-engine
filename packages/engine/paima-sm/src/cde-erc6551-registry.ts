@@ -2,7 +2,7 @@ import type { CdeErc6551RegistryDatum } from './types.js';
 import { cdeErc6551InsertRegistry } from '@paima/db';
 import type { SQLUpdate } from '@paima/db';
 
-export default async function processErc721Datum(
+export default async function processErc6551Datum(
   cdeDatum: CdeErc6551RegistryDatum
 ): Promise<SQLUpdate[]> {
   const updateList: SQLUpdate[] = [

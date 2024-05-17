@@ -35,6 +35,7 @@ function transferToCdeDatum(
       cdeId: extension.cdeId,
       cdeDatumType: ChainDataExtensionDatumType.ERC20Deposit,
       blockNumber: event.blockNumber,
+      transactionHash: event.transactionHash,
       payload: {
         from: event.returnValues.from.toLowerCase(),
         value: event.returnValues.value,

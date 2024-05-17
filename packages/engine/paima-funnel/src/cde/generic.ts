@@ -36,6 +36,7 @@ function eventToCdeDatum(
     cdeId: extension.cdeId,
     cdeDatumType: ChainDataExtensionDatumType.Generic,
     blockNumber: event.blockNumber,
+    transactionHash: event.transactionHash,
     scheduledPrefix: extension.scheduledPrefix,
     payload: event.returnValues,
     network,
