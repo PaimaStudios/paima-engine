@@ -3,6 +3,7 @@ services:
   database:
     image: postgres:16
     environment:
+      PGUSER: postgres
       POSTGRES_PASSWORD: postgres
     volumes:
       - "./migrations/up.sql:/docker-entrypoint-initdb.d/up.sql"

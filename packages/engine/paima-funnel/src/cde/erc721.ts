@@ -34,6 +34,7 @@ function transferToTransferDatum(
     cdeId: extension.cdeId,
     cdeDatumType: ChainDataExtensionDatumType.ERC721Transfer,
     blockNumber: event.blockNumber,
+    transactionHash: event.transactionHash,
     payload: {
       from: event.returnValues.from.toLowerCase(),
       to: event.returnValues.to.toLowerCase(),
@@ -53,6 +54,7 @@ function transferToMintDatum(
     cdeId: extension.cdeId,
     cdeDatumType: ChainDataExtensionDatumType.ERC721Mint,
     blockNumber: event.blockNumber,
+    transactionHash: event.transactionHash,
     payload: {
       tokenId: event.returnValues.tokenId,
       mintData: '',

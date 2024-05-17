@@ -179,6 +179,7 @@ interface CdeDatumBase {
   cdeId: number;
   cdeDatumType: ChainDataExtensionDatumType;
   blockNumber: number;
+  transactionHash: string;
   payload: ChainDataExtensionPayload;
   network: string;
 }

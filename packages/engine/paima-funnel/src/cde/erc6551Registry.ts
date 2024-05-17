@@ -75,6 +75,7 @@ function toDatum(
     cdeId: extension.cdeId,
     cdeDatumType: ChainDataExtensionDatumType.ERC6551Registry,
     blockNumber: event.blockNumber,
+    transactionHash: event.transactionHash,
     payload: {
       accountCreated: event.returnValues.account,
       implementation: event.returnValues.implementation,

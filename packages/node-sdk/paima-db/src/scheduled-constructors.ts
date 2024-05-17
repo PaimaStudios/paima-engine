@@ -10,12 +10,24 @@ import type {
   IRemoveAllScheduledDataByInputDataParams,
 } from './sql/scheduled.queries.js';
 
-// Create an SQL update which schedules a piece of data to be run through
-// the STF at a future block height.
-export function createScheduledData(inputData: string, blockHeight: number): SQLUpdate {
+/**
+ * Create an SQL update which schedules a piece of data to be run through
+ * the STF at a future block height.
+ *
+ * @param inputData The input to pass to the STF, generally in Paima Concise format.
+ * @param blockHeight The future block height at which to post the input to the STF.
+ * @param txHash Transaction hash of the Primitive event that triggered this input, for possible later use.
+ * @returns
+ */
+export function createScheduledData(
+  inputData: string,
+  blockHeight: number,
+  txHash?: string
+): SQLUpdate {
   const nsdParams: INewScheduledDataParams = {
     block_height: blockHeight,
     input_data: inputData,
+    tx_hash: txHash,
   };
   const newScheduledDataTuple: SQLUpdate = [newScheduledData, nsdParams];
   return newScheduledDataTuple;

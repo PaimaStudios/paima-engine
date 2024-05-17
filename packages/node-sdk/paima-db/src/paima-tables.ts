@@ -39,7 +39,7 @@ const TABLE_DATA_NONCES: TableData = {
   creationQuery: QUERY_CREATE_TABLE_NONCES,
 };
 
-const QUERY_CREATE_TABLE_SCHEDULED = `
+const QUERY_CREATE_TABLE_SCHEDULED_DATA = `
 CREATE TABLE scheduled_data (
   id SERIAL PRIMARY KEY,
   block_height INTEGER NOT NULL,
@@ -47,7 +47,7 @@ CREATE TABLE scheduled_data (
 );
 `;
 
-const TABLE_DATA_SCHEDULED: TableData = {
+const TABLE_DATA_SCHEDULED_DATA: TableData = {
   tableName: 'scheduled_data',
   primaryKeyColumns: ['id'],
   columnData: packTuples([
@@ -56,7 +56,25 @@ const TABLE_DATA_SCHEDULED: TableData = {
     ['input_data', 'text', 'NO', ''],
   ]),
   serialColumns: ['id'],
-  creationQuery: QUERY_CREATE_TABLE_SCHEDULED,
+  creationQuery: QUERY_CREATE_TABLE_SCHEDULED_DATA,
+};
+
+const QUERY_CREATE_TABLE_SCHEDULED_DATA_TX_HASH = `
+CREATE TABLE scheduled_data_tx_hash (
+  id INTEGER PRIMARY KEY REFERENCES scheduled_data(id) ON DELETE CASCADE,
+  tx_hash TEXT NOT NULL
+);
+`;
+
+const TABLE_DATA_SCHEDULED_DATA_TX_HASH: TableData = {
+  tableName: 'scheduled_data_tx_hash',
+  primaryKeyColumns: ['id'],
+  columnData: packTuples([
+    ['id', 'integer', 'NO', ''],
+    ['tx_hash', 'text', 'NO', ''],
+  ]),
+  serialColumns: [],
+  creationQuery: QUERY_CREATE_TABLE_SCHEDULED_DATA_TX_HASH,
 };
 
 const QUERY_CREATE_TABLE_HISTORICAL = `
@@ -684,7 +702,8 @@ export const FUNCTIONS: string[] = [
 export const TABLES: TableData[] = [
   TABLE_DATA_BLOCKHEIGHTS,
   TABLE_DATA_NONCES,
-  TABLE_DATA_SCHEDULED,
+  TABLE_DATA_SCHEDULED_DATA,
+  TABLE_DATA_SCHEDULED_DATA_TX_HASH,
   TABLE_DATA_HISTORICAL,
   TABLE_DATA_CDE_TRACKING,
   TABLE_DATA_CDE_TRACKING_CARDANO,

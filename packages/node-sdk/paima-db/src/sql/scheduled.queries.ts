@@ -5,6 +5,7 @@ import { PreparedQuery } from '@pgtyped/runtime';
 export interface INewScheduledDataParams {
   block_height: number;
   input_data: string;
+  tx_hash?: string | null | void;
 }
 
 /** 'NewScheduledData' return type */
@@ -16,13 +17,19 @@ export interface INewScheduledDataQuery {
   result: INewScheduledDataResult;
 }
 
-const newScheduledDataIR: any = {"usedParamSet":{"block_height":true,"input_data":true},"params":[{"name":"block_height","required":true,"transform":{"type":"scalar"},"locs":[{"a":61,"b":74}]},{"name":"input_data","required":true,"transform":{"type":"scalar"},"locs":[{"a":77,"b":88}]}],"statement":"INSERT INTO scheduled_data(block_height, input_data)\nVALUES (:block_height!, :input_data!)"};
+const newScheduledDataIR: any = {"usedParamSet":{"block_height":true,"input_data":true,"tx_hash":true},"params":[{"name":"block_height","required":true,"transform":{"type":"scalar"},"locs":[{"a":83,"b":96}]},{"name":"input_data","required":true,"transform":{"type":"scalar"},"locs":[{"a":99,"b":110}]},{"name":"tx_hash","required":false,"transform":{"type":"scalar"},"locs":[{"a":211,"b":218},{"a":232,"b":239}]}],"statement":"WITH new_row AS (\n  INSERT INTO scheduled_data(block_height, input_data)\n  VALUES (:block_height!, :input_data!)\n  RETURNING id\n)\nINSERT INTO scheduled_data_tx_hash(id, tx_hash)\nSELECT (SELECT id FROM new_row), :tx_hash::TEXT\nWHERE :tx_hash IS NOT NULL"};
 
 /**
  * Query generated from SQL:
  * ```
- * INSERT INTO scheduled_data(block_height, input_data)
- * VALUES (:block_height!, :input_data!)
+ * WITH new_row AS (
+ *   INSERT INTO scheduled_data(block_height, input_data)
+ *   VALUES (:block_height!, :input_data!)
+ *   RETURNING id
+ * )
+ * INSERT INTO scheduled_data_tx_hash(id, tx_hash)
+ * SELECT (SELECT id FROM new_row), :tx_hash::TEXT
+ * WHERE :tx_hash IS NOT NULL
  * ```
  */
 export const newScheduledData = new PreparedQuery<INewScheduledDataParams,INewScheduledDataResult>(newScheduledDataIR);
@@ -38,6 +45,7 @@ export interface IGetScheduledDataByBlockHeightResult {
   block_height: number;
   id: number;
   input_data: string;
+  tx_hash: string;
 }
 
 /** 'GetScheduledDataByBlockHeight' query type */
@@ -46,14 +54,17 @@ export interface IGetScheduledDataByBlockHeightQuery {
   result: IGetScheduledDataByBlockHeightResult;
 }
 
-const getScheduledDataByBlockHeightIR: any = {"usedParamSet":{"block_height":true},"params":[{"name":"block_height","required":true,"transform":{"type":"scalar"},"locs":[{"a":50,"b":63}]}],"statement":"SELECT * from scheduled_data\nWHERE block_height = :block_height!\nORDER BY id ASC"};
+const getScheduledDataByBlockHeightIR: any = {"usedParamSet":{"block_height":true},"params":[{"name":"block_height","required":true,"transform":{"type":"scalar"},"locs":[{"a":183,"b":196}]}],"statement":"SELECT scheduled_data.id, block_height, input_data, tx_hash\nFROM scheduled_data\nLEFT JOIN scheduled_data_tx_hash\nON scheduled_data.id = scheduled_data_tx_hash.id\nWHERE block_height = :block_height!\nORDER BY scheduled_data.id ASC"};
 
 /**
  * Query generated from SQL:
  * ```
- * SELECT * from scheduled_data
+ * SELECT scheduled_data.id, block_height, input_data, tx_hash
+ * FROM scheduled_data
+ * LEFT JOIN scheduled_data_tx_hash
+ * ON scheduled_data.id = scheduled_data_tx_hash.id
  * WHERE block_height = :block_height!
- * ORDER BY id ASC
+ * ORDER BY scheduled_data.id ASC
  * ```
  */
 export const getScheduledDataByBlockHeight = new PreparedQuery<IGetScheduledDataByBlockHeightParams,IGetScheduledDataByBlockHeightResult>(getScheduledDataByBlockHeightIR);

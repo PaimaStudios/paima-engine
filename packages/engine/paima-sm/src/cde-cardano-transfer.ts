@@ -19,7 +19,7 @@ export default async function processDatum(
   const scheduledInputData = `${prefix}|${txId}|${metadata}|${inputCredentials}|${outputs}`;
 
   const updateList: SQLUpdate[] = [
-    createScheduledData(scheduledInputData, scheduledBlockHeight),
+    createScheduledData(scheduledInputData, scheduledBlockHeight, cdeDatum.transactionHash),
     [
       cdeCardanoTransferInsert,
       {

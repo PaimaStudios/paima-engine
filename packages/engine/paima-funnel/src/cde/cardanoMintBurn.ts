@@ -76,6 +76,7 @@ function eventToCdeDatum(
     cdeId: extension.cdeId,
     cdeDatumType: ChainDataExtensionDatumType.CardanoMintBurn,
     blockNumber,
+    transactionHash: event.txId,
     payload: {
       txId: event.txId,
       metadata: event.metadata,

@@ -47,6 +47,7 @@ function transferSingleToDatum(
     cdeId: extension.cdeId,
     cdeDatumType: ChainDataExtensionDatumType.Erc1155Transfer,
     blockNumber: event.blockNumber,
+    transactionHash: event.transactionHash,
     payload: {
       operator: event.returnValues.operator,
       from: event.returnValues.from,
@@ -71,6 +72,7 @@ function transferBatchToDatum(
     cdeId: extension.cdeId,
     cdeDatumType: ChainDataExtensionDatumType.Erc1155Transfer,
     blockNumber: event.blockNumber,
+    transactionHash: event.transactionHash,
     payload: {
       operator: event.returnValues.operator,
       from: event.returnValues.from,

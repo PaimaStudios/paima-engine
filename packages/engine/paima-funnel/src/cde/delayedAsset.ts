@@ -79,6 +79,7 @@ function eventToCdeDatum(
     cdeId: extension.cdeId,
     cdeDatumType: ChainDataExtensionDatumType.CardanoAssetUtxo,
     blockNumber,
+    transactionHash: event.txId,
     payload: {
       address: event.paymentCred,
       txId: event.utxo.tx,
