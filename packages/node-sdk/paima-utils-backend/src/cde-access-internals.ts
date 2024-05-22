@@ -34,19 +34,6 @@ import type {
   ICdeErc1155GetByTokenIdResult,
 } from '@paima/db';
 
-/* Functions to retrieve CDE ID: */
-
-export async function getcdeNameByName(
-  readonlyDBConn: Pool,
-  cdeName: string
-): Promise<string | null> {
-  const results = await selectChainDataExtensionsByName.run({ cde_name: cdeName }, readonlyDBConn);
-  if (results.length === 0) {
-    return null;
-  }
-  return results[0].cde_name;
-}
-
 /* Functions to retrieve CDE data using the CDE ID: */
 
 export async function internalGetNftOwner(
