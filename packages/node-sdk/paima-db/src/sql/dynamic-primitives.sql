@@ -3,11 +3,12 @@ SELECT * FROM cde_dynamic_primitive_config;
 
 /* @name  insertDynamicExtension */
 INSERT INTO cde_dynamic_primitive_config(
-    cde_id,
+    cde_name,
     config
 ) 
 SELECT 
-    MAX(chain_data_extensions.cde_id),
+    :base_name! || '-' || COUNT(*),
     :config!
 FROM
-    chain_data_extensions;
+    cde_dynamic_primitive_config
+WHERE starts_with(cde_name, :base_name! || '-');

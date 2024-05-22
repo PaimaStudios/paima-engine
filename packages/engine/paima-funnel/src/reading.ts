@@ -162,13 +162,15 @@ export async function fetchDynamicEvmPrimitives(
   sharedData: FunnelSharedData,
   network: string
 ): Promise<ChainDataExtensionDatum[][]> {
+  const filteredExtensions = sharedData.extensions.filter(
+    extension =>
+      extension.network === network &&
+      extension.cdeType === ChainDataExtensionType.DynamicEvmPrimitive
+  );
+
   const DynamicEvmPrimitives = await getUngroupedCdeData(
     web3,
-    sharedData.extensions.filter(
-      extension =>
-        extension.network === network &&
-        extension.cdeType === ChainDataExtensionType.DynamicEvmPrimitive
-    ),
+    filteredExtensions,
     fromBlock,
     toBlock,
     network
@@ -178,21 +180,29 @@ export async function fetchDynamicEvmPrimitives(
     for (const _ext of exts) {
       const ext: CdeDynamicEvmPrimitiveDatum = _ext as CdeDynamicEvmPrimitiveDatum;
 
+      const cdeName = `${ext.cdeName}-${
+        sharedData.extensions.filter(
+          e =>
+            e.cdeType !== ChainDataExtensionType.DynamicEvmPrimitive &&
+            e.cdeName.startsWith(ext.cdeName)
+        ).length
+      }`;
+
       // this would propagate the change to further funnels in the pipeline,
-      // which is needed to set the proper cdeId.
+      // which is needed to set the proper cdeName.
       sharedData.extensions.push({
-        name: '',
+        cdeName: cdeName,
+        name: cdeName,
         startBlockHeight: ext.blockNumber,
         type: CdeEntryTypeName.ERC721,
         contractAddress: ext.payload.contractAddress,
         scheduledPrefix: ext.scheduledPrefix,
         burnScheduledPrefix: ext.burnScheduledPrefix,
-        cdeId: sharedData.extensions.length,
-        network: network,
         // not relevant
         hash: 0,
         cdeType: ChainDataExtensionType.ERC721,
         contract: getErc721Contract(ext.payload.contractAddress, web3),
+        network: ext.network,
       });
     }
   }

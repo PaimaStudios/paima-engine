@@ -82,7 +82,7 @@ function eventToCdeDatum(
   };
 
   return {
-    cdeId: extension.cdeId,
+    cdeName: extension.cdeName,
     cdeDatumType: ChainDataExtensionDatumType.CardanoProjectedNFT,
     blockNumber,
     payload: {

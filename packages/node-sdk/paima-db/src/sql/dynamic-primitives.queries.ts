@@ -6,7 +6,7 @@ export type IGetDynamicExtensionsParams = void;
 
 /** 'GetDynamicExtensions' return type */
 export interface IGetDynamicExtensionsResult {
-  cde_id: number;
+  cde_name: string;
   config: string;
 }
 
@@ -29,6 +29,7 @@ export const getDynamicExtensions = new PreparedQuery<IGetDynamicExtensionsParam
 
 /** 'InsertDynamicExtension' parameters type */
 export interface IInsertDynamicExtensionParams {
+  base_name: string;
   config: string;
 }
 
@@ -41,20 +42,21 @@ export interface IInsertDynamicExtensionQuery {
   result: IInsertDynamicExtensionResult;
 }
 
-const insertDynamicExtensionIR: any = {"usedParamSet":{"config":true},"params":[{"name":"config","required":true,"transform":{"type":"scalar"},"locs":[{"a":119,"b":126}]}],"statement":"INSERT INTO cde_dynamic_primitive_config(\n    cde_id,\n    config\n) \nSELECT \n    MAX(chain_data_extensions.cde_id),\n    :config!\nFROM\n    chain_data_extensions"};
+const insertDynamicExtensionIR: any = {"usedParamSet":{"base_name":true,"config":true},"params":[{"name":"base_name","required":true,"transform":{"type":"scalar"},"locs":[{"a":82,"b":92},{"a":193,"b":203}]},{"name":"config","required":true,"transform":{"type":"scalar"},"locs":[{"a":118,"b":125}]}],"statement":"INSERT INTO cde_dynamic_primitive_config(\n    cde_name,\n    config\n) \nSELECT \n    :base_name! || '-' || COUNT(*),\n    :config!\nFROM\n    cde_dynamic_primitive_config\nWHERE starts_with(cde_name, :base_name! || '-')"};
 
 /**
  * Query generated from SQL:
  * ```
  * INSERT INTO cde_dynamic_primitive_config(
- *     cde_id,
+ *     cde_name,
  *     config
  * ) 
  * SELECT 
- *     MAX(chain_data_extensions.cde_id),
+ *     :base_name! || '-' || COUNT(*),
  *     :config!
  * FROM
- *     chain_data_extensions
+ *     cde_dynamic_primitive_config
+ * WHERE starts_with(cde_name, :base_name! || '-')
  * ```
  */
 export const insertDynamicExtension = new PreparedQuery<IInsertDynamicExtensionParams,IInsertDynamicExtensionResult>(insertDynamicExtensionIR);

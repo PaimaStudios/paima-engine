@@ -1,7 +1,6 @@
 import type { Pool } from 'pg';
 
 import {
-  getCdeIdByName,
   internalGetNftOwner,
   internalGetOwnedNfts,
   internalGetFungibleTokenBalance,
@@ -41,9 +40,7 @@ export async function getNftOwner(
   cdeName: string,
   nftId: bigint
 ): Promise<string | null> {
-  const cdeId = await getCdeIdByName(readonlyDBConn, cdeName);
-  if (cdeId === null) return null;
-  return await internalGetNftOwner(readonlyDBConn, cdeId, nftId);
+  return await internalGetNftOwner(readonlyDBConn, cdeName, nftId);
 }
 
 /**
@@ -78,9 +75,7 @@ export async function getOwnedNfts(
   cdeName: string,
   ownerAddress: string
 ): Promise<bigint[]> {
-  const cdeId = await getCdeIdByName(readonlyDBConn, cdeName);
-  if (cdeId === null) return [];
-  return await internalGetOwnedNfts(readonlyDBConn, cdeId, ownerAddress);
+  return await internalGetOwnedNfts(readonlyDBConn, cdeName, ownerAddress);
 }
 
 /**
@@ -91,9 +86,7 @@ export async function getFungibleTokenBalance(
   cdeName: string,
   walletAddress: string
 ): Promise<bigint | null> {
-  const cdeId = await getCdeIdByName(readonlyDBConn, cdeName);
-  if (cdeId === null) return null;
-  return await internalGetFungibleTokenBalance(readonlyDBConn, cdeId, walletAddress);
+  return await internalGetFungibleTokenBalance(readonlyDBConn, cdeName, walletAddress);
 }
 
 /**
@@ -104,9 +97,7 @@ export async function totalAmountDeposited(
   cdeName: string,
   walletAddress: string
 ): Promise<bigint | null> {
-  const cdeId = await getCdeIdByName(readonlyDBConn, cdeName);
-  if (cdeId === null) return null;
-  return await internalGetTotalDeposited(readonlyDBConn, cdeId, walletAddress);
+  return await internalGetTotalDeposited(readonlyDBConn, cdeName, walletAddress);
 }
 
 /**
@@ -117,9 +108,7 @@ export async function findUsersWithDepositsGreaterThan(
   cdeName: string,
   thresholdAmount: bigint
 ): Promise<string[]> {
-  const cdeId = await getCdeIdByName(readonlyDBConn, cdeName);
-  if (cdeId === null) return [];
-  return await internalGetDonorsAboveThreshold(readonlyDBConn, cdeId, thresholdAmount);
+  return await internalGetDonorsAboveThreshold(readonlyDBConn, cdeName, thresholdAmount);
 }
 
 /**
@@ -130,9 +119,7 @@ export async function getGenericDataBlockheight(
   cdeName: string,
   blockHeight: number
 ): Promise<GenericCdeDataUnit[]> {
-  const cdeId = await getCdeIdByName(readonlyDBConn, cdeName);
-  if (cdeId === null) return [];
-  return await internalGetGenericDataBlockheight(readonlyDBConn, cdeId, blockHeight);
+  return await internalGetGenericDataBlockheight(readonlyDBConn, cdeName, blockHeight);
 }
 
 /**
@@ -144,9 +131,7 @@ export async function getGenericDataBlockheightRange(
   fromBlock: number,
   toBlock: number
 ): Promise<GenericCdeDataUnit[]> {
-  const cdeId = await getCdeIdByName(readonlyDBConn, cdeName);
-  if (cdeId === null) return [];
-  return await internalGetGenericDataBlockheightRange(readonlyDBConn, cdeId, fromBlock, toBlock);
+  return await internalGetGenericDataBlockheightRange(readonlyDBConn, cdeName, fromBlock, toBlock);
 }
 
 /**
@@ -157,9 +142,7 @@ export async function getErc1155AllTokens(
   cdeName: string,
   wallet: string
 ): Promise<ICdeErc1155GetAllTokensResult[]> {
-  const cdeId = await getCdeIdByName(readonlyDBConn, cdeName);
-  if (cdeId === null) return [];
-  return await internalGetErc1155AllTokens(readonlyDBConn, cdeId, wallet);
+  return await internalGetErc1155AllTokens(readonlyDBConn, cdeName, wallet);
 }
 
 /**
@@ -170,9 +153,7 @@ export async function getErc1155ByTokenId(
   cdeName: string,
   tokenId: bigint
 ): Promise<ICdeErc1155GetByTokenIdResult | null> {
-  const cdeId = await getCdeIdByName(readonlyDBConn, cdeName);
-  if (cdeId === null) return null;
-  return await internalGetErc1155ByTokenId(readonlyDBConn, cdeId, tokenId);
+  return await internalGetErc1155ByTokenId(readonlyDBConn, cdeName, tokenId);
 }
 
 /**
@@ -184,9 +165,7 @@ export async function getErc1155ByTokenIdAndWallet(
   wallet: string,
   tokenId: bigint
 ): Promise<ICdeErc1155GetByTokenIdAndWalletResult | null> {
-  const cdeId = await getCdeIdByName(readonlyDBConn, cdeName);
-  if (cdeId === null) return null;
-  return await internalGetErc1155ByTokenIdAndWallet(readonlyDBConn, cdeId, wallet, tokenId);
+  return await internalGetErc1155ByTokenIdAndWallet(readonlyDBConn, cdeName, wallet, tokenId);
 }
 
 /**
@@ -197,9 +176,7 @@ export async function getErc6551AccountOwner(
   cdeName: string,
   accountCreated: string
 ): Promise<TokenIdPair | null> {
-  const cdeId = await getCdeIdByName(readonlyDBConn, cdeName);
-  if (cdeId === null) return null;
-  return await internalGetErc6551AccountOwner(readonlyDBConn, cdeId, accountCreated);
+  return await internalGetErc6551AccountOwner(readonlyDBConn, cdeName, accountCreated);
 }
 
 /**
@@ -210,9 +187,7 @@ export async function getAllOwnedErc6551Accounts(
   cdeName: string,
   nft: TokenIdPair
 ): Promise<string[]> {
-  const cdeId = await getCdeIdByName(readonlyDBConn, cdeName);
-  if (cdeId === null) return [];
-  return await internalGetAllOwnedErc6551Accounts(readonlyDBConn, cdeId, nft);
+  return await internalGetAllOwnedErc6551Accounts(readonlyDBConn, cdeName, nft);
 }
 
 /**

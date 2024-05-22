@@ -82,7 +82,7 @@ export type CarpFunnelCacheEntryState = {
   epoch: number | undefined;
   cursors:
     | {
-        [cdeId: number]: { cursor: string; finished: boolean };
+        [cdeName: string]: { cursor: string; finished: boolean };
       }
     | undefined;
 };
@@ -112,13 +112,13 @@ export class CarpFunnelCacheEntry implements FunnelCacheEntry {
     }
   }
 
-  public updateCursor(cdeId: number, presyncCursor: { cursor: string; finished: boolean }): void {
+  public updateCursor(cdeName: string, presyncCursor: { cursor: string; finished: boolean }): void {
     if (this.state) {
       if (!this.state.cursors) {
         this.state.cursors = {};
       }
 
-      this.state.cursors[cdeId] = presyncCursor;
+      this.state.cursors[cdeName] = presyncCursor;
     }
   }
 
@@ -187,7 +187,7 @@ export type MinaFunnelCacheEntryState = {
   pg: pg.Client;
   cursors:
     | {
-        [cdeId: number]: { cursor: string; finished: boolean };
+        [cdeName: string]: { cursor: string; finished: boolean };
       }
     | undefined;
 };
@@ -211,13 +211,13 @@ export class MinaFunnelCacheEntry implements FunnelCacheEntry {
     }
   }
 
-  public updateCursor(cdeId: number, presyncCursor: { cursor: string; finished: boolean }): void {
+  public updateCursor(cdeName: string, presyncCursor: { cursor: string; finished: boolean }): void {
     if (this.state) {
       if (!this.state.cursors) {
         this.state.cursors = {};
       }
 
-      this.state.cursors[cdeId] = presyncCursor;
+      this.state.cursors[cdeName] = presyncCursor;
     }
   }
 

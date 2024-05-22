@@ -7,7 +7,7 @@ export default async function processDatum(
   cdeDatum: CdeCardanoTransferDatum,
   inPresync: boolean
 ): Promise<SQLUpdate[]> {
-  const cdeId = cdeDatum.cdeId;
+  const cdeName = cdeDatum.cdeName;
   const prefix = cdeDatum.scheduledPrefix;
   const txId = cdeDatum.payload.txId;
   const rawTx = cdeDatum.payload.rawTx;
@@ -23,7 +23,7 @@ export default async function processDatum(
     [
       cdeCardanoTransferInsert,
       {
-        cde_id: cdeId,
+        cde_name: cdeName,
         tx_id: txId,
         raw_tx: rawTx,
         metadata: metadata,

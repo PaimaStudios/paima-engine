@@ -3,13 +3,13 @@ select * from cde_tracking_cursor_pagination;
 
 /* @name updatePaginationCursor */
 INSERT INTO cde_tracking_cursor_pagination(
-  cde_id,
+  cde_name,
   cursor,
   finished
 ) VALUES (
-  :cde_id!,
+  :cde_name!,
   :cursor!,
   :finished!
 )
-ON CONFLICT (cde_id)
+ON CONFLICT (cde_name)
 DO UPDATE SET cursor = :cursor!, finished = :finished!;

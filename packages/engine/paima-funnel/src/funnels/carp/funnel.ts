@@ -224,13 +224,13 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
     }
 
     const cache = this.cache;
-    const mapCursorPaginatedData = (cdeId: number) => (datums: any) => {
+    const mapCursorPaginatedData = (cdeName: string) => (datums: any) => {
       // we are providing the entire indexed range, so if carp
       // returns nothing we know the presync is finished for this
       // CDE.
       const finished = datums.length === 0 || datums.length < this.config.paginationLimit;
 
-      cache.updateCursor(cdeId, {
+      cache.updateCursor(cdeName, {
         cursor: datums[datums.length - 1] ? datums[datums.length - 1].paginationCursor.cursor : '',
         finished,
       });
@@ -251,7 +251,7 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
             }
 
             if (cursors) {
-              const cursor = cursors[extension.cdeId];
+              const cursor = cursors[extension.cdeName];
 
               if (!cursor) {
                 return true;
@@ -268,7 +268,7 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
                 const cursors = this.cache.getState().cursors;
                 const startingSlot = this.cache.getState().startingSlot - 1;
 
-                const cursor = cursors && cursors[extension.cdeId];
+                const cursor = cursors && cursors[extension.cdeName];
 
                 const data = getCdePoolData(
                   this.carpUrl,
@@ -282,10 +282,10 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
                   cursor ? (JSON.parse(cursor.cursor) as BlockTxPair) : undefined,
                   this.config.paginationLimit,
                   this.chainName
-                ).then(mapCursorPaginatedData(extension.cdeId));
+                ).then(mapCursorPaginatedData(extension.cdeName));
 
                 return data.then(data => ({
-                  cdeId: extension.cdeId,
+                  cdeName: extension.cdeName,
                   cdeType: extension.cdeType,
                   data,
                 }));
@@ -294,7 +294,7 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
                 const cursors = this.cache.getState().cursors;
                 const startingSlot = this.cache.getState().startingSlot - 1;
 
-                const cursor = cursors && cursors[extension.cdeId];
+                const cursor = cursors && cursors[extension.cdeName];
 
                 const data = getCdeProjectedNFTData(
                   this.carpUrl,
@@ -308,10 +308,10 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
                   cursor ? (JSON.parse(cursor.cursor) as BlockTxPair) : undefined,
                   this.config.paginationLimit,
                   this.chainName
-                ).then(mapCursorPaginatedData(extension.cdeId));
+                ).then(mapCursorPaginatedData(extension.cdeName));
 
                 return data.then(data => ({
-                  cdeId: extension.cdeId,
+                  cdeName: extension.cdeName,
                   cdeType: extension.cdeType,
                   data,
                 }));
@@ -320,7 +320,7 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
                 const cursors = this.cache.getState().cursors;
                 const startingSlot = this.cache.getState().startingSlot - 1;
 
-                const cursor = cursors && cursors[extension.cdeId];
+                const cursor = cursors && cursors[extension.cdeName];
 
                 const data = getCdeDelayedAsset(
                   this.carpUrl,
@@ -333,10 +333,10 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
                   cursor ? (JSON.parse(cursor.cursor) as BlockTxPair) : undefined,
                   this.config.paginationLimit,
                   this.chainName
-                ).then(mapCursorPaginatedData(extension.cdeId));
+                ).then(mapCursorPaginatedData(extension.cdeName));
 
                 return data.then(data => ({
-                  cdeId: extension.cdeId,
+                  cdeName: extension.cdeName,
                   cdeType: extension.cdeType,
                   data,
                 }));
@@ -345,7 +345,7 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
                 const cursors = this.cache.getState().cursors;
                 const startingSlot = this.cache.getState().startingSlot - 1;
 
-                const cursor = cursors && cursors[extension.cdeId];
+                const cursor = cursors && cursors[extension.cdeName];
 
                 const data = getCdeTransferData(
                   this.carpUrl,
@@ -358,10 +358,10 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
                   cursor ? (JSON.parse(cursor.cursor) as BlockTxPair) : undefined,
                   this.config.paginationLimit,
                   this.chainName
-                ).then(mapCursorPaginatedData(extension.cdeId));
+                ).then(mapCursorPaginatedData(extension.cdeName));
 
                 return data.then(data => ({
-                  cdeId: extension.cdeId,
+                  cdeName: extension.cdeName,
                   cdeType: extension.cdeType,
                   data,
                 }));
@@ -370,7 +370,7 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
                 const cursors = this.cache.getState().cursors;
                 const startingSlot = this.cache.getState().startingSlot - 1;
 
-                const cursor = cursors && cursors[extension.cdeId];
+                const cursor = cursors && cursors[extension.cdeName];
 
                 const data = getCdeMintBurnData(
                   this.carpUrl,
@@ -383,10 +383,10 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
                   cursor ? (JSON.parse(cursor.cursor) as BlockTxPair) : undefined,
                   this.config.paginationLimit,
                   this.chainName
-                ).then(mapCursorPaginatedData(extension.cdeId));
+                ).then(mapCursorPaginatedData(extension.cdeName));
 
                 return data.then(data => ({
-                  cdeId: extension.cdeId,
+                  cdeName: extension.cdeName,
                   cdeType: extension.cdeType,
                   data,
                 }));
@@ -408,7 +408,7 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
           network: this.chainName,
           networkType: ConfigNetworkType.CARDANO,
           carpCursor: {
-            cdeId: event.cdeId,
+            cdeName: event.cdeName,
             cursor: event.paginationCursor.cursor,
             finished: event.paginationCursor.finished,
           },
@@ -460,16 +460,16 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
 
       const extensions = sharedData.extensions
         .filter(extensions => extensions.network === chainName)
-        .map(extension => extension.cdeId)
-        .reduce((set, cdeId) => {
-          set.add(cdeId);
+        .map(extension => extension.cdeName)
+        .reduce((set, cdeName) => {
+          set.add(cdeName);
           return set;
         }, new Set());
 
       cursors
-        .filter(cursor => extensions.has(cursor.cde_id))
+        .filter(cursor => extensions.has(cursor.cde_name))
         .forEach(cursor => {
-          newEntry.updateCursor(cursor.cde_id, {
+          newEntry.updateCursor(cursor.cde_name, {
             cursor: cursor.cursor,
             finished: cursor.finished,
           });

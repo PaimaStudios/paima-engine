@@ -17,7 +17,7 @@ export default async function processErc1155TransferDatum(
   cdeDatum: CdeErc1155TransferDatum,
   inPresync: boolean
 ): Promise<SQLUpdate[]> {
-  const { cdeId, scheduledPrefix, burnScheduledPrefix, payload, blockNumber } = cdeDatum;
+  const { cdeName, scheduledPrefix, burnScheduledPrefix, payload, blockNumber } = cdeDatum;
   const { operator, from, to, ids, values } = payload;
   const isMint = from == '0x0000000000000000000000000000000000000000';
   const isBurn = /^0x0+(dead)?$/i.test(to);
@@ -60,7 +60,7 @@ export default async function processErc1155TransferDatum(
       updateList.push([
         cdeErc1155ModifyBalance,
         {
-          cde_id: cdeId,
+          cde_name: cdeName,
           token_id,
           wallet_address: from.toLowerCase(),
           value: (-value).toString(),
@@ -70,7 +70,7 @@ export default async function processErc1155TransferDatum(
       updateList.push([
         cdeErc1155DeleteIfZero,
         {
-          cde_id: cdeId,
+          cde_name: cdeName,
           token_id,
           wallet_address: from.toLowerCase(),
         } satisfies ICdeErc1155DeleteIfZeroParams,
@@ -82,7 +82,7 @@ export default async function processErc1155TransferDatum(
       updateList.push([
         cdeErc1155ModifyBalance,
         {
-          cde_id: cdeId,
+          cde_name: cdeName,
           token_id,
           wallet_address: to.toLowerCase(),
           value: value.toString(),
@@ -93,7 +93,7 @@ export default async function processErc1155TransferDatum(
       updateList.push([
         cdeErc1155Burn,
         {
-          cde_id: cdeId,
+          cde_name: cdeName,
           token_id,
           wallet_address: from.toLowerCase(),
           value: value.toString(),

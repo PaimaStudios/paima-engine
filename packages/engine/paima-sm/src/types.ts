@@ -58,14 +58,14 @@ export interface EvmPresyncChainData {
 export interface CardanoPresyncChainData {
   network: string;
   networkType: ConfigNetworkType.CARDANO;
-  carpCursor: { cdeId: number; cursor: string; finished: boolean };
+  carpCursor: { cdeName: string; cursor: string; finished: boolean };
   extensionDatums: ChainDataExtensionDatum[];
 }
 
 export interface MinaPresyncChainData {
   network: string;
   networkType: ConfigNetworkType.MINA;
-  minaCursor: { cdeId: number; cursor: string; finished: boolean };
+  minaCursor: { cdeName: string; cursor: string; finished: boolean };
   extensionDatums: ChainDataExtensionDatum[];
 }
 
@@ -181,7 +181,7 @@ type ChainDataExtensionPayload =
   | CdeDatumDynamicEvmPrimitivePayload;
 
 interface CdeDatumBase {
-  cdeId: number;
+  cdeName: string;
   cdeDatumType: ChainDataExtensionDatumType;
   blockNumber: number;
   payload: ChainDataExtensionPayload;
@@ -280,7 +280,6 @@ export interface CdeDynamicEvmPrimitiveDatum extends CdeDatumBase {
   payload: CdeDatumDynamicEvmPrimitivePayload;
   scheduledPrefix: string;
   burnScheduledPrefix?: string | undefined;
-  cdeName: string;
 }
 
 export type ChainDataExtensionDatum =
@@ -326,7 +325,7 @@ const ChainDataExtensionConfigBase = Type.Object({
   startBlockHeight: Type.Number(),
 });
 interface ChainDataExtensionBase {
-  cdeId: number;
+  cdeName: string;
   hash: number; // hash of the CDE config that created this type
 }
 

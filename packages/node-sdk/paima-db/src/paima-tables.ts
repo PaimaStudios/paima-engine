@@ -120,7 +120,7 @@ const TABLE_DATA_CDE_TRACKING_CARDANO: TableData = {
 
 const QUERY_CREATE_TABLE_CDE_TRACKING_CURSOR_PAGINATION = `
 CREATE TABLE cde_tracking_cursor_pagination (
-  cde_id INTEGER PRIMARY KEY,
+  cde_name TEXT PRIMARY KEY,
   cursor TEXT NOT NULL,
   finished BOOLEAN NOT NULL
 );
@@ -128,9 +128,9 @@ CREATE TABLE cde_tracking_cursor_pagination (
 
 const TABLE_DATA_CDE_TRACKING_CURSOR_PAGINATION: TableData = {
   tableName: 'cde_tracking_cursor_pagination',
-  primaryKeyColumns: ['cde_id'],
+  primaryKeyColumns: ['cde_name'],
   columnData: packTuples([
-    ['cde_id', 'integer', 'NO', ''],
+    ['cde_name', 'text', 'NO', ''],
     ['cursor', 'text', 'NO', ''],
     ['finished', 'boolean', 'NO', ''],
   ]),
@@ -140,9 +140,8 @@ const TABLE_DATA_CDE_TRACKING_CURSOR_PAGINATION: TableData = {
 
 const QUERY_CREATE_TABLE_CDE = `
 CREATE TABLE chain_data_extensions (
-  cde_id INTEGER PRIMARY KEY,
+  cde_name TEXT PRIMARY KEY,
   cde_type INTEGER NOT NULL,
-  cde_name TEXT NOT NULL,
   cde_hash INTEGER,
   start_blockheight INTEGER NOT NULL,
   scheduled_prefix TEXT
@@ -151,9 +150,8 @@ CREATE TABLE chain_data_extensions (
 
 const TABLE_DATA_CDE: TableData = {
   tableName: 'chain_data_extensions',
-  primaryKeyColumns: ['cde_id'],
+  primaryKeyColumns: ['cde_name'],
   columnData: packTuples([
-    ['cde_id', 'integer', 'NO', ''],
     ['cde_type', 'integer', 'NO', ''],
     ['cde_name', 'text', 'NO', ''],
     ['cde_hash', 'integer', 'YES', ''],
@@ -166,18 +164,18 @@ const TABLE_DATA_CDE: TableData = {
 
 const QUERY_CREATE_TABLE_CDE_ERC20 = `
 CREATE TABLE cde_erc20_data (
-  cde_id INTEGER NOT NULL,
+  cde_name TEXT NOT NULL,
   wallet_address TEXT NOT NULL,
   balance TEXT NOT NULL,
-  PRIMARY KEY (cde_id, wallet_address)
+  PRIMARY KEY (cde_name, wallet_address)
 );
 `;
 
 const TABLE_DATA_CDE_ERC20: TableData = {
   tableName: 'cde_erc20_data',
-  primaryKeyColumns: ['cde_id', 'wallet_address'],
+  primaryKeyColumns: ['cde_name', 'wallet_address'],
   columnData: packTuples([
-    ['cde_id', 'integer', 'NO', ''],
+    ['cde_name', 'text', 'NO', ''],
     ['wallet_address', 'text', 'NO', ''],
     ['balance', 'text', 'NO', ''],
   ]),
@@ -187,18 +185,18 @@ const TABLE_DATA_CDE_ERC20: TableData = {
 
 const QUERY_CREATE_TABLE_CDE_ERC721 = `
 CREATE TABLE cde_erc721_data (
-  cde_id INTEGER NOT NULL,
+  cde_name TEXT NOT NULL,
   token_id TEXT NOT NULL,
   nft_owner TEXT NOT NULL,
-  PRIMARY KEY (cde_id, token_id)
+  PRIMARY KEY (cde_name, token_id)
 );
 `;
 
 const TABLE_DATA_CDE_ERC721: TableData = {
   tableName: 'cde_erc721_data',
-  primaryKeyColumns: ['cde_id', 'token_id'],
+  primaryKeyColumns: ['cde_name', 'token_id'],
   columnData: packTuples([
-    ['cde_id', 'integer', 'NO', ''],
+    ['cde_name', 'text', 'NO', ''],
     ['token_id', 'text', 'NO', ''],
     ['nft_owner', 'text', 'NO', ''],
   ]),
@@ -208,18 +206,18 @@ const TABLE_DATA_CDE_ERC721: TableData = {
 
 const QUERY_CREATE_TABLE_CDE_ERC721_BURN = `
 CREATE TABLE cde_erc721_burn (
-  cde_id INTEGER NOT NULL,
+  cde_name TEXT NOT NULL,
   token_id TEXT NOT NULL,
   nft_owner TEXT NOT NULL,
-  PRIMARY KEY (cde_id, token_id)
+  PRIMARY KEY (cde_name, token_id)
 );
 `;
 
 const TABLE_DATA_CDE_ERC721_BURN: TableData = {
   tableName: 'cde_erc721_burn',
-  primaryKeyColumns: ['cde_id', 'token_id'],
+  primaryKeyColumns: ['cde_name', 'token_id'],
   columnData: packTuples([
-    ['cde_id', 'integer', 'NO', ''],
+    ['cde_name', 'text', 'NO', ''],
     ['token_id', 'text', 'NO', ''],
     ['nft_owner', 'text', 'NO', ''],
   ]),
@@ -229,19 +227,19 @@ const TABLE_DATA_CDE_ERC721_BURN: TableData = {
 
 const QUERY_CREATE_TABLE_CDE_ERC1155_DATA = `
 CREATE TABLE cde_erc1155_data (
-  cde_id INTEGER NOT NULL,
+  cde_name TEXT NOT NULL,
   token_id TEXT NOT NULL,
   wallet_address TEXT NOT NULL,
   balance TEXT NOT NULL,
-  PRIMARY KEY (cde_id, token_id, wallet_address)
+  PRIMARY KEY (cde_name, token_id, wallet_address)
 );
 `;
 
 const TABLE_DATA_CDE_ERC1155_DATA: TableData = {
   tableName: 'cde_erc1155_data',
-  primaryKeyColumns: ['cde_id', 'token_id'],
+  primaryKeyColumns: ['cde_name', 'token_id'],
   columnData: packTuples([
-    ['cde_id', 'integer', 'NO', ''],
+    ['cde_name', 'text', 'NO', ''],
     ['token_id', 'text', 'NO', ''],
     ['wallet_address', 'text', 'NO', ''],
     ['balance', 'text', 'NO', ''],
@@ -252,19 +250,19 @@ const TABLE_DATA_CDE_ERC1155_DATA: TableData = {
 
 const QUERY_CREATE_TABLE_CDE_ERC1155_BURN = `
 CREATE TABLE cde_erc1155_burn (
-  cde_id INTEGER NOT NULL,
+  cde_name TEXT NOT NULL,
   token_id TEXT NOT NULL,
   wallet_address TEXT NOT NULL,
   balance TEXT NOT NULL,
-  PRIMARY KEY (cde_id, token_id, wallet_address)
+  PRIMARY KEY (cde_name, token_id, wallet_address)
 );
 `;
 
 const TABLE_DATA_CDE_ERC1155_BURN: TableData = {
   tableName: 'cde_erc1155_burn',
-  primaryKeyColumns: ['cde_id', 'token_id'],
+  primaryKeyColumns: ['cde_name', 'token_id'],
   columnData: packTuples([
-    ['cde_id', 'integer', 'NO', ''],
+    ['cde_name', 'text', 'NO', ''],
     ['token_id', 'text', 'NO', ''],
     ['wallet_address', 'text', 'NO', ''],
     ['balance', 'text', 'NO', ''],
@@ -275,18 +273,18 @@ const TABLE_DATA_CDE_ERC1155_BURN: TableData = {
 
 const QUERY_CREATE_TABLE_CDE_ERC20_DEPOSIT = `
 CREATE TABLE cde_erc20_deposit_data (
-  cde_id INTEGER NOT NULL,
+  cde_name TEXT NOT NULL,
   wallet_address TEXT NOT NULL,
   total_deposited TEXT NOT NULL,
-  PRIMARY KEY (cde_id, wallet_address)
+  PRIMARY KEY (cde_name, wallet_address)
 );
 `;
 
 const TABLE_DATA_CDE_ERC20_DEPOSIT: TableData = {
   tableName: 'cde_erc20_deposit_data',
-  primaryKeyColumns: ['cde_id', 'wallet_address'],
+  primaryKeyColumns: ['cde_name', 'wallet_address'],
   columnData: packTuples([
-    ['cde_id', 'integer', 'NO', ''],
+    ['cde_name', 'text', 'NO', ''],
     ['wallet_address', 'text', 'NO', ''],
     ['total_deposited', 'text', 'NO', ''],
   ]),
@@ -296,19 +294,19 @@ const TABLE_DATA_CDE_ERC20_DEPOSIT: TableData = {
 
 const QUERY_CREATE_TABLE_CDE_GENERIC_DATA = `
 CREATE TABLE cde_generic_data (
-  cde_id INTEGER NOT NULL,
+  cde_name TEXT NOT NULL,
   id SERIAL,
   block_height INTEGER NOT NULL,
   event_data JSON NOT NULL,
-  PRIMARY KEY (cde_id, id)
+  PRIMARY KEY (cde_name, id)
 );
 `;
 
 const TABLE_DATA_CDE_GENERIC_DATA: TableData = {
   tableName: 'cde_generic_data',
-  primaryKeyColumns: ['cde_id', 'id'],
+  primaryKeyColumns: ['cde_name', 'id'],
   columnData: packTuples([
-    ['cde_id', 'integer', 'NO', ''],
+    ['cde_name', 'text', 'NO', ''],
     ['id', 'integer', 'NO', ''],
     ['block_height', 'integer', 'NO', ''],
     ['event_data', 'json', 'NO', ''],
@@ -319,7 +317,7 @@ const TABLE_DATA_CDE_GENERIC_DATA: TableData = {
 
 const QUERY_CREATE_TABLE_CDE_ERC6551_REGISTRY = `
 CREATE TABLE cde_erc6551_registry_data (
-  cde_id INTEGER NOT NULL,
+  cde_name TEXT NOT NULL,
   block_height INTEGER NOT NULL,
   account_created TEXT NOT NULL,
   implementation TEXT NOT NULL,
@@ -327,15 +325,15 @@ CREATE TABLE cde_erc6551_registry_data (
   token_id TEXT NOT NULL,
   chain_id TEXT NOT NULL,
   salt TEXT NOT NULL,
-  PRIMARY KEY (cde_id, account_created)
+  PRIMARY KEY (cde_name, account_created)
 );
 `;
 
 const TABLE_DATA_CDE_ERC6551_REGISTRY: TableData = {
   tableName: 'cde_erc6551_registry_data',
-  primaryKeyColumns: ['cde_id', 'account_created'],
+  primaryKeyColumns: ['cde_name', 'account_created'],
   columnData: packTuples([
-    ['cde_id', 'integer', 'NO', ''],
+    ['cde_name', 'text', 'NO', ''],
     ['block_height', 'integer', 'NO', ''],
     ['account_created', 'text', 'NO', ''],
     ['implementation', 'text', 'NO', ''],
@@ -350,19 +348,19 @@ const TABLE_DATA_CDE_ERC6551_REGISTRY: TableData = {
 
 const QUERY_CREATE_TABLE_CDE_CARDANO_POOL = `
 CREATE TABLE cde_cardano_pool_delegation (
-  cde_id INTEGER NOT NULL,
+  cde_name TEXT NOT NULL,
   epoch INTEGER NOT NULL,
   address TEXT NOT NULL,
   pool TEXT,
-  PRIMARY KEY (cde_id, epoch, address)
+  PRIMARY KEY (cde_name, epoch, address)
 );
 `;
 
 const TABLE_DATA_CDE_CARDANO_POOL: TableData = {
   tableName: 'cde_cardano_pool_delegation',
-  primaryKeyColumns: ['cde_id', 'epoch', 'address'],
+  primaryKeyColumns: ['cde_name', 'epoch', 'address'],
   columnData: packTuples([
-    ['cde_id', 'integer', 'NO', ''],
+    ['cde_name', 'text', 'NO', ''],
     ['epoch', 'integer', 'NO', ''],
     ['address', 'text', 'NO', ''],
     ['pool', 'text', 'YES', ''],
@@ -373,7 +371,7 @@ const TABLE_DATA_CDE_CARDANO_POOL: TableData = {
 
 const QUERY_CREATE_TABLE_CDE_CARDANO_PROJECTED_NFT = `
 CREATE TABLE cde_cardano_projected_nft (
-  cde_id INTEGER NOT NULL,
+  cde_name TEXT NOT NULL,
   id SERIAL,
   owner_address TEXT NOT NULL,
   previous_tx_hash TEXT,
@@ -386,15 +384,15 @@ CREATE TABLE cde_cardano_projected_nft (
   status TEXT NOT NULL,
   plutus_datum TEXT NOT NULL,
   for_how_long BIGINT,
-  PRIMARY KEY (cde_id, id)
+  PRIMARY KEY (cde_name, id)
 )
 `;
 
 const TABLE_DATA_CDE_CARDANO_PROJECTED_NFT: TableData = {
   tableName: 'cde_cardano_projected_nft',
-  primaryKeyColumns: ['cde_id', 'id'],
+  primaryKeyColumns: ['cde_name', 'id'],
   columnData: packTuples([
-    ['cde_id', 'integer', 'NO', ''],
+    ['cde_name', 'text', 'NO', ''],
     ['id', 'integer', 'NO', ''],
     ['owner_address', 'text', 'NO', ''],
     ['previous_tx_hash', 'text', 'YES', ''],
@@ -432,7 +430,7 @@ const TABLE_DATA_CARDANO_LAST_EPOCH: TableData = {
 
 const QUERY_CREATE_TABLE_CDE_CARDANO_ASSET_UTXOS = `
 CREATE TABLE cde_cardano_asset_utxos (
-  cde_id INTEGER NOT NULL,
+  cde_name TEXT NOT NULL,
   address TEXT NOT NULL,
   tx_id TEXT NOT NULL,
   output_index INTEGER NOT NULL,
@@ -440,7 +438,7 @@ CREATE TABLE cde_cardano_asset_utxos (
   cip14_fingerprint TEXT NOT NULL,
   policy_id text NOT NULL,
   asset_name text NOT NULL,
-  PRIMARY KEY(cde_id,tx_id,output_index,cip14_fingerprint)
+  PRIMARY KEY(cde_name,tx_id,output_index,cip14_fingerprint)
 );
 `;
 
@@ -450,9 +448,9 @@ CREATE INDEX CDE_CARDANO_ASSET_UTXOS_ADDRESS_INDEX ON "cde_cardano_asset_utxos" 
 
 const TABLE_DATA_CDE_CARDANO_ASSET_UTXOS: TableData = {
   tableName: 'cde_cardano_asset_utxos',
-  primaryKeyColumns: ['cde_id', 'tx_id', 'output_index'],
+  primaryKeyColumns: ['cde_name', 'tx_id', 'output_index'],
   columnData: packTuples([
-    ['cde_id', 'integer', 'NO', ''],
+    ['cde_name', 'text', 'NO', ''],
     ['address', 'text', 'NO', ''],
     ['tx_id', 'text', 'NO', ''],
     ['output_index', 'integer', 'NO', ''],
@@ -471,19 +469,19 @@ const TABLE_DATA_CDE_CARDANO_ASSET_UTXOS: TableData = {
 
 const QUERY_CREATE_TABLE_CDE_CARDANO_TRANSFER = `
 CREATE TABLE cde_cardano_transfer (
-  cde_id INTEGER NOT NULL,
+  cde_name TEXT NOT NULL,
   tx_id TEXT NOT NULL,
   raw_tx TEXT NOT NULL,
   metadata TEXT,
-  PRIMARY KEY (cde_id, tx_id)
+  PRIMARY KEY (cde_name, tx_id)
 )
 `;
 
 const TABLE_DATA_CDE_CARDANO_TRANSFER: TableData = {
   tableName: 'cde_cardano_transfer',
-  primaryKeyColumns: ['cde_id', 'tx_id'],
+  primaryKeyColumns: ['cde_name', 'tx_id'],
   columnData: packTuples([
-    ['cde_id', 'integer', 'NO', ''],
+    ['cde_name', 'text', 'NO', ''],
     ['tx_id', 'text', 'NO', ''],
     ['raw_tx', 'text', 'NO', ''],
     ['metadata', 'text', 'YES', ''],
@@ -494,21 +492,21 @@ const TABLE_DATA_CDE_CARDANO_TRANSFER: TableData = {
 
 const QUERY_CREATE_TABLE_CDE_CARDANO_MINT_BURN = `
 CREATE TABLE cde_cardano_mint_burn(
-  cde_id INTEGER NOT NULL,
+  cde_name TEXT NOT NULL,
   tx_id TEXT NOT NULL,
   metadata TEXT NOT NULL,
   assets JSONB NOT NULL,
   input_addresses JSONB NOT NULL,
   output_addresses JSONB NOT NULL,
-  PRIMARY KEY (cde_id, tx_id)
+  PRIMARY KEY (cde_name, tx_id)
 )
 `;
 
 const TABLE_DATA_CDE_CARDANO_MINT_BURN: TableData = {
   tableName: 'cde_cardano_mint_burn',
-  primaryKeyColumns: ['cde_id', 'tx_id'],
+  primaryKeyColumns: ['cde_name', 'tx_id'],
   columnData: packTuples([
-    ['cde_id', 'integer', 'NO', ''],
+    ['cde_name', 'text', 'NO', ''],
     ['tx_id', 'text', 'NO', ''],
     ['metadata', 'text', 'NO', ''],
     ['assets', 'jsonb', 'NO', ''],
@@ -678,17 +676,17 @@ CREATE OR REPLACE TRIGGER wallet_connect_insert_or_update
 
 const QUERY_CREATE_TABLE_CDE_DYNAMIC_PRIMITIVE_CONFIG = `
 CREATE TABLE cde_dynamic_primitive_config (
-  cde_id INTEGER NOT NULL,
+  cde_name TEXT NOT NULL,
   config TEXT NOT NULL,
-  PRIMARY KEY(cde_id)
+  PRIMARY KEY(cde_name)
 );
 `;
 
 const TABLE_DATA_CDE_DYNAMIC_PRIMITIVE_CONFIG: TableData = {
   tableName: 'cde_dynamic_primitive_config',
-  primaryKeyColumns: ['cde_id'],
+  primaryKeyColumns: ['cde_name'],
   columnData: packTuples([
-    ['cde_id', 'integer', 'NO', ''],
+    ['cde_name', 'text', 'NO', ''],
     ['config', 'text', 'NO', ''],
   ]),
   serialColumns: [],

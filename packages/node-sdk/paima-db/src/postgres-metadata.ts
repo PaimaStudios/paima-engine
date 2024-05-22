@@ -133,7 +133,5 @@ async function checkTableColumn(
   const flagNullable = row.is_nullable === column.columnNullable;
 
   const result = flagDefault && flagType && flagNullable;
-  if (!result) {
-  }
   return result;
 }

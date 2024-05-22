@@ -83,7 +83,7 @@ function eventToCdeDatum(
   const outputs = computeOutputs(event.transaction.payload);
 
   return {
-    cdeId: extension.cdeId,
+    cdeName: extension.cdeName,
     cdeDatumType: ChainDataExtensionDatumType.CardanoTransfer,
     blockNumber,
     payload: {

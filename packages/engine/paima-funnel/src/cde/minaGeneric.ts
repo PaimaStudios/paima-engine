@@ -96,7 +96,7 @@ export async function getCdeData(
 
     const events = grouped.flatMap(perBlock =>
       perBlock.eventsData.map(txEvent => ({
-        cdeId: extension.cdeId,
+        cdeName: extension.cdeName,
         cdeDatumType,
         blockNumber: getBlockNumber(Number.parseInt(perBlock.blockInfo.timestamp, 10)),
         payload: txEvent,

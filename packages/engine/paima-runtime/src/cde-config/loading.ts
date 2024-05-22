@@ -84,7 +84,7 @@ export async function loadChainDataExtensions(
           name: Type.String(),
           type: Type.Enum(CdeEntryTypeName),
         }),
-        { ...YAML.parse(ext.config) }
+        { ...YAML.parse(ext.config), name: ext.cde_name }
       )
     );
   } catch (err) {
@@ -277,7 +277,7 @@ async function instantiateExtension(
       return {
         ...config,
         network,
-        cdeId: index,
+        cdeName: config.name,
         hash: hashConfig(config),
         cdeType: ChainDataExtensionType.ERC20,
         contract: getErc20Contract(config.contractAddress, web3s[network]),
@@ -287,7 +287,7 @@ async function instantiateExtension(
         return {
           ...config,
           network,
-          cdeId: index,
+          cdeName: config.name,
           hash: hashConfig(config),
           cdeType: ChainDataExtensionType.PaimaERC721,
           contract: getPaimaErc721Contract(config.contractAddress, web3s[network]),
@@ -296,7 +296,7 @@ async function instantiateExtension(
         return {
           ...config,
           network,
-          cdeId: index,
+          cdeName: config.name,
           hash: hashConfig(config),
           cdeType: ChainDataExtensionType.ERC721,
           contract: getErc721Contract(config.contractAddress, web3s[network]),
@@ -306,7 +306,7 @@ async function instantiateExtension(
       return {
         ...config,
         network,
-        cdeId: index,
+        cdeName: config.name,
         hash: hashConfig(config),
         cdeType: ChainDataExtensionType.ERC20Deposit,
         contract: getErc20Contract(config.contractAddress, web3s[network]),
@@ -315,7 +315,7 @@ async function instantiateExtension(
       return {
         ...config,
         network,
-        cdeId: index,
+        cdeName: config.name,
         hash: hashConfig(config),
         cdeType: ChainDataExtensionType.ERC1155,
         contract: getErc1155Contract(config.contractAddress, web3s[network]),
@@ -330,7 +330,7 @@ async function instantiateExtension(
       return {
         ...config,
         network,
-        cdeId: index,
+        cdeName: config.name,
         hash: hashConfig(config),
         cdeType: ChainDataExtensionType.ERC6551Registry,
         contractAddress,
@@ -351,7 +351,7 @@ async function instantiateExtension(
       return {
         ...config,
         network: config.network || defaultCardanoNetworkName,
-        cdeId: index,
+        cdeName: config.name,
         hash: hashConfig(config),
         cdeType: ChainDataExtensionType.CardanoPool,
       };
@@ -359,7 +359,7 @@ async function instantiateExtension(
       return {
         ...config,
         network: config.network || defaultCardanoNetworkName,
-        cdeId: index,
+        cdeName: config.name,
         hash: hashConfig(config),
         cdeType: ChainDataExtensionType.CardanoProjectedNFT,
       };
@@ -367,7 +367,7 @@ async function instantiateExtension(
       return {
         ...config,
         network: config.network || defaultCardanoNetworkName,
-        cdeId: index,
+        cdeName: config.name,
         hash: hashConfig(config),
         cdeType: ChainDataExtensionType.CardanoAssetUtxo,
       };
@@ -375,7 +375,7 @@ async function instantiateExtension(
       return {
         ...config,
         network: config.network || defaultCardanoNetworkName,
-        cdeId: index,
+        cdeName: config.name,
         hash: hashConfig(config),
         cdeType: ChainDataExtensionType.CardanoTransfer,
       };
@@ -383,7 +383,7 @@ async function instantiateExtension(
       return {
         ...config,
         network: config.network || defaultCardanoNetworkName,
-        cdeId: index,
+        cdeName: config.name,
         hash: hashConfig(config),
         cdeType: ChainDataExtensionType.CardanoMintBurn,
       };
@@ -391,7 +391,7 @@ async function instantiateExtension(
       return {
         ...config,
         network: config.network || defaultMinaNetworkName,
-        cdeId: index,
+        cdeName: config.name,
         hash: hashConfig(config),
         cdeType: ChainDataExtensionType.MinaEventGeneric,
       };
@@ -399,7 +399,7 @@ async function instantiateExtension(
       return {
         ...config,
         network: config.network || defaultMinaNetworkName,
-        cdeId: index,
+        cdeName: config.name,
         hash: hashConfig(config),
         cdeType: ChainDataExtensionType.MinaActionGeneric,
       };
@@ -445,7 +445,7 @@ async function instantiateCdeGeneric(
     const { abiPath: _, ...rest } = config; // want to remove abi path since it's no longer relevant at runtime
     return {
       ...rest,
-      cdeId: index,
+      cdeName: config.name,
       hash: hashConfig(config),
       cdeType: ChainDataExtensionType.Generic,
       contract,
@@ -483,7 +483,7 @@ async function instantiateCdeDynamicEvmPrimitive(
     const { abiPath: _, ...rest } = config; // want to remove abi path since it's no longer relevant at runtime
     return {
       ...rest,
-      cdeId: index,
+      cdeName: config.name,
       hash: hashConfig(config),
       cdeType: ChainDataExtensionType.DynamicEvmPrimitive,
       contract,

@@ -15,7 +15,7 @@ export interface ICdeCardanoAssetUtxosByAddressResult {
   address: string;
   amount: string;
   asset_name: string;
-  cde_id: number;
+  cde_name: string;
   cip14_fingerprint: string;
   output_index: number;
   policy_id: string;
@@ -47,7 +47,7 @@ export interface ICdeInsertCardanoAssetUtxoParams {
   address: string;
   amount: NumberOrString;
   asset_name?: string | null | void;
-  cde_id: number;
+  cde_name: string;
   cip14_fingerprint: string;
   output_index: number;
   policy_id: string;
@@ -63,13 +63,13 @@ export interface ICdeInsertCardanoAssetUtxoQuery {
   result: ICdeInsertCardanoAssetUtxoResult;
 }
 
-const cdeInsertCardanoAssetUtxoIR: any = {"usedParamSet":{"cde_id":true,"address":true,"tx_id":true,"output_index":true,"amount":true,"cip14_fingerprint":true,"policy_id":true,"asset_name":true},"params":[{"name":"cde_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":172,"b":179}]},{"name":"address","required":true,"transform":{"type":"scalar"},"locs":[{"a":186,"b":194}]},{"name":"tx_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":201,"b":207}]},{"name":"output_index","required":true,"transform":{"type":"scalar"},"locs":[{"a":214,"b":227}]},{"name":"amount","required":true,"transform":{"type":"scalar"},"locs":[{"a":234,"b":241}]},{"name":"cip14_fingerprint","required":true,"transform":{"type":"scalar"},"locs":[{"a":248,"b":266}]},{"name":"policy_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":273,"b":283}]},{"name":"asset_name","required":false,"transform":{"type":"scalar"},"locs":[{"a":290,"b":300}]}],"statement":"INSERT INTO cde_cardano_asset_utxos(\n    cde_id,\n    address,\n    tx_id,\n    output_index, \n    amount,\n    cip14_fingerprint,\n    policy_id,\n    asset_name\n) VALUES (\n    :cde_id!,\n    :address!,\n    :tx_id!,\n    :output_index!,\n    :amount!,\n    :cip14_fingerprint!,\n    :policy_id!,\n    :asset_name\n)"};
+const cdeInsertCardanoAssetUtxoIR: any = {"usedParamSet":{"cde_name":true,"address":true,"tx_id":true,"output_index":true,"amount":true,"cip14_fingerprint":true,"policy_id":true,"asset_name":true},"params":[{"name":"cde_name","required":true,"transform":{"type":"scalar"},"locs":[{"a":174,"b":183}]},{"name":"address","required":true,"transform":{"type":"scalar"},"locs":[{"a":190,"b":198}]},{"name":"tx_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":205,"b":211}]},{"name":"output_index","required":true,"transform":{"type":"scalar"},"locs":[{"a":218,"b":231}]},{"name":"amount","required":true,"transform":{"type":"scalar"},"locs":[{"a":238,"b":245}]},{"name":"cip14_fingerprint","required":true,"transform":{"type":"scalar"},"locs":[{"a":252,"b":270}]},{"name":"policy_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":277,"b":287}]},{"name":"asset_name","required":false,"transform":{"type":"scalar"},"locs":[{"a":294,"b":304}]}],"statement":"INSERT INTO cde_cardano_asset_utxos(\n    cde_name,\n    address,\n    tx_id,\n    output_index, \n    amount,\n    cip14_fingerprint,\n    policy_id,\n    asset_name\n) VALUES (\n    :cde_name!,\n    :address!,\n    :tx_id!,\n    :output_index!,\n    :amount!,\n    :cip14_fingerprint!,\n    :policy_id!,\n    :asset_name\n)"};
 
 /**
  * Query generated from SQL:
  * ```
  * INSERT INTO cde_cardano_asset_utxos(
- *     cde_id,
+ *     cde_name,
  *     address,
  *     tx_id,
  *     output_index, 
@@ -78,7 +78,7 @@ const cdeInsertCardanoAssetUtxoIR: any = {"usedParamSet":{"cde_id":true,"address
  *     policy_id,
  *     asset_name
  * ) VALUES (
- *     :cde_id!,
+ *     :cde_name!,
  *     :address!,
  *     :tx_id!,
  *     :output_index!,

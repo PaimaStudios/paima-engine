@@ -5,13 +5,13 @@ export type Json = null | boolean | number | string | Json[] | { [key: string]: 
 
 /** 'CdeGenericGetAllData' parameters type */
 export interface ICdeGenericGetAllDataParams {
-  cde_id: number;
+  cde_name: string;
 }
 
 /** 'CdeGenericGetAllData' return type */
 export interface ICdeGenericGetAllDataResult {
   block_height: number;
-  cde_id: number;
+  cde_name: string;
   event_data: Json;
   id: number;
 }
@@ -22,13 +22,13 @@ export interface ICdeGenericGetAllDataQuery {
   result: ICdeGenericGetAllDataResult;
 }
 
-const cdeGenericGetAllDataIR: any = {"usedParamSet":{"cde_id":true},"params":[{"name":"cde_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":46,"b":53}]}],"statement":"SELECT * FROM cde_generic_data\nWHERE cde_id = :cde_id!"};
+const cdeGenericGetAllDataIR: any = {"usedParamSet":{"cde_name":true},"params":[{"name":"cde_name","required":true,"transform":{"type":"scalar"},"locs":[{"a":48,"b":57}]}],"statement":"SELECT * FROM cde_generic_data\nWHERE cde_name = :cde_name!"};
 
 /**
  * Query generated from SQL:
  * ```
  * SELECT * FROM cde_generic_data
- * WHERE cde_id = :cde_id!
+ * WHERE cde_name = :cde_name!
  * ```
  */
 export const cdeGenericGetAllData = new PreparedQuery<ICdeGenericGetAllDataParams,ICdeGenericGetAllDataResult>(cdeGenericGetAllDataIR);
@@ -37,13 +37,13 @@ export const cdeGenericGetAllData = new PreparedQuery<ICdeGenericGetAllDataParam
 /** 'CdeGenericGetBlockheightData' parameters type */
 export interface ICdeGenericGetBlockheightDataParams {
   block_height: number;
-  cde_id: number;
+  cde_name: string;
 }
 
 /** 'CdeGenericGetBlockheightData' return type */
 export interface ICdeGenericGetBlockheightDataResult {
   block_height: number;
-  cde_id: number;
+  cde_name: string;
   event_data: Json;
   id: number;
 }
@@ -54,13 +54,13 @@ export interface ICdeGenericGetBlockheightDataQuery {
   result: ICdeGenericGetBlockheightDataResult;
 }
 
-const cdeGenericGetBlockheightDataIR: any = {"usedParamSet":{"cde_id":true,"block_height":true},"params":[{"name":"cde_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":46,"b":53}]},{"name":"block_height","required":true,"transform":{"type":"scalar"},"locs":[{"a":74,"b":87}]}],"statement":"SELECT * FROM cde_generic_data\nWHERE cde_id = :cde_id!\nAND block_height = :block_height!"};
+const cdeGenericGetBlockheightDataIR: any = {"usedParamSet":{"cde_name":true,"block_height":true},"params":[{"name":"cde_name","required":true,"transform":{"type":"scalar"},"locs":[{"a":48,"b":57}]},{"name":"block_height","required":true,"transform":{"type":"scalar"},"locs":[{"a":78,"b":91}]}],"statement":"SELECT * FROM cde_generic_data\nWHERE cde_name = :cde_name!\nAND block_height = :block_height!"};
 
 /**
  * Query generated from SQL:
  * ```
  * SELECT * FROM cde_generic_data
- * WHERE cde_id = :cde_id!
+ * WHERE cde_name = :cde_name!
  * AND block_height = :block_height!
  * ```
  */
@@ -69,7 +69,7 @@ export const cdeGenericGetBlockheightData = new PreparedQuery<ICdeGenericGetBloc
 
 /** 'CdeGenericGetRangeData' parameters type */
 export interface ICdeGenericGetRangeDataParams {
-  cde_id: number;
+  cde_name: string;
   from_block: number;
   to_block: number;
 }
@@ -77,7 +77,7 @@ export interface ICdeGenericGetRangeDataParams {
 /** 'CdeGenericGetRangeData' return type */
 export interface ICdeGenericGetRangeDataResult {
   block_height: number;
-  cde_id: number;
+  cde_name: string;
   event_data: Json;
   id: number;
 }
@@ -88,13 +88,13 @@ export interface ICdeGenericGetRangeDataQuery {
   result: ICdeGenericGetRangeDataResult;
 }
 
-const cdeGenericGetRangeDataIR: any = {"usedParamSet":{"cde_id":true,"from_block":true,"to_block":true},"params":[{"name":"cde_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":46,"b":53}]},{"name":"from_block","required":true,"transform":{"type":"scalar"},"locs":[{"a":75,"b":86}]},{"name":"to_block","required":true,"transform":{"type":"scalar"},"locs":[{"a":108,"b":117}]}],"statement":"SELECT * FROM cde_generic_data\nWHERE cde_id = :cde_id!\nAND block_height >= :from_block!\nAND block_height <= :to_block!"};
+const cdeGenericGetRangeDataIR: any = {"usedParamSet":{"cde_name":true,"from_block":true,"to_block":true},"params":[{"name":"cde_name","required":true,"transform":{"type":"scalar"},"locs":[{"a":48,"b":57}]},{"name":"from_block","required":true,"transform":{"type":"scalar"},"locs":[{"a":79,"b":90}]},{"name":"to_block","required":true,"transform":{"type":"scalar"},"locs":[{"a":112,"b":121}]}],"statement":"SELECT * FROM cde_generic_data\nWHERE cde_name = :cde_name!\nAND block_height >= :from_block!\nAND block_height <= :to_block!"};
 
 /**
  * Query generated from SQL:
  * ```
  * SELECT * FROM cde_generic_data
- * WHERE cde_id = :cde_id!
+ * WHERE cde_name = :cde_name!
  * AND block_height >= :from_block!
  * AND block_height <= :to_block!
  * ```
@@ -105,7 +105,7 @@ export const cdeGenericGetRangeData = new PreparedQuery<ICdeGenericGetRangeDataP
 /** 'CdeGenericInsertData' parameters type */
 export interface ICdeGenericInsertDataParams {
   block_height: number;
-  cde_id: number;
+  cde_name: string;
   event_data: Json;
 }
 
@@ -118,17 +118,17 @@ export interface ICdeGenericInsertDataQuery {
   result: ICdeGenericInsertDataResult;
 }
 
-const cdeGenericInsertDataIR: any = {"usedParamSet":{"cde_id":true,"block_height":true,"event_data":true},"params":[{"name":"cde_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":90,"b":97}]},{"name":"block_height","required":true,"transform":{"type":"scalar"},"locs":[{"a":104,"b":117}]},{"name":"event_data","required":true,"transform":{"type":"scalar"},"locs":[{"a":124,"b":135}]}],"statement":"INSERT INTO cde_generic_data(\n    cde_id,\n    block_height,\n    event_data\n) VALUES (\n    :cde_id!,\n    :block_height!,\n    :event_data!\n)"};
+const cdeGenericInsertDataIR: any = {"usedParamSet":{"cde_name":true,"block_height":true,"event_data":true},"params":[{"name":"cde_name","required":true,"transform":{"type":"scalar"},"locs":[{"a":92,"b":101}]},{"name":"block_height","required":true,"transform":{"type":"scalar"},"locs":[{"a":108,"b":121}]},{"name":"event_data","required":true,"transform":{"type":"scalar"},"locs":[{"a":128,"b":139}]}],"statement":"INSERT INTO cde_generic_data(\n    cde_name,\n    block_height,\n    event_data\n) VALUES (\n    :cde_name!,\n    :block_height!,\n    :event_data!\n)"};
 
 /**
  * Query generated from SQL:
  * ```
  * INSERT INTO cde_generic_data(
- *     cde_id,
+ *     cde_name,
  *     block_height,
  *     event_data
  * ) VALUES (
- *     :cde_id!,
+ *     :cde_name!,
  *     :block_height!,
  *     :event_data!
  * )

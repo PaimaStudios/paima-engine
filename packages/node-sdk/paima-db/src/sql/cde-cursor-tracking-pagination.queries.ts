@@ -6,7 +6,7 @@ export type IGetPaginationCursorsParams = void;
 
 /** 'GetPaginationCursors' return type */
 export interface IGetPaginationCursorsResult {
-  cde_id: number;
+  cde_name: string;
   cursor: string;
   finished: boolean;
 }
@@ -30,7 +30,7 @@ export const getPaginationCursors = new PreparedQuery<IGetPaginationCursorsParam
 
 /** 'UpdatePaginationCursor' parameters type */
 export interface IUpdatePaginationCursorParams {
-  cde_id: number;
+  cde_name: string;
   cursor: string;
   finished: boolean;
 }
@@ -44,21 +44,21 @@ export interface IUpdatePaginationCursorQuery {
   result: IUpdatePaginationCursorResult;
 }
 
-const updatePaginationCursorIR: any = {"usedParamSet":{"cde_id":true,"cursor":true,"finished":true},"params":[{"name":"cde_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":88,"b":95}]},{"name":"cursor","required":true,"transform":{"type":"scalar"},"locs":[{"a":100,"b":107},{"a":169,"b":176}]},{"name":"finished","required":true,"transform":{"type":"scalar"},"locs":[{"a":112,"b":121},{"a":190,"b":199}]}],"statement":"INSERT INTO cde_tracking_cursor_pagination(\n  cde_id,\n  cursor,\n  finished\n) VALUES (\n  :cde_id!,\n  :cursor!,\n  :finished!\n)\nON CONFLICT (cde_id)\nDO UPDATE SET cursor = :cursor!, finished = :finished!"};
+const updatePaginationCursorIR: any = {"usedParamSet":{"cde_name":true,"cursor":true,"finished":true},"params":[{"name":"cde_name","required":true,"transform":{"type":"scalar"},"locs":[{"a":90,"b":99}]},{"name":"cursor","required":true,"transform":{"type":"scalar"},"locs":[{"a":104,"b":111},{"a":175,"b":182}]},{"name":"finished","required":true,"transform":{"type":"scalar"},"locs":[{"a":116,"b":125},{"a":196,"b":205}]}],"statement":"INSERT INTO cde_tracking_cursor_pagination(\n  cde_name,\n  cursor,\n  finished\n) VALUES (\n  :cde_name!,\n  :cursor!,\n  :finished!\n)\nON CONFLICT (cde_name)\nDO UPDATE SET cursor = :cursor!, finished = :finished!"};
 
 /**
  * Query generated from SQL:
  * ```
  * INSERT INTO cde_tracking_cursor_pagination(
- *   cde_id,
+ *   cde_name,
  *   cursor,
  *   finished
  * ) VALUES (
- *   :cde_id!,
+ *   :cde_name!,
  *   :cursor!,
  *   :finished!
  * )
- * ON CONFLICT (cde_id)
+ * ON CONFLICT (cde_name)
  * DO UPDATE SET cursor = :cursor!, finished = :finished!
  * ```
  */

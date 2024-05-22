@@ -72,7 +72,7 @@ function toDatum(
   network: string
 ): CdeErc6551RegistryDatum {
   return {
-    cdeId: extension.cdeId,
+    cdeName: extension.cdeName,
     cdeDatumType: ChainDataExtensionDatumType.ERC6551Registry,
     blockNumber: event.blockNumber,
     payload: {

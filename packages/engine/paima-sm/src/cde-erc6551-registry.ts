@@ -9,7 +9,7 @@ export default async function processErc721Datum(
     [
       cdeErc6551InsertRegistry,
       {
-        cde_id: cdeDatum.cdeId,
+        cde_name: cdeDatum.cdeName,
         block_height: cdeDatum.blockNumber,
         account_created: cdeDatum.payload.accountCreated,
         implementation: cdeDatum.payload.implementation,

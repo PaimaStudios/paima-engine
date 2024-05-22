@@ -21,7 +21,7 @@ export default async function getCdeDynamicEvmPrimitive(
   );
 
   return events.map(event => ({
-    cdeId: extension.cdeId,
+    cdeName: extension.cdeName,
     cdeDatumType: ChainDataExtensionDatumType.DynamicEvmPrimitive,
     blockNumber: event.blockNumber,
     payload: {
@@ -31,6 +31,5 @@ export default async function getCdeDynamicEvmPrimitive(
     network,
     scheduledPrefix: extension.targetConfig.scheduledPrefix,
     burnScheduledPrefix: extension.targetConfig.burnScheduledPrefix,
-    cdeName: '',
   }));
 }

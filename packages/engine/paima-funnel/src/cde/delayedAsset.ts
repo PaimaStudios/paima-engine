@@ -76,7 +76,7 @@ function eventToCdeDatum(
   };
 
   return {
-    cdeId: extension.cdeId,
+    cdeName: extension.cdeName,
     cdeDatumType: ChainDataExtensionDatumType.CardanoAssetUtxo,
     blockNumber,
     payload: {

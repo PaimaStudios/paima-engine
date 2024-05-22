@@ -3,7 +3,7 @@ import { PreparedQuery } from '@pgtyped/runtime';
 
 /** 'CdeErc1155ModifyBalance' parameters type */
 export interface ICdeErc1155ModifyBalanceParams {
-  cde_id: number;
+  cde_name: string;
   token_id: string;
   value: string;
   wallet_address: string;
@@ -18,24 +18,24 @@ export interface ICdeErc1155ModifyBalanceQuery {
   result: ICdeErc1155ModifyBalanceResult;
 }
 
-const cdeErc1155ModifyBalanceIR: any = {"usedParamSet":{"cde_id":true,"token_id":true,"wallet_address":true,"value":true},"params":[{"name":"cde_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":94,"b":101}]},{"name":"token_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":106,"b":115}]},{"name":"wallet_address","required":true,"transform":{"type":"scalar"},"locs":[{"a":120,"b":135}]},{"name":"value","required":true,"transform":{"type":"scalar"},"locs":[{"a":140,"b":146}]}],"statement":"INSERT INTO cde_erc1155_data (\n  cde_id,\n  token_id,\n  wallet_address,\n  balance\n)\nVALUES (\n  :cde_id!,\n  :token_id!,\n  :wallet_address!,\n  :value!\n)\nON CONFLICT (cde_id, token_id, wallet_address)\nDO UPDATE SET balance = CAST(cde_erc1155_data.balance AS NUMERIC) + CAST(EXCLUDED.balance AS NUMERIC)"};
+const cdeErc1155ModifyBalanceIR: any = {"usedParamSet":{"cde_name":true,"token_id":true,"wallet_address":true,"value":true},"params":[{"name":"cde_name","required":true,"transform":{"type":"scalar"},"locs":[{"a":96,"b":105}]},{"name":"token_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":110,"b":119}]},{"name":"wallet_address","required":true,"transform":{"type":"scalar"},"locs":[{"a":124,"b":139}]},{"name":"value","required":true,"transform":{"type":"scalar"},"locs":[{"a":144,"b":150}]}],"statement":"INSERT INTO cde_erc1155_data (\n  cde_name,\n  token_id,\n  wallet_address,\n  balance\n)\nVALUES (\n  :cde_name!,\n  :token_id!,\n  :wallet_address!,\n  :value!\n)\nON CONFLICT (cde_name, token_id, wallet_address)\nDO UPDATE SET balance = CAST(cde_erc1155_data.balance AS NUMERIC) + CAST(EXCLUDED.balance AS NUMERIC)"};
 
 /**
  * Query generated from SQL:
  * ```
  * INSERT INTO cde_erc1155_data (
- *   cde_id,
+ *   cde_name,
  *   token_id,
  *   wallet_address,
  *   balance
  * )
  * VALUES (
- *   :cde_id!,
+ *   :cde_name!,
  *   :token_id!,
  *   :wallet_address!,
  *   :value!
  * )
- * ON CONFLICT (cde_id, token_id, wallet_address)
+ * ON CONFLICT (cde_name, token_id, wallet_address)
  * DO UPDATE SET balance = CAST(cde_erc1155_data.balance AS NUMERIC) + CAST(EXCLUDED.balance AS NUMERIC)
  * ```
  */
@@ -44,7 +44,7 @@ export const cdeErc1155ModifyBalance = new PreparedQuery<ICdeErc1155ModifyBalanc
 
 /** 'CdeErc1155DeleteIfZero' parameters type */
 export interface ICdeErc1155DeleteIfZeroParams {
-  cde_id: number;
+  cde_name: string;
   token_id: string;
   wallet_address: string;
 }
@@ -58,14 +58,14 @@ export interface ICdeErc1155DeleteIfZeroQuery {
   result: ICdeErc1155DeleteIfZeroResult;
 }
 
-const cdeErc1155DeleteIfZeroIR: any = {"usedParamSet":{"cde_id":true,"token_id":true,"wallet_address":true},"params":[{"name":"cde_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":62,"b":69}]},{"name":"token_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":86,"b":95}]},{"name":"wallet_address","required":true,"transform":{"type":"scalar"},"locs":[{"a":118,"b":133}]}],"statement":"DELETE FROM cde_erc1155_data\nWHERE balance = '0'\nAND cde_id = :cde_id!\nAND token_id = :token_id!\nAND wallet_address = :wallet_address!"};
+const cdeErc1155DeleteIfZeroIR: any = {"usedParamSet":{"cde_name":true,"token_id":true,"wallet_address":true},"params":[{"name":"cde_name","required":true,"transform":{"type":"scalar"},"locs":[{"a":64,"b":73}]},{"name":"token_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":90,"b":99}]},{"name":"wallet_address","required":true,"transform":{"type":"scalar"},"locs":[{"a":122,"b":137}]}],"statement":"DELETE FROM cde_erc1155_data\nWHERE balance = '0'\nAND cde_name = :cde_name!\nAND token_id = :token_id!\nAND wallet_address = :wallet_address!"};
 
 /**
  * Query generated from SQL:
  * ```
  * DELETE FROM cde_erc1155_data
  * WHERE balance = '0'
- * AND cde_id = :cde_id!
+ * AND cde_name = :cde_name!
  * AND token_id = :token_id!
  * AND wallet_address = :wallet_address!
  * ```
@@ -75,7 +75,7 @@ export const cdeErc1155DeleteIfZero = new PreparedQuery<ICdeErc1155DeleteIfZeroP
 
 /** 'CdeErc1155Burn' parameters type */
 export interface ICdeErc1155BurnParams {
-  cde_id: number;
+  cde_name: string;
   token_id: string;
   value: string;
   wallet_address: string;
@@ -90,24 +90,24 @@ export interface ICdeErc1155BurnQuery {
   result: ICdeErc1155BurnResult;
 }
 
-const cdeErc1155BurnIR: any = {"usedParamSet":{"cde_id":true,"token_id":true,"wallet_address":true,"value":true},"params":[{"name":"cde_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":94,"b":101}]},{"name":"token_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":106,"b":115}]},{"name":"wallet_address","required":true,"transform":{"type":"scalar"},"locs":[{"a":120,"b":135}]},{"name":"value","required":true,"transform":{"type":"scalar"},"locs":[{"a":140,"b":146}]}],"statement":"INSERT INTO cde_erc1155_burn (\n  cde_id,\n  token_id,\n  wallet_address,\n  balance\n)\nVALUES (\n  :cde_id!,\n  :token_id!,\n  :wallet_address!,\n  :value!\n)\nON CONFLICT (cde_id, token_id, wallet_address)\nDO UPDATE SET balance = CAST(cde_erc1155_burn.balance AS NUMERIC) + CAST(EXCLUDED.balance AS NUMERIC)"};
+const cdeErc1155BurnIR: any = {"usedParamSet":{"cde_name":true,"token_id":true,"wallet_address":true,"value":true},"params":[{"name":"cde_name","required":true,"transform":{"type":"scalar"},"locs":[{"a":96,"b":105}]},{"name":"token_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":110,"b":119}]},{"name":"wallet_address","required":true,"transform":{"type":"scalar"},"locs":[{"a":124,"b":139}]},{"name":"value","required":true,"transform":{"type":"scalar"},"locs":[{"a":144,"b":150}]}],"statement":"INSERT INTO cde_erc1155_burn (\n  cde_name,\n  token_id,\n  wallet_address,\n  balance\n)\nVALUES (\n  :cde_name!,\n  :token_id!,\n  :wallet_address!,\n  :value!\n)\nON CONFLICT (cde_name, token_id, wallet_address)\nDO UPDATE SET balance = CAST(cde_erc1155_burn.balance AS NUMERIC) + CAST(EXCLUDED.balance AS NUMERIC)"};
 
 /**
  * Query generated from SQL:
  * ```
  * INSERT INTO cde_erc1155_burn (
- *   cde_id,
+ *   cde_name,
  *   token_id,
  *   wallet_address,
  *   balance
  * )
  * VALUES (
- *   :cde_id!,
+ *   :cde_name!,
  *   :token_id!,
  *   :wallet_address!,
  *   :value!
  * )
- * ON CONFLICT (cde_id, token_id, wallet_address)
+ * ON CONFLICT (cde_name, token_id, wallet_address)
  * DO UPDATE SET balance = CAST(cde_erc1155_burn.balance AS NUMERIC) + CAST(EXCLUDED.balance AS NUMERIC)
  * ```
  */
@@ -116,14 +116,14 @@ export const cdeErc1155Burn = new PreparedQuery<ICdeErc1155BurnParams,ICdeErc115
 
 /** 'CdeErc1155GetAllTokens' parameters type */
 export interface ICdeErc1155GetAllTokensParams {
-  cde_id: number;
+  cde_name: string;
   wallet_address: string;
 }
 
 /** 'CdeErc1155GetAllTokens' return type */
 export interface ICdeErc1155GetAllTokensResult {
   balance: string;
-  cde_id: number;
+  cde_name: string;
   token_id: string;
   wallet_address: string;
 }
@@ -134,13 +134,13 @@ export interface ICdeErc1155GetAllTokensQuery {
   result: ICdeErc1155GetAllTokensResult;
 }
 
-const cdeErc1155GetAllTokensIR: any = {"usedParamSet":{"cde_id":true,"wallet_address":true},"params":[{"name":"cde_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":46,"b":53}]},{"name":"wallet_address","required":true,"transform":{"type":"scalar"},"locs":[{"a":76,"b":91}]}],"statement":"SELECT * from cde_erc1155_data\nWHERE cde_id = :cde_id!\nAND wallet_address = :wallet_address!\nAND CAST(balance AS NUMERIC) > 0"};
+const cdeErc1155GetAllTokensIR: any = {"usedParamSet":{"cde_name":true,"wallet_address":true},"params":[{"name":"cde_name","required":true,"transform":{"type":"scalar"},"locs":[{"a":48,"b":57}]},{"name":"wallet_address","required":true,"transform":{"type":"scalar"},"locs":[{"a":80,"b":95}]}],"statement":"SELECT * from cde_erc1155_data\nWHERE cde_name = :cde_name!\nAND wallet_address = :wallet_address!\nAND CAST(balance AS NUMERIC) > 0"};
 
 /**
  * Query generated from SQL:
  * ```
  * SELECT * from cde_erc1155_data
- * WHERE cde_id = :cde_id!
+ * WHERE cde_name = :cde_name!
  * AND wallet_address = :wallet_address!
  * AND CAST(balance AS NUMERIC) > 0
  * ```
@@ -150,14 +150,14 @@ export const cdeErc1155GetAllTokens = new PreparedQuery<ICdeErc1155GetAllTokensP
 
 /** 'CdeErc1155GetByTokenId' parameters type */
 export interface ICdeErc1155GetByTokenIdParams {
-  cde_id: number;
+  cde_name: string;
   token_id: string;
 }
 
 /** 'CdeErc1155GetByTokenId' return type */
 export interface ICdeErc1155GetByTokenIdResult {
   balance: string;
-  cde_id: number;
+  cde_name: string;
   token_id: string;
   wallet_address: string;
 }
@@ -168,13 +168,13 @@ export interface ICdeErc1155GetByTokenIdQuery {
   result: ICdeErc1155GetByTokenIdResult;
 }
 
-const cdeErc1155GetByTokenIdIR: any = {"usedParamSet":{"cde_id":true,"token_id":true},"params":[{"name":"cde_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":46,"b":53}]},{"name":"token_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":70,"b":79}]}],"statement":"SELECT * from cde_erc1155_data\nWHERE cde_id = :cde_id!\nAND token_id = :token_id!"};
+const cdeErc1155GetByTokenIdIR: any = {"usedParamSet":{"cde_name":true,"token_id":true},"params":[{"name":"cde_name","required":true,"transform":{"type":"scalar"},"locs":[{"a":48,"b":57}]},{"name":"token_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":74,"b":83}]}],"statement":"SELECT * from cde_erc1155_data\nWHERE cde_name = :cde_name!\nAND token_id = :token_id!"};
 
 /**
  * Query generated from SQL:
  * ```
  * SELECT * from cde_erc1155_data
- * WHERE cde_id = :cde_id!
+ * WHERE cde_name = :cde_name!
  * AND token_id = :token_id!
  * ```
  */
@@ -183,7 +183,7 @@ export const cdeErc1155GetByTokenId = new PreparedQuery<ICdeErc1155GetByTokenIdP
 
 /** 'CdeErc1155GetByTokenIdAndWallet' parameters type */
 export interface ICdeErc1155GetByTokenIdAndWalletParams {
-  cde_id: number;
+  cde_name: string;
   token_id: string;
   wallet_address: string;
 }
@@ -191,7 +191,7 @@ export interface ICdeErc1155GetByTokenIdAndWalletParams {
 /** 'CdeErc1155GetByTokenIdAndWallet' return type */
 export interface ICdeErc1155GetByTokenIdAndWalletResult {
   balance: string;
-  cde_id: number;
+  cde_name: string;
   token_id: string;
   wallet_address: string;
 }
@@ -202,13 +202,13 @@ export interface ICdeErc1155GetByTokenIdAndWalletQuery {
   result: ICdeErc1155GetByTokenIdAndWalletResult;
 }
 
-const cdeErc1155GetByTokenIdAndWalletIR: any = {"usedParamSet":{"cde_id":true,"wallet_address":true,"token_id":true},"params":[{"name":"cde_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":46,"b":53}]},{"name":"wallet_address","required":true,"transform":{"type":"scalar"},"locs":[{"a":76,"b":91}]},{"name":"token_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":108,"b":117}]}],"statement":"SELECT * from cde_erc1155_data\nWHERE cde_id = :cde_id!\nAND wallet_address = :wallet_address!\nAND token_id = :token_id!"};
+const cdeErc1155GetByTokenIdAndWalletIR: any = {"usedParamSet":{"cde_name":true,"wallet_address":true,"token_id":true},"params":[{"name":"cde_name","required":true,"transform":{"type":"scalar"},"locs":[{"a":48,"b":57}]},{"name":"wallet_address","required":true,"transform":{"type":"scalar"},"locs":[{"a":80,"b":95}]},{"name":"token_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":112,"b":121}]}],"statement":"SELECT * from cde_erc1155_data\nWHERE cde_name = :cde_name!\nAND wallet_address = :wallet_address!\nAND token_id = :token_id!"};
 
 /**
  * Query generated from SQL:
  * ```
  * SELECT * from cde_erc1155_data
- * WHERE cde_id = :cde_id!
+ * WHERE cde_name = :cde_name!
  * AND wallet_address = :wallet_address!
  * AND token_id = :token_id!
  * ```

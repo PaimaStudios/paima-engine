@@ -9,7 +9,7 @@ export interface ICdeCardanoPoolGetAddressDelegationParams {
 /** 'CdeCardanoPoolGetAddressDelegation' return type */
 export interface ICdeCardanoPoolGetAddressDelegationResult {
   address: string;
-  cde_id: number;
+  cde_name: string;
   epoch: number;
   pool: string | null;
 }
@@ -36,7 +36,7 @@ export const cdeCardanoPoolGetAddressDelegation = new PreparedQuery<ICdeCardanoP
 /** 'CdeCardanoPoolInsertData' parameters type */
 export interface ICdeCardanoPoolInsertDataParams {
   address: string;
-  cde_id: number;
+  cde_name: string;
   epoch: number;
   pool: string;
 }
@@ -50,22 +50,22 @@ export interface ICdeCardanoPoolInsertDataQuery {
   result: ICdeCardanoPoolInsertDataResult;
 }
 
-const cdeCardanoPoolInsertDataIR: any = {"usedParamSet":{"cde_id":true,"address":true,"pool":true,"epoch":true},"params":[{"name":"cde_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":101,"b":108}]},{"name":"address","required":true,"transform":{"type":"scalar"},"locs":[{"a":115,"b":123}]},{"name":"pool","required":true,"transform":{"type":"scalar"},"locs":[{"a":130,"b":135},{"a":212,"b":217}]},{"name":"epoch","required":true,"transform":{"type":"scalar"},"locs":[{"a":142,"b":148}]}],"statement":"INSERT INTO cde_cardano_pool_delegation(\n    cde_id,\n    address,\n    pool,\n    epoch\n) VALUES (\n    :cde_id!,\n    :address!,\n    :pool!,\n    :epoch!\n) ON CONFLICT (cde_id, epoch, address) DO\n  UPDATE SET pool = :pool!"};
+const cdeCardanoPoolInsertDataIR: any = {"usedParamSet":{"cde_name":true,"address":true,"pool":true,"epoch":true},"params":[{"name":"cde_name","required":true,"transform":{"type":"scalar"},"locs":[{"a":103,"b":112}]},{"name":"address","required":true,"transform":{"type":"scalar"},"locs":[{"a":119,"b":127}]},{"name":"pool","required":true,"transform":{"type":"scalar"},"locs":[{"a":134,"b":139},{"a":218,"b":223}]},{"name":"epoch","required":true,"transform":{"type":"scalar"},"locs":[{"a":146,"b":152}]}],"statement":"INSERT INTO cde_cardano_pool_delegation(\n    cde_name,\n    address,\n    pool,\n    epoch\n) VALUES (\n    :cde_name!,\n    :address!,\n    :pool!,\n    :epoch!\n) ON CONFLICT (cde_name, epoch, address) DO\n  UPDATE SET pool = :pool!"};
 
 /**
  * Query generated from SQL:
  * ```
  * INSERT INTO cde_cardano_pool_delegation(
- *     cde_id,
+ *     cde_name,
  *     address,
  *     pool,
  *     epoch
  * ) VALUES (
- *     :cde_id!,
+ *     :cde_name!,
  *     :address!,
  *     :pool!,
  *     :epoch!
- * ) ON CONFLICT (cde_id, epoch, address) DO
+ * ) ON CONFLICT (cde_name, epoch, address) DO
  *   UPDATE SET pool = :pool!
  * ```
  */
@@ -86,15 +86,15 @@ export interface IRemoveOldEntriesQuery {
   result: IRemoveOldEntriesResult;
 }
 
-const removeOldEntriesIR: any = {"usedParamSet":{"address":true},"params":[{"name":"address","required":true,"transform":{"type":"scalar"},"locs":[{"a":179,"b":187},{"a":238,"b":246}]}],"statement":"DELETE FROM cde_cardano_pool_delegation\nWHERE (cde_id, epoch, address) NOT IN (\n    SELECT\n        cde_id, epoch, address\n    FROM cde_cardano_pool_delegation\n    WHERE address = :address!\n    ORDER BY epoch DESC\n\tLIMIT 2\n)\nAND address = :address!"};
+const removeOldEntriesIR: any = {"usedParamSet":{"address":true},"params":[{"name":"address","required":true,"transform":{"type":"scalar"},"locs":[{"a":183,"b":191},{"a":242,"b":250}]}],"statement":"DELETE FROM cde_cardano_pool_delegation\nWHERE (cde_name, epoch, address) NOT IN (\n    SELECT\n        cde_name, epoch, address\n    FROM cde_cardano_pool_delegation\n    WHERE address = :address!\n    ORDER BY epoch DESC\n\tLIMIT 2\n)\nAND address = :address!"};
 
 /**
  * Query generated from SQL:
  * ```
  * DELETE FROM cde_cardano_pool_delegation
- * WHERE (cde_id, epoch, address) NOT IN (
+ * WHERE (cde_name, epoch, address) NOT IN (
  *     SELECT
- *         cde_id, epoch, address
+ *         cde_name, epoch, address
  *     FROM cde_cardano_pool_delegation
  *     WHERE address = :address!
  *     ORDER BY epoch DESC

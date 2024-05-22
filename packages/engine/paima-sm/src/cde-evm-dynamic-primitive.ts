@@ -1,4 +1,8 @@
-import { insertDynamicExtension, registerChainDataExtension } from '@paima/db';
+import {
+  insertDynamicExtension,
+  registerChainDataExtension,
+  registerDynamicChainDataExtension,
+} from '@paima/db';
 import type { SQLUpdate } from '@paima/db';
 import { CdeEntryTypeName, type CdeDynamicEvmPrimitiveDatum } from './types.js';
 import { ChainDataExtensionType } from '@paima/utils';
@@ -18,7 +22,6 @@ export default async function processDatum(
   }
 
   const config = {
-    name: cdeDatum.cdeName,
     type: cdeDatum.payload.type,
     contractAddress: cdeDatum.payload.contractAddress,
     startBlockHeight: cdeDatum.blockNumber,
@@ -29,10 +32,10 @@ export default async function processDatum(
 
   const updateList: SQLUpdate[] = [
     [
-      registerChainDataExtension,
+      registerDynamicChainDataExtension,
       {
+        base_name: cdeDatum.cdeName,
         cde_type: type,
-        cde_name: cdeDatum.cdeName,
         start_blockheight: cdeDatum.blockNumber,
         scheduled_prefix: cdeDatum.scheduledPrefix,
       },
@@ -40,6 +43,7 @@ export default async function processDatum(
     [
       insertDynamicExtension,
       {
+        base_name: cdeDatum.cdeName,
         config: YAML.stringify(config),
       },
     ],

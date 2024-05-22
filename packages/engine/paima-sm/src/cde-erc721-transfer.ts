@@ -17,7 +17,7 @@ export default async function processErc721Datum(
   cdeDatum: CdeErc721TransferDatum,
   inPresync: boolean
 ): Promise<SQLUpdate[]> {
-  const cdeId = cdeDatum.cdeId;
+  const cdeName = cdeDatum.cdeName;
   const { to, tokenId } = cdeDatum.payload;
   const toAddr = to.toLowerCase();
 
@@ -26,10 +26,10 @@ export default async function processErc721Datum(
   const updateList: SQLUpdate[] = [];
   try {
     const ownerRow = await cdeErc721GetOwner.run(
-      { cde_id: cdeId, token_id: tokenId },
+      { cde_name: cdeName, token_id: tokenId },
       readonlyDBConn
     );
-    const newOwnerData = { cde_id: cdeId, token_id: tokenId, nft_owner: toAddr };
+    const newOwnerData = { cde_name: cdeName, token_id: tokenId, nft_owner: toAddr };
     if (ownerRow.length > 0) {
       if (isBurn) {
         if (cdeDatum.burnScheduledPrefix) {
@@ -46,9 +46,9 @@ export default async function processErc721Datum(
         // burn address
         updateList.push([
           cdeErc721BurnInsert,
-          { cde_id: cdeId, token_id: tokenId, nft_owner: ownerRow[0].nft_owner },
+          { cde_name: cdeName, token_id: tokenId, nft_owner: ownerRow[0].nft_owner },
         ]);
-        updateList.push([cdeErc721Delete, { cde_id: cdeId, token_id: tokenId }]);
+        updateList.push([cdeErc721Delete, { cde_name: cdeName, token_id: tokenId }]);
       } else {
         updateList.push([cdeErc721UpdateOwner, newOwnerData]);
       }

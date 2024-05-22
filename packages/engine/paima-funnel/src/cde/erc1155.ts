@@ -44,7 +44,7 @@ function transferSingleToDatum(
   network: string
 ): CdeErc1155TransferDatum {
   return {
-    cdeId: extension.cdeId,
+    cdeName: extension.cdeName,
     cdeDatumType: ChainDataExtensionDatumType.Erc1155Transfer,
     blockNumber: event.blockNumber,
     payload: {
@@ -68,7 +68,7 @@ function transferBatchToDatum(
   network: string
 ): CdeErc1155TransferDatum {
   return {
-    cdeId: extension.cdeId,
+    cdeName: extension.cdeName,
     cdeDatumType: ChainDataExtensionDatumType.Erc1155Transfer,
     blockNumber: event.blockNumber,
     payload: {

@@ -11,7 +11,7 @@ export default async function processDatum(
   cdeDatum: CdeCardanoProjectedNFTDatum,
   inPresync: boolean
 ): Promise<SQLUpdate[]> {
-  const cdeId = cdeDatum.cdeId;
+  const cdeName = cdeDatum.cdeName;
   const prefix = cdeDatum.scheduledPrefix;
   const ownerAddress = cdeDatum.payload.ownerAddress;
   const previousTxHash = cdeDatum.payload.previousTxHash;
@@ -34,7 +34,7 @@ export default async function processDatum(
       [
         cdeCardanoProjectedNftInsertData,
         {
-          cde_id: cdeId,
+          cde_name: cdeName,
           owner_address: ownerAddress,
           current_tx_hash: currentTxHash,
           current_tx_output_index: currentOutputIndex,
@@ -54,7 +54,7 @@ export default async function processDatum(
     [
       cdeCardanoProjectedNftUpdateData,
       {
-        cde_id: cdeId,
+        cde_name: cdeName,
         owner_address: ownerAddress,
         new_tx_hash: currentTxHash,
         new_tx_output_index: currentOutputIndex,

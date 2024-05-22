@@ -32,7 +32,7 @@ function transferToCdeDatum(
   }
   return [
     {
-      cdeId: extension.cdeId,
+      cdeName: extension.cdeName,
       cdeDatumType: ChainDataExtensionDatumType.ERC20Deposit,
       blockNumber: event.blockNumber,
       payload: {

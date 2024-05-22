@@ -54,8 +54,8 @@ export function emulateCde(
     .flat()
     .sort((a, b) => {
       const bhDiff = a.blockNumber - b.blockNumber;
-      const cdeIdDiff = a.cdeId - b.cdeId;
-      return bhDiff ? bhDiff : cdeIdDiff;
+      const cdeNameDiff = a.cdeName.localeCompare(b.cdeName);
+      return bhDiff ? bhDiff : cdeNameDiff;
     })
     .map(cdeDatum => ({ ...cdeDatum, blockNumber }));
 }

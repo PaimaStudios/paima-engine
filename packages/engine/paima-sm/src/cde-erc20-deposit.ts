@@ -15,13 +15,13 @@ export default async function processErc20Datum(
   cdeDatum: CdeErc20DepositDatum,
   inPresync: boolean
 ): Promise<SQLUpdate[]> {
-  const cdeId = cdeDatum.cdeId;
+  const cdeName = cdeDatum.cdeName;
   const { from, value } = cdeDatum.payload;
 
   const fromAddr = from.toLowerCase();
 
   const fromRow = await cdeErc20DepositGetTotalDeposited.run(
-    { cde_id: cdeId, wallet_address: fromAddr },
+    { cde_name: cdeName, wallet_address: fromAddr },
     readonlyDBConn
   );
 
@@ -40,7 +40,7 @@ export default async function processErc20Datum(
       updateList.push([
         cdeErc20DepositUpdateTotalDeposited,
         {
-          cde_id: cdeId,
+          cde_name: cdeName,
           wallet_address: fromAddr,
           total_deposited: newTotal.toString(10),
         },
@@ -49,7 +49,7 @@ export default async function processErc20Datum(
       updateList.push([
         cdeErc20DepositInsertTotalDeposited,
         {
-          cde_id: cdeId,
+          cde_name: cdeName,
           wallet_address: fromAddr,
           total_deposited: value,
         },

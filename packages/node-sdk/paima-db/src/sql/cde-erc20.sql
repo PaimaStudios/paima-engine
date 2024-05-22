@@ -1,15 +1,15 @@
 /* @name cdeErc20GetBalance */
 SELECT * FROM cde_erc20_data
-WHERE cde_id = :cde_id!
+WHERE cde_name = :cde_name!
 AND wallet_address = :wallet_address!;
 
 /* @name cdeErc20InsertBalance */
 INSERT INTO cde_erc20_data(
-    cde_id,
+    cde_name,
     wallet_address,
     balance
 ) VALUES (
-    :cde_id!,
+    :cde_name!,
     :wallet_address!,
     :balance!
 );
@@ -18,5 +18,5 @@ INSERT INTO cde_erc20_data(
 UPDATE cde_erc20_data
 SET
     balance = :balance!
-WHERE cde_id = :cde_id!
+WHERE cde_name = :cde_name!
 AND wallet_address = :wallet_address!;

@@ -6,7 +6,7 @@ export type Json = null | boolean | number | string | Json[] | { [key: string]: 
 /** 'CdeCardanoMintBurnInsert' parameters type */
 export interface ICdeCardanoMintBurnInsertParams {
   assets: Json;
-  cde_id: number;
+  cde_name: string;
   input_addresses: Json;
   metadata: string;
   output_addresses: Json;
@@ -22,20 +22,20 @@ export interface ICdeCardanoMintBurnInsertQuery {
   result: ICdeCardanoMintBurnInsertResult;
 }
 
-const cdeCardanoMintBurnInsertIR: any = {"usedParamSet":{"cde_id":true,"tx_id":true,"metadata":true,"assets":true,"input_addresses":true,"output_addresses":true},"params":[{"name":"cde_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":128,"b":135}]},{"name":"tx_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":140,"b":146}]},{"name":"metadata","required":true,"transform":{"type":"scalar"},"locs":[{"a":151,"b":160}]},{"name":"assets","required":true,"transform":{"type":"scalar"},"locs":[{"a":165,"b":172}]},{"name":"input_addresses","required":true,"transform":{"type":"scalar"},"locs":[{"a":177,"b":193}]},{"name":"output_addresses","required":true,"transform":{"type":"scalar"},"locs":[{"a":198,"b":215}]}],"statement":"INSERT INTO cde_cardano_mint_burn (\n  cde_id,\n  tx_id,\n  metadata,\n  assets,\n  input_addresses,\n  output_addresses\n) VALUES (\n  :cde_id!,\n  :tx_id!,\n  :metadata!,\n  :assets!,\n  :input_addresses!,\n  :output_addresses!\n)"};
+const cdeCardanoMintBurnInsertIR: any = {"usedParamSet":{"cde_name":true,"tx_id":true,"metadata":true,"assets":true,"input_addresses":true,"output_addresses":true},"params":[{"name":"cde_name","required":true,"transform":{"type":"scalar"},"locs":[{"a":130,"b":139}]},{"name":"tx_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":144,"b":150}]},{"name":"metadata","required":true,"transform":{"type":"scalar"},"locs":[{"a":155,"b":164}]},{"name":"assets","required":true,"transform":{"type":"scalar"},"locs":[{"a":169,"b":176}]},{"name":"input_addresses","required":true,"transform":{"type":"scalar"},"locs":[{"a":181,"b":197}]},{"name":"output_addresses","required":true,"transform":{"type":"scalar"},"locs":[{"a":202,"b":219}]}],"statement":"INSERT INTO cde_cardano_mint_burn (\n  cde_name,\n  tx_id,\n  metadata,\n  assets,\n  input_addresses,\n  output_addresses\n) VALUES (\n  :cde_name!,\n  :tx_id!,\n  :metadata!,\n  :assets!,\n  :input_addresses!,\n  :output_addresses!\n)"};
 
 /**
  * Query generated from SQL:
  * ```
  * INSERT INTO cde_cardano_mint_burn (
- *   cde_id,
+ *   cde_name,
  *   tx_id,
  *   metadata,
  *   assets,
  *   input_addresses,
  *   output_addresses
  * ) VALUES (
- *   :cde_id!,
+ *   :cde_name!,
  *   :tx_id!,
  *   :metadata!,
  *   :assets!,
