@@ -34,7 +34,7 @@ export default async function processDatum(
     [
       registerDynamicChainDataExtension,
       {
-        base_name: cdeDatum.cdeName,
+        base_name: `${cdeDatum.cdeName}##`,
         cde_type: type,
         start_blockheight: cdeDatum.blockNumber,
         scheduled_prefix: cdeDatum.scheduledPrefix,
@@ -43,7 +43,7 @@ export default async function processDatum(
     [
       insertDynamicExtension,
       {
-        base_name: cdeDatum.cdeName,
+        base_name: `${cdeDatum.cdeName}##`,
         config: YAML.stringify(config),
       },
     ],

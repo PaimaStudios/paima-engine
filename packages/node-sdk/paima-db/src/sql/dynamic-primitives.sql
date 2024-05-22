@@ -7,8 +7,8 @@ INSERT INTO cde_dynamic_primitive_config(
     config
 ) 
 SELECT 
-    :base_name! || '-' || COUNT(*),
+    :base_name! || COUNT(*),
     :config!
 FROM
     cde_dynamic_primitive_config
-WHERE starts_with(cde_name, :base_name! || '-');
+WHERE starts_with(cde_name, :base_name!);

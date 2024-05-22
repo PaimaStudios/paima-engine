@@ -154,7 +154,7 @@ export interface IRegisterDynamicChainDataExtensionQuery {
   result: IRegisterDynamicChainDataExtensionResult;
 }
 
-const registerDynamicChainDataExtensionIR: any = {"usedParamSet":{"base_name":true,"cde_type":true,"start_blockheight":true,"scheduled_prefix":true},"params":[{"name":"base_name","required":true,"transform":{"type":"scalar"},"locs":[{"a":146,"b":156},{"a":301,"b":311}]},{"name":"cde_type","required":true,"transform":{"type":"scalar"},"locs":[{"a":182,"b":191}]},{"name":"start_blockheight","required":true,"transform":{"type":"scalar"},"locs":[{"a":198,"b":216}]},{"name":"scheduled_prefix","required":true,"transform":{"type":"scalar"},"locs":[{"a":223,"b":240}]}],"statement":"INSERT INTO\n    chain_data_extensions (\n        CDE_NAME,\n        CDE_TYPE,\n        START_BLOCKHEIGHT,\n        SCHEDULED_PREFIX\n    )\nSELECT \n    :base_name! || '-' || COUNT(*),\n    :cde_type!,\n    :start_blockheight!,\n    :scheduled_prefix!\nFROM\n    chain_data_extensions\nWHERE starts_with(cde_name, :base_name! || '-')"};
+const registerDynamicChainDataExtensionIR: any = {"usedParamSet":{"base_name":true,"cde_type":true,"start_blockheight":true,"scheduled_prefix":true},"params":[{"name":"base_name","required":true,"transform":{"type":"scalar"},"locs":[{"a":146,"b":156},{"a":294,"b":304}]},{"name":"cde_type","required":true,"transform":{"type":"scalar"},"locs":[{"a":175,"b":184}]},{"name":"start_blockheight","required":true,"transform":{"type":"scalar"},"locs":[{"a":191,"b":209}]},{"name":"scheduled_prefix","required":true,"transform":{"type":"scalar"},"locs":[{"a":216,"b":233}]}],"statement":"INSERT INTO\n    chain_data_extensions (\n        CDE_NAME,\n        CDE_TYPE,\n        START_BLOCKHEIGHT,\n        SCHEDULED_PREFIX\n    )\nSELECT \n    :base_name! || COUNT(*),\n    :cde_type!,\n    :start_blockheight!,\n    :scheduled_prefix!\nFROM\n    chain_data_extensions\nWHERE starts_with(cde_name, :base_name!)"};
 
 /**
  * Query generated from SQL:
@@ -167,13 +167,13 @@ const registerDynamicChainDataExtensionIR: any = {"usedParamSet":{"base_name":tr
  *         SCHEDULED_PREFIX
  *     )
  * SELECT 
- *     :base_name! || '-' || COUNT(*),
+ *     :base_name! || COUNT(*),
  *     :cde_type!,
  *     :start_blockheight!,
  *     :scheduled_prefix!
  * FROM
  *     chain_data_extensions
- * WHERE starts_with(cde_name, :base_name! || '-')
+ * WHERE starts_with(cde_name, :base_name!)
  * ```
  */
 export const registerDynamicChainDataExtension = new PreparedQuery<IRegisterDynamicChainDataExtensionParams,IRegisterDynamicChainDataExtensionResult>(registerDynamicChainDataExtensionIR);

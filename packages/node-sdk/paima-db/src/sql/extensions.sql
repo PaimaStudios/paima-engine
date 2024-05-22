@@ -36,10 +36,10 @@ INSERT INTO
         SCHEDULED_PREFIX
     )
 SELECT 
-    :base_name! || '-' || COUNT(*),
+    :base_name! || COUNT(*),
     :cde_type!,
     :start_blockheight!,
     :scheduled_prefix!
 FROM
     chain_data_extensions
-WHERE starts_with(cde_name, :base_name! || '-');
+WHERE starts_with(cde_name, :base_name!);
