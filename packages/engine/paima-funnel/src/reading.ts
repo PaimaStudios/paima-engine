@@ -23,6 +23,7 @@ import type { PaimaGameInteraction } from '@paima/utils';
 import { extractSubmittedData } from './paima-l2-processing.js';
 import type { FunnelSharedData } from './funnels/BaseFunnel.js';
 import { getUngroupedCdeData } from './cde/reading.js';
+import { generateDynamicPrimitiveName } from '@paima/utils-backend';
 
 export async function getBaseChainDataMulti(
   web3: Web3,
@@ -181,13 +182,13 @@ export async function fetchDynamicEvmPrimitives(
     for (const _ext of exts) {
       const ext: CdeDynamicEvmPrimitiveDatum = _ext as CdeDynamicEvmPrimitiveDatum;
 
-      const cdeName = `${ext.cdeName}${DYNAMIC_PRIMITIVE_NAME_SEPARATOR}${
-        sharedData.extensions.filter(
-          e =>
-            e.cdeType !== ChainDataExtensionType.DynamicEvmPrimitive &&
-            e.cdeName.startsWith(ext.cdeName)
-        ).length
-      }`;
+      const id = sharedData.extensions.filter(
+        e =>
+          e.cdeType !== ChainDataExtensionType.DynamicEvmPrimitive &&
+          e.cdeName.startsWith(ext.cdeName)
+      ).length;
+
+      const cdeName = generateDynamicPrimitiveName(ext.cdeName, id);
 
       // this would propagate the change to further funnels in the pipeline,
       // which is needed to set the proper cdeName.

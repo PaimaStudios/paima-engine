@@ -32,6 +32,7 @@ import type {
   TokenIdPair,
   CardanoAssetUtxo,
 } from './types.js';
+import { DYNAMIC_PRIMITIVE_NAME_SEPARATOR } from '@paima/utils';
 
 /**
  * Fetch the owner of the NFT from the database
@@ -235,6 +236,10 @@ export async function getCardanoAssetUtxosByPolicyId(
   policyId: string
 ): Promise<CardanoAssetUtxo[]> {
   return await internalGetCardanoAssetUtxos(readonlyDBConn, address, 'policy_id', policyId);
+}
+
+export function generateDynamicPrimitiveName(parentName: string, id: number): string {
+  return `${parentName}${DYNAMIC_PRIMITIVE_NAME_SEPARATOR}${id}`;
 }
 
 export async function getDynamicExtensions(
