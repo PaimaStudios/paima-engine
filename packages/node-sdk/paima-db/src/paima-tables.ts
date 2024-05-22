@@ -677,6 +677,7 @@ CREATE OR REPLACE TRIGGER wallet_connect_insert_or_update
 const QUERY_CREATE_TABLE_CDE_DYNAMIC_PRIMITIVE_CONFIG = `
 CREATE TABLE cde_dynamic_primitive_config (
   cde_name TEXT NOT NULL,
+  parent TEXT NOT NULL,
   config TEXT NOT NULL,
   PRIMARY KEY(cde_name)
 );
@@ -687,6 +688,7 @@ const TABLE_DATA_CDE_DYNAMIC_PRIMITIVE_CONFIG: TableData = {
   primaryKeyColumns: ['cde_name'],
   columnData: packTuples([
     ['cde_name', 'text', 'NO', ''],
+    ['parent', 'text', 'NO', ''],
     ['config', 'text', 'NO', ''],
   ]),
   serialColumns: [],

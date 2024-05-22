@@ -18,11 +18,12 @@ import {
   internalGetErc1155ByTokenId,
   internalGetErc1155ByTokenIdAndWallet,
 } from './cde-access-internals.js';
-import type {
-  ICdeCardanoGetProjectedNftResult,
-  ICdeErc1155GetAllTokensResult,
-  ICdeErc1155GetByTokenIdAndWalletResult,
-  ICdeErc1155GetByTokenIdResult,
+import {
+  getDynamicExtensionsByParent,
+  type ICdeCardanoGetProjectedNftResult,
+  type ICdeErc1155GetAllTokensResult,
+  type ICdeErc1155GetByTokenIdAndWalletResult,
+  type ICdeErc1155GetByTokenIdResult,
 } from '@paima/db';
 export type { ICdeErc1155GetAllTokensResult };
 import type {
@@ -234,4 +235,13 @@ export async function getCardanoAssetUtxosByPolicyId(
   policyId: string
 ): Promise<CardanoAssetUtxo[]> {
   return await internalGetCardanoAssetUtxos(readonlyDBConn, address, 'policy_id', policyId);
+}
+
+export async function getDynamicExtensions(
+  readonlyDBConn: Pool,
+  parent: string
+): Promise<{ name: string; config: string }[]> {
+  const dbResult = await getDynamicExtensionsByParent.run({ parent: parent }, readonlyDBConn);
+
+  return dbResult.map(ext => ({ name: ext.cde_name, config: ext.config }));
 }

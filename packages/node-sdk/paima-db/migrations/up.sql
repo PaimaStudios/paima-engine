@@ -258,6 +258,7 @@ CREATE TABLE achievement_progress(
 
 CREATE TABLE cde_dynamic_primitive_config (
   cde_name TEXT NOT NULL,
+  parent TEXT NOT NULL,
   config TEXT NOT NULL,
   PRIMARY KEY(cde_name)
 );

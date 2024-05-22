@@ -30,11 +30,13 @@ export default async function processDatum(
     network: cdeDatum.network,
   };
 
+  const baseName = `${cdeDatum.cdeName}##`;
+
   const updateList: SQLUpdate[] = [
     [
       registerDynamicChainDataExtension,
       {
-        base_name: `${cdeDatum.cdeName}##`,
+        base_name: baseName,
         cde_type: type,
         start_blockheight: cdeDatum.blockNumber,
         scheduled_prefix: cdeDatum.scheduledPrefix,
@@ -43,8 +45,9 @@ export default async function processDatum(
     [
       insertDynamicExtension,
       {
-        base_name: `${cdeDatum.cdeName}##`,
-        config: YAML.stringify(config),
+        base_name: baseName,
+        parent_name: cdeDatum.cdeName,
+        config: JSON.stringify(config),
       },
     ],
   ];
