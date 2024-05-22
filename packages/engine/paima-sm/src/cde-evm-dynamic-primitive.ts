@@ -1,12 +1,7 @@
-import {
-  insertDynamicExtension,
-  registerChainDataExtension,
-  registerDynamicChainDataExtension,
-} from '@paima/db';
+import { insertDynamicExtension, registerDynamicChainDataExtension } from '@paima/db';
 import type { SQLUpdate } from '@paima/db';
 import { CdeEntryTypeName, type CdeDynamicEvmPrimitiveDatum } from './types.js';
-import { ChainDataExtensionType } from '@paima/utils';
-import YAML from 'yaml';
+import { ChainDataExtensionType, DYNAMIC_PRIMITIVE_NAME_SEPARATOR } from '@paima/utils';
 
 export default async function processDatum(
   cdeDatum: CdeDynamicEvmPrimitiveDatum,
@@ -30,7 +25,7 @@ export default async function processDatum(
     network: cdeDatum.network,
   };
 
-  const baseName = `${cdeDatum.cdeName}##`;
+  const baseName = `${cdeDatum.cdeName}${DYNAMIC_PRIMITIVE_NAME_SEPARATOR}`;
 
   const updateList: SQLUpdate[] = [
     [

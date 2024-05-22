@@ -55,3 +55,5 @@ export const enum InternalEventType {
   EvmLastBlock,
   MinaLastTimestamp,
 }
+
+export const DYNAMIC_PRIMITIVE_NAME_SEPARATOR = '##';

@@ -8,6 +8,7 @@ import {
   doLog,
   ChainDataExtensionType,
   getErc721Contract,
+  DYNAMIC_PRIMITIVE_NAME_SEPARATOR,
 } from '@paima/utils';
 import type { PaimaL2Contract } from '@paima/utils';
 import { TimeoutError } from '@paima/runtime';
@@ -180,7 +181,7 @@ export async function fetchDynamicEvmPrimitives(
     for (const _ext of exts) {
       const ext: CdeDynamicEvmPrimitiveDatum = _ext as CdeDynamicEvmPrimitiveDatum;
 
-      const cdeName = `${ext.cdeName}-${
+      const cdeName = `${ext.cdeName}${DYNAMIC_PRIMITIVE_NAME_SEPARATOR}${
         sharedData.extensions.filter(
           e =>
             e.cdeType !== ChainDataExtensionType.DynamicEvmPrimitive &&
