@@ -8,10 +8,10 @@ import {
   doLog,
   ChainDataExtensionType,
   getErc721Contract,
-  DYNAMIC_PRIMITIVE_NAME_SEPARATOR,
 } from '@paima/utils';
 import type { PaimaL2Contract } from '@paima/utils';
-import { TimeoutError } from '@paima/runtime';
+import { TimeoutError, instantiateCdeGeneric } from '@paima/runtime';
+import type { ChainDataExtension, TChainDataExtensionGenericConfig } from '@paima/sm';
 import {
   CdeEntryTypeName,
   type CdeDynamicEvmPrimitiveDatum,
@@ -192,20 +192,42 @@ export async function fetchDynamicEvmPrimitives(
 
       // this would propagate the change to further funnels in the pipeline,
       // which is needed to set the proper cdeName.
-      sharedData.extensions.push({
-        cdeName: cdeName,
-        name: cdeName,
-        startBlockHeight: ext.blockNumber,
-        type: CdeEntryTypeName.ERC721,
-        contractAddress: ext.payload.contractAddress,
-        scheduledPrefix: ext.scheduledPrefix,
-        burnScheduledPrefix: ext.burnScheduledPrefix,
-        // not relevant
-        hash: 0,
-        cdeType: ChainDataExtensionType.ERC721,
-        contract: getErc721Contract(ext.payload.contractAddress, web3),
-        network: ext.network,
-      });
+      switch (ext.payload.targetConfig.type) {
+        case CdeEntryTypeName.ERC721:
+          sharedData.extensions.push({
+            cdeName: cdeName,
+            name: cdeName,
+            startBlockHeight: ext.blockNumber,
+            type: ext.payload.targetConfig.type,
+            contractAddress: ext.payload.contractAddress,
+            scheduledPrefix: ext.payload.targetConfig.scheduledPrefix,
+            burnScheduledPrefix: ext.payload.targetConfig.burnScheduledPrefix,
+            // not relevant
+            hash: 0,
+            cdeType: ChainDataExtensionType.ERC721,
+            contract: getErc721Contract(ext.payload.contractAddress, web3),
+            network: ext.network,
+          });
+          break;
+        case CdeEntryTypeName.Generic:
+          const config: TChainDataExtensionGenericConfig = {
+            startBlockHeight: ext.blockNumber,
+            name: cdeName,
+            type: ext.payload.targetConfig.type,
+            contractAddress: ext.payload.contractAddress,
+            abiPath: ext.payload.targetConfig.abiPath,
+            eventSignature: ext.payload.targetConfig.eventSignature,
+            scheduledPrefix: ext.payload.targetConfig.abiPath,
+          };
+
+          const instantiatedGenericExtension: ChainDataExtension = {
+            ...(await instantiateCdeGeneric(config, web3)),
+            network,
+          };
+
+          sharedData.extensions.push(instantiatedGenericExtension);
+          break;
+      }
     }
   }
 
