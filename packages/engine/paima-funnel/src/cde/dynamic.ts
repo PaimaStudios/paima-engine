@@ -1,4 +1,8 @@
-import type { ChainDataExtensionDynamicEvmPrimitive, ChainDataExtensionDatum } from '@paima/sm';
+import {
+  type ChainDataExtensionDynamicEvmPrimitive,
+  type ChainDataExtensionDatum,
+  CdeEntryTypeName,
+} from '@paima/sm';
 import { ChainDataExtensionDatumType, DEFAULT_FUNNEL_TIMEOUT, timeout } from '@paima/utils';
 
 export default async function getCdeDynamicEvmPrimitive(
@@ -20,17 +24,34 @@ export default async function getCdeDynamicEvmPrimitive(
     DEFAULT_FUNNEL_TIMEOUT
   );
 
+  let targetConfig;
+  switch (extension.targetConfig.type) {
+    case CdeEntryTypeName.ERC721:
+      targetConfig = {
+        type: extension.targetConfig.type,
+        scheduledPrefix: extension.targetConfig.scheduledPrefix,
+        burnScheduledPrefix: extension.targetConfig.burnScheduledPrefix,
+      };
+      break;
+    case CdeEntryTypeName.Generic:
+      targetConfig = {
+        type: extension.targetConfig.type,
+        scheduledPrefix: extension.targetConfig.scheduledPrefix,
+        abiPath: extension.targetConfig.abiPath,
+        eventSignature: extension.targetConfig.eventSignature,
+      };
+      break;
+  }
+
   return events.map(event => ({
     cdeName: extension.cdeName,
     cdeDatumType: ChainDataExtensionDatumType.DynamicEvmPrimitive,
     blockNumber: event.blockNumber,
     payload: {
       contractAddress: event.returnValues[extension.dynamicFields.contractAddress],
-      type: extension.targetConfig.type,
+      targetConfig: targetConfig,
     },
     network,
-    scheduledPrefix: extension.targetConfig.scheduledPrefix,
-    burnScheduledPrefix: extension.targetConfig.burnScheduledPrefix,
     transactionHash: event.transactionHash,
   }));
 }

@@ -95,7 +95,7 @@ export async function loadChainDataExtensions(
   try {
     const config = parseCdeConfigFile(configFileData, dynamicExtensions);
     const instantiatedExtensions = await Promise.all(
-      config.extensions.map((e, i) => instantiateExtension(e, i, web3s))
+      config.extensions.map(e => instantiateExtension(e, web3s))
     );
     return [instantiatedExtensions, true];
   } catch (err) {
@@ -268,7 +268,6 @@ export function hashConfig(config: any): number {
 // Do type-specific initialization and construct contract objects
 async function instantiateExtension(
   config: Static<typeof CdeConfig>['extensions'][0],
-  index: number,
   web3s: { [network: string]: Web3 }
 ): Promise<ChainDataExtension> {
   const network = config.network || defaultEvmMainNetworkName;
@@ -322,7 +321,7 @@ async function instantiateExtension(
       };
     case CdeEntryTypeName.Generic:
       return {
-        ...(await instantiateCdeGeneric(config, index, web3s[network])),
+        ...(await instantiateCdeGeneric(config, web3s[network])),
         network,
       };
     case CdeEntryTypeName.ERC6551Registry:
@@ -344,7 +343,7 @@ async function instantiateExtension(
       };
     case CdeEntryTypeName.DynamicEvmPrimitive:
       return {
-        ...(await instantiateCdeDynamicEvmPrimitive(config, index, web3s[network])),
+        ...(await instantiateCdeDynamicEvmPrimitive(config, web3s[network])),
         network,
       };
     case CdeEntryTypeName.CardanoDelegation:
@@ -423,9 +422,8 @@ export async function isPaimaErc721(
   }
 }
 
-async function instantiateCdeGeneric(
+export async function instantiateCdeGeneric(
   config: TChainDataExtensionGenericConfig,
-  index: number,
   web3: Web3
 ): Promise<ChainDataExtensionGeneric> {
   const eventSignature = config.eventSignature;
@@ -463,7 +461,6 @@ async function instantiateCdeGeneric(
 
 async function instantiateCdeDynamicEvmPrimitive(
   config: TChainDataExtensionDynamicEvmPrimitiveConfig,
-  index: number,
   web3: Web3
 ): Promise<ChainDataExtensionDynamicEvmPrimitive> {
   const eventSignature = config.eventSignature;

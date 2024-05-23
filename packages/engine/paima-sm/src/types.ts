@@ -164,7 +164,18 @@ interface CdeDatumCardanoMintBurnPayload {
 
 interface CdeDatumDynamicEvmPrimitivePayload {
   contractAddress: string;
-  type: CdeEntryTypeName;
+  targetConfig:
+    | {
+        type: CdeEntryTypeName.ERC721;
+        scheduledPrefix: string;
+        burnScheduledPrefix?: string | undefined;
+      }
+    | {
+        type: CdeEntryTypeName.Generic;
+        abiPath: string;
+        eventSignature: string;
+        scheduledPrefix: string;
+      };
 }
 
 type ChainDataExtensionPayload =
@@ -279,8 +290,6 @@ export interface CdeMinaActionGenericDatum extends CdeDatumBase {
 export interface CdeDynamicEvmPrimitiveDatum extends CdeDatumBase {
   cdeDatumType: ChainDataExtensionDatumType.DynamicEvmPrimitive;
   payload: CdeDatumDynamicEvmPrimitivePayload;
-  scheduledPrefix: string;
-  burnScheduledPrefix?: string | undefined;
 }
 
 export type ChainDataExtensionDatum =
@@ -543,10 +552,14 @@ export const ChainDataExtensionDynamicEvmPrimitiveConfig = Type.Intersect([
     contractAddress: EvmAddress,
     abiPath: Type.String(),
     eventSignature: Type.String(),
-    targetConfig: Type.Pick(ChainDataExtensionErc721Config, [
-      'scheduledPrefix',
-      'burnScheduledPrefix',
-      'type',
+    targetConfig: Type.Union([
+      Type.Pick(ChainDataExtensionErc721Config, ['scheduledPrefix', 'burnScheduledPrefix', 'type']),
+      Type.Pick(ChainDataExtensionGenericConfig, [
+        'abiPath',
+        'eventSignature',
+        'scheduledPrefix',
+        'type',
+      ]),
     ]),
     dynamicFields: Type.Object({
       contractAddress: Type.String(),
