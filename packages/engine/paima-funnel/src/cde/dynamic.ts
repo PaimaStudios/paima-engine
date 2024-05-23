@@ -31,5 +31,6 @@ export default async function getCdeDynamicEvmPrimitive(
     network,
     scheduledPrefix: extension.targetConfig.scheduledPrefix,
     burnScheduledPrefix: extension.targetConfig.burnScheduledPrefix,
+    transactionHash: event.transactionHash,
   }));
 }
