@@ -1,5 +1,5 @@
 import type { AddressType, WalletAddress, UserSignature, InputDataString } from '@paima/utils';
-import { sha3 } from 'web3-utils';
+import web3utils from 'web3-utils';
 
 export const OUTER_BATCH_DIVIDER: string = '\x02';
 export const INNER_BATCH_DIVIDER: string = '\x03';
@@ -33,7 +33,7 @@ export function hashBatchSubunit(input: BatchedSubunit): string {
   return hashFxn(input.userAddress + input.gameInput + input.millisecondTimestamp);
 }
 
-const hashFxn = (s: string): string => sha3(s) || '0x0';
+const hashFxn = (s: string): string => web3utils.sha3(s) || '0x0';
 
 export function packInput(input: BatchedSubunit): string {
   return [
