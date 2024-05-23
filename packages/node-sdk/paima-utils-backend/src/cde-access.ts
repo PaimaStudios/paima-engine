@@ -1,7 +1,6 @@
 import type { Pool } from 'pg';
 
 import {
-  getCdeIdByName,
   internalGetNftOwner,
   internalGetOwnedNfts,
   internalGetFungibleTokenBalance,
@@ -19,11 +18,12 @@ import {
   internalGetErc1155ByTokenId,
   internalGetErc1155ByTokenIdAndWallet,
 } from './cde-access-internals.js';
-import type {
-  ICdeCardanoGetProjectedNftResult,
-  ICdeErc1155GetAllTokensResult,
-  ICdeErc1155GetByTokenIdAndWalletResult,
-  ICdeErc1155GetByTokenIdResult,
+import {
+  getDynamicExtensionsByParent,
+  type ICdeCardanoGetProjectedNftResult,
+  type ICdeErc1155GetAllTokensResult,
+  type ICdeErc1155GetByTokenIdAndWalletResult,
+  type ICdeErc1155GetByTokenIdResult,
 } from '@paima/db';
 export type { ICdeErc1155GetAllTokensResult };
 import type {
@@ -32,6 +32,7 @@ import type {
   TokenIdPair,
   CardanoAssetUtxo,
 } from './types.js';
+import { DYNAMIC_PRIMITIVE_NAME_SEPARATOR } from '@paima/utils';
 
 /**
  * Fetch the owner of the NFT from the database
@@ -41,9 +42,7 @@ export async function getNftOwner(
   cdeName: string,
   nftId: bigint
 ): Promise<string | null> {
-  const cdeId = await getCdeIdByName(readonlyDBConn, cdeName);
-  if (cdeId === null) return null;
-  return await internalGetNftOwner(readonlyDBConn, cdeId, nftId);
+  return await internalGetNftOwner(readonlyDBConn, cdeName, nftId);
 }
 
 /**
@@ -78,9 +77,7 @@ export async function getOwnedNfts(
   cdeName: string,
   ownerAddress: string
 ): Promise<bigint[]> {
-  const cdeId = await getCdeIdByName(readonlyDBConn, cdeName);
-  if (cdeId === null) return [];
-  return await internalGetOwnedNfts(readonlyDBConn, cdeId, ownerAddress);
+  return await internalGetOwnedNfts(readonlyDBConn, cdeName, ownerAddress);
 }
 
 /**
@@ -91,9 +88,7 @@ export async function getFungibleTokenBalance(
   cdeName: string,
   walletAddress: string
 ): Promise<bigint | null> {
-  const cdeId = await getCdeIdByName(readonlyDBConn, cdeName);
-  if (cdeId === null) return null;
-  return await internalGetFungibleTokenBalance(readonlyDBConn, cdeId, walletAddress);
+  return await internalGetFungibleTokenBalance(readonlyDBConn, cdeName, walletAddress);
 }
 
 /**
@@ -104,9 +99,7 @@ export async function totalAmountDeposited(
   cdeName: string,
   walletAddress: string
 ): Promise<bigint | null> {
-  const cdeId = await getCdeIdByName(readonlyDBConn, cdeName);
-  if (cdeId === null) return null;
-  return await internalGetTotalDeposited(readonlyDBConn, cdeId, walletAddress);
+  return await internalGetTotalDeposited(readonlyDBConn, cdeName, walletAddress);
 }
 
 /**
@@ -117,9 +110,7 @@ export async function findUsersWithDepositsGreaterThan(
   cdeName: string,
   thresholdAmount: bigint
 ): Promise<string[]> {
-  const cdeId = await getCdeIdByName(readonlyDBConn, cdeName);
-  if (cdeId === null) return [];
-  return await internalGetDonorsAboveThreshold(readonlyDBConn, cdeId, thresholdAmount);
+  return await internalGetDonorsAboveThreshold(readonlyDBConn, cdeName, thresholdAmount);
 }
 
 /**
@@ -130,9 +121,7 @@ export async function getGenericDataBlockheight(
   cdeName: string,
   blockHeight: number
 ): Promise<GenericCdeDataUnit[]> {
-  const cdeId = await getCdeIdByName(readonlyDBConn, cdeName);
-  if (cdeId === null) return [];
-  return await internalGetGenericDataBlockheight(readonlyDBConn, cdeId, blockHeight);
+  return await internalGetGenericDataBlockheight(readonlyDBConn, cdeName, blockHeight);
 }
 
 /**
@@ -144,9 +133,7 @@ export async function getGenericDataBlockheightRange(
   fromBlock: number,
   toBlock: number
 ): Promise<GenericCdeDataUnit[]> {
-  const cdeId = await getCdeIdByName(readonlyDBConn, cdeName);
-  if (cdeId === null) return [];
-  return await internalGetGenericDataBlockheightRange(readonlyDBConn, cdeId, fromBlock, toBlock);
+  return await internalGetGenericDataBlockheightRange(readonlyDBConn, cdeName, fromBlock, toBlock);
 }
 
 /**
@@ -157,9 +144,7 @@ export async function getErc1155AllTokens(
   cdeName: string,
   wallet: string
 ): Promise<ICdeErc1155GetAllTokensResult[]> {
-  const cdeId = await getCdeIdByName(readonlyDBConn, cdeName);
-  if (cdeId === null) return [];
-  return await internalGetErc1155AllTokens(readonlyDBConn, cdeId, wallet);
+  return await internalGetErc1155AllTokens(readonlyDBConn, cdeName, wallet);
 }
 
 /**
@@ -170,9 +155,7 @@ export async function getErc1155ByTokenId(
   cdeName: string,
   tokenId: bigint
 ): Promise<ICdeErc1155GetByTokenIdResult | null> {
-  const cdeId = await getCdeIdByName(readonlyDBConn, cdeName);
-  if (cdeId === null) return null;
-  return await internalGetErc1155ByTokenId(readonlyDBConn, cdeId, tokenId);
+  return await internalGetErc1155ByTokenId(readonlyDBConn, cdeName, tokenId);
 }
 
 /**
@@ -184,9 +167,7 @@ export async function getErc1155ByTokenIdAndWallet(
   wallet: string,
   tokenId: bigint
 ): Promise<ICdeErc1155GetByTokenIdAndWalletResult | null> {
-  const cdeId = await getCdeIdByName(readonlyDBConn, cdeName);
-  if (cdeId === null) return null;
-  return await internalGetErc1155ByTokenIdAndWallet(readonlyDBConn, cdeId, wallet, tokenId);
+  return await internalGetErc1155ByTokenIdAndWallet(readonlyDBConn, cdeName, wallet, tokenId);
 }
 
 /**
@@ -197,9 +178,7 @@ export async function getErc6551AccountOwner(
   cdeName: string,
   accountCreated: string
 ): Promise<TokenIdPair | null> {
-  const cdeId = await getCdeIdByName(readonlyDBConn, cdeName);
-  if (cdeId === null) return null;
-  return await internalGetErc6551AccountOwner(readonlyDBConn, cdeId, accountCreated);
+  return await internalGetErc6551AccountOwner(readonlyDBConn, cdeName, accountCreated);
 }
 
 /**
@@ -210,9 +189,7 @@ export async function getAllOwnedErc6551Accounts(
   cdeName: string,
   nft: TokenIdPair
 ): Promise<string[]> {
-  const cdeId = await getCdeIdByName(readonlyDBConn, cdeName);
-  if (cdeId === null) return [];
-  return await internalGetAllOwnedErc6551Accounts(readonlyDBConn, cdeId, nft);
+  return await internalGetAllOwnedErc6551Accounts(readonlyDBConn, cdeName, nft);
 }
 
 /**
@@ -259,4 +236,17 @@ export async function getCardanoAssetUtxosByPolicyId(
   policyId: string
 ): Promise<CardanoAssetUtxo[]> {
   return await internalGetCardanoAssetUtxos(readonlyDBConn, address, 'policy_id', policyId);
+}
+
+export function generateDynamicPrimitiveName(parentName: string, id: number): string {
+  return `${parentName}${DYNAMIC_PRIMITIVE_NAME_SEPARATOR}${id}`;
+}
+
+export async function getDynamicExtensions(
+  readonlyDBConn: Pool,
+  parent: string
+): Promise<{ name: string; config: string }[]> {
+  const dbResult = await getDynamicExtensionsByParent.run({ parent: parent }, readonlyDBConn);
+
+  return dbResult.map(ext => ({ name: ext.cde_name, config: ext.config }));
 }

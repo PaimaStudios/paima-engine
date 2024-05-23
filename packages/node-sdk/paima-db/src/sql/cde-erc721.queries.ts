@@ -3,13 +3,13 @@ import { PreparedQuery } from '@pgtyped/runtime';
 
 /** 'CdeErc721GetOwner' parameters type */
 export interface ICdeErc721GetOwnerParams {
-  cde_id: number;
+  cde_name: string;
   token_id: string;
 }
 
 /** 'CdeErc721GetOwner' return type */
 export interface ICdeErc721GetOwnerResult {
-  cde_id: number;
+  cde_name: string;
   nft_owner: string;
   token_id: string;
 }
@@ -20,13 +20,13 @@ export interface ICdeErc721GetOwnerQuery {
   result: ICdeErc721GetOwnerResult;
 }
 
-const cdeErc721GetOwnerIR: any = {"usedParamSet":{"cde_id":true,"token_id":true},"params":[{"name":"cde_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":45,"b":52}]},{"name":"token_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":69,"b":78}]}],"statement":"SELECT * FROM cde_erc721_data\nWHERE cde_id = :cde_id!\nAND token_id = :token_id!"};
+const cdeErc721GetOwnerIR: any = {"usedParamSet":{"cde_name":true,"token_id":true},"params":[{"name":"cde_name","required":true,"transform":{"type":"scalar"},"locs":[{"a":47,"b":56}]},{"name":"token_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":73,"b":82}]}],"statement":"SELECT * FROM cde_erc721_data\nWHERE cde_name = :cde_name!\nAND token_id = :token_id!"};
 
 /**
  * Query generated from SQL:
  * ```
  * SELECT * FROM cde_erc721_data
- * WHERE cde_id = :cde_id!
+ * WHERE cde_name = :cde_name!
  * AND token_id = :token_id!
  * ```
  */
@@ -35,13 +35,13 @@ export const cdeErc721GetOwner = new PreparedQuery<ICdeErc721GetOwnerParams,ICde
 
 /** 'CdeErc721GetOwnedNfts' parameters type */
 export interface ICdeErc721GetOwnedNftsParams {
-  cde_id: number;
+  cde_name: string;
   nft_owner: string;
 }
 
 /** 'CdeErc721GetOwnedNfts' return type */
 export interface ICdeErc721GetOwnedNftsResult {
-  cde_id: number;
+  cde_name: string;
   nft_owner: string;
   token_id: string;
 }
@@ -52,13 +52,13 @@ export interface ICdeErc721GetOwnedNftsQuery {
   result: ICdeErc721GetOwnedNftsResult;
 }
 
-const cdeErc721GetOwnedNftsIR: any = {"usedParamSet":{"cde_id":true,"nft_owner":true},"params":[{"name":"cde_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":45,"b":52}]},{"name":"nft_owner","required":true,"transform":{"type":"scalar"},"locs":[{"a":70,"b":80}]}],"statement":"SELECT * FROM cde_erc721_data\nWHERE cde_id = :cde_id!\nAND nft_owner = :nft_owner!"};
+const cdeErc721GetOwnedNftsIR: any = {"usedParamSet":{"cde_name":true,"nft_owner":true},"params":[{"name":"cde_name","required":true,"transform":{"type":"scalar"},"locs":[{"a":47,"b":56}]},{"name":"nft_owner","required":true,"transform":{"type":"scalar"},"locs":[{"a":74,"b":84}]}],"statement":"SELECT * FROM cde_erc721_data\nWHERE cde_name = :cde_name!\nAND nft_owner = :nft_owner!"};
 
 /**
  * Query generated from SQL:
  * ```
  * SELECT * FROM cde_erc721_data
- * WHERE cde_id = :cde_id!
+ * WHERE cde_name = :cde_name!
  * AND nft_owner = :nft_owner!
  * ```
  */
@@ -67,7 +67,7 @@ export const cdeErc721GetOwnedNfts = new PreparedQuery<ICdeErc721GetOwnedNftsPar
 
 /** 'CdeErc721InsertOwner' parameters type */
 export interface ICdeErc721InsertOwnerParams {
-  cde_id: number;
+  cde_name: string;
   nft_owner: string;
   token_id: string;
 }
@@ -81,17 +81,17 @@ export interface ICdeErc721InsertOwnerQuery {
   result: ICdeErc721InsertOwnerResult;
 }
 
-const cdeErc721InsertOwnerIR: any = {"usedParamSet":{"cde_id":true,"token_id":true,"nft_owner":true},"params":[{"name":"cde_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":84,"b":91}]},{"name":"token_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":98,"b":107}]},{"name":"nft_owner","required":true,"transform":{"type":"scalar"},"locs":[{"a":114,"b":124}]}],"statement":"INSERT INTO cde_erc721_data(\n    cde_id,\n    token_id,\n    nft_owner\n) VALUES (\n    :cde_id!,\n    :token_id!,\n    :nft_owner!\n)"};
+const cdeErc721InsertOwnerIR: any = {"usedParamSet":{"cde_name":true,"token_id":true,"nft_owner":true},"params":[{"name":"cde_name","required":true,"transform":{"type":"scalar"},"locs":[{"a":86,"b":95}]},{"name":"token_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":102,"b":111}]},{"name":"nft_owner","required":true,"transform":{"type":"scalar"},"locs":[{"a":118,"b":128}]}],"statement":"INSERT INTO cde_erc721_data(\n    cde_name,\n    token_id,\n    nft_owner\n) VALUES (\n    :cde_name!,\n    :token_id!,\n    :nft_owner!\n)"};
 
 /**
  * Query generated from SQL:
  * ```
  * INSERT INTO cde_erc721_data(
- *     cde_id,
+ *     cde_name,
  *     token_id,
  *     nft_owner
  * ) VALUES (
- *     :cde_id!,
+ *     :cde_name!,
  *     :token_id!,
  *     :nft_owner!
  * )
@@ -102,7 +102,7 @@ export const cdeErc721InsertOwner = new PreparedQuery<ICdeErc721InsertOwnerParam
 
 /** 'CdeErc721UpdateOwner' parameters type */
 export interface ICdeErc721UpdateOwnerParams {
-  cde_id: number;
+  cde_name: string;
   nft_owner: string;
   token_id: string;
 }
@@ -116,7 +116,7 @@ export interface ICdeErc721UpdateOwnerQuery {
   result: ICdeErc721UpdateOwnerResult;
 }
 
-const cdeErc721UpdateOwnerIR: any = {"usedParamSet":{"nft_owner":true,"cde_id":true,"token_id":true},"params":[{"name":"nft_owner","required":true,"transform":{"type":"scalar"},"locs":[{"a":43,"b":53}]},{"name":"cde_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":70,"b":77}]},{"name":"token_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":94,"b":103}]}],"statement":"UPDATE cde_erc721_data\nSET\n    nft_owner = :nft_owner!\nWHERE cde_id = :cde_id!\nAND token_id = :token_id!"};
+const cdeErc721UpdateOwnerIR: any = {"usedParamSet":{"nft_owner":true,"cde_name":true,"token_id":true},"params":[{"name":"nft_owner","required":true,"transform":{"type":"scalar"},"locs":[{"a":43,"b":53}]},{"name":"cde_name","required":true,"transform":{"type":"scalar"},"locs":[{"a":72,"b":81}]},{"name":"token_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":98,"b":107}]}],"statement":"UPDATE cde_erc721_data\nSET\n    nft_owner = :nft_owner!\nWHERE cde_name = :cde_name!\nAND token_id = :token_id!"};
 
 /**
  * Query generated from SQL:
@@ -124,7 +124,7 @@ const cdeErc721UpdateOwnerIR: any = {"usedParamSet":{"nft_owner":true,"cde_id":t
  * UPDATE cde_erc721_data
  * SET
  *     nft_owner = :nft_owner!
- * WHERE cde_id = :cde_id!
+ * WHERE cde_name = :cde_name!
  * AND token_id = :token_id!
  * ```
  */
@@ -148,13 +148,13 @@ export interface ICdeErc721GetAllOwnedNftsQuery {
   result: ICdeErc721GetAllOwnedNftsResult;
 }
 
-const cdeErc721GetAllOwnedNftsIR: any = {"usedParamSet":{"nft_owner":true},"params":[{"name":"nft_owner","required":true,"transform":{"type":"scalar"},"locs":[{"a":150,"b":160}]}],"statement":"SELECT cde_name, token_id  FROM cde_erc721_data\nJOIN chain_data_extensions ON chain_data_extensions.cde_id = cde_erc721_data.cde_id\nWHERE nft_owner = :nft_owner!"};
+const cdeErc721GetAllOwnedNftsIR: any = {"usedParamSet":{"nft_owner":true},"params":[{"name":"nft_owner","required":true,"transform":{"type":"scalar"},"locs":[{"a":176,"b":186}]}],"statement":"SELECT chain_data_extensions.cde_name, token_id  FROM cde_erc721_data\nJOIN chain_data_extensions ON chain_data_extensions.cde_name = cde_erc721_data.cde_name\nWHERE nft_owner = :nft_owner!"};
 
 /**
  * Query generated from SQL:
  * ```
- * SELECT cde_name, token_id  FROM cde_erc721_data
- * JOIN chain_data_extensions ON chain_data_extensions.cde_id = cde_erc721_data.cde_id
+ * SELECT chain_data_extensions.cde_name, token_id  FROM cde_erc721_data
+ * JOIN chain_data_extensions ON chain_data_extensions.cde_name = cde_erc721_data.cde_name
  * WHERE nft_owner = :nft_owner!
  * ```
  */
@@ -163,7 +163,7 @@ export const cdeErc721GetAllOwnedNfts = new PreparedQuery<ICdeErc721GetAllOwnedN
 
 /** 'CdeErc721Delete' parameters type */
 export interface ICdeErc721DeleteParams {
-  cde_id: number;
+  cde_name: string;
   token_id: string;
 }
 
@@ -176,13 +176,13 @@ export interface ICdeErc721DeleteQuery {
   result: ICdeErc721DeleteResult;
 }
 
-const cdeErc721DeleteIR: any = {"usedParamSet":{"cde_id":true,"token_id":true},"params":[{"name":"cde_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":43,"b":50}]},{"name":"token_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":67,"b":76}]}],"statement":"DELETE FROM cde_erc721_data\nWHERE cde_id = :cde_id!\nAND token_id = :token_id!"};
+const cdeErc721DeleteIR: any = {"usedParamSet":{"cde_name":true,"token_id":true},"params":[{"name":"cde_name","required":true,"transform":{"type":"scalar"},"locs":[{"a":45,"b":54}]},{"name":"token_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":71,"b":80}]}],"statement":"DELETE FROM cde_erc721_data\nWHERE cde_name = :cde_name!\nAND token_id = :token_id!"};
 
 /**
  * Query generated from SQL:
  * ```
  * DELETE FROM cde_erc721_data
- * WHERE cde_id = :cde_id!
+ * WHERE cde_name = :cde_name!
  * AND token_id = :token_id!
  * ```
  */
@@ -191,7 +191,7 @@ export const cdeErc721Delete = new PreparedQuery<ICdeErc721DeleteParams,ICdeErc7
 
 /** 'CdeErc721BurnInsert' parameters type */
 export interface ICdeErc721BurnInsertParams {
-  cde_id: number;
+  cde_name: string;
   nft_owner: string;
   token_id: string;
 }
@@ -205,17 +205,17 @@ export interface ICdeErc721BurnInsertQuery {
   result: ICdeErc721BurnInsertResult;
 }
 
-const cdeErc721BurnInsertIR: any = {"usedParamSet":{"cde_id":true,"token_id":true,"nft_owner":true},"params":[{"name":"cde_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":84,"b":91}]},{"name":"token_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":98,"b":107}]},{"name":"nft_owner","required":true,"transform":{"type":"scalar"},"locs":[{"a":114,"b":124}]}],"statement":"INSERT INTO cde_erc721_burn(\n    cde_id,\n    token_id,\n    nft_owner\n) VALUES (\n    :cde_id!,\n    :token_id!,\n    :nft_owner!\n)"};
+const cdeErc721BurnInsertIR: any = {"usedParamSet":{"cde_name":true,"token_id":true,"nft_owner":true},"params":[{"name":"cde_name","required":true,"transform":{"type":"scalar"},"locs":[{"a":86,"b":95}]},{"name":"token_id","required":true,"transform":{"type":"scalar"},"locs":[{"a":102,"b":111}]},{"name":"nft_owner","required":true,"transform":{"type":"scalar"},"locs":[{"a":118,"b":128}]}],"statement":"INSERT INTO cde_erc721_burn(\n    cde_name,\n    token_id,\n    nft_owner\n) VALUES (\n    :cde_name!,\n    :token_id!,\n    :nft_owner!\n)"};
 
 /**
  * Query generated from SQL:
  * ```
  * INSERT INTO cde_erc721_burn(
- *     cde_id,
+ *     cde_name,
  *     token_id,
  *     nft_owner
  * ) VALUES (
- *     :cde_id!,
+ *     :cde_name!,
  *     :token_id!,
  *     :nft_owner!
  * )

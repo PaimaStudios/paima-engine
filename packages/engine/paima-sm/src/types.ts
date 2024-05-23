@@ -58,14 +58,14 @@ export interface EvmPresyncChainData {
 export interface CardanoPresyncChainData {
   network: string;
   networkType: ConfigNetworkType.CARDANO;
-  carpCursor: { cdeId: number; cursor: string; finished: boolean };
+  carpCursor: { cdeName: string; cursor: string; finished: boolean };
   extensionDatums: ChainDataExtensionDatum[];
 }
 
 export interface MinaPresyncChainData {
   network: string;
   networkType: ConfigNetworkType.MINA;
-  minaCursor: { cdeId: number; cursor: string; finished: boolean };
+  minaCursor: { cdeName: string; cursor: string; finished: boolean };
   extensionDatums: ChainDataExtensionDatum[];
 }
 
@@ -162,6 +162,11 @@ interface CdeDatumCardanoMintBurnPayload {
   outputAddresses: { [address: string]: { policyId: string; assetName: string; amount: string }[] };
 }
 
+interface CdeDatumDynamicEvmPrimitivePayload {
+  contractAddress: string;
+  type: CdeEntryTypeName;
+}
+
 type ChainDataExtensionPayload =
   | CdeDatumErc20TransferPayload
   | CdeDatumErc721MintPayload
@@ -172,10 +177,11 @@ type ChainDataExtensionPayload =
   | CdeDatumGenericPayload
   | CdeDatumErc6551RegistryPayload
   | CdeDatumCardanoPoolPayload
-  | CdeDatumCardanoProjectedNFTPayload;
+  | CdeDatumCardanoProjectedNFTPayload
+  | CdeDatumDynamicEvmPrimitivePayload;
 
 interface CdeDatumBase {
-  cdeId: number;
+  cdeName: string;
   cdeDatumType: ChainDataExtensionDatumType;
   blockNumber: number;
   transactionHash: string;
@@ -270,6 +276,12 @@ export interface CdeMinaActionGenericDatum extends CdeDatumBase {
   paginationCursor: { cursor: string; finished: boolean };
   scheduledPrefix: string;
 }
+export interface CdeDynamicEvmPrimitiveDatum extends CdeDatumBase {
+  cdeDatumType: ChainDataExtensionDatumType.DynamicEvmPrimitive;
+  payload: CdeDatumDynamicEvmPrimitivePayload;
+  scheduledPrefix: string;
+  burnScheduledPrefix?: string | undefined;
+}
 
 export type ChainDataExtensionDatum =
   | CdeErc20TransferDatum
@@ -285,7 +297,8 @@ export type ChainDataExtensionDatum =
   | CdeCardanoTransferDatum
   | CdeCardanoMintBurnDatum
   | CdeMinaEventGenericDatum
-  | CdeMinaActionGenericDatum;
+  | CdeMinaActionGenericDatum
+  | CdeDynamicEvmPrimitiveDatum;
 
 export enum CdeEntryTypeName {
   Generic = 'generic',
@@ -301,6 +314,7 @@ export enum CdeEntryTypeName {
   CardanoMintBurn = 'cardano-mint-burn',
   MinaEventGeneric = 'mina-event-generic',
   MinaActionGeneric = 'mina-action-generic',
+  DynamicEvmPrimitive = 'dynamic-evm-primitive',
 }
 
 const EvmAddress = Type.Transform(Type.RegExp('0x[0-9a-fA-F]{40}'))
@@ -312,7 +326,7 @@ const ChainDataExtensionConfigBase = Type.Object({
   startBlockHeight: Type.Number(),
 });
 interface ChainDataExtensionBase {
-  cdeId: number;
+  cdeName: string;
   hash: number; // hash of the CDE config that created this type
 }
 
@@ -522,6 +536,34 @@ export type ChainDataExtensionMinaActionGeneric = ChainDataExtensionBase &
     cdeType: ChainDataExtensionType.MinaActionGeneric;
   };
 
+export const ChainDataExtensionDynamicEvmPrimitiveConfig = Type.Intersect([
+  ChainDataExtensionConfigBase,
+  Type.Object({
+    type: Type.Literal(CdeEntryTypeName.DynamicEvmPrimitive),
+    contractAddress: EvmAddress,
+    abiPath: Type.String(),
+    eventSignature: Type.String(),
+    targetConfig: Type.Pick(ChainDataExtensionErc721Config, [
+      'scheduledPrefix',
+      'burnScheduledPrefix',
+      'type',
+    ]),
+    dynamicFields: Type.Object({
+      contractAddress: Type.String(),
+    }),
+  }),
+]);
+export type TChainDataExtensionDynamicEvmPrimitiveConfig = Static<
+  typeof ChainDataExtensionDynamicEvmPrimitiveConfig
+>;
+export type ChainDataExtensionDynamicEvmPrimitive = ChainDataExtensionBase &
+  Omit<Static<typeof ChainDataExtensionDynamicEvmPrimitiveConfig>, 'abiPath'> & {
+    cdeType: ChainDataExtensionType.DynamicEvmPrimitive;
+    contract: Contract;
+    eventSignatureHash: string;
+    eventName: string;
+  };
+
 export const CdeConfig = Type.Object({
   extensions: Type.Array(
     Type.Intersect([
@@ -539,6 +581,7 @@ export const CdeConfig = Type.Object({
         ChainDataExtensionCardanoMintBurnConfig,
         ChainDataExtensionMinaEventGenericConfig,
         ChainDataExtensionMinaActionGenericConfig,
+        ChainDataExtensionDynamicEvmPrimitiveConfig,
       ]),
       Type.Partial(Type.Object({ network: Type.String() })),
     ])
@@ -573,6 +616,7 @@ export type ChainDataExtension = (
   | ChainDataExtensionCardanoMintBurn
   | ChainDataExtensionMinaEventGeneric
   | ChainDataExtensionMinaActionGeneric
+  | ChainDataExtensionDynamicEvmPrimitive
 ) & { network: string | undefined };
 
 export type GameStateTransitionFunctionRouter = (

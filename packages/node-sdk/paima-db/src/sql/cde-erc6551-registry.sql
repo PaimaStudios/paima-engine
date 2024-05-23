@@ -1,17 +1,17 @@
 /* @name cdeErc6551GetOwner */
 SELECT * FROM cde_erc6551_registry_data
-WHERE cde_id = :cde_id!
+WHERE cde_name = :cde_name!
 AND account_created = :account_created!;
 
 /* @name cdeErc6551GetOwnedAccounts */
 SELECT * FROM cde_erc6551_registry_data
-WHERE cde_id = :cde_id!
+WHERE cde_name = :cde_name!
 AND token_contract = :token_contract!
 AND token_id = :token_id!;
 
 /* @name cdeErc6551InsertRegistry */
 INSERT INTO cde_erc6551_registry_data(
-    cde_id,
+    cde_name,
     block_height,
     account_created,
     implementation,
@@ -20,7 +20,7 @@ INSERT INTO cde_erc6551_registry_data(
     chain_id,
     salt
 ) VALUES (
-    :cde_id!,
+    :cde_name!,
     :block_height!,
     :account_created!,
     :implementation!,

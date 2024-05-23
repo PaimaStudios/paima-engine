@@ -6,7 +6,7 @@ WHERE
 
 /* @name  cdeInsertCardanoAssetUtxo */
 INSERT INTO cde_cardano_asset_utxos(
-    cde_id,
+    cde_name,
     address,
     tx_id,
     output_index, 
@@ -15,7 +15,7 @@ INSERT INTO cde_cardano_asset_utxos(
     policy_id,
     asset_name
 ) VALUES (
-    :cde_id!,
+    :cde_name!,
     :address!,
     :tx_id!,
     :output_index!,

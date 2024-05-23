@@ -34,28 +34,15 @@ import type {
   ICdeErc1155GetByTokenIdResult,
 } from '@paima/db';
 
-/* Functions to retrieve CDE ID: */
-
-export async function getCdeIdByName(
-  readonlyDBConn: Pool,
-  cdeName: string
-): Promise<number | null> {
-  const results = await selectChainDataExtensionsByName.run({ cde_name: cdeName }, readonlyDBConn);
-  if (results.length === 0) {
-    return null;
-  }
-  return results[0].cde_id;
-}
-
 /* Functions to retrieve CDE data using the CDE ID: */
 
 export async function internalGetNftOwner(
   readonlyDBConn: Pool,
-  cdeId: number,
+  cdeName: string,
   nftId: bigint
 ): Promise<string | null> {
   const results = await cdeErc721GetOwner.run(
-    { cde_id: cdeId, token_id: nftId.toString(10) },
+    { cde_name: cdeName, token_id: nftId.toString(10) },
     readonlyDBConn
   );
   if (results.length === 0) {
@@ -80,12 +67,12 @@ export async function internalGetAllOwnedNfts(
 
 export async function internalGetOwnedNfts(
   readonlyDBConn: Pool,
-  cdeId: number,
+  cdeName: string,
   ownerAddress: string
 ): Promise<bigint[]> {
   ownerAddress = ownerAddress.toLowerCase();
   const results = await cdeErc721GetOwnedNfts.run(
-    { cde_id: cdeId, nft_owner: ownerAddress },
+    { cde_name: cdeName, nft_owner: ownerAddress },
     readonlyDBConn
   );
   return results.map(row => BigInt(row.token_id));
@@ -93,12 +80,12 @@ export async function internalGetOwnedNfts(
 
 export async function internalGetFungibleTokenBalance(
   readonlyDBConn: Pool,
-  cdeId: number,
+  cdeName: string,
   walletAddress: string
 ): Promise<bigint | null> {
   walletAddress = walletAddress.toLowerCase();
   const results = await cdeErc20GetBalance.run(
-    { cde_id: cdeId, wallet_address: walletAddress },
+    { cde_name: cdeName, wallet_address: walletAddress },
     readonlyDBConn
   );
   if (results.length === 0) {
@@ -110,12 +97,12 @@ export async function internalGetFungibleTokenBalance(
 
 export async function internalGetTotalDeposited(
   readonlyDBConn: Pool,
-  cdeId: number,
+  cdeName: string,
   walletAddress: string
 ): Promise<bigint | null> {
   walletAddress = walletAddress.toLowerCase();
   const results = await cdeErc20DepositGetTotalDeposited.run(
-    { cde_id: cdeId, wallet_address: walletAddress },
+    { cde_name: cdeName, wallet_address: walletAddress },
     readonlyDBConn
   );
   if (results.length === 0) {
@@ -127,21 +114,21 @@ export async function internalGetTotalDeposited(
 
 export async function internalGetDonorsAboveThreshold(
   readonlyDBConn: Pool,
-  cdeId: number,
+  cdeName: string,
   threshold: bigint
 ): Promise<string[]> {
-  const results = await cdeErc20DepositSelectAll.run({ cde_id: cdeId }, readonlyDBConn);
+  const results = await cdeErc20DepositSelectAll.run({ cde_name: cdeName }, readonlyDBConn);
   const aboveThreshold = results.filter(res => BigInt(res.total_deposited) >= threshold);
   return aboveThreshold.map(res => res.wallet_address);
 }
 
 export async function internalGetGenericDataBlockheight(
   readonlyDBConn: Pool,
-  cdeId: number,
+  cdeName: string,
   blockHeight: number
 ): Promise<GenericCdeDataUnit[]> {
   const results = await cdeGenericGetBlockheightData.run(
-    { cde_id: cdeId, block_height: blockHeight },
+    { cde_name: cdeName, block_height: blockHeight },
     readonlyDBConn
   );
   return results.map(res => ({
@@ -152,12 +139,12 @@ export async function internalGetGenericDataBlockheight(
 
 export async function internalGetGenericDataBlockheightRange(
   readonlyDBConn: Pool,
-  cdeId: number,
+  cdeName: string,
   fromBlock: number,
   toBlock: number
 ): Promise<GenericCdeDataUnit[]> {
   const results = await cdeGenericGetRangeData.run(
-    { cde_id: cdeId, from_block: fromBlock, to_block: toBlock },
+    { cde_name: cdeName, from_block: fromBlock, to_block: toBlock },
     readonlyDBConn
   );
   return results.map(res => ({
@@ -168,31 +155,31 @@ export async function internalGetGenericDataBlockheightRange(
 
 export async function internalGetErc1155AllTokens(
   readonlyDBConn: Pool,
-  cde_id: number,
+  cde_name: string,
   wallet_address: string
 ): Promise<ICdeErc1155GetAllTokensResult[]> {
-  return await cdeErc1155GetAllTokens.run({ cde_id, wallet_address }, readonlyDBConn);
+  return await cdeErc1155GetAllTokens.run({ cde_name, wallet_address }, readonlyDBConn);
 }
 
 export async function internalGetErc1155ByTokenId(
   readonlyDBConn: Pool,
-  cde_id: number,
+  cde_name: string,
   token_id: bigint
 ): Promise<ICdeErc1155GetByTokenIdResult | null> {
   return (
-    await cdeErc1155GetByTokenId.run({ cde_id, token_id: String(token_id) }, readonlyDBConn)
+    await cdeErc1155GetByTokenId.run({ cde_name, token_id: String(token_id) }, readonlyDBConn)
   )[0];
 }
 
 export async function internalGetErc1155ByTokenIdAndWallet(
   readonlyDBConn: Pool,
-  cde_id: number,
+  cde_name: string,
   wallet_address: string,
   token_id: bigint
 ): Promise<ICdeErc1155GetByTokenIdAndWalletResult | null> {
   return (
     await cdeErc1155GetByTokenIdAndWallet.run(
-      { cde_id, wallet_address, token_id: String(token_id) },
+      { cde_name, wallet_address, token_id: String(token_id) },
       readonlyDBConn
     )
   )[0];
@@ -200,11 +187,11 @@ export async function internalGetErc1155ByTokenIdAndWallet(
 
 export async function internalGetErc6551AccountOwner(
   readonlyDBConn: Pool,
-  cdeId: number,
+  cdeName: string,
   accountCreated: string
 ): Promise<TokenIdPair | null> {
   const results = await cdeErc6551GetOwner.run(
-    { cde_id: cdeId, account_created: accountCreated },
+    { cde_name: cdeName, account_created: accountCreated },
     readonlyDBConn
   );
   if (results.length === 0) {
@@ -219,11 +206,11 @@ export async function internalGetErc6551AccountOwner(
 
 export async function internalGetAllOwnedErc6551Accounts(
   readonlyDBConn: Pool,
-  cdeId: number,
+  cdeName: string,
   nft: TokenIdPair
 ): Promise<string[]> {
   const results = await cdeErc6551GetOwnedAccounts.run(
-    { cde_id: cdeId, token_contract: nft.tokenContract, token_id: nft.tokenId },
+    { cde_name: cdeName, token_contract: nft.tokenContract, token_id: nft.tokenId },
     readonlyDBConn
   );
   return results.map(row => row.account_created);

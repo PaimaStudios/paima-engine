@@ -111,7 +111,8 @@ export const runPaimaEngine = async (): Promise<void> => {
     process.exit(0);
   }
 
-  const [, config] = await GlobalConfig.mainEvmConfig();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [_, config] = await GlobalConfig.mainEvmConfig();
 
   // Check that packed game code is available
   if (checkForPackedGameCode()) {
@@ -122,8 +123,7 @@ export const runPaimaEngine = async (): Promise<void> => {
     // Import & initialize state machine
     const stateMachine = gameSM();
     const funnelFactory = await FunnelFactory.initialize(
-      config.chainUri,
-      config.paimaL2ContractAddress
+      await stateMachine.getReadonlyDbConn().connect()
     );
     const engine = paimaRuntime.initialize(funnelFactory, stateMachine, ENV.GAME_NODE_VERSION);
 

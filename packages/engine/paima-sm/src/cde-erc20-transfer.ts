@@ -9,18 +9,18 @@ export default async function processErc20Datum(
   readonlyDBConn: PoolClient,
   cdeDatum: CdeErc20TransferDatum
 ): Promise<SQLUpdate[]> {
-  const cdeId = cdeDatum.cdeId;
+  const cdeName = cdeDatum.cdeName;
   const { from, to, value } = cdeDatum.payload;
 
   const fromAddr = from.toLowerCase();
   const toAddr = to.toLowerCase();
 
   const fromRow = await cdeErc20GetBalance.run(
-    { cde_id: cdeId, wallet_address: fromAddr },
+    { cde_name: cdeName, wallet_address: fromAddr },
     readonlyDBConn
   );
   const toRow = await cdeErc20GetBalance.run(
-    { cde_id: cdeId, wallet_address: toAddr },
+    { cde_name: cdeName, wallet_address: toAddr },
     readonlyDBConn
   );
 
@@ -34,7 +34,7 @@ export default async function processErc20Datum(
       updateList.push([
         cdeErc20UpdateBalance,
         {
-          cde_id: cdeId,
+          cde_name: cdeName,
           wallet_address: fromAddr,
           balance: fromNewBalance.toString(10),
         },
@@ -47,7 +47,7 @@ export default async function processErc20Datum(
       updateList.push([
         cdeErc20UpdateBalance,
         {
-          cde_id: cdeId,
+          cde_name: cdeName,
           wallet_address: toAddr,
           balance: toNewBalance.toString(10),
         },
@@ -56,7 +56,7 @@ export default async function processErc20Datum(
       updateList.push([
         cdeErc20InsertBalance,
         {
-          cde_id: cdeId,
+          cde_name: cdeName,
           wallet_address: toAddr,
           balance: value,
         },

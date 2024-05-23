@@ -11,7 +11,7 @@ export default async function processDatum(
   cdeDatum: CdeGenericDatum | CdeMinaEventGenericDatum | CdeMinaActionGenericDatum,
   inPresync: boolean
 ): Promise<SQLUpdate[]> {
-  const cdeId = cdeDatum.cdeId;
+  const cdeName = cdeDatum.cdeName;
   const blockHeight = cdeDatum.blockNumber;
   const payload = cdeDatum.payload;
   const prefix = cdeDatum.scheduledPrefix;
@@ -26,7 +26,7 @@ export default async function processDatum(
 
   updateList.push([
     cdeGenericInsertData,
-    { cde_id: cdeId, block_height: blockHeight, event_data: payload },
+    { cde_name: cdeName, block_height: blockHeight, event_data: payload },
   ]);
 
   return updateList;

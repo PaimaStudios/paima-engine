@@ -4,7 +4,7 @@ WHERE owner_address = :owner_address!;
 
 /* @name cdeCardanoProjectedNftInsertData */
 INSERT INTO cde_cardano_projected_nft(
-    cde_id,
+    cde_name,
     owner_address,
     current_tx_hash,
     current_tx_output_index,
@@ -15,7 +15,7 @@ INSERT INTO cde_cardano_projected_nft(
     plutus_datum,
     for_how_long
 ) VALUES (
-             :cde_id!,
+             :cde_name!,
              :owner_address!,
              :current_tx_hash!,
              :current_tx_output_index!,
@@ -39,7 +39,7 @@ SET
     plutus_datum = :plutus_datum!,
     for_how_long = :for_how_long!
 WHERE
-    cde_id = :cde_id!
+    cde_name = :cde_name!
     AND current_tx_hash = :previous_tx_hash!
     AND current_tx_output_index = :previous_tx_output_index!
     AND policy_id = :policy_id!

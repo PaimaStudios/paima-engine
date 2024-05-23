@@ -5,7 +5,7 @@ import type { CdeCardanoAssetUtxoDatum } from './types.js';
 export default async function processDatum(
   cdeDatum: CdeCardanoAssetUtxoDatum
 ): Promise<SQLUpdate[]> {
-  const cdeId = cdeDatum.cdeId;
+  const cdeName = cdeDatum.cdeName;
   const address = cdeDatum.payload.address;
   const amount = cdeDatum.payload.amount;
   const tx_id = cdeDatum.payload.txId;
@@ -22,7 +22,7 @@ export default async function processDatum(
       [
         cdeInsertCardanoAssetUtxo,
         {
-          cde_id: cdeId,
+          cde_name: cdeName,
           address: address,
           tx_id: tx_id,
           output_index: output_index,

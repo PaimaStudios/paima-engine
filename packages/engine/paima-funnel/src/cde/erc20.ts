@@ -22,16 +22,16 @@ export default async function getCdeData(
     }),
     DEFAULT_FUNNEL_TIMEOUT
   )) as unknown as ERC20Transfer[];
-  return events.map((e: ERC20Transfer) => transferToCdeDatum(e, extension.cdeId, network));
+  return events.map((e: ERC20Transfer) => transferToCdeDatum(e, extension.cdeName, network));
 }
 
 function transferToCdeDatum(
   event: ERC20Transfer,
-  cdeId: number,
+  cdeName: string,
   network: string
 ): CdeErc20TransferDatum {
   return {
-    cdeId: cdeId,
+    cdeName: cdeName,
     cdeDatumType: ChainDataExtensionDatumType.ERC20Transfer,
     blockNumber: event.blockNumber,
     transactionHash: event.transactionHash,

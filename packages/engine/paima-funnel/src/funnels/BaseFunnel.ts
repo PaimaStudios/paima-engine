@@ -8,7 +8,7 @@ import type { FUNNEL_PRESYNC_FINISHED } from '@paima/utils';
 export type FunnelSharedData = {
   readonly web3: Web3;
   readonly paimaL2Contract: PaimaL2Contract;
-  readonly extensions: ChainDataExtension[];
+  extensions: ChainDataExtension[];
   readonly extensionsValid: boolean;
   readonly cacheManager: FunnelCacheManager;
 };

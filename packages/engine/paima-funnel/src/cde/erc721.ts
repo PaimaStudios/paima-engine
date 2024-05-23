@@ -31,7 +31,7 @@ function transferToTransferDatum(
   network: string
 ): CdeErc721TransferDatum {
   return {
-    cdeId: extension.cdeId,
+    cdeName: extension.cdeName,
     cdeDatumType: ChainDataExtensionDatumType.ERC721Transfer,
     blockNumber: event.blockNumber,
     transactionHash: event.transactionHash,
@@ -51,7 +51,7 @@ function transferToMintDatum(
   network: string
 ): CdeErc721MintDatum {
   return {
-    cdeId: extension.cdeId,
+    cdeName: extension.cdeName,
     cdeDatumType: ChainDataExtensionDatumType.ERC721Mint,
     blockNumber: event.blockNumber,
     transactionHash: event.transactionHash,

@@ -1,13 +1,29 @@
 import type Web3 from 'web3';
 import type { BlockTransactionString } from 'web3-eth';
 import type { PoolClient } from 'pg';
-import { timeout, cutAfterFirstRejected, DEFAULT_FUNNEL_TIMEOUT, doLog } from '@paima/utils';
+import {
+  timeout,
+  cutAfterFirstRejected,
+  DEFAULT_FUNNEL_TIMEOUT,
+  doLog,
+  ChainDataExtensionType,
+  getErc721Contract,
+  DYNAMIC_PRIMITIVE_NAME_SEPARATOR,
+} from '@paima/utils';
 import type { PaimaL2Contract } from '@paima/utils';
 import { TimeoutError } from '@paima/runtime';
-import type { ChainData } from '@paima/sm';
+import {
+  CdeEntryTypeName,
+  type CdeDynamicEvmPrimitiveDatum,
+  type ChainData,
+  type ChainDataExtensionDatum,
+} from '@paima/sm';
 import type { PaimaGameInteraction } from '@paima/utils';
 
 import { extractSubmittedData } from './paima-l2-processing.js';
+import type { FunnelSharedData } from './funnels/BaseFunnel.js';
+import { getUngroupedCdeData } from './cde/reading.js';
+import { generateDynamicPrimitiveName } from '@paima/utils-backend';
 
 export async function getBaseChainDataMulti(
   web3: Web3,
@@ -135,4 +151,63 @@ async function getPaimaEvents(
     }),
     DEFAULT_FUNNEL_TIMEOUT
   )) as unknown as PaimaGameInteraction[];
+}
+
+// We need to fetch these before the rest of the primitives, because this may
+// change the set of primitives. Otherwise we would miss the events for those.
+// If there is an event that triggers a dynamic primitive here, then an
+// extension will be added to the list with a starting block at that point.
+export async function fetchDynamicEvmPrimitives(
+  fromBlock: number,
+  toBlock: number,
+  web3: Web3,
+  sharedData: FunnelSharedData,
+  network: string
+): Promise<ChainDataExtensionDatum[][]> {
+  const filteredExtensions = sharedData.extensions.filter(
+    extension =>
+      extension.network === network &&
+      extension.cdeType === ChainDataExtensionType.DynamicEvmPrimitive
+  );
+
+  const DynamicEvmPrimitives = await getUngroupedCdeData(
+    web3,
+    filteredExtensions,
+    fromBlock,
+    toBlock,
+    network
+  );
+
+  for (const exts of DynamicEvmPrimitives) {
+    for (const _ext of exts) {
+      const ext: CdeDynamicEvmPrimitiveDatum = _ext as CdeDynamicEvmPrimitiveDatum;
+
+      const id = sharedData.extensions.filter(
+        e =>
+          e.cdeType !== ChainDataExtensionType.DynamicEvmPrimitive &&
+          e.cdeName.startsWith(ext.cdeName)
+      ).length;
+
+      const cdeName = generateDynamicPrimitiveName(ext.cdeName, id);
+
+      // this would propagate the change to further funnels in the pipeline,
+      // which is needed to set the proper cdeName.
+      sharedData.extensions.push({
+        cdeName: cdeName,
+        name: cdeName,
+        startBlockHeight: ext.blockNumber,
+        type: CdeEntryTypeName.ERC721,
+        contractAddress: ext.payload.contractAddress,
+        scheduledPrefix: ext.scheduledPrefix,
+        burnScheduledPrefix: ext.burnScheduledPrefix,
+        // not relevant
+        hash: 0,
+        cdeType: ChainDataExtensionType.ERC721,
+        contract: getErc721Contract(ext.payload.contractAddress, web3),
+        network: ext.network,
+      });
+    }
+  }
+
+  return DynamicEvmPrimitives;
 }

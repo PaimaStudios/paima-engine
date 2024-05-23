@@ -1,7 +1,15 @@
 import type { OtherEvmConfig, Web3 } from '@paima/utils';
-import { doLog, initWeb3, logError, timeout, delay, InternalEventType } from '@paima/utils';
+import {
+  doLog,
+  initWeb3,
+  logError,
+  timeout,
+  delay,
+  InternalEventType,
+  ChainDataExtensionType,
+} from '@paima/utils';
 import type { ChainFunnel, ReadPresyncDataFrom } from '@paima/runtime';
-import type { ChainData, EvmPresyncChainData, PresyncChainData } from '@paima/sm';
+import { type ChainData, type EvmPresyncChainData, type PresyncChainData } from '@paima/sm';
 import { getUngroupedCdeData } from '../../cde/reading.js';
 import { composeChainData, groupCdeData } from '../../utils.js';
 import { BaseFunnel } from '../BaseFunnel.js';
@@ -10,7 +18,7 @@ import type { EvmFunnelCacheEntryState } from '../FunnelCache.js';
 import { EvmFunnelCacheEntry, RpcCacheEntry, RpcRequestState } from '../FunnelCache.js';
 import type { PoolClient } from 'pg';
 import { FUNNEL_PRESYNC_FINISHED } from '@paima/utils';
-import { getMultipleBlockData } from '../../reading.js';
+import { fetchDynamicEvmPrimitives, getMultipleBlockData } from '../../reading.js';
 import { getLatestProcessedCdeBlockheight } from '@paima/db';
 
 const GET_BLOCK_NUMBER_TIMEOUT = 5000;
@@ -319,15 +327,27 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
       return [];
     }
     try {
-      const cdeData = await getUngroupedCdeData(
+      const DynamicEvmPrimitives = await fetchDynamicEvmPrimitives(
+        blockNumber,
+        blockNumber,
         this.web3,
-        this.sharedData.extensions.filter(
-          extension => !extension.network || extension.network === this.chainName
-        ),
-        blockNumber,
-        blockNumber,
+        this.sharedData,
         this.chainName
       );
+
+      const cdeData = (
+        await getUngroupedCdeData(
+          this.web3,
+          this.sharedData.extensions.filter(
+            extension =>
+              extension.network === this.chainName &&
+              extension.cdeType !== ChainDataExtensionType.DynamicEvmPrimitive
+          ),
+          blockNumber,
+          blockNumber,
+          this.chainName
+        )
+      ).concat(DynamicEvmPrimitives);
 
       for (const extensionData of cdeData) {
         for (const data of extensionData) {
@@ -360,13 +380,27 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
     }
 
     try {
-      const ungroupedCdeData = await getUngroupedCdeData(
-        this.web3,
-        this.sharedData.extensions.filter(extension => extension.network === this.chainName),
+      const DynamicEvmPrimitives = await fetchDynamicEvmPrimitives(
         fromBlock,
         toBlock,
+        this.web3,
+        this.sharedData,
         this.chainName
       );
+
+      const ungroupedCdeData = (
+        await getUngroupedCdeData(
+          this.web3,
+          this.sharedData.extensions.filter(
+            extension =>
+              extension.network === this.chainName &&
+              extension.cdeType !== ChainDataExtensionType.DynamicEvmPrimitive
+          ),
+          fromBlock,
+          toBlock,
+          this.chainName
+        )
+      ).concat(DynamicEvmPrimitives);
 
       let mappedFrom: number | undefined;
       let mappedTo: number | undefined;
@@ -431,13 +465,27 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
 
       doLog(`EVM CDE funnel presync ${this.config.chainId}: #${fromBlock}-${toBlock}`);
 
-      const ungroupedCdeData = await getUngroupedCdeData(
-        this.web3,
-        this.sharedData.extensions.filter(extension => extension.network === this.chainName),
+      const dynamicDatums = await fetchDynamicEvmPrimitives(
         fromBlock,
         toBlock,
+        this.web3,
+        this.sharedData,
         this.chainName
       );
+
+      const ungroupedCdeData = (
+        await getUngroupedCdeData(
+          this.web3,
+          this.sharedData.extensions.filter(
+            extension =>
+              extension.network === this.chainName &&
+              extension.cdeType !== ChainDataExtensionType.DynamicEvmPrimitive
+          ),
+          fromBlock,
+          toBlock,
+          this.chainName
+        )
+      ).concat(dynamicDatums);
 
       return {
         ...baseData,

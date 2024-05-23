@@ -27,6 +27,7 @@ export const enum ChainDataExtensionType {
   ERC1155 = 12,
   MinaEventGeneric = 13,
   MinaActionGeneric = 14,
+  DynamicEvmPrimitive = 15,
 }
 
 export const enum ChainDataExtensionDatumType {
@@ -44,6 +45,7 @@ export const enum ChainDataExtensionDatumType {
   Erc1155Transfer,
   MinaEventGeneric,
   MinaActionGeneric,
+  DynamicEvmPrimitive,
 }
 
 export const FUNNEL_PRESYNC_FINISHED = 'finished';
@@ -53,3 +55,5 @@ export const enum InternalEventType {
   EvmLastBlock,
   MinaLastTimestamp,
 }
+
+export const DYNAMIC_PRIMITIVE_NAME_SEPARATOR = '##';

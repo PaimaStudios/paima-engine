@@ -1,8 +1,12 @@
 import type { EvmConfig } from '@paima/utils';
-import { ENV, GlobalConfig, doLog, timeout } from '@paima/utils';
+import { ChainDataExtensionType, ENV, GlobalConfig, doLog, timeout } from '@paima/utils';
 import type { ChainFunnel, ReadPresyncDataFrom } from '@paima/runtime';
-import type { ChainData, PresyncChainData } from '@paima/sm';
-import { getBaseChainDataMulti, getBaseChainDataSingle } from '../../reading.js';
+import { type ChainData, type PresyncChainData } from '@paima/sm';
+import {
+  fetchDynamicEvmPrimitives,
+  getBaseChainDataMulti,
+  getBaseChainDataSingle,
+} from '../../reading.js';
 import { getUngroupedCdeData } from '../../cde/reading.js';
 import { composeChainData, groupCdeData } from '../../utils.js';
 import { BaseFunnel } from '../BaseFunnel.js';
@@ -10,7 +14,6 @@ import type { FunnelSharedData } from '../BaseFunnel.js';
 import { RpcCacheEntry, RpcRequestState } from '../FunnelCache.js';
 import type { PoolClient } from 'pg';
 import { FUNNEL_PRESYNC_FINISHED } from '@paima/utils';
-import { ConfigNetworkType } from '@paima/utils';
 
 const GET_BLOCK_NUMBER_TIMEOUT = 5000;
 
@@ -85,6 +88,14 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
       return [];
     }
     try {
+      const dynamicDatums = await fetchDynamicEvmPrimitives(
+        blockNumber,
+        blockNumber,
+        this.sharedData.web3,
+        this.sharedData,
+        this.chainName
+      );
+
       const [baseChainData, cdeData] = await Promise.all([
         getBaseChainDataSingle(
           this.sharedData.web3,
@@ -95,7 +106,12 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
         ),
         getUngroupedCdeData(
           this.sharedData.web3,
-          this.sharedData.extensions.filter(extension => extension.network === this.chainName),
+          this.sharedData.extensions.filter(
+            extension =>
+              extension.network === this.chainName &&
+              // these are fetched above
+              extension.cdeType !== ChainDataExtensionType.DynamicEvmPrimitive
+          ),
           blockNumber,
           blockNumber,
           this.chainName
@@ -105,7 +121,7 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
       return [
         {
           ...baseChainData,
-          extensionDatums: cdeData.flat(),
+          extensionDatums: cdeData.concat(dynamicDatums).flat(),
         },
       ];
     } catch (err) {
@@ -122,6 +138,14 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
       return [];
     }
     try {
+      const dynamicDatums = await fetchDynamicEvmPrimitives(
+        fromBlock,
+        toBlock,
+        this.sharedData.web3,
+        this.sharedData,
+        this.chainName
+      );
+
       const [baseChainData, ungroupedCdeData] = await Promise.all([
         getBaseChainDataMulti(
           this.sharedData.web3,
@@ -133,12 +157,20 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
         ),
         getUngroupedCdeData(
           this.sharedData.web3,
-          this.sharedData.extensions.filter(extension => extension.network === this.chainName),
+          this.sharedData.extensions.filter(
+            extension =>
+              extension.network === this.chainName &&
+              // these are fetched above
+              extension.cdeType !== ChainDataExtensionType.DynamicEvmPrimitive
+          ),
           fromBlock,
           toBlock,
           this.chainName
         ),
       ]);
+
+      ungroupedCdeData.push(...dynamicDatums);
+
       const cdeData = groupCdeData(this.chainName, fromBlock, toBlock, ungroupedCdeData);
       return composeChainData(baseChainData, cdeData);
     } catch (err) {
@@ -170,13 +202,24 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
         return {};
       }
 
-      const ungroupedCdeData = await getUngroupedCdeData(
-        this.sharedData.web3,
-        this.sharedData.extensions.filter(extension => extension.network === this.chainName),
+      const dynamicDatums = await fetchDynamicEvmPrimitives(
         fromBlock,
         toBlock,
+        this.sharedData.web3,
+        this.sharedData,
         this.chainName
       );
+
+      const ungroupedCdeData = (
+        await getUngroupedCdeData(
+          this.sharedData.web3,
+          this.sharedData.extensions.filter(extension => extension.network === this.chainName),
+          fromBlock,
+          toBlock,
+          this.chainName
+        )
+      ).concat(dynamicDatums);
+
       return {
         [this.chainName]: groupCdeData(this.chainName, fromBlock, toBlock, ungroupedCdeData),
       };

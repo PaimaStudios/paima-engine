@@ -7,7 +7,7 @@ export default async function processDatum(
   cdeDatum: CdeCardanoMintBurnDatum,
   inPresync: boolean
 ): Promise<SQLUpdate[]> {
-  const cdeId = cdeDatum.cdeId;
+  const cdeName = cdeDatum.cdeName;
   const prefix = cdeDatum.scheduledPrefix;
   const txId = cdeDatum.payload.txId;
   const assets = JSON.stringify(cdeDatum.payload.assets);
@@ -23,7 +23,7 @@ export default async function processDatum(
     [
       cdeCardanoMintBurnInsert,
       {
-        cde_id: cdeId,
+        cde_name: cdeName,
         tx_id: txId,
         metadata: metadata,
         assets: cdeDatum.payload.assets,

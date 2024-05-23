@@ -33,11 +33,11 @@ export async function validatePersistentCdeConfig(
 
   // Verifying all CDEs match between persistent config and read yaml config
   for (const cde of config) {
-    const persistent = persistentConfig.find(row => row.cde_id === cde.cdeId);
+    const persistent = persistentConfig.find(row => row.cde_name === cde.cdeName);
     if (!persistent) {
       return false;
     }
-    if (persistent.cde_hash !== cde.hash) {
+    if (persistent.cde_hash && persistent.cde_hash !== cde.hash) {
       return false;
     }
   }
@@ -52,7 +52,6 @@ async function storeCdeConfig(config: ChainDataExtension[], DBConn: PoolClient):
     for (const cde of config) {
       await registerChainDataExtension.run(
         {
-          cde_id: cde.cdeId,
           cde_type: cde.cdeType,
           cde_name: cde.name,
           cde_hash: cde.hash,

@@ -33,7 +33,7 @@ function eventToCdeDatum(
   network: string
 ): CdeGenericDatum {
   return {
-    cdeId: extension.cdeId,
+    cdeName: extension.cdeName,
     cdeDatumType: ChainDataExtensionDatumType.Generic,
     blockNumber: event.blockNumber,
     transactionHash: event.transactionHash,

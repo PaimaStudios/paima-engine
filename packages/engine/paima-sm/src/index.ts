@@ -30,6 +30,7 @@ import {
   updateCardanoEpoch,
   updatePaginationCursor,
   updateMinaCheckpoint,
+  getChainDataExtensions,
 } from '@paima/db';
 import Prando from '@paima/prando';
 
@@ -320,7 +321,7 @@ async function processCdeData(
 }
 
 async function processPaginatedCdeData(
-  paginationCursor: { cdeId: number; cursor: string; finished: boolean },
+  paginationCursor: { cdeName: string; cursor: string; finished: boolean },
   cdeData: ChainDataExtensionDatum[] | undefined,
   dbTx: PoolClient,
   inPresync: boolean
@@ -328,7 +329,7 @@ async function processPaginatedCdeData(
   return await processCdeDataBase(cdeData, dbTx, inPresync, async () => {
     await updatePaginationCursor.run(
       {
-        cde_id: paginationCursor.cdeId,
+        cde_name: paginationCursor.cdeName,
         cursor: paginationCursor.cursor,
         finished: paginationCursor.finished,
       },

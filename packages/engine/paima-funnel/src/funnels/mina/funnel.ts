@@ -216,10 +216,10 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
       return data;
     }
 
-    const mapCursorPaginatedData = (cdeId: number) => (datums: any) => {
+    const mapCursorPaginatedData = (cdeName: string) => (datums: any) => {
       const finished = datums.length === 0 || datums.length < this.config.paginationLimit;
 
-      this.cache.updateCursor(cdeId, {
+      this.cache.updateCursor(cdeName, {
         cursor: datums[datums.length - 1] ? datums[datums.length - 1].paginationCursor.cursor : '',
         finished,
       });
@@ -244,7 +244,7 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
               }
 
               if (cursors) {
-                const cursor = cursors[extension.cdeId];
+                const cursor = cursors[extension.cdeName];
 
                 if (!cursor) {
                   return true;
@@ -257,7 +257,7 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
             })
             .map(async extension => {
               if (extension.cdeType === ChainDataExtensionType.MinaEventGeneric) {
-                const cursor = cursors && cursors[extension.cdeId];
+                const cursor = cursors && cursors[extension.cdeName];
 
                 const data = await getEventCdeData({
                   pg: cache.pg,
@@ -274,15 +274,15 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
                   isPresync: true,
                   cursor: cursor?.cursor,
                   limit: this.config.paginationLimit,
-                }).then(mapCursorPaginatedData(extension.cdeId));
+                }).then(mapCursorPaginatedData(extension.cdeName));
 
                 return {
-                  cdeId: extension.cdeId,
+                  cdeName: extension.cdeName,
                   cdeType: extension.cdeType,
                   data,
                 };
               } else if (extension.cdeType === ChainDataExtensionType.MinaActionGeneric) {
-                const cursor = cursors && cursors[extension.cdeId];
+                const cursor = cursors && cursors[extension.cdeName];
 
                 const data = await getActionCdeData({
                   pg: cache.pg,
@@ -295,10 +295,10 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
                   isPresync: true,
                   cursor: cursor?.cursor,
                   limit: this.config.paginationLimit,
-                }).then(mapCursorPaginatedData(extension.cdeId));
+                }).then(mapCursorPaginatedData(extension.cdeName));
 
                 return {
-                  cdeId: extension.cdeId,
+                  cdeName: extension.cdeName,
                   cdeType: extension.cdeType,
                   data,
                 };
@@ -318,7 +318,7 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
             network: this.chainName,
             networkType: ConfigNetworkType.MINA,
             minaCursor: {
-              cdeId: event.cdeId,
+              cdeName: event.cdeName,
               cursor: event.paginationCursor.cursor,
               finished: event.paginationCursor.finished,
             },
@@ -365,16 +365,16 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
 
       const extensions = sharedData.extensions
         .filter(extensions => extensions.network === chainName)
-        .map(extension => extension.cdeId)
-        .reduce((set, cdeId) => {
-          set.add(cdeId);
+        .map(extension => extension.cdeName)
+        .reduce((set, cdeName) => {
+          set.add(cdeName);
           return set;
         }, new Set());
 
       cursors
-        .filter(cursor => extensions.has(cursor.cde_id))
+        .filter(cursor => extensions.has(cursor.cde_name))
         .forEach(cursor => {
-          newEntry.updateCursor(cursor.cde_id, {
+          newEntry.updateCursor(cursor.cde_name, {
             cursor: cursor.cursor,
             finished: cursor.finished,
           });
