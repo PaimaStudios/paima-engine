@@ -388,6 +388,7 @@ async function processScheduledData(
       doLog(`[paima-sm] Error on scheduled data STF call. Skipping`, err);
       continue;
     }
+    if (sqlQueries.length === 0) continue;
 
     await tryOrRollback(DBConn, async () => {
       for (const [query, params] of sqlQueries) {
@@ -461,6 +462,7 @@ async function processUserInputs(
       doLog(`[paima-sm] Error on user input STF call. Skipping`, err);
       continue;
     }
+    if (sqlQueries.length === 0) continue;
 
     await tryOrRollback(DBConn, async () => {
       for (const [query, params] of sqlQueries) {
