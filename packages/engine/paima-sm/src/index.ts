@@ -32,6 +32,7 @@ import {
   updateMinaCheckpoint,
   getChainDataExtensions,
 } from '@paima/db';
+import type { SQLUpdate } from '@paima/db';
 import Prando from '@paima/prando';
 
 import { randomnessRouter } from './randomness.js';
@@ -225,43 +226,55 @@ const SM: GameStateMachineInitializer = {
 
         await processInternalEvents(latestChainData.internalEvents, dbTx);
 
-        const checkpointName = `game_sm_start`;
-        await dbTx.query(`SAVEPOINT ${checkpointName}`);
-        try {
-          // Fetch and execute scheduled input data
-          const scheduledInputsLength = await processScheduledData(
-            latestChainData,
-            dbTx,
-            gameStateTransition,
-            randomnessGenerator
+        // Fetch and execute scheduled input data
+        const scheduledInputsLength = await processScheduledData(
+          latestChainData,
+          dbTx,
+          gameStateTransition,
+          randomnessGenerator
+        );
+
+        // Execute user submitted input data
+        const userInputsLength = await processUserInputs(
+          latestChainData,
+          dbTx,
+          gameStateTransition,
+          randomnessGenerator
+        );
+
+        // Extra logging
+        if (cdeDataLength + userInputsLength + scheduledInputsLength > 0)
+          doLog(
+            `Processed ${userInputsLength} user inputs, ${scheduledInputsLength} scheduled inputs and ${cdeDataLength} CDE events in block #${latestChainData.blockNumber}`
           );
 
-          // Execute user submitted input data
-          const userInputsLength = await processUserInputs(
-            latestChainData,
-            dbTx,
-            gameStateTransition,
-            randomnessGenerator
-          );
-
-          // Extra logging
-          if (cdeDataLength + userInputsLength + scheduledInputsLength > 0)
-            doLog(
-              `Processed ${userInputsLength} user inputs, ${scheduledInputsLength} scheduled inputs and ${cdeDataLength} CDE events in block #${latestChainData.blockNumber}`
-            );
-        } catch (e) {
-          await dbTx.query(`ROLLBACK TO SAVEPOINT ${checkpointName}`);
-          throw e;
-        } finally {
-          await dbTx.query(`RELEASE SAVEPOINT ${checkpointName}`);
-
-          // Commit finishing of processing to DB
-          await blockHeightDone.run({ block_height: latestChainData.blockNumber }, dbTx);
-        }
+        // Commit finishing of processing to DB
+        await blockHeightDone.run({ block_height: latestChainData.blockNumber }, dbTx);
       },
     };
   },
 };
+
+/**
+ * We need to process all the SQL calls of an STF update in an all-or-nothing manner
+ * STF updates can fail (since the data for them comes from arbitrary onchain data)
+ * But we can't allow a single user's bad transaction to DOS the game for everybody else
+ * So failures should be isolated to just the specific input, and not the full block
+ * (recall: without this, in psql, if a query fails during a db transaction, the entire dbTx becomes invalid)
+ */
+async function tryOrRollback<T>(dbTx: PoolClient, func: () => Promise<T>): Promise<undefined | T> {
+  const checkpointName = `game_state_transition`;
+  await dbTx.query(`SAVEPOINT ${checkpointName}`);
+  try {
+    return await func();
+  } catch (err) {
+    await dbTx.query(`ROLLBACK TO SAVEPOINT ${checkpointName}`);
+    doLog(`[paima-sm] Database error on ${checkpointName}. Rolling back.`, err);
+    return undefined;
+  } finally {
+    await dbTx.query(`RELEASE SAVEPOINT ${checkpointName}`);
+  }
+}
 
 async function processCdeDataBase(
   cdeData: ChainDataExtensionDatum[] | undefined,
@@ -365,21 +378,27 @@ async function processScheduledData(
       scheduledTxHash: data.tx_hash,
     };
     // Trigger STF
-    const sqlQueries = await gameStateTransition(
-      inputData,
-      data.block_height,
-      randomnessGenerator,
-      DBConn
-    );
+    let sqlQueries: SQLUpdate[] = [];
     try {
+      sqlQueries = await gameStateTransition(
+        inputData,
+        data.block_height,
+        randomnessGenerator,
+        DBConn
+      );
+    } catch (err) {
+      // skip scheduled data where the STF fails
+      doLog(`[paima-sm] Error on scheduled data STF call. Skipping`, err);
+      continue;
+    }
+    if (sqlQueries.length === 0) continue;
+
+    await tryOrRollback(DBConn, async () => {
       for (const [query, params] of sqlQueries) {
         await query.run(params, DBConn);
       }
       await deleteScheduled.run({ id: data.id }, DBConn);
-    } catch (err) {
-      doLog(`[paima-sm] Database error on deleteScheduled: ${err}`);
-      throw err;
-    }
+    });
   }
   return scheduledData.length;
 }
@@ -433,14 +452,22 @@ async function processUserInputs(
     }
 
     // Trigger STF
-    const sqlQueries = await gameStateTransition(
-      inputData,
-      latestChainData.blockNumber,
-      randomnessGenerator,
-      DBConn
-    );
-
+    let sqlQueries: SQLUpdate[] = [];
     try {
+      sqlQueries = await gameStateTransition(
+        inputData,
+        latestChainData.blockNumber,
+        randomnessGenerator,
+        DBConn
+      );
+    } catch (err) {
+      // skip inputs where the STF fails
+      doLog(`[paima-sm] Error on user input STF call. Skipping`, err);
+      continue;
+    }
+    if (sqlQueries.length === 0) continue;
+
+    await tryOrRollback(DBConn, async () => {
       for (const [query, params] of sqlQueries) {
         await query.run(params, DBConn);
       }
@@ -461,10 +488,7 @@ async function processUserInputs(
           DBConn
         );
       }
-    } catch (err) {
-      doLog(`[paima-sm] Database error on gameStateTransition: ${err}`);
-      throw err;
-    }
+    });
   }
   return latestChainData.submittedData.length;
 }
