@@ -100,6 +100,11 @@ export class ENV {
   static get ENABLE_DRY_RUN(): boolean {
     return process.env.ENABLE_DRY_RUN === 'true';
   }
+  static get GAME_STF_EXECUTION_MODE(): 'parallel' | 'serial' {
+    return process.env.GAME_STF_EXECUTION_MODE?.toLocaleLowerCase() === 'parallel'
+      ? 'parallel'
+      : 'serial';
+  }
 
   // Middleware config:
   static get BACKEND_URI(): string {
