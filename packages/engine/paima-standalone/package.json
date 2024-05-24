@@ -36,16 +36,18 @@
     ],
     "targets": [
       "node20-linux-x64",
-      "node20-macos-x64"
+      "node20-macos-x64",
+      "node20-win-x64"
     ]
   },
   "scripts": {
     "lint:eslint": "eslint .",
     "build": "npx tsc --build tsconfig.json",
     "pack": "node ./esbuildconfig.cjs",
-    "build:prod-binary": "npm run build:prod-binary-macos && npm run build:prod-binary-linux",
+    "build:prod-binary": "npm run build:prod-binary-macos && npm run build:prod-binary-linux  && npm run build:prod-binary-win",
     "build:prod-binary-macos": "npm run pack && ts-node ./scripts/package macos && mv ./packaged/tmp/@standalone/paima-engine-macos ./packaged/@standalone/",
     "build:prod-binary-linux": "npm run pack && ts-node ./scripts/package linux && mv ./packaged/tmp/@standalone/paima-engine-linux ./packaged/@standalone/",
+    "build:prod-binary-win": "npm run pack && ts-node ./scripts/package win && mv ./packaged/tmp/@standalone/paima-engine-win.exe ./packaged/@standalone/",
     "install-binaries": "../../../tools/scripts/unpack.sh",
     "build:dev-binary": "npm run build:dev-binary-macos && npm run build:dev-binary-linux",
     "build:dev-binary-macos": "npm run pack && ts-node ./scripts/package macos --debug",
