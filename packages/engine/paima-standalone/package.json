@@ -44,7 +44,7 @@
     "lint:eslint": "eslint .",
     "build": "npx tsc --build tsconfig.json",
     "pack": "node ./esbuildconfig.cjs",
-    "build:prod-binary": "npm run build:prod-binary-macos && npm run build:prod-binary-linux  && npm run build:prod-binary-win",
+    "build:prod-binary": "npm run build:prod-binary-macos && npm run build:prod-binary-linux && npm run build:prod-binary-win",
     "build:prod-binary-macos": "npm run pack && ts-node ./scripts/package macos && mv ./packaged/tmp/@standalone/paima-engine-macos ./packaged/@standalone/",
     "build:prod-binary-linux": "npm run pack && ts-node ./scripts/package linux && mv ./packaged/tmp/@standalone/paima-engine-linux ./packaged/@standalone/",
     "build:prod-binary-win": "npm run pack && ts-node ./scripts/package win && mv ./packaged/tmp/@standalone/paima-engine-win.exe ./packaged/@standalone/",
