@@ -367,38 +367,42 @@ async function processScheduledData(
     DBConn
   );
   for (const data of scheduledData) {
-    const inputData: STFSubmittedData = {
-      userId: SCHEDULED_DATA_ID,
-      realAddress: SCHEDULED_DATA_ADDRESS,
-      userAddress: SCHEDULED_DATA_ADDRESS,
-      inputData: data.input_data,
-      inputNonce: '',
-      suppliedValue: '0',
-      scheduled: true,
-      scheduledTxHash: data.tx_hash,
-    };
-    // Trigger STF
-    let sqlQueries: SQLUpdate[] = [];
     try {
-      sqlQueries = await gameStateTransition(
-        inputData,
-        data.block_height,
-        randomnessGenerator,
-        DBConn
-      );
-    } catch (err) {
-      // skip scheduled data where the STF fails
-      doLog(`[paima-sm] Error on scheduled data STF call. Skipping`, err);
-      continue;
-    }
-    if (sqlQueries.length === 0) continue;
-
-    await tryOrRollback(DBConn, async () => {
-      for (const [query, params] of sqlQueries) {
-        await query.run(params, DBConn);
+      const inputData: STFSubmittedData = {
+        userId: SCHEDULED_DATA_ID,
+        realAddress: SCHEDULED_DATA_ADDRESS,
+        userAddress: SCHEDULED_DATA_ADDRESS,
+        inputData: data.input_data,
+        inputNonce: '',
+        suppliedValue: '0',
+        scheduled: true,
+        scheduledTxHash: data.tx_hash,
+      };
+      // Trigger STF
+      let sqlQueries: SQLUpdate[] = [];
+      try {
+        sqlQueries = await gameStateTransition(
+          inputData,
+          data.block_height,
+          randomnessGenerator,
+          DBConn
+        );
+      } catch (err) {
+        // skip scheduled data where the STF fails
+        doLog(`[paima-sm] Error on scheduled data STF call. Skipping`, err);
+        continue;
       }
+      if (sqlQueries.length !== 0) {
+        await tryOrRollback(DBConn, async () => {
+          for (const [query, params] of sqlQueries) {
+            await query.run(params, DBConn);
+          }
+        });
+      }
+    } finally {
+      // guarantee we run this no matter if there is an error or a continue
       await deleteScheduled.run({ id: data.id }, DBConn);
-    });
+    }
   }
   return scheduledData.length;
 }
@@ -430,47 +434,50 @@ async function processUserInputs(
       userAddress: address.address,
       userId: address.id,
     };
-
-    // Check if internal Concise Command
-    // Internal Concise Commands are prefixed with an ampersand (&)
-    //
-    // delegate       = &wd|from?|to?|from_signature|to_signature
-    // migrate        = &wm|from?|to?|from_signature|to_signature
-    // cancelDelegate = &wc|to?
-    const delegateWallet = new DelegateWallet(DBConn);
-    if (inputData.inputData.startsWith(DelegateWallet.INTERNAL_COMMAND_PREFIX)) {
-      const status = await delegateWallet.process(
-        inputData.realAddress,
-        inputData.userAddress,
-        inputData.inputData
-      );
-      if (!status) continue;
-    } else if (inputData.userId === NO_USER_ID) {
-      // If wallet does not exist in address table: create it.
-      const newAddress = await delegateWallet.createAddress(inputData.userAddress);
-      inputData.userId = newAddress.id;
-    }
-
-    // Trigger STF
-    let sqlQueries: SQLUpdate[] = [];
     try {
-      sqlQueries = await gameStateTransition(
-        inputData,
-        latestChainData.blockNumber,
-        randomnessGenerator,
-        DBConn
-      );
-    } catch (err) {
-      // skip inputs where the STF fails
-      doLog(`[paima-sm] Error on user input STF call. Skipping`, err);
-      continue;
-    }
-    if (sqlQueries.length === 0) continue;
-
-    await tryOrRollback(DBConn, async () => {
-      for (const [query, params] of sqlQueries) {
-        await query.run(params, DBConn);
+      // Check if internal Concise Command
+      // Internal Concise Commands are prefixed with an ampersand (&)
+      //
+      // delegate       = &wd|from?|to?|from_signature|to_signature
+      // migrate        = &wm|from?|to?|from_signature|to_signature
+      // cancelDelegate = &wc|to?
+      const delegateWallet = new DelegateWallet(DBConn);
+      if (inputData.inputData.startsWith(DelegateWallet.INTERNAL_COMMAND_PREFIX)) {
+        const status = await delegateWallet.process(
+          inputData.realAddress,
+          inputData.userAddress,
+          inputData.inputData
+        );
+        if (!status) continue;
+      } else if (inputData.userId === NO_USER_ID) {
+        // If wallet does not exist in address table: create it.
+        const newAddress = await delegateWallet.createAddress(inputData.userAddress);
+        inputData.userId = newAddress.id;
       }
+
+      // Trigger STF
+      let sqlQueries: SQLUpdate[] = [];
+      try {
+        sqlQueries = await gameStateTransition(
+          inputData,
+          latestChainData.blockNumber,
+          randomnessGenerator,
+          DBConn
+        );
+      } catch (err) {
+        // skip inputs where the STF fails
+        doLog(`[paima-sm] Error on user input STF call. Skipping`, err);
+        continue;
+      }
+      if (sqlQueries.length !== 0) {
+        await tryOrRollback(DBConn, async () => {
+          for (const [query, params] of sqlQueries) {
+            await query.run(params, DBConn);
+          }
+        });
+      }
+    } finally {
+      // guarantee we run this no matter if there is an error or a continue
       await insertNonce.run(
         {
           nonce: inputData.inputNonce,
@@ -488,7 +495,7 @@ async function processUserInputs(
           DBConn
         );
       }
-    });
+    }
   }
   return latestChainData.submittedData.length;
 }
