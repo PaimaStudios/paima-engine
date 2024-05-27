@@ -213,11 +213,8 @@ export async function fetchDynamicEvmPrimitives(
           const config: TChainDataExtensionGenericConfig = {
             startBlockHeight: ext.blockNumber,
             name: cdeName,
-            type: ext.payload.targetConfig.type,
             contractAddress: ext.payload.contractAddress,
-            abiPath: ext.payload.targetConfig.abiPath,
-            eventSignature: ext.payload.targetConfig.eventSignature,
-            scheduledPrefix: ext.payload.targetConfig.abiPath,
+            ...ext.payload.targetConfig,
           };
 
           const instantiatedGenericExtension: ChainDataExtension = {
