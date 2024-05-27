@@ -215,13 +215,13 @@ export async function fetchDynamicEvmPrimitives(
             startBlockHeight: ext.blockNumber,
             name: cdeName,
             contractAddress: ext.payload.contractAddress,
-            includeNameInInput: true,
             ...ext.payload.targetConfig,
           };
 
           const instantiatedGenericExtension: ChainDataExtension = {
             ...(await instantiateCdeGeneric(config, web3)),
             network,
+            includeNameInInput: true,
           };
 
           sharedData.extensions.push(instantiatedGenericExtension);

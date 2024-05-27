@@ -20,8 +20,6 @@ export default async function processErc721Datum(
   const cdeName = cdeDatum.cdeName;
   const { to, tokenId } = cdeDatum.payload;
   const toAddr = to.toLowerCase();
-  const shouldIncludeName = cdeDatum.includeName ?? false;
-  const name = shouldIncludeName ? cdeName + '|' : '';
 
   const isBurn = Boolean(toAddr.toLocaleLowerCase().match(/^0x0+(dead)?$/g));
 
@@ -35,14 +33,19 @@ export default async function processErc721Datum(
     if (ownerRow.length > 0) {
       if (isBurn) {
         if (cdeDatum.burnScheduledPrefix) {
-          const scheduledInputData = `${cdeDatum.burnScheduledPrefix}|${name}${ownerRow[0].nft_owner}|${tokenId}`;
+          const scheduledInputData = `${cdeDatum.burnScheduledPrefix}|${ownerRow[0].nft_owner}|${tokenId}`;
 
           const scheduledBlockHeight = inPresync
             ? ENV.SM_START_BLOCKHEIGHT + 1
             : cdeDatum.blockNumber;
 
           updateList.push(
-            createScheduledData(scheduledInputData, scheduledBlockHeight, cdeDatum.transactionHash)
+            createScheduledData(
+              scheduledInputData,
+              scheduledBlockHeight,
+              cdeDatum.transactionHash,
+              cdeDatum.includeName ? cdeDatum.cdeName : undefined
+            )
           );
         }
 

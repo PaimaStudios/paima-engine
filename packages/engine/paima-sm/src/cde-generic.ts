@@ -17,15 +17,21 @@ export default async function processDatum(
   const prefix = cdeDatum.scheduledPrefix;
   const shouldIncludeName =
     cdeDatum.cdeDatumType === ChainDataExtensionDatumType.Generic ? cdeDatum.includeName : false;
-  const name = shouldIncludeName ? cdeName + '|' : '';
 
   const scheduledBlockHeight = inPresync ? ENV.SM_START_BLOCKHEIGHT + 1 : cdeDatum.blockNumber;
   const stringifiedPayload = JSON.stringify(payload);
-  const scheduledInputData = `${prefix}|${name}${stringifiedPayload}`;
+  const scheduledInputData = `${prefix}|${stringifiedPayload}`;
 
   const updateList: SQLUpdate[] = inPresync
     ? []
-    : [createScheduledData(scheduledInputData, scheduledBlockHeight, cdeDatum.transactionHash)];
+    : [
+        createScheduledData(
+          scheduledInputData,
+          scheduledBlockHeight,
+          cdeDatum.transactionHash,
+          shouldIncludeName ? cdeDatum.cdeName : undefined
+        ),
+      ];
 
   updateList.push([
     cdeGenericInsertData,

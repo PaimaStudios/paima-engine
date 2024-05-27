@@ -371,6 +371,7 @@ export type ChainDataExtensionErc721 = ChainDataExtensionBase &
   Static<typeof ChainDataExtensionErc721Config> & {
     cdeType: ChainDataExtensionType.ERC721;
     contract: ERC721Contract;
+    includeNameInInput: boolean;
   };
 
 /** same as ERC721, but with a different type flag (see isPaimaErc721) */
@@ -418,7 +419,6 @@ export const ChainDataExtensionGenericConfig = Type.Intersect([
     abiPath: Type.String(),
     eventSignature: Type.String(),
     scheduledPrefix: Type.String(),
-    includeNameInInput: Type.Optional(Type.Boolean({ default: false })),
   }),
 ]);
 export type TChainDataExtensionGenericConfig = Static<typeof ChainDataExtensionGenericConfig>;
@@ -428,6 +428,7 @@ export type ChainDataExtensionGeneric = ChainDataExtensionBase &
     eventName: string;
     eventSignatureHash: string;
     contract: Contract;
+    includeNameInInput?: boolean | undefined;
   };
 
 export const ChainDataExtensionErc6551RegistryConfig = Type.Intersect([

@@ -22,12 +22,14 @@ import type {
 export function createScheduledData(
   inputData: string,
   blockHeight: number,
-  txHash?: string
+  txHash?: string,
+  cdeName?: string
 ): SQLUpdate {
   const nsdParams: INewScheduledDataParams = {
     block_height: blockHeight,
     input_data: inputData,
     tx_hash: txHash,
+    cde_name: cdeName,
   };
   const newScheduledDataTuple: SQLUpdate = [newScheduledData, nsdParams];
   return newScheduledDataTuple;

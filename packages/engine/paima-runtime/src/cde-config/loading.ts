@@ -84,7 +84,7 @@ export async function loadChainDataExtensions(
           name: Type.String(),
           type: Type.Enum(CdeEntryTypeName),
         }),
-        { ...YAML.parse(ext.config), name: ext.cde_name }
+        { ...YAML.parse(ext.config), name: ext.cde_name, includeNameInInput: true }
       )
     );
   } catch (err) {

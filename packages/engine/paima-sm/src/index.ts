@@ -30,7 +30,6 @@ import {
   updateCardanoEpoch,
   updatePaginationCursor,
   updateMinaCheckpoint,
-  getChainDataExtensions,
 } from '@paima/db';
 import type { SQLUpdate } from '@paima/db';
 import Prando from '@paima/prando';
@@ -39,7 +38,6 @@ import { randomnessRouter } from './randomness.js';
 import { cdeTransitionFunction } from './cde-processing.js';
 import { DelegateWallet } from './delegate-wallet.js';
 import type {
-  SubmittedData,
   ChainData,
   PresyncChainData,
   ChainDataExtensionDatum,
@@ -377,6 +375,7 @@ async function processScheduledData(
         suppliedValue: '0',
         scheduled: true,
         scheduledTxHash: data.tx_hash,
+        extensionName: data.cde_name,
       };
       // Trigger STF
       let sqlQueries: SQLUpdate[] = [];
