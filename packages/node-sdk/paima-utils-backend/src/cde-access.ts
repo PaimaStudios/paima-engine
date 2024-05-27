@@ -19,6 +19,7 @@ import {
   internalGetErc1155ByTokenIdAndWallet,
 } from './cde-access-internals.js';
 import {
+  getDynamicExtensionByName as internalGetDynamicExtensionByName,
   getDynamicExtensionsByParent,
   type ICdeCardanoGetProjectedNftResult,
   type ICdeErc1155GetAllTokensResult,
@@ -249,4 +250,13 @@ export async function getDynamicExtensions(
   const dbResult = await getDynamicExtensionsByParent.run({ parent: parent }, readonlyDBConn);
 
   return dbResult.map(ext => ({ name: ext.cde_name, config: ext.config }));
+}
+
+export async function getDynamicExtensionByName(
+  readonlyDBConn: Pool,
+  name: string
+): Promise<string[]> {
+  const dbResult = await internalGetDynamicExtensionByName.run({ name: name }, readonlyDBConn);
+
+  return dbResult.map(ext => ext.config);
 }
