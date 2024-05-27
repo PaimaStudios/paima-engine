@@ -26,7 +26,6 @@ import {
   type ICdeErc1155GetByTokenIdAndWalletResult,
   type ICdeErc1155GetByTokenIdResult,
 } from '@paima/db';
-export type { ICdeErc1155GetAllTokensResult };
 import type {
   OwnedNftsResponse,
   GenericCdeDataUnit,
@@ -34,6 +33,7 @@ import type {
   CardanoAssetUtxo,
 } from './types.js';
 import { DYNAMIC_PRIMITIVE_NAME_SEPARATOR } from '@paima/utils';
+export type { ICdeErc1155GetAllTokensResult };
 
 /**
  * Fetch the owner of the NFT from the database
@@ -255,8 +255,9 @@ export async function getDynamicExtensions(
 export async function getDynamicExtensionByName(
   readonlyDBConn: Pool,
   name: string
-): Promise<string[]> {
+): Promise<{ contractAddress: string; startBlockHeight: number }[]> {
   const dbResult = await internalGetDynamicExtensionByName.run({ name: name }, readonlyDBConn);
 
-  return dbResult.map(ext => ext.config);
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+  return dbResult.map(ext => JSON.parse(ext.config));
 }
