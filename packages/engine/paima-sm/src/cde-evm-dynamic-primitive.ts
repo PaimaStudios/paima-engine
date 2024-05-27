@@ -27,6 +27,7 @@ export default async function processDatum(
         contractAddress: cdeDatum.payload.contractAddress,
         startBlockHeight: cdeDatum.blockNumber,
         network: cdeDatum.network,
+        includeNameInInput: true,
       };
 
       config = erc721Config;
@@ -40,6 +41,7 @@ export default async function processDatum(
         contractAddress: cdeDatum.payload.contractAddress,
         startBlockHeight: cdeDatum.blockNumber,
         network: cdeDatum.network,
+        includeNameInInput: true,
       };
 
       config = genericConfig;

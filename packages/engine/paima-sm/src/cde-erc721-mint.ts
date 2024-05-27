@@ -13,6 +13,8 @@ export default async function processErc721Datum(
   }
   const { tokenId, mintData } = cdeDatum.payload;
   const scheduledBlockHeight = inPresync ? ENV.SM_START_BLOCKHEIGHT + 1 : cdeDatum.blockNumber;
-  const scheduledInputData = `${prefix}|${address}|${tokenId}|${mintData}`;
+  const shouldIncludeName = cdeDatum.includeName ?? false;
+  const name = shouldIncludeName ? cdeDatum.cdeName + '|' : '';
+  const scheduledInputData = `${prefix}|${name}${address}|${tokenId}|${mintData}`;
   return [createScheduledData(scheduledInputData, scheduledBlockHeight, cdeDatum.transactionHash)];
 }

@@ -209,6 +209,7 @@ export interface CdeErc721TransferDatum extends CdeDatumBase {
   cdeDatumType: ChainDataExtensionDatumType.ERC721Transfer;
   payload: CdeDatumErc721TransferPayload;
   burnScheduledPrefix?: string | undefined;
+  includeName?: boolean | undefined;
 }
 
 export interface CdeErc721MintDatum extends CdeDatumBase {
@@ -216,6 +217,7 @@ export interface CdeErc721MintDatum extends CdeDatumBase {
   payload: CdeDatumErc721MintPayload;
   contractAddress: string;
   scheduledPrefix: string;
+  includeName?: boolean | undefined;
 }
 
 export interface CdeErc20DepositDatum extends CdeDatumBase {
@@ -236,6 +238,7 @@ export interface CdeGenericDatum extends CdeDatumBase {
   cdeDatumType: ChainDataExtensionDatumType.Generic;
   payload: CdeDatumGenericPayload;
   scheduledPrefix: string;
+  includeName?: boolean | undefined;
 }
 
 export interface CdeErc6551RegistryDatum extends CdeDatumBase {
@@ -359,6 +362,7 @@ export const ChainDataExtensionErc721Config = Type.Intersect([
     contractAddress: EvmAddress,
     scheduledPrefix: Type.String(),
     burnScheduledPrefix: Type.Optional(Type.String()),
+    includeNameInInput: Type.Optional(Type.Boolean({ default: false })),
   }),
 ]);
 export type TChainDataExtensionErc721Config = Static<typeof ChainDataExtensionErc721Config>;
@@ -414,6 +418,7 @@ export const ChainDataExtensionGenericConfig = Type.Intersect([
     abiPath: Type.String(),
     eventSignature: Type.String(),
     scheduledPrefix: Type.String(),
+    includeNameInInput: Type.Optional(Type.Boolean({ default: false })),
   }),
 ]);
 export type TChainDataExtensionGenericConfig = Static<typeof ChainDataExtensionGenericConfig>;

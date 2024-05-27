@@ -207,6 +207,7 @@ export async function fetchDynamicEvmPrimitives(
             cdeType: ChainDataExtensionType.ERC721,
             contract: getErc721Contract(ext.payload.contractAddress, web3),
             network: ext.network,
+            includeNameInInput: true,
           });
           break;
         case CdeEntryTypeName.Generic:
@@ -214,6 +215,7 @@ export async function fetchDynamicEvmPrimitives(
             startBlockHeight: ext.blockNumber,
             name: cdeName,
             contractAddress: ext.payload.contractAddress,
+            includeNameInInput: true,
             ...ext.payload.targetConfig,
           };
 

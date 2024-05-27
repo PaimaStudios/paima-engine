@@ -42,6 +42,7 @@ function transferToTransferDatum(
     },
     burnScheduledPrefix: extension.burnScheduledPrefix,
     network,
+    includeName: extension.includeNameInInput,
   };
 }
 
@@ -62,6 +63,7 @@ function transferToMintDatum(
     contractAddress: extension.contractAddress,
     scheduledPrefix: extension.scheduledPrefix,
     network,
+    includeName: extension.includeNameInInput,
   };
 }
 
