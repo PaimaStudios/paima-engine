@@ -18,8 +18,8 @@ export default async function processErc721Datum(
     createScheduledData(
       scheduledInputData,
       scheduledBlockHeight,
-      cdeDatum.transactionHash,
-      cdeDatum.includeName ? cdeDatum.cdeName : undefined
+      cdeDatum.cdeName,
+      cdeDatum.transactionHash
     ),
   ];
 }

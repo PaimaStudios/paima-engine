@@ -1,4 +1,4 @@
-import { ChainDataExtensionDatumType, ENV } from '@paima/utils';
+import { ENV } from '@paima/utils';
 import type {
   CdeGenericDatum,
   CdeMinaActionGenericDatum,
@@ -15,8 +15,6 @@ export default async function processDatum(
   const blockHeight = cdeDatum.blockNumber;
   const payload = cdeDatum.payload;
   const prefix = cdeDatum.scheduledPrefix;
-  const shouldIncludeName =
-    cdeDatum.cdeDatumType === ChainDataExtensionDatumType.Generic ? cdeDatum.includeName : false;
 
   const scheduledBlockHeight = inPresync ? ENV.SM_START_BLOCKHEIGHT + 1 : cdeDatum.blockNumber;
   const stringifiedPayload = JSON.stringify(payload);
@@ -28,8 +26,8 @@ export default async function processDatum(
         createScheduledData(
           scheduledInputData,
           scheduledBlockHeight,
-          cdeDatum.transactionHash,
-          shouldIncludeName ? cdeDatum.cdeName : undefined
+          cdeDatum.cdeName,
+          cdeDatum.transactionHash
         ),
       ];
 

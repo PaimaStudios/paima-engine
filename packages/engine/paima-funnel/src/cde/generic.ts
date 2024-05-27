@@ -40,6 +40,5 @@ function eventToCdeDatum(
     scheduledPrefix: extension.scheduledPrefix,
     payload: event.returnValues,
     network,
-    includeName: extension.includeNameInInput,
   };
 }

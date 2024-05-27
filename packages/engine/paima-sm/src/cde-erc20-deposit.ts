@@ -33,7 +33,12 @@ export default async function processErc20Datum(
     const scheduledInputData = `${prefix}|${fromAddr}|${value}`;
     const scheduledBlockHeight = inPresync ? ENV.SM_START_BLOCKHEIGHT + 1 : cdeDatum.blockNumber;
     updateList.push(
-      createScheduledData(scheduledInputData, scheduledBlockHeight, cdeDatum.transactionHash)
+      createScheduledData(
+        scheduledInputData,
+        scheduledBlockHeight,
+        cdeDatum.cdeName,
+        cdeDatum.transactionHash
+      )
     );
 
     if (fromRow.length > 0) {
