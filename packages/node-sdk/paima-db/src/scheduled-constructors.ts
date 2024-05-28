@@ -17,17 +17,20 @@ import type {
  * @param inputData The input to pass to the STF, generally in Paima Concise format.
  * @param blockHeight The future block height at which to post the input to the STF.
  * @param txHash Transaction hash of the Primitive event that triggered this input, for possible later use.
+ * @param cdeName Name of the CDE that triggered this input.
  * @returns
  */
 export function createScheduledData(
   inputData: string,
   blockHeight: number,
+  cdeName: string,
   txHash?: string
 ): SQLUpdate {
   const nsdParams: INewScheduledDataParams = {
     block_height: blockHeight,
     input_data: inputData,
     tx_hash: txHash,
+    cde_name: cdeName,
   };
   const newScheduledDataTuple: SQLUpdate = [newScheduledData, nsdParams];
   return newScheduledDataTuple;

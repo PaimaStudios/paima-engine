@@ -54,6 +54,8 @@ export interface STFSubmittedData extends SubmittedData {
   userId: number;
   /** Transaction hash of Primitive that triggered this scheduled data, if known. */
   scheduledTxHash?: string;
+  /** Name/id of the extension that triggered this event, if known */
+  extensionName?: string;
 }
 
 export type SubmittedChainData = SubmittedData;

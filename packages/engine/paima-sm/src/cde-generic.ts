@@ -22,7 +22,14 @@ export default async function processDatum(
 
   const updateList: SQLUpdate[] = inPresync
     ? []
-    : [createScheduledData(scheduledInputData, scheduledBlockHeight, cdeDatum.transactionHash)];
+    : [
+        createScheduledData(
+          scheduledInputData,
+          scheduledBlockHeight,
+          cdeDatum.cdeName,
+          cdeDatum.transactionHash
+        ),
+      ];
 
   updateList.push([
     cdeGenericInsertData,

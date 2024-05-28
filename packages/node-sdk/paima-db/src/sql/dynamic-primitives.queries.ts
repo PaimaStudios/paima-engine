@@ -58,6 +58,36 @@ const getDynamicExtensionsByParentIR: any = {"usedParamSet":{"parent":true},"par
 export const getDynamicExtensionsByParent = new PreparedQuery<IGetDynamicExtensionsByParentParams,IGetDynamicExtensionsByParentResult>(getDynamicExtensionsByParentIR);
 
 
+/** 'GetDynamicExtensionByName' parameters type */
+export interface IGetDynamicExtensionByNameParams {
+  name: string;
+}
+
+/** 'GetDynamicExtensionByName' return type */
+export interface IGetDynamicExtensionByNameResult {
+  cde_name: string;
+  config: string;
+  parent: string;
+}
+
+/** 'GetDynamicExtensionByName' query type */
+export interface IGetDynamicExtensionByNameQuery {
+  params: IGetDynamicExtensionByNameParams;
+  result: IGetDynamicExtensionByNameResult;
+}
+
+const getDynamicExtensionByNameIR: any = {"usedParamSet":{"name":true},"params":[{"name":"name","required":true,"transform":{"type":"scalar"},"locs":[{"a":60,"b":65}]}],"statement":"SELECT * FROM cde_dynamic_primitive_config\nWHERE cde_name = :name!"};
+
+/**
+ * Query generated from SQL:
+ * ```
+ * SELECT * FROM cde_dynamic_primitive_config
+ * WHERE cde_name = :name!
+ * ```
+ */
+export const getDynamicExtensionByName = new PreparedQuery<IGetDynamicExtensionByNameParams,IGetDynamicExtensionByNameResult>(getDynamicExtensionByNameIR);
+
+
 /** 'InsertDynamicExtension' parameters type */
 export interface IInsertDynamicExtensionParams {
   base_name: string;

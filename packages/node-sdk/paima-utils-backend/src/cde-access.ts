@@ -19,13 +19,13 @@ import {
   internalGetErc1155ByTokenIdAndWallet,
 } from './cde-access-internals.js';
 import {
+  getDynamicExtensionByName as internalGetDynamicExtensionByName,
   getDynamicExtensionsByParent,
   type ICdeCardanoGetProjectedNftResult,
   type ICdeErc1155GetAllTokensResult,
   type ICdeErc1155GetByTokenIdAndWalletResult,
   type ICdeErc1155GetByTokenIdResult,
 } from '@paima/db';
-export type { ICdeErc1155GetAllTokensResult };
 import type {
   OwnedNftsResponse,
   GenericCdeDataUnit,
@@ -33,6 +33,7 @@ import type {
   CardanoAssetUtxo,
 } from './types.js';
 import { DYNAMIC_PRIMITIVE_NAME_SEPARATOR } from '@paima/utils';
+export type { ICdeErc1155GetAllTokensResult };
 
 /**
  * Fetch the owner of the NFT from the database
@@ -249,4 +250,14 @@ export async function getDynamicExtensions(
   const dbResult = await getDynamicExtensionsByParent.run({ parent: parent }, readonlyDBConn);
 
   return dbResult.map(ext => ({ name: ext.cde_name, config: ext.config }));
+}
+
+export async function getDynamicExtensionByName(
+  readonlyDBConn: Pool,
+  name: string
+): Promise<{ contractAddress: string; startBlockHeight: number }[]> {
+  const dbResult = await internalGetDynamicExtensionByName.run({ name: name }, readonlyDBConn);
+
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+  return dbResult.map(ext => JSON.parse(ext.config));
 }

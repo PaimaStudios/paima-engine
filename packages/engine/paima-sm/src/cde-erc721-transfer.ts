@@ -40,7 +40,12 @@ export default async function processErc721Datum(
             : cdeDatum.blockNumber;
 
           updateList.push(
-            createScheduledData(scheduledInputData, scheduledBlockHeight, cdeDatum.transactionHash)
+            createScheduledData(
+              scheduledInputData,
+              scheduledBlockHeight,
+              cdeDatum.cdeName,
+              cdeDatum.transactionHash
+            )
           );
         }
 

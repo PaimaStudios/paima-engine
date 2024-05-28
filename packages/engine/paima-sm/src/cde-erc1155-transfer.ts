@@ -36,7 +36,12 @@ export default async function processErc1155TransferDatum(
       JSON.stringify(values),
     ].join('|');
     updateList.push(
-      createScheduledData(scheduledInputData, scheduledBlockHeight, cdeDatum.transactionHash)
+      createScheduledData(
+        scheduledInputData,
+        scheduledBlockHeight,
+        cdeDatum.cdeName,
+        cdeDatum.transactionHash
+      )
     );
   }
 
@@ -49,7 +54,14 @@ export default async function processErc1155TransferDatum(
       JSON.stringify(ids),
       JSON.stringify(values),
     ].join('|');
-    updateList.push(createScheduledData(burnData, scheduledBlockHeight, cdeDatum.transactionHash));
+    updateList.push(
+      createScheduledData(
+        burnData,
+        scheduledBlockHeight,
+        cdeDatum.cdeName,
+        cdeDatum.transactionHash
+      )
+    );
   }
 
   // Update balance + burn tables.

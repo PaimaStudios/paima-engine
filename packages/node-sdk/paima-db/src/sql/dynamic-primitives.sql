@@ -5,6 +5,10 @@ SELECT * FROM cde_dynamic_primitive_config;
 SELECT * FROM cde_dynamic_primitive_config
 WHERE parent = :parent!;
 
+/* @name getDynamicExtensionByName */
+SELECT * FROM cde_dynamic_primitive_config
+WHERE cde_name = :name!;
+
 /* @name  insertDynamicExtension */
 INSERT INTO cde_dynamic_primitive_config(
     cde_name,

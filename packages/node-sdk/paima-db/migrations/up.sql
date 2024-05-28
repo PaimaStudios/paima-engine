@@ -15,6 +15,11 @@ CREATE TABLE scheduled_data_tx_hash (
   tx_hash TEXT NOT NULL
 );
 
+CREATE TABLE scheduled_data_extension (
+  id INTEGER PRIMARY KEY REFERENCES scheduled_data(id) ON DELETE CASCADE,
+  cde_name TEXT NOT NULL
+);
+
 CREATE TABLE nonces (
   nonce TEXT PRIMARY KEY,
   block_height INTEGER NOT NULL
