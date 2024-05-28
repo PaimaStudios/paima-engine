@@ -5,7 +5,7 @@ import type {
   ChainDataExtensionMinaEventGeneric,
 } from '@paima/sm';
 import { ChainDataExtensionDatumType } from '@paima/utils';
-import pg from 'pg';
+import type pg from 'pg';
 
 export async function getEventCdeData(args: {
   pg: pg.Client;
@@ -19,7 +19,7 @@ export async function getEventCdeData(args: {
   limit?: number;
   fromBlockHeight?: number;
 }): Promise<(CdeMinaActionGenericDatum | CdeMinaEventGenericDatum)[]> {
-  return getCdeData(
+  return await getCdeData(
     getEventsQuery,
     ChainDataExtensionDatumType.MinaEventGeneric,
     args.pg,
@@ -47,7 +47,7 @@ export async function getActionCdeData(args: {
   limit?: number;
   fromBlockHeight?: number;
 }): Promise<(CdeMinaActionGenericDatum | CdeMinaEventGenericDatum)[]> {
-  return getCdeData(
+  return await getCdeData(
     getActionsQuery,
     ChainDataExtensionDatumType.MinaActionGeneric,
     args.pg,
@@ -123,14 +123,16 @@ export async function getCdeData(
   return result;
 }
 
-function groupByTx(events: PerBlock[]) {
-  const grouped = [] as {
-    blockInfo: {
-      height: number;
-      timestamp: string;
-    };
-    eventsData: { data: string[][]; txHash: string }[];
-  }[];
+type EventsGroupedByTx = {
+  blockInfo: {
+    height: number;
+    timestamp: string;
+  };
+  eventsData: { data: string[][]; txHash: string }[];
+}[];
+
+function groupByTx(events: PerBlock[]): EventsGroupedByTx {
+  const grouped = [] as EventsGroupedByTx;
 
   for (const block of events) {
     const eventData = [] as { data: string[][]; txHash: string }[];
@@ -155,7 +157,11 @@ function groupByTx(events: PerBlock[]) {
   return grouped;
 }
 
-function canonicalChainCTE(toTimestamp?: string, fromTimestamp?: string, fromBlockHeight?: string) {
+function canonicalChainCTE(
+  toTimestamp?: string,
+  fromTimestamp?: string,
+  fromBlockHeight?: string
+): string {
   return `
   canonical_chain AS (
     SELECT
@@ -172,7 +178,7 @@ function canonicalChainCTE(toTimestamp?: string, fromTimestamp?: string, fromBlo
   `;
 }
 
-function accountIdentifierCTE(address: string) {
+function accountIdentifierCTE(address: string): string {
   return `
   account_identifier AS (
     SELECT
@@ -184,7 +190,7 @@ function accountIdentifierCTE(address: string) {
   )`;
 }
 
-function blocksAccessedCTE() {
+function blocksAccessedCTE(): string {
   return `
   blocks_accessed AS
   (
@@ -205,7 +211,7 @@ function blocksAccessedCTE() {
   )`;
 }
 
-function emittedZkAppCommandsCTE(after?: string) {
+function emittedZkAppCommandsCTE(after?: string): string {
   return `
   emitted_zkapp_commands AS (
     SELECT
@@ -233,14 +239,15 @@ function emittedZkAppCommandsCTE(after?: string) {
   )`;
 }
 
-function emittedEventsCTE() {
+function emittedEventsCTE(): string {
   return `
   emitted_events AS (
     SELECT
       *,
       zke.id AS zkapp_event_id,
       zke.element_ids AS zkapp_event_element_ids,
-      zkfa.id AS zkapp_event_array_id
+      zkfa.id AS zkapp_event_array_id,
+      zkf.id as zkf_id
     FROM
       emitted_zkapp_commands
       INNER JOIN zkapp_events zke ON zke.id = events_id
@@ -250,7 +257,7 @@ function emittedEventsCTE() {
   `;
 }
 
-function emittedActionsCTE() {
+function emittedActionsCTE(): string {
   return `
   emitted_actions AS (
     SELECT
@@ -267,7 +274,7 @@ function emittedActionsCTE() {
   `;
 }
 
-function emittedActionStateCTE() {
+function emittedActionStateCTE(): string {
   return `
   emitted_action_state AS (
     SELECT
@@ -297,7 +304,7 @@ export function getEventsQuery(
   after?: string,
   limit?: string,
   fromBlockHeight?: string
-) {
+): Promise<{ rows: PerBlock[] }> {
   let query = `
   WITH 
   ${canonicalChainCTE(toTimestamp, fromTimestamp, fromBlockHeight)},
@@ -309,7 +316,7 @@ export function getEventsQuery(
     SELECT
       MAX(timestamp) timestamp,
       MAX(hash) hash,
-      JSON_AGG(field) events_data,
+      JSON_AGG(field ORDER BY zkf_id) events_data,
       MAX(height) height
     FROM emitted_events
     GROUP BY (
@@ -339,7 +346,7 @@ export function getActionsQuery(
   after?: string,
   limit?: string,
   fromBlockHeight?: string
-) {
+): Promise<{ rows: PerBlock[] }> {
   const query = `
   WITH
   ${canonicalChainCTE(toTimestamp, fromTimestamp, fromBlockHeight)},
