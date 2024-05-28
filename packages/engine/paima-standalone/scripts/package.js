@@ -7,7 +7,7 @@ import pkgJson from '../package.json' assert { type: 'json' };
 
 console.log('Package script start');
 console.log(process.argv);
-const compilationTarget = process.argv[2] /* as 'macos' | 'linux' */;
+const compilationTarget = process.argv[2]; /* as 'macos' | 'linux' | 'windows' */;
 const isDebug = process.argv[3] === '--debug';
 
 function getTmpFolder() {
@@ -61,7 +61,7 @@ async function packageApp() {
     } else {
       // pkg only supports creating prod builds that match the machine you're compiling on (ex: linux can't build macos)
       // UNLESS you compile them all at the same time (I know it makes no sense, but this is what they say)
-      // so we build both <macos, linux> together, and then ignore the build we don't care about
+      // so we build both <macos, linux, win> together, and then ignore the build we don't care about
       // that way we can pack the right files for the right builds
       args.push(...['--out-path', `packaged/tmp/`]);
     }
