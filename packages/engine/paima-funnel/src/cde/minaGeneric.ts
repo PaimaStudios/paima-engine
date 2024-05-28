@@ -246,7 +246,8 @@ function emittedEventsCTE(): string {
       *,
       zke.id AS zkapp_event_id,
       zke.element_ids AS zkapp_event_element_ids,
-      zkfa.id AS zkapp_event_array_id
+      zkfa.id AS zkapp_event_array_id,
+      zkf.id as zkf_id
     FROM
       emitted_zkapp_commands
       INNER JOIN zkapp_events zke ON zke.id = events_id
@@ -315,7 +316,7 @@ export function getEventsQuery(
     SELECT
       MAX(timestamp) timestamp,
       MAX(hash) hash,
-      JSON_AGG(field) events_data,
+      JSON_AGG(field ORDER BY zkf_id) events_data,
       MAX(height) height
     FROM emitted_events
     GROUP BY (
