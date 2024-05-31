@@ -23,7 +23,7 @@ import type {
 export function createScheduledData(
   inputData: string,
   blockHeight: number,
-  cdeName: string,
+  cdeName?: string,
   txHash?: string
 ): SQLUpdate {
   const nsdParams: INewScheduledDataParams = {
