@@ -38,6 +38,14 @@ export async function validatePersistentCdeConfig(
       return false;
     }
     if (persistent.cde_hash && persistent.cde_hash !== cde.hash) {
+      doLog(
+        'Unexpected hash for',
+        persistent.cde_name,
+        'found',
+        persistent.cde_hash,
+        'expected',
+        cde.hash
+      );
       return false;
     }
   }

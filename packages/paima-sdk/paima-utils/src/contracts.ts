@@ -165,7 +165,8 @@ export function validatePaimaL2ContractAddress(address: string): void {
 
 export async function retrieveFee(address: string, web3: Web3): Promise<string> {
   const contract = getPaimaL2Contract(address, web3);
-  return await contract.methods.fee().call();
+  // getFee returns a String or BigInt
+  return String(await contract.methods.fee().call());
 }
 
 export async function getPaimaL2ContractOwner(address: string, web3: Web3): Promise<string> {
