@@ -1,0 +1,36 @@
+# NOTE: unlike .gitignore, ** is not implied, and only the root .dockerignore is considered.
+
+# Dockerignore exclusive
+/.dockerignore
+/Dockerfile
+/docker-tag
+/.git
+
+# .gitignore
+/**/node_modules
+/**/bin
+/**/.nx
+/**/dist
+/**/build
+/**/*.tsbuildinfo
+/**/*.log
+/**/.idea
+
+# .husky/_/.gitignore
+/.husky/_
+
+# packages/batcher/batcher-standalone/.gitignore
+/packages/batcher/batcher-standalone/packaged
+
+# packages/contracts/evm-contracts/.gitignore
+/packages/contracts/evm-contracts/artifacts
+/packages/contracts/evm-contracts/build
+/packages/contracts/evm-contracts/cache
+/packages/contracts/evm-contracts/publish
+/packages/contracts/evm-contracts/typechain-types
+
+# packages/engine/paima-standalone/.gitignore
+/packages/engine/paima-standalone/packaged
+
+# packages/paima-sdk/paima-utils/.gitignore
+/packages/paima-sdk/paima-utils/src/contract-types/
