@@ -74,10 +74,11 @@ export async function updateFee(): Promise<void> {
 export const postConciseData = async (
   data: string,
   errorFxn: EndpointErrorFxn,
-  mode?: WalletMode
+  mode?: WalletMode,
+  captcha?: string
 ): Promise<PostDataResponse | FailedResult> => {
   try {
-    const response = await postConciselyEncodedData(data, mode);
+    const response = await postConciselyEncodedData(data, mode, captcha);
     if (!response.success) {
       return errorFxn(
         PaimaMiddlewareErrorCode.ERROR_POSTING_TO_CHAIN,
@@ -106,7 +107,8 @@ export const postConciseData = async (
  */
 export async function postConciselyEncodedData(
   gameInput: string,
-  mode?: WalletMode
+  mode?: WalletMode,
+  captcha?: string
 ): Promise<Result<number>> {
   const errorFxn = buildEndpointErrorFxn('postConciselyEncodedData');
 
@@ -133,9 +135,12 @@ export async function postConciselyEncodedData(
         `Unbatched only supported for EVM wallets`
       );
     case PostingMode.BATCHED:
-      return await buildBatchedSubunit(provider.signMessage, provider.getAddress(), gameInput).then(
-        submitToBatcher
+      const subunit = await buildBatchedSubunit(
+        provider.signMessage,
+        provider.getAddress(),
+        gameInput
       );
+      return await submitToBatcher(subunit, captcha);
     default:
       assertNever(postingMode, true);
       return errorFxn(
@@ -195,10 +200,10 @@ async function verifyTx(txHash: string, msTimeout: number): Promise<number> {
   return receipt.blockNumber;
 }
 
-async function submitToBatcher(subunit: BatchedSubunit): Promise<Result<number>> {
+async function submitToBatcher(subunit: BatchedSubunit, captcha?: string): Promise<Result<number>> {
   const errorFxn = buildEndpointErrorFxn('submitToBatcher');
 
-  const body = batchedToJsonString(subunit);
+  const body = batchedToJsonString(subunit, captcha);
   let res: Response;
 
   try {

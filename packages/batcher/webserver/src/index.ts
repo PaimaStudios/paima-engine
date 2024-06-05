@@ -20,6 +20,7 @@ import { createMessageForBatcher } from '@paima/concise';
 import { AddressType, getWriteNamespace, wait } from '@paima/utils';
 import { hashBatchSubunit } from '@paima/concise';
 import { GlobalConfig } from '@paima/utils';
+import axios from 'axios';
 
 const port = ENV.BATCHER_PORT;
 
@@ -88,6 +89,7 @@ type SubmitUserInputRequest = {
   game_input: string;
   timestamp: string;
   user_signature: string;
+  captcha: string;
 };
 type SubmitUserInputResponse =
   | {
@@ -333,13 +335,15 @@ async function initializeServer(
           return;
         }
 
-        const [addressType, userAddress, gameInput, millisecondTimestamp, userSignature] = [
-          req.body.address_type || AddressType.UNKNOWN,
-          req.body.user_address || '',
-          req.body.game_input || '',
-          req.body.timestamp || '',
-          req.body.user_signature || '',
-        ];
+        const [addressType, userAddress, gameInput, millisecondTimestamp, userSignature, captcha] =
+          [
+            req.body.address_type || AddressType.UNKNOWN,
+            req.body.user_address || '',
+            req.body.game_input || '',
+            req.body.timestamp || '',
+            req.body.user_signature || '',
+            req.body.captcha || '',
+          ];
         const input: BatchedSubunit = {
           addressType,
           userAddress,
@@ -405,6 +409,7 @@ async function initializeServer(
 
         if (validity === 0) {
           try {
+            await reCaptchaValidation(captcha);
             unsetWebserverClosed();
             await insertStateValidating.run({ input_hash: hash }, pool);
             await insertUnvalidatedInput.run(
@@ -449,6 +454,44 @@ async function initializeServer(
       }
     }
   );
+}
+
+//
+// This method executes Google reCaptcha3 validation for backend.
+// If the validation fails, an error is thrown - otherwise, the method returns void.
+// To enable validation:
+//  1. Create a reCaptcha3 account and get the site key and secret key. (https://www.google.com/recaptcha)
+//  2. Enable enable reCaptcha3 in the game frontend and use postConciseData(data, mode, errorFxn, CAPTCHA) to send the captcha token to the backend.
+//  3. Set the RECAPTCHA_BACKEND_KEY in the .env.<NETWORK> file with your secret key.
+async function reCaptchaValidation(captcha: string): Promise<void> {
+  // TODO only check if ENV is set
+  // if (!ENV.RECAPTCHA_BACKEND_KEY) return;
+
+  // TODO MOVE TO ENV RECAPTCHA_BACKEND_KEY
+  const secret = '6LeXu_EpAAAAAK7XTokGMXzpI5P2OUpUugeJl2m7';
+  const recapchaURL = 'https://www.google.com/recaptcha/api/siteverify';
+  /**
+   * API Request Parameters:
+   *   secret	  Required. The shared key between your site and reCAPTCHA.
+   *   response	Required. The user response token provided by the reCAPTCHA client-side integration on your site.
+   *   remoteip	Optional. The user's IP address.
+   */
+  const recaptchaResponse = await axios({
+    url: recapchaURL,
+    method: 'post',
+    data: { secret, response: captcha },
+  });
+  /* reCaptcha API Response example
+   * {
+   *   "success": true|false,
+   *   "challenge_ts": timestamp,  // timestamp of the challenge load (ISO format yyyy-MM-dd'T'HH:mm:ssZZ)
+   *   "hostname": string,         // the hostname of the site where the reCAPTCHA was solved
+   *   "error-codes": [...]        // optional
+   * }
+   */
+  if (!recaptchaResponse.data?.success) {
+    throw new Error('Recaptcha validation failed');
+  }
 }
 
 async function startServer(
