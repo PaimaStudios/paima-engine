@@ -424,6 +424,10 @@ async function initializeServer(
             );
             setWebserverClosed();
           } catch (err) {
+            if ((err as Error).message === 'Recaptcha validation failed') {
+              console.log('[webserver] Recaptcha validation failed.');
+              console.log({ addressType, userAddress, gameInput, millisecondTimestamp });
+            }
             console.log('[webserver] Error while setting input as validated.');
             res.status(500).json({
               success: false,
@@ -461,14 +465,11 @@ async function initializeServer(
 // If the validation fails, an error is thrown - otherwise, the method returns void.
 // To enable validation:
 //  1. Create a reCaptcha3 account and get the site key and secret key. (https://www.google.com/recaptcha)
-//  2. Enable enable reCaptcha3 in the game frontend and use postConciseData(data, mode, errorFxn, CAPTCHA) to send the captcha token to the backend.
-//  3. Set the RECAPTCHA_BACKEND_KEY in the .env.<NETWORK> file with your secret key.
+//  2.a Set the RECAPTCHA_V3_BACKEND in the .env.<NETWORK> file with your secret key.
+//  2.b Set the RECAPTCHA_V3_FRONTEND in the .env.<NETWORK> file with your site key.
+//  3. Add the reCaptcha3 script to the frontend or call injectReCaptchaToHTML()
 async function reCaptchaValidation(captcha: string): Promise<void> {
-  // TODO only check if ENV is set
-  // if (!ENV.RECAPTCHA_BACKEND_KEY) return;
-
-  // TODO MOVE TO ENV RECAPTCHA_BACKEND_KEY
-  const secret = '6LeXu_EpAAAAAK7XTokGMXzpI5P2OUpUugeJl2m7';
+  if (!ENV.RECAPTCHA_V3_BACKEND) return;
   const recapchaURL = 'https://www.google.com/recaptcha/api/siteverify';
   /**
    * API Request Parameters:
@@ -479,7 +480,11 @@ async function reCaptchaValidation(captcha: string): Promise<void> {
   const recaptchaResponse = await axios({
     url: recapchaURL,
     method: 'post',
-    data: { secret, response: captcha },
+    headers: { 'content-type': 'application/x-www-form-urlencoded' },
+    data: {
+      secret: ENV.RECAPTCHA_V3_BACKEND,
+      response: captcha,
+    },
   });
   /* reCaptcha API Response example
    * {

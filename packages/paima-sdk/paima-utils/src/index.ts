@@ -26,6 +26,7 @@ export * from './security/parse.js';
 export * from './constants.js';
 export * from './contracts.js';
 export type * from './contracts.js';
+export * from './captcha.js';
 
 export {
   AddressType,

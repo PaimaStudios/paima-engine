@@ -59,6 +59,11 @@ export class ENV {
     return parseInt(process.env.BATCHER_DB_PORT || '0', 10);
   }
 
+  // Security
+  static get RECAPTCHA_V3_BACKEND(): string {
+    return process.env.RECAPTCHA_V3_BACKEND || '';
+  }
+
   // Validation parameters:
   static get GAME_NODE_URI(): string {
     return process.env.GAME_NODE_URI || '';

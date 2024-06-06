@@ -1,4 +1,4 @@
-import { retrieveFee, retryPromise, wait } from '@paima/utils';
+import { ENV, retrieveFee, retryPromise, wait } from '@paima/utils';
 import type { EndpointErrorFxn } from '../errors.js';
 import {
   BatcherRejectionCode,
@@ -65,6 +65,39 @@ export async function updateFee(): Promise<void> {
   }
 }
 
+//
+// reCaptcha to validate batcher submissions
+//
+// To enable validation:
+//  1. Create a reCaptcha3 account and get the site key and secret key. (https://www.google.com/recaptcha)
+//  2.a Set the RECAPTCHA_V3_BACKEND in the .env.<NETWORK> file with your secret key.
+//  2.b Set the RECAPTCHA_V3_FRONTEND in the .env.<NETWORK> file with your site key.
+//  3. Add the reCaptcha3 script to the frontend or call injectReCaptchaToHTML()
+//
+/* Recaptcha simplified interface */
+declare global {
+  interface Window {
+    grecaptcha: {
+      ready: (callback: () => void) => void;
+      execute: (key: unknown, config: { action: 'submit' }) => Promise<string | undefined>;
+    };
+  }
+}
+/* Generate Recaptcha token */
+const reCaptcha = (): Promise<string | undefined> => {
+  if (!window.grecaptcha) return Promise.resolve(undefined);
+  return new Promise((resolve, reject) => {
+    window.grecaptcha.ready(function () {
+      window.grecaptcha
+        .execute(ENV.RECAPTCHA_V3_FRONTEND, { action: 'submit' })
+        .then(function (token: string | undefined) {
+          return resolve(token);
+        })
+        .catch(reject);
+    });
+  });
+};
+
 /**
  * Wrapper around post concisely encoded data with added error handling
  * @param data Concisely encoded data to post
@@ -74,10 +107,10 @@ export async function updateFee(): Promise<void> {
 export const postConciseData = async (
   data: string,
   errorFxn: EndpointErrorFxn,
-  mode?: WalletMode,
-  captcha?: string
+  mode?: WalletMode
 ): Promise<PostDataResponse | FailedResult> => {
   try {
+    const captcha = await reCaptcha();
     const response = await postConciselyEncodedData(data, mode, captcha);
     if (!response.success) {
       return errorFxn(
