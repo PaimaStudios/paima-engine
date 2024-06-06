@@ -65,15 +65,6 @@ export async function updateFee(): Promise<void> {
   }
 }
 
-//
-// reCaptcha to validate batcher submissions
-//
-// To enable validation:
-//  1. Create a reCaptcha3 account and get the site key and secret key. (https://www.google.com/recaptcha)
-//  2.a Set the RECAPTCHA_V3_BACKEND in the .env.<NETWORK> file with your secret key.
-//  2.b Set the RECAPTCHA_V3_FRONTEND in the .env.<NETWORK> file with your site key.
-//  3. Add the reCaptcha3 script to the frontend or call injectReCaptchaToHTML()
-//
 /* Recaptcha simplified interface */
 declare global {
   interface Window {
