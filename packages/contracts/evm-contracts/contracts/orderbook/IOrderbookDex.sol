@@ -7,6 +7,15 @@ import {IERC1155Receiver} from "@openzeppelin/contracts/token/ERC1155/IERC1155Re
 /// @notice Facilitates base-chain trading of assets that are living on a different app-chain.
 /// @dev Orders are identified by an asset-specific unique incremental `orderId`.
 interface IOrderbookDex is IERC1155Receiver {
+    struct FeeInfo {
+        /// @dev The maker fee collected from the seller when a sell order is filled. Expressed in basis points.
+        uint256 makerFee;
+        /// @dev The taker fee collected from the buyer when a sell order is filled. Expressed in basis points.
+        uint256 takerFee;
+        /// @dev Flag indicating whether the fees are set.
+        bool set;
+    }
+
     struct Order {
         /// @dev The asset's unique token identifier.
         uint256 assetId;
@@ -16,6 +25,10 @@ interface IOrderbookDex is IERC1155Receiver {
         uint256 pricePerAsset;
         /// @dev The seller's address.
         address payable seller;
+        /// @dev The maker fee in basis points, set when order is created, defined by the asset's fee info.
+        uint256 makerFee;
+        /// @dev The taker fee in basis points, set when order is created, defined by the asset's fee info.
+        uint256 takerFee;
     }
 
     /// @param asset The asset's address.
@@ -24,13 +37,17 @@ interface IOrderbookDex is IERC1155Receiver {
     /// @param seller The seller's address.
     /// @param assetAmount The amount of the asset that has been put for sale.
     /// @param pricePerAsset The requested price per one unit of asset.
+    /// @param makerFee The maker fee in basis points.
+    /// @param takerFee The taker fee in basis points.
     event OrderCreated(
         address indexed asset,
         uint256 indexed assetId,
         uint256 indexed orderId,
         address seller,
         uint256 assetAmount,
-        uint256 pricePerAsset
+        uint256 pricePerAsset,
+        uint256 makerFee,
+        uint256 takerFee
     );
 
     /// @param asset The asset's address.
@@ -40,6 +57,8 @@ interface IOrderbookDex is IERC1155Receiver {
     /// @param buyer The buyer's address.
     /// @param assetAmount The amount of the asset that was traded.
     /// @param pricePerAsset The price per one unit of asset that was paid.
+    /// @param makerFeeCollected The maker fee in native tokens that was collected.
+    /// @param takerFeeCollected The taker fee in native tokens that was collected.
     event OrderFilled(
         address indexed asset,
         uint256 indexed assetId,
@@ -47,7 +66,9 @@ interface IOrderbookDex is IERC1155Receiver {
         address seller,
         address buyer,
         uint256 assetAmount,
-        uint256 pricePerAsset
+        uint256 pricePerAsset,
+        uint256 makerFeeCollected,
+        uint256 takerFeeCollected
     );
 
     /// @param asset The asset's address.
@@ -55,8 +76,34 @@ interface IOrderbookDex is IERC1155Receiver {
     /// @param orderId The order's asset-specific unique identifier.
     event OrderCancelled(address indexed asset, uint256 indexed assetId, uint256 indexed orderId);
 
+    /// @param receiver The address that received the fees.
+    /// @param amount The amount of fees that were withdrawn.
+    event FeesWithdrawn(address indexed receiver, uint256 amount);
+
     /// @notice The `orderId` of the next sell order for specific `asset`.
     function currentOrderId(address asset) external view returns (uint256);
+
+    /// @notice The default maker fee, used if fee information for asset is not set.
+    function defaultMakerFee() external view returns (uint256);
+
+    /// @notice The default taker fee, used if fee information for asset is not set.
+    function defaultTakerFee() external view returns (uint256);
+
+    /// @notice The maximum fee, maker/taker fees cannot be set to exceed this amount.
+    function maxFee() external view returns (uint256);
+
+    /// @notice The fee information of `asset`.
+    function getAssetFeeInfo(address asset) external view returns (FeeInfo memory);
+
+    /// @notice Set the fee information of `asset`. Executable only by the owner.
+    /// @dev MUST revert if `makerFee` or `takerFee` exceeds `maxFee`.
+    /// MUST revert if called by unauthorized account.
+    function setAssetFeeInfo(address asset, uint256 makerFee, uint256 takerFee) external;
+
+    /// @notice Set the default fee information that is used if fee information for asset is not set. Executable only by the owner.
+    /// @dev MUST revert if `makerFee` or `takerFee` exceeds `maxFee`.
+    /// MUST revert if called by unauthorized account.
+    function setDefaultFeeInfo(uint256 makerFee, uint256 takerFee) external;
 
     /// @notice Returns the Order struct information about an order identified by the `orderId` for specific `asset`.
     function getOrder(address asset, uint256 orderId) external view returns (Order memory);
@@ -121,4 +168,10 @@ interface IOrderbookDex is IERC1155Receiver {
     /// @notice Cancels a batch of sell orders of `asset` with asset-specific `orderIds`, transferring the orders' assets back to the seller.
     /// @dev This is a batched version of `cancelSellOrder` that simply iterates through the array to call said function.
     function cancelBatchSellOrder(address asset, uint256[] memory orderIds) external;
+
+    /// @notice Withdraws the contract balance (containing collected fees) to the owner. Executable only by the owner.
+    /// @dev MUST transfer the entire contract balance to the owner.
+    /// MUST revert if called by unauthorized account.
+    /// MUST emit `FeesWithdrawn` event.
+    function withdrawFees() external;
 }

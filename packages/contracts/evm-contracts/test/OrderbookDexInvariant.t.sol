@@ -361,10 +361,12 @@ contract OrderbookDexInvariantTest is CTest, ERC1155Holder {
     OrderbookDexHandler public dexHandler;
     IInverseAppProjected1155 asset;
     AssetHandler public assetHandler;
+    uint256 makerFee = 40;
+    uint256 takerFee = 60;
 
     function setUp() public {
         asset = new InverseAppProjected1155("Gold", "GOLD", address(this));
-        dex = new OrderbookDex(address(this));
+        dex = new OrderbookDex(address(this), makerFee, takerFee);
         dexHandler = new OrderbookDexHandler(asset, dex);
         assetHandler = new AssetHandler(asset, dex);
         targetContract(address(assetHandler));

@@ -19,17 +19,55 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, Ownable, ReentrancyGuard 
     using Arrays for uint256[];
     using Arrays for address[];
 
+    uint256 constant basisPoints = 10000;
+    /// @notice Maximum fee is 10% (1000 bps).
+    uint256 public constant maxFee = basisPoints / 10;
     /// @inheritdoc IOrderbookDex
     mapping(address asset => uint256 orderId) public currentOrderId;
     mapping(address asset => mapping(uint256 orderId => Order)) internal orders;
+    mapping(address asset => FeeInfo) internal assetFeeInfo;
+    /// @inheritdoc IOrderbookDex
+    uint256 public defaultMakerFee;
+    /// @inheritdoc IOrderbookDex
+    uint256 public defaultTakerFee;
 
+    error FeeTooHigh();
     error OrderDoesNotExist(uint256 orderId);
     error InsufficientEndAmount(uint256 expectedAmount, uint256 actualAmount);
     error InvalidArrayLength();
     error InvalidInput(uint256 input);
     error Unauthorized(address sender);
 
-    constructor(address _owner) Ownable(_owner) {}
+    constructor(
+        address _owner,
+        uint256 _defaultMakerFee,
+        uint256 _defaultTakerFee
+    ) Ownable(_owner) {
+        defaultMakerFee = _defaultMakerFee;
+        defaultTakerFee = _defaultTakerFee;
+    }
+
+    /// @inheritdoc IOrderbookDex
+    function getAssetFeeInfo(address asset) public view virtual returns (FeeInfo memory) {
+        return assetFeeInfo[asset];
+    }
+
+    /// @inheritdoc IOrderbookDex
+    function setAssetFeeInfo(address asset, uint256 makerFee, uint256 takerFee) public onlyOwner {
+        if (makerFee > maxFee || takerFee > maxFee) {
+            revert FeeTooHigh();
+        }
+        assetFeeInfo[asset] = FeeInfo({makerFee: makerFee, takerFee: takerFee, set: true});
+    }
+
+    /// @inheritdoc IOrderbookDex
+    function setDefaultFeeInfo(uint256 makerFee, uint256 takerFee) public onlyOwner {
+        if (makerFee > maxFee || takerFee > maxFee) {
+            revert FeeTooHigh();
+        }
+        defaultMakerFee = makerFee;
+        defaultTakerFee = takerFee;
+    }
 
     /// @inheritdoc IOrderbookDex
     function getOrder(address asset, uint256 orderId) public view virtual returns (Order memory) {
@@ -111,7 +149,9 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, Ownable, ReentrancyGuard 
                 order.seller,
                 msg.sender,
                 assetsToBuy,
-                order.pricePerAsset
+                order.pricePerAsset,
+                order.makerFee,
+                order.takerFee
             );
             if (remainingEth == 0) {
                 break;
@@ -165,7 +205,9 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, Ownable, ReentrancyGuard 
                 order.seller,
                 msg.sender,
                 assetsToBuy,
-                order.pricePerAsset
+                order.pricePerAsset,
+                order.makerFee,
+                order.takerFee
             );
             if (remainingAsset == 0) {
                 break;
@@ -197,6 +239,13 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, Ownable, ReentrancyGuard 
         }
     }
 
+    /// @inheritdoc IOrderbookDex
+    function withdrawFees() external onlyOwner {
+        uint256 amount = address(this).balance;
+        payable(owner()).sendValue(amount);
+        emit FeesWithdrawn(owner(), amount);
+    }
+
     /// @dev Returns true if this contract implements the interface defined by `interfaceId`. See EIP165.
     function supportsInterface(
         bytes4 interfaceId
@@ -221,15 +270,27 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, Ownable, ReentrancyGuard 
             assetAmount,
             bytes("")
         );
+        (uint256 makerFee, uint256 takerFee) = _getFees(asset);
         Order memory newOrder = Order({
             assetId: assetId,
             assetAmount: assetAmount,
             pricePerAsset: pricePerAsset,
-            seller: payable(msg.sender)
+            seller: payable(msg.sender),
+            makerFee: makerFee,
+            takerFee: takerFee
         });
         uint256 orderId = currentOrderId[asset];
         orders[asset][orderId] = newOrder;
-        emit OrderCreated(asset, assetId, orderId, msg.sender, assetAmount, pricePerAsset);
+        emit OrderCreated(
+            asset,
+            assetId,
+            orderId,
+            msg.sender,
+            assetAmount,
+            pricePerAsset,
+            makerFee,
+            takerFee
+        );
         ++currentOrderId[asset];
         return orderId;
     }
@@ -249,5 +310,13 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, Ownable, ReentrancyGuard 
             bytes("")
         );
         emit OrderCancelled(asset, order.assetId, orderId);
+    }
+
+    function _getFees(address asset) internal virtual returns (uint256 makerFee, uint256 takerFee) {
+        FeeInfo memory feeInfo = assetFeeInfo[asset];
+        if (feeInfo.set) {
+            return (feeInfo.makerFee, feeInfo.takerFee);
+        }
+        return (defaultMakerFee, defaultTakerFee);
     }
 }

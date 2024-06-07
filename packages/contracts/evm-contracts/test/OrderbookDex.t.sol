@@ -21,12 +21,14 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
     CheatCodes vm = CheatCodes(HEVM_ADDRESS);
     OrderbookDex public dex;
     IInverseAppProjected1155 asset;
+    uint256 makerFee = 40;
+    uint256 takerFee = 60;
     address alice = vm.addr(uint256(keccak256(abi.encodePacked("alice"))));
     address boris = vm.addr(uint256(keccak256(abi.encodePacked("boris"))));
 
     function setUp() public {
         asset = new InverseAppProjected1155("Gold", "GOLD", address(this));
-        dex = new OrderbookDex(address(this));
+        dex = new OrderbookDex(address(this), makerFee, takerFee);
         asset.setApprovalForAll(address(dex), true);
         vm.deal(alice, 1_000 ether);
         vm.deal(boris, 1_000 ether);
@@ -48,7 +50,9 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
             orderId,
             address(this),
             assetAmount,
-            pricePerAsset
+            pricePerAsset,
+            makerFee,
+            takerFee
         );
         dex.createSellOrder(address(asset), assetId, assetAmount, pricePerAsset);
 
@@ -80,7 +84,9 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
                 orderId + i,
                 address(this),
                 assetAmounts[i],
-                pricesPerAssets[i]
+                pricesPerAssets[i],
+                makerFee,
+                takerFee
             );
         }
 
@@ -167,7 +173,9 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
                     sellers[i],
                     buyer,
                     order.assetAmount,
-                    order.pricePerAsset
+                    order.pricePerAsset,
+                    makerFee,
+                    takerFee
                 );
             }
             vm.startPrank(buyer);
@@ -231,7 +239,9 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
                     sellers[i],
                     buyer,
                     order.assetAmount,
-                    order.pricePerAsset
+                    order.pricePerAsset,
+                    makerFee,
+                    takerFee
                 );
             }
             vm.startPrank(buyer);
