@@ -172,6 +172,9 @@ async function main(): Promise<void> {
   console.log('Validation type:        ', ENV.GAME_INPUT_VALIDATION_TYPE);
   console.log('PaimaL2Contract address:', ENV.CONTRACT_ADDRESS);
   console.log('Batcher account address:', provider.getAddress());
+  if (ENV.RECAPTCHA_V3_BACKEND) {
+    console.log('reCAPTCHA V3 enabled');
+  }
 
   const gameInputValidatorCore = await getValidatorCore(ENV.GAME_INPUT_VALIDATION_TYPE);
   const gameInputValidator = new GameInputValidator(gameInputValidatorCore, pool);

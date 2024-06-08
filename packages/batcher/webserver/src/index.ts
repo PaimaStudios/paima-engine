@@ -20,6 +20,7 @@ import { createMessageForBatcher } from '@paima/concise';
 import { AddressType, getWriteNamespace, wait } from '@paima/utils';
 import { hashBatchSubunit } from '@paima/concise';
 import { GlobalConfig } from '@paima/utils';
+import { RecaptchaError, reCaptchaValidation } from './recaptcha.js';
 
 const port = ENV.BATCHER_PORT;
 
@@ -88,6 +89,7 @@ type SubmitUserInputRequest = {
   game_input: string;
   timestamp: string;
   user_signature: string;
+  captcha: string;
 };
 type SubmitUserInputResponse =
   | {
@@ -333,13 +335,15 @@ async function initializeServer(
           return;
         }
 
-        const [addressType, userAddress, gameInput, millisecondTimestamp, userSignature] = [
-          req.body.address_type || AddressType.UNKNOWN,
-          req.body.user_address || '',
-          req.body.game_input || '',
-          req.body.timestamp || '',
-          req.body.user_signature || '',
-        ];
+        const [addressType, userAddress, gameInput, millisecondTimestamp, userSignature, captcha] =
+          [
+            req.body.address_type || AddressType.UNKNOWN,
+            req.body.user_address || '',
+            req.body.game_input || '',
+            req.body.timestamp || '',
+            req.body.user_signature || '',
+            req.body.captcha || '',
+          ];
         const input: BatchedSubunit = {
           addressType,
           userAddress,
@@ -405,6 +409,7 @@ async function initializeServer(
 
         if (validity === 0) {
           try {
+            await reCaptchaValidation(captcha);
             unsetWebserverClosed();
             await insertStateValidating.run({ input_hash: hash }, pool);
             await insertUnvalidatedInput.run(
@@ -419,7 +424,12 @@ async function initializeServer(
             );
             setWebserverClosed();
           } catch (err) {
-            console.log('[webserver] Error while setting input as validated.');
+            if (err instanceof RecaptchaError) {
+              console.log('[webserver] Recaptcha validation failed.');
+              console.log({ addressType, userAddress, gameInput, millisecondTimestamp });
+            } else {
+              console.log('[webserver] Error while setting input as validated.');
+            }
             res.status(500).json({
               success: false,
               message: 'Internal server error',

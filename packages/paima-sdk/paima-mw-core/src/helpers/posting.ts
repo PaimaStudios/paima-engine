@@ -1,4 +1,4 @@
-import { retrieveFee, retryPromise, wait } from '@paima/utils';
+import { ENV, retrieveFee, retryPromise, wait } from '@paima/utils';
 import type { EndpointErrorFxn } from '../errors.js';
 import {
   BatcherRejectionCode,
@@ -65,6 +65,30 @@ export async function updateFee(): Promise<void> {
   }
 }
 
+/* Recaptcha simplified interface */
+declare global {
+  interface Window {
+    grecaptcha: {
+      ready: (callback: () => void) => void;
+      execute: (key: unknown, config: { action: 'submit' }) => Promise<string | undefined>;
+    };
+  }
+}
+/* Generate Recaptcha token */
+const reCaptcha = (): Promise<string | undefined> => {
+  if (!window.grecaptcha) return Promise.resolve(undefined);
+  return new Promise((resolve, reject) => {
+    window.grecaptcha.ready(function () {
+      window.grecaptcha
+        .execute(ENV.RECAPTCHA_V3_FRONTEND, { action: 'submit' })
+        .then(function (token: string | undefined) {
+          return resolve(token);
+        })
+        .catch(reject);
+    });
+  });
+};
+
 /**
  * Wrapper around post concisely encoded data with added error handling
  * @param data Concisely encoded data to post
@@ -77,7 +101,8 @@ export const postConciseData = async (
   mode?: WalletMode
 ): Promise<PostDataResponse | FailedResult> => {
   try {
-    const response = await postConciselyEncodedData(data, mode);
+    const captcha = await reCaptcha();
+    const response = await postConciselyEncodedData(data, mode, captcha);
     if (!response.success) {
       return errorFxn(
         PaimaMiddlewareErrorCode.ERROR_POSTING_TO_CHAIN,
@@ -106,7 +131,8 @@ export const postConciseData = async (
  */
 export async function postConciselyEncodedData(
   gameInput: string,
-  mode?: WalletMode
+  mode?: WalletMode,
+  captcha?: string
 ): Promise<Result<number>> {
   const errorFxn = buildEndpointErrorFxn('postConciselyEncodedData');
 
@@ -133,9 +159,12 @@ export async function postConciselyEncodedData(
         `Unbatched only supported for EVM wallets`
       );
     case PostingMode.BATCHED:
-      return await buildBatchedSubunit(provider.signMessage, provider.getAddress(), gameInput).then(
-        submitToBatcher
+      const subunit = await buildBatchedSubunit(
+        provider.signMessage,
+        provider.getAddress(),
+        gameInput
       );
+      return await submitToBatcher(subunit, captcha);
     default:
       assertNever(postingMode, true);
       return errorFxn(
@@ -195,10 +224,10 @@ async function verifyTx(txHash: string, msTimeout: number): Promise<number> {
   return receipt.blockNumber;
 }
 
-async function submitToBatcher(subunit: BatchedSubunit): Promise<Result<number>> {
+async function submitToBatcher(subunit: BatchedSubunit, captcha?: string): Promise<Result<number>> {
   const errorFxn = buildEndpointErrorFxn('submitToBatcher');
 
-  const body = batchedToJsonString(subunit);
+  const body = batchedToJsonString(subunit, captcha);
   let res: Response;
 
   try {

@@ -57,6 +57,9 @@ export class ENV {
   static get SECURITY_NAMESPACE(): string {
     return process.env.SECURITY_NAMESPACE || 'CONTRACT_ADDRESS';
   }
+  static get RECAPTCHA_V3_FRONTEND(): string {
+    return process.env.RECAPTCHA_V3_FRONTEND || '';
+  }
 
   // PaimaL2Contract:
   static get CONTRACT_ADDRESS(): string {
