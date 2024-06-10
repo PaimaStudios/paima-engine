@@ -18,6 +18,8 @@ export async function reCaptchaValidation(captcha: string): Promise<void> {
   //
   const recaptchaResponse = await axios<{
     success: boolean;
+    score: number; // the score for this request (0.0 - 1.0)
+    action: string; // the action name for this request (important to verify)
     challenge_ts: string;
     hostname: string;
     'error-codes'?: string[];
@@ -32,6 +34,10 @@ export async function reCaptchaValidation(captcha: string): Promise<void> {
   });
 
   if (!recaptchaResponse.data?.success) {
+    throw new RecaptchaError('Recaptcha validation failed');
+  }
+
+  if (recaptchaResponse.data.score < ENV.RECAPTCHA_V3_SCORE) {
     throw new RecaptchaError('Recaptcha validation failed');
   }
 }

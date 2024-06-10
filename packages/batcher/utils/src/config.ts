@@ -63,6 +63,9 @@ export class ENV {
   static get RECAPTCHA_V3_BACKEND(): string {
     return process.env.RECAPTCHA_V3_BACKEND || '';
   }
+  static get RECAPTCHA_V3_SCORE(): number {
+    return parseFloat(process.env.RECAPTCHA_V3_SCORE || '0.5');
+  }
 
   // Validation parameters:
   static get GAME_NODE_URI(): string {

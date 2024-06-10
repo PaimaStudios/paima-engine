@@ -70,17 +70,19 @@ declare global {
   interface Window {
     grecaptcha: {
       ready: (callback: () => void) => void;
-      execute: (key: unknown, config: { action: 'submit' }) => Promise<string | undefined>;
+      execute: (key: unknown, config: { action: string }) => Promise<string | undefined>;
     };
   }
 }
 /* Generate Recaptcha token */
-const reCaptcha = (): Promise<string | undefined> => {
+const reCaptcha = (input: string): Promise<string | undefined> => {
   if (!window.grecaptcha) return Promise.resolve(undefined);
+  const key = input.match(/(^.+?)\|/);
+  const action = key ? `submit/${key[1].replace(/[^A-Za-z/_]/g, '')}` : 'submit';
   return new Promise((resolve, reject) => {
     window.grecaptcha.ready(function () {
       window.grecaptcha
-        .execute(ENV.RECAPTCHA_V3_FRONTEND, { action: 'submit' })
+        .execute(ENV.RECAPTCHA_V3_FRONTEND, { action })
         .then(function (token: string | undefined) {
           return resolve(token);
         })
@@ -101,7 +103,7 @@ export const postConciseData = async (
   mode?: WalletMode
 ): Promise<PostDataResponse | FailedResult> => {
   try {
-    const captcha = await reCaptcha();
+    const captcha = await reCaptcha(data);
     const response = await postConciselyEncodedData(data, mode, captcha);
     if (!response.success) {
       return errorFxn(
