@@ -95,6 +95,11 @@ interface IOrderbookDex is IERC1155Receiver {
     /// @notice The fee information of `asset`.
     function getAssetFeeInfo(address asset) external view returns (FeeInfo memory);
 
+    /// @notice Returns the asset fees if set, otherwise returns the default fees.
+    function getAssetAppliedFees(
+        address asset
+    ) external view returns (uint256 makerFee, uint256 takerFee);
+
     /// @notice Set the fee information of `asset`. Executable only by the owner.
     /// @dev MUST revert if `makerFee` or `takerFee` exceeds `maxFee`.
     /// MUST revert if called by unauthorized account.

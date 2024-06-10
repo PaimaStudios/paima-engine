@@ -638,7 +638,7 @@ contract CTest is StdInvariant {
         uint256 max
     ) internal view virtual returns (uint256 result) {
         result = _bound(x, min, max);
-        console2_log("Bound Result", result);
+        // console2_log("Bound Result", result);
     }
 
     function _bound(

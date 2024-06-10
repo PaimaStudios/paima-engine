@@ -179,6 +179,8 @@ contract OrderbookDexHandler is CTest, ERC1155Holder {
 
         // Set current actor's balance to expected total price to avoid revert
         uint256 value = sumPrice;
+        (, uint256 takerFee) = dex.getAssetAppliedFees(address(asset));
+        value += (value * takerFee) / 10000 + 1;
         vm.deal(currentActor, value);
 
         // Take note of buyer's tokens balances and orders' asset amounts before filling orders
@@ -251,6 +253,8 @@ contract OrderbookDexHandler is CTest, ERC1155Holder {
         // Set current actor's balance to expected total price plus 100 to avoid revert and
         // to provide surplus which should be refunded
         uint256 value = sumPrice + 100;
+        (, uint256 takerFee) = dex.getAssetAppliedFees(address(asset));
+        value += (value * takerFee) / 10000;
         vm.deal(currentActor, value);
 
         // Take note of buyer's tokens balances and orders' asset amounts before filling orders
@@ -378,10 +382,6 @@ contract OrderbookDexInvariantTest is CTest, ERC1155Holder {
             IOrderbookDex.Order memory order = dex.getOrder(address(asset), i);
             assertEq(order.assetAmount, asset.balanceOf(address(dex), order.assetId));
         }
-    }
-
-    function invariant_contractDoesNotObtainEther() public {
-        assertEq(address(dex).balance, 0);
     }
 
     function invariant_orderIdIsIncremental() public {

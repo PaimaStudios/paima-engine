@@ -34,6 +34,7 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, Ownable, ReentrancyGuard 
     error FeeTooHigh();
     error OrderDoesNotExist(uint256 orderId);
     error InsufficientEndAmount(uint256 expectedAmount, uint256 actualAmount);
+    error InsufficientPayment();
     error InvalidArrayLength();
     error InvalidInput(uint256 input);
     error Unauthorized(address sender);
@@ -50,6 +51,17 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, Ownable, ReentrancyGuard 
     /// @inheritdoc IOrderbookDex
     function getAssetFeeInfo(address asset) public view virtual returns (FeeInfo memory) {
         return assetFeeInfo[asset];
+    }
+
+    /// @inheritdoc IOrderbookDex
+    function getAssetAppliedFees(
+        address asset
+    ) public view virtual returns (uint256 makerFee, uint256 takerFee) {
+        FeeInfo memory feeInfo = assetFeeInfo[asset];
+        if (feeInfo.set) {
+            return (feeInfo.makerFee, feeInfo.takerFee);
+        }
+        return (defaultMakerFee, defaultTakerFee);
     }
 
     /// @inheritdoc IOrderbookDex
@@ -124,15 +136,34 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, Ownable, ReentrancyGuard 
             if (order.assetAmount == 0) {
                 continue;
             }
-            uint256 assetsToBuy = remainingEth / order.pricePerAsset;
+
+            uint256 assetsToBuy = (remainingEth * basisPoints) /
+                ((order.pricePerAsset * (order.takerFee + basisPoints)));
             if (assetsToBuy == 0) {
                 continue;
             }
             if (assetsToBuy > order.assetAmount) {
                 assetsToBuy = order.assetAmount;
             }
-            order.assetAmount -= assetsToBuy;
-            remainingEth -= assetsToBuy * order.pricePerAsset;
+
+            // Can be unchecked because assetsToBuy is less than or equal to order.assetAmount.
+            unchecked {
+                order.assetAmount -= assetsToBuy;
+            }
+
+            uint256 purchaseCost = assetsToBuy * order.pricePerAsset;
+            uint256 makerFee = (purchaseCost * order.makerFee) / basisPoints;
+            uint256 takerFee = (purchaseCost * order.takerFee) / basisPoints;
+
+            if (remainingEth < purchaseCost + takerFee) {
+                revert InsufficientPayment();
+            }
+
+            // Can be unchecked because (purchaseCost + takerFee) is less than or equal to remainingEth.
+            unchecked {
+                remainingEth -= (purchaseCost + takerFee);
+            }
+
             totalAssetReceived += assetsToBuy;
             IInverseProjected1155(asset).safeTransferFrom(
                 address(this),
@@ -141,7 +172,7 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, Ownable, ReentrancyGuard 
                 assetsToBuy,
                 bytes("")
             );
-            order.seller.sendValue(assetsToBuy * order.pricePerAsset);
+            order.seller.sendValue(purchaseCost - makerFee);
             emit OrderFilled(
                 asset,
                 order.assetId,
@@ -150,8 +181,8 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, Ownable, ReentrancyGuard 
                 msg.sender,
                 assetsToBuy,
                 order.pricePerAsset,
-                order.makerFee,
-                order.takerFee
+                makerFee,
+                takerFee
             );
             if (remainingEth == 0) {
                 break;
@@ -187,9 +218,29 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, Ownable, ReentrancyGuard 
             if (assetsToBuy == 0) {
                 continue;
             }
-            order.assetAmount -= assetsToBuy;
-            remainingEth -= assetsToBuy * order.pricePerAsset;
-            remainingAsset -= assetsToBuy;
+
+            // Can be unchecked because assetsToBuy is less than or equal to order.assetAmount.
+            unchecked {
+                order.assetAmount -= assetsToBuy;
+            }
+
+            uint256 purchaseCost = assetsToBuy * order.pricePerAsset;
+            uint256 makerFee = (purchaseCost * order.makerFee) / basisPoints;
+            uint256 takerFee = (purchaseCost * order.takerFee) / basisPoints;
+
+            if (remainingEth < purchaseCost + takerFee) {
+                revert InsufficientPayment();
+            }
+
+            // Can be unchecked because (purchaseCost + takerFee) is less than or equal to remainingEth.
+            unchecked {
+                remainingEth -= (purchaseCost + takerFee);
+            }
+            // Can be unchecked because assetsToBuy is less than or equal to remainingAsset.
+            unchecked {
+                remainingAsset -= assetsToBuy;
+            }
+
             IInverseProjected1155(asset).safeTransferFrom(
                 address(this),
                 msg.sender,
@@ -197,7 +248,7 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, Ownable, ReentrancyGuard 
                 assetsToBuy,
                 bytes("")
             );
-            order.seller.sendValue(assetsToBuy * order.pricePerAsset);
+            order.seller.sendValue(purchaseCost - makerFee);
             emit OrderFilled(
                 asset,
                 order.assetId,
@@ -206,8 +257,8 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, Ownable, ReentrancyGuard 
                 msg.sender,
                 assetsToBuy,
                 order.pricePerAsset,
-                order.makerFee,
-                order.takerFee
+                makerFee,
+                takerFee
             );
             if (remainingAsset == 0) {
                 break;
@@ -270,7 +321,7 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, Ownable, ReentrancyGuard 
             assetAmount,
             bytes("")
         );
-        (uint256 makerFee, uint256 takerFee) = _getFees(asset);
+        (uint256 makerFee, uint256 takerFee) = getAssetAppliedFees(asset);
         Order memory newOrder = Order({
             assetId: assetId,
             assetAmount: assetAmount,
@@ -310,13 +361,5 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, Ownable, ReentrancyGuard 
             bytes("")
         );
         emit OrderCancelled(asset, order.assetId, orderId);
-    }
-
-    function _getFees(address asset) internal virtual returns (uint256 makerFee, uint256 takerFee) {
-        FeeInfo memory feeInfo = assetFeeInfo[asset];
-        if (feeInfo.set) {
-            return (feeInfo.makerFee, feeInfo.takerFee);
-        }
-        return (defaultMakerFee, defaultTakerFee);
     }
 }
