@@ -15,6 +15,7 @@ import type { FunnelSharedData } from './funnels/BaseFunnel.js';
 import { FunnelCacheManager } from './funnels/FunnelCache.js';
 import { wrapToCarpFunnel } from './funnels/carp/funnel.js';
 import { wrapToParallelEvmFunnel } from './funnels/parallelEvm/funnel.js';
+import { wrapToAvailFunnel } from './funnels/avail/funnel.js';
 import { ConfigNetworkType } from '@paima/utils';
 import type Web3 from 'web3';
 import { wrapToMinaFunnel } from './funnels/mina/funnel.js';
@@ -97,6 +98,17 @@ export class FunnelFactory implements IFunnelFactory {
     chainFunnel = await wrapToCarpFunnel(chainFunnel, this.sharedData, dbTx, ENV.START_BLOCKHEIGHT);
     for (const [chainName, config] of await GlobalConfig.minaConfig()) {
       chainFunnel = await wrapToMinaFunnel(
+        chainFunnel,
+        this.sharedData,
+        dbTx,
+        ENV.START_BLOCKHEIGHT,
+        chainName,
+        config
+      );
+    }
+
+    for (const [chainName, config] of await GlobalConfig.availConfig()) {
+      chainFunnel = await wrapToAvailFunnel(
         chainFunnel,
         this.sharedData,
         dbTx,

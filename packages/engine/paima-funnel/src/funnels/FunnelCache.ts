@@ -1,4 +1,5 @@
 import type { ChainData } from '@paima/sm';
+import type { ApiPromise } from 'avail-js-sdk';
 import type pg from 'pg';
 
 export interface FunnelCacheEntry {
@@ -15,6 +16,7 @@ export type CacheMapType = {
   [CarpFunnelCacheEntry.SYMBOL]?: CarpFunnelCacheEntry;
   [EvmFunnelCacheEntry.SYMBOL]?: EvmFunnelCacheEntry;
   [MinaFunnelCacheEntry.SYMBOL]?: MinaFunnelCacheEntry;
+  [AvailFunnelCacheEntry.SYMBOL]?: AvailFunnelCacheEntry;
 };
 export class FunnelCacheManager {
   public cacheEntries: CacheMapType = {};
@@ -228,6 +230,54 @@ export class MinaFunnelCacheEntry implements FunnelCacheEntry {
   public getState(): Readonly<MinaFunnelCacheEntryState> {
     if (!this.state) {
       throw new Error('[mina-funnel] Uninitialized cache entry');
+    }
+    return this.state;
+  }
+
+  clear: FunnelCacheEntry['clear'] = () => {
+    this.state = null;
+  };
+}
+
+export type AvailFunnelCacheEntryState = {
+  api: ApiPromise;
+  latestBlock: { hash: string; number: number; slot: number } | undefined;
+  startingBlockHeight: number;
+  bufferedChainData: ChainData[];
+  timestampToBlockNumber: [number, number][];
+  lastMaxSlot: number;
+  lastBlock: number;
+};
+
+export class AvailFunnelCacheEntry implements FunnelCacheEntry {
+  private state: AvailFunnelCacheEntryState | null = null;
+  public static readonly SYMBOL = Symbol('AvailFunnelStartingSlot');
+
+  public initialized(): boolean {
+    return !!this.state;
+  }
+
+  public initialize(api: ApiPromise, startingBlockHeight: number): void {
+    this.state = {
+      api: api,
+      latestBlock: undefined,
+      startingBlockHeight: startingBlockHeight,
+      bufferedChainData: [],
+      timestampToBlockNumber: [],
+      lastMaxSlot: 0,
+      lastBlock: 1,
+    };
+  }
+
+  public updateLatestBlock(block: { hash: string; number: number; slot: number }): void {
+    if (this.state) {
+      this.state.latestBlock = block;
+    }
+  }
+
+  public getState(): Readonly<AvailFunnelCacheEntryState> {
+    if (!this.state) {
+      throw new Error('[avail-funnel] Uninitialized cache entry');
     }
     return this.state;
   }
