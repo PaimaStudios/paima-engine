@@ -305,7 +305,7 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
         orderIds[0] = orderId;
         uint256 purchaseCost = assetAmountToBuy * pricePerAsset;
         vm.startPrank(buyer);
-        dex.fillOrdersExactEth{value: (purchaseCost + (purchaseCost * takerFee) / 10000) + 1}(
+        dex.fillOrdersExactEth{value: (purchaseCost + (purchaseCost * takerFee) / 10000)}(
             address(asset),
             assetAmountToBuy,
             orderIds

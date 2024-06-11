@@ -137,13 +137,18 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, Ownable, ReentrancyGuard 
                 continue;
             }
 
-            uint256 assetsToBuy = (remainingEth * basisPoints) /
-                ((order.pricePerAsset * (order.takerFee + basisPoints)));
+            uint256 purchaseCost = (remainingEth * basisPoints) / (order.takerFee + basisPoints);
+            if (purchaseCost * (order.takerFee + basisPoints) != (remainingEth * basisPoints)) {
+                ++purchaseCost;
+            }
+            uint256 assetsToBuy = purchaseCost / order.pricePerAsset;
+
             if (assetsToBuy == 0) {
                 continue;
             }
             if (assetsToBuy > order.assetAmount) {
                 assetsToBuy = order.assetAmount;
+                purchaseCost = assetsToBuy * order.pricePerAsset;
             }
 
             // Can be unchecked because assetsToBuy is less than or equal to order.assetAmount.
@@ -151,7 +156,6 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, Ownable, ReentrancyGuard 
                 order.assetAmount -= assetsToBuy;
             }
 
-            uint256 purchaseCost = assetsToBuy * order.pricePerAsset;
             uint256 makerFee = (purchaseCost * order.makerFee) / basisPoints;
             uint256 takerFee = (purchaseCost * order.takerFee) / basisPoints;
 
