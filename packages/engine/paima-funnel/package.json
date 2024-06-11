@@ -20,6 +20,7 @@
     "assert-never": "^1.2.1",
     "@dcspark/carp-client": "^3.1.0",
     "@dcspark/cardano-multiplatform-lib-nodejs": "5.2.0",
-    "pg": "^8.11.3"
+    "pg": "^8.11.3",
+    "avail-js-sdk": "^0.2.12"
   }
 }

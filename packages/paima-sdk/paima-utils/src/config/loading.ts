@@ -13,6 +13,7 @@ export enum ConfigNetworkType {
   EVM_OTHER = 'evm-other',
   CARDANO = 'cardano',
   MINA = 'mina',
+  AVAIL = 'avail',
 }
 
 export type EvmConfig = Static<typeof EvmConfigSchema>;
@@ -98,6 +99,16 @@ export const MinaConfigSchema = Type.Object({
 
 export type MinaConfig = Static<typeof MinaConfigSchema>;
 
+export const AvailConfigSchema = Type.Object({
+  rpc: Type.String(),
+  lightClient: Type.String(),
+  delay: Type.Number(),
+  confirmationDepth: Type.Optional(Type.Number()),
+  funnelBlockGroupSize: Type.Number({ default: 100 }),
+});
+
+export type AvailConfig = Static<typeof AvailConfigSchema>;
+
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const TaggedEvmConfig = <T extends boolean, U extends boolean>(T: T, MAIN_CONFIG: U) =>
   Type.Union([
@@ -135,12 +146,20 @@ export const TaggedMinaConfig = <T extends boolean>(T: T) =>
   ]);
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+export const TaggedAvailConfig = <T extends boolean>(T: T) =>
+  Type.Intersect([
+    T ? AvailConfigSchema : Type.Partial(AvailConfigSchema),
+    Type.Object({ type: Type.Literal(ConfigNetworkType.AVAIL) }),
+  ]);
+
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const TaggedConfig = <T extends boolean>(T: T) =>
   Type.Union([
     TaggedEvmMainConfig(T),
     TaggedEvmOtherConfig(T),
     TaggedCardanoConfig(T),
     TaggedMinaConfig(T),
+    TaggedAvailConfig(T),
   ]);
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
@@ -164,6 +183,12 @@ const minaConfigDefaults = {
   // lightnet defaults
   confirmationDepth: 30,
   delay: 30 * 40,
+};
+
+const availConfigDefaults = {
+  funnelBlockGroupSize: 100,
+  confirmationDepth: 10,
+  delay: 10 * 20,
 };
 
 // used as a placeholder name for the ENV fallback mechanism
@@ -237,6 +262,9 @@ export async function loadConfig(): Promise<Static<typeof BaseConfigWithDefaults
         case ConfigNetworkType.MINA:
           config[network] = Object.assign(minaConfigDefaults, networkConfig);
           break;
+        case ConfigNetworkType.AVAIL:
+          config[network] = Object.assign(availConfigDefaults, networkConfig);
+          break;
         default:
           throw new Error('unknown network type');
       }
@@ -291,6 +319,13 @@ export function parseConfigFile(configFileData: string): Static<typeof BaseConfi
         baseConfig[network] = checkOrError(
           'mina config entry',
           TaggedMinaConfig(false),
+          baseStructure[network]
+        );
+        break;
+      case ConfigNetworkType.AVAIL:
+        baseConfig[network] = checkOrError(
+          'avail config entry',
+          TaggedAvailConfig(false),
           baseStructure[network]
         );
         break;

@@ -5,6 +5,7 @@ import type {
   BaseConfigWithDefaults,
   MinaConfig,
   OtherEvmConfig,
+  AvailConfig,
 } from './loading.js';
 import { loadConfig, ConfigNetworkType } from './loading.js';
 
@@ -71,5 +72,13 @@ export class GlobalConfig {
     return Object.keys(instance)
       .filter(key => instance[key].type === ConfigNetworkType.MINA)
       .map(key => [key, instance[key] as MinaConfig]);
+  }
+
+  public static async availConfig(): Promise<[string, AvailConfig][]> {
+    const instance = await GlobalConfig.getInstance();
+
+    return Object.keys(instance)
+      .filter(key => instance[key].type === ConfigNetworkType.AVAIL)
+      .map(key => [key, instance[key] as AvailConfig]);
   }
 }
