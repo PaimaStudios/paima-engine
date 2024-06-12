@@ -1,5 +1,11 @@
 import type { AvailConfig } from '@paima/utils';
-import { doLog, logError, delay, ChainDataExtensionDatumType } from '@paima/utils';
+import {
+  doLog,
+  logError,
+  delay,
+  ChainDataExtensionDatumType,
+  ConfigNetworkType,
+} from '@paima/utils';
 import type { ChainFunnel, ReadPresyncDataFrom } from '@paima/runtime';
 import type { CdeGenericDatum } from '@paima/sm';
 import { type ChainData, type PresyncChainData } from '@paima/sm';
@@ -11,6 +17,7 @@ import type { PoolClient } from 'pg';
 import { FUNNEL_PRESYNC_FINISHED } from '@paima/utils';
 import type { ApiPromise } from 'avail-js-sdk';
 import { createApi } from './createApi.js';
+import { Header } from '@polkadot/types/interfaces/types.js';
 
 function applyDelay(config: AvailConfig, baseTimestamp: number): number {
   return Math.max(baseTimestamp - (config.delay ?? 0), 0);
@@ -83,7 +90,7 @@ export class AvailFunnel extends BaseFunnel implements ChainFunnel {
         cachedState.lastBlock + this.config.funnelBlockGroupSize
       );
 
-      doLog(`Avail funnel #${cachedState.latestBlock.number + 1}-${to}`);
+      doLog(`Avail funnel #${cachedState.lastBlock + 1}-${to}`);
 
       const availHeaders = await getMultipleHeaderData(
         cachedState.api,
@@ -93,15 +100,16 @@ export class AvailFunnel extends BaseFunnel implements ChainFunnel {
 
       headers.push(...availHeaders);
 
-      if (headers.length > 0 && headers[headers.length - 1].slot >= maxSlot) {
-        break;
-      }
-
       if (headers.length > 0) {
         const last = headers[headers.length - 1];
 
         cachedState.lastBlock = last.number;
       }
+
+      if (headers.length > 0 && headers[headers.length - 1].slot >= maxSlot) {
+        break;
+      }
+
       if (to !== latestBlock.number) continue;
       while ((await this.updateLatestBlock()) === latestBlock?.number) {
         // wait for blocks to be produced
@@ -132,11 +140,10 @@ export class AvailFunnel extends BaseFunnel implements ChainFunnel {
 
     let currIndex = 0;
 
-    for (const parallelChainBlock of cachedState.timestampToBlockNumber) {
+    for (const availBlock of cachedState.timestampToBlockNumber) {
       while (currIndex < chainData.length) {
-        if (applyDelay(this.config, chainData[currIndex].timestamp) >= parallelChainBlock[0]) {
-          availToMainchainBlockHeightMapping[parallelChainBlock[1]] =
-            chainData[currIndex].blockNumber;
+        if (applyDelay(this.config, chainData[currIndex].timestamp) >= availBlock[0]) {
+          availToMainchainBlockHeightMapping[availBlock[1]] = chainData[currIndex].blockNumber;
           break;
         } else {
           currIndex++;
@@ -183,12 +190,54 @@ export class AvailFunnel extends BaseFunnel implements ChainFunnel {
   public override async readPresyncData(
     args: ReadPresyncDataFrom
   ): Promise<{ [network: string]: PresyncChainData[] | typeof FUNNEL_PRESYNC_FINISHED }> {
-    // TODO: implement
     const baseData = await this.baseFunnel.readPresyncData(args);
 
-    baseData[this.chainName] = FUNNEL_PRESYNC_FINISHED;
+    let arg = args.find(arg => arg.network == this.chainName);
 
-    return baseData;
+    if (!arg) {
+      return baseData;
+    }
+
+    // TODO: a bit hacky, but there are no extensions for now, so the initial
+    // point doesn't work
+    let fromBlock = arg.from;
+    let toBlock = arg.to;
+
+    const startBlockHeight = this.getState().startingBlockHeight;
+
+    if (fromBlock >= startBlockHeight) {
+      return { ...baseData, [this.chainName]: FUNNEL_PRESYNC_FINISHED };
+    }
+
+    try {
+      toBlock = Math.min(toBlock, startBlockHeight - 1);
+      fromBlock = Math.max(fromBlock, 0);
+      if (fromBlock > toBlock) {
+        return baseData;
+      }
+
+      doLog(`Avail funnel presync ${this.chainName}: #${fromBlock}-${toBlock}`);
+
+      const data = await getSubmittedData(
+        this.config.lightClient,
+        fromBlock,
+        toBlock,
+        this.chainName
+      );
+
+      return {
+        ...baseData,
+        [this.chainName]: data.map(d => ({
+          extensionDatums: d.extensionDatums,
+          networkType: ConfigNetworkType.AVAIL,
+          network: this.chainName,
+          blockNumber: d.blockNumber,
+        })),
+      };
+    } catch (err) {
+      doLog(`[paima-funnel::readPresyncData] Exception occurred while reading blocks: ${err}`);
+      throw err;
+    }
   }
 
   public static async recoverState(
@@ -210,8 +259,17 @@ export class AvailFunnel extends BaseFunnel implements ChainFunnel {
     })();
 
     if (!availFunnelCacheEntry.initialized()) {
+      const startingBlock = await sharedData.web3.eth.getBlock(startingBlockHeight);
+
       const api = await createApi(config.rpc);
-      availFunnelCacheEntry.initialize(api, 30);
+
+      const mappedStartingBlockHeight = await findBlockByTimestamp(
+        api,
+        applyDelay(config, Number(startingBlock.timestamp)),
+        chainName
+      );
+
+      availFunnelCacheEntry.initialize(api, mappedStartingBlockHeight);
     }
 
     const funnel = new AvailFunnel(sharedData, dbTx, config, chainName, baseFunnel);
@@ -249,15 +307,7 @@ export class AvailFunnel extends BaseFunnel implements ChainFunnel {
     const delayedBlockHash = await cachedState.api.rpc.chain.getBlockHash(delayedBlock);
     const delayedHeader = await cachedState.api.rpc.chain.getHeader(delayedBlockHash);
 
-    const preRuntimeLog = delayedHeader.digest.logs.find(log => log.isPreRuntime);
-
-    const preRuntime = preRuntimeLog!.asPreRuntime;
-
-    const rawBabeDigest = cachedState.api.createType('RawBabePreDigest', preRuntime[1]);
-
-    const babeDigest = rawBabeDigest.toPrimitive() as unknown as any;
-
-    const slot = babeDigest[Object.getOwnPropertyNames(babeDigest)[0]].slotNumber;
+    const slot = getSlotFromHeader(delayedHeader, cachedState.api);
 
     this.sharedData.cacheManager.cacheEntries[AvailFunnelCacheEntry.SYMBOL]?.updateLatestBlock({
       number: delayedHeader.number.toNumber(),
@@ -322,15 +372,7 @@ async function getMultipleHeaderData(
     const hash = await api.rpc.chain.getBlockHash(bn);
     const header = await api.rpc.chain.getHeader(hash);
 
-    const preRuntime = header.digest.logs.find(log => log.isPreRuntime)!.asPreRuntime;
-
-    // FIXME: duplicated code
-    const rawBabeDigest = api.createType('RawBabePreDigest', preRuntime[1]);
-
-    const babeDigest = rawBabeDigest.toPrimitive() as unknown as any;
-
-    // the object is an enumeration, but all the variants have a slotNumber field
-    const slot = babeDigest[Object.getOwnPropertyNames(babeDigest)[0]].slotNumber;
+    const slot = getSlotFromHeader(header, api);
 
     results.push({
       number: header.number.toNumber(),
@@ -340,6 +382,19 @@ async function getMultipleHeaderData(
   }
 
   return results;
+}
+
+function getSlotFromHeader(header: Header, api: ApiPromise): number {
+  const preRuntime = header.digest.logs.find(log => log.isPreRuntime)!.asPreRuntime;
+
+  // FIXME: duplicated code
+  const rawBabeDigest = api.createType('RawBabePreDigest', preRuntime[1]);
+
+  const babeDigest = rawBabeDigest.toPrimitive() as unknown as any;
+
+  // the object is an enumeration, but all the variants have a slotNumber field
+  const slot = babeDigest[Object.getOwnPropertyNames(babeDigest)[0]].slotNumber;
+  return slot;
 }
 
 // finds the last block in the timestampToBlockNumber collection that is between
@@ -371,11 +426,12 @@ async function getSubmittedData(
   network: string
 ): Promise<{ blockNumber: number; extensionDatums: CdeGenericDatum[] }[]> {
   const data = [] as { blockNumber: number; extensionDatums: CdeGenericDatum[] }[];
-  for (let curr = from; from < to; curr++) {
+
+  for (let curr = from; curr < to; curr++) {
     const responseRaw = await fetch(`${lc}/v2/blocks/${curr}/data`);
 
     // TODO: handle better the status code ( not documented ).
-    if (responseRaw.status != 200) {
+    if (responseRaw.status !== 200) {
       continue;
     }
 
@@ -394,7 +450,7 @@ async function getSubmittedData(
           cdeName: 'availDefaultExtension',
           blockNumber: response.block_number,
           transactionHash: 'hash',
-          payload: d.data,
+          payload: { data: d.data },
           cdeDatumType: ChainDataExtensionDatumType.Generic,
           scheduledPrefix: 'avail',
           network: network,
@@ -429,4 +485,50 @@ export function composeChainData(
 
     return blockData;
   });
+}
+
+// TODO: duplicated code
+/*
+ * performs binary search to find the block corresponding to a specific timestamp
+ * Note: if there are multiple blocks with the same timestamp
+ * @returns the index of the first block that occurs > targetTimestamp
+ */
+async function findBlockByTimestamp(
+  api: ApiPromise,
+  targetTimestamp: number,
+  chainName: string
+): Promise<number> {
+  let low = 1;
+  // TODO: check this
+  // blocks are 0-indexed, so we add +1 to get the size
+  let highHash = await api.rpc.chain.getFinalizedHead();
+
+  let high = (await api.rpc.chain.getHeader(highHash)).number.toNumber() + 1;
+
+  let requests = 0;
+
+  while (low < high) {
+    const mid = Math.floor((low + high) / 2);
+
+    const hash = await api.rpc.chain.getBlockHash(mid);
+    const header = await api.rpc.chain.getHeader(hash);
+
+    const slot = getSlotFromHeader(header, api);
+
+    requests++;
+
+    // recall: there may be many blocks with the same targetTimestamp
+    // in this case, <= means we slowly increase `low` to return the most recent block with that timestamp
+    if (Number(slot * 20) <= targetTimestamp) {
+      low = mid + 1;
+    } else {
+      high = mid;
+    }
+  }
+
+  doLog(
+    `avail funnel: Found block #${low} on ${chainName} by binary search with ${requests} requests`
+  );
+
+  return low;
 }

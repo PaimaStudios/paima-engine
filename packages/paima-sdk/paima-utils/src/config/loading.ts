@@ -105,6 +105,7 @@ export const AvailConfigSchema = Type.Object({
   delay: Type.Number(),
   confirmationDepth: Type.Optional(Type.Number()),
   funnelBlockGroupSize: Type.Number({ default: 100 }),
+  presyncStepSize: Type.Number({ default: 1000 }),
 });
 
 export type AvailConfig = Static<typeof AvailConfigSchema>;
@@ -189,6 +190,7 @@ const availConfigDefaults = {
   funnelBlockGroupSize: 100,
   confirmationDepth: 10,
   delay: 10 * 20,
+  presyncStepSize: 1000,
 };
 
 // used as a placeholder name for the ENV fallback mechanism
