@@ -18,6 +18,7 @@ import { FUNNEL_PRESYNC_FINISHED } from '@paima/utils';
 import type { ApiPromise } from 'avail-js-sdk';
 import { createApi } from './createApi.js';
 import { Header } from '@polkadot/types/interfaces/types.js';
+import { getLatestProcessedCdeBlockheight } from '@paima/db';
 
 function applyDelay(config: AvailConfig, baseTimestamp: number): number {
   return Math.max(baseTimestamp - (config.delay ?? 0), 0);
@@ -56,11 +57,6 @@ export class AvailFunnel extends BaseFunnel implements ChainFunnel {
     const latestBlockQueryState = this.latestBlock();
     const latestHeaderTimestamp = latestBlockQueryState.slot * 20;
 
-    if (!cachedState.latestBlock) {
-      // TODO
-      cachedState.latestBlock = { number: 1, hash: '', slot: 1 };
-    }
-
     const chainData: ChainData[] = [];
 
     // filter the data so that we are sure we can get all the blocks in the range
@@ -76,6 +72,38 @@ export class AvailFunnel extends BaseFunnel implements ChainFunnel {
 
     if (chainData.length === 0) {
       return chainData;
+    }
+
+    if (!cachedState.lastBlock) {
+      const queryResults = await getLatestProcessedCdeBlockheight.run(
+        { network: this.chainName },
+        this.dbTx
+      );
+
+      if (queryResults[0]) {
+        // If we are in `readData`, we know that the presync stage finished.
+        // This means `readPresyncData` was actually called with the entire
+        // range up to startBlockHeight - 1 (inclusive), since that's the stop
+        // condition for the presync. So there is no point in starting from
+        // earlier than that, since we know there are no events there.
+        cachedState.lastBlock = Math.max(
+          queryResults[0].block_height,
+          cachedState.startingBlockHeight - 1
+        );
+      } else {
+        // The earliest parallel block we might have to sync
+        // is one whose timestamp occurs after the timestamp of (current block - 1)
+        const block = await this.sharedData.web3.eth.getBlock(chainData[0].blockNumber - 1);
+        const ts = Number(block.timestamp);
+        const earliestParallelChainBlock = await findBlockByTimestamp(
+          cachedState.api,
+          applyDelay(this.config, ts),
+          this.chainName
+        );
+        // earliestParallelChainBlock is the earliest block that we might need to include
+        // so earliestParallelChainBlock-1 is the first block we can ignore (the "lastBlock" we're done syncing)
+        cachedState.lastBlock = earliestParallelChainBlock - 1;
+      }
     }
 
     // fetch headers from avail
@@ -427,7 +455,7 @@ async function getSubmittedData(
 ): Promise<{ blockNumber: number; extensionDatums: CdeGenericDatum[] }[]> {
   const data = [] as { blockNumber: number; extensionDatums: CdeGenericDatum[] }[];
 
-  for (let curr = from; curr < to; curr++) {
+  for (let curr = from; curr <= to; curr++) {
     const responseRaw = await fetch(`${lc}/v2/blocks/${curr}/data`);
 
     // TODO: handle better the status code ( not documented ).
