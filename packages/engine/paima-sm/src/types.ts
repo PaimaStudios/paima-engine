@@ -69,7 +69,18 @@ export interface MinaPresyncChainData {
   extensionDatums: ChainDataExtensionDatum[];
 }
 
-export type PresyncChainData = EvmPresyncChainData | CardanoPresyncChainData | MinaPresyncChainData;
+export interface AvailPresyncChainData {
+  network: string;
+  networkType: ConfigNetworkType.AVAIL;
+  blockNumber: number;
+  extensionDatums: ChainDataExtensionDatum[];
+}
+
+export type PresyncChainData =
+  | EvmPresyncChainData
+  | CardanoPresyncChainData
+  | MinaPresyncChainData
+  | AvailPresyncChainData;
 
 interface CdeDatumErc20TransferPayload {
   from: string;
