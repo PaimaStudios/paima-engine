@@ -5,6 +5,7 @@ import {
   delay,
   ChainDataExtensionDatumType,
   ConfigNetworkType,
+  InternalEventType,
 } from '@paima/utils';
 import type { ChainFunnel, ReadPresyncDataFrom } from '@paima/runtime';
 import type { CdeGenericDatum } from '@paima/sm';
@@ -165,6 +166,8 @@ export class AvailFunnel extends BaseFunnel implements ChainFunnel {
     cachedState.lastMaxSlot = maxSlot;
 
     const availToMainchainBlockHeightMapping: { [blockNumber: number]: number } = {};
+    // Mapping of mainchain to sidechain block heights
+    const mainchainToAvailBlockHeightMapping: { [blockNumber: number]: number } = {};
 
     let currIndex = 0;
 
@@ -172,6 +175,8 @@ export class AvailFunnel extends BaseFunnel implements ChainFunnel {
       while (currIndex < chainData.length) {
         if (applyDelay(this.config, chainData[currIndex].timestamp) >= availBlock[0]) {
           availToMainchainBlockHeightMapping[availBlock[1]] = chainData[currIndex].blockNumber;
+
+          mainchainToAvailBlockHeightMapping[chainData[currIndex].blockNumber] = availBlock[1];
           break;
         } else {
           currIndex++;
@@ -208,9 +213,48 @@ export class AvailFunnel extends BaseFunnel implements ChainFunnel {
 
     for (const data of availData) {
       data.blockNumber = availToMainchainBlockHeightMapping[data.blockNumber];
+
+      for (const datum of data.extensionDatums) {
+        datum.blockNumber = availToMainchainBlockHeightMapping[data.blockNumber];
+      }
     }
 
     composeChainData(chainData, availData);
+
+    // This adds the internal event that updates the last block point. This is
+    // mostly to avoid having to do a binary search each time we boot the
+    // engine. Since we need to know from where to start searching for blocks in
+    // the timestamp range.
+    for (const data of chainData) {
+      const originalBlockNumber = mainchainToAvailBlockHeightMapping[data.blockNumber];
+      // it's technically possible for this to be null, because there may not be
+      // a block of the sidechain in between a particular pair of blocks or the
+      // original chain.
+      //
+      // in this case it could be more optimal to set the block number here to
+      // the one in the next block, but it shouldn't make much of a difference.
+      if (!originalBlockNumber) {
+        continue;
+      }
+
+      if (!data.internalEvents) {
+        data.internalEvents = [];
+      }
+      data.internalEvents.push({
+        type: InternalEventType.AvailLastBlock,
+        // this is the block number in the original chain, so that we can resume
+        // from that point later.
+        //
+        // there can be more than one block here, for example, if the main
+        // chain produces a block every 10 seconds, and the parallel chain
+        // generates a block every second, then there can be 10 blocks.
+        // The block here will be the last in the range. Losing the
+        // information doesn't matter because there is a transaction per main
+        // chain block, so the result would be the same.
+        block: originalBlockNumber,
+        network: this.chainName,
+      });
+    }
 
     return chainData;
   }

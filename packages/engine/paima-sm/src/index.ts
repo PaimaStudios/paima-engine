@@ -590,6 +590,7 @@ async function processInternalEvents(
       case InternalEventType.CardanoBestEpoch:
         await updateCardanoEpoch.run({ epoch: event.epoch }, dbTx);
         break;
+      case InternalEventType.AvailLastBlock:
       case InternalEventType.EvmLastBlock:
         await markCdeBlockheightProcessed.run(
           {
