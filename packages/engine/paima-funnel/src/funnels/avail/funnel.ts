@@ -249,54 +249,56 @@ export class AvailFunnel extends BaseFunnel implements ChainFunnel {
   public override async readPresyncData(
     args: ReadPresyncDataFrom
   ): Promise<{ [network: string]: PresyncChainData[] | typeof FUNNEL_PRESYNC_FINISHED }> {
-    const baseData = await this.baseFunnel.readPresyncData(args);
+    const baseDataPromise = this.baseFunnel.readPresyncData(args);
 
     let arg = args.find(arg => arg.network == this.chainName);
 
+    const startingBlockHeight = this.getState().startingBlockHeight;
+    const chainName = this.chainName;
+    const lightClient = this.config.lightClient;
+
     if (!arg) {
-      return baseData;
+      return await baseDataPromise;
     }
 
-    // TODO: a bit hacky, but there are no extensions for now, so the initial
-    // point doesn't work
     let fromBlock = arg.from;
     let toBlock = arg.to;
 
-    const startBlockHeight = this.getState().startingBlockHeight;
-
-    if (fromBlock >= startBlockHeight) {
-      return { ...baseData, [this.chainName]: FUNNEL_PRESYNC_FINISHED };
+    if (fromBlock >= startingBlockHeight) {
+      return { ...(await baseDataPromise), [chainName]: FUNNEL_PRESYNC_FINISHED };
     }
 
-    try {
-      toBlock = Math.min(toBlock, startBlockHeight - 1);
-      fromBlock = Math.max(fromBlock, 0);
-      if (fromBlock > toBlock) {
-        return baseData;
-      }
+    const [baseData, data] = await Promise.all([
+      baseDataPromise,
+      (async function (): Promise<{ blockNumber: number; extensionDatums: CdeGenericDatum[] }[]> {
+        try {
+          toBlock = Math.min(toBlock, startingBlockHeight - 1);
+          fromBlock = Math.max(fromBlock, 0);
+          if (fromBlock > toBlock) {
+            return [];
+          }
 
-      doLog(`Avail funnel presync ${this.chainName}: #${fromBlock}-${toBlock}`);
+          doLog(`Avail funnel presync ${chainName}: #${fromBlock}-${toBlock}`);
 
-      const data = await getSubmittedData(
-        this.config.lightClient,
-        fromBlock,
-        toBlock,
-        this.chainName
-      );
+          const data = await getSubmittedData(lightClient, fromBlock, toBlock, chainName);
 
-      return {
-        ...baseData,
-        [this.chainName]: data.map(d => ({
-          extensionDatums: d.extensionDatums,
-          networkType: ConfigNetworkType.AVAIL,
-          network: this.chainName,
-          blockNumber: d.blockNumber,
-        })),
-      };
-    } catch (err) {
-      doLog(`[paima-funnel::readPresyncData] Exception occurred while reading blocks: ${err}`);
-      throw err;
-    }
+          return data;
+        } catch (err) {
+          doLog(`[paima-funnel::readPresyncData] Exception occurred while reading blocks: ${err}`);
+          throw err;
+        }
+      })(),
+    ]);
+
+    return {
+      ...baseData,
+      [this.chainName]: data.map(d => ({
+        extensionDatums: d.extensionDatums,
+        networkType: ConfigNetworkType.AVAIL,
+        network: this.chainName,
+        blockNumber: d.blockNumber,
+      })),
+    };
   }
 
   public static async recoverState(
