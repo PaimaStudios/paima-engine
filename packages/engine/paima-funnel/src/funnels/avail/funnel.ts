@@ -91,19 +91,6 @@ export class AvailFunnel extends BaseFunnel implements ChainFunnel {
           queryResults[0].block_height,
           cachedState.startingBlockHeight - 1
         );
-      } else {
-        // The earliest parallel block we might have to sync
-        // is one whose timestamp occurs after the timestamp of (current block - 1)
-        const block = await this.sharedData.web3.eth.getBlock(chainData[0].blockNumber - 1);
-        const ts = Number(block.timestamp);
-        const earliestParallelChainBlock = await findBlockByTimestamp(
-          cachedState.api,
-          applyDelay(this.config, ts),
-          this.chainName
-        );
-        // earliestParallelChainBlock is the earliest block that we might need to include
-        // so earliestParallelChainBlock-1 is the first block we can ignore (the "lastBlock" we're done syncing)
-        cachedState.lastBlock = earliestParallelChainBlock - 1;
       }
     }
 
