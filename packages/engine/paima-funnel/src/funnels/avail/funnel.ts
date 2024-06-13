@@ -18,7 +18,7 @@ import type { PoolClient } from 'pg';
 import { FUNNEL_PRESYNC_FINISHED } from '@paima/utils';
 import type { ApiPromise } from 'avail-js-sdk';
 import { createApi } from './createApi.js';
-import { Header } from '@polkadot/types/interfaces/types.js';
+import type { Header } from '@polkadot/types/interfaces/types.js';
 import { getLatestProcessedCdeBlockheight } from '@paima/db';
 
 function applyDelay(config: AvailConfig, baseTimestamp: number): number {
@@ -98,6 +98,7 @@ export class AvailFunnel extends BaseFunnel implements ChainFunnel {
     const maxSlot = applyDelay(this.config, chainData[chainData.length - 1].timestamp) / 20;
 
     const headers = [];
+    const availSubmittedData = [];
 
     while (true) {
       const latestBlock = this.latestBlock();
@@ -108,11 +109,33 @@ export class AvailFunnel extends BaseFunnel implements ChainFunnel {
 
       doLog(`Avail funnel #${cachedState.lastBlock + 1}-${to}`);
 
-      const availHeaders = await getMultipleHeaderData(
-        cachedState.api,
-        cachedState.lastBlock + 1,
-        to
+      availSubmittedData.push(
+        ...(await getSubmittedData(
+          this.config.lightClient,
+          cachedState.lastBlock + 1,
+          to,
+          this.chainName
+        ))
       );
+
+      let availHeaders;
+
+      if (availSubmittedData.length > 0) {
+        const numbers = availSubmittedData.map(d => d.blockNumber);
+
+        // we only need at least one to have some idea of where we are in time.
+        // otherwise if there is no data submitted for the app we would never
+        // exit this loop.
+        if (numbers[numbers.length - 1] !== to) {
+          numbers.push(to);
+        }
+
+        // get only headers for block that have data
+        availHeaders = await getMultipleHeaderData(cachedState.api, numbers);
+      } else {
+        // unless the range is empty
+        availHeaders = await getMultipleHeaderData(cachedState.api, [to]);
+      }
 
       headers.push(...availHeaders);
 
@@ -133,18 +156,25 @@ export class AvailFunnel extends BaseFunnel implements ChainFunnel {
       }
     }
 
-    for (const availHeader of headers) {
-      cachedState.timestampToBlockNumber.push([availHeader.slot * 20, availHeader.number]);
+    for (const availBlock of availSubmittedData) {
+      const availHeader = headers.find(h => h.number === availBlock.blockNumber);
+
+      if (!availHeader) {
+        throw new Error("Couldn't get header for block with app data");
+      }
+
+      cachedState.timestampToBlock.push([availHeader.slot * 20, availBlock]);
       cachedState.latestBlock = availHeader;
     }
 
     while (true) {
-      if (cachedState.timestampToBlockNumber.length === 0) {
+      if (cachedState.timestampToBlock.length === 0) {
         return chainData;
       }
 
-      if (cachedState.timestampToBlockNumber[0][0] <= cachedState.lastMaxSlot * 20) {
-        cachedState.timestampToBlockNumber.shift();
+      // delete old entries
+      if (cachedState.timestampToBlock[0][0] <= cachedState.lastMaxSlot * 20) {
+        cachedState.timestampToBlock.shift();
       } else {
         break;
       }
@@ -158,12 +188,14 @@ export class AvailFunnel extends BaseFunnel implements ChainFunnel {
 
     let currIndex = 0;
 
-    for (const availBlock of cachedState.timestampToBlockNumber) {
+    for (const availBlock of cachedState.timestampToBlock) {
       while (currIndex < chainData.length) {
         if (applyDelay(this.config, chainData[currIndex].timestamp) >= availBlock[0]) {
-          availToMainchainBlockHeightMapping[availBlock[1]] = chainData[currIndex].blockNumber;
+          availToMainchainBlockHeightMapping[availBlock[1].blockNumber] =
+            chainData[currIndex].blockNumber;
 
-          mainchainToAvailBlockHeightMapping[chainData[currIndex].blockNumber] = availBlock[1];
+          mainchainToAvailBlockHeightMapping[chainData[currIndex].blockNumber] =
+            availBlock[1].blockNumber;
           break;
         } else {
           currIndex++;
@@ -171,38 +203,31 @@ export class AvailFunnel extends BaseFunnel implements ChainFunnel {
       }
     }
 
-    if (!cachedState.timestampToBlockNumber[0]) {
+    if (!cachedState.timestampToBlock[0]) {
       return chainData;
     }
 
-    if (cachedState.timestampToBlockNumber[0][0] > maxSlot * 20) {
+    if (cachedState.timestampToBlock[0][0] > maxSlot * 20) {
       return chainData;
     }
 
-    const fromBlock = cachedState.timestampToBlockNumber[0][1];
-
-    let toBlock =
-      getUpperBoundBlock(cachedState.timestampToBlockNumber, maxSlot * 20) ||
-      // this works because we know that there is at least a block in the time
-      // range, because of the previous if/early return.
-      fromBlock;
-
-    if (!toBlock || fromBlock < 0 || toBlock < fromBlock) {
-      return chainData;
-    }
-
-    const availData = await getSubmittedData(
-      this.config.lightClient,
-      fromBlock,
-      toBlock,
-      this.chainName
+    let toBlock = getUpperBoundBlock(
+      cachedState.timestampToBlock.map(d => [d[0], d[1].blockNumber]),
+      maxSlot * 20
     );
+
+    if (!toBlock) {
+      return chainData;
+    }
+
+    // TODO: remove from the cache instead (but it's not cached yet)
+    const availData = availSubmittedData.filter(d => d.blockNumber <= toBlock);
 
     for (const data of availData) {
       data.blockNumber = availToMainchainBlockHeightMapping[data.blockNumber];
 
       for (const datum of data.extensionDatums) {
-        datum.blockNumber = availToMainchainBlockHeightMapping[data.blockNumber];
+        datum.blockNumber = availToMainchainBlockHeightMapping[datum.blockNumber];
       }
     }
 
@@ -212,36 +237,12 @@ export class AvailFunnel extends BaseFunnel implements ChainFunnel {
     // mostly to avoid having to do a binary search each time we boot the
     // engine. Since we need to know from where to start searching for blocks in
     // the timestamp range.
-    for (const data of chainData) {
-      const originalBlockNumber = mainchainToAvailBlockHeightMapping[data.blockNumber];
-      // it's technically possible for this to be null, because there may not be
-      // a block of the sidechain in between a particular pair of blocks or the
-      // original chain.
-      //
-      // in this case it could be more optimal to set the block number here to
-      // the one in the next block, but it shouldn't make much of a difference.
-      if (!originalBlockNumber) {
-        continue;
-      }
-
-      if (!data.internalEvents) {
-        data.internalEvents = [];
-      }
-      data.internalEvents.push({
-        type: InternalEventType.AvailLastBlock,
-        // this is the block number in the original chain, so that we can resume
-        // from that point later.
-        //
-        // there can be more than one block here, for example, if the main
-        // chain produces a block every 10 seconds, and the parallel chain
-        // generates a block every second, then there can be 10 blocks.
-        // The block here will be the last in the range. Losing the
-        // information doesn't matter because there is a transaction per main
-        // chain block, so the result would be the same.
-        block: originalBlockNumber,
-        network: this.chainName,
-      });
-    }
+    addInternalCheckpointingEvent(
+      chainData,
+      n => mainchainToAvailBlockHeightMapping[n],
+      this.chainName,
+      InternalEventType.AvailLastBlock
+    );
 
     return chainData;
   }
@@ -420,12 +421,11 @@ type HeaderData = { number: number; hash: string; slot: number };
 
 async function getMultipleHeaderData(
   api: ApiPromise,
-  from: number,
-  to: number
+  blockNumbers: number[]
 ): Promise<HeaderData[]> {
   const results = [] as HeaderData[];
 
-  for (let bn = from; bn < to; bn++) {
+  for (const bn of blockNumbers) {
     // NOTE: the light client allows getting header directly from block number,
     // but it doesn't provide the babe data for the slot
 
@@ -592,4 +592,43 @@ async function findBlockByTimestamp(
   );
 
   return low;
+}
+
+function addInternalCheckpointingEvent(
+  chainData: ChainData[],
+  mapBlockNumber: (mainchainNumber: number) => number,
+  chainName: string,
+  eventType: InternalEventType.AvailLastBlock | InternalEventType.EvmLastBlock
+): void {
+  for (const data of chainData) {
+    // const originalBlockNumber = mainchainToAvailBlockHeightMapping[data.blockNumber];
+    const originalBlockNumber = mapBlockNumber(data.blockNumber);
+    // it's technically possible for this to be null, because there may not be
+    // a block of the sidechain in between a particular pair of blocks or the
+    // original chain.
+    //
+    // in this case it could be more optimal to set the block number here to
+    // the one in the next block, but it shouldn't make much of a difference.
+    if (!originalBlockNumber) {
+      continue;
+    }
+
+    if (!data.internalEvents) {
+      data.internalEvents = [];
+    }
+    data.internalEvents.push({
+      type: eventType,
+      // this is the block number in the original chain, so that we can resume
+      // from that point later.
+      //
+      // there can be more than one block here, for example, if the main
+      // chain produces a block every 10 seconds, and the parallel chain
+      // generates a block every second, then there can be 10 blocks.
+      // The block here will be the last in the range. Losing the
+      // information doesn't matter because there is a transaction per main
+      // chain block, so the result would be the same.
+      block: originalBlockNumber,
+      network: chainName,
+    });
+  }
 }
