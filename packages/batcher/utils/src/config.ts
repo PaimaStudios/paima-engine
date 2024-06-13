@@ -60,9 +60,14 @@ export class ENV {
   }
 
   // Security
+  static get ENABLE_RECAPTCHA_V3(): boolean {
+    return ENV.isTrue(process.env.ENABLE_RECAPTCHA_V3);
+  }
+
   static get RECAPTCHA_V3_BACKEND(): string {
     return process.env.RECAPTCHA_V3_BACKEND || '';
   }
+
   static get RECAPTCHA_V3_SCORE(): number {
     return parseFloat(process.env.RECAPTCHA_V3_SCORE || '0.5');
   }
@@ -106,7 +111,7 @@ export class ENV {
   }
 
   static get DEFAULT_VALIDATION_ACTIVE(): boolean {
-    return process.env.DEFAULT_VALIDATION_ACTIVE === 'true';
+    return ENV.isTrue(process.env.DEFAULT_VALIDATION_ACTIVE);
   }
 
   static get GAME_INPUT_VALIDATION_TYPE(): GameInputValidatorCoreType {
@@ -115,11 +120,15 @@ export class ENV {
 
   // Self-signing:
   static get SELF_SIGNING_ENABLED(): boolean {
-    return process.env.SELF_SIGNING_ENABLED === 'true';
+    return ENV.isTrue(process.env.SELF_SIGNING_ENABLED);
   }
 
   static get SELF_SIGNING_API_KEY(): string {
     return process.env.SELF_SIGNING_API_KEY || '';
+  }
+
+  private static isTrue(value: string | undefined): boolean {
+    return ['true', '1', 'yes'].includes((value ?? '').toLowerCase());
   }
 }
 

@@ -37,7 +37,11 @@ export async function reCaptchaValidation(captcha: string): Promise<void> {
     throw new RecaptchaError('Recaptcha validation failed');
   }
 
-  if (recaptchaResponse.data.score < ENV.RECAPTCHA_V3_SCORE) {
-    throw new RecaptchaError('Recaptcha validation failed');
+  if (ENV.ENABLE_RECAPTCHA_V3) {
+    if (recaptchaResponse.data.score < ENV.RECAPTCHA_V3_SCORE) {
+      throw new RecaptchaError('Recaptcha validation failed');
+    }
+  } else {
+    console.log('INFO: ENABLE_RECAPTCHA_V3 is disabled, but RECAPTCHA_V3_BACKEND is set.');
   }
 }
