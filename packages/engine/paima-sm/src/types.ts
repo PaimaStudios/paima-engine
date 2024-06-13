@@ -35,7 +35,11 @@ export interface ChainData {
   internalEvents?: InternalEvent[];
 }
 
-export type InternalEvent = CardanoEpochEvent | EvmLastBlockEvent | MinaLastTimestampEvent;
+export type InternalEvent =
+  | CardanoEpochEvent
+  | EvmLastBlockEvent
+  | MinaLastTimestampEvent
+  | AvailLastBlockEvent;
 export type CardanoEpochEvent = { type: InternalEventType.CardanoBestEpoch; epoch: number };
 export type EvmLastBlockEvent = {
   type: InternalEventType.EvmLastBlock;
@@ -45,6 +49,11 @@ export type EvmLastBlockEvent = {
 export type MinaLastTimestampEvent = {
   type: InternalEventType.MinaLastTimestamp;
   timestamp: string;
+  network: string;
+};
+export type AvailLastBlockEvent = {
+  type: InternalEventType.AvailLastBlock;
+  block: number;
   network: string;
 };
 

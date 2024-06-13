@@ -54,6 +54,7 @@ export const enum InternalEventType {
   CardanoBestEpoch,
   EvmLastBlock,
   MinaLastTimestamp,
+  AvailLastBlock,
 }
 
 export const DYNAMIC_PRIMITIVE_NAME_SEPARATOR = '##';
