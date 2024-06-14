@@ -56,7 +56,7 @@ export class AvailFunnel extends BaseFunnel implements ChainFunnel {
 
     await this.updateLatestBlock();
     const latestBlockQueryState = this.latestBlock();
-    const latestHeaderTimestamp = latestBlockQueryState.slot * 20;
+    const latestHeaderTimestamp = slotToTimestamp(latestBlockQueryState.slot, cachedState.api);
 
     const chainData: ChainData[] = [];
 
@@ -95,7 +95,10 @@ export class AvailFunnel extends BaseFunnel implements ChainFunnel {
     }
 
     // fetch headers from avail
-    const maxSlot = applyDelay(this.config, chainData[chainData.length - 1].timestamp) / 20;
+    const maxSlot = timestampToSlot(
+      applyDelay(this.config, chainData[chainData.length - 1].timestamp),
+      cachedState.api
+    );
 
     const headers = [];
     const availSubmittedData = [];
@@ -110,12 +113,7 @@ export class AvailFunnel extends BaseFunnel implements ChainFunnel {
       doLog(`Avail funnel #${cachedState.lastBlock + 1}-${to}`);
 
       availSubmittedData.push(
-        ...(await getSubmittedData(
-          this.config.lightClient,
-          cachedState.lastBlock + 1,
-          to,
-          this.chainName
-        ))
+        ...(await getDAData(this.config.lightClient, cachedState.lastBlock + 1, to, this.chainName))
       );
 
       let availHeaders;
@@ -207,20 +205,19 @@ export class AvailFunnel extends BaseFunnel implements ChainFunnel {
       return chainData;
     }
 
-    if (cachedState.timestampToBlock[0][0] > maxSlot * 20) {
+    if (cachedState.timestampToBlock[0][0] > slotToTimestamp(maxSlot, cachedState.api)) {
       return chainData;
     }
 
     let toBlock = getUpperBoundBlock(
       cachedState.timestampToBlock.map(d => [d[0], d[1].blockNumber]),
-      maxSlot * 20
+      slotToTimestamp(maxSlot, cachedState.api)
     );
 
     if (!toBlock) {
       return chainData;
     }
 
-    // TODO: remove from the cache instead (but it's not cached yet)
     const availData = availSubmittedData.filter(d => d.blockNumber <= toBlock);
 
     for (const data of availData) {
@@ -233,10 +230,6 @@ export class AvailFunnel extends BaseFunnel implements ChainFunnel {
 
     composeChainData(chainData, availData);
 
-    // This adds the internal event that updates the last block point. This is
-    // mostly to avoid having to do a binary search each time we boot the
-    // engine. Since we need to know from where to start searching for blocks in
-    // the timestamp range.
     addInternalCheckpointingEvent(
       chainData,
       n => mainchainToAvailBlockHeightMapping[n],
@@ -281,7 +274,7 @@ export class AvailFunnel extends BaseFunnel implements ChainFunnel {
 
           doLog(`Avail funnel presync ${chainName}: #${fromBlock}-${toBlock}`);
 
-          const data = await getSubmittedData(lightClient, fromBlock, toBlock, chainName);
+          const data = await getDAData(lightClient, fromBlock, toBlock, chainName);
 
           return data;
         } catch (err) {
@@ -328,7 +321,8 @@ export class AvailFunnel extends BaseFunnel implements ChainFunnel {
       const mappedStartingBlockHeight = await findBlockByTimestamp(
         api,
         applyDelay(config, Number(startingBlock.timestamp)),
-        chainName
+        chainName,
+        async (blockNumber: number) => await getTimestampForBlockAt(api, blockNumber)
       );
 
       availFunnelCacheEntry.initialize(api, mappedStartingBlockHeight);
@@ -428,8 +422,6 @@ async function getMultipleHeaderData(
   for (const bn of blockNumbers) {
     // NOTE: the light client allows getting header directly from block number,
     // but it doesn't provide the babe data for the slot
-
-    // TODO: probably this can be batched?
     const hash = await api.rpc.chain.getBlockHash(bn);
     const header = await api.rpc.chain.getHeader(hash);
 
@@ -448,7 +440,6 @@ async function getMultipleHeaderData(
 function getSlotFromHeader(header: Header, api: ApiPromise): number {
   const preRuntime = header.digest.logs.find(log => log.isPreRuntime)!.asPreRuntime;
 
-  // FIXME: duplicated code
   const rawBabeDigest = api.createType('RawBabePreDigest', preRuntime[1]);
 
   const babeDigest = rawBabeDigest.toPrimitive() as unknown as any;
@@ -480,7 +471,7 @@ function getUpperBoundBlock(
   return toBlock;
 }
 
-async function getSubmittedData(
+async function getDAData(
   lc: string,
   from: number,
   to: number,
@@ -523,6 +514,7 @@ async function getSubmittedData(
   return data;
 }
 
+// TODO: duplicated? it's not exactly the same though
 export function composeChainData(
   baseChainData: ChainData[],
   cdeData: { blockNumber: number; extensionDatums: CdeGenericDatum[] }[]
@@ -557,30 +549,26 @@ export function composeChainData(
 async function findBlockByTimestamp(
   api: ApiPromise,
   targetTimestamp: number,
-  chainName: string
+  chainName: string,
+  getTimestampForBlock: (at: number) => Promise<number>
 ): Promise<number> {
+  // the genesis doesn't have a slot to extract a timestamp from
   let low = 1;
-  // TODO: check this
-  // blocks are 0-indexed, so we add +1 to get the size
-  let highHash = await api.rpc.chain.getFinalizedHead();
 
-  let high = (await api.rpc.chain.getHeader(highHash)).number.toNumber() + 1;
+  let high = await getLatestBlockNumber(api);
 
   let requests = 0;
 
   while (low < high) {
     const mid = Math.floor((low + high) / 2);
 
-    const hash = await api.rpc.chain.getBlockHash(mid);
-    const header = await api.rpc.chain.getHeader(hash);
-
-    const slot = getSlotFromHeader(header, api);
+    const ts = await getTimestampForBlock(mid);
 
     requests++;
 
     // recall: there may be many blocks with the same targetTimestamp
     // in this case, <= means we slowly increase `low` to return the most recent block with that timestamp
-    if (Number(slot * 20) <= targetTimestamp) {
+    if (ts <= targetTimestamp) {
       low = mid + 1;
     } else {
       high = mid;
@@ -594,14 +582,51 @@ async function findBlockByTimestamp(
   return low;
 }
 
+async function getLatestBlockNumber(api: ApiPromise): Promise<number> {
+  let highHash = await api.rpc.chain.getFinalizedHead();
+  let high = (await api.rpc.chain.getHeader(highHash)).number.toNumber();
+  return high;
+}
+
+async function getTimestampForBlockAt(api: ApiPromise, mid: number): Promise<number> {
+  const hash = await api.rpc.chain.getBlockHash(mid);
+  const header = await api.rpc.chain.getHeader(hash);
+
+  const slot = getSlotFromHeader(header, api);
+  return slotToTimestamp(slot, api);
+}
+
+function slotToTimestamp(slot: number, api: ApiPromise): number {
+  // this is how it's computed by the pallet
+  // https://paritytech.github.io/polkadot-sdk/master/src/pallet_babe/lib.rs.html#533
+  const slotDuration = (Number.parseInt(api.consts.timestamp.minimumPeriod.toString()) * 2) / 1000;
+
+  // slots start at unix epoch:
+  // https://paritytech.github.io/polkadot-sdk/master/src/pallet_babe/lib.rs.html#902
+  return slot * slotDuration;
+}
+
+// inverse to `slotToTimestamp`
+function timestampToSlot(timestamp: number, api: ApiPromise): number {
+  const slotDuration = (Number.parseInt(api.consts.timestamp.minimumPeriod.toString()) * 2) / 1000;
+
+  // slots start at the unix epoch regardless of the genesis timestamp
+  return timestamp / slotDuration;
+}
+
+// This adds the internal event that updates the last block point. This is
+// mostly to avoid having to do a binary search each time we boot the
+// engine. Since we need to know from where to start searching for blocks in
+// the timestamp range.
 function addInternalCheckpointingEvent(
   chainData: ChainData[],
   mapBlockNumber: (mainchainNumber: number) => number,
   chainName: string,
-  eventType: InternalEventType.AvailLastBlock | InternalEventType.EvmLastBlock
+  // FIXME: not really clear why this ignore is needed
+  // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
+  eventType: InternalEventType.EvmLastBlock | InternalEventType.AvailLastBlock
 ): void {
   for (const data of chainData) {
-    // const originalBlockNumber = mainchainToAvailBlockHeightMapping[data.blockNumber];
     const originalBlockNumber = mapBlockNumber(data.blockNumber);
     // it's technically possible for this to be null, because there may not be
     // a block of the sidechain in between a particular pair of blocks or the
