@@ -1,5 +1,5 @@
 import type { ChainData, ChainDataExtensionDatum, EvmPresyncChainData } from '@paima/sm';
-import { ConfigNetworkType } from '@paima/utils';
+import { ConfigNetworkType, doLog } from '@paima/utils';
 
 export function groupCdeData(
   network: string,
@@ -59,4 +59,39 @@ export function composeChainData(
 
     return blockData;
   });
+}
+
+/*
+ * performs binary search to find the block corresponding to a specific timestamp
+ * Note: if there are multiple blocks with the same timestamp
+ * @returns the index of the first block that occurs > targetTimestamp
+ */
+export async function findBlockByTimestamp(
+  low: number,
+  high: number,
+  targetTimestamp: number,
+  chainName: string,
+  getTimestampForBlock: (at: number) => Promise<number>
+): Promise<number> {
+  let requests = 0;
+
+  while (low < high) {
+    const mid = Math.floor((low + high) / 2);
+
+    const ts = await getTimestampForBlock(mid);
+
+    requests++;
+
+    // recall: there may be many blocks with the same targetTimestamp
+    // in this case, <= means we slowly increase `low` to return the most recent block with that timestamp
+    if (ts <= targetTimestamp) {
+      low = mid + 1;
+    } else {
+      high = mid;
+    }
+  }
+
+  doLog(`Found block #${low} on ${chainName} by binary search with ${requests} requests`);
+
+  return low;
 }
