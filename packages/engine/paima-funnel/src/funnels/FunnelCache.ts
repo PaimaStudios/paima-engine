@@ -275,6 +275,33 @@ export class AvailFunnelCacheEntry implements FunnelCacheEntry {
     }
   }
 
+  public cacheBlocks(
+    blocks: {
+      number: number;
+      timestamp: number;
+      extensionDatums: ChainDataExtensionDatum[];
+      hash: string;
+      slot: number;
+    }[]
+  ): void {
+    if (!this.state) {
+      throw new Error('[avail-funnel] Uninitialized cache entry');
+    }
+
+    for (const block of blocks) {
+      this.state.timestampToBlock.push([
+        block.timestamp,
+        { blockNumber: block.number, extensionDatums: block.extensionDatums },
+      ]);
+
+      this.state.latestBlock = {
+        hash: block.hash,
+        number: block.number,
+        slot: block.slot,
+      };
+    }
+  }
+
   public getState(): Readonly<AvailFunnelCacheEntryState> {
     if (!this.state) {
       throw new Error('[avail-funnel] Uninitialized cache entry');

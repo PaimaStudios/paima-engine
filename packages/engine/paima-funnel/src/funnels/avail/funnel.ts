@@ -30,6 +30,7 @@ import {
   addInternalCheckpointingEvent,
   buildParallelBlockMappings,
   findBlockByTimestamp,
+  getUpperBoundBlock,
 } from '../../utils.js';
 
 type BlockData = {
@@ -161,18 +162,7 @@ export class AvailFunnel extends BaseFunnel implements ChainFunnel {
       await this.waitForBlocksToBeProduced(latestBlock.number);
     }
 
-    for (const availBlock of parallelData) {
-      cachedState.timestampToBlock.push([
-        availBlock.timestamp,
-        { blockNumber: availBlock.number, extensionDatums: availBlock.extensionDatums },
-      ]);
-
-      cachedState.latestBlock = {
-        hash: availBlock.hash,
-        number: availBlock.number,
-        slot: availBlock.slot,
-      };
-    }
+    this.getCacheEntry().cacheBlocks(parallelData);
 
     removeOldEntriesFromPreviousRound(cachedState);
 
@@ -364,6 +354,12 @@ export class AvailFunnel extends BaseFunnel implements ChainFunnel {
     return delayedBlock;
   }
 
+  private getCacheEntry(): AvailFunnelCacheEntry {
+    const cacheEntry = this.sharedData.cacheManager.cacheEntries[AvailFunnelCacheEntry.SYMBOL];
+
+    return cacheEntry!;
+  }
+
   private getState(): AvailFunnelCacheEntryState {
     const bufferedState =
       this.sharedData.cacheManager.cacheEntries[AvailFunnelCacheEntry.SYMBOL]?.getState();
@@ -450,28 +446,6 @@ export async function wrapToAvailFunnel(
     logError(err);
     throw new Error('[paima-funnel] Unable to initialize avail events processor');
   }
-}
-
-// finds the last block in the timestampToBlockNumber collection that is between
-// the range: (-Infinity, maxTimestamp]
-// PRE: timestampToBlockNumber should be sorted by timestamp (first element of the tuple)
-function getUpperBoundBlock(
-  timestampToBlockNumber: [number, number][],
-  maxTimestamp: number
-): number | undefined {
-  let toBlock: number | undefined = undefined;
-
-  for (let i = timestampToBlockNumber.length - 1; i >= 0; i--) {
-    const [ts, toBlockInner] = timestampToBlockNumber[i];
-
-    if (maxTimestamp >= ts) {
-      toBlock = toBlockInner;
-      // we are going backwards, so we can stop
-      break;
-    }
-  }
-
-  return toBlock;
 }
 
 async function getDAData(

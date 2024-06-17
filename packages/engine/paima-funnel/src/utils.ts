@@ -1,5 +1,6 @@
 import type { ChainData, ChainDataExtensionDatum, EvmPresyncChainData } from '@paima/sm';
-import { ConfigNetworkType, InternalEventType, doLog } from '@paima/utils';
+import type { InternalEventType } from '@paima/utils';
+import { ConfigNetworkType, doLog } from '@paima/utils';
 
 export function groupCdeData(
   network: string,
@@ -175,4 +176,26 @@ export function addInternalCheckpointingEvent(
       network: chainName,
     });
   }
+}
+
+// finds the last block in the timestampToBlockNumber collection that is between
+// the range: (-Infinity, maxTimestamp]
+// PRE: timestampToBlockNumber should be sorted by timestamp (first element of the tuple)
+export function getUpperBoundBlock(
+  timestampToBlockNumber: [number, number][],
+  maxTimestamp: number
+): number | undefined {
+  let toBlock: number | undefined = undefined;
+
+  for (let i = timestampToBlockNumber.length - 1; i >= 0; i--) {
+    const [ts, toBlockInner] = timestampToBlockNumber[i];
+
+    if (maxTimestamp >= ts) {
+      toBlock = toBlockInner;
+      // we are going backwards, so we can stop
+      break;
+    }
+  }
+
+  return toBlock;
 }
