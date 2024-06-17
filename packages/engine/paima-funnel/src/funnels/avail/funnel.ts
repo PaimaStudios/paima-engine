@@ -16,11 +16,11 @@ import type { AvailFunnelCacheEntryState } from '../FunnelCache.js';
 import { AvailFunnelCacheEntry } from '../FunnelCache.js';
 import type { PoolClient } from 'pg';
 import { FUNNEL_PRESYNC_FINISHED } from '@paima/utils';
-import type { ApiPromise } from 'avail-js-sdk';
 import { createApi } from './createApi.js';
 import { getLatestProcessedCdeBlockheight } from '@paima/db';
 import {
   getLatestBlockNumber,
+  getMultipleHeaderData,
   getSlotFromHeader,
   getTimestampForBlockAt,
   slotToTimestamp,
@@ -446,32 +446,6 @@ export async function wrapToAvailFunnel(
     logError(err);
     throw new Error('[paima-funnel] Unable to initialize avail events processor');
   }
-}
-
-type HeaderData = { number: number; hash: string; slot: number };
-
-async function getMultipleHeaderData(
-  api: ApiPromise,
-  blockNumbers: number[]
-): Promise<HeaderData[]> {
-  const results = [] as HeaderData[];
-
-  for (const bn of blockNumbers) {
-    // NOTE: the light client allows getting header directly from block number,
-    // but it doesn't provide the babe data for the slot
-    const hash = await api.rpc.chain.getBlockHash(bn);
-    const header = await api.rpc.chain.getHeader(hash);
-
-    const slot = getSlotFromHeader(header, api);
-
-    results.push({
-      number: header.number.toNumber(),
-      hash: header.hash.toString(),
-      slot: slot,
-    });
-  }
-
-  return results;
 }
 
 // finds the last block in the timestampToBlockNumber collection that is between

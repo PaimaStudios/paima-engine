@@ -44,3 +44,29 @@ export function timestampToSlot(timestamp: number, api: ApiPromise): number {
   // slots start at the unix epoch regardless of the genesis timestamp
   return timestamp / slotDuration;
 }
+
+type HeaderData = { number: number; hash: string; slot: number };
+
+export async function getMultipleHeaderData(
+  api: ApiPromise,
+  blockNumbers: number[]
+): Promise<HeaderData[]> {
+  const results = [] as HeaderData[];
+
+  for (const bn of blockNumbers) {
+    // NOTE: the light client allows getting header directly from block number,
+    // but it doesn't provide the babe data for the slot
+    const hash = await api.rpc.chain.getBlockHash(bn);
+    const header = await api.rpc.chain.getHeader(hash);
+
+    const slot = getSlotFromHeader(header, api);
+
+    results.push({
+      number: header.number.toNumber(),
+      hash: header.hash.toString(),
+      slot: slot,
+    });
+  }
+
+  return results;
+}
