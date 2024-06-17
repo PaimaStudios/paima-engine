@@ -111,8 +111,17 @@ contract OrderbookDexHandler is CTest, ERC1155Holder {
         // Take note of the previous order id
         previousOrderId = dex.currentOrderId(address(asset));
 
+        uint256 orderCreationFee = dex.orderCreationFee();
+        vm.deal(currentActor, orderCreationFee);
+
         // Execute the sell order creation
-        return dex.createSellOrder(address(asset), assetId, assetAmount, price);
+        return
+            dex.createSellOrder{value: orderCreationFee}(
+                address(asset),
+                assetId,
+                assetAmount,
+                price
+            );
     }
 
     function createBatchSellOrder(
@@ -138,9 +147,12 @@ contract OrderbookDexHandler is CTest, ERC1155Holder {
         }
         asset.setApprovalForAll(address(dex), true);
 
+        uint256 orderCreationFee = dex.orderCreationFee();
+        vm.deal(currentActor, orderCreationFee * newAssetIds.length);
+
         // Execute the batch sell order creation
         return
-            dex.createBatchSellOrder(
+            dex.createBatchSellOrder{value: orderCreationFee * newAssetIds.length}(
                 address(asset),
                 newAssetIds,
                 newAssetAmounts,
@@ -367,10 +379,11 @@ contract OrderbookDexInvariantTest is CTest, ERC1155Holder {
     AssetHandler public assetHandler;
     uint256 makerFee = 40;
     uint256 takerFee = 60;
+    uint256 orderCreationFee = 10000 gwei;
 
     function setUp() public {
         asset = new InverseAppProjected1155("Gold", "GOLD", address(this));
-        dex = new OrderbookDex(address(this), makerFee, takerFee);
+        dex = new OrderbookDex(address(this), makerFee, takerFee, orderCreationFee);
         dexHandler = new OrderbookDexHandler(asset, dex);
         assetHandler = new AssetHandler(asset, dex);
         targetContract(address(assetHandler));

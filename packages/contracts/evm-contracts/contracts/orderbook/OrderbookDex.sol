@@ -30,6 +30,8 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, Ownable, ReentrancyGuard 
     uint256 public defaultMakerFee;
     /// @inheritdoc IOrderbookDex
     uint256 public defaultTakerFee;
+    /// @inheritdoc IOrderbookDex
+    uint256 public orderCreationFee;
 
     error FeeTooHigh();
     error OrderDoesNotExist(uint256 orderId);
@@ -42,10 +44,12 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, Ownable, ReentrancyGuard 
     constructor(
         address _owner,
         uint256 _defaultMakerFee,
-        uint256 _defaultTakerFee
+        uint256 _defaultTakerFee,
+        uint256 _orderCreationFee
     ) Ownable(_owner) {
         defaultMakerFee = _defaultMakerFee;
         defaultTakerFee = _defaultTakerFee;
+        orderCreationFee = _orderCreationFee;
     }
 
     /// @inheritdoc IOrderbookDex
@@ -70,6 +74,7 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, Ownable, ReentrancyGuard 
             revert FeeTooHigh();
         }
         assetFeeInfo[asset] = FeeInfo({makerFee: makerFee, takerFee: takerFee, set: true});
+        emit FeeInfoChanged(asset, makerFee, takerFee);
     }
 
     /// @inheritdoc IOrderbookDex
@@ -79,6 +84,13 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, Ownable, ReentrancyGuard 
         }
         defaultMakerFee = makerFee;
         defaultTakerFee = takerFee;
+        emit FeeInfoChanged(address(0), makerFee, takerFee);
+    }
+
+    /// @inheritdoc IOrderbookDex
+    function setOrderCreationFee(uint256 fee) public onlyOwner {
+        emit OrderCreationFeeChanged(orderCreationFee, fee);
+        orderCreationFee = fee;
     }
 
     /// @inheritdoc IOrderbookDex
@@ -92,7 +104,10 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, Ownable, ReentrancyGuard 
         uint256 assetId,
         uint256 assetAmount,
         uint256 pricePerAsset
-    ) external virtual nonReentrant returns (uint256) {
+    ) external payable virtual nonReentrant returns (uint256) {
+        if (msg.value < orderCreationFee) {
+            revert InsufficientPayment();
+        }
         return _createSellOrder(asset, assetId, assetAmount, pricePerAsset);
     }
 
@@ -102,9 +117,12 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, Ownable, ReentrancyGuard 
         uint256[] memory assetIds,
         uint256[] memory assetAmounts,
         uint256[] memory pricesPerAssets
-    ) external virtual nonReentrant returns (uint256[] memory) {
+    ) external payable virtual nonReentrant returns (uint256[] memory) {
         if (assetIds.length != assetAmounts.length || assetIds.length != pricesPerAssets.length) {
             revert InvalidArrayLength();
+        }
+        if (msg.value < orderCreationFee * assetIds.length) {
+            revert InsufficientPayment();
         }
         uint256[] memory orderIds = new uint256[](assetIds.length);
         for (uint256 i; i < assetIds.length; ) {

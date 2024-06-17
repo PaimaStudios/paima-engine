@@ -31,6 +31,11 @@ interface IOrderbookDex is IERC1155Receiver {
         uint256 takerFee;
     }
 
+    /// @param asset The asset's address (zero address if changing default fees).
+    /// @param makerFee The new maker fee in basis points.
+    /// @param takerFee The new taker fee in basis points.
+    event FeeInfoChanged(address indexed asset, uint256 makerFee, uint256 takerFee);
+
     /// @param asset The asset's address.
     /// @param assetId The asset's unique token identifier.
     /// @param orderId The order's asset-specific unique identifier.
@@ -76,6 +81,10 @@ interface IOrderbookDex is IERC1155Receiver {
     /// @param orderId The order's asset-specific unique identifier.
     event OrderCancelled(address indexed asset, uint256 indexed assetId, uint256 indexed orderId);
 
+    /// @param oldFee The old fee value.
+    /// @param newFee The new fee value.
+    event OrderCreationFeeChanged(uint256 oldFee, uint256 newFee);
+
     /// @param receiver The address that received the fees.
     /// @param amount The amount of fees that were withdrawn.
     event FeesWithdrawn(address indexed receiver, uint256 amount);
@@ -88,6 +97,9 @@ interface IOrderbookDex is IERC1155Receiver {
 
     /// @notice The default taker fee, used if fee information for asset is not set.
     function defaultTakerFee() external view returns (uint256);
+
+    /// @notice The flat fee paid by the seller when creating a sell order, to prevent spam.
+    function orderCreationFee() external view returns (uint256);
 
     /// @notice The maximum fee, maker/taker fees cannot be set to exceed this amount.
     function maxFee() external view returns (uint256);
@@ -110,30 +122,36 @@ interface IOrderbookDex is IERC1155Receiver {
     /// MUST revert if called by unauthorized account.
     function setDefaultFeeInfo(uint256 makerFee, uint256 takerFee) external;
 
+    /// @notice Set the flat fee paid by the seller when creating a sell order, to prevent spam. Executable only by the owner.
+    /// @dev MUST revert if called by unauthorized account.
+    function setOrderCreationFee(uint256 fee) external;
+
     /// @notice Returns the Order struct information about an order identified by the `orderId` for specific `asset`.
     function getOrder(address asset, uint256 orderId) external view returns (Order memory);
 
-    /// @notice Creates a sell order for the `assetAmount` of `asset` with ID `assetId` at `pricePerAsset`.
+    /// @notice Creates a sell order for the `assetAmount` of `asset` with ID `assetId` at `pricePerAsset`. Requires payment of `orderCreationFee`.
     /// @dev The order information is saved in a mapping `asset -> orderId -> Order`, with `orderId` being an asset-specific unique incremental identifier.
     /// MUST transfer the `assetAmount` of `asset` with ID `assetId` from the seller to the contract.
     /// MUST emit `OrderCreated` event.
+    /// MUST revert if `msg.value` is less than `orderCreationFee`.
     /// @return The asset-specific unique identifier of the created order.
     function createSellOrder(
         address asset,
         uint256 assetId,
         uint256 assetAmount,
         uint256 pricePerAsset
-    ) external returns (uint256);
+    ) external payable returns (uint256);
 
-    /// @notice Creates a batch of sell orders for the `assetAmount` of `asset` with ID `assetId` at `pricePerAsset`.
+    /// @notice Creates a batch of sell orders for the `assetAmount` of `asset` with ID `assetId` at `pricePerAsset`. Requires payment of `orderCreationFee` times the amount of orders.
     /// @dev This is a batched version of `createSellOrder` that simply iterates through the arrays to call said function.
+    /// MUST revert if `msg.value` is less than `orderCreationFee * assetIds.length`.
     /// @return The asset-specific unique identifiers of the created orders.
     function createBatchSellOrder(
         address asset,
         uint256[] memory assetIds,
         uint256[] memory assetAmounts,
         uint256[] memory pricesPerAssets
-    ) external returns (uint256[] memory);
+    ) external payable returns (uint256[] memory);
 
     /// @notice Consecutively fills an array of orders of `asset` identified by the asset-specific `orderId` of each order,
     /// by providing an exact amount of ETH and requesting a specific minimum amount of asset to receive.

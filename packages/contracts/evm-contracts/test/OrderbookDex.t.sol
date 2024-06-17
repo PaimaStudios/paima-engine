@@ -23,12 +23,13 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
     IInverseAppProjected1155 asset;
     uint256 makerFee = 40;
     uint256 takerFee = 60;
+    uint256 orderCreationFee = 10000 gwei;
     address alice = vm.addr(uint256(keccak256(abi.encodePacked("alice"))));
     address boris = vm.addr(uint256(keccak256(abi.encodePacked("boris"))));
 
     function setUp() public {
         asset = new InverseAppProjected1155("Gold", "GOLD", address(this));
-        dex = new OrderbookDex(address(this), makerFee, takerFee);
+        dex = new OrderbookDex(address(this), makerFee, takerFee, orderCreationFee);
         asset.setApprovalForAll(address(dex), true);
         vm.deal(alice, 1_000 ether);
         vm.deal(boris, 1_000 ether);
@@ -54,7 +55,12 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
             makerFee,
             takerFee
         );
-        dex.createSellOrder(address(asset), assetId, assetAmount, pricePerAsset);
+        dex.createSellOrder{value: orderCreationFee}(
+            address(asset),
+            assetId,
+            assetAmount,
+            pricePerAsset
+        );
 
         IOrderbookDex.Order memory order = dex.getOrder(address(asset), orderId);
         assertEq(order.assetId, assetId);
@@ -90,12 +96,9 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
             );
         }
 
-        uint256[] memory orderIds = dex.createBatchSellOrder(
-            address(asset),
-            assetIds,
-            assetAmounts,
-            pricesPerAssets
-        );
+        uint256[] memory orderIds = dex.createBatchSellOrder{
+            value: orderCreationFee * assetIds.length
+        }(address(asset), assetIds, assetAmounts, pricesPerAssets);
 
         for (uint256 i = 0; i < orderCount; ++i) {
             IOrderbookDex.Order memory order = dex.getOrder(address(asset), orderIds[i]);
@@ -120,14 +123,19 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
         uint256[] memory pricesPerAssets = new uint256[](length3);
 
         vm.expectRevert(OrderbookDex.InvalidArrayLength.selector);
-        dex.createBatchSellOrder(address(asset), assetIds, assetAmounts, pricesPerAssets);
+        dex.createBatchSellOrder{value: orderCreationFee * assetIds.length}(
+            address(asset),
+            assetIds,
+            assetAmounts,
+            pricesPerAssets
+        );
     }
 
     function testFuzz_createSellOrder_reverts_ifAssetAmountIsZero(uint256 pricePerAsset) public {
         uint256 assetId = asset.mint(0, "");
 
         vm.expectRevert(abi.encodeWithSelector(OrderbookDex.InvalidInput.selector, 0));
-        dex.createSellOrder(address(asset), assetId, 0, pricePerAsset);
+        dex.createSellOrder{value: orderCreationFee}(address(asset), assetId, 0, pricePerAsset);
     }
 
     function testFuzz_fillOrdersExactEth_transfersCorrectly(uint256 price) public {
@@ -141,6 +149,7 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
         address buyer = address(this);
         for (uint256 i = 0; i < ordersCount; i++) {
             address payable seller = payable(vm.addr(uint256(keccak256(abi.encodePacked(i)))));
+            vm.deal(seller, orderCreationFee);
             uint256 assetAmount = price / (ordersCount - i);
             uint256 pricePerAsset = price / assetAmount;
             orderIds[i] = dex.currentOrderId(address(asset));
@@ -148,7 +157,12 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
             vm.startPrank(seller);
             assetIds[i] = asset.mint(assetAmount, "");
             asset.setApprovalForAll(address(dex), true);
-            dex.createSellOrder(address(asset), assetIds[i], assetAmount, pricePerAsset);
+            dex.createSellOrder{value: orderCreationFee}(
+                address(asset),
+                assetIds[i],
+                assetAmount,
+                pricePerAsset
+            );
             totalAssetAmount += assetAmount;
         }
 
@@ -216,6 +230,7 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
         address buyer = address(this);
         for (uint256 i = 0; i < ordersCount; i++) {
             address payable seller = payable(vm.addr(uint256(keccak256(abi.encodePacked(i)))));
+            vm.deal(seller, orderCreationFee);
             uint256 assetAmount = price / (ordersCount - i);
             uint256 pricePerAsset = price / assetAmount;
             orderIds[i] = dex.currentOrderId(address(asset));
@@ -223,7 +238,12 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
             vm.startPrank(seller);
             assetIds[i] = asset.mint(assetAmount, "");
             asset.setApprovalForAll(address(dex), true);
-            dex.createSellOrder(address(asset), assetIds[i], assetAmount, pricePerAsset);
+            dex.createSellOrder{value: orderCreationFee}(
+                address(asset),
+                assetIds[i],
+                assetAmount,
+                pricePerAsset
+            );
             totalAssetAmount += assetAmount;
         }
 
@@ -297,7 +317,12 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
         vm.startPrank(seller);
         uint256 assetId = asset.mint(assetAmount, "");
         asset.setApprovalForAll(address(dex), true);
-        dex.createSellOrder(address(asset), assetId, assetAmount, pricePerAsset);
+        dex.createSellOrder{value: orderCreationFee}(
+            address(asset),
+            assetId,
+            assetAmount,
+            pricePerAsset
+        );
 
         uint256 buyerBalanceBefore = buyer.balance;
         uint256 sellerBalanceBefore = seller.balance;
@@ -342,7 +367,12 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
         vm.startPrank(seller);
         uint256 assetId = asset.mint(assetAmount, "");
         asset.setApprovalForAll(address(dex), true);
-        dex.createSellOrder(address(asset), assetId, assetAmount, pricePerAsset);
+        dex.createSellOrder{value: orderCreationFee}(
+            address(asset),
+            assetId,
+            assetAmount,
+            pricePerAsset
+        );
 
         uint256 buyerBalanceBefore = buyer.balance;
         uint256 sellerBalanceBefore = seller.balance;
@@ -382,7 +412,12 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
         vm.deal(alice, assetAmount * pricePerAsset * multiplier);
         uint256 orderId = dex.currentOrderId(address(asset));
         uint256 assetId = asset.mint(assetAmount, "");
-        dex.createSellOrder(address(asset), assetId, assetAmount, pricePerAsset);
+        dex.createSellOrder{value: orderCreationFee}(
+            address(asset),
+            assetId,
+            assetAmount,
+            pricePerAsset
+        );
 
         uint256 purchaseCost = assetAmount * pricePerAsset;
         uint256 paidTakerFee = (purchaseCost * takerFee) / 10000;
@@ -406,7 +441,12 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
         vm.deal(alice, assetAmount * pricePerAsset * multiplier);
         uint256 orderId = dex.currentOrderId(address(asset));
         uint256 assetId = asset.mint(assetAmount, "");
-        dex.createSellOrder(address(asset), assetId, assetAmount, pricePerAsset);
+        dex.createSellOrder{value: orderCreationFee}(
+            address(asset),
+            assetId,
+            assetAmount,
+            pricePerAsset
+        );
 
         uint256 purchaseCost = assetAmount * pricePerAsset;
         uint256 paidTakerFee = (purchaseCost * takerFee) / 10000;
@@ -423,7 +463,12 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
         uint256 pricePerAsset = 200;
         uint256 orderId = dex.currentOrderId(address(asset));
         uint256 assetId = asset.mint(assetAmount, "");
-        dex.createSellOrder(address(asset), assetId, assetAmount, pricePerAsset);
+        dex.createSellOrder{value: orderCreationFee}(
+            address(asset),
+            assetId,
+            assetAmount,
+            pricePerAsset
+        );
         dex.cancelSellOrder(address(asset), orderId);
 
         uint256 aliceBalanceBefore = alice.balance;
@@ -440,7 +485,12 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
         uint256 pricePerAsset = 200;
         uint256 orderId = dex.currentOrderId(address(asset));
         uint256 assetId = asset.mint(assetAmount, "");
-        dex.createSellOrder(address(asset), assetId, assetAmount, pricePerAsset);
+        dex.createSellOrder{value: orderCreationFee}(
+            address(asset),
+            assetId,
+            assetAmount,
+            pricePerAsset
+        );
         dex.cancelSellOrder(address(asset), orderId);
 
         uint256 aliceBalanceBefore = alice.balance;
@@ -457,7 +507,12 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
         uint256 pricePerAsset = 100;
         uint256 orderId = dex.currentOrderId(address(asset));
         uint256 assetId = asset.mint(assetAmount, "");
-        dex.createSellOrder(address(asset), assetId, assetAmount, pricePerAsset);
+        dex.createSellOrder{value: orderCreationFee}(
+            address(asset),
+            assetId,
+            assetAmount,
+            pricePerAsset
+        );
 
         address payable[] memory sellers = new address payable[](1);
         sellers[0] = payable(address(this));
@@ -485,7 +540,12 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
         uint256 pricePerAsset = 100;
         uint256 orderId = dex.currentOrderId(address(asset));
         uint256 assetId = asset.mint(assetAmount, "");
-        dex.createSellOrder(address(asset), assetId, assetAmount, pricePerAsset);
+        dex.createSellOrder{value: orderCreationFee}(
+            address(asset),
+            assetId,
+            assetAmount,
+            pricePerAsset
+        );
 
         address payable[] memory sellers = new address payable[](1);
         sellers[0] = payable(address(this));
@@ -518,7 +578,7 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
         vm.assume(assetAmount > 0);
         uint256 assetId = asset.mint(assetAmount, "");
         uint256 orderId = dex.currentOrderId(address(asset));
-        dex.createSellOrder(address(asset), assetId, assetAmount, 200);
+        dex.createSellOrder{value: orderCreationFee}(address(asset), assetId, assetAmount, 200);
 
         vm.expectEmit(true, true, true, true);
         emit IOrderbookDex.OrderCancelled(address(asset), assetId, orderId);
@@ -532,7 +592,7 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
     function test_cancelSellOrder_reverts_ifUnauthorized() public {
         uint256 orderId = dex.currentOrderId(address(asset));
         uint256 assetId = asset.mint(100, "");
-        dex.createSellOrder(address(asset), assetId, 100, 200);
+        dex.createSellOrder{value: orderCreationFee}(address(asset), assetId, 100, 200);
 
         vm.startPrank(alice);
         vm.expectRevert(abi.encodeWithSelector(OrderbookDex.Unauthorized.selector, alice));
@@ -553,12 +613,9 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
 
         uint256 orderId = dex.currentOrderId(address(asset));
 
-        uint256[] memory orderIds = dex.createBatchSellOrder(
-            address(asset),
-            assetIds,
-            assetAmounts,
-            pricesPerAssets
-        );
+        uint256[] memory orderIds = dex.createBatchSellOrder{
+            value: orderCreationFee * assetIds.length
+        }(address(asset), assetIds, assetAmounts, pricesPerAssets);
 
         for (uint256 i = 0; i < orderCount; ++i) {
             vm.expectEmit(true, true, true, true);
@@ -578,7 +635,7 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
     function test_cancelBatchSellOrder_reverts_ifUnauthorized() public {
         uint256 orderId = dex.currentOrderId(address(asset));
         uint256 assetId = asset.mint(100, "");
-        dex.createSellOrder(address(asset), assetId, 100, 200);
+        dex.createSellOrder{value: orderCreationFee}(address(asset), assetId, 100, 200);
 
         uint256[] memory orderIds = new uint256[](1);
         orderIds[0] = orderId;
@@ -602,12 +659,9 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
             assetIds[i] = asset.mint(assetAmounts[i], "");
             totalPurchaseCost += assetAmounts[i] * pricesPerAssets[i];
         }
-        uint256[] memory orderIds = dex.createBatchSellOrder(
-            address(asset),
-            assetIds,
-            assetAmounts,
-            pricesPerAssets
-        );
+        uint256[] memory orderIds = dex.createBatchSellOrder{
+            value: orderCreationFee * assetIds.length
+        }(address(asset), assetIds, assetAmounts, pricesPerAssets);
         uint256 paidTakerFee = (totalPurchaseCost * takerFee) / 10000;
 
         assertEq(orderIds.length, orderCount);
