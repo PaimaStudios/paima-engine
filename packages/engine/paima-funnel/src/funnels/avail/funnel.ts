@@ -67,7 +67,7 @@ export class AvailFunnel extends BaseFunnel implements ChainFunnel {
   public override async readData(blockHeight: number): Promise<ChainData[]> {
     const cachedState = this.getState();
 
-    const chainData: ChainData[] = await readFromBaseFunnel(
+    const chainData: ChainData[] = await readFromWrappedFunnel(
       blockHeight,
       this.baseFunnel,
       cachedState.bufferedChainData,
@@ -514,7 +514,7 @@ export function composeChainData(baseChainData: ChainData[], cdeData: BlockData[
   });
 }
 
-async function readFromBaseFunnel(
+async function readFromWrappedFunnel(
   blockHeight: number,
   baseFunnel: ChainFunnel,
   bufferedChainData: ChainData[],
