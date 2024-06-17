@@ -1,5 +1,5 @@
 import type { ChainData, ChainDataExtensionDatum, EvmPresyncChainData } from '@paima/sm';
-import { ConfigNetworkType, doLog } from '@paima/utils';
+import { ConfigNetworkType, InternalEventType, doLog } from '@paima/utils';
 
 export function groupCdeData(
   network: string,
@@ -131,4 +131,48 @@ export function buildParallelBlockMappings(
     parallelToMainchainBlockHeightMapping: parallelToMainchainBlockHeightMapping,
     mainchainToParallelBlockHeightMapping: mainchainToParallelBlockHeightMapping,
   };
+}
+
+// This adds the internal event that updates the last block point. This is
+// mostly to avoid having to do a binary search each time we boot the
+// engine. Since we need to know from where to start searching for blocks in
+// the timestamp range.
+export function addInternalCheckpointingEvent(
+  chainData: ChainData[],
+  mapBlockNumber: (mainchainNumber: number) => number,
+  chainName: string,
+  // FIXME: not really clear why this ignore is needed
+  // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
+  eventType: InternalEventType.EvmLastBlock | InternalEventType.AvailLastBlock
+): void {
+  for (const data of chainData) {
+    const originalBlockNumber = mapBlockNumber(data.blockNumber);
+    // it's technically possible for this to be null, because there may not be
+    // a block of the sidechain in between a particular pair of blocks or the
+    // original chain.
+    //
+    // in this case it could be more optimal to set the block number here to
+    // the one in the next block, but it shouldn't make much of a difference.
+    if (!originalBlockNumber) {
+      continue;
+    }
+
+    if (!data.internalEvents) {
+      data.internalEvents = [];
+    }
+    data.internalEvents.push({
+      type: eventType,
+      // this is the block number in the original chain, so that we can resume
+      // from that point later.
+      //
+      // there can be more than one block here, for example, if the main
+      // chain produces a block every 10 seconds, and the parallel chain
+      // generates a block every second, then there can be 10 blocks.
+      // The block here will be the last in the range. Losing the
+      // information doesn't matter because there is a transaction per main
+      // chain block, so the result would be the same.
+      block: originalBlockNumber,
+      network: chainName,
+    });
+  }
 }
