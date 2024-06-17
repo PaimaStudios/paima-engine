@@ -8,7 +8,7 @@ import {
   InternalEventType,
 } from '@paima/utils';
 import type { ChainFunnel, ReadPresyncDataFrom } from '@paima/runtime';
-import type { CdeGenericDatum } from '@paima/sm';
+import type { CdeGenericDatum, ChainDataExtensionDatum } from '@paima/sm';
 import { type ChainData, type PresyncChainData } from '@paima/sm';
 import { BaseFunnel } from '../BaseFunnel.js';
 import type { FunnelSharedData } from '../BaseFunnel.js';
@@ -27,6 +27,14 @@ import {
   timestampToSlot,
 } from './utils.js';
 import { findBlockByTimestamp } from '../../utils.js';
+
+type BlockData = {
+  number: number;
+  timestamp: number;
+  extensionDatums: ChainDataExtensionDatum[];
+  hash: string;
+  slot: number;
+};
 
 function applyDelay(config: AvailConfig, baseTimestamp: number): number {
   return Math.max(baseTimestamp - (config.delay ?? 0), 0);
@@ -79,8 +87,7 @@ export class AvailFunnel extends BaseFunnel implements ChainFunnel {
       cachedState.api
     );
 
-    const headers = [];
-    const parallelData = [];
+    const parallelData: BlockData[] = [];
 
     while (true) {
       const latestBlock = this.latestBlock();
@@ -91,14 +98,17 @@ export class AvailFunnel extends BaseFunnel implements ChainFunnel {
 
       doLog(`Avail funnel #${cachedState.lastBlock + 1}-${to}`);
 
-      parallelData.push(
-        ...(await getDAData(this.config.lightClient, cachedState.lastBlock + 1, to, this.chainName))
+      const roundParallelData = await getDAData(
+        this.config.lightClient,
+        cachedState.lastBlock + 1,
+        to,
+        this.chainName
       );
 
       let parallelHeaders;
 
-      if (parallelData.length > 0) {
-        const numbers = parallelData.map(d => d.blockNumber);
+      if (roundParallelData.length > 0) {
+        const numbers = roundParallelData.map(d => d.blockNumber);
 
         // we only need at least one to have some idea of where we are in time.
         // otherwise if there is no data submitted for the app we would never
@@ -114,54 +124,56 @@ export class AvailFunnel extends BaseFunnel implements ChainFunnel {
         parallelHeaders = await getMultipleHeaderData(cachedState.api, [to]);
       }
 
-      headers.push(...parallelHeaders);
+      for (const blockData of roundParallelData) {
+        const header = parallelHeaders.find(h => h.number === blockData.blockNumber);
 
-      if (headers.length > 0) {
-        const last = headers[headers.length - 1];
+        if (!header) {
+          throw new Error("Couldn't get header for block with app data");
+        }
+
+        parallelData.push({
+          number: blockData.blockNumber,
+          timestamp: slotToTimestamp(header.slot, cachedState.api),
+          slot: header.slot,
+          hash: header.hash,
+          extensionDatums: blockData.extensionDatums,
+        });
+      }
+
+      if (parallelHeaders.length > 0) {
+        const last = parallelHeaders[parallelHeaders.length - 1];
 
         cachedState.lastBlock = last.number;
       }
 
-      if (headers.length > 0 && headers[headers.length - 1].slot >= maxSlot) {
+      if (
+        parallelHeaders.length > 0 &&
+        parallelHeaders[parallelHeaders.length - 1].slot >= maxSlot
+      ) {
         break;
       }
 
       if (to !== latestBlock.number) continue;
-      while ((await this.updateLatestBlock()) === latestBlock?.number) {
-        // wait for blocks to be produced
-        await delay(500);
-      }
+      await this.waitForBlocksToBeProduced(latestBlock.number);
     }
 
     for (const availBlock of parallelData) {
-      const availHeader = headers.find(h => h.number === availBlock.blockNumber);
-
-      if (!availHeader) {
-        throw new Error("Couldn't get header for block with app data");
-      }
-
       cachedState.timestampToBlock.push([
-        slotToTimestamp(availHeader.slot, cachedState.api),
-        availBlock,
+        availBlock.timestamp,
+        { blockNumber: availBlock.number, extensionDatums: availBlock.extensionDatums },
       ]);
 
-      cachedState.latestBlock = availHeader;
+      cachedState.latestBlock = {
+        hash: availBlock.hash,
+        number: availBlock.number,
+        slot: availBlock.slot,
+      };
     }
 
-    while (true) {
-      if (cachedState.timestampToBlock.length === 0) {
-        return chainData;
-      }
+    removeOldEntriesFromPreviousRound(cachedState);
 
-      // delete old entries
-      if (
-        cachedState.timestampToBlock[0][0] <=
-        slotToTimestamp(cachedState.lastMaxSlot, cachedState.api)
-      ) {
-        cachedState.timestampToBlock.shift();
-      } else {
-        break;
-      }
+    if (cachedState.timestampToBlock.length === 0) {
+      return chainData;
     }
 
     cachedState.lastMaxSlot = maxSlot;
@@ -190,7 +202,7 @@ export class AvailFunnel extends BaseFunnel implements ChainFunnel {
       return chainData;
     }
 
-    const parallelDataInRange = parallelData.filter(d => d.blockNumber <= toBlock);
+    const parallelDataInRange = parallelData.filter(d => d.number <= toBlock);
 
     mapBlockNumbersToMainChain(parallelDataInRange, parallelToMainchainBlockHeightMapping);
 
@@ -204,6 +216,12 @@ export class AvailFunnel extends BaseFunnel implements ChainFunnel {
     );
 
     return chainData;
+  }
+
+  private async waitForBlocksToBeProduced(latestKnownBlock: number): Promise<void> {
+    while ((await this.updateLatestBlock()) === latestKnownBlock) {
+      await delay(500);
+    }
   }
 
   public override async readPresyncData(
@@ -354,12 +372,26 @@ export class AvailFunnel extends BaseFunnel implements ChainFunnel {
   }
 }
 
+function removeOldEntriesFromPreviousRound(cachedState: AvailFunnelCacheEntryState): void {
+  while (true) {
+    if (
+      cachedState.timestampToBlock.length > 0 &&
+      cachedState.timestampToBlock[0][0] <=
+        slotToTimestamp(cachedState.lastMaxSlot, cachedState.api)
+    ) {
+      cachedState.timestampToBlock.shift();
+    } else {
+      break;
+    }
+  }
+}
+
 function mapBlockNumbersToMainChain(
-  availData: { blockNumber: number; extensionDatums: CdeGenericDatum[] }[],
+  parallelData: BlockData[],
   parallelToMainchainBlockHeightMapping: { [blockNumber: number]: number }
-) {
-  for (const data of availData) {
-    data.blockNumber = parallelToMainchainBlockHeightMapping[data.blockNumber];
+): void {
+  for (const data of parallelData) {
+    data.number = parallelToMainchainBlockHeightMapping[data.number];
 
     for (const datum of data.extensionDatums) {
       datum.blockNumber = parallelToMainchainBlockHeightMapping[datum.blockNumber];
@@ -508,13 +540,10 @@ async function getDAData(
 }
 
 // TODO: duplicated? it's not exactly the same though
-export function composeChainData(
-  baseChainData: ChainData[],
-  cdeData: { blockNumber: number; extensionDatums: CdeGenericDatum[] }[]
-): ChainData[] {
+export function composeChainData(baseChainData: ChainData[], cdeData: BlockData[]): ChainData[] {
   return baseChainData.map(blockData => {
     const matchingData = cdeData.find(
-      blockCdeData => blockCdeData.blockNumber === blockData.blockNumber
+      blockCdeData => blockCdeData.number === blockData.blockNumber
     );
 
     if (!matchingData) {
