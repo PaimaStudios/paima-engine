@@ -138,6 +138,7 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, Ownable, ReentrancyGuard 
             }
 
             uint256 purchaseCost = (remainingEth * basisPoints) / (order.takerFee + basisPoints);
+            // After the integer division by fees, purchase cost needs to be rounded up (fees are rounded down)
             if (purchaseCost * (order.takerFee + basisPoints) != (remainingEth * basisPoints)) {
                 ++purchaseCost;
             }
