@@ -26,7 +26,7 @@ import {
   slotToTimestamp,
   timestampToSlot,
 } from './utils.js';
-import { findBlockByTimestamp } from '../../utils.js';
+import { buildParallelBlockMappings, findBlockByTimestamp } from '../../utils.js';
 
 type BlockData = {
   number: number;
@@ -179,7 +179,7 @@ export class AvailFunnel extends BaseFunnel implements ChainFunnel {
     cachedState.lastMaxSlot = maxSlot;
 
     const { parallelToMainchainBlockHeightMapping, mainchainToParallelBlockHeightMapping } =
-      buildBlockMappings(
+      buildParallelBlockMappings(
         (ts: number) => applyDelay(this.config, ts),
         chainData,
         cachedState.timestampToBlock
@@ -636,41 +636,4 @@ async function readFromBaseFunnel(
   chainData.forEach(_ => bufferedChainData.shift());
 
   return chainData;
-}
-
-// deterministically assigns to every block in blockData, a block in chainData.
-// this is the block that is used for the data merge.
-// additionally returns the inverse mapping.
-function buildBlockMappings(
-  applyDelay: (ts: number) => number,
-  chainData: ChainData[],
-  blockData: [number, { blockNumber: number }][]
-): {
-  parallelToMainchainBlockHeightMapping: { [blockNumber: number]: number };
-  mainchainToParallelBlockHeightMapping: { [blockNumber: number]: number };
-} {
-  const parallelToMainchainBlockHeightMapping: { [blockNumber: number]: number } = {};
-  const mainchainToParallelBlockHeightMapping: { [blockNumber: number]: number } = {};
-
-  let currIndex = 0;
-
-  for (const availBlock of blockData) {
-    while (currIndex < chainData.length) {
-      if (applyDelay(chainData[currIndex].timestamp) >= availBlock[0]) {
-        parallelToMainchainBlockHeightMapping[availBlock[1].blockNumber] =
-          chainData[currIndex].blockNumber;
-
-        mainchainToParallelBlockHeightMapping[chainData[currIndex].blockNumber] =
-          availBlock[1].blockNumber;
-        break;
-      } else {
-        currIndex++;
-      }
-    }
-  }
-
-  return {
-    parallelToMainchainBlockHeightMapping: parallelToMainchainBlockHeightMapping,
-    mainchainToParallelBlockHeightMapping: mainchainToParallelBlockHeightMapping,
-  };
 }
