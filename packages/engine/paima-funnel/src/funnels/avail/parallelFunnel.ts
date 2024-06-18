@@ -1,15 +1,14 @@
-import type { AvailConfig } from '@paima/utils';
+import type { AvailConfig, SubmittedData } from '@paima/utils';
 import {
   doLog,
   logError,
   delay,
-  ChainDataExtensionDatumType,
   ConfigNetworkType,
   InternalEventType,
   timeout,
 } from '@paima/utils';
 import type { ChainFunnel, ReadPresyncDataFrom } from '@paima/runtime';
-import type { CdeGenericDatum, ChainDataExtensionDatum } from '@paima/sm';
+import type { CdeGenericDatum } from '@paima/sm';
 import { type ChainData, type PresyncChainData } from '@paima/sm';
 import { BaseFunnel } from '../BaseFunnel.js';
 import type { FunnelSharedData } from '../BaseFunnel.js';
@@ -21,12 +20,14 @@ import { createApi } from './createApi.js';
 import { getLatestProcessedCdeBlockheight } from '@paima/db';
 import type { Header } from './utils.js';
 import {
+  getDAData,
   getLatestBlockNumber,
   getMultipleHeaderData,
   getSlotFromHeader,
   getTimestampForBlockAt,
   slotToTimestamp,
   timestampToSlot,
+  GET_DATA_TIMEOUT,
 } from './utils.js';
 import {
   addInternalCheckpointingEvent,
@@ -35,16 +36,14 @@ import {
   findBlockByTimestamp,
   getUpperBoundBlock,
 } from '../../utils.js';
-import { base64Decode } from '@polkadot/util-crypto';
-import type { ApiPromise } from 'avail-js-sdk';
+import { processDataUnit } from '../../paima-l2-processing.js';
 
 const LATEST_BLOCK_UPDATE_TIMEOUT = 2000;
-const GET_DATA_TIMEOUT = 10000;
 
 type BlockData = {
   blockNumber: number;
   timestamp: number;
-  extensionDatums: ChainDataExtensionDatum[];
+  submittedData: SubmittedData[];
   hash: string;
   slot: number;
 };
@@ -119,13 +118,7 @@ export class AvailParallelFunnel extends BaseFunnel implements ChainFunnel {
       doLog(`Avail funnel #${cachedState.lastBlock + 1}-${to}`);
 
       const roundParallelData = await timeout(
-        getDAData(
-          cachedState.api,
-          this.config.lightClient,
-          cachedState.lastBlock + 1,
-          to,
-          this.chainName
-        ),
+        getDAData(cachedState.api, this.config.lightClient, cachedState.lastBlock + 1, to),
         GET_DATA_TIMEOUT
       );
 
@@ -161,12 +154,26 @@ export class AvailParallelFunnel extends BaseFunnel implements ChainFunnel {
           throw new Error("Couldn't get header for block with app data");
         }
 
+        const blockTimestamp = slotToTimestamp(header.slot, cachedState.api);
+
+        const mapped = [];
+
+        const processed = await Promise.all(
+          blockData.submittedData.map(unit =>
+            processDataUnit(unit, blockData.blockNumber, blockTimestamp, this.dbTx)
+          )
+        );
+
+        for (const data of processed) {
+          mapped.push(...data);
+        }
+
         parallelData.push({
           blockNumber: blockData.blockNumber,
-          timestamp: slotToTimestamp(header.slot, cachedState.api),
+          timestamp: blockTimestamp,
           slot: header.slot,
           hash: header.hash,
-          extensionDatums: blockData.extensionDatums,
+          submittedData: mapped,
         });
       }
 
@@ -247,54 +254,13 @@ export class AvailParallelFunnel extends BaseFunnel implements ChainFunnel {
 
     let arg = args.find(arg => arg.network == this.chainName);
 
-    const startingBlockHeight = this.getState().startingBlockHeight;
     const chainName = this.chainName;
-    const lightClient = this.config.lightClient;
 
     if (!arg) {
       return await baseDataPromise;
-    }
-
-    let fromBlock = arg.from;
-    let toBlock = arg.to;
-
-    if (fromBlock >= startingBlockHeight) {
+    } else {
       return { ...(await baseDataPromise), [chainName]: FUNNEL_PRESYNC_FINISHED };
     }
-
-    const api = this.getState().api;
-
-    const [baseData, data] = await Promise.all([
-      baseDataPromise,
-      (async function (): Promise<{ blockNumber: number; extensionDatums: CdeGenericDatum[] }[]> {
-        try {
-          toBlock = Math.min(toBlock, startingBlockHeight - 1);
-          fromBlock = Math.max(fromBlock, 0);
-          if (fromBlock > toBlock) {
-            return [];
-          }
-
-          doLog(`Avail funnel presync ${chainName}: #${fromBlock}-${toBlock}`);
-
-          const data = await getDAData(api, lightClient, fromBlock, toBlock, chainName);
-
-          return data;
-        } catch (err) {
-          doLog(`[paima-funnel::readPresyncData] Exception occurred while reading blocks: ${err}`);
-          throw err;
-        }
-      })(),
-    ]);
-
-    return {
-      ...baseData,
-      [this.chainName]: data.map(d => ({
-        extensionDatums: d.extensionDatums,
-        networkType: ConfigNetworkType.AVAIL,
-        network: this.chainName,
-        blockNumber: d.blockNumber,
-      })),
-    };
   }
 
   public static async recoverState(
@@ -409,10 +375,6 @@ function mapBlockNumbersToMainChain(
 ): void {
   for (const data of parallelData) {
     data.blockNumber = parallelToMainchainBlockHeightMapping[data.blockNumber];
-
-    for (const datum of data.extensionDatums) {
-      datum.blockNumber = parallelToMainchainBlockHeightMapping[datum.blockNumber];
-    }
   }
 }
 
@@ -460,55 +422,6 @@ export async function wrapToAvailParallelFunnel(
     logError(err);
     throw new Error('[paima-funnel] Unable to initialize avail events processor');
   }
-}
-
-async function getDAData(
-  api: ApiPromise,
-  lc: string,
-  from: number,
-  to: number,
-  network: string
-): Promise<{ blockNumber: number; extensionDatums: CdeGenericDatum[] }[]> {
-  const data = [] as { blockNumber: number; extensionDatums: CdeGenericDatum[] }[];
-
-  for (let curr = from; curr <= to; curr++) {
-    const responseRaw = await fetch(`${lc}/v2/blocks/${curr}/data?fields=data,extrinsic`);
-
-    // TODO: handle better the status code ( not documented in the api though ).
-    if (responseRaw.status !== 200) {
-      continue;
-    }
-
-    const response = (await responseRaw.json()) as unknown as {
-      block_number: number;
-      data_transactions: { data: string; extrinsic: string }[];
-    };
-
-    if (response.data_transactions.length > 0) {
-      // not sure how this would be controlled by extensions yet, so for now we
-      // just generate a generic event, since the app_id is in the client, and the
-      // data doesn't have a format.
-      data.push({
-        blockNumber: response.block_number,
-        extensionDatums: response.data_transactions.map(d => {
-          const dbytes = base64Decode(d.extrinsic);
-          const decoded = api.createType('Extrinsic', dbytes);
-
-          return {
-            cdeName: 'availDefaultExtension',
-            blockNumber: response.block_number,
-            transactionHash: decoded.hash.toHex(),
-            payload: { data: d.data },
-            cdeDatumType: ChainDataExtensionDatumType.Generic,
-            scheduledPrefix: 'avail',
-            network: network,
-          };
-        }),
-      });
-    }
-  }
-
-  return data;
 }
 
 async function readFromWrappedFunnel(

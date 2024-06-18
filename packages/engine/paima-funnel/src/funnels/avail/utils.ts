@@ -1,5 +1,9 @@
 import type { ApiPromise } from 'avail-js-sdk';
 import type { Header as PolkadotHeader } from '@polkadot/types/interfaces/types';
+import type { SubmittedData } from '@paima/sm';
+import { base64Decode } from '@polkadot/util-crypto';
+
+export const GET_DATA_TIMEOUT = 10000;
 
 export type Header = PolkadotHeader;
 
@@ -72,4 +76,61 @@ export async function getMultipleHeaderData(
   }
 
   return results;
+}
+
+export async function getDAData(
+  api: ApiPromise,
+  lc: string,
+  from: number,
+  to: number
+): Promise<{ blockNumber: number; submittedData: SubmittedData[] }[]> {
+  const data = [] as { blockNumber: number; submittedData: SubmittedData[] }[];
+
+  for (let curr = from; curr <= to; curr++) {
+    const responseRaw = await fetch(`${lc}/v2/blocks/${curr}/data?fields=data,extrinsic`);
+
+    // TODO: handle better the status code ( not documented in the api though ).
+    if (responseRaw.status !== 200) {
+      continue;
+    }
+
+    const response = (await responseRaw.json()) as unknown as {
+      block_number: number;
+      data_transactions: { data: string; extrinsic: string }[];
+    };
+
+    if (response.data_transactions.length > 0) {
+      // not sure how this would be controlled by extensions yet, so for now we
+      // just generate a generic event, since the app_id is in the client, and the
+      // data doesn't have a format.
+      data.push({
+        blockNumber: response.block_number,
+        submittedData: response.data_transactions.map(d => {
+          const dbytes = base64Decode(d.extrinsic);
+          const decoded = api.createType('Extrinsic', dbytes);
+
+          // decoded.args
+
+          const data = base64Decode(d.data);
+          const dstring = new TextDecoder().decode(data);
+
+          return {
+            realAddress: decoded.signer.toString(),
+            inputData: dstring,
+            inputNonce: '', // placeholder that will be filled later
+            // There is no concept of supplying a fee to the app with the data
+            // availability call, afaik.
+            // We can get the fee with an extra rpc call to
+            // `api.call.transactionPaymentApi.queryFeeDetails`, and we can get
+            // the `tip` from the extrinsic itself, but these are just for the
+            // block producer.
+            suppliedValue: '0',
+            scheduled: false,
+          };
+        }),
+      });
+    }
+  }
+
+  return data;
 }
