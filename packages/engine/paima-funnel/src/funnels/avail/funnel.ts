@@ -19,8 +19,8 @@ import type { PoolClient } from 'pg';
 import { FUNNEL_PRESYNC_FINISHED } from '@paima/utils';
 import { createApi } from './createApi.js';
 import { getLatestProcessedCdeBlockheight } from '@paima/db';
+import type { Header } from './utils.js';
 import {
-  Header,
   getLatestBlockNumber,
   getMultipleHeaderData,
   getSlotFromHeader,
@@ -31,6 +31,7 @@ import {
 import {
   addInternalCheckpointingEvent,
   buildParallelBlockMappings,
+  composeChainData,
   findBlockByTimestamp,
   getUpperBoundBlock,
 } from '../../utils.js';
@@ -41,7 +42,7 @@ const LATEST_BLOCK_UPDATE_TIMEOUT = 2000;
 const GET_DATA_TIMEOUT = 10000;
 
 type BlockData = {
-  number: number;
+  blockNumber: number;
   timestamp: number;
   extensionDatums: ChainDataExtensionDatum[];
   hash: string;
@@ -161,7 +162,7 @@ export class AvailFunnel extends BaseFunnel implements ChainFunnel {
         }
 
         parallelData.push({
-          number: blockData.blockNumber,
+          blockNumber: blockData.blockNumber,
           timestamp: slotToTimestamp(header.slot, cachedState.api),
           slot: header.slot,
           hash: header.hash,
@@ -217,7 +218,7 @@ export class AvailFunnel extends BaseFunnel implements ChainFunnel {
       return chainData;
     }
 
-    const parallelDataInRange = parallelData.filter(d => d.number <= toBlock);
+    const parallelDataInRange = parallelData.filter(d => d.blockNumber <= toBlock);
 
     mapBlockNumbersToMainChain(parallelDataInRange, parallelToMainchainBlockHeightMapping);
 
@@ -407,7 +408,7 @@ function mapBlockNumbersToMainChain(
   parallelToMainchainBlockHeightMapping: { [blockNumber: number]: number }
 ): void {
   for (const data of parallelData) {
-    data.number = parallelToMainchainBlockHeightMapping[data.number];
+    data.blockNumber = parallelToMainchainBlockHeightMapping[data.blockNumber];
 
     for (const datum of data.extensionDatums) {
       datum.blockNumber = parallelToMainchainBlockHeightMapping[datum.blockNumber];
@@ -508,29 +509,6 @@ async function getDAData(
   }
 
   return data;
-}
-
-// TODO: duplicated? it's not exactly the same though
-export function composeChainData(baseChainData: ChainData[], cdeData: BlockData[]): ChainData[] {
-  return baseChainData.map(blockData => {
-    const matchingData = cdeData.find(
-      blockCdeData => blockCdeData.number === blockData.blockNumber
-    );
-
-    if (!matchingData) {
-      return blockData;
-    }
-
-    if (blockData.extensionDatums) {
-      if (matchingData.extensionDatums) {
-        blockData.extensionDatums.push(...matchingData.extensionDatums);
-      }
-    } else if (matchingData.extensionDatums) {
-      blockData.extensionDatums = matchingData.extensionDatums;
-    }
-
-    return blockData;
-  });
 }
 
 async function readFromWrappedFunnel(

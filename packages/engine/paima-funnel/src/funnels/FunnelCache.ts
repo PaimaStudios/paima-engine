@@ -283,7 +283,7 @@ export class AvailFunnelCacheEntry implements FunnelCacheEntry {
 
   public cacheBlocks(
     blocks: {
-      number: number;
+      blockNumber: number;
       timestamp: number;
       extensionDatums: ChainDataExtensionDatum[];
       hash: string;
@@ -297,12 +297,12 @@ export class AvailFunnelCacheEntry implements FunnelCacheEntry {
     for (const block of blocks) {
       this.state.timestampToBlock.push([
         block.timestamp,
-        { blockNumber: block.number, extensionDatums: block.extensionDatums },
+        { blockNumber: block.blockNumber, extensionDatums: block.extensionDatums },
       ]);
 
       this.state.latestBlock = {
         hash: block.hash,
-        number: block.number,
+        number: block.blockNumber,
         slot: block.slot,
       };
     }
