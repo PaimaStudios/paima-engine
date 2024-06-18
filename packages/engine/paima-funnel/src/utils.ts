@@ -1,4 +1,9 @@
-import type { ChainData, ChainDataExtensionDatum, EvmPresyncChainData } from '@paima/sm';
+import type {
+  ChainData,
+  ChainDataExtensionDatum,
+  EvmPresyncChainData,
+  InternalEvent,
+} from '@paima/sm';
 import type { InternalEventType } from '@paima/utils';
 import { ConfigNetworkType, doLog } from '@paima/utils';
 
@@ -31,7 +36,11 @@ export function groupCdeData(
 
 export function composeChainData(
   baseChainData: ChainData[],
-  cdeData: EvmPresyncChainData[]
+  cdeData: {
+    blockNumber: number;
+    extensionDatums: ChainDataExtensionDatum[];
+    internalEvents?: InternalEvent[];
+  }[]
 ): ChainData[] {
   return baseChainData.map(blockData => {
     const matchingData = cdeData.find(
