@@ -275,6 +275,12 @@ export class AvailFunnelCacheEntry implements FunnelCacheEntry {
     }
   }
 
+  public updateLastBlock(block: number): void {
+    if (this.state) {
+      this.state.lastBlock = block;
+    }
+  }
+
   public cacheBlocks(
     blocks: {
       number: number;
@@ -300,6 +306,31 @@ export class AvailFunnelCacheEntry implements FunnelCacheEntry {
         slot: block.slot,
       };
     }
+  }
+
+  public cleanOldEntries(maxTimestamp: number): void {
+    if (!this.state) {
+      throw new Error('[avail-funnel] Uninitialized cache entry');
+    }
+
+    while (true) {
+      if (
+        this.state.timestampToBlock.length > 0 &&
+        this.state.timestampToBlock[0][0] <= maxTimestamp
+      ) {
+        this.state.timestampToBlock.shift();
+      } else {
+        break;
+      }
+    }
+  }
+
+  public updateLastMaxSlot(maxSlot: number): void {
+    if (!this.state) {
+      throw new Error('[avail-funnel] Uninitialized cache entry');
+    }
+
+    this.state.lastMaxSlot = maxSlot;
   }
 
   public getState(): Readonly<AvailFunnelCacheEntryState> {

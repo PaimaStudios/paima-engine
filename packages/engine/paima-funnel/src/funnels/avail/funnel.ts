@@ -32,6 +32,8 @@ import {
   findBlockByTimestamp,
   getUpperBoundBlock,
 } from '../../utils.js';
+import { base64Decode } from '@polkadot/util-crypto';
+import type { ApiPromise } from 'avail-js-sdk';
 
 type BlockData = {
   number: number;
@@ -85,7 +87,14 @@ export class AvailFunnel extends BaseFunnel implements ChainFunnel {
       return chainData;
     }
 
-    await restoreLastPointCheckpointFromDb(cachedState, this.dbTx, this.chainName);
+    if (!cachedState.lastBlock) {
+      await restoreLastPointCheckpointFromDb(
+        this.getCacheEntry(),
+        this.dbTx,
+        this.chainName,
+        cachedState.startingBlockHeight
+      );
+    }
 
     const maxSlot = timestampToSlot(
       applyDelay(this.config, chainData[chainData.length - 1].timestamp),
@@ -104,6 +113,7 @@ export class AvailFunnel extends BaseFunnel implements ChainFunnel {
       doLog(`Avail funnel #${cachedState.lastBlock + 1}-${to}`);
 
       const roundParallelData = await getDAData(
+        cachedState.api,
         this.config.lightClient,
         cachedState.lastBlock + 1,
         to,
@@ -148,7 +158,7 @@ export class AvailFunnel extends BaseFunnel implements ChainFunnel {
       if (parallelHeaders.length > 0) {
         const last = parallelHeaders[parallelHeaders.length - 1];
 
-        cachedState.lastBlock = last.number;
+        this.getCacheEntry().updateLastBlock(last.number);
       }
 
       if (
@@ -162,15 +172,16 @@ export class AvailFunnel extends BaseFunnel implements ChainFunnel {
       await this.waitForBlocksToBeProduced(latestBlock.number);
     }
 
-    this.getCacheEntry().cacheBlocks(parallelData);
+    const cacheEntry = this.getCacheEntry();
 
-    removeOldEntriesFromPreviousRound(cachedState);
+    cacheEntry.cacheBlocks(parallelData);
+    cacheEntry.cleanOldEntries(slotToTimestamp(cachedState.lastMaxSlot, cachedState.api));
 
     if (cachedState.timestampToBlock.length === 0) {
       return chainData;
     }
 
-    cachedState.lastMaxSlot = maxSlot;
+    cacheEntry.updateLastMaxSlot(maxSlot);
 
     const { parallelToMainchainBlockHeightMapping, mainchainToParallelBlockHeightMapping } =
       buildParallelBlockMappings(
@@ -178,10 +189,6 @@ export class AvailFunnel extends BaseFunnel implements ChainFunnel {
         chainData,
         cachedState.timestampToBlock
       );
-
-    if (!cachedState.timestampToBlock[0]) {
-      return chainData;
-    }
 
     if (cachedState.timestampToBlock[0][0] > slotToTimestamp(maxSlot, cachedState.api)) {
       return chainData;
@@ -240,6 +247,8 @@ export class AvailFunnel extends BaseFunnel implements ChainFunnel {
       return { ...(await baseDataPromise), [chainName]: FUNNEL_PRESYNC_FINISHED };
     }
 
+    const api = this.getState().api;
+
     const [baseData, data] = await Promise.all([
       baseDataPromise,
       (async function (): Promise<{ blockNumber: number; extensionDatums: CdeGenericDatum[] }[]> {
@@ -252,7 +261,7 @@ export class AvailFunnel extends BaseFunnel implements ChainFunnel {
 
           doLog(`Avail funnel presync ${chainName}: #${fromBlock}-${toBlock}`);
 
-          const data = await getDAData(lightClient, fromBlock, toBlock, chainName);
+          const data = await getDAData(api, lightClient, fromBlock, toBlock, chainName);
 
           return data;
         } catch (err) {
@@ -360,7 +369,7 @@ export class AvailFunnel extends BaseFunnel implements ChainFunnel {
     return cacheEntry!;
   }
 
-  private getState(): AvailFunnelCacheEntryState {
+  private getState(): Readonly<AvailFunnelCacheEntryState> {
     const bufferedState =
       this.sharedData.cacheManager.cacheEntries[AvailFunnelCacheEntry.SYMBOL]?.getState();
 
@@ -369,20 +378,6 @@ export class AvailFunnel extends BaseFunnel implements ChainFunnel {
     }
 
     return bufferedState;
-  }
-}
-
-function removeOldEntriesFromPreviousRound(cachedState: AvailFunnelCacheEntryState): void {
-  while (true) {
-    if (
-      cachedState.timestampToBlock.length > 0 &&
-      cachedState.timestampToBlock[0][0] <=
-        slotToTimestamp(cachedState.lastMaxSlot, cachedState.api)
-    ) {
-      cachedState.timestampToBlock.shift();
-    } else {
-      break;
-    }
   }
 }
 
@@ -402,24 +397,21 @@ function mapBlockNumbersToMainChain(
 // Gets the latest processed block in a particular chain. Used to restore the
 // synchronization point after a restart.
 async function restoreLastPointCheckpointFromDb(
-  cachedState: { lastBlock: number; startingBlockHeight: number },
+  cacheEntry: AvailFunnelCacheEntry,
   dbTx: PoolClient,
-  chainName: string
+  chainName: string,
+  startingBlockHeight: number
 ): Promise<void> {
-  if (!cachedState.lastBlock) {
-    const queryResults = await getLatestProcessedCdeBlockheight.run({ network: chainName }, dbTx);
+  const queryResults = await getLatestProcessedCdeBlockheight.run({ network: chainName }, dbTx);
 
-    if (queryResults[0]) {
-      // If we are in `readData`, we know that the presync stage finished.
-      // This means `readPresyncData` was actually called with the entire
-      // range up to startBlockHeight - 1 (inclusive), since that's the stop
-      // condition for the presync. So there is no point in starting from
-      // earlier than that, since we know there are no events there.
-      cachedState.lastBlock = Math.max(
-        queryResults[0].block_height,
-        cachedState.startingBlockHeight - 1
-      );
-    }
+  if (queryResults[0]) {
+    // If we are in `readData`, we know that the presync stage finished.
+    // This means `readPresyncData` was actually called with the entire
+    // range up to startBlockHeight - 1 (inclusive), since that's the stop
+    // condition for the presync. So there is no point in starting from
+    // earlier than that, since we know there are no events there.
+
+    cacheEntry.updateLastBlock(Math.max(queryResults[0].block_height, startingBlockHeight - 1));
   }
 }
 
@@ -449,6 +441,7 @@ export async function wrapToAvailFunnel(
 }
 
 async function getDAData(
+  api: ApiPromise,
   lc: string,
   from: number,
   to: number,
@@ -457,7 +450,7 @@ async function getDAData(
   const data = [] as { blockNumber: number; extensionDatums: CdeGenericDatum[] }[];
 
   for (let curr = from; curr <= to; curr++) {
-    const responseRaw = await fetch(`${lc}/v2/blocks/${curr}/data`);
+    const responseRaw = await fetch(`${lc}/v2/blocks/${curr}/data?fields=data,extrinsic`);
 
     // TODO: handle better the status code ( not documented in the api though ).
     if (responseRaw.status !== 200) {
@@ -466,7 +459,7 @@ async function getDAData(
 
     const response = (await responseRaw.json()) as unknown as {
       block_number: number;
-      data_transactions: { data: string }[];
+      data_transactions: { data: string; extrinsic: string }[];
     };
 
     if (response.data_transactions.length > 0) {
@@ -475,15 +468,20 @@ async function getDAData(
       // data doesn't have a format.
       data.push({
         blockNumber: response.block_number,
-        extensionDatums: response.data_transactions.map(d => ({
-          cdeName: 'availDefaultExtension',
-          blockNumber: response.block_number,
-          transactionHash: 'hash',
-          payload: { data: d.data },
-          cdeDatumType: ChainDataExtensionDatumType.Generic,
-          scheduledPrefix: 'avail',
-          network: network,
-        })),
+        extensionDatums: response.data_transactions.map(d => {
+          const dbytes = base64Decode(d.extrinsic);
+          const decoded = api.createType('Extrinsic', dbytes);
+
+          return {
+            cdeName: 'availDefaultExtension',
+            blockNumber: response.block_number,
+            transactionHash: decoded.hash.toHex(),
+            payload: { data: d.data },
+            cdeDatumType: ChainDataExtensionDatumType.Generic,
+            scheduledPrefix: 'avail',
+            network: network,
+          };
+        }),
       });
     }
   }
