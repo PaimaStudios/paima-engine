@@ -6,6 +6,7 @@ import {
   ChainDataExtensionDatumType,
   ConfigNetworkType,
   InternalEventType,
+  timeout,
 } from '@paima/utils';
 import type { ChainFunnel, ReadPresyncDataFrom } from '@paima/runtime';
 import type { CdeGenericDatum, ChainDataExtensionDatum } from '@paima/sm';
@@ -19,6 +20,7 @@ import { FUNNEL_PRESYNC_FINISHED } from '@paima/utils';
 import { createApi } from './createApi.js';
 import { getLatestProcessedCdeBlockheight } from '@paima/db';
 import {
+  Header,
   getLatestBlockNumber,
   getMultipleHeaderData,
   getSlotFromHeader,
@@ -34,6 +36,9 @@ import {
 } from '../../utils.js';
 import { base64Decode } from '@polkadot/util-crypto';
 import type { ApiPromise } from 'avail-js-sdk';
+
+const LATEST_BLOCK_UPDATE_TIMEOUT = 2000;
+const GET_DATA_TIMEOUT = 10000;
 
 type BlockData = {
   number: number;
@@ -112,12 +117,15 @@ export class AvailFunnel extends BaseFunnel implements ChainFunnel {
 
       doLog(`Avail funnel #${cachedState.lastBlock + 1}-${to}`);
 
-      const roundParallelData = await getDAData(
-        cachedState.api,
-        this.config.lightClient,
-        cachedState.lastBlock + 1,
-        to,
-        this.chainName
+      const roundParallelData = await timeout(
+        getDAData(
+          cachedState.api,
+          this.config.lightClient,
+          cachedState.lastBlock + 1,
+          to,
+          this.chainName
+        ),
+        GET_DATA_TIMEOUT
       );
 
       let parallelHeaders;
@@ -133,10 +141,16 @@ export class AvailFunnel extends BaseFunnel implements ChainFunnel {
         }
 
         // get only headers for block that have data
-        parallelHeaders = await getMultipleHeaderData(cachedState.api, numbers);
+        parallelHeaders = await timeout(
+          getMultipleHeaderData(cachedState.api, numbers),
+          GET_DATA_TIMEOUT
+        );
       } else {
         // unless the range is empty
-        parallelHeaders = await getMultipleHeaderData(cachedState.api, [to]);
+        parallelHeaders = await timeout(
+          getMultipleHeaderData(cachedState.api, [to]),
+          GET_DATA_TIMEOUT
+        );
       }
 
       for (const blockData of roundParallelData) {
@@ -340,27 +354,34 @@ export class AvailFunnel extends BaseFunnel implements ChainFunnel {
 
   private async updateLatestBlock(): Promise<number> {
     const cachedState = this.getState();
-    // TODO: timeout
-    const latestHead = await cachedState.api.rpc.chain.getFinalizedHead();
-    const latestHeader = await cachedState.api.rpc.chain.getHeader(latestHead);
 
-    const delayedBlock = Math.max(
-      latestHeader.number.toNumber() - (this.config.confirmationDepth ?? 0),
-      1
+    const delayedHeader = await timeout(
+      (async (): Promise<Header> => {
+        const latestHead = await cachedState.api.rpc.chain.getFinalizedHead();
+        const latestHeader = await cachedState.api.rpc.chain.getHeader(latestHead);
+
+        const delayedBlock = Math.max(
+          latestHeader.number.toNumber() - (this.config.confirmationDepth ?? 0),
+          1
+        );
+
+        const delayedBlockHash = await cachedState.api.rpc.chain.getBlockHash(delayedBlock);
+        const delayedHeader = await cachedState.api.rpc.chain.getHeader(delayedBlockHash);
+
+        return delayedHeader;
+      })(),
+      LATEST_BLOCK_UPDATE_TIMEOUT
     );
-
-    const delayedBlockHash = await cachedState.api.rpc.chain.getBlockHash(delayedBlock);
-    const delayedHeader = await cachedState.api.rpc.chain.getHeader(delayedBlockHash);
 
     const slot = getSlotFromHeader(delayedHeader, cachedState.api);
 
     this.sharedData.cacheManager.cacheEntries[AvailFunnelCacheEntry.SYMBOL]?.updateLatestBlock({
       number: delayedHeader.number.toNumber(),
-      hash: delayedBlockHash.toString(),
+      hash: delayedHeader.hash.toString(),
       slot: slot,
     });
 
-    return delayedBlock;
+    return delayedHeader.number.toNumber();
   }
 
   private getCacheEntry(): AvailFunnelCacheEntry {
