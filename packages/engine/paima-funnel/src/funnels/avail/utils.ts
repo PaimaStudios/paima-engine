@@ -1,5 +1,7 @@
 import type { ApiPromise } from 'avail-js-sdk';
-import type { Header } from '@polkadot/types/interfaces/types';
+import type { Header as PolkadotHeader } from '@polkadot/types/interfaces/types';
+
+export type Header = PolkadotHeader;
 
 export function getSlotFromHeader(header: Header, api: ApiPromise): number {
   const preRuntime = header.digest.logs.find(log => log.isPreRuntime)!.asPreRuntime;
