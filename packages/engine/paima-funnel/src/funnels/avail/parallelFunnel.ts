@@ -53,7 +53,7 @@ function applyDelay(config: AvailConfig, baseTimestamp: number): number {
   return Math.max(baseTimestamp - (config.delay ?? 0), 0);
 }
 
-export class AvailFunnel extends BaseFunnel implements ChainFunnel {
+export class AvailParallelFunnel extends BaseFunnel implements ChainFunnel {
   config: AvailConfig;
   chainName: string;
 
@@ -304,7 +304,7 @@ export class AvailFunnel extends BaseFunnel implements ChainFunnel {
     chainName: string,
     config: AvailConfig,
     startingBlockHeight: number
-  ): Promise<AvailFunnel> {
+  ): Promise<AvailParallelFunnel> {
     const availFunnelCacheEntry = ((): AvailFunnelCacheEntry => {
       const entry = sharedData.cacheManager.cacheEntries[AvailFunnelCacheEntry.SYMBOL];
       if (entry != null) return entry;
@@ -332,7 +332,7 @@ export class AvailFunnel extends BaseFunnel implements ChainFunnel {
       availFunnelCacheEntry.initialize(api, mappedStartingBlockHeight);
     }
 
-    const funnel = new AvailFunnel(sharedData, dbTx, config, chainName, baseFunnel);
+    const funnel = new AvailParallelFunnel(sharedData, dbTx, config, chainName, baseFunnel);
 
     await funnel.updateLatestBlock();
 
@@ -437,7 +437,7 @@ async function restoreLastPointCheckpointFromDb(
   }
 }
 
-export async function wrapToAvailFunnel(
+export async function wrapToAvailParallelFunnel(
   chainFunnel: ChainFunnel,
   sharedData: FunnelSharedData,
   dbTx: PoolClient,
@@ -446,7 +446,7 @@ export async function wrapToAvailFunnel(
   config: AvailConfig
 ): Promise<ChainFunnel> {
   try {
-    const ebp = await AvailFunnel.recoverState(
+    const ebp = await AvailParallelFunnel.recoverState(
       sharedData,
       dbTx,
       chainFunnel,
