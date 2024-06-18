@@ -8,6 +8,7 @@ export function getSlotFromHeader(header: Header, api: ApiPromise): number {
 
   const rawBabeDigest = api.createType('RawBabePreDigest', preRuntime[1]);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const babeDigest = rawBabeDigest.toPrimitive() as unknown as any;
 
   // the object is an enumeration, but all the variants have a slotNumber field
