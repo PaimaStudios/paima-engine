@@ -201,7 +201,7 @@ export class PaimaParser {
     // Add standard - common expressions to parse * and |
     grammar += `
 asterisk  ::= "*"
-pipe ::= "|" 
+pipe ::= "|"
 at ::= "@"
 `;
 
@@ -318,6 +318,11 @@ at ::= "@"
       }
       return transform ? transform(input) : input;
     };
+  }
+
+  // For use with extension Primitives that supply JSON objects.
+  public static Json(): ParserCommandExec {
+    return (keyName: string, input: string) => JSON.parse(input);
   }
 
   private log(message: string): void {
