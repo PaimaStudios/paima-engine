@@ -66,7 +66,7 @@ function decodeEventData(eventData: string): string {
   }
 }
 
-async function processDataUnit(
+export async function processDataUnit(
   unit: SubmittedData,
   blockHeight: number,
   blockTimestamp: number,

@@ -1,4 +1,4 @@
-import type { ChainData, ChainDataExtensionDatum } from '@paima/sm';
+import type { ChainData, ChainDataExtensionDatum, SubmittedData } from '@paima/sm';
 import type { ApiPromise } from 'avail-js-sdk';
 import type pg from 'pg';
 
@@ -55,17 +55,17 @@ export type RpcRequestResult<T> =
   | { state: RpcRequestState.HasResult; result: T };
 
 export class RpcCacheEntry implements FunnelCacheEntry {
-  private rpcResult: Record<number, RpcRequestResult<number>> = {};
+  private rpcResult: Record<number | string, RpcRequestResult<number>> = {};
   public static readonly SYMBOL = Symbol('RpcCacheEntry');
 
-  public updateState = (chainId: number, height: number): void => {
+  public updateState = (chainId: number | string, height: number): void => {
     this.rpcResult[chainId] = {
       state: RpcRequestState.HasResult,
       result: height,
     };
   };
 
-  public getState(chainId: number): Readonly<RpcRequestResult<number>> {
+  public getState(chainId: number | string): Readonly<RpcRequestResult<number>> {
     return (
       this.rpcResult[chainId] ?? {
         state: RpcRequestState.NotRequested,
@@ -244,7 +244,7 @@ export type AvailFunnelCacheEntryState = {
   latestBlock: { hash: string; number: number; slot: number } | undefined;
   startingBlockHeight: number;
   bufferedChainData: ChainData[];
-  timestampToBlock: [number, { blockNumber: number; extensionDatums: ChainDataExtensionDatum[] }][];
+  timestampToBlock: [number, { blockNumber: number; submittedData: SubmittedData[] }][];
   lastMaxSlot: number;
   lastBlock: number;
 };
@@ -285,7 +285,7 @@ export class AvailFunnelCacheEntry implements FunnelCacheEntry {
     blocks: {
       blockNumber: number;
       timestamp: number;
-      extensionDatums: ChainDataExtensionDatum[];
+      submittedData: SubmittedData[];
       hash: string;
       slot: number;
     }[]
@@ -297,7 +297,7 @@ export class AvailFunnelCacheEntry implements FunnelCacheEntry {
     for (const block of blocks) {
       this.state.timestampToBlock.push([
         block.timestamp,
-        { blockNumber: block.blockNumber, extensionDatums: block.extensionDatums },
+        { blockNumber: block.blockNumber, submittedData: block.submittedData },
       ]);
 
       this.state.latestBlock = {
