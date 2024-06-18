@@ -297,7 +297,9 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, Ownable, ReentrancyGuard 
 
     /// @inheritdoc IOrderbookDex
     function cancelSellOrder(address asset, uint256 orderId) external virtual nonReentrant {
+        uint256 creationFeePaid = orders[asset][orderId].creationFeePaid;
         _cancelSellOrder(asset, orderId);
+        payable(msg.sender).sendValue(creationFeePaid);
     }
 
     /// @inheritdoc IOrderbookDex
@@ -305,12 +307,15 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, Ownable, ReentrancyGuard 
         address asset,
         uint256[] memory orderIds
     ) external virtual nonReentrant {
+        uint256 totalCreationFeePaid;
         for (uint256 i; i < orderIds.length; ) {
+            totalCreationFeePaid += orders[asset][orderIds.unsafeMemoryAccess(i)].creationFeePaid;
             _cancelSellOrder(asset, orderIds.unsafeMemoryAccess(i));
             unchecked {
                 ++i;
             }
         }
+        payable(msg.sender).sendValue(totalCreationFeePaid);
     }
 
     /// @inheritdoc IOrderbookDex
@@ -351,7 +356,8 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, Ownable, ReentrancyGuard 
             pricePerAsset: pricePerAsset,
             seller: payable(msg.sender),
             makerFee: makerFee,
-            takerFee: takerFee
+            takerFee: takerFee,
+            creationFeePaid: orderCreationFee
         });
         uint256 orderId = currentOrderId[asset];
         orders[asset][orderId] = newOrder;
@@ -376,6 +382,7 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, Ownable, ReentrancyGuard 
         }
         uint256 assetAmount = order.assetAmount;
         delete order.assetAmount;
+        delete order.creationFeePaid;
         IInverseProjected1155(asset).safeTransferFrom(
             address(this),
             msg.sender,

@@ -192,7 +192,7 @@ contract OrderbookDexHandler is CTest, ERC1155Holder {
         // Set current actor's balance to expected total price to avoid revert
         uint256 value = sumPrice;
         (, uint256 takerFee) = dex.getAssetAppliedFees(address(asset));
-        value += (value * takerFee) / 10000 + 1;
+        value += (value * takerFee) / 10000;
         vm.deal(currentActor, value);
 
         // Take note of buyer's tokens balances and orders' asset amounts before filling orders

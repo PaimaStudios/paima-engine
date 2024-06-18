@@ -29,6 +29,8 @@ interface IOrderbookDex is IERC1155Receiver {
         uint256 makerFee;
         /// @dev The taker fee in basis points, set when order is created, defined by the asset's fee info.
         uint256 takerFee;
+        /// @dev The order creation fee paid by the seller when creating the order, refunded if sell order is cancelled.
+        uint256 creationFeePaid;
     }
 
     /// @param asset The asset's address (zero address if changing default fees).
