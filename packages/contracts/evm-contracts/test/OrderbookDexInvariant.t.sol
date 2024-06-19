@@ -407,5 +407,9 @@ contract OrderbookDexInvariantTest is CTest, ERC1155Holder {
         assertGe(currentId, previousId);
     }
 
+    function invariant_contractHasBalanceAtLeastOfCollectedFees() public {
+        assertGe(address(dex).balance, dex.collectedFees());
+    }
+
     receive() external payable {}
 }

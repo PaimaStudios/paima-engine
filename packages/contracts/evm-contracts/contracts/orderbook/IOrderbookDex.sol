@@ -33,6 +33,10 @@ interface IOrderbookDex is IERC1155Receiver {
         uint256 creationFeePaid;
     }
 
+    /// @param user The address that claimed the balance.
+    /// @param amount The amount that was claimed.
+    event BalanceClaimed(address indexed user, uint256 amount);
+
     /// @param asset The asset's address (zero address if changing default fees).
     /// @param makerFee The new maker fee in basis points.
     /// @param takerFee The new taker fee in basis points.
@@ -91,8 +95,17 @@ interface IOrderbookDex is IERC1155Receiver {
     /// @param amount The amount of fees that were withdrawn.
     event FeesWithdrawn(address indexed receiver, uint256 amount);
 
+    /// @notice The balance of `user` that's claimable by `claim` function.
+    function balances(address user) external view returns (uint256);
+
+    /// @notice Withdraw the claimable balance of the caller.
+    function claim() external;
+
     /// @notice The `orderId` of the next sell order for specific `asset`.
     function currentOrderId(address asset) external view returns (uint256);
+
+    /// @notice The total amount of fees collected by the contract.
+    function collectedFees() external view returns (uint256);
 
     /// @notice The default maker fee, used if fee information for asset is not set.
     function defaultMakerFee() external view returns (uint256);

@@ -23,9 +23,13 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, Ownable, ReentrancyGuard 
     /// @notice Maximum fee is 10% (1000 bps).
     uint256 public constant maxFee = basisPoints / 10;
     /// @inheritdoc IOrderbookDex
+    mapping(address user => uint256 value) public balances;
+    /// @inheritdoc IOrderbookDex
     mapping(address asset => uint256 orderId) public currentOrderId;
     mapping(address asset => mapping(uint256 orderId => Order)) internal orders;
     mapping(address asset => FeeInfo) internal assetFeeInfo;
+    /// @inheritdoc IOrderbookDex
+    uint256 public collectedFees;
     /// @inheritdoc IOrderbookDex
     uint256 public defaultMakerFee;
     /// @inheritdoc IOrderbookDex
@@ -50,6 +54,14 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, Ownable, ReentrancyGuard 
         defaultMakerFee = _defaultMakerFee;
         defaultTakerFee = _defaultTakerFee;
         orderCreationFee = _orderCreationFee;
+    }
+
+    /// @inheritdoc IOrderbookDex
+    function claim() external {
+        uint256 amount = balances[msg.sender];
+        delete balances[msg.sender];
+        emit BalanceClaimed(msg.sender, amount);
+        payable(msg.sender).sendValue(amount);
     }
 
     /// @inheritdoc IOrderbookDex
@@ -108,6 +120,7 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, Ownable, ReentrancyGuard 
         if (msg.value < orderCreationFee) {
             revert InsufficientPayment();
         }
+        collectedFees += msg.value;
         return _createSellOrder(asset, assetId, assetAmount, pricePerAsset);
     }
 
@@ -124,6 +137,7 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, Ownable, ReentrancyGuard 
         if (msg.value < orderCreationFee * assetIds.length) {
             revert InsufficientPayment();
         }
+        collectedFees += msg.value;
         uint256[] memory orderIds = new uint256[](assetIds.length);
         for (uint256 i; i < assetIds.length; ) {
             orderIds[i] = _createSellOrder(
@@ -187,6 +201,8 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, Ownable, ReentrancyGuard 
                 remainingEth -= (purchaseCost + takerFee);
             }
 
+            collectedFees += makerFee + takerFee;
+
             totalAssetReceived += assetsToBuy;
             IInverseProjected1155(asset).safeTransferFrom(
                 address(this),
@@ -195,7 +211,7 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, Ownable, ReentrancyGuard 
                 assetsToBuy,
                 bytes("")
             );
-            order.seller.sendValue(purchaseCost - makerFee);
+            balances[order.seller] += purchaseCost - makerFee;
             emit OrderFilled(
                 asset,
                 order.assetId,
@@ -264,6 +280,8 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, Ownable, ReentrancyGuard 
                 remainingAsset -= assetsToBuy;
             }
 
+            collectedFees += makerFee + takerFee;
+
             IInverseProjected1155(asset).safeTransferFrom(
                 address(this),
                 msg.sender,
@@ -271,7 +289,7 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, Ownable, ReentrancyGuard 
                 assetsToBuy,
                 bytes("")
             );
-            order.seller.sendValue(purchaseCost - makerFee);
+            balances[order.seller] += purchaseCost - makerFee;
             emit OrderFilled(
                 asset,
                 order.assetId,
@@ -299,6 +317,7 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, Ownable, ReentrancyGuard 
     function cancelSellOrder(address asset, uint256 orderId) external virtual nonReentrant {
         uint256 creationFeePaid = orders[asset][orderId].creationFeePaid;
         _cancelSellOrder(asset, orderId);
+        collectedFees -= creationFeePaid;
         payable(msg.sender).sendValue(creationFeePaid);
     }
 
@@ -315,14 +334,16 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, Ownable, ReentrancyGuard 
                 ++i;
             }
         }
+        collectedFees -= totalCreationFeePaid;
         payable(msg.sender).sendValue(totalCreationFeePaid);
     }
 
     /// @inheritdoc IOrderbookDex
     function withdrawFees() external onlyOwner {
-        uint256 amount = address(this).balance;
-        payable(owner()).sendValue(amount);
+        uint256 amount = collectedFees;
+        delete collectedFees;
         emit FeesWithdrawn(owner(), amount);
+        payable(owner()).sendValue(amount);
     }
 
     /// @dev Returns true if this contract implements the interface defined by `interfaceId`. See EIP165.
