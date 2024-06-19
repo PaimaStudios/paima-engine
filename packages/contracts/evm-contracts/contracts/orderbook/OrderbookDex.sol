@@ -181,8 +181,8 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, Ownable, ReentrancyGuard 
             }
             if (assetsToBuy > order.assetAmount) {
                 assetsToBuy = order.assetAmount;
-                purchaseCost = assetsToBuy * order.pricePerAsset;
             }
+            purchaseCost = assetsToBuy * order.pricePerAsset;
 
             // Can be unchecked because assetsToBuy is less than or equal to order.assetAmount.
             unchecked {
