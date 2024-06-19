@@ -10,7 +10,8 @@ export enum ConfigNetworkType {
   EVM_OTHER = 'evm-other',
   CARDANO = 'cardano',
   MINA = 'mina',
-  AVAIL = 'avail',
+  AVAIL_MAIN = 'avail-main',
+  AVAIL_OTHER = 'avail-other',
 }
 
 export type EvmConfig = Static<typeof EvmConfigSchema>;
@@ -128,10 +129,17 @@ export const TaggedMinaConfig = <T extends boolean>(T: T) =>
   ]);
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-export const TaggedAvailConfig = <T extends boolean>(T: T) =>
+export const TaggedAvailMainConfig = <T extends boolean>(T: T) =>
   Type.Intersect([
     T ? AvailConfigSchema : Type.Partial(AvailConfigSchema),
-    Type.Object({ type: Type.Literal(ConfigNetworkType.AVAIL) }),
+    Type.Object({ type: Type.Literal(ConfigNetworkType.AVAIL_MAIN) }),
+  ]);
+
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+export const TaggedAvailOtherConfig = <T extends boolean>(T: T) =>
+  Type.Intersect([
+    T ? AvailConfigSchema : Type.Partial(AvailConfigSchema),
+    Type.Object({ type: Type.Literal(ConfigNetworkType.AVAIL_OTHER) }),
   ]);
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
@@ -141,7 +149,8 @@ export const TaggedConfig = <T extends boolean>(T: T) =>
     TaggedEvmOtherConfig(T),
     TaggedCardanoConfig(T),
     TaggedMinaConfig(T),
-    TaggedAvailConfig(T),
+    TaggedAvailMainConfig(T),
+    TaggedAvailOtherConfig(T),
   ]);
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
@@ -239,7 +248,8 @@ export async function loadConfig(): Promise<Static<typeof BaseConfigWithDefaults
         case ConfigNetworkType.MINA:
           config[network] = Object.assign(minaConfigDefaults, networkConfig);
           break;
-        case ConfigNetworkType.AVAIL:
+        case ConfigNetworkType.AVAIL_MAIN:
+        case ConfigNetworkType.AVAIL_OTHER:
           config[network] = Object.assign(availConfigDefaults, networkConfig);
           break;
         default:
@@ -299,10 +309,17 @@ export function parseConfigFile(configFileData: string): Static<typeof BaseConfi
           baseStructure[network]
         );
         break;
-      case ConfigNetworkType.AVAIL:
+      case ConfigNetworkType.AVAIL_MAIN:
         baseConfig[network] = checkOrError(
-          'avail config entry',
-          TaggedAvailConfig(false),
+          'avail main config entry',
+          TaggedAvailMainConfig(false),
+          baseStructure[network]
+        );
+        break;
+      case ConfigNetworkType.AVAIL_OTHER:
+        baseConfig[network] = checkOrError(
+          'avail other config entry',
+          TaggedAvailOtherConfig(false),
           baseStructure[network]
         );
         break;
