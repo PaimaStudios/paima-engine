@@ -341,7 +341,7 @@ async function processCdeData(
   dbTx: PoolClient,
   inPresync: boolean
 ): Promise<number> {
-  const [mainNetwork, _] = await GlobalConfig.mainEvmConfig();
+  const [mainNetwork, _] = await GlobalConfig.mainConfig();
   return await processCdeDataBase(cdeData, dbTx, inPresync, async () => {
     // During the presync,
     //     we know that the block_height is for that network in particular,

@@ -21,9 +21,13 @@ export async function wrapToEmulatedBlocksFunnel(
   try {
     // get the time of the block to start indexing the DC from
     const startBlock = await timeout(
-      sharedData.web3.eth.getBlock(startBlockHeight),
+      sharedData.mainNetworkApi.getBlock(startBlockHeight),
       DEFAULT_FUNNEL_TIMEOUT
     );
+    if (!startBlock) {
+      throw new Error("Couldn't get main's network starting block timestamp");
+    }
+
     const startTimestamp =
       typeof startBlock.timestamp === 'string'
         ? parseInt(startBlock.timestamp, 10)

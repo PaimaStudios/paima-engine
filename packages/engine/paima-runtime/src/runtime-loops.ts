@@ -140,7 +140,7 @@ async function getPresyncStartBlockheight(
 
     // avail doesn't have extensions
     const earliestCdeSbh =
-      config[network].type === ConfigNetworkType.AVAIL
+      config[network].type === ConfigNetworkType.AVAIL_MAIN
         ? 1
         : getEarliestStartBlockheight(CDEs, network);
 

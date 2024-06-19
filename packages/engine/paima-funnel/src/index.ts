@@ -12,7 +12,7 @@ import type { ChainFunnel, IFunnelFactory } from '@paima/runtime';
 import type { ChainDataExtension } from '@paima/sm';
 import { wrapToEmulatedBlocksFunnel } from './funnels/emulated/utils.js';
 import { BlockFunnel } from './funnels/block/funnel.js';
-import type { FunnelSharedData } from './funnels/BaseFunnel.js';
+import { BaseFunnelSharedApi, type FunnelSharedData } from './funnels/BaseFunnel.js';
 import { FunnelCacheManager } from './funnels/FunnelCache.js';
 import { wrapToCarpFunnel } from './funnels/carp/funnel.js';
 import { wrapToParallelEvmFunnel } from './funnels/parallelEvm/funnel.js';
@@ -21,6 +21,23 @@ import { ConfigNetworkType } from '@paima/utils';
 import type Web3 from 'web3';
 import { wrapToMinaFunnel } from './funnels/mina/funnel.js';
 import { AvailBlockFunnel } from './funnels/avail/baseFunnel.js';
+import { AvailSharedApi } from './funnels/avail/utils.js';
+import { CoinSelectionStrategyCIP2 } from '@dcspark/cardano-multiplatform-lib-nodejs';
+
+export class Web3SharedApi extends BaseFunnelSharedApi {
+  public constructor(protected web3: Web3) {
+    super();
+    this.getBlock.bind(this);
+  }
+
+  public override async getBlock(
+    height: number
+  ): Promise<{ timestamp: number | string } | undefined> {
+    const block = await this.web3.eth.getBlock(height);
+
+    return block;
+  }
+}
 
 export class FunnelFactory implements IFunnelFactory {
   private constructor(public sharedData: FunnelSharedData) {}
@@ -28,14 +45,20 @@ export class FunnelFactory implements IFunnelFactory {
   public static async initialize(db: PoolClient): Promise<FunnelFactory> {
     const configs = await GlobalConfig.getInstance();
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [_, mainConfig] = await GlobalConfig.mainEvmConfig();
+    const [_, mainConfig] = await GlobalConfig.mainConfig();
 
-    const nodeUrl = mainConfig.chainUri;
-    const paimaL2ContractAddress = mainConfig.paimaL2ContractAddress;
+    let mainNetworkApi;
 
-    validatePaimaL2ContractAddress(paimaL2ContractAddress);
-    const web3 = await initWeb3(nodeUrl);
-    const paimaL2Contract = getPaimaL2Contract(paimaL2ContractAddress, web3);
+    if (mainConfig.type === ConfigNetworkType.EVM) {
+      const nodeUrl = mainConfig.chainUri;
+      const web3 = await initWeb3(nodeUrl);
+
+      mainNetworkApi = new Web3SharedApi(web3);
+    }
+
+    if (mainConfig.type === ConfigNetworkType.AVAIL_MAIN) {
+      mainNetworkApi = new AvailSharedApi(mainConfig.rpc);
+    }
 
     const web3s = await Promise.all(
       Object.keys(configs).reduce(
@@ -62,9 +85,12 @@ export class FunnelFactory implements IFunnelFactory {
       db
     );
 
+    if (!mainNetworkApi) {
+      throw new Error("Failed to initialize main's network shared api");
+    }
+
     return new FunnelFactory({
-      web3,
-      paimaL2Contract,
+      mainNetworkApi,
       extensions,
       extensionsValid,
       cacheManager: new FunnelCacheManager(),
@@ -88,15 +114,25 @@ export class FunnelFactory implements IFunnelFactory {
     // and wrap it with dynamic decorators as needed
     let chainFunnel: ChainFunnel | undefined;
 
-    try {
-      const [chainName, config] = await GlobalConfig.mainEvmConfig();
-      chainFunnel = await BlockFunnel.recoverState(this.sharedData, dbTx, chainName, config);
-    } catch (e) {}
+    const [chainName, config] = await GlobalConfig.mainConfig();
 
-    try {
-      const [chainName, config] = await GlobalConfig.mainAvailConfig();
+    if (config.type === ConfigNetworkType.EVM) {
+      const web3 = await initWeb3(config.chainUri);
+      const paimaL2Contract = getPaimaL2Contract(config.paimaL2ContractAddress, web3);
+
+      chainFunnel = await BlockFunnel.recoverState(
+        this.sharedData,
+        dbTx,
+        chainName,
+        config,
+        web3,
+        paimaL2Contract
+      );
+    }
+
+    if (config.type === ConfigNetworkType.AVAIL_MAIN) {
       chainFunnel = await AvailBlockFunnel.recoverState(this.sharedData, dbTx, chainName, config);
-    } catch (e) {}
+    }
 
     if (!chainFunnel) {
       throw new Error('No configuration found for the main network');

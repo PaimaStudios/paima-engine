@@ -34,7 +34,23 @@ export class GlobalConfig {
     return GlobalConfig.instance;
   }
 
-  public static async mainEvmConfig(): Promise<[string, MainEvmConfig]> {
+  public static async mainConfig(): Promise<[string, MainEvmConfig | AvailConfig]> {
+    const instance = await GlobalConfig.getInstance();
+
+    for (const key of Object.keys(instance)) {
+      if (instance[key].type === ConfigNetworkType.EVM) {
+        return [key, instance[key] as MainEvmConfig];
+      }
+
+      if (instance[key].type === ConfigNetworkType.AVAIL_MAIN) {
+        return [key, instance[key] as AvailConfig];
+      }
+    }
+
+    throw new Error('No main chain config found');
+  }
+
+  public static async mainEvmConfig(): Promise<[string, MainEvmConfig] | undefined> {
     const instance = await GlobalConfig.getInstance();
 
     for (const key of Object.keys(instance)) {
@@ -43,7 +59,7 @@ export class GlobalConfig {
       }
     }
 
-    throw new Error('main config not found');
+    return undefined;
   }
 
   public static async cardanoConfig(): Promise<[string, CardanoConfig] | undefined> {
@@ -72,18 +88,6 @@ export class GlobalConfig {
     return Object.keys(instance)
       .filter(key => instance[key].type === ConfigNetworkType.MINA)
       .map(key => [key, instance[key] as MinaConfig]);
-  }
-
-  public static async mainAvailConfig(): Promise<[string, AvailConfig]> {
-    const instance = await GlobalConfig.getInstance();
-
-    for (const key of Object.keys(instance)) {
-      if (instance[key].type === ConfigNetworkType.AVAIL_MAIN) {
-        return [key, instance[key] as AvailConfig];
-      }
-    }
-
-    throw new Error('main config not found');
   }
 
   public static async otherAvailConfig(): Promise<[string, AvailConfig][]> {

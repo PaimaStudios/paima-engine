@@ -107,6 +107,10 @@ export const AvailConfigSchema = Type.Object({
   confirmationDepth: Type.Optional(Type.Number()),
   funnelBlockGroupSize: Type.Number({ default: 100 }),
   presyncStepSize: Type.Number({ default: 1000 }),
+  type: Type.Union([
+    Type.Literal(ConfigNetworkType.AVAIL_MAIN),
+    Type.Literal(ConfigNetworkType.AVAIL_OTHER),
+  ]),
 });
 
 export type AvailConfig = Static<typeof AvailConfigSchema>;

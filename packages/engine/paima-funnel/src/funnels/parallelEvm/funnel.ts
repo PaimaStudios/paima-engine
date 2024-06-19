@@ -94,9 +94,15 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
           cachedState.startBlockHeight - 1
         );
       } else {
+        // FIXME: this branch probably can't happen.
+
         // The earliest parallel block we might have to sync
         // is one whose timestamp occurs after the timestamp of (current block - 1)
-        const block = await this.sharedData.web3.eth.getBlock(chainData[0].blockNumber - 1);
+        const block = await this.sharedData.mainNetworkApi.getBlock(chainData[0].blockNumber - 1);
+
+        if (!block) {
+          throw new Error("Couldn't get main's network staring block timestamp");
+        }
         const ts = Number(block.timestamp);
         const earliestParallelChainBlock = await findBlockByTimestamp(
           this.web3,
@@ -529,7 +535,11 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
     })();
 
     if (evmCacheEntry.getState(config.chainId).state !== RpcRequestState.HasResult) {
-      const startingBlock = await sharedData.web3.eth.getBlock(startingBlockHeight);
+      const startingBlock = await sharedData.mainNetworkApi.getBlock(startingBlockHeight);
+
+      if (!startingBlock) {
+        throw new Error("Couldn't get main's network staring block timestamp");
+      }
       const mappedStartingBlockHeight = await findBlockByTimestamp(
         web3,
         applyDelay(config, Number(startingBlock.timestamp)),

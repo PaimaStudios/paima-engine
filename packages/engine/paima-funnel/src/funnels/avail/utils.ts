@@ -2,6 +2,8 @@ import type { ApiPromise } from 'avail-js-sdk';
 import type { Header as PolkadotHeader } from '@polkadot/types/interfaces/types';
 import type { SubmittedData } from '@paima/sm';
 import { base64Decode } from '@polkadot/util-crypto';
+import { BaseFunnelSharedApi } from '../BaseFunnel.js';
+import { createApi } from './createApi.js';
 
 export const GET_DATA_TIMEOUT = 10000;
 
@@ -148,4 +150,23 @@ export async function getLatestAvailableBlockNumberFromLightClient(lc: string): 
   const last = response.blocks.available.last;
 
   return last;
+}
+
+export class AvailSharedApi extends BaseFunnelSharedApi {
+  public constructor(private rpc: string) {
+    super();
+    this.getBlock.bind(this);
+  }
+
+  public override async getBlock(
+    height: number
+  ): Promise<{ timestamp: number | string } | undefined> {
+    const api = await createApi(this.rpc);
+
+    const headerData = await getMultipleHeaderData(api, [height]);
+
+    const timestamp = slotToTimestamp(headerData[0].slot, api);
+
+    return { timestamp: timestamp };
+  }
 }

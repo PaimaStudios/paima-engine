@@ -101,7 +101,7 @@ async function runInitializationProcedures(
     return false;
   }
 
-  const [chainName] = await GlobalConfig.mainEvmConfig();
+  const [chainName] = await GlobalConfig.mainConfig();
 
   const smStarted =
     (await gameStateMachine.presyncStarted(chainName)) || (await gameStateMachine.syncStarted());

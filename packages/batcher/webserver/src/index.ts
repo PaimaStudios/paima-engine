@@ -113,7 +113,12 @@ async function initializeServer(
   errorCodeToMessage: ErrorMessageFxn,
   provider: EthersEvmProvider
 ): Promise<void> {
-  const [chainName, config] = await GlobalConfig.mainEvmConfig();
+  const mainEvmConfig = await GlobalConfig.mainEvmConfig();
+  if (!mainEvmConfig) {
+    throw new Error('Non EVM main layer not supported yet');
+  }
+  const [_, config] = mainEvmConfig;
+
   const addressValidator = new AddressValidator(config.chainUri, pool);
   await addressValidator.initialize();
 
