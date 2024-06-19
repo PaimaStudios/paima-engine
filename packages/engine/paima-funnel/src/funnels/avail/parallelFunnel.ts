@@ -275,7 +275,11 @@ export class AvailParallelFunnel extends BaseFunnel implements ChainFunnel {
     })();
 
     if (!availFunnelCacheEntry.initialized()) {
-      const startingBlock = await sharedData.web3.eth.getBlock(startingBlockHeight);
+      const startingBlock = await sharedData.mainNetworkApi.getBlock(startingBlockHeight);
+
+      if (!startingBlock) {
+        throw new Error("Couldn't get base funnel starting block timestamp");
+      }
 
       const api = await createApi(config.rpc);
 

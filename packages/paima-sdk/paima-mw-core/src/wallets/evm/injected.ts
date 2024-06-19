@@ -1,15 +1,5 @@
 import { buildEndpointErrorFxn, PaimaMiddlewareErrorCode } from '../../errors.js';
-import {
-  getChainCurrencyDecimals,
-  getChainCurrencyName,
-  getChainCurrencySymbol,
-  getChainExplorerUri,
-  getChainId,
-  getChainName,
-  getChainUri,
-  getGameName,
-  hasLogin,
-} from '../../state.js';
+import { getChainId, getChainUri, getGameName, hasLogin } from '../../state.js';
 import type { LoginInfoMap, OldResult, Result } from '../../types.js';
 import { updateFee } from '../../helpers/posting.js';
 
@@ -17,14 +7,21 @@ import { connectInjected } from '../wallet-modes.js';
 import { WalletMode } from '@paima/providers';
 import type { ApiForMode, IProvider } from '@paima/providers';
 import { EvmInjectedConnector } from '@paima/providers';
-import { EvmConfig, GlobalConfig } from '@paima/utils';
+import { GlobalConfig } from '@paima/utils';
 
 interface SwitchError {
   code: number;
 }
 
 async function switchChain(): Promise<boolean> {
-  const [chainName, config] = await GlobalConfig.mainEvmConfig();
+  const mainEvmConfig = await GlobalConfig.mainEvmConfig();
+
+  if (!mainEvmConfig) {
+    // TODO: not sure what this does and what to do here.
+    throw new Error('No evm configuration in switchChain');
+  }
+
+  const [chainName, config] = mainEvmConfig;
 
   const errorFxn = buildEndpointErrorFxn('switchChain');
 
