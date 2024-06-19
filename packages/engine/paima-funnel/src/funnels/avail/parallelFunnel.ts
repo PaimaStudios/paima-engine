@@ -30,6 +30,7 @@ import {
   getUpperBoundBlock,
 } from '../../utils.js';
 import { processDataUnit } from '../../paima-l2-processing.js';
+import type { ApiPromise } from 'avail-js-sdk';
 
 const LATEST_BLOCK_UPDATE_TIMEOUT = 2000;
 
@@ -54,7 +55,8 @@ export class AvailParallelFunnel extends BaseFunnel implements ChainFunnel {
     dbTx: PoolClient,
     config: AvailConfig,
     chainName: string,
-    private readonly baseFunnel: ChainFunnel
+    private readonly baseFunnel: ChainFunnel,
+    private readonly api: ApiPromise
   ) {
     super(sharedData, dbTx);
     this.readData.bind(this);
@@ -74,7 +76,7 @@ export class AvailParallelFunnel extends BaseFunnel implements ChainFunnel {
       async () => {
         await this.updateLatestBlock();
         const latestBlockQueryState = this.latestBlock();
-        const latestHeaderTimestamp = slotToTimestamp(latestBlockQueryState.slot, cachedState.api);
+        const latestHeaderTimestamp = slotToTimestamp(latestBlockQueryState.slot, this.api);
 
         return latestHeaderTimestamp;
       },
@@ -96,7 +98,7 @@ export class AvailParallelFunnel extends BaseFunnel implements ChainFunnel {
 
     const maxSlot = timestampToSlot(
       applyDelay(this.config, chainData[chainData.length - 1].timestamp),
-      cachedState.api
+      this.api
     );
 
     const parallelData: BlockData[] = [];
@@ -111,7 +113,7 @@ export class AvailParallelFunnel extends BaseFunnel implements ChainFunnel {
       doLog(`Avail funnel #${cachedState.lastBlock + 1}-${to}`);
 
       const roundParallelData = await timeout(
-        getDAData(cachedState.api, this.config.lightClient, cachedState.lastBlock + 1, to),
+        getDAData(this.api, this.config.lightClient, cachedState.lastBlock + 1, to),
         GET_DATA_TIMEOUT
       );
 
@@ -128,16 +130,10 @@ export class AvailParallelFunnel extends BaseFunnel implements ChainFunnel {
         }
 
         // get only headers for block that have data
-        parallelHeaders = await timeout(
-          getMultipleHeaderData(cachedState.api, numbers),
-          GET_DATA_TIMEOUT
-        );
+        parallelHeaders = await timeout(getMultipleHeaderData(this.api, numbers), GET_DATA_TIMEOUT);
       } else {
         // unless the range is empty
-        parallelHeaders = await timeout(
-          getMultipleHeaderData(cachedState.api, [to]),
-          GET_DATA_TIMEOUT
-        );
+        parallelHeaders = await timeout(getMultipleHeaderData(this.api, [to]), GET_DATA_TIMEOUT);
       }
 
       for (const blockData of roundParallelData) {
@@ -147,7 +143,7 @@ export class AvailParallelFunnel extends BaseFunnel implements ChainFunnel {
           throw new Error("Couldn't get header for block with app data");
         }
 
-        const blockTimestamp = slotToTimestamp(header.slot, cachedState.api);
+        const blockTimestamp = slotToTimestamp(header.slot, this.api);
 
         const mapped = [];
 
@@ -190,7 +186,7 @@ export class AvailParallelFunnel extends BaseFunnel implements ChainFunnel {
     const cacheEntry = this.getCacheEntry();
 
     cacheEntry.cacheBlocks(parallelData);
-    cacheEntry.cleanOldEntries(slotToTimestamp(cachedState.lastMaxSlot, cachedState.api));
+    cacheEntry.cleanOldEntries(slotToTimestamp(cachedState.lastMaxSlot, this.api));
 
     if (cachedState.timestampToBlock.length === 0) {
       return chainData;
@@ -205,13 +201,13 @@ export class AvailParallelFunnel extends BaseFunnel implements ChainFunnel {
         cachedState.timestampToBlock
       );
 
-    if (cachedState.timestampToBlock[0][0] > slotToTimestamp(maxSlot, cachedState.api)) {
+    if (cachedState.timestampToBlock[0][0] > slotToTimestamp(maxSlot, this.api)) {
       return chainData;
     }
 
     let toBlock = getUpperBoundBlock(
       cachedState.timestampToBlock.map(d => [d[0], d[1].blockNumber]),
-      slotToTimestamp(maxSlot, cachedState.api)
+      slotToTimestamp(maxSlot, this.api)
     );
 
     if (!toBlock) {
@@ -274,14 +270,14 @@ export class AvailParallelFunnel extends BaseFunnel implements ChainFunnel {
       return newEntry;
     })();
 
+    const api = await createApi(config.rpc);
+
     if (!availFunnelCacheEntry.initialized()) {
       const startingBlock = await sharedData.mainNetworkApi.getBlock(startingBlockHeight);
 
       if (!startingBlock) {
         throw new Error("Couldn't get base funnel starting block timestamp");
       }
-
-      const api = await createApi(config.rpc);
 
       const mappedStartingBlockHeight = await findBlockByTimestamp(
         // the genesis doesn't have a slot to extract a timestamp from
@@ -292,10 +288,10 @@ export class AvailParallelFunnel extends BaseFunnel implements ChainFunnel {
         async (blockNumber: number) => await getTimestampForBlockAt(api, blockNumber)
       );
 
-      availFunnelCacheEntry.initialize(api, mappedStartingBlockHeight);
+      availFunnelCacheEntry.initialize(mappedStartingBlockHeight);
     }
 
-    const funnel = new AvailParallelFunnel(sharedData, dbTx, config, chainName, baseFunnel);
+    const funnel = new AvailParallelFunnel(sharedData, dbTx, config, chainName, baseFunnel, api);
 
     await funnel.updateLatestBlock();
 
@@ -317,8 +313,6 @@ export class AvailParallelFunnel extends BaseFunnel implements ChainFunnel {
   }
 
   private async updateLatestBlock(): Promise<number> {
-    const cachedState = this.getState();
-
     const config = this.config;
 
     const delayedHeader = await timeout(
@@ -327,15 +321,15 @@ export class AvailParallelFunnel extends BaseFunnel implements ChainFunnel {
 
         const delayedBlock = Math.max(latestNumber - (this.config.confirmationDepth ?? 0), 1);
 
-        const delayedBlockHash = await cachedState.api.rpc.chain.getBlockHash(delayedBlock);
-        const delayedHeader = await cachedState.api.rpc.chain.getHeader(delayedBlockHash);
+        const delayedBlockHash = await this.api.rpc.chain.getBlockHash(delayedBlock);
+        const delayedHeader = await this.api.rpc.chain.getHeader(delayedBlockHash);
 
         return delayedHeader;
       })(),
       LATEST_BLOCK_UPDATE_TIMEOUT
     );
 
-    const slot = getSlotFromHeader(delayedHeader, cachedState.api);
+    const slot = getSlotFromHeader(delayedHeader, this.api);
 
     this.sharedData.cacheManager.cacheEntries[AvailFunnelCacheEntry.SYMBOL]?.updateLatestBlock({
       number: delayedHeader.number.toNumber(),

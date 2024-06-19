@@ -111,8 +111,6 @@ export async function getDAData(
           const dbytes = base64Decode(d.extrinsic);
           const decoded = api.createType('Extrinsic', dbytes);
 
-          // decoded.args
-
           const data = base64Decode(d.data);
           const dstring = new TextDecoder().decode(data);
 
