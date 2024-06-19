@@ -1,14 +1,6 @@
 import type { AvailConfig, SubmittedData } from '@paima/utils';
-import {
-  doLog,
-  logError,
-  delay,
-  ConfigNetworkType,
-  InternalEventType,
-  timeout,
-} from '@paima/utils';
+import { doLog, logError, delay, InternalEventType, timeout } from '@paima/utils';
 import type { ChainFunnel, ReadPresyncDataFrom } from '@paima/runtime';
-import type { CdeGenericDatum } from '@paima/sm';
 import { type ChainData, type PresyncChainData } from '@paima/sm';
 import { BaseFunnel } from '../BaseFunnel.js';
 import type { FunnelSharedData } from '../BaseFunnel.js';
@@ -28,6 +20,7 @@ import {
   slotToTimestamp,
   timestampToSlot,
   GET_DATA_TIMEOUT,
+  getLatestAvailableBlockNumberFromLightClient,
 } from './utils.js';
 import {
   addInternalCheckpointingEvent,
@@ -322,15 +315,13 @@ export class AvailParallelFunnel extends BaseFunnel implements ChainFunnel {
   private async updateLatestBlock(): Promise<number> {
     const cachedState = this.getState();
 
+    const config = this.config;
+
     const delayedHeader = await timeout(
       (async (): Promise<Header> => {
-        const latestHead = await cachedState.api.rpc.chain.getFinalizedHead();
-        const latestHeader = await cachedState.api.rpc.chain.getHeader(latestHead);
+        const latestNumber = await getLatestAvailableBlockNumberFromLightClient(config.lightClient);
 
-        const delayedBlock = Math.max(
-          latestHeader.number.toNumber() - (this.config.confirmationDepth ?? 0),
-          1
-        );
+        const delayedBlock = Math.max(latestNumber - (this.config.confirmationDepth ?? 0), 1);
 
         const delayedBlockHash = await cachedState.api.rpc.chain.getBlockHash(delayedBlock);
         const delayedHeader = await cachedState.api.rpc.chain.getHeader(delayedBlockHash);
