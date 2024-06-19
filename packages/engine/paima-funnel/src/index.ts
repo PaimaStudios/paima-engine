@@ -22,7 +22,6 @@ import type Web3 from 'web3';
 import { wrapToMinaFunnel } from './funnels/mina/funnel.js';
 import { AvailBlockFunnel } from './funnels/avail/baseFunnel.js';
 import { AvailSharedApi } from './funnels/avail/utils.js';
-import { CoinSelectionStrategyCIP2 } from '@dcspark/cardano-multiplatform-lib-nodejs';
 
 export class Web3SharedApi extends BaseFunnelSharedApi {
   public constructor(protected web3: Web3) {

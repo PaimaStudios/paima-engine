@@ -16,6 +16,7 @@ import {
   getMultipleHeaderData,
   slotToTimestamp,
 } from './utils.js';
+import { processDataUnit } from '../../paima-l2-processing.js';
 
 export class AvailBlockFunnel extends BaseFunnel implements ChainFunnel {
   config: AvailConfig;
@@ -109,12 +110,27 @@ export class AvailBlockFunnel extends BaseFunnel implements ChainFunnel {
 
     for (const header of parallelHeaders) {
       const blockData = submittedData.find(bd => bd.blockNumber === header.number);
+      const blockTimestamp = slotToTimestamp(header.slot, this.api);
+
+      const mappedSubmittedData = [];
+
+      if (blockData?.submittedData) {
+        const processed = await Promise.all(
+          blockData.submittedData.map(unit =>
+            processDataUnit(unit, blockData.blockNumber, header.slot, this.dbTx)
+          )
+        );
+
+        for (const data of processed) {
+          mappedSubmittedData.push(...data);
+        }
+      }
 
       data.push({
         blockNumber: header.number,
-        timestamp: slotToTimestamp(header.slot, this.api),
+        timestamp: blockTimestamp,
         blockHash: header.hash,
-        submittedData: blockData?.submittedData || [],
+        submittedData: mappedSubmittedData,
       });
     }
 
