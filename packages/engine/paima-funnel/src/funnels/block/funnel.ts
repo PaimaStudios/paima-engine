@@ -14,6 +14,7 @@ import type { FunnelSharedData } from '../BaseFunnel.js';
 import { RpcCacheEntry, RpcRequestState } from '../FunnelCache.js';
 import type { PoolClient } from 'pg';
 import { FUNNEL_PRESYNC_FINISHED } from '@paima/utils';
+import { MainEvmConfig } from '@paima/utils/src/config/loading.js';
 
 const GET_BLOCK_NUMBER_TIMEOUT = 5000;
 
@@ -236,7 +237,9 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
 
   public static async recoverState(
     sharedData: FunnelSharedData,
-    dbTx: PoolClient
+    dbTx: PoolClient,
+    chainName: string,
+    config: MainEvmConfig
   ): Promise<BlockFunnel> {
     // we always write to this cache instead of reading from it
     // as other funnels used may want to read from this cached data
@@ -253,8 +256,6 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
       sharedData.cacheManager.cacheEntries[RpcCacheEntry.SYMBOL] = newEntry;
       return newEntry;
     })();
-
-    const [chainName, config] = await GlobalConfig.mainEvmConfig();
 
     cacheEntry.updateState(config.chainId, latestBlock);
 

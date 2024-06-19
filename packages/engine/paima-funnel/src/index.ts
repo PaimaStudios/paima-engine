@@ -2,6 +2,7 @@ import type { PoolClient } from 'pg';
 import {
   ENV,
   GlobalConfig,
+  doLog,
   getPaimaL2Contract,
   initWeb3,
   validatePaimaL2ContractAddress,
@@ -19,6 +20,7 @@ import { wrapToAvailParallelFunnel } from './funnels/avail/parallelFunnel.js';
 import { ConfigNetworkType } from '@paima/utils';
 import type Web3 from 'web3';
 import { wrapToMinaFunnel } from './funnels/mina/funnel.js';
+import { AvailBlockFunnel } from './funnels/avail/baseFunnel.js';
 
 export class FunnelFactory implements IFunnelFactory {
   private constructor(public sharedData: FunnelSharedData) {}
@@ -84,7 +86,22 @@ export class FunnelFactory implements IFunnelFactory {
   async generateFunnel(dbTx: PoolClient): Promise<ChainFunnel> {
     // start with a base funnel
     // and wrap it with dynamic decorators as needed
-    let chainFunnel: ChainFunnel = await BlockFunnel.recoverState(this.sharedData, dbTx);
+    let chainFunnel: ChainFunnel | undefined;
+
+    try {
+      const [chainName, config] = await GlobalConfig.mainEvmConfig();
+      chainFunnel = await BlockFunnel.recoverState(this.sharedData, dbTx, chainName, config);
+    } catch (e) {}
+
+    try {
+      const [chainName, config] = await GlobalConfig.mainAvailConfig();
+      chainFunnel = await AvailBlockFunnel.recoverState(this.sharedData, dbTx, chainName, config);
+    } catch (e) {}
+
+    if (!chainFunnel) {
+      throw new Error('No configuration found for the main network');
+    }
+
     for (const [chainName, config] of await GlobalConfig.otherEvmConfig()) {
       chainFunnel = await wrapToParallelEvmFunnel(
         chainFunnel,
@@ -107,7 +124,7 @@ export class FunnelFactory implements IFunnelFactory {
       );
     }
 
-    for (const [chainName, config] of await GlobalConfig.availConfig()) {
+    for (const [chainName, config] of await GlobalConfig.otherAvailConfig()) {
       chainFunnel = await wrapToAvailParallelFunnel(
         chainFunnel,
         this.sharedData,

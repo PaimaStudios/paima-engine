@@ -74,11 +74,23 @@ export class GlobalConfig {
       .map(key => [key, instance[key] as MinaConfig]);
   }
 
-  public static async availConfig(): Promise<[string, AvailConfig][]> {
+  public static async mainAvailConfig(): Promise<[string, AvailConfig]> {
+    const instance = await GlobalConfig.getInstance();
+
+    for (const key of Object.keys(instance)) {
+      if (instance[key].type === ConfigNetworkType.AVAIL_MAIN) {
+        return [key, instance[key] as AvailConfig];
+      }
+    }
+
+    throw new Error('main config not found');
+  }
+
+  public static async otherAvailConfig(): Promise<[string, AvailConfig][]> {
     const instance = await GlobalConfig.getInstance();
 
     return Object.keys(instance)
-      .filter(key => instance[key].type === ConfigNetworkType.AVAIL)
+      .filter(key => instance[key].type === ConfigNetworkType.AVAIL_OTHER)
       .map(key => [key, instance[key] as AvailConfig]);
   }
 }
