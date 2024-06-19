@@ -1,5 +1,4 @@
-import type { ChainData, ChainDataExtensionDatum, SubmittedData } from '@paima/sm';
-import type { ApiPromise } from 'avail-js-sdk';
+import type { ChainData, SubmittedData } from '@paima/sm';
 import type pg from 'pg';
 
 export interface FunnelCacheEntry {
@@ -240,7 +239,6 @@ export class MinaFunnelCacheEntry implements FunnelCacheEntry {
 }
 
 export type AvailFunnelCacheEntryState = {
-  api: ApiPromise;
   latestBlock: { hash: string; number: number; slot: number } | undefined;
   startingBlockHeight: number;
   bufferedChainData: ChainData[];
@@ -257,9 +255,8 @@ export class AvailFunnelCacheEntry implements FunnelCacheEntry {
     return !!this.state;
   }
 
-  public initialize(api: ApiPromise, startingBlockHeight: number): void {
+  public initialize(startingBlockHeight: number): void {
     this.state = {
-      api: api,
       latestBlock: undefined,
       startingBlockHeight: startingBlockHeight,
       bufferedChainData: [],
