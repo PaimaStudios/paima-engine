@@ -4,7 +4,7 @@ import type {
   EvmPresyncChainData,
   InternalEvent,
 } from '@paima/sm';
-import type { InternalEventType } from '@paima/utils';
+import type { InternalEventType, SubmittedData } from '@paima/utils';
 import { ConfigNetworkType, doLog } from '@paima/utils';
 
 export function groupCdeData(
@@ -38,8 +38,9 @@ export function composeChainData(
   baseChainData: ChainData[],
   cdeData: {
     blockNumber: number;
-    extensionDatums: ChainDataExtensionDatum[];
+    extensionDatums?: ChainDataExtensionDatum[];
     internalEvents?: InternalEvent[];
+    submittedData?: SubmittedData[];
   }[]
 ): ChainData[] {
   return baseChainData.map(blockData => {
@@ -65,6 +66,14 @@ export function composeChainData(
       }
     } else if (matchingData.internalEvents) {
       blockData.internalEvents = matchingData.internalEvents;
+    }
+
+    if (blockData.submittedData) {
+      if (matchingData.submittedData) {
+        blockData.submittedData.push(...matchingData.submittedData);
+      }
+    } else if (matchingData.submittedData) {
+      blockData.submittedData = matchingData.submittedData;
     }
 
     return blockData;
