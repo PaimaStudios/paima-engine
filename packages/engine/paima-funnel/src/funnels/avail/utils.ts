@@ -134,3 +134,18 @@ export async function getDAData(
 
   return data;
 }
+
+export async function getLatestAvailableBlockNumberFromLightClient(lc: string): Promise<number> {
+  const responseRaw = await fetch(`${lc}/v2/status`);
+
+  if (responseRaw.status !== 200) {
+    throw new Error("Couldn't get light client status");
+  }
+
+  const response: { blocks: { available: { first: number; last: number } } } =
+    await responseRaw.json();
+
+  const last = response.blocks.available.last;
+
+  return last;
+}
