@@ -1,5 +1,5 @@
-import type { AvailConfig, SubmittedData } from '@paima/utils';
-import { GlobalConfig, doLog, timeout } from '@paima/utils';
+import type { AvailConfig } from '@paima/utils';
+import { doLog, timeout } from '@paima/utils';
 import type { ChainFunnel, ReadPresyncDataFrom } from '@paima/runtime';
 import { type ChainData, type PresyncChainData } from '@paima/sm';
 import { BaseFunnel } from '../BaseFunnel.js';

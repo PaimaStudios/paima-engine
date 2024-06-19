@@ -251,7 +251,7 @@ export class EmulatedBlocksFunnel extends BaseFunnel {
       return newEntry.processingQueue;
     })();
 
-    const [chainName, _config] = await GlobalConfig.mainConfig();
+    const [chainName] = await GlobalConfig.mainConfig();
 
     const [b] = await getLatestProcessedBlockHeight.run(undefined, dbTx);
     if (!b) {
