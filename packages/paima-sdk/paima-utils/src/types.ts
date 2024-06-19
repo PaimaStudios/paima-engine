@@ -11,12 +11,15 @@ export type PolkadotAddress = string;
 export type AlgorandAddress = string;
 export type MinaAddress = string;
 
-// eslint-disable-next-line @typescript-eslint/no-duplicate-type-constituents -- the overlapping types is on purpose for readability
 export type WalletAddress =
   | ETHAddress
+  // eslint-disable-next-line @typescript-eslint/no-duplicate-type-constituents -- the overlapping types is on purpose for readability
   | CardanoAddress
+  // eslint-disable-next-line @typescript-eslint/no-duplicate-type-constituents -- the overlapping types is on purpose for readability
   | PolkadotAddress
+  // eslint-disable-next-line @typescript-eslint/no-duplicate-type-constituents -- the overlapping types is on purpose for readability
   | AlgorandAddress
+  // eslint-disable-next-line @typescript-eslint/no-duplicate-type-constituents -- the overlapping types is on purpose for readability
   | MinaAddress;
 
 export type ContractAddress = ETHAddress;

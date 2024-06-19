@@ -1,12 +1,5 @@
 import type { PoolClient } from 'pg';
-import {
-  ENV,
-  GlobalConfig,
-  doLog,
-  getPaimaL2Contract,
-  initWeb3,
-  validatePaimaL2ContractAddress,
-} from '@paima/utils';
+import { ENV, GlobalConfig, getPaimaL2Contract, initWeb3 } from '@paima/utils';
 import { loadChainDataExtensions } from '@paima/runtime';
 import type { ChainFunnel, IFunnelFactory } from '@paima/runtime';
 import type { ChainDataExtension } from '@paima/sm';
