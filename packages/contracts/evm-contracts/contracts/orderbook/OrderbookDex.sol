@@ -4,17 +4,24 @@ pragma solidity ^0.8.20;
 
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {Arrays} from "@openzeppelin/contracts/utils/Arrays.sol";
-import {ERC1155Holder} from "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
+import {ERC1155HolderUpgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC1155/utils/ERC1155HolderUpgradeable.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 
 import {IInverseProjected1155} from "../token/IInverseProjected1155.sol";
 import {IOrderbookDex} from "./IOrderbookDex.sol";
 
 /// @notice Facilitates base-chain trading of assets that are living on a different app-chain.
 /// @dev Orders are identified by an asset-specific unique incremental `orderId`.
-contract OrderbookDex is IOrderbookDex, ERC1155Holder, Ownable, ReentrancyGuard {
+contract OrderbookDex is
+    IOrderbookDex,
+    ERC1155HolderUpgradeable,
+    OwnableUpgradeable,
+    UUPSUpgradeable,
+    ReentrancyGuardUpgradeable
+{
     using Address for address payable;
     using Arrays for uint256[];
     using Arrays for address[];
@@ -45,12 +52,22 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, Ownable, ReentrancyGuard 
     error InvalidInput(uint256 input);
     error Unauthorized(address sender);
 
-    constructor(
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
+    function initialize(
         address _owner,
         uint256 _defaultMakerFee,
         uint256 _defaultTakerFee,
         uint256 _orderCreationFee
-    ) Ownable(_owner) {
+    ) public initializer {
+        __Ownable_init(_owner);
+        __UUPSUpgradeable_init();
+        __ERC1155Holder_init();
+        __ReentrancyGuard_init();
+
         defaultMakerFee = _defaultMakerFee;
         defaultTakerFee = _defaultTakerFee;
         orderCreationFee = _orderCreationFee;
@@ -349,10 +366,12 @@ contract OrderbookDex is IOrderbookDex, ERC1155Holder, Ownable, ReentrancyGuard 
     /// @dev Returns true if this contract implements the interface defined by `interfaceId`. See EIP165.
     function supportsInterface(
         bytes4 interfaceId
-    ) public view virtual override(ERC1155Holder, IERC165) returns (bool) {
+    ) public view virtual override(ERC1155HolderUpgradeable, IERC165) returns (bool) {
         return
             interfaceId == type(IOrderbookDex).interfaceId || super.supportsInterface(interfaceId);
     }
+
+    function _authorizeUpgrade(address) internal override onlyOwner {}
 
     function _createSellOrder(
         address asset,

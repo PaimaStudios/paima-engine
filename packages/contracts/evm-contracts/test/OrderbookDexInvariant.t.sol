@@ -13,6 +13,7 @@ import {IInverseAppProjected1155} from "../contracts/token/IInverseAppProjected1
 import {InverseAppProjected1155} from "../contracts/token/InverseAppProjected1155.sol";
 import {IOrderbookDex} from "../contracts/orderbook/IOrderbookDex.sol";
 import {OrderbookDex} from "../contracts/orderbook/OrderbookDex.sol";
+import {OrderbookDexProxy} from "../contracts/Proxy/OrderbookDexProxy.sol";
 
 contract AssetHandler is CTest {
     CheatCodes vm = CheatCodes(HEVM_ADDRESS);
@@ -383,7 +384,17 @@ contract OrderbookDexInvariantTest is CTest, ERC1155Holder {
 
     function setUp() public {
         asset = new InverseAppProjected1155("Gold", "GOLD", address(this));
-        dex = new OrderbookDex(address(this), makerFee, takerFee, orderCreationFee);
+        dex = OrderbookDex(
+            address(
+                new OrderbookDexProxy(
+                    address(new OrderbookDex()),
+                    address(this),
+                    makerFee,
+                    takerFee,
+                    orderCreationFee
+                )
+            )
+        );
         dexHandler = new OrderbookDexHandler(asset, dex);
         assetHandler = new AssetHandler(asset, dex);
         targetContract(address(assetHandler));
