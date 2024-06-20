@@ -13,6 +13,7 @@ import {IInverseAppProjected1155} from "../contracts/token/IInverseAppProjected1
 import {InverseAppProjected1155} from "../contracts/token/InverseAppProjected1155.sol";
 import {IOrderbookDex} from "../contracts/orderbook/IOrderbookDex.sol";
 import {OrderbookDex} from "../contracts/orderbook/OrderbookDex.sol";
+import {OrderbookDexProxy} from "../contracts/Proxy/OrderbookDexProxy.sol";
 
 contract AssetHandler is CTest {
     CheatCodes vm = CheatCodes(HEVM_ADDRESS);
@@ -109,10 +110,19 @@ contract OrderbookDexHandler is CTest, ERC1155Holder {
         asset.setApprovalForAll(address(dex), true);
 
         // Take note of the previous order id
-        previousOrderId = dex.currentOrderId();
+        previousOrderId = dex.currentOrderId(address(asset));
+
+        uint256 orderCreationFee = dex.orderCreationFee();
+        vm.deal(currentActor, orderCreationFee);
 
         // Execute the sell order creation
-        return dex.createSellOrder(assetId, assetAmount, price);
+        return
+            dex.createSellOrder{value: orderCreationFee}(
+                address(asset),
+                assetId,
+                assetAmount,
+                price
+            );
     }
 
     function createBatchSellOrder(
@@ -138,8 +148,17 @@ contract OrderbookDexHandler is CTest, ERC1155Holder {
         }
         asset.setApprovalForAll(address(dex), true);
 
+        uint256 orderCreationFee = dex.orderCreationFee();
+        vm.deal(currentActor, orderCreationFee * newAssetIds.length);
+
         // Execute the batch sell order creation
-        return dex.createBatchSellOrder(newAssetIds, newAssetAmounts, newPricesPerAssets);
+        return
+            dex.createBatchSellOrder{value: orderCreationFee * newAssetIds.length}(
+                address(asset),
+                newAssetIds,
+                newAssetAmounts,
+                newPricesPerAssets
+            );
     }
 
     function fillOrdersExactEth(
@@ -155,7 +174,7 @@ contract OrderbookDexHandler is CTest, ERC1155Holder {
         uint256 sumAssetAmount;
         uint256 sumPrice;
         for (uint256 i; i < inputLength; ++i) {
-            IOrderbookDex.Order memory order = dex.getOrder(orderIds[i]);
+            IOrderbookDex.Order memory order = dex.getOrder(address(asset), orderIds[i]);
 
             if (!orderIdUsed[orderIds[i]]) {
                 sumAssetAmount += order.assetAmount;
@@ -173,23 +192,25 @@ contract OrderbookDexHandler is CTest, ERC1155Holder {
 
         // Set current actor's balance to expected total price to avoid revert
         uint256 value = sumPrice;
+        (, uint256 takerFee) = dex.getAssetAppliedFees(address(asset));
+        value += (value * takerFee) / 10000;
         vm.deal(currentActor, value);
 
         // Take note of buyer's tokens balances and orders' asset amounts before filling orders
         // for the assertions later
         uint256[] memory orderAssetAmountBefore = new uint256[](inputLength);
         for (uint256 i; i < inputLength; ++i) {
-            IOrderbookDex.Order memory order = dex.getOrder(newOrderIds[i]);
+            IOrderbookDex.Order memory order = dex.getOrder(address(asset), newOrderIds[i]);
             buyerTokenBalanceBefore[order.assetId] = asset.balanceOf(currentActor, order.assetId);
             orderAssetAmountBefore[i] = order.assetAmount;
         }
 
         // Execute the fills
-        dex.fillOrdersExactEth{value: value}(minimumAsset, newOrderIds);
+        dex.fillOrdersExactEth{value: value}(address(asset), minimumAsset, newOrderIds);
 
         // Calculate the expected token balance gain for each token
         for (uint256 i; i < inputLength; ++i) {
-            IOrderbookDex.Order memory order = dex.getOrder(newOrderIds[i]);
+            IOrderbookDex.Order memory order = dex.getOrder(address(asset), newOrderIds[i]);
             expectedTokenBalanceGain[order.assetId] +=
                 orderAssetAmountBefore[i] -
                 order.assetAmount;
@@ -197,7 +218,7 @@ contract OrderbookDexHandler is CTest, ERC1155Holder {
 
         // Assert that the buyer's token balances have increased by the expected amount (that was credited from the orders' asset amounts)
         for (uint256 i; i < inputLength; ++i) {
-            IOrderbookDex.Order memory order = dex.getOrder(newOrderIds[i]);
+            IOrderbookDex.Order memory order = dex.getOrder(address(asset), newOrderIds[i]);
             assertEq(
                 asset.balanceOf(currentActor, order.assetId),
                 buyerTokenBalanceBefore[order.assetId] + expectedTokenBalanceGain[order.assetId]
@@ -206,7 +227,7 @@ contract OrderbookDexHandler is CTest, ERC1155Holder {
 
         // Clean-up
         for (uint256 i; i < inputLength; ++i) {
-            IOrderbookDex.Order memory order = dex.getOrder(newOrderIds[i]);
+            IOrderbookDex.Order memory order = dex.getOrder(address(asset), newOrderIds[i]);
             delete expectedTokenBalanceGain[order.assetId];
             delete orderIdUsed[newOrderIds[i]];
         }
@@ -226,7 +247,7 @@ contract OrderbookDexHandler is CTest, ERC1155Holder {
         uint256 sumAssetAmount;
         uint256 sumPrice;
         for (uint256 i; i < inputLength; ++i) {
-            IOrderbookDex.Order memory order = dex.getOrder(orderIds[i]);
+            IOrderbookDex.Order memory order = dex.getOrder(address(asset), orderIds[i]);
 
             if (!orderIdUsed[orderIds[i]]) {
                 sumAssetAmount += order.assetAmount;
@@ -245,23 +266,25 @@ contract OrderbookDexHandler is CTest, ERC1155Holder {
         // Set current actor's balance to expected total price plus 100 to avoid revert and
         // to provide surplus which should be refunded
         uint256 value = sumPrice + 100;
+        (, uint256 takerFee) = dex.getAssetAppliedFees(address(asset));
+        value += (value * takerFee) / 10000;
         vm.deal(currentActor, value);
 
         // Take note of buyer's tokens balances and orders' asset amounts before filling orders
         // for the assertions later
         uint256[] memory orderAssetAmountBefore = new uint256[](inputLength);
         for (uint256 i; i < inputLength; ++i) {
-            IOrderbookDex.Order memory order = dex.getOrder(newOrderIds[i]);
+            IOrderbookDex.Order memory order = dex.getOrder(address(asset), newOrderIds[i]);
             buyerTokenBalanceBefore[order.assetId] = asset.balanceOf(currentActor, order.assetId);
             orderAssetAmountBefore[i] = order.assetAmount;
         }
 
         // Execute the fills
-        dex.fillOrdersExactAsset{value: value}(assetAmount, newOrderIds);
+        dex.fillOrdersExactAsset{value: value}(address(asset), assetAmount, newOrderIds);
 
         // Calculate the expected token balance gain for each token
         for (uint256 i; i < inputLength; ++i) {
-            IOrderbookDex.Order memory order = dex.getOrder(newOrderIds[i]);
+            IOrderbookDex.Order memory order = dex.getOrder(address(asset), newOrderIds[i]);
             expectedTokenBalanceGain[order.assetId] +=
                 orderAssetAmountBefore[i] -
                 order.assetAmount;
@@ -269,7 +292,7 @@ contract OrderbookDexHandler is CTest, ERC1155Holder {
 
         // Assert that the buyer's token balances have increased by the expected amount (that was credited from the orders' asset amounts)
         for (uint256 i; i < inputLength; ++i) {
-            IOrderbookDex.Order memory order = dex.getOrder(newOrderIds[i]);
+            IOrderbookDex.Order memory order = dex.getOrder(address(asset), newOrderIds[i]);
             assertEq(
                 asset.balanceOf(currentActor, order.assetId),
                 buyerTokenBalanceBefore[order.assetId] + expectedTokenBalanceGain[order.assetId]
@@ -278,7 +301,7 @@ contract OrderbookDexHandler is CTest, ERC1155Holder {
 
         // Clean-up
         for (uint256 i; i < inputLength; ++i) {
-            IOrderbookDex.Order memory order = dex.getOrder(newOrderIds[i]);
+            IOrderbookDex.Order memory order = dex.getOrder(address(asset), newOrderIds[i]);
             delete expectedTokenBalanceGain[order.assetId];
             delete orderIdUsed[newOrderIds[i]];
         }
@@ -290,8 +313,8 @@ contract OrderbookDexHandler is CTest, ERC1155Holder {
         uint256 actorIndexSeed
     ) public useActor(actorIndexSeed) {
         // If the order does not exist, get the last order id
-        if (dex.getOrder(orderId).assetAmount == 0) {
-            orderId = dex.currentOrderId();
+        if (dex.getOrder(address(asset), orderId).assetAmount == 0) {
+            orderId = dex.currentOrderId(address(asset));
             // If there are no orders, return
             if (orderId == 0) {
                 return;
@@ -301,19 +324,19 @@ contract OrderbookDexHandler is CTest, ERC1155Holder {
         }
 
         // Assert that you can't cancel an order if you're not the seller
-        address seller = dex.getOrder(orderId).seller;
+        address seller = dex.getOrder(address(asset), orderId).seller;
         if (currentActor != seller) {
             vm.expectRevert(
                 abi.encodeWithSelector(OrderbookDex.Unauthorized.selector, currentActor)
             );
-            dex.cancelSellOrder(orderId);
+            dex.cancelSellOrder(address(asset), orderId);
         }
 
         // Prank the order's seller
         vm.startPrank(seller);
 
         // Execute the cancel
-        dex.cancelSellOrder(orderId);
+        dex.cancelSellOrder(address(asset), orderId);
     }
 
     function cancelBatchSellOrder(
@@ -326,7 +349,7 @@ contract OrderbookDexHandler is CTest, ERC1155Holder {
         // Create new orders if the order does not exist or the seller is not the current actor
         uint256[] memory _newOrderIds = new uint256[](len);
         for (uint256 i; i < len; ++i) {
-            IOrderbookDex.Order memory order = dex.getOrder(orderIds[i]);
+            IOrderbookDex.Order memory order = dex.getOrder(address(asset), orderIds[i]);
             if (order.assetAmount == 0 || order.seller != currentActor) {
                 uint256 x = uint256(keccak256(abi.encodePacked(i)));
                 _newOrderIds[i] = this.createSellOrder(x, x, x, actorIndexSeed);
@@ -341,7 +364,7 @@ contract OrderbookDexHandler is CTest, ERC1155Holder {
         }
 
         // Execute the batch cancel
-        dex.cancelBatchSellOrder(_newOrderIds);
+        dex.cancelBatchSellOrder(address(asset), _newOrderIds);
     }
 
     fallback() external payable {}
@@ -355,10 +378,23 @@ contract OrderbookDexInvariantTest is CTest, ERC1155Holder {
     OrderbookDexHandler public dexHandler;
     IInverseAppProjected1155 asset;
     AssetHandler public assetHandler;
+    uint256 makerFee = 40;
+    uint256 takerFee = 60;
+    uint256 orderCreationFee = 10000 gwei;
 
     function setUp() public {
         asset = new InverseAppProjected1155("Gold", "GOLD", address(this));
-        dex = new OrderbookDex(address(asset));
+        dex = OrderbookDex(
+            address(
+                new OrderbookDexProxy(
+                    address(new OrderbookDex()),
+                    address(this),
+                    makerFee,
+                    takerFee,
+                    orderCreationFee
+                )
+            )
+        );
         dexHandler = new OrderbookDexHandler(asset, dex);
         assetHandler = new AssetHandler(asset, dex);
         targetContract(address(assetHandler));
@@ -366,24 +402,24 @@ contract OrderbookDexInvariantTest is CTest, ERC1155Holder {
     }
 
     function invariant_ordersAssetAmountEqualsContractTokenBalance() public {
-        for (uint256 i; i < dex.currentOrderId(); ++i) {
-            IOrderbookDex.Order memory order = dex.getOrder(i);
+        for (uint256 i; i < dex.currentOrderId(address(asset)); ++i) {
+            IOrderbookDex.Order memory order = dex.getOrder(address(asset), i);
             assertEq(order.assetAmount, asset.balanceOf(address(dex), order.assetId));
         }
     }
 
-    function invariant_contractDoesNotObtainEther() public {
-        assertEq(address(dex).balance, 0);
-    }
-
     function invariant_orderIdIsIncremental() public {
-        uint256 currentId = dex.currentOrderId();
+        uint256 currentId = dex.currentOrderId(address(asset));
         uint256 previousId = dexHandler.previousOrderId();
         if (currentId == previousId) {
             assertEq(currentId, 0);
             return;
         }
         assertGe(currentId, previousId);
+    }
+
+    function invariant_contractHasBalanceAtLeastOfCollectedFees() public {
+        assertGe(address(dex).balance, dex.collectedFees());
     }
 
     receive() external payable {}
