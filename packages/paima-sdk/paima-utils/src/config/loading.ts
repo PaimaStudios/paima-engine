@@ -368,6 +368,14 @@ function validateConfig(configs: Static<typeof BaseConfigWithoutDefaults>): void
   if (paimaContractEntries.length > 1) {
     throw new Error('There can only be a single network with the paimaL2ContractAddress setting');
   }
+
+  const mainNetworks = Object.values(configs).filter(
+    config => config.type === ConfigNetworkType.EVM || config.type === ConfigNetworkType.AVAIL_MAIN
+  );
+
+  if (mainNetworks.length > 1) {
+    throw new Error('There can only be a single main network (evm or avail_main types)');
+  }
 }
 
 function checkOrError<T extends TSchema>(name: string, structure: T, config: unknown): Static<T> {
