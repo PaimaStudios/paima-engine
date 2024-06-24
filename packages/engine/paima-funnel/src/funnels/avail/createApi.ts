@@ -16,9 +16,9 @@ export async function createApi(apiUrl: string): Promise<ApiPromise> {
           apis[apiUrl].api = rapi;
 
           const [chain, nodeName, nodeVersion] = await Promise.all([
-            apis[apiUrl].api!.rpc.system.chain(),
-            apis[apiUrl].api!.rpc.system.name(),
-            apis[apiUrl].api!.rpc.system.version(),
+            apis[apiUrl].api.rpc.system.chain(),
+            apis[apiUrl].api.rpc.system.name(),
+            apis[apiUrl].api.rpc.system.version(),
           ]);
 
           doLog(
