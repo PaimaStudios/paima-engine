@@ -135,21 +135,13 @@ export class FunnelFactory implements IFunnelFactory {
         chainFunnel,
         this.sharedData,
         dbTx,
-        ENV.START_BLOCKHEIGHT,
         chainName,
         config
       );
     }
     chainFunnel = await wrapToCarpFunnel(chainFunnel, this.sharedData, dbTx, ENV.START_BLOCKHEIGHT);
     for (const [chainName, config] of await GlobalConfig.minaConfig()) {
-      chainFunnel = await wrapToMinaFunnel(
-        chainFunnel,
-        this.sharedData,
-        dbTx,
-        ENV.START_BLOCKHEIGHT,
-        chainName,
-        config
-      );
+      chainFunnel = await wrapToMinaFunnel(chainFunnel, this.sharedData, dbTx, chainName, config);
     }
 
     for (const [chainName, config] of await GlobalConfig.otherAvailConfig()) {
@@ -157,7 +149,6 @@ export class FunnelFactory implements IFunnelFactory {
         chainFunnel,
         this.sharedData,
         dbTx,
-        ENV.START_BLOCKHEIGHT,
         chainName,
         config
       );

@@ -1,7 +1,7 @@
 import type { ChainFunnel, ReadPresyncDataFrom } from '@paima/runtime';
 import type { ChainData, ChainDataExtension, PresyncChainData } from '@paima/sm';
 import type { PoolClient } from 'pg';
-import type { FUNNEL_PRESYNC_FINISHED } from '@paima/utils';
+import { ENV, type FUNNEL_PRESYNC_FINISHED } from '@paima/utils';
 import type { FunnelCacheManager } from './FunnelCache.js';
 
 export type FunnelSharedData = {
@@ -12,6 +12,16 @@ export type FunnelSharedData = {
 };
 
 export class BaseFunnelSharedApi {
+  private startingBlockTimestamp: Promise<{ timestamp: number | string } | undefined> | undefined;
+
+  public async getStartingBlock(): Promise<{ timestamp: number | string } | undefined> {
+    if (!this.startingBlockTimestamp) {
+      this.startingBlockTimestamp = this.getBlock(ENV.START_BLOCKHEIGHT);
+    }
+
+    return await this.startingBlockTimestamp;
+  }
+
   public async getBlock(_height: number): Promise<{ timestamp: number | string } | undefined> {
     return undefined;
   }

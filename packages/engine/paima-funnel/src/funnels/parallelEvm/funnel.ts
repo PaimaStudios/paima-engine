@@ -7,6 +7,7 @@ import {
   delay,
   InternalEventType,
   ChainDataExtensionType,
+  ENV,
 } from '@paima/utils';
 import type { ChainFunnel, ReadPresyncDataFrom } from '@paima/runtime';
 import { type ChainData, type EvmPresyncChainData, type PresyncChainData } from '@paima/sm';
@@ -507,8 +508,7 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
     dbTx: PoolClient,
     baseFunnel: ChainFunnel,
     chainName: string,
-    config: OtherEvmConfig,
-    startingBlockHeight: number
+    config: OtherEvmConfig
   ): Promise<ParallelEvmFunnel> {
     const web3 = await initWeb3(config.chainUri);
 
@@ -535,7 +535,7 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
     })();
 
     if (evmCacheEntry.getState(config.chainId).state !== RpcRequestState.HasResult) {
-      const startingBlock = await sharedData.mainNetworkApi.getBlock(startingBlockHeight);
+      const startingBlock = await sharedData.mainNetworkApi.getStartingBlock();
 
       if (!startingBlock) {
         throw new Error("Couldn't get main's network staring block timestamp");
@@ -597,7 +597,6 @@ export async function wrapToParallelEvmFunnel(
   chainFunnel: ChainFunnel,
   sharedData: FunnelSharedData,
   dbTx: PoolClient,
-  startingBlockHeight: number,
   chainName: string,
   config: OtherEvmConfig
 ): Promise<ChainFunnel> {
@@ -607,8 +606,7 @@ export async function wrapToParallelEvmFunnel(
       dbTx,
       chainFunnel,
       chainName,
-      config,
-      startingBlockHeight
+      config
     );
     return ebp;
   } catch (err) {

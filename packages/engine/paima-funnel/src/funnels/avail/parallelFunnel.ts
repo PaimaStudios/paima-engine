@@ -257,8 +257,7 @@ export class AvailParallelFunnel extends BaseFunnel implements ChainFunnel {
     dbTx: PoolClient,
     baseFunnel: ChainFunnel,
     chainName: string,
-    config: AvailConfig,
-    startingBlockHeight: number
+    config: AvailConfig
   ): Promise<AvailParallelFunnel> {
     const availFunnelCacheEntry = ((): AvailFunnelCacheEntry => {
       const entry = sharedData.cacheManager.cacheEntries[AvailFunnelCacheEntry.SYMBOL];
@@ -273,7 +272,7 @@ export class AvailParallelFunnel extends BaseFunnel implements ChainFunnel {
     const api = await createApi(config.rpc);
 
     if (!availFunnelCacheEntry.initialized()) {
-      const startingBlock = await sharedData.mainNetworkApi.getBlock(startingBlockHeight);
+      const startingBlock = await sharedData.mainNetworkApi.getStartingBlock();
 
       if (!startingBlock) {
         throw new Error("Couldn't get base funnel starting block timestamp");
@@ -392,7 +391,6 @@ export async function wrapToAvailParallelFunnel(
   chainFunnel: ChainFunnel,
   sharedData: FunnelSharedData,
   dbTx: PoolClient,
-  startingBlockHeight: number,
   chainName: string,
   config: AvailConfig
 ): Promise<ChainFunnel> {
@@ -402,8 +400,7 @@ export async function wrapToAvailParallelFunnel(
       dbTx,
       chainFunnel,
       chainName,
-      config,
-      startingBlockHeight
+      config
     );
     return ebp;
   } catch (err) {
