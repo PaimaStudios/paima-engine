@@ -4,8 +4,6 @@ import type { ChainFunnel, ReadPresyncDataFrom } from '@paima/runtime';
 import { type ChainData, type PresyncChainData } from '@paima/sm';
 import { BaseFunnel } from '../BaseFunnel.js';
 import type { FunnelSharedData } from '../BaseFunnel.js';
-import type { AvailFunnelCacheEntryState } from '../FunnelCache.js';
-import { AvailFunnelCacheEntry } from '../FunnelCache.js';
 import type { PoolClient } from 'pg';
 import { FUNNEL_PRESYNC_FINISHED } from '@paima/utils';
 import { createApi } from './createApi.js';
@@ -31,6 +29,8 @@ import {
 } from '../../utils.js';
 import { processDataUnit } from '../../paima-l2-processing.js';
 import type { ApiPromise } from 'avail-js-sdk';
+import type { AvailFunnelCacheEntryState } from './cache.js';
+import { AvailFunnelCacheEntry } from './cache.js';
 
 const LATEST_BLOCK_UPDATE_TIMEOUT = 2000;
 
@@ -214,7 +214,9 @@ export class AvailParallelFunnel extends BaseFunnel implements ChainFunnel {
       return chainData;
     }
 
-    const parallelDataInRange = parallelData.filter(d => d.blockNumber <= toBlock);
+    const parallelDataInRange = cachedState.timestampToBlock
+      .map(d => d[1])
+      .filter(d => d.blockNumber <= toBlock);
 
     mapBlockNumbersToMainChain(parallelDataInRange, parallelToMainchainBlockHeightMapping);
 
@@ -323,7 +325,7 @@ export class AvailParallelFunnel extends BaseFunnel implements ChainFunnel {
         const delayedBlockHash = await this.api.rpc.chain.getBlockHash(delayedBlock);
         const delayedHeader = await this.api.rpc.chain.getHeader(delayedBlockHash);
 
-        return delayedHeader;
+        return delayedHeader as unknown as Header;
       })(),
       LATEST_BLOCK_UPDATE_TIMEOUT
     );

@@ -30,7 +30,8 @@ export async function getLatestBlockNumber(api: ApiPromise): Promise<number> {
 
 export async function getTimestampForBlockAt(api: ApiPromise, mid: number): Promise<number> {
   const hash = await api.rpc.chain.getBlockHash(mid);
-  const header = await api.rpc.chain.getHeader(hash);
+  // FIXME: why is the conversion needed?
+  const header = (await api.rpc.chain.getHeader(hash)) as unknown as Header;
 
   const slot = getSlotFromHeader(header, api);
   return slotToTimestamp(slot, api);
@@ -66,7 +67,7 @@ export async function getMultipleHeaderData(
     // NOTE: the light client allows getting header directly from block number,
     // but it doesn't provide the babe data for the slot
     const hash = await api.rpc.chain.getBlockHash(bn);
-    const header = await api.rpc.chain.getHeader(hash);
+    const header = (await api.rpc.chain.getHeader(hash)) as unknown as Header;
 
     const slot = getSlotFromHeader(header, api);
 
