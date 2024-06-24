@@ -6,10 +6,14 @@
   "license": "MIT",
   "type": "module",
   "exports": {
-    ".": "./build/src/index.js"
+    ".": "./build/index.js"
   },
+  "files": [
+    "build"
+  ],
   "scripts": {
     "build": "tsc",
+    "postbuild": "node build/postbuild.js",
     "lint": "eslint src/",
     "lint:fix": "npm run lint -- --fix",
     "prestart": "npm install --silent && npm run build && docker compose up --wait",

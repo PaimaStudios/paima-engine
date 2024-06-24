@@ -10,6 +10,7 @@ import {
   createEcdsa,
   createForeignCurve,
 } from 'o1js';
+import { PrebuiltCache } from './cache';
 
 // ----------------------------------------------------------------------------
 // Common data types
@@ -118,5 +119,8 @@ export const DelegationOrderProgram = ZkProgram({
     },
   },
 });
+
+DelegationOrderProgram.compile = PrebuiltCache.wrap(DelegationOrderProgram.compile);
+
 /** A verifiable proof of {@link DelegationOrderProgram}'s success. */
 export class DelegationOrderProof extends ZkProgram.Proof(DelegationOrderProgram) {}
