@@ -12,7 +12,7 @@ import {
 import type { ChainFunnel, ReadPresyncDataFrom } from '@paima/runtime';
 import { type ChainData, type EvmPresyncChainData, type PresyncChainData } from '@paima/sm';
 import { getUngroupedCdeData } from '../../cde/reading.js';
-import { composeChainData, groupCdeData } from '../../utils.js';
+import { composeChainData, findBlockByTimestamp, groupCdeData } from '../../utils.js';
 import { BaseFunnel } from '../BaseFunnel.js';
 import type { FunnelSharedData } from '../BaseFunnel.js';
 import type { EvmFunnelCacheEntryState } from '../FunnelCache.js';
@@ -84,36 +84,15 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
         this.dbTx
       );
 
-      if (queryResults[0]) {
-        // If we are in `readData`, we know that the presync stage finished.
-        // This means `readPresyncData` was actually called with the entire
-        // range up to startBlockHeight - 1 (inclusive), since that's the stop
-        // condition for the presync. So there is no point in starting from
-        // earlier than that, since we know there are no events there.
-        cachedState.lastBlock = Math.max(
-          queryResults[0].block_height,
-          cachedState.startBlockHeight - 1
-        );
-      } else {
-        // FIXME: this branch probably can't happen.
-
-        // The earliest parallel block we might have to sync
-        // is one whose timestamp occurs after the timestamp of (current block - 1)
-        const block = await this.sharedData.mainNetworkApi.getBlock(chainData[0].blockNumber - 1);
-
-        if (!block) {
-          throw new Error("Couldn't get main's network staring block timestamp");
-        }
-        const ts = Number(block.timestamp);
-        const earliestParallelChainBlock = await findBlockByTimestamp(
-          this.web3,
-          applyDelay(this.config, ts),
-          this.chainName
-        );
-        // earliestParallelChainBlock is the earliest block that we might need to include
-        // so earliestParallelChainBlock-1 is the first block we can ignore (the "lastBlock" we're done syncing)
-        cachedState.lastBlock = earliestParallelChainBlock - 1;
-      }
+      // If we are in `readData`, we know that the presync stage finished.
+      // This means `readPresyncData` was actually called with the entire
+      // range up to startBlockHeight - 1 (inclusive), since that's the stop
+      // condition for the presync. So there is no point in starting from
+      // earlier than that, since we know there are no events there.
+      cachedState.lastBlock = Math.max(
+        queryResults[0].block_height,
+        cachedState.startBlockHeight - 1
+      );
     }
 
     const maxTimestamp = applyDelay(this.config, chainData[chainData.length - 1].timestamp);
@@ -540,10 +519,15 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
       if (!startingBlock) {
         throw new Error("Couldn't get main's network staring block timestamp");
       }
+
+      let high = Number(await web3.eth.getBlockNumber()) + 1;
+
       const mappedStartingBlockHeight = await findBlockByTimestamp(
-        web3,
+        0,
+        high,
         applyDelay(config, Number(startingBlock.timestamp)),
-        chainName
+        chainName,
+        async block => Number((await web3.eth.getBlock(block)).timestamp)
       );
 
       evmCacheEntry.updateState(config.chainId, [], [], mappedStartingBlockHeight);
@@ -614,45 +598,6 @@ export async function wrapToParallelEvmFunnel(
     logError(err);
     throw new Error('[paima-funnel] Unable to initialize evm cde events processor');
   }
-}
-
-/**
- * performs binary search to find the block corresponding to a specific timestamp
- * Note: if there are multiple blocks with the same timestamp
- * @returns the index of the first block that occurs > targetTimestamp
- */
-async function findBlockByTimestamp(
-  web3: Web3,
-  targetTimestamp: number,
-  chainName: string
-): Promise<number> {
-  let low = 0;
-  // blocks are 0-indexed, so we add +1 to get the size
-  let high = Number(await web3.eth.getBlockNumber()) + 1;
-
-  let requests = 0;
-
-  while (low < high) {
-    const mid = Math.floor((low + high) / 2);
-
-    const block = await web3.eth.getBlock(mid);
-
-    requests++;
-
-    // recall: there may be many blocks with the same targetTimestamp
-    // in this case, <= means we slowly increase `low` to return the most recent block with that timestamp
-    if (Number(block.timestamp) <= targetTimestamp) {
-      low = mid + 1;
-    } else {
-      high = mid;
-    }
-  }
-
-  doLog(
-    `EVM CDE funnel: Found block #${low} on ${chainName} by binary search with ${requests} requests`
-  );
-
-  return low;
 }
 
 // finds the last block in the timestampToBlockNumber collection that is between
