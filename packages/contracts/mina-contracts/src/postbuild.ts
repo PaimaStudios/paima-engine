@@ -3,8 +3,10 @@ import { DelegationOrderProgram } from './delegate.js';
 
 const cache = Cache.FileSystem('build/zkcache');
 for (const program of [DelegationOrderProgram]) {
-  program.compile({
+  console.time(program.name);
+  await program.compile({
     cache: cache,
     forceRecompile: false,
   });
+  console.timeEnd(program.name);
 }

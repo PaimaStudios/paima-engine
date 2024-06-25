@@ -1,18 +1,28 @@
 import { Cache, CacheHeader, Field } from 'o1js';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 type CompileFn = (
   options?: { cache?: Cache | undefined; forceRecompile?: boolean | undefined } | undefined
 ) => Promise<{ verificationKey: { data: string; hash: Field } }>;
 
+const baseCache = Cache.FileSystem(path.dirname(fileURLToPath(import.meta.url)) + '/zkcache');
+
 export class PrebuiltCache implements Cache {
   read(header: CacheHeader): Uint8Array | undefined {
-    const result = Cache.FileSystem(__dirname + '/zkcache').read(header);
-    if (!result) {
+    if (this.debug) {
+      console.log('PrebuiltCache.read', header.persistentId);
+    }
+    const result = baseCache.read(header);
+    if (!result && this.debug) {
       console.warn('PrebuiltCache miss for', header);
     }
     return result;
   }
   write(header: CacheHeader, value: Uint8Array): void {
+    if (this.debug) {
+      console.log('PrebuiltCache.write', header.persistentId);
+    }
     throw new Error('PrebuiltCache cannot write.');
   }
   canWrite: boolean = false;
