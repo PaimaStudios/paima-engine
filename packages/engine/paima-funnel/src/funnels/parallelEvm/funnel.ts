@@ -12,7 +12,12 @@ import {
 import type { ChainFunnel, ReadPresyncDataFrom } from '@paima/runtime';
 import { type ChainData, type EvmPresyncChainData, type PresyncChainData } from '@paima/sm';
 import { getUngroupedCdeData } from '../../cde/reading.js';
-import { composeChainData, findBlockByTimestamp, groupCdeData } from '../../utils.js';
+import {
+  buildParallelBlockMappings,
+  composeChainData,
+  findBlockByTimestamp,
+  groupCdeData,
+} from '../../utils.js';
 import { BaseFunnel } from '../BaseFunnel.js';
 import type { FunnelSharedData } from '../BaseFunnel.js';
 import type { EvmFunnelCacheEntryState } from '../FunnelCache.js';
@@ -194,31 +199,12 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
     // breaking the invariant.
     //
     // This maps timestamps from the sidechain to the mainchain.
-    const sidechainToMainchainBlockHeightMapping: { [blockNumber: number]: number } = {};
-
-    // Mapping of mainchain to sidechain block heights
-    const mainchainToSidechainBlockHeightMapping: { [blockNumber: number]: number } = {};
-
-    // chainData is sorted by timestamp, so we never need to search old entries,
-    // we keep this around to know from where to start searching for a block
-    // from the original chain that has a timestamp >= than the current
-    // sidechain block.
-    let currIndex = 0;
-
-    for (const parallelChainBlock of cachedState.timestampToBlockNumber) {
-      while (currIndex < chainData.length) {
-        if (applyDelay(this.config, chainData[currIndex].timestamp) >= parallelChainBlock[0]) {
-          sidechainToMainchainBlockHeightMapping[parallelChainBlock[1]] =
-            chainData[currIndex].blockNumber;
-
-          mainchainToSidechainBlockHeightMapping[chainData[currIndex].blockNumber] =
-            parallelChainBlock[1];
-          break;
-        } else {
-          currIndex++;
-        }
-      }
-    }
+    const { parallelToMainchainBlockHeightMapping, mainchainToParallelBlockHeightMapping } =
+      buildParallelBlockMappings(
+        ts => applyDelay(this.config, ts),
+        chainData,
+        cachedState.timestampToBlockNumber.map(xs => [xs[0], { blockNumber: xs[1] }])
+      );
 
     if (!cachedState.timestampToBlockNumber[0]) {
       return chainData;
@@ -253,7 +239,7 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
       data = await this.internalReadDataSingle(
         fromBlock,
         chainData[0],
-        blockNumber => sidechainToMainchainBlockHeightMapping[blockNumber]
+        blockNumber => parallelToMainchainBlockHeightMapping[blockNumber]
       );
     } else {
       doLog(`EVM CDE funnel ${this.config.chainId}: #${fromBlock}-${toBlock}`);
@@ -261,7 +247,7 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
         fromBlock,
         toBlock,
         chainData,
-        blockNumber => sidechainToMainchainBlockHeightMapping[blockNumber]
+        blockNumber => parallelToMainchainBlockHeightMapping[blockNumber]
       );
     }
 
@@ -270,7 +256,7 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
     // engine. Since we need to know from where to start searching for blocks in
     // the timestamp range.
     for (const chainData of data) {
-      const originalBlockNumber = mainchainToSidechainBlockHeightMapping[chainData.blockNumber];
+      const originalBlockNumber = mainchainToParallelBlockHeightMapping[chainData.blockNumber];
       // it's technically possible for this to be null, because there may not be
       // a block of the sidechain in between a particular pair of blocks or the
       // original chain.
