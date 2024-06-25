@@ -10,7 +10,7 @@ import {
   createEcdsa,
   createForeignCurve,
 } from 'o1js';
-import { PrebuiltCache } from './cache';
+import { PrebuiltCache } from './cache.js';
 
 // ----------------------------------------------------------------------------
 // Common data types
@@ -81,8 +81,8 @@ export class DelegationOrder extends Struct({
 }
 
 function encodeKey(k: PublicKey): UInt8[] {
-  const bytes = [boolToU8(k.isOdd)];
-  const bits = k.x.toBits(/* implied 254 */);
+  const bytes = [];
+  const bits = [...k.x.toBits(254), k.isOdd];
   for (let i = 0; i < bits.length; i += 8) {
     let value = new UInt8(0);
     for (let j = 0; j < 8; j++) {

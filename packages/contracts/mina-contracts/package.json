@@ -14,10 +14,8 @@
   "scripts": {
     "build": "tsc",
     "postbuild": "node build/postbuild.js",
-    "lint": "eslint src/",
-    "lint:fix": "npm run lint -- --fix",
-    "prestart": "npm install --silent && npm run build && docker compose up --wait",
-    "start": "node --enable-source-maps build/src/run.js"
+    "pretest": "npm run build",
+    "test": "node build/test.js"
   },
   "keywords": [
     "mina",

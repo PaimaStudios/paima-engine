@@ -26,7 +26,7 @@ export class PrebuiltCache implements Cache {
       return original({
         // Default cache to the PrebuiltCache instead of o1js FileSystemDefault,
         // but the user can still override it.
-        cache: options?.cache ?? PrebuiltCache.INSTANCE,
+        cache: PrebuiltCache.INSTANCE,
         ...options,
       });
     };
