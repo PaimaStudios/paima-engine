@@ -7,7 +7,6 @@ import {
   delay,
   InternalEventType,
   ChainDataExtensionType,
-  ENV,
 } from '@paima/utils';
 import type { ChainFunnel, ReadPresyncDataFrom } from '@paima/runtime';
 import { type ChainData, type EvmPresyncChainData, type PresyncChainData } from '@paima/sm';
