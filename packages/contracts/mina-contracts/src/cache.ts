@@ -6,6 +6,7 @@ type CompileFn<T> = (
   options?: { cache?: Cache | undefined; forceRecompile?: boolean | undefined } | undefined
 ) => Promise<T>;
 
+// TODO: web support
 const baseCache = Cache.FileSystem(path.dirname(fileURLToPath(import.meta.url)) + '/zkcache');
 
 /**

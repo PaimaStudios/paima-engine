@@ -15,7 +15,7 @@
   ],
   "scripts": {
     "build": "tsc",
-    "postbuild": "node build/postbuild.js",
+    "postbuild": "node build/postbuild.js && node build/postbuild.js",
     "pretest": "npm run build",
     "test": "node build/test.js"
   },
