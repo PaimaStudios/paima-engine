@@ -1,7 +1,8 @@
+export { PrebuiltCache } from './cache.js';
 export {
-  Secp256k1,
-  Ecdsa,
   DelegationOrder,
   DelegationOrderProgram,
   DelegationOrderProof,
+  Ecdsa,
+  Secp256k1,
 } from './delegate.js';
