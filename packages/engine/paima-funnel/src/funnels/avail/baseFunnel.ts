@@ -117,7 +117,12 @@ export class AvailBlockFunnel extends BaseFunnel implements ChainFunnel {
       if (blockData?.submittedData) {
         const processed = await Promise.all(
           blockData.submittedData.map(unit =>
-            processDataUnit(unit, blockData.blockNumber, header.slot, this.dbTx)
+            processDataUnit(
+              unit,
+              blockData.blockNumber,
+              slotToTimestamp(header.slot, this.api),
+              this.dbTx
+            )
           )
         );
 
