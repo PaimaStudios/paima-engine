@@ -1,4 +1,4 @@
-import { AddressType } from '@paima/utils';
+import { AddressType, uint8ArrayToHexString } from '@paima/utils';
 import type {
   ActiveConnection,
   AddressAndType,
@@ -12,7 +12,6 @@ import type {
 import { optionToActive } from './IProvider.js';
 import { ProviderApiError, ProviderNotInitialized, WalletNotFound } from './errors.js';
 import type { InjectedExtension, InjectedWindowProvider } from '@polkadot/extension-inject/types';
-import { utf8ToHex } from 'web3-utils';
 import { getWindow } from './window.js';
 
 export type PolkadotAddress = string;
@@ -143,13 +142,14 @@ export class PolkadotProvider implements IProvider<PolkadotApi> {
       address: this.address,
     };
   };
-  signMessage = async (message: string): Promise<UserSignature> => {
+  signMessage = async (message: string | Uint8Array): Promise<UserSignature> => {
     if (this.conn.api.signer.signRaw == null) {
       throw new ProviderApiError(
         `[polkadot] extension ${this.conn.metadata.name} does not support signRaw`
       );
     }
-    const hexMessage = utf8ToHex(message);
+    const msgArray = message instanceof Uint8Array ? message : new TextEncoder().encode(message);
+    const hexMessage = '0x' + uint8ArrayToHexString(msgArray);
     const { signature } = await this.conn.api.signer.signRaw({
       address: this.getAddress().address,
       data: hexMessage,

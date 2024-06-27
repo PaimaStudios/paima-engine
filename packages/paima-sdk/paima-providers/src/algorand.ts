@@ -130,7 +130,7 @@ export class AlgorandProvider implements IProvider<AlgorandApi> {
       address: this.address,
     };
   };
-  signMessage = async (message: string): Promise<UserSignature> => {
+  signMessage = async (message: string | Uint8Array): Promise<UserSignature> => {
     const txn = await CryptoManager.Algorand().buildAlgorandTransaction(
       this.getAddress().address,
       message

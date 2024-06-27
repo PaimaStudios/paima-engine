@@ -1,6 +1,5 @@
 import type { SignedTransaction, Transaction, SuggestedParams } from 'algosdk';
 import { doLog, hexStringToUint8Array } from '@paima/utils';
-import web3UtilsPkg from 'web3-utils';
 import type { IVerify } from './IVerify.js';
 
 export class AlgorandCrypto implements IVerify {
@@ -27,9 +26,11 @@ export class AlgorandCrypto implements IVerify {
     }
   };
 
-  buildAlgorandTransaction = async (userAddress: string, message: string): Promise<Transaction> => {
-    const hexMessage = web3UtilsPkg.utf8ToHex(message).slice(2);
-    const msgArray = hexStringToUint8Array(hexMessage);
+  buildAlgorandTransaction = async (
+    userAddress: string,
+    message: string | Uint8Array
+  ): Promise<Transaction> => {
+    const msgArray = message instanceof Uint8Array ? message : new TextEncoder().encode(message);
     const SUGGESTED_PARAMS: SuggestedParams = {
       fee: 0,
       firstRound: 10,

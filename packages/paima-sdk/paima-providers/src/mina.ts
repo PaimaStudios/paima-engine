@@ -138,10 +138,16 @@ export class MinaProvider implements IProvider<MinaApi> {
       address: this.address,
     };
   };
-  signMessage = async (message: string): Promise<UserSignature> => {
+  signMessage = async (message: string | Uint8Array): Promise<UserSignature> => {
+    // Seems like the aurowallet package requires strings because it uses JSON,
+    // so throw if the Uint8Array isn't valid UTF-8.
+    const strMessage =
+      message instanceof Uint8Array
+        ? new TextDecoder('utf-8', { fatal: true }).decode(message)
+        : message;
     // There is no way of choosing the signing account here. At most we could
     // monitor the changed events and erroring out if it changed.
-    const signed = await this.conn.api.signMessage({ message: message });
+    const signed = await this.conn.api.signMessage({ message: strMessage });
 
     if ('signature' in signed) {
       const { signature } = signed;
