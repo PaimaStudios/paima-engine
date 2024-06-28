@@ -38,7 +38,7 @@ export class Ecdsa extends createEcdsa(Secp256k1) {
 const ethereumPrefix = Bytes.fromString('\x19Ethereum Signed Message:\n');
 // A prefix to distinguish this delegation order scheme from what might be
 // similar-looking messages.
-const delegationPrefix = Bytes.fromString('MinaDelegate|');
+const delegationPrefix = Bytes.fromString('DELEGATE-WALLET:');
 
 /**
  * An order that a particular EVM address has signed to authorize (delegate)
