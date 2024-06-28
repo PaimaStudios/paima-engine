@@ -1,7 +1,7 @@
 {
-  "name": "@paima/mina-contracts",
+  "name": "@paima/mina-delegation",
   "version": "3.1.0",
-  "description": "Mina programs and contracts for the Paima ecosystem",
+  "description": "Mina ZkProgram for EVM->Mina delegation",
   "author": "Paima Studios",
   "license": "MIT",
   "type": "module",
