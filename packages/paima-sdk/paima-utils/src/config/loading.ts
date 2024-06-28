@@ -1,4 +1,3 @@
-import * as fs from 'fs/promises';
 import YAML from 'yaml';
 import type { Static, TSchema } from '@sinclair/typebox';
 import { Value, ValueErrorType } from '@sinclair/typebox/value';
@@ -118,6 +117,7 @@ export const AvailOptionalProperties = Type.Object({
 
 export const AvailConfigSchema = Type.Intersect([AvailRequiredProperties, AvailOptionalProperties]);
 
+export type AvailMainConfig = AvailConfig & { type: ConfigNetworkType.AVAIL_MAIN };
 export type AvailConfig = Static<typeof AvailConfigSchema>;
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
@@ -221,47 +221,54 @@ export const defaultMinaNetworkName = 'mina';
 export async function loadConfig(): Promise<Static<typeof BaseConfigWithDefaults> | undefined> {
   let configFileData: string;
   try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const fs = require('fs/promises');
     try {
       configFileData = await fs.readFile(`config.${ENV.NETWORK}.yml`, 'utf8');
     } catch (error) {
       configFileData = await fs.readFile(`config.${ENV.NETWORK}.yaml`, 'utf8');
     }
   } catch (err) {
-    // fallback to the ENV config for now to keep backwards compatibility
-    const mainConfig: EvmConfig = {
-      chainUri: ENV.CHAIN_URI,
-      chainId: ENV.CHAIN_ID,
-      chainCurrencyName: ENV.CHAIN_CURRENCY_NAME,
-      chainCurrencySymbol: ENV.CHAIN_CURRENCY_SYMBOL,
-      chainCurrencyDecimals: ENV.CHAIN_CURRENCY_DECIMALS,
-      chainExplorerUri: ENV.CHAIN_EXPLORER_URI,
-      funnelBlockGroupSize: ENV.DEFAULT_FUNNEL_GROUP_SIZE,
-      presyncStepSize: ENV.DEFAULT_PRESYNC_STEP_SIZE,
-      paimaL2ContractAddress: ENV.CONTRACT_ADDRESS,
-      type: ConfigNetworkType.EVM,
-    };
+    // injected at build time with the middleware esbuild template
+    if (process.env.BUILT_TIME_INJECTED_CONFIGURATION) {
+      configFileData = process.env.BUILT_TIME_INJECTED_CONFIGURATION;
+    } else {
+      // fallback to the ENV config for now to keep backwards compatibility
+      const mainConfig: EvmConfig = {
+        chainUri: ENV.CHAIN_URI,
+        chainId: ENV.CHAIN_ID,
+        chainCurrencyName: ENV.CHAIN_CURRENCY_NAME,
+        chainCurrencySymbol: ENV.CHAIN_CURRENCY_SYMBOL,
+        chainCurrencyDecimals: ENV.CHAIN_CURRENCY_DECIMALS,
+        chainExplorerUri: ENV.CHAIN_EXPLORER_URI,
+        funnelBlockGroupSize: ENV.DEFAULT_FUNNEL_GROUP_SIZE,
+        presyncStepSize: ENV.DEFAULT_PRESYNC_STEP_SIZE,
+        paimaL2ContractAddress: ENV.CONTRACT_ADDRESS,
+        type: ConfigNetworkType.EVM,
+      };
 
-    const baseConfig: Static<typeof BaseConfigWithDefaults> = {
-      [defaultEvmMainNetworkName]: mainConfig,
-    };
+      const baseConfig: Static<typeof BaseConfigWithDefaults> = {
+        [defaultEvmMainNetworkName]: mainConfig,
+      };
 
-    if (ENV.CARP_URL) {
-      if (!ENV.CARDANO_CONFIRMATION_DEPTH) {
-        throw new Error('[carp-funnel] Missing CARDANO_CONFIRMATION_DEPTH setting.');
+      if (ENV.CARP_URL) {
+        if (!ENV.CARDANO_CONFIRMATION_DEPTH) {
+          throw new Error('[carp-funnel] Missing CARDANO_CONFIRMATION_DEPTH setting.');
+        }
+
+        const network = Value.Decode(CardanoNetwork, ENV.CARDANO_NETWORK);
+
+        baseConfig[defaultCardanoNetworkName] = {
+          carpUrl: ENV.CARP_URL,
+          network,
+          confirmationDepth: ENV.CARDANO_CONFIRMATION_DEPTH,
+          presyncStepSize: ENV.DEFAULT_PRESYNC_STEP_SIZE,
+          type: ConfigNetworkType.CARDANO,
+        };
       }
 
-      const network = Value.Decode(CardanoNetwork, ENV.CARDANO_NETWORK);
-
-      baseConfig[defaultCardanoNetworkName] = {
-        carpUrl: ENV.CARP_URL,
-        network,
-        confirmationDepth: ENV.CARDANO_CONFIRMATION_DEPTH,
-        presyncStepSize: ENV.DEFAULT_PRESYNC_STEP_SIZE,
-        type: ConfigNetworkType.CARDANO,
-      };
+      return baseConfig;
     }
-
-    return baseConfig;
   }
 
   try {
