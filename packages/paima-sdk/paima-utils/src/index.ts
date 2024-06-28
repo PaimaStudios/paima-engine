@@ -18,6 +18,7 @@ import {
   defaultCardanoNetworkName,
   defaultMinaNetworkName,
   BaseConfigWithoutDefaults,
+  AvailMainConfig,
   AvailConfig,
 } from './config/loading.js';
 
@@ -45,6 +46,7 @@ export {
   CardanoConfig,
   MinaConfig,
   AvailConfig,
+  AvailMainConfig,
   ConfigNetworkType,
   defaultEvmMainNetworkName,
   defaultCardanoNetworkName,

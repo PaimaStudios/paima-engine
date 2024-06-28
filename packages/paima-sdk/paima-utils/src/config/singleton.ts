@@ -6,6 +6,7 @@ import type {
   MinaConfig,
   OtherEvmConfig,
   AvailConfig,
+  AvailMainConfig,
 } from './loading.js';
 import { loadConfig, ConfigNetworkType } from './loading.js';
 
@@ -34,7 +35,8 @@ export class GlobalConfig {
     return GlobalConfig.instance;
   }
 
-  public static async mainConfig(): Promise<[string, MainEvmConfig | AvailConfig]> {
+  // FIXME: return an object?
+  public static async mainConfig(): Promise<[string, MainEvmConfig | AvailMainConfig]> {
     const instance = await GlobalConfig.getInstance();
 
     for (const key of Object.keys(instance)) {
@@ -43,7 +45,7 @@ export class GlobalConfig {
       }
 
       if (instance[key].type === ConfigNetworkType.AVAIL_MAIN) {
-        return [key, instance[key] as AvailConfig];
+        return [key, instance[key] as AvailMainConfig];
       }
     }
 
