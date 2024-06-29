@@ -14,7 +14,7 @@ import {
 } from '@paima/batcher-db';
 import { ENV, keepRunning, setWebserverClosed, unsetWebserverClosed } from '@paima/batcher-utils';
 import type { ErrorMessageFxn } from '@paima/batcher-utils';
-import type { EthersEvmProvider } from '@paima/providers';
+import type { EthersEvmProvider, PolkadotProvider } from '@paima/providers';
 import type { BatchedSubunit } from '@paima/concise';
 import { createMessageForBatcher } from '@paima/concise';
 import { AddressType, getWriteNamespace, wait } from '@paima/utils';
@@ -111,7 +111,8 @@ TODO: This will be fixed in express v5 when it comes out
 async function initializeServer(
   pool: Pool,
   errorCodeToMessage: ErrorMessageFxn,
-  provider: EthersEvmProvider
+  provider: EthersEvmProvider | PolkadotProvider,
+  getCurrentBlock: () => Promise<number>
 ): Promise<void> {
   const mainEvmConfig = await GlobalConfig.mainEvmConfig();
   if (!mainEvmConfig) {
@@ -323,6 +324,7 @@ async function initializeServer(
       req: Request<unknown, unknown, SubmitUserInputRequest>,
       res: Response<SubmitUserInputResponse>
     ) => {
+      console.log('req?');
       try {
         const expectedProps = [
           'address_type',
@@ -392,7 +394,7 @@ async function initializeServer(
           } else {
             console.log('BlockNumber cache miss');
             try {
-              blockHeight = await provider.getConnection().api.provider!.getBlockNumber();
+              blockHeight = await getCurrentBlock();
               blockHeightCache.height = blockHeight;
               blockHeightCache.time = new Date().getTime();
             } catch (e) {
@@ -469,10 +471,11 @@ async function initializeServer(
 async function startServer(
   _pool: Pool,
   errorCodeToMessage: ErrorMessageFxn,
-  provider: EthersEvmProvider
+  provider: EthersEvmProvider | PolkadotProvider,
+  getCurrentBlock: () => Promise<number>
 ): Promise<void> {
   pool = _pool;
-  await initializeServer(pool, errorCodeToMessage, provider);
+  await initializeServer(pool, errorCodeToMessage, provider, getCurrentBlock);
   setWebserverClosed();
   server.listen(port, () => {
     console.log(`server started at http://localhost:${port}`);
