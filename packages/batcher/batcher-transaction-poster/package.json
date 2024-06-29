@@ -13,6 +13,7 @@
     "@types/pg": "^8.10.9"
   },
   "dependencies": {
-    "pg": "^8.11.3"
+    "pg": "^8.11.3",
+    "@polkadot/util-crypto": "^12.6.2"
   }
 }
