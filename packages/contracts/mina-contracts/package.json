@@ -1,0 +1,34 @@
+{
+  "name": "@paima/mina-contracts",
+  "version": "3.1.0",
+  "description": "Mina programs and contracts for the Paima ecosystem",
+  "author": "Paima Studios",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./build/index.js"
+  },
+  "files": [
+    "build",
+    "!build/postbuild.*",
+    "!build/test.*"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "postbuild": "node build/postbuild.js && node build/postbuild.js",
+    "pretest": "npm run build",
+    "test": "node build/test.js"
+  },
+  "keywords": [
+    "mina",
+    "zk",
+    "o1js"
+  ],
+  "dependencies": {
+    "o1js": "^1.3.1"
+  },
+  "devDependencies": {
+    "eslint-plugin-o1js": "^0.4.0",
+    "typescript": "^5.3.3"
+  }
+}
