@@ -12,7 +12,11 @@ import {
 } from '@paima/batcher-utils'; // load first to load ENV variables
 import type { Pool } from 'pg';
 
-import BatchedTransactionPoster from '@paima/batcher-transaction-poster';
+import {
+  AvailBatchedTransactionPoster,
+  BatchedTransactionPoster,
+  EvmBatchedTransactionPoster,
+} from '@paima/batcher-transaction-poster';
 import { server, startServer } from '@paima/batcher-webserver';
 import GameInputValidator, {
   DefaultInputValidatorCoreInitializator,
@@ -20,15 +24,15 @@ import GameInputValidator, {
   getErrors,
 } from '@paima/batcher-game-input-validator';
 
-import type { EthersEvmProvider } from '@paima/providers';
+import { EthersEvmProvider, PolkadotProvider } from '@paima/providers';
 import type { ErrorCode, ErrorMessageFxn, GameInputValidatorCore } from '@paima/batcher-utils';
 
 import { initializePool } from './pg/pgPool.js';
 import type { BatcherRuntimeInitializer } from './types.js';
-import { setLogger } from '@paima/utils';
+import { ConfigNetworkType, GlobalConfig, setLogger } from '@paima/utils';
 import * as fs from 'fs';
 import { parseSecurityYaml } from '@paima/utils-backend';
-import { getRemoteBackendVersion, initMiddlewareCore } from '@paima/mw-core';
+import { getBlockNumber, getRemoteBackendVersion, initMiddlewareCore } from '@paima/mw-core';
 
 setLogger(s => {
   try {
@@ -37,6 +41,7 @@ setLogger(s => {
 });
 
 const MINIMUM_INTER_CATCH_PERIOD = 1000;
+// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
 let batchedTransactionPosterReference: BatchedTransactionPoster | null = null;
 let lastCatchDate = Date.now();
 let reinitializingWeb3 = false;
@@ -65,7 +70,7 @@ process.on('uncaughtException', async err => {
     reinitializingWeb3 = true;
     const walletWeb3 = await getAndConfirmWeb3(ENV.CHAIN_URI, ENV.BATCHER_PRIVATE_KEY, 1000);
     reinitializingWeb3 = false;
-    batchedTransactionPosterReference.updateWeb3(walletWeb3);
+    batchedTransactionPosterReference.updateProvider(walletWeb3);
   }
 });
 
@@ -103,13 +108,14 @@ const BatcherRuntime: BatcherRuntimeInitializer = {
       async run(
         gameInputValidator: GameInputValidator,
         batchedTransactionPoster: BatchedTransactionPoster,
-        provider: EthersEvmProvider
+        provider: EthersEvmProvider | PolkadotProvider,
+        getCurrentBlock: () => Promise<number>
       ): Promise<void> {
         // pass endpoints to web server and run
 
         // do not await on these as they may run forever
         void Promise.all([
-          startServer(pool, errorCodeToMessage, provider).catch(e => {
+          startServer(pool, errorCodeToMessage, provider, getCurrentBlock).catch(e => {
             console.log('Uncaught error in startServer');
             console.log(e);
             throw e;
@@ -153,8 +159,6 @@ async function main(): Promise<void> {
   }
   await parseSecurityYaml();
 
-  const privateKey = ENV.BATCHER_PRIVATE_KEY;
-
   console.log(`Running paima-batcher version ${VERSION_STRING}`);
   console.log('Currently supporting signatures from the following chains:');
   for (const chain of SUPPORTED_CHAIN_NAMES) {
@@ -166,31 +170,74 @@ async function main(): Promise<void> {
     'Game Batcher', // TODO: it doesn't matter now, but there is no way for the batcher to get the name of the game
     await getRemoteBackendVersion()
   );
-  const provider = await getWalletWeb3AndAddress(ENV.CHAIN_URI, privateKey);
+  let provider: EthersEvmProvider | PolkadotProvider;
+  let batchedTransactionPoster;
+  let getCurrentBlock;
 
-  console.log('Chain URI:              ', ENV.CHAIN_URI);
-  console.log('Validation type:        ', ENV.GAME_INPUT_VALIDATION_TYPE);
-  console.log('PaimaL2Contract address:', ENV.CONTRACT_ADDRESS);
-  console.log('Batcher account address:', provider.getAddress());
+  if (!ENV.BATCHER_AVAIL_LIGHT_CLIENT) {
+    const privateKey = ENV.BATCHER_PRIVATE_KEY;
+    provider = await getWalletWeb3AndAddress(ENV.CHAIN_URI, privateKey);
+
+    console.log('Chain URI:              ', ENV.CHAIN_URI);
+    console.log('Validation type:        ', ENV.GAME_INPUT_VALIDATION_TYPE);
+    console.log('PaimaL2Contract address:', ENV.CONTRACT_ADDRESS);
+    console.log('Batcher account address:', provider.getAddress());
+
+    batchedTransactionPoster = new EvmBatchedTransactionPoster(
+      provider,
+      ENV.CONTRACT_ADDRESS,
+      ENV.BATCHED_MESSAGE_SIZE_LIMIT,
+      pool
+    );
+
+    getCurrentBlock = async (): Promise<number> => {
+      // FIXME: cast
+      return await (provider as EthersEvmProvider).getConnection().api.provider!.getBlockNumber();
+    };
+  } else {
+    batchedTransactionPoster = new AvailBatchedTransactionPoster(
+      ENV.BATCHER_AVAIL_LIGHT_CLIENT,
+      ENV.BATCHED_MESSAGE_SIZE_LIMIT,
+      pool
+    );
+
+    console.log('Avail Light Client:              ', ENV.BATCHER_AVAIL_LIGHT_CLIENT);
+    console.log('Validation type:        ', ENV.GAME_INPUT_VALIDATION_TYPE);
+    console.log('PaimaL2Contract address:', ENV.CONTRACT_ADDRESS);
+
+    // FIXME: implement?
+    provider = {} as unknown as PolkadotProvider;
+
+    // TODO: copy-pasted from funnel utils
+    getCurrentBlock = async (): Promise<number> => {
+      const responseRaw = await fetch(`${ENV.BATCHER_AVAIL_LIGHT_CLIENT}/v2/status`);
+
+      if (responseRaw.status !== 200) {
+        throw new Error("Couldn't get light client status");
+      }
+
+      const response: { blocks: { available: { first: number; last: number } } } =
+        await responseRaw.json();
+
+      const last = response.blocks.available.last;
+
+      return last;
+    };
+  }
+
   if (ENV.RECAPTCHA_V3_BACKEND) {
     console.log('reCAPTCHA V3 enabled');
   }
 
   const gameInputValidatorCore = await getValidatorCore(ENV.GAME_INPUT_VALIDATION_TYPE);
   const gameInputValidator = new GameInputValidator(gameInputValidatorCore, pool);
-  const batchedTransactionPoster = new BatchedTransactionPoster(
-    provider,
-    ENV.CONTRACT_ADDRESS,
-    ENV.BATCHED_MESSAGE_SIZE_LIMIT,
-    pool
-  );
   batchedTransactionPosterReference = batchedTransactionPoster;
   await batchedTransactionPoster.initialize();
 
   const runtime = BatcherRuntime.initialize(pool);
 
   requestStart();
-  await runtime.run(gameInputValidator, batchedTransactionPoster, provider);
+  await runtime.run(gameInputValidator, batchedTransactionPoster, provider, getCurrentBlock);
 }
 
 main().catch(e => {
