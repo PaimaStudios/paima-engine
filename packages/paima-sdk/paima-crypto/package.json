@@ -35,6 +35,6 @@
     "bech32": "^2.0.0",
     "@paima/utils": "2.4.0",
     "mina-signer": "^2.1.1",
-    "base58check": "^2.0.0"
+    "bs58check": "^4.0.0"
   }
 }

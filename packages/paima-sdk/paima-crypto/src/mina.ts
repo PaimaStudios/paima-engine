@@ -1,11 +1,12 @@
 import { doLog } from '@paima/utils';
 import type { IVerify } from './IVerify.js';
-const base58check = require('base58check');
+import bs58check from 'bs58check';
+import type { NetworkId } from 'mina-signer/dist/node/mina-signer/src/signature.js';
 
 export class MinaCrypto implements IVerify {
   verifyAddress = async (address: string): Promise<boolean> => {
     try {
-      base58check.decode(address);
+      bs58check.decode(address);
     } catch (e) {
       return false;
     }
@@ -23,9 +24,9 @@ export class MinaCrypto implements IVerify {
         return false;
       }
 
-      const Client = require('mina-signer');
+      const Client = (await import('mina-signer')).default;
 
-      const signerClient = new Client({ network });
+      const signerClient = new Client({ network: network as NetworkId });
 
       const verifyBody = {
         data: message,

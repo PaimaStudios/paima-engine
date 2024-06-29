@@ -16,7 +16,7 @@ import {
   WalletNotFound,
 } from './errors.js';
 import { getWindow } from './window.js';
-import AuroMinaApi from '@aurowallet/mina-provider';
+import type AuroMinaApi from '@aurowallet/mina-provider';
 
 export type MinaApi = AuroMinaApi;
 
