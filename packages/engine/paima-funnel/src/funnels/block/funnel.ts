@@ -15,6 +15,7 @@ import { RpcCacheEntry, RpcRequestState } from '../FunnelCache.js';
 import type { PoolClient } from 'pg';
 import { FUNNEL_PRESYNC_FINISHED } from '@paima/utils';
 
+let i = 0;
 const GET_BLOCK_NUMBER_TIMEOUT = 5000;
 
 export class BlockFunnel extends BaseFunnel implements ChainFunnel {
@@ -48,13 +49,15 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
       return [];
     }
 
+    let data = [];
     if (toBlock === fromBlock) {
       doLog(`Block funnel ${this.config.chainId}: #${toBlock}`);
-      return await this.internalReadDataSingle(fromBlock);
+      data = await this.internalReadDataSingle(fromBlock);
     } else {
       doLog(`Block funnel ${this.config.chainId}: #${fromBlock}-${toBlock}`);
-      return await this.internalReadDataMulti(fromBlock, toBlock);
+      data = await this.internalReadDataMulti(fromBlock, toBlock);
     }
+    return data;
   }
 
   /**

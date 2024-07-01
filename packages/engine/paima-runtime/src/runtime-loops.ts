@@ -1,6 +1,12 @@
 import process from 'process';
-import { doLog, logError, delay, GlobalConfig } from '@paima/utils';
-import { tx, DataMigrations } from '@paima/db';
+import { doLog, logError, delay, GlobalConfig, ENV, wait } from '@paima/utils';
+import {
+  tx,
+  DataMigrations,
+  emulatedBlockheightToDeploymentChain,
+  deploymentChainBlockheightToEmulated,
+  emulatedSelectLatestPrior,
+} from '@paima/db';
 import { getEarliestStartBlockheight, getEarliestStartSlot } from './cde-config/utils.js';
 import type { ChainFunnel, IFunnelFactory, ReadPresyncDataFrom } from './types.js';
 import type { ChainData, ChainDataExtension, GameStateMachine } from '@paima/sm';
@@ -16,6 +22,8 @@ import { cleanNoncesIfTime } from './nonce-gc.js';
 import type { PoolClient } from 'pg';
 import { FUNNEL_PRESYNC_FINISHED, ConfigNetworkType } from '@paima/utils';
 import type { CardanoConfig, EvmConfig } from '@paima/utils';
+import { MQTTBroker } from './mqtt/mqtt-broker.js';
+import { MQTTPublisher, MQTTSystemEvents } from './mqtt/mqtt-publisher.js';
 
 // The core logic of paima runtime which polls the funnel and processes the resulting chain data using the game's state machine.
 // Of note, the runtime is designed to continue running/attempting to process the next required block no matter what errors propagate upwards.
@@ -40,6 +48,9 @@ export async function startRuntime(
     startBlockHeight,
     emulatedBlocks ? null : stopBlockHeight
   );
+
+  // Enable broker
+  await startMQTTBroker();
 
   // Main sync:
   await runSync(gameStateMachine, funnelFactory, pollingPeriod, stopBlockHeight);
@@ -273,6 +284,20 @@ async function runSync(
         ) {
           break;
         }
+
+        let emulated: number | undefined;
+        let block_chain: number = chainData.blockNumber;
+        if (ENV.EMULATED_BLOCKS) {
+          const [e] = await emulatedSelectLatestPrior.run(
+            {
+              emulated_block_height: chainData.blockNumber,
+            },
+            gameStateMachine.getReadWriteDbConn()
+          );
+          emulated = block_chain;
+          block_chain = e.deployment_chain_block_height;
+        }
+        MQTTPublisher.sendMessage({ block: block_chain, emulated }, MQTTSystemEvents.STF);
       }
     } catch (err) {
       doLog('[paima-runtime] Uncaught error propagated to runtime while processing chain data:');
@@ -426,3 +451,17 @@ async function blockPostProcess(
 
   return true;
 }
+
+const startMQTTBroker = async (): Promise<void> => {
+  if (ENV.MQTT_BROKER) {
+    // Load Server
+    MQTTBroker.getServer();
+    // TODO is this necessary?
+    await wait(1000);
+  }
+  // Listen to all system events
+  MQTTPublisher.startListener(MQTTSystemEvents.STF).catch((e: any) => console.log(e));
+  MQTTPublisher.startListener(MQTTSystemEvents.BATCHER_HASH).catch((e: any) => console.log(e));
+
+  return;
+};

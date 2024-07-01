@@ -27,6 +27,7 @@
     "noImplicitOverride": true,
     "skipLibCheck": true,
     "paths": {
+      // "@paima/mqtt/*": ["./packages/mqtt/*"],
       "@paima/batcher-address-validator/*": ["./packages/batcher/address-validator/*"],
       "@paima/batcher-db/*": ["./packages/batcher/db/*"],
       "@paima/batcher-game-input-validator/*": ["./packages/batcher/game-input-validator/*"],

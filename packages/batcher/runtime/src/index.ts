@@ -34,6 +34,7 @@ import { setLogger } from '@paima/utils';
 import * as fs from 'fs';
 import { parseSecurityYaml } from '@paima/utils-backend';
 import { getRemoteBackendVersion, initMiddlewareCore } from '@paima/mw-core';
+import { MQTTBroker } from './mqtt/mqtt-broker.js';
 
 setLogger(s => {
   try {
@@ -114,6 +115,7 @@ const BatcherRuntime: BatcherRuntimeInitializer = {
       ): Promise<void> {
         // pass endpoints to web server and run
 
+        MQTTBroker.getServer();
         // do not await on these as they may run forever
         void Promise.all([
           startServer(pool, errorCodeToMessage, provider, getCurrentBlock).catch(e => {

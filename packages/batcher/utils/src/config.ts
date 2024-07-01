@@ -135,6 +135,8 @@ export class ENV {
     return process.env.SELF_SIGNING_API_KEY || '';
   }
 
+  // Utils
+
   private static isTrue(value: string | undefined): boolean {
     return ['true', '1', 'yes'].includes((value ?? '').toLowerCase());
   }
