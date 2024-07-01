@@ -14,6 +14,7 @@ import { hashBatchSubunit, buildBatchData } from '@paima/concise';
 import { contractAbis, wait } from '@paima/utils';
 import { utf8ToHex } from 'web3-utils';
 import { ethers } from 'ethers';
+import { MQTTPublisher, MQTTSystemEvents } from './mqtt/mqtt-publisher.js';
 
 class BatchedTransactionPoster {
   private provider: EthersEvmProvider;
@@ -95,7 +96,8 @@ class BatchedTransactionPoster {
       value: '0x' + Number(this.fee).toString(16),
       gasLimit: estimateGasLimit(msg.length),
     });
-    const receipt = (await transaction.extra.wait())!;
+    // TODO ONLY ACTIVATE IN ASYNC MODE!!!1!
+    const receipt = (await transaction.extra.wait(0))!;
     return [receipt.blockNumber, receipt.hash];
   };
 
@@ -103,8 +105,9 @@ class BatchedTransactionPoster {
   private postingRound = async (): Promise<number> => {
     const hashes: string[] = [];
     const ids: number[] = [];
+    const addresses: Set<string> = new Set();
 
-    const batchedTransaction = await this.buildBatchedTransaction(hashes, ids);
+    const batchedTransaction = await this.buildBatchedTransaction(hashes, ids, addresses);
     if (!batchedTransaction) {
       return 0;
     }
@@ -131,7 +134,7 @@ class BatchedTransactionPoster {
         return ids.length;
       }
 
-      await this.updatePostedStates(hashes, blockHeight, transactionHash);
+      await this.updatePostedStates(hashes, blockHeight, transactionHash, addresses);
       await this.deletePostedInputs(ids);
 
       if (!keepRunning) {
@@ -149,7 +152,11 @@ class BatchedTransactionPoster {
     return ids.length;
   };
 
-  private buildBatchedTransaction = async (hashes: string[], ids: number[]): Promise<string> => {
+  private buildBatchedTransaction = async (
+    hashes: string[],
+    ids: number[],
+    address: Set<string>
+  ): Promise<string> => {
     const validatedInputs = await getValidatedInputs.run(undefined, this.pool);
 
     if (!keepRunning) {
@@ -171,6 +178,7 @@ class BatchedTransactionPoster {
       }))
     );
     for (let i = 0; i < batchData.selectedInputs.length; i++) {
+      address.add(batchData.selectedInputs[i].userAddress);
       hashes.push(hashBatchSubunit(batchData.selectedInputs[i]));
       ids.push(validatedInputs[i].id);
     }
@@ -181,10 +189,14 @@ class BatchedTransactionPoster {
   private updatePostedStates = async (
     hashes: string[],
     blockHeight: number,
-    transactionHash: string
+    transactionHash: string,
+    addresses: Set<string>
   ): Promise<void> => {
     for (let hash of hashes) {
       try {
+        // Emit new hash.
+        MQTTPublisher.sendMessage({ hash, blockHeight, addresses }, MQTTSystemEvents.BATCHER_HASH);
+
         await updateStatePosted.run(
           {
             input_hash: hash,

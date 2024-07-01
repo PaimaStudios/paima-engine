@@ -4,7 +4,7 @@ import type { SignFunction } from '../types.js';
 import { createMessageForBatcher, type BatchedSubunit } from '@paima/concise';
 import type { AddressAndType } from '@paima/providers';
 
-export function batchedToJsonString(b: BatchedSubunit, captcha?: string): string {
+export function batchedToJsonString(b: BatchedSubunit, captcha?: string, async?: boolean): string {
   return JSON.stringify({
     address_type: b.addressType,
     user_address: b.userAddress,
@@ -12,6 +12,7 @@ export function batchedToJsonString(b: BatchedSubunit, captcha?: string): string
     game_input: b.gameInput,
     timestamp: b.millisecondTimestamp,
     captcha,
+    async,
   });
 }
 

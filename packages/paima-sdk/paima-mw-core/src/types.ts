@@ -72,3 +72,4 @@ export type BaseSuccessResponse = {
 };
 
 export type PostDataResponse = BaseSuccessResponse & { blockHeight: number };
+export type PostDataResponseAsync = BaseSuccessResponse & { hash: string };

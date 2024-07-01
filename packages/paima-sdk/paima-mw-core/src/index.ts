@@ -8,7 +8,11 @@ import { userWalletLoginWithoutChecks, updateBackendUri } from './endpoints/inte
 
 import { getBlockNumber, postDataToEndpoint } from './helpers/general.js';
 import { getRemoteBackendVersion, awaitBlock } from './helpers/auxiliary-queries.js';
-import { postConciselyEncodedData, postConciseData } from './helpers/posting.js';
+import {
+  postConciselyEncodedData,
+  postConciseData,
+  postConciseDataAsync,
+} from './helpers/posting.js';
 import { buildQuery, buildBackendQuery } from './helpers/query-constructors.js';
 import { pushLog } from './helpers/logging.js';
 
@@ -60,6 +64,7 @@ export {
   getActiveAddress,
   getStorageAddress,
   postConciseData,
+  postConciseDataAsync,
   postConciselyEncodedData,
   awaitBlock,
   buildQuery,

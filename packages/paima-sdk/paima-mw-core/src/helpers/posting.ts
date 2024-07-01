@@ -22,6 +22,7 @@ import type {
   BatcherTrackResponse,
   FailedResult,
   PostDataResponse,
+  PostDataResponseAsync,
   Result,
 } from '../types.js';
 import { batchedToJsonString, buildBatchedSubunit } from './data-processing.js';
@@ -104,7 +105,7 @@ export const postConciseData = async (
 ): Promise<PostDataResponse | FailedResult> => {
   try {
     const captcha = await reCaptcha(data);
-    const response = await postConciselyEncodedData(data, mode, captcha);
+    const response = await postConciselyEncodedData(data, mode, captcha, false);
     if (!response.success) {
       return errorFxn(
         PaimaMiddlewareErrorCode.ERROR_POSTING_TO_CHAIN,
@@ -112,8 +113,10 @@ export const postConciseData = async (
         response.errorCode
       );
     }
-    const blockHeight = response.result;
-
+    if (typeof response.result !== 'number') {
+      throw new Error('Blockheight expected');
+    }
+    const blockHeight: number = response.result;
     if (blockHeight < 0) {
       return errorFxn(
         PaimaMiddlewareErrorCode.ERROR_POSTING_TO_CHAIN,
@@ -127,6 +130,36 @@ export const postConciseData = async (
 };
 
 /**
+ * Wrapper around post concisely encoded data with added error handling
+ * @param data Concisely encoded data to post
+ * @param errorFxn Utility error function to handle error formatting
+ * @returns blockheight or failure
+ */
+export const postConciseDataAsync = async (
+  data: string,
+  errorFxn: EndpointErrorFxn,
+  mode?: WalletMode
+): Promise<PostDataResponseAsync | FailedResult> => {
+  try {
+    const captcha = await reCaptcha(data);
+    const response = await postConciselyEncodedData(data, mode, captcha, true);
+    if (!response.success) {
+      return errorFxn(
+        PaimaMiddlewareErrorCode.ERROR_POSTING_TO_CHAIN,
+        response.errorMessage,
+        response.errorCode
+      );
+    }
+    if (typeof response.result !== 'string') {
+      throw new Error('Hash expected');
+    }
+    return { success: true, hash: response.result };
+  } catch (err) {
+    return errorFxn(PaimaMiddlewareErrorCode.ERROR_POSTING_TO_CHAIN, err);
+  }
+};
+
+/**
  * @deprecated for outside use, utilize @see {postConciseData} instead
  * @param gameInput
  * @returns On success the block number of the transaction
@@ -134,8 +167,9 @@ export const postConciseData = async (
 export async function postConciselyEncodedData(
   gameInput: string,
   mode?: WalletMode,
-  captcha?: string
-): Promise<Result<number>> {
+  captcha?: string,
+  async?: boolean
+): Promise<Result<number | string>> {
   const errorFxn = buildEndpointErrorFxn('postConciselyEncodedData');
 
   const provider = mode == null ? getDefaultProvider() : WalletModeMap[mode].getOrThrowProvider();
@@ -166,7 +200,7 @@ export async function postConciselyEncodedData(
         provider.getAddress(),
         gameInput
       );
-      return await submitToBatcher(subunit, captcha);
+      return await submitToBatcher(subunit, captcha, async);
     default:
       assertNever(postingMode, true);
       return errorFxn(
@@ -226,10 +260,14 @@ async function verifyTx(txHash: string, msTimeout: number): Promise<number> {
   return receipt.blockNumber;
 }
 
-async function submitToBatcher(subunit: BatchedSubunit, captcha?: string): Promise<Result<number>> {
+async function submitToBatcher(
+  subunit: BatchedSubunit,
+  captcha?: string,
+  async?: boolean
+): Promise<Result<number | string>> {
   const errorFxn = buildEndpointErrorFxn('submitToBatcher');
 
-  const body = batchedToJsonString(subunit, captcha);
+  const body = batchedToJsonString(subunit, captcha, async);
   let res: Response;
 
   try {
@@ -255,6 +293,12 @@ async function submitToBatcher(subunit: BatchedSubunit, captcha?: string): Promi
     inputHash = response.hash;
   } catch (err) {
     return errorFxn(PaimaMiddlewareErrorCode.INVALID_RESPONSE_FROM_BATCHER, err);
+  }
+
+  // In "async" mode we return the hash, and not the block number.
+  // We expect the client to resolve the blockheight from the hash.
+  if (async) {
+    return { success: true, result: inputHash };
   }
 
   try {
