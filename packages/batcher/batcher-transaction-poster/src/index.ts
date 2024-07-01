@@ -14,6 +14,7 @@ import { hashBatchSubunit, buildBatchData } from '@paima/concise';
 import { contractAbis, wait } from '@paima/utils';
 import { utf8ToHex } from 'web3-utils';
 import { ethers } from 'ethers';
+import { MQTTPublisher, MQTTSystemEvents } from './mqtt/mqtt-publisher.js';
 
 class BatchedTransactionPoster {
   private provider: EthersEvmProvider;
@@ -95,7 +96,8 @@ class BatchedTransactionPoster {
       value: '0x' + Number(this.fee).toString(16),
       gasLimit: estimateGasLimit(msg.length),
     });
-    const receipt = (await transaction.extra.wait())!;
+    // TODO ONLY ACTIVATE IN ASYNC MODE!!!1!
+    const receipt = (await transaction.extra.wait(0))!;
     return [receipt.blockNumber, receipt.hash];
   };
 
@@ -185,6 +187,9 @@ class BatchedTransactionPoster {
   ): Promise<void> => {
     for (let hash of hashes) {
       try {
+        // Emit new hash.
+        MQTTPublisher.sendMessage({ hash, blockHeight }, MQTTSystemEvents.BATCHER_HASH);
+
         await updateStatePosted.run(
           {
             input_hash: hash,
