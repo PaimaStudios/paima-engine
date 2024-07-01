@@ -1,86 +1,97 @@
 import mqtt from 'mqtt';
+import { MQTTSystemEventsNames } from './mqtt-events.js';
+import type { MQTTEvent } from './mqtt-events.js';
 
-export type MQTTCallback = (target: string, path: string, rawObject: object) => void;
-export type MQTTSystemEventsSetup = {
-  path: string;
-  target: 'PaimaEngine' | 'Batcher';
-  isSystem?: boolean;
-};
-export const MQTTSystemEvents: Record<string, MQTTSystemEventsSetup> = {
-  STF: { path: '/sys/stf', target: 'PaimaEngine', isSystem: true },
-  BATCHER_HASH: { path: '/sys/batch_hash', target: 'Batcher', isSystem: true },
-};
+export type MQTTCallback = (
+  target: string,
+  path: string | ((address: string) => string),
+  rawObject: object
+) => void;
 
 export class MQTTClient {
+  /* Shared storage for last blocked STF processed */
   private static lastSTFBlock = 0;
+  /* Map of known hashes */
   private static hashes: Record<string, number> = {};
-  private static listeners: Record<string, MQTTCallback> = {};
+  /* List of event processors */
+  private static subscriptions: MQTTEvent[] = [];
+
+  /* ws-clients */
+  private static engineClient: mqtt.MqttClient | undefined;
+  private static batcherClient: mqtt.MqttClient | undefined;
 
   private static wait(n: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, n));
   }
 
-  private static engineClient: mqtt.MqttClient | undefined;
-  private static batcherClient: mqtt.MqttClient | undefined;
-
+  /* Processes new messages, applies system transformations and side effects before calling the user "callback" */
   private static systemParser =
-    (target: string) =>
+    (broker: string) =>
     (path: string, message: Buffer): void => {
       // message is Buffer
       const m = message.toString();
       const data: Record<string, unknown> = JSON.parse(m);
-      // Parse System Events
-      if (path === MQTTSystemEvents.STF.path) {
-        MQTTClient.lastSTFBlock = data.block as number;
+      const mqttEvent = MQTTClient.subscriptions.find(s => s.match(broker, path));
+      if (!mqttEvent) {
+        console.log('Critical error not event manager for', { broker, path, message: m });
+        return;
       }
-      if (path === MQTTSystemEvents.BATCHER_HASH.path) {
-        MQTTClient.hashes[data.hash as string] = data.blockHeight as number;
+      // Default system behaviors
+      switch (mqttEvent.name) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
+        case MQTTSystemEventsNames.STF_GLOBAL:
+          MQTTClient.lastSTFBlock = data.block as number;
+          break;
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
+        case MQTTSystemEventsNames.BATCHER_HASH_GLOBAL:
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
+        case MQTTSystemEventsNames.BATCHER_HASH_$ADDRESS:
+          MQTTClient.hashes[data.hash as string] = data.blockHeight as number;
+          break;
       }
-      if (MQTTClient.listeners[`${target}:${path}`]) {
-        MQTTClient.listeners[`${target}:${path}`](target, path, data);
+
+      if (mqttEvent.callback) {
+        mqttEvent.callback(mqttEvent, data);
       }
       return;
     };
 
+  /* Connect to paima-engine & batcher broker */
   public static connect(): void {
     if (MQTTClient.engineClient || MQTTClient.batcherClient) return;
 
     // TODO Parametrize this based on ENV.
     MQTTClient.engineClient = mqtt.connect('ws://127.0.0.1:8883');
-    MQTTClient.engineClient.on('message', MQTTClient.systemParser('PaimaEngine'));
+    MQTTClient.engineClient.on('message', MQTTClient.systemParser('paima-engine'));
 
     MQTTClient.batcherClient = mqtt.connect('ws://127.0.0.1:8884');
-    MQTTClient.batcherClient.on('message', MQTTClient.systemParser('Batcher'));
+    MQTTClient.batcherClient.on('message', MQTTClient.systemParser('batcher'));
   }
 
-  // TODO this should be from the shared enum
-  public static subscribe(event: MQTTSystemEventsSetup, callback?: MQTTCallback): void {
-    switch (event.target) {
-      case 'PaimaEngine':
-        if (!MQTTClient.engineClient) {
-          throw new Error('Connect client first');
-        }
-        MQTTClient.engineClient.on('connect', () => {
-          MQTTClient.engineClient!.subscribe(event.path, err => {
-            if (err) console.log('MQTT[1] ERROR', err);
-          });
-          if (callback) MQTTClient.listeners[`${event.target}:${event.path}`] = callback;
-        });
+  /* Subscribe to System or Custom Events */
+  public static subscribe(event: MQTTEvent): void {
+    let client;
+    switch (event.broker) {
+      case 'paima-engine':
+        if (!MQTTClient.engineClient) client = MQTTClient.engineClient;
         break;
-      case 'Batcher':
-        if (!MQTTClient.batcherClient) {
-          throw new Error('Connect client first');
-        }
-        MQTTClient.batcherClient.on('connect', () => {
-          MQTTClient.batcherClient!.subscribe(event.path, err => {
-            if (err) console.log('MQTT[2] ERROR', err);
-          });
-          if (callback) MQTTClient.listeners[`${event.target}:${event.path}`] = callback;
-        });
+      case 'batcher':
+        if (MQTTClient.batcherClient) client = MQTTClient.batcherClient;
         break;
     }
+
+    if (!client) throw new Error('Unknown client');
+
+    client.on('connect', () => {
+      client.subscribe(event.path.fullPath, (err: any) => {
+        if (err) console.log(`MQTT[${event.broker}] ERROR`, err);
+      });
+    });
+
+    MQTTClient.subscriptions.push(event);
   }
 
+  /* Helper to wait when hash is ready */
   public static awaitBlock = async (hash: string, maxTimeSec = 20): Promise<number> => {
     console.log('Waiting for hash:', hash);
     const startTime = new Date().getTime();
