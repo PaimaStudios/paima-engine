@@ -105,8 +105,9 @@ class BatchedTransactionPoster {
   private postingRound = async (): Promise<number> => {
     const hashes: string[] = [];
     const ids: number[] = [];
+    const addresses: Set<string> = new Set();
 
-    const batchedTransaction = await this.buildBatchedTransaction(hashes, ids);
+    const batchedTransaction = await this.buildBatchedTransaction(hashes, ids, addresses);
     if (!batchedTransaction) {
       return 0;
     }
@@ -133,7 +134,7 @@ class BatchedTransactionPoster {
         return ids.length;
       }
 
-      await this.updatePostedStates(hashes, blockHeight, transactionHash);
+      await this.updatePostedStates(hashes, blockHeight, transactionHash, addresses);
       await this.deletePostedInputs(ids);
 
       if (!keepRunning) {
@@ -151,7 +152,11 @@ class BatchedTransactionPoster {
     return ids.length;
   };
 
-  private buildBatchedTransaction = async (hashes: string[], ids: number[]): Promise<string> => {
+  private buildBatchedTransaction = async (
+    hashes: string[],
+    ids: number[],
+    address: Set<string>
+  ): Promise<string> => {
     const validatedInputs = await getValidatedInputs.run(undefined, this.pool);
 
     if (!keepRunning) {
@@ -173,6 +178,7 @@ class BatchedTransactionPoster {
       }))
     );
     for (let i = 0; i < batchData.selectedInputs.length; i++) {
+      address.add(batchData.selectedInputs[i].userAddress);
       hashes.push(hashBatchSubunit(batchData.selectedInputs[i]));
       ids.push(validatedInputs[i].id);
     }
@@ -183,12 +189,13 @@ class BatchedTransactionPoster {
   private updatePostedStates = async (
     hashes: string[],
     blockHeight: number,
-    transactionHash: string
+    transactionHash: string,
+    addresses: Set<string>
   ): Promise<void> => {
     for (let hash of hashes) {
       try {
         // Emit new hash.
-        MQTTPublisher.sendMessage({ hash, blockHeight }, MQTTSystemEvents.BATCHER_HASH);
+        MQTTPublisher.sendMessage({ hash, blockHeight, addresses }, MQTTSystemEvents.BATCHER_HASH);
 
         await updateStatePosted.run(
           {

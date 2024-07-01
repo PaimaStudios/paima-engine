@@ -27,6 +27,12 @@ export * from './constants.js';
 export * from './contracts.js';
 export type * from './contracts.js';
 export * from './captcha.js';
+export {
+  MQTTClient,
+  MQTTCallback,
+  MQTTSystemEvents,
+  MQTTSystemEventsSetup,
+} from './mqtt/mqtt-client.js';
 
 export {
   AddressType,
