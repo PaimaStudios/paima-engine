@@ -177,24 +177,25 @@ async function main(): Promise<void> {
 
   if (!ENV.BATCHER_AVAIL_LIGHT_CLIENT) {
     const privateKey = ENV.BATCHER_PRIVATE_KEY;
-    provider = await getWalletWeb3AndAddress(ENV.CHAIN_URI, privateKey);
+    const prov = await getWalletWeb3AndAddress(ENV.CHAIN_URI, privateKey);
 
     console.log('Chain URI:              ', ENV.CHAIN_URI);
     console.log('Validation type:        ', ENV.GAME_INPUT_VALIDATION_TYPE);
     console.log('PaimaL2Contract address:', ENV.CONTRACT_ADDRESS);
-    console.log('Batcher account address:', provider.getAddress());
+    console.log('Batcher account address:', prov.getAddress());
 
     batchedTransactionPoster = new EvmBatchedTransactionPoster(
-      provider,
+      prov,
       ENV.CONTRACT_ADDRESS,
       ENV.BATCHED_MESSAGE_SIZE_LIMIT,
       pool
     );
 
     getCurrentBlock = async (): Promise<number> => {
-      // FIXME: cast
-      return await (provider as EthersEvmProvider).getConnection().api.provider!.getBlockNumber();
+      return await prov.getConnection().api.provider!.getBlockNumber();
     };
+
+    provider = prov;
   } else {
     batchedTransactionPoster = new AvailBatchedTransactionPoster(
       ENV.BATCHER_AVAIL_LIGHT_CLIENT,
