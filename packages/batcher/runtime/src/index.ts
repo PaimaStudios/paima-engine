@@ -9,6 +9,7 @@ import {
   VERSION_STRING,
   getAndConfirmWeb3,
   getInvalidEnvVars,
+  getWalletAvailAndAddress,
 } from '@paima/batcher-utils'; // load first to load ENV variables
 import type { Pool } from 'pg';
 
@@ -24,15 +25,15 @@ import GameInputValidator, {
   getErrors,
 } from '@paima/batcher-game-input-validator';
 
-import { EthersEvmProvider, PolkadotProvider } from '@paima/providers';
+import { AvailJsProvider, EthersEvmProvider } from '@paima/providers';
 import type { ErrorCode, ErrorMessageFxn, GameInputValidatorCore } from '@paima/batcher-utils';
 
 import { initializePool } from './pg/pgPool.js';
 import type { BatcherRuntimeInitializer } from './types.js';
-import { ConfigNetworkType, GlobalConfig, setLogger } from '@paima/utils';
+import { setLogger } from '@paima/utils';
 import * as fs from 'fs';
 import { parseSecurityYaml } from '@paima/utils-backend';
-import { getBlockNumber, getRemoteBackendVersion, initMiddlewareCore } from '@paima/mw-core';
+import { getRemoteBackendVersion, initMiddlewareCore } from '@paima/mw-core';
 
 setLogger(s => {
   try {
@@ -108,7 +109,7 @@ const BatcherRuntime: BatcherRuntimeInitializer = {
       async run(
         gameInputValidator: GameInputValidator,
         batchedTransactionPoster: BatchedTransactionPoster,
-        provider: EthersEvmProvider | PolkadotProvider,
+        provider: EthersEvmProvider | AvailJsProvider,
         getCurrentBlock: () => Promise<number>
       ): Promise<void> {
         // pass endpoints to web server and run
@@ -170,7 +171,7 @@ async function main(): Promise<void> {
     'Game Batcher', // TODO: it doesn't matter now, but there is no way for the batcher to get the name of the game
     await getRemoteBackendVersion()
   );
-  let provider: EthersEvmProvider | PolkadotProvider;
+  let provider: EthersEvmProvider | AvailJsProvider;
   let batchedTransactionPoster;
   let getCurrentBlock;
 
@@ -202,11 +203,15 @@ async function main(): Promise<void> {
     );
 
     console.log('Avail Light Client:              ', ENV.BATCHER_AVAIL_LIGHT_CLIENT);
+    console.log('Avail RPC:              ', ENV.CHAIN_URI);
     console.log('Validation type:        ', ENV.GAME_INPUT_VALIDATION_TYPE);
     console.log('PaimaL2Contract address:', ENV.CONTRACT_ADDRESS);
 
-    // FIXME: implement?
-    provider = {} as unknown as PolkadotProvider;
+    if (!ENV.CHAIN_URI || !ENV.BATCHER_PRIVATE_KEY) {
+      throw new Error('Missing Avail configuration variables');
+    }
+
+    provider = await getWalletAvailAndAddress(ENV.CHAIN_URI, ENV.BATCHER_PRIVATE_KEY);
 
     // TODO: copy-pasted from funnel utils
     getCurrentBlock = async (): Promise<number> => {

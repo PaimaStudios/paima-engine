@@ -11,6 +11,7 @@ import { EthersConnector, EvmInjectedConnector } from './evm/index.js';
 import { CardanoConnector } from './cardano.js';
 import { PolkadotConnector } from './polkadot.js';
 import { MinaConnector } from './mina.js';
+import { AvailConnector } from './avail.js';
 
 export const enum WalletMode {
   EvmInjected,
@@ -19,6 +20,7 @@ export const enum WalletMode {
   Polkadot,
   Algorand,
   Mina,
+  AvailJs,
 }
 
 export const WalletModeMap = {
@@ -28,6 +30,7 @@ export const WalletModeMap = {
   [WalletMode.Polkadot]: PolkadotConnector.instance(),
   [WalletMode.Algorand]: AlgorandConnector.instance(),
   [WalletMode.Mina]: MinaConnector.instance(),
+  [WalletMode.AvailJs]: AvailConnector.instance(),
 };
 
 type ExtractGeneric<T> = T extends IConnector<infer U> ? U : never;
