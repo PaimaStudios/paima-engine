@@ -14,12 +14,11 @@ import {
 } from '@paima/batcher-db';
 import { ENV, keepRunning, setWebserverClosed, unsetWebserverClosed } from '@paima/batcher-utils';
 import type { ErrorMessageFxn } from '@paima/batcher-utils';
-import type { EthersEvmProvider, PolkadotProvider } from '@paima/providers';
+import type { AvailJsProvider, EthersEvmProvider } from '@paima/providers';
 import type { BatchedSubunit } from '@paima/concise';
 import { createMessageForBatcher } from '@paima/concise';
 import { AddressType, getWriteNamespace, wait } from '@paima/utils';
 import { hashBatchSubunit } from '@paima/concise';
-import { GlobalConfig } from '@paima/utils';
 import { RecaptchaError, reCaptchaValidation } from './recaptcha.js';
 
 const port = ENV.BATCHER_PORT;
@@ -229,7 +228,7 @@ async function initializeServer(
           return;
         }
 
-        const addressType = AddressType.EVM;
+        const addressType = provider.getAddress().type;
 
         const message: string = createMessageForBatcher(
           await getWriteNamespace(),
@@ -464,7 +463,7 @@ async function initializeServer(
 async function startServer(
   _pool: Pool,
   errorCodeToMessage: ErrorMessageFxn,
-  provider: EthersEvmProvider | PolkadotProvider,
+  provider: EthersEvmProvider | AvailJsProvider,
   getCurrentBlock: () => Promise<number>
 ): Promise<void> {
   pool = _pool;
