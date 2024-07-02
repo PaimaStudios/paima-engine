@@ -316,7 +316,6 @@ async function initializeServer(
       req: Request<unknown, unknown, SubmitUserInputRequest>,
       res: Response<SubmitUserInputResponse>
     ) => {
-      console.log('req?');
       try {
         const expectedProps = [
           'address_type',
