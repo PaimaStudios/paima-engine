@@ -16,6 +16,14 @@ if (process.env.SECURITY_NAMESPACE) {
   }
 }
 
+try {
+  const fileContent = fs.readFileSync(
+    `../../config.${process.env.NETWORK || 'localhost'}.yml`,
+    'utf8'
+  );
+  define[`process.env.BUILT_TIME_INJECTED_CONFIGURATION`] = JSON.stringify(fileContent);
+} catch (error) {}
+
 // Verify env file is filled out
 if (!process.env.BACKEND_URI) throw new Error('Please ensure you have filled out your .env file');
 

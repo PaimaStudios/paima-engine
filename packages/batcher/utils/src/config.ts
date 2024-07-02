@@ -25,6 +25,10 @@ export class ENV {
     return process.env.BATCHER_PRIVATE_KEY || '';
   }
 
+  static get BATCHER_AVAIL_LIGHT_CLIENT(): string | undefined {
+    return process.env.BATCHER_AVAIL_LIGHT_CLIENT;
+  }
+
   static get MAX_BASE_GAS(): number {
     return process.env.MAX_BASE_GAS ? parseInt(process.env.MAX_BASE_GAS, 10) : 50000;
   }

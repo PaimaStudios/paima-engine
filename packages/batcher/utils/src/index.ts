@@ -1,9 +1,9 @@
 import './config.js'; // place at the top to load ENV variables
-import type { EthersEvmProvider } from '@paima/providers';
-import { EthersConnector, WalletMode } from '@paima/providers';
+import type { AvailJsProvider, EthersEvmProvider } from '@paima/providers';
+import { AvailConnector, EthersConnector, WalletMode } from '@paima/providers';
 import { paimaEndpoints } from '@paima/mw-core';
 import { GenericRejectionCode } from './types.js';
-
+import { initialize, getKeyringFromSeed } from 'avail-js-sdk';
 import { AddressType, wait } from '@paima/utils';
 import assertNever from 'assert-never';
 import { ethers } from 'ethers';
@@ -126,6 +126,37 @@ export async function getWalletWeb3AndAddress(
   const provider = EthersConnector.instance().getProvider();
   if (provider == null) {
     throw new Error(`Batcher failed to find Ethers provider`);
+  }
+  return provider;
+}
+
+export async function getWalletAvailAndAddress(
+  nodeUrl: string,
+  seed: string
+): Promise<AvailJsProvider> {
+  const rpc = await initialize(nodeUrl);
+
+  const connectedWallet = await paimaEndpoints.userWalletLogin({
+    mode: WalletMode.AvailJs,
+    preferBatchedMode: false,
+    seed: seed,
+    connection: {
+      api: rpc,
+      metadata: {
+        name: 'paima-batcher',
+        displayName: 'Paima Batcher',
+      },
+    },
+  });
+
+  if (!connectedWallet.success) {
+    throw new Error(`Wallet connection failed`);
+  }
+
+  // we return this instead just to avoid having to port the whole batcher system to use the middleware
+  const provider = AvailConnector.instance().getProvider();
+  if (provider == null) {
+    throw new Error(`Batcher failed to find Avail JS provider`);
   }
   return provider;
 }

@@ -21,19 +21,11 @@ import { Routes } from '@dcspark/carp-client';
 import { ethers } from 'ethers';
 
 class PaimaAddressValidator {
-  private web3: ethers.JsonRpcProvider | undefined;
-  private nodeUrl: string;
   private pool: Pool;
 
-  constructor(nodeUrl: string, pool: Pool) {
-    this.web3 = undefined;
-    this.nodeUrl = nodeUrl;
+  constructor(pool: Pool) {
     this.pool = pool;
   }
-
-  public initialize = async (): Promise<void> => {
-    this.web3 = new ethers.JsonRpcProvider(this.nodeUrl);
-  };
 
   public validateUserInput = async (input: BatchedSubunit, height: number): Promise<ErrorCode> => {
     // Determine address type:
@@ -74,11 +66,8 @@ class PaimaAddressValidator {
 
   private validateAddress = async (address: string, addressType: AddressType): Promise<boolean> => {
     switch (addressType) {
-      case AddressType.EVM: {
-        if (this.web3 == null)
-          throw new Error(`[address-validator] web3 not initialized before address validations`);
+      case AddressType.EVM:
         return await CryptoManager.Evm().verifyAddress(address);
-      }
       case AddressType.CARDANO:
         return await CryptoManager.Cardano().verifyAddress(address);
       case AddressType.POLKADOT:
@@ -106,9 +95,6 @@ class PaimaAddressValidator {
     const tryVerifySig = async (message: string): Promise<boolean> => {
       switch (addressType) {
         case AddressType.EVM:
-          if (!this.web3) {
-            throw new Error('[PaimaAddressValidator::verifySignature] web3 not initialized!');
-          }
           return await CryptoManager.Evm().verifySignature(
             input.userAddress,
             message,
