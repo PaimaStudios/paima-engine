@@ -11,11 +11,8 @@ class AvailBatchedTransactionPoster extends BatchedTransactionPosterBase {
   }
 
   protected override postMessage = async (msg: string): Promise<[number, string]> => {
-    console.log('msg', msg);
     const bytesMsg = new TextEncoder().encode(msg);
     const data = base64Encode(bytesMsg);
-
-    console.log('data', data);
 
     const req = fetch(`${this.provider}/v2/submit`, {
       method: 'POST',
@@ -30,8 +27,6 @@ class AvailBatchedTransactionPoster extends BatchedTransactionPosterBase {
       .catch(error => console.error(error));
 
     const receipt = await req;
-
-    console.log('receipt', receipt);
 
     return [receipt.block_number, receipt.hash];
   };
