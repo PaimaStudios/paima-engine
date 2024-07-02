@@ -14,14 +14,12 @@ interface SwitchError {
 }
 
 async function switchChain(): Promise<boolean> {
-  const mainEvmConfig = await GlobalConfig.mainEvmConfig();
+  const evmConfig = await GlobalConfig.mainEvmConfig();
 
-  if (!mainEvmConfig) {
-    // TODO: not sure what this does and what to do here.
-    throw new Error('No evm configuration in switchChain');
+  if (!evmConfig) {
+    return true;
   }
-
-  const [chainName, config] = mainEvmConfig;
+  const [chainName, config] = evmConfig;
 
   const errorFxn = buildEndpointErrorFxn('switchChain');
 
