@@ -41,6 +41,7 @@
     "@paima/concise": "2.4.0",
     "@paima/prando": "2.4.0",
     "assert-never": "^1.2.1",
-    "js-sha256": "^0.9.0"
+    "js-sha256": "^0.9.0",
+    "avail-js-sdk": "^0.2.12"
   }
 }
