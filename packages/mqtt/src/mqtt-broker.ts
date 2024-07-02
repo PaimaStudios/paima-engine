@@ -1,4 +1,5 @@
-// import { ENV } from '@paima/utils';
+import type { ENV as e1 } from '@paima/utils';
+import type { ENV as e2 } from '@paima/batcher-utils';
 import Aedes from 'aedes';
 import type { Server } from 'aedes-server-factory';
 import { createServer } from 'aedes-server-factory';
@@ -14,26 +15,23 @@ export enum MQTTBrokerProtocols {
  * This class implements a local MQTT Broker
  */
 export class MQTTBroker {
-  public static getConnectionString(protocol: MQTTBrokerProtocols): string {
-    return `${protocol}://127.0.0.1:${MQTTBroker.getPort(protocol)}`;
-  }
+  constructor(private env: typeof e1 | typeof e2) {}
 
-  private static getPort(protocol: MQTTBrokerProtocols): number {
+  private getPort(protocol: MQTTBrokerProtocols): number {
     switch (protocol) {
       case MQTTBrokerProtocols.WEBSOCKET:
-        return 8883; // ENV.MQTT_BROKER_WS_PORT;
+        return this.env.MQTT_BROKER_WS_PORT;
       case MQTTBrokerProtocols.MQTT:
-        return 1883; // ENV.MQTT_BROKER_PORT;
+        return this.env.MQTT_BROKER_PORT;
     }
   }
   private static aedes: Aedes | null = null;
   private static server: Record<MQTTBrokerProtocols, Server> | null = null;
   // Get/Init Singleton
-  public static getServer(): Record<MQTTBrokerProtocols, Server> {
-    // if (!ENV.MQTT_BROKER) {
-    //   throw new Error('Local MQTT Broker is disabled.');
-    // }
-
+  public getServer(): Record<MQTTBrokerProtocols, Server> {
+    if (!this.env.MQTT_BROKER) {
+      throw new Error('Local MQTT Broker is disabled.');
+    }
     if (MQTTBroker.server) return MQTTBroker.server;
 
     MQTTBroker.aedes = new Aedes();
@@ -44,23 +42,17 @@ export class MQTTBroker {
 
     // MQTT
     MQTTBroker.server[MQTTBrokerProtocols.MQTT].listen(
-      MQTTBroker.getPort(MQTTBrokerProtocols.MQTT),
-      function () {
-        console.log(
-          'MQTT Server Started @',
-          MQTTBroker.getConnectionString(MQTTBrokerProtocols.MQTT)
-        );
+      this.getPort(MQTTBrokerProtocols.MQTT),
+      () => {
+        console.log('MQTT Server Started @', this.env.MQTT_BROKER_URL);
       }
     );
 
     // Websocket
     MQTTBroker.server[MQTTBrokerProtocols.WEBSOCKET].listen(
-      MQTTBroker.getPort(MQTTBrokerProtocols.WEBSOCKET),
-      function () {
-        console.log(
-          'MQTT-WS Server Started @',
-          MQTTBroker.getConnectionString(MQTTBrokerProtocols.WEBSOCKET)
-        );
+      this.getPort(MQTTBrokerProtocols.WEBSOCKET),
+      () => {
+        console.log('MQTT-WS Server Started @', this.env.MQTT_BROKER_WS_URL);
       }
     );
     return MQTTBroker.server;
