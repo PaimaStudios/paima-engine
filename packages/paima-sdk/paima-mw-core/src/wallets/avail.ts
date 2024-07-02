@@ -8,7 +8,7 @@ import { Keyring, ApiPromise } from 'avail-js-sdk';
 async function connectWallet(
   loginInfo: LoginInfoMap[WalletMode.AvailJs]
 ): Promise<Result<IProvider<AvailJsApi>>> {
-  const errorFxn = buildEndpointErrorFxn('ethersLoginWrapper');
+  const errorFxn = buildEndpointErrorFxn('availJsLoginWrapper');
 
   const gameInfo = {
     gameName: getGameName(),
@@ -32,7 +32,7 @@ async function connectWallet(
   } catch (err) {
     console.log(`availJsLoginWrapper: Error while logging into wallet name}`);
 
-    return errorFxn(PaimaMiddlewareErrorCode.EVM_LOGIN, err);
+    return errorFxn(PaimaMiddlewareErrorCode.POLKADOT_LOGIN, err);
   }
 }
 export async function availJsLoginWrapper(
