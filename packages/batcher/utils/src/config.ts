@@ -127,9 +127,28 @@ export class ENV {
     return process.env.SELF_SIGNING_API_KEY || '';
   }
 
-  // Utils
+  // MQTT BROKER
+  static get MQTT_BROKER(): boolean {
+    return ENV.isTrue(process.env.MQTT_BROKER, true);
+  }
+  static get MQTT_BROKER_PORT(): number {
+    return parseInt(process.env.MQTT_PORT || '1884', 10);
+  }
+  static get MQTT_BROKER_WS_PORT(): number {
+    return parseInt(process.env.MQTT_WS_PORT || '8884', 10);
+  }
+  // MQTT CLIENT
+  static get MQTT_BROKER_URL(): string {
+    return process.env.MQTT_BROKER || 'mqtt://127.0.0.1:1884';
+  }
+  // MQTT WS CLIENT
+  static get MQTT_BROKER_WS_URL(): string {
+    return process.env.MQTT_BROKER || 'ws://127.0.0.1:8884';
+  }
 
-  private static isTrue(value: string | undefined): boolean {
+  // Utils
+  private static isTrue(value: string | undefined, defaultValue = false): boolean {
+    if (value == null || value === '') return defaultValue;
     return ['true', '1', 'yes'].includes((value ?? '').toLowerCase());
   }
 }

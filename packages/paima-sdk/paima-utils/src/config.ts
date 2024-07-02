@@ -142,6 +142,10 @@ export class ENV {
   static get MQTT_BROKER_URL(): string {
     return process.env.MQTT_BROKER || 'mqtt://127.0.0.1:1883';
   }
+  // MQTT WS CLIENT
+  static get MQTT_BROKER_WS_URL(): string {
+    return process.env.MQTT_BROKER || 'ws://127.0.0.1:8883';
+  }
 
   // Utils
   private static isTrue(value: string | undefined, defaultValue = false): boolean {
