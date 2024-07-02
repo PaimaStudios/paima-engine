@@ -35,7 +35,6 @@ export class GlobalConfig {
     return GlobalConfig.instance;
   }
 
-  // FIXME: return an object?
   public static async mainConfig(): Promise<[string, MainEvmConfig | AvailMainConfig]> {
     const instance = await GlobalConfig.getInstance();
 
