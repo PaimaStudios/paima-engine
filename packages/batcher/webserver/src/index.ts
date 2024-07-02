@@ -111,17 +111,10 @@ TODO: This will be fixed in express v5 when it comes out
 async function initializeServer(
   pool: Pool,
   errorCodeToMessage: ErrorMessageFxn,
-  provider: EthersEvmProvider | PolkadotProvider,
+  provider: EthersEvmProvider | AvailJsProvider,
   getCurrentBlock: () => Promise<number>
 ): Promise<void> {
-  const mainEvmConfig = await GlobalConfig.mainEvmConfig();
-  if (!mainEvmConfig) {
-    throw new Error('Non EVM main layer not supported yet');
-  }
-  const [_, config] = mainEvmConfig;
-
-  const addressValidator = new AddressValidator(config.chainUri, pool);
-  await addressValidator.initialize();
+  const addressValidator = new AddressValidator(pool);
 
   server.get(
     '/track_user_input',
