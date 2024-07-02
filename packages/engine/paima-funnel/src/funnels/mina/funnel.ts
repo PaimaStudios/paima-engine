@@ -354,7 +354,12 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
       const pg = new Client({ connectionString: config.archiveConnectionString });
       await pg.connect();
 
-      const startingBlock = await sharedData.web3.eth.getBlock(startingBlockHeight);
+      const startingBlock = await sharedData.mainNetworkApi.getStartingBlock();
+
+      if (!startingBlock) {
+        throw new Error("Couldn't get main's network staring block timestamp");
+      }
+
       const startingBlockTimestamp = startingBlock.timestamp as number;
 
       const minaTimestamp = baseChainTimestampToMina(startingBlockTimestamp, config.delay);
@@ -396,7 +401,6 @@ export async function wrapToMinaFunnel(
   chainFunnel: ChainFunnel,
   sharedData: FunnelSharedData,
   dbTx: PoolClient,
-  startingBlockHeight: number,
   chainName: string,
   config: MinaConfig
 ): Promise<ChainFunnel> {
@@ -407,7 +411,7 @@ export async function wrapToMinaFunnel(
       chainFunnel,
       chainName,
       config,
-      startingBlockHeight
+      ENV.START_BLOCKHEIGHT
     );
     return ebp;
   } catch (err) {

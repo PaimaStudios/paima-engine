@@ -1,6 +1,12 @@
 import { FunnelFactory } from '@paima/funnel';
 import paimaRuntime, { registerDocs, registerValidationErrorHandler } from '@paima/runtime';
-import { ENV, GlobalConfig, doLog, BaseConfigWithoutDefaults } from '@paima/utils';
+import {
+  ENV,
+  GlobalConfig,
+  doLog,
+  BaseConfigWithoutDefaults,
+  ConfigNetworkType,
+} from '@paima/utils';
 import { exec } from 'child_process';
 import { createInterface } from 'readline';
 import { gameSM } from '../sm.js';
@@ -112,13 +118,16 @@ export const runPaimaEngine = async (): Promise<void> => {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [_, config] = await GlobalConfig.mainEvmConfig();
+  const mainConfig = await GlobalConfig.mainConfig();
 
   // Check that packed game code is available
   if (checkForPackedGameCode()) {
     doLog(`Starting Game Node...`);
-    doLog(`Using RPC: ${config.chainUri}`);
-    doLog(`Targeting Smart Contact: ${config.paimaL2ContractAddress}`);
+
+    if (mainConfig[1].type === ConfigNetworkType.EVM) {
+      doLog(`Using RPC: ${mainConfig[1].chainUri}`);
+      doLog(`Targeting Smart Contact: ${mainConfig[1].paimaL2ContractAddress}`);
+    }
 
     // Import & initialize state machine
     const stateMachine = gameSM();
