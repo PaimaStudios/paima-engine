@@ -134,6 +134,10 @@ export class ENV {
   private static isTrue(value: string | undefined): boolean {
     return ['true', '1', 'yes'].includes((value ?? '').toLowerCase());
   }
+
+  static get SECURITY_NAMESPACE(): string {
+    return ENGINE_ENV.SECURITY_NAMESPACE;
+  }
 }
 
 function getGameInputValidatorTypeFromBool(
