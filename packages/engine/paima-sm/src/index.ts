@@ -193,7 +193,7 @@ const SM: GameStateMachineInitializer = {
         }
       },
       // Core function which triggers state transitions
-      process: async (dbTx: PoolClient, latestChainData: ChainData): Promise<void> => {
+      process: async (dbTx: PoolClient, latestChainData: ChainData): Promise<number> => {
         // Acquire correct STF based on router (based on block height)
         const gameStateTransition = gameStateTransitionRouter(latestChainData.blockNumber);
         // Save blockHeight and randomness seed
@@ -269,14 +269,16 @@ const SM: GameStateMachineInitializer = {
           indexForEventByTx
         );
 
+        const processedCount = cdeDataLength + userInputsLength + scheduledInputsLength;
         // Extra logging
-        if (cdeDataLength + userInputsLength + scheduledInputsLength > 0)
+        if (processedCount > 0)
           doLog(
             `Processed ${userInputsLength} user inputs, ${scheduledInputsLength} scheduled inputs and ${cdeDataLength} CDE events in block #${latestChainData.blockNumber}`
           );
 
         // Commit finishing of processing to DB
         await blockHeightDone.run({ block_height: latestChainData.blockNumber }, dbTx);
+        return processedCount;
       },
     };
   },
