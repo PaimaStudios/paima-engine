@@ -1,4 +1,3 @@
-export { PrebuiltCache } from './cache.js';
 export {
   DelegationOrder,
   DelegationOrderProgram,
