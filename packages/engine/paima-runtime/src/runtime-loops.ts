@@ -275,25 +275,30 @@ async function runSync(
     // Iterate through all of the returned chainData and process each one via the state machine's STF
     try {
       for (const chainData of latestChainDataList) {
-        if (
-          !(await processSyncBlockData(gameStateMachine, chainData, pollingPeriod, stopBlockHeight))
-        ) {
-          break;
-        }
+        let count = await processSyncBlockData(
+          gameStateMachine,
+          chainData,
+          pollingPeriod,
+          stopBlockHeight
+        );
+        if (count === -1) break;
 
         let emulated: number | undefined;
         let block_chain: number = chainData.blockNumber;
-        if (ENV.EMULATED_BLOCKS) {
-          const [e] = await emulatedSelectLatestPrior.run(
-            {
-              emulated_block_height: chainData.blockNumber,
-            },
-            gameStateMachine.getReadWriteDbConn()
-          );
-          emulated = block_chain;
-          block_chain = e.deployment_chain_block_height;
+
+        if (count) {
+          if (ENV.EMULATED_BLOCKS) {
+            const [e] = await emulatedSelectLatestPrior.run(
+              {
+                emulated_block_height: chainData.blockNumber,
+              },
+              gameStateMachine.getReadWriteDbConn()
+            );
+            emulated = block_chain;
+            block_chain = e.deployment_chain_block_height;
+          }
+          MQTTPublisher.sendMessage({ block: block_chain, emulated }, MQTTSystemEvents.STF);
         }
-        MQTTPublisher.sendMessage({ block: block_chain, emulated }, MQTTSystemEvents.STF);
       }
     } catch (err) {
       doLog('[paima-runtime] Uncaught error propagated to runtime while processing chain data:');
@@ -355,33 +360,29 @@ async function processSyncBlockData(
   chainData: ChainData,
   pollingPeriod: number,
   stopBlockHeight: number | null
-): Promise<boolean> {
+): Promise<number> {
   // Checking if should safely close in between processing blocks
   exitIfStopped(run);
 
   // note: every state machine update is its own SQL transaction
   // this is to ensure things like shutting down and taking snapshots properly sees SM updates
-  const success = await tx<boolean>(gameStateMachine.getReadWriteDbConn(), async dbTx => {
+  const count = await tx<number>(gameStateMachine.getReadWriteDbConn(), async dbTx => {
     // Before processing -- sanity check of block height:
     if (!(await blockPreProcess(dbTx, gameStateMachine, chainData.blockNumber, pollingPeriod))) {
-      return false;
+      return -1;
     }
 
     // Processing proper -- data migrations and passing chain data to SM
-    if (!(await blockCoreProcess(dbTx, gameStateMachine, chainData))) {
-      return false;
-    }
-
-    return true;
+    return await blockCoreProcess(dbTx, gameStateMachine, chainData);
   });
-  if (!success) return false;
+  if (count === -1) return -1;
 
   // After processing -- checking
   if (!(await blockPostProcess(gameStateMachine, chainData.blockNumber, stopBlockHeight))) {
-    return false;
+    return -1;
   }
 
-  return true;
+  return count;
 }
 
 async function blockPreProcess(
@@ -413,20 +414,21 @@ async function blockCoreProcess(
   dbTx: PoolClient,
   gameStateMachine: GameStateMachine,
   chainData: ChainData
-): Promise<boolean> {
+): Promise<number> {
+  let count = 0;
   try {
     if (DataMigrations.hasPendingMigrationForBlock(chainData.blockNumber)) {
       await DataMigrations.applyDataDBMigrations(dbTx, chainData.blockNumber);
     }
-    await gameStateMachine.process(dbTx, chainData);
+    count = await gameStateMachine.process(dbTx, chainData);
     exitIfStopped(run);
   } catch (err) {
     doLog(`[paima-runtime] Error occurred while SM processing of block ${chainData.blockNumber}:`);
     logError(err);
-    return false;
+    return -1;
   }
 
-  return true;
+  return count;
 }
 
 async function blockPostProcess(

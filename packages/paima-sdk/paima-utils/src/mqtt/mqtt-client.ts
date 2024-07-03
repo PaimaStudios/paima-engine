@@ -73,7 +73,7 @@ export class MQTTClient {
     let client;
     switch (event.broker) {
       case 'paima-engine':
-        if (!MQTTClient.engineClient) client = MQTTClient.engineClient;
+        if (MQTTClient.engineClient) client = MQTTClient.engineClient;
         break;
       case 'batcher':
         if (MQTTClient.batcherClient) client = MQTTClient.batcherClient;

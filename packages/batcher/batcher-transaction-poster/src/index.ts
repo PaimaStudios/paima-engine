@@ -194,6 +194,12 @@ class BatchedTransactionPoster {
   ): Promise<void> => {
     for (let hash of hashes) {
       try {
+        for (let address of addresses) {
+          // Update with latest mqtt publisher when available
+          const topic: any = `${MQTTSystemEvents.BATCHER_HASH}/${address}`;
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+          MQTTPublisher.sendMessage({ hash, blockHeight, addresses }, topic);
+        }
         // Emit new hash.
         MQTTPublisher.sendMessage({ hash, blockHeight, addresses }, MQTTSystemEvents.BATCHER_HASH);
 
