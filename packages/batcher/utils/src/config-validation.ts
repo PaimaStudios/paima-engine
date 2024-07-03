@@ -33,7 +33,9 @@ export function getInvalidEnvVars(): string[] {
   }
 
   if (ENV.BATCHER_AVAIL_LIGHT_CLIENT) {
-    missingVars.push('SECURITY_NAMESPACE');
+    if (!ENV['SECURITY_NAMESPACE']) {
+      missingVars.push('SECURITY_NAMESPACE');
+    }
   } else {
     if (!ENV['CONTRACT_ADDRESS']) {
       missingVars.push('CONTRACT_ADDRESS');
