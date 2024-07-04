@@ -1,6 +1,6 @@
 {
   "name": "@paima/aiken-mdx",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Aiken documentation generator",
   "main": "index.js",
   "types": "index.d.ts",
@@ -11,7 +11,7 @@
     "postbuild": "chmod +x ./build/render.mjs && cp -r ./src/templates ./build/templates && cp ./README.md ./build && cp ./package.json ./build",
     "lint:eslint": "eslint .",
     "test:single": "./build/render.mjs --single ../inverse-whirlpool --output ./test/out/out-single.mdx",
-    "test:multiple": "./build/render.mjs--multiple ./test/multiple.hbs --output ./test/out/out-multiple.mdx",
+    "test:multiple": "./build/render.mjs --multiple ./test/multiple.hbs --output ./test/out/out-multiple.mdx",
     "test": "npm run build && npm run test:single",
     "release": "npm run build && (cd ./build && npm publish --access public)"
   },
@@ -26,12 +26,12 @@
   "license": "MIT",
   "dependencies": {
     "@docusaurus/theme-classic": ">=3.4.0",
-    "react": ">=18.0.0"
-  },
-  "devDependencies": {
-    "@types/react": "^18.0.0",
+    "react": ">=18.0.0",
     "commander": "^12.1.0",
     "handlebars": "^4.7.7",
     "toml": "^3.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.0.0"
   }
 }

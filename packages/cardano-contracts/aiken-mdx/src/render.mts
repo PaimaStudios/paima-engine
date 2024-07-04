@@ -282,8 +282,17 @@ function definitionToType(context: any, definitions: any, depth: number): Recurs
         value: 'Int',
       };
     }
-    default:
+    default: {
+      // Data is a special Aiken-only type
+      // https://github.com/aiken-lang/aiken/issues/973
+      if (context.title === 'Data') {
+        return {
+          type: 'BaseType',
+          value: 'Data',
+        };
+      }
       throw new Error(`Unsupported Plutus type ${JSON.stringify(context)}`);
+    }
   }
 }
 

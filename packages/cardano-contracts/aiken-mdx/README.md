@@ -1,4 +1,4 @@
-# aiken-md
+# aiken-mdx
 
 A tool to generate mdx documentation for `plutus.json` files generated from Aiken
 
