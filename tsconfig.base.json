@@ -38,6 +38,7 @@
       "@paima/concise/*": ["./packages/paima-sdk/paima-concise/*"],
       "@paima/crypto/*": ["./packages/paima-sdk/paima-crypto/*"],
       "@paima/db/*": ["./packages/node-sdk/paima-db/*"],
+      "@paima/aiken-mdx/*": ["./packages/cardano-contracts/aiken-mdx/*"],
       "@paima/evm-contracts/*": ["./packages/contracts/evm-contracts/*"],
       "@paima/executors/*": ["./packages/paima-sdk/paima-executors/*"],
       "@paima/funnel/*": ["./packages/engine/paima-funnel/*"],
