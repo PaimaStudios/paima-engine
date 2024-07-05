@@ -1,6 +1,6 @@
 {
   "name": "@paima/aiken-mdx",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Aiken documentation generator",
   "main": "index.js",
   "types": "index.d.ts",

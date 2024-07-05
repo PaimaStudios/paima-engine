@@ -1,7 +1,7 @@
 {
   "preamble": {
-    "title": "micro/inverse-whirlpool",
-    "description": "Aiken contracts for project 'micro/inverse-whirlpool'",
+    "title": "paima/inverse-whirlpool",
+    "description": "Aiken contracts for project Cardano inverse projection",
     "version": "0.0.0",
     "plutusVersion": "v2",
     "compiler": {

@@ -121,6 +121,10 @@ function filterDefinitions(
         };
         scopes.set(scope, scopeEntry);
       }
+      // remove duplicates (in practice there are few elements and using a set complicates things)
+      if (scopeEntry.names.find(entry => entry.original === key) != null) {
+        continue;
+      }
       scopeEntry.names.push({
         local: adjustedKey,
         original: key,
@@ -349,6 +353,7 @@ async function genFileMarkdown(folderPath: string, startDepth: number): Promise<
       : null;
 
   const categories = filterDefinitions(directories, jsonData.definitions);
+  console.log(categories.get('constructor'));
   const withGlobals: Record<any, any> = {
     context: {
       githubLink: projectLink,
