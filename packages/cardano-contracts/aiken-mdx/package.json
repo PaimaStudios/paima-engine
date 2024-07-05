@@ -10,7 +10,7 @@
     "build": "tsc",
     "postbuild": "chmod +x ./build/render.mjs && cp -r ./src/templates ./build/templates && cp ./README.md ./build && cp ./package.json ./build",
     "lint:eslint": "eslint .",
-    "test:single": "./build/render.mjs --single ../inverse-whirlpool --output ./test/out/out-single.mdx",
+    "test:single": "./build/render.mjs --single ./test/aiken-mdx-test --output ./test/out/out-single.mdx",
     "test:multiple": "./build/render.mjs --multiple ./test/multiple.hbs --output ./test/out/out-multiple.mdx",
     "test": "npm run build && npm run test:single",
     "release": "npm run build && (cd ./build && npm publish --access public)"
