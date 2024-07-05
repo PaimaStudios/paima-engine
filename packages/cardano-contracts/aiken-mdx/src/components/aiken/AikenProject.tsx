@@ -9,7 +9,7 @@ const AikenProject = (props: {
   plutusVersion: string;
   githubLink: string;
   children: React.ReactNode;
-}) => {
+}): React.ReactNode => {
   const [title, ...rest] = React.Children.toArray(props.children);
   return (
     <AnchorProvider anchor={props.anchor}>

@@ -5,7 +5,7 @@ const AikenRedeemer = (props: {
   title: string;
   description: string;
   children: React.ReactNode;
-}) => {
+}): React.ReactNode => {
   return (
     <>
       <CommentBlock comment={props.description} />

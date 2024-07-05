@@ -5,7 +5,7 @@ const AikenDefinitionBlock = (props: {
   scope: string;
   isLocal: boolean;
   children: React.ReactNode;
-}) => {
+}): React.ReactNode => {
   const { addType } = useContext(TypeContext);
   React.useEffect(() => {
     addType({

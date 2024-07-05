@@ -8,6 +8,8 @@ import { Command } from 'commander';
 import toml from 'toml';
 import { fileURLToPath } from 'url';
 
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+
 const program = new Command();
 
 program
@@ -34,7 +36,7 @@ if (!options.output) {
 function relativeToFile(source: string): string {
   return path.dirname(fileURLToPath(import.meta.url)) + source;
 }
-function getTemplate(source: string) {
+function getTemplate(source: string): HandlebarsTemplateDelegate<any> {
   const template = fs.readFileSync(source, 'utf8');
   const compiled = Handlebars.compile(template);
   return compiled;
@@ -357,13 +359,13 @@ async function genFileMarkdown(folderPath: string, startDepth: number): Promise<
     anchor: jsonData.preamble.title.replaceAll('/', '-'),
   };
   for (const type of AllTypes) {
-    withGlobals[`has-${type}s`] = (() => {
+    withGlobals[`has-${type}s`] = ((): boolean => {
       const val = categories.get(type);
       return val != null && val.size > 0;
     })();
   }
   for (const type of AllTypes) {
-    withGlobals[`all-${type}s`] = (() => {
+    withGlobals[`all-${type}s`] = ((): TypeScope[] => {
       const result: TypeScope[] = Array.from((categories.get(type) ?? new Map())?.values());
 
       // sort scopes to put local scopes first
@@ -393,7 +395,7 @@ async function genFileMarkdown(folderPath: string, startDepth: number): Promise<
 
   Handlebars.registerHelper(
     'isType',
-    function (typeName: string, type: RecursiveType, options: any) {
+    function (typeName: string, type: RecursiveType, _options: any) {
       return type.type === typeName;
     }
   );
@@ -407,7 +409,7 @@ async function genFileMarkdown(folderPath: string, startDepth: number): Promise<
   return prettierOutput;
 }
 
-async function getAllFiles() {
+async function getAllFiles(): Promise<void> {
   const prelude = preludeTemplate({});
 
   if (options.single) {
@@ -421,7 +423,7 @@ async function getAllFiles() {
     // since handlebar doesn't support async calls, we do 2 passes
     // 1) find all the files we have to parse
     {
-      Handlebars.registerHelper('import', function (path: string, options: any) {
+      Handlebars.registerHelper('import', function (path: string, _options: any) {
         paths.push(path);
         return '';
       });
@@ -435,7 +437,7 @@ async function getAllFiles() {
 
     // 2) properly fill the import calls with the data we've fetched
     {
-      Handlebars.registerHelper('import', function (path: string, options: any) {
+      Handlebars.registerHelper('import', function (path: string, _options: any) {
         return generatedDocs.get(path);
       });
       const multiTemplate = getTemplate(options.multiple);

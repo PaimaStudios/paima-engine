@@ -2,7 +2,11 @@ import React, { useContext } from 'react';
 import CommentBlock from '../utils/CommentBlock.js';
 import { AnchorContext } from '../../context/AnchorProvider.js';
 
-const AikenEnum = (props: { title: string; description: string; children: React.ReactNode }) => {
+const AikenEnum = (props: {
+  title: string;
+  description: string;
+  children: React.ReactNode;
+}): React.ReactNode => {
   const rootAnchor = useContext(AnchorContext);
   return (
     <div>

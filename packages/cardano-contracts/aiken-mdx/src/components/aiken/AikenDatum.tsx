@@ -1,7 +1,11 @@
 import React from 'react';
 import AikenRedeemer from './AikenRedeemer.js';
 
-const AikenDatum = (props: { title: string; description: string; children: React.ReactNode }) => {
+const AikenDatum = (props: {
+  title: string;
+  description: string;
+  children: React.ReactNode;
+}): React.ReactNode => {
   return <AikenRedeemer {...props} />;
 };
 

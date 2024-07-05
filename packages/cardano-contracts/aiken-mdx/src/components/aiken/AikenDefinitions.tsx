@@ -2,7 +2,7 @@ import React, { useContext } from 'react';
 import { TypeContext, default as TypesProvider } from '../../context/TypesProvider.js';
 import OutlineBlock from '../utils/OutlineBlock.js';
 
-const AikenDefinitions = (props: { children: React.ReactNode }) => {
+const AikenDefinitions = (props: { children: React.ReactNode }): React.ReactNode => {
   const { types } = useContext(TypeContext);
   return (
     <>
@@ -11,7 +11,7 @@ const AikenDefinitions = (props: { children: React.ReactNode }) => {
   );
 };
 
-const AikenDefinitionsWrapper = (props: { children: React.ReactNode }) => {
+const AikenDefinitionsWrapper = (props: { children: React.ReactNode }): React.ReactNode => {
   return (
     <TypesProvider>
       {props.children}

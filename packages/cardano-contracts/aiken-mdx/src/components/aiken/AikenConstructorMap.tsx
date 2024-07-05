@@ -5,7 +5,7 @@ const AikenConstructorMap = (props: {
   title: string;
   description: string;
   children: React.ReactNode;
-}) => {
+}): React.ReactNode => {
   const childrenArray = React.Children.toArray(props.children);
   const commaSeparatedItems = childrenArray.reduce<React.ReactNode[]>((acc, curr, index) => {
     if (index === 0) {

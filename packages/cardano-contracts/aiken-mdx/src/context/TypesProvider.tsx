@@ -7,7 +7,7 @@ export const TypeContext = createContext({
   addType: (_type: LineList) => {},
 });
 
-const TypesProvider = (props: { children: React.ReactNode }) => {
+const TypesProvider = (props: { children: React.ReactNode }): React.ReactNode => {
   const [types, setTypes] = useState<LineList[]>([]);
 
   const addType = (type: LineList): void => {

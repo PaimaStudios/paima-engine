@@ -8,7 +8,7 @@ const AikenValidator = (props: {
   datum?: React.ReactNode;
   redeemer: React.ReactNode;
   parameters: React.ReactNode[];
-}) => {
+}): React.ReactNode => {
   const lists: LineList[] = [];
   if (props.datum) {
     lists.push({

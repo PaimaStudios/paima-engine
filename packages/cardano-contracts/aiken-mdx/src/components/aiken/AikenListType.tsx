@@ -1,6 +1,6 @@
 import React from 'react';
 
-const AikenListType = (props: { children: React.ReactNode }) => {
+const AikenListType = (props: { children: React.ReactNode }): React.ReactNode => {
   return <>{props.children}[]</>;
 };
 

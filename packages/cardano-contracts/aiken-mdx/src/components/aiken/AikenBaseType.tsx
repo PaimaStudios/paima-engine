@@ -2,11 +2,11 @@ import React, { useContext } from 'react';
 import { AnchorContext } from '../../context/AnchorProvider.js';
 import { IsLocalContext } from '../../context/IsLocalProvider.js';
 
-const AikenBaseType = (props: { value: string; children: React.ReactNode }) => {
+const AikenBaseType = (props: { value: string; children: React.ReactNode }): React.ReactNode => {
   const rootAnchor = useContext(AnchorContext);
   const isLocal = useContext(IsLocalContext);
 
-  const isPrimitive = (() => {
+  const isPrimitive = ((): boolean => {
     switch (props.value) {
       case 'Int':
       case 'ByteArray':

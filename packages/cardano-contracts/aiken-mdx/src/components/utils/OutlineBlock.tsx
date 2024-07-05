@@ -6,7 +6,7 @@ export type LineList = {
   isLocal: boolean;
   lines: React.ReactNode[];
 };
-const OutlineBlock = ({ type, lists }: { type: string; lists: LineList[] }) => {
+const OutlineBlock = ({ type, lists }: { type: string; lists: LineList[] }): React.ReactNode => {
   return (
     <div
       style={{ fontFamily: "'Roboto Mono', monospace" }}

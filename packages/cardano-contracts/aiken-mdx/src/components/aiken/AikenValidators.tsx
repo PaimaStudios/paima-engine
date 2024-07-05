@@ -1,6 +1,6 @@
-import React from 'react';
+import type React from 'react';
 
-const AikenValidators = (props: { children: React.ReactNode }) => {
+const AikenValidators = (props: { children: React.ReactNode }): React.ReactNode => {
   return props.children;
 };
 

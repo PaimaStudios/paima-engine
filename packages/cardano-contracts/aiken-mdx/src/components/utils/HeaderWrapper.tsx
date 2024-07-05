@@ -1,11 +1,11 @@
-import React from 'react';
+import type React from 'react';
 
 /**
  * For tools like Docusaurus, headers must be defined
  * - statically (ex: ## Foo)
  * - not dynamically (using tags like h1 in JSX)
  */
-const HeaderWrapper = (props: { children: React.ReactNode }) => {
+const HeaderWrapper = (props: { children: React.ReactNode }): React.ReactNode => {
   return props.children;
 };
 
