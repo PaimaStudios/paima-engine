@@ -1,6 +1,6 @@
 {
   "name": "@paima/aiken-mdx",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Aiken documentation generator",
   "main": "index.js",
   "types": "index.d.ts",
@@ -22,6 +22,11 @@
     "aiken",
     "cardano"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:PaimaStudios/paima-engine.git",
+    "directory": "packages/cardano-contracts/aiken-mdx"
+  },
   "author": "Paima Studios",
   "license": "MIT",
   "dependencies": {

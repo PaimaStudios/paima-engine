@@ -21,6 +21,11 @@
   ],
   "author": "Paima Studios",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:PaimaStudios/paima-engine.git",
+    "directory": "packages/contracts/evm-contracts"
+  },
   "dependencies": {
     "dotenv": "^16.3.1"
   },

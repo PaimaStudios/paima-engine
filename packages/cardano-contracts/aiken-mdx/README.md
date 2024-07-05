@@ -21,7 +21,7 @@ Single-file mode outputs MDX documentation for a single project. This is useful 
 
 `npx aiken-mdx --single <path-to-plutus.json> --output <output-path.mdx>`
 
-### #Multi-file mode
+### Multi-file mode
 
 Single-file mode outputs MDX documentation for multiple projects at once. This is useful if you prefer organizing your docs with 1 page for all your Aiken project
 
