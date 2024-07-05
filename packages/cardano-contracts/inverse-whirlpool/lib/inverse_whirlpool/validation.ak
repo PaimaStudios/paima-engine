@@ -48,11 +48,11 @@ pub fn init_merkle(
   expect [first_output, ..] = tx.outputs
 
   // Control mint value
-  expect [(_, 1)] =
+  expect [Pair(_, 1)] =
     tx.mint
       |> value.from_minted_value
       |> value.tokens(own_policy)
-      |> dict.to_list
+      |> dict.to_pairs
 
   let Output {
     address: actual_address,

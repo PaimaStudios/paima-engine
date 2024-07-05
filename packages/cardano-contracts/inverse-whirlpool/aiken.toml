@@ -1,16 +1,16 @@
-name = "micro/inverse-whirlpool"
+name = "paima/inverse-whirlpool"
 version = "0.0.0"
 license = "Apache-2.0"
-description = "Aiken contracts for project 'micro/inverse-whirlpool'"
+description = "Aiken contracts for project Cardano inverse projection"
 
 [repository]
-user = "micro"
-project = "inverse-whirlpool"
+user = "PaimaStudios"
+project = "paima-engine"
 platform = "github"
 
 [[dependencies]]
 name = "aiken-lang/stdlib"
-version = "1.8.0"
+version = "1.9.0"
 source = "github"
 
 [[dependencies]]

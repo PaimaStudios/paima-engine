@@ -35,5 +35,5 @@ requirements = []
 source = "github"
 
 [etags]
-"aiken-lang/fuzz@main" = [{ secs_since_epoch = 1719706506, nanos_since_epoch = 372363000 }, "a8294651f1577c671d580c99c9bc5445ef1fd44e4aa3dde550434a4cbc8d50b6"]
-"aiken-lang/sparse-merkle-tree@main" = [{ secs_since_epoch = 1719706506, nanos_since_epoch = 549403000 }, "076db86c829f1bf2be5e996c9c1a714efcb761452d8abb8ae2b311e95c4aa6ed"]
+"aiken-lang/fuzz@main" = [{ secs_since_epoch = 1720184431, nanos_since_epoch = 623504751 }, "a8294651f1577c671d580c99c9bc5445ef1fd44e4aa3dde550434a4cbc8d50b6"]
+"aiken-lang/sparse-merkle-tree@main" = [{ secs_since_epoch = 1720184432, nanos_since_epoch = 277332931 }, "076db86c829f1bf2be5e996c9c1a714efcb761452d8abb8ae2b311e95c4aa6ed"]
