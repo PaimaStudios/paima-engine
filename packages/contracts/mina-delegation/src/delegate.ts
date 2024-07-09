@@ -49,18 +49,18 @@ export class DelegationOrder extends Struct({
   /** Ethereum public key that signed the delegation order. */
   signer: Secp256k1.provable,
 }) {
-  private _innerMessage(): Bytes {
-    return Bytes.from([...delegationPrefix.bytes, ...encodeKey(this.target)]);
+  private static _innerMessage(target: PublicKey): Bytes {
+    return Bytes.from([...delegationPrefix.bytes, ...encodeKey(target)]);
   }
 
   /** Get the message for an Etherum wallet to sign, WITHOUT the Ethereum prefix. */
-  bytesToSign(): Uint8Array {
-    return this._innerMessage().toBytes();
+  static bytesToSign(target: PublicKey): Uint8Array {
+    return this._innerMessage(target).toBytes();
   }
 
   /** Validate that the given Ethereum signature matches this order, WITH the Ethereum prefix. */
   assertSignatureMatches(signature: Ecdsa) {
-    const inner = this._innerMessage();
+    const inner = DelegationOrder._innerMessage(this.target);
     const fullMessage = Bytes.from([
       ...ethereumPrefix.bytes,
       ...Bytes.fromString(String(inner.length)).bytes,
