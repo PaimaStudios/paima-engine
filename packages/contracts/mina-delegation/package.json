@@ -5,14 +5,22 @@
   "author": "Paima Studios",
   "license": "MIT",
   "type": "module",
-  "exports": {
-    ".": "./build/index.js"
-  },
   "files": [
     "build"
   ],
+  "main": "./build/index.js",
+  "types": "./build/index.d.ts",
+  "exports": {
+    ".": {
+      "default": "./build/index.js",
+      "types": "./build/index.d.ts"
+    }
+  },
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "clean": "rm -r tsconfig.tsbuildinfo build/",
+    "prepare": "npm run build",
+    "prepack": "npm run clean"
   },
   "keywords": [
     "mina",
