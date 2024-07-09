@@ -16,15 +16,21 @@ import {
 
 /** A Mina foreign curve for Secp256k1, like Ethereum uses. */
 export class Secp256k1 extends createForeignCurve(Crypto.CurveParams.Secp256k1) {
-  /** Convert a standard 0x04{128 hex digits} public key into this provable struct. */
+  /** Convert a standard hex public key into this provable struct. */
   static fromHex(publicKey: `0x${string}`): Secp256k1 {
-    if (!publicKey.startsWith('0x04') || publicKey.length != 4 + 64 + 64) {
+    if (publicKey.startsWith('0x04') && publicKey.length === 4 + 64 + 64) {
+      return Secp256k1.from({
+        x: BigInt('0x' + publicKey.substring(4, 4 + 64)),
+        y: BigInt('0x' + publicKey.substring(4 + 64, 4 + 64 + 64)),
+      });
+    } else if (publicKey.startsWith('0x') && publicKey.length === 2 + 64 + 64) {
+      return Secp256k1.from({
+        x: BigInt('0x' + publicKey.substring(2, 2 + 64)),
+        y: BigInt('0x' + publicKey.substring(2 + 64, 2 + 64 + 64)),
+      });
+    } else {
       throw new Error('Bad public key format');
     }
-    return Secp256k1.from({
-      x: BigInt('0x' + publicKey.substring(4, 4 + 64)),
-      y: BigInt('0x' + publicKey.substring(4 + 64, 4 + 64 + 64)),
-    });
   }
 }
 
