@@ -176,7 +176,7 @@ const SM: GameStateMachineInitializer = {
               suppliedValue: '0',
               scheduled: false,
               dryRun: true,
-              caip2Prefix: '',
+              caip2: '',
               // FIXME: TODO
               txHash: 'TODO',
             },
@@ -418,7 +418,7 @@ async function processScheduledData(
         suppliedValue: '0',
         scheduled: true,
         txHash: txHash,
-        caip2Prefix: '',
+        caip2: '',
       };
 
       if (data.tx_hash) {
@@ -496,7 +496,7 @@ async function processUserInputs(
       ...submittedData,
       userAddress: address.address,
       userId: address.id,
-      txHash: '0x' + sha3_256(submittedData.caip2Prefix + submittedData.txHash + index),
+      txHash: '0x' + sha3_256(submittedData.caip2 + submittedData.txHash + index),
     };
     try {
       // Check if internal Concise Command

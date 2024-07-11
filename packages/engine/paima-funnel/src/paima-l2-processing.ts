@@ -22,10 +22,10 @@ export async function extractSubmittedData(
   events: PaimaGameInteraction[],
   blockTimestamp: number,
   DBConn: PoolClient,
-  caip2Prefix: string
+  caip2: string
 ): Promise<SubmittedData[]> {
   const unflattenedList = await Promise.all(
-    events.map(e => eventMapper(e, blockTimestamp, DBConn, caip2Prefix))
+    events.map(e => eventMapper(e, blockTimestamp, DBConn, caip2))
   );
   return unflattenedList.flat();
 }
@@ -34,7 +34,7 @@ async function eventMapper(
   e: PaimaGameInteraction,
   blockTimestamp: number,
   DBConn: PoolClient,
-  caip2Prefix: string
+  caip2: string
 ): Promise<SubmittedData[]> {
   const decodedData = decodeEventData(e.returnValues.data);
   return await processDataUnit(
@@ -44,7 +44,7 @@ async function eventMapper(
       inputNonce: '', // placeholder that will be filled later
       suppliedValue: e.returnValues.value,
       scheduled: false,
-      caip2Prefix,
+      caip2,
       txHash: e.transactionHash,
     },
     e.blockNumber,
@@ -96,7 +96,7 @@ async function processDataUnit(
           blockHeight,
           blockTimestamp,
           DBConn,
-          unit.caip2Prefix,
+          unit.caip2,
           unit.txHash
         )
       )
@@ -114,7 +114,7 @@ async function processBatchedSubunit(
   blockHeight: number,
   blockTimestamp: number,
   DBConn: PoolClient,
-  caip2Prefix: string,
+  caip2: string,
   txHash: string
 ): Promise<ValidatedSubmittedData> {
   const INVALID_INPUT: ValidatedSubmittedData = {
@@ -126,7 +126,7 @@ async function processBatchedSubunit(
     suppliedValue: '0',
     scheduled: false,
     validated: false,
-    caip2Prefix: '',
+    caip2: '',
     txHash: '',
   };
 
@@ -166,7 +166,7 @@ async function processBatchedSubunit(
     suppliedValue,
     scheduled: false,
     validated,
-    caip2Prefix,
+    caip2,
     txHash,
   };
 }

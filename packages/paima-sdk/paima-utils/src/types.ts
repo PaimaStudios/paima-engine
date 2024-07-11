@@ -45,7 +45,7 @@ export interface SubmittedData {
   suppliedValue: string;
   scheduled: boolean;
   dryRun?: boolean;
-  caip2Prefix: string;
+  caip2: string;
   txHash: string;
 }
 
