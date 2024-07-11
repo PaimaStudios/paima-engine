@@ -45,6 +45,7 @@ async function eventMapper(
       suppliedValue: e.returnValues.value,
       scheduled: false,
       caip2Prefix,
+      txHash: e.transactionHash,
     },
     e.blockNumber,
     blockTimestamp,
@@ -95,7 +96,8 @@ async function processDataUnit(
           blockHeight,
           blockTimestamp,
           DBConn,
-          unit.caip2Prefix
+          unit.caip2Prefix,
+          unit.txHash
         )
       )
     );
@@ -111,8 +113,9 @@ async function processBatchedSubunit(
   suppliedValue: string,
   blockHeight: number,
   blockTimestamp: number,
-  DBConn: PoolClient
-  caip2Prefix: string
+  DBConn: PoolClient,
+  caip2Prefix: string,
+  txHash: string
 ): Promise<ValidatedSubmittedData> {
   const INVALID_INPUT: ValidatedSubmittedData = {
     inputData: '',
@@ -124,6 +127,7 @@ async function processBatchedSubunit(
     scheduled: false,
     validated: false,
     caip2Prefix: '',
+    txHash: '',
   };
 
   const elems = input.split(INNER_BATCH_DIVIDER);
@@ -163,6 +167,7 @@ async function processBatchedSubunit(
     scheduled: false,
     validated,
     caip2Prefix,
+    txHash,
   };
 }
 

@@ -46,6 +46,7 @@ export interface SubmittedData {
   scheduled: boolean;
   dryRun?: boolean;
   caip2Prefix: string;
+  txHash: string;
 }
 
 export interface STFSubmittedData extends SubmittedData {

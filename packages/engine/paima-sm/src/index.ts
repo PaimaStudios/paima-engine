@@ -44,9 +44,11 @@ import type {
   GameStateTransitionFunction,
   GameStateMachineInitializer,
   InternalEvent,
+  Precompiles,
 } from './types.js';
 import { ConfigNetworkType } from '@paima/utils';
 import assertNever from 'assert-never';
+import { sha3_256 } from 'js-sha3';
 
 export * from './types.js';
 export type * from './types.js';
@@ -175,6 +177,8 @@ const SM: GameStateMachineInitializer = {
               scheduled: false,
               dryRun: true,
               caip2Prefix: '',
+              // FIXME: TODO
+              txHash: 'TODO',
             },
             blockHeight,
             new Prando('1234567890'),
@@ -361,25 +365,70 @@ async function processScheduledData(
   latestChainData: ChainData,
   DBConn: PoolClient,
   gameStateTransition: GameStateTransitionFunction,
-  randomnessGenerator: Prando
+  randomnessGenerator: Prando,
+  precompiles: Precompiles['precompiles']
 ): Promise<number> {
   const scheduledData = await getScheduledDataByBlockHeight.run(
     { block_height: latestChainData.blockNumber },
     DBConn
   );
+
+  // just in case there are two timers in the same block with the same exact contents.
+  let timerIndexRelativeToBlock = -1;
+
+  // Used to disambiguate when two primitives have events in the same tx. This
+  // means the hash depends on the order we process the primitives (which is the
+  // order in the configuration).
+  let previousTx = undefined;
+  let index = -1;
+
   for (const data of scheduledData) {
     try {
+      let txHash;
+
+      const userAddress = data.precompile ? precompiles[data.precompile] : SCHEDULED_DATA_ADDRESS;
+
+      if (data.precompile && !precompiles[data.precompile]) {
+        doLog(`[paima-sm] Precompile for scheduled event not found ${data.precompile}. Skipping.`);
+        continue;
+      }
+
+      if (data.cde_name && data.tx_hash) {
+        if (previousTx && data.tx_hash === previousTx) {
+          index += 1;
+        } else {
+          index = 0;
+        }
+
+        txHash = '0x' + sha3_256(data.tx_hash + index);
+      } else {
+        // it has to be an scheduled timer if we don't have a cde_name
+        timerIndexRelativeToBlock += 1;
+
+        txHash =
+          '0x' + sha3_256(userAddress + sha3_256(data.input_data) + timerIndexRelativeToBlock);
+      }
+
       const inputData: STFSubmittedData = {
         userId: SCHEDULED_DATA_ID,
         realAddress: SCHEDULED_DATA_ADDRESS,
-        userAddress: SCHEDULED_DATA_ADDRESS,
+        userAddress,
         inputData: data.input_data,
         inputNonce: '',
         suppliedValue: '0',
         scheduled: true,
-        scheduledTxHash: data.tx_hash,
-        extensionName: data.cde_name,
+        txHash: txHash,
+        caip2Prefix: '',
       };
+
+      if (data.tx_hash) {
+        inputData.scheduledTxHash = data.tx_hash;
+      }
+
+      if (data.cde_name) {
+        inputData.extensionName = data.cde_name;
+      }
+
       // Trigger STF
       let sqlQueries: SQLUpdate[] = [];
       try {
@@ -418,6 +467,12 @@ async function processUserInputs(
   gameStateTransition: GameStateTransitionFunction,
   randomnessGenerator: Prando
 ): Promise<number> {
+  // Used to disambiguate when two primitives have events in the same tx. This
+  // means the hash depends on the order we process the primitives (which is the
+  // order in the configuration).
+  let previousTx = undefined;
+  let index = -1;
+
   for (const submittedData of latestChainData.submittedData) {
     // Check nonce is valid
     if (submittedData.inputNonce === '') {
@@ -431,10 +486,17 @@ async function processUserInputs(
     }
     const address = await getMainAddress(submittedData.realAddress, DBConn);
 
+    if (previousTx && submittedData.txHash === previousTx) {
+      index += 1;
+    } else {
+      index = 0;
+    }
+
     const inputData: STFSubmittedData = {
       ...submittedData,
       userAddress: address.address,
       userId: address.id,
+      txHash: '0x' + sha3_256(submittedData.caip2Prefix + submittedData.txHash + index),
     };
     try {
       // Check if internal Concise Command
