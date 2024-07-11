@@ -6,6 +6,7 @@ export interface INewScheduledDataParams {
   block_height: number;
   cde_name?: string | null | void;
   input_data: string;
+  precompile?: string | null | void;
   tx_hash?: string | null | void;
 }
 
@@ -18,7 +19,7 @@ export interface INewScheduledDataQuery {
   result: INewScheduledDataResult;
 }
 
-const newScheduledDataIR: any = {"usedParamSet":{"block_height":true,"input_data":true,"tx_hash":true,"cde_name":true},"params":[{"name":"block_height","required":true,"transform":{"type":"scalar"},"locs":[{"a":83,"b":96}]},{"name":"input_data","required":true,"transform":{"type":"scalar"},"locs":[{"a":99,"b":110}]},{"name":"tx_hash","required":false,"transform":{"type":"scalar"},"locs":[{"a":231,"b":238},{"a":253,"b":260}]},{"name":"cde_name","required":false,"transform":{"type":"scalar"},"locs":[{"a":360,"b":368},{"a":382,"b":390}]}],"statement":"WITH new_row AS (\n  INSERT INTO scheduled_data(block_height, input_data)\n  VALUES (:block_height!, :input_data!)\n  RETURNING id\n),\ninsert_hash AS (\n\tINSERT INTO scheduled_data_tx_hash(id, tx_hash)\n\tSELECT (SELECT id FROM new_row), :tx_hash::TEXT\n\tWHERE :tx_hash IS NOT NULL\n)\nINSERT INTO scheduled_data_extension(id, cde_name)\nSELECT (SELECT id FROM new_row), :cde_name::TEXT\nWHERE :cde_name IS NOT NULL"};
+const newScheduledDataIR: any = {"usedParamSet":{"block_height":true,"input_data":true,"tx_hash":true,"cde_name":true,"precompile":true},"params":[{"name":"block_height","required":true,"transform":{"type":"scalar"},"locs":[{"a":83,"b":96}]},{"name":"input_data","required":true,"transform":{"type":"scalar"},"locs":[{"a":99,"b":110}]},{"name":"tx_hash","required":false,"transform":{"type":"scalar"},"locs":[{"a":231,"b":238},{"a":253,"b":260}]},{"name":"cde_name","required":false,"transform":{"type":"scalar"},"locs":[{"a":387,"b":395},{"a":411,"b":419}]},{"name":"precompile","required":false,"transform":{"type":"scalar"},"locs":[{"a":522,"b":532},{"a":546,"b":556}]}],"statement":"WITH new_row AS (\n  INSERT INTO scheduled_data(block_height, input_data)\n  VALUES (:block_height!, :input_data!)\n  RETURNING id\n),\ninsert_hash AS (\n\tINSERT INTO scheduled_data_tx_hash(id, tx_hash)\n\tSELECT (SELECT id FROM new_row), :tx_hash::TEXT\n\tWHERE :tx_hash IS NOT NULL\n),\ninsert_extension AS (\n  INSERT INTO scheduled_data_extension(id, cde_name)\n  SELECT (SELECT id FROM new_row), :cde_name::TEXT\n  WHERE :cde_name IS NOT NULL\n)\nINSERT INTO scheduled_data_precompile(id, precompile)\nSELECT (SELECT id FROM new_row), :precompile::TEXT\nWHERE :precompile IS NOT NULL"};
 
 /**
  * Query generated from SQL:
@@ -32,10 +33,15 @@ const newScheduledDataIR: any = {"usedParamSet":{"block_height":true,"input_data
  * 	INSERT INTO scheduled_data_tx_hash(id, tx_hash)
  * 	SELECT (SELECT id FROM new_row), :tx_hash::TEXT
  * 	WHERE :tx_hash IS NOT NULL
+ * ),
+ * insert_extension AS (
+ *   INSERT INTO scheduled_data_extension(id, cde_name)
+ *   SELECT (SELECT id FROM new_row), :cde_name::TEXT
+ *   WHERE :cde_name IS NOT NULL
  * )
- * INSERT INTO scheduled_data_extension(id, cde_name)
- * SELECT (SELECT id FROM new_row), :cde_name::TEXT
- * WHERE :cde_name IS NOT NULL
+ * INSERT INTO scheduled_data_precompile(id, precompile)
+ * SELECT (SELECT id FROM new_row), :precompile::TEXT
+ * WHERE :precompile IS NOT NULL
  * ```
  */
 export const newScheduledData = new PreparedQuery<INewScheduledDataParams,INewScheduledDataResult>(newScheduledDataIR);
@@ -49,10 +55,11 @@ export interface IGetScheduledDataByBlockHeightParams {
 /** 'GetScheduledDataByBlockHeight' return type */
 export interface IGetScheduledDataByBlockHeightResult {
   block_height: number;
-  cde_name: string;
+  cde_name: string | null;
   id: number;
   input_data: string;
-  tx_hash: string;
+  precompile: string | null;
+  tx_hash: string | null;
 }
 
 /** 'GetScheduledDataByBlockHeight' query type */
@@ -61,17 +68,24 @@ export interface IGetScheduledDataByBlockHeightQuery {
   result: IGetScheduledDataByBlockHeightResult;
 }
 
-const getScheduledDataByBlockHeightIR: any = {"usedParamSet":{"block_height":true},"params":[{"name":"block_height","required":true,"transform":{"type":"scalar"},"locs":[{"a":279,"b":292}]}],"statement":"SELECT scheduled_data.id, block_height, input_data, tx_hash, cde_name\nFROM scheduled_data\nLEFT JOIN scheduled_data_tx_hash\nON scheduled_data.id = scheduled_data_tx_hash.id\nLEFT JOIN scheduled_data_extension\nON scheduled_data.id = scheduled_data_extension.id\nWHERE block_height = :block_height!\nORDER BY scheduled_data.id ASC"};
+const getScheduledDataByBlockHeightIR: any = {"usedParamSet":{"block_height":true},"params":[{"name":"block_height","required":true,"transform":{"type":"scalar"},"locs":[{"a":435,"b":448}]}],"statement":"SELECT scheduled_data.id,\n  block_height,\n  input_data,\n  tx_hash as \"tx_hash?\",\n  cde_name as \"cde_name?\",\n  precompile as \"precompile?\"\nFROM scheduled_data\nLEFT JOIN scheduled_data_tx_hash\nON scheduled_data.id = scheduled_data_tx_hash.id\nLEFT JOIN scheduled_data_extension\nON scheduled_data.id = scheduled_data_extension.id\nLEFT JOIN scheduled_data_precompile\nON scheduled_data.id = scheduled_data_precompile.id\nWHERE block_height = :block_height!\nORDER BY scheduled_data.id ASC"};
 
 /**
  * Query generated from SQL:
  * ```
- * SELECT scheduled_data.id, block_height, input_data, tx_hash, cde_name
+ * SELECT scheduled_data.id,
+ *   block_height,
+ *   input_data,
+ *   tx_hash as "tx_hash?",
+ *   cde_name as "cde_name?",
+ *   precompile as "precompile?"
  * FROM scheduled_data
  * LEFT JOIN scheduled_data_tx_hash
  * ON scheduled_data.id = scheduled_data_tx_hash.id
  * LEFT JOIN scheduled_data_extension
  * ON scheduled_data.id = scheduled_data_extension.id
+ * LEFT JOIN scheduled_data_precompile
+ * ON scheduled_data.id = scheduled_data_precompile.id
  * WHERE block_height = :block_height!
  * ORDER BY scheduled_data.id ASC
  * ```

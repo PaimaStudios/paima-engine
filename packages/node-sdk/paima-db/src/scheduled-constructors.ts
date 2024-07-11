@@ -23,14 +23,14 @@ import type {
 export function createScheduledData(
   inputData: string,
   blockHeight: number,
-  cdeName?: string,
-  txHash?: string
+  source: { cdeName: string; txHash: string } | { precompile: string }
 ): SQLUpdate {
   const nsdParams: INewScheduledDataParams = {
     block_height: blockHeight,
     input_data: inputData,
-    tx_hash: txHash,
-    cde_name: cdeName,
+    tx_hash: 'txHash' in source ? source.txHash : null,
+    cde_name: 'cdeName' in source ? source.cdeName : null,
+    precompile: 'precompile' in source ? source.precompile : null,
   };
   const newScheduledDataTuple: SQLUpdate = [newScheduledData, nsdParams];
   return newScheduledDataTuple;

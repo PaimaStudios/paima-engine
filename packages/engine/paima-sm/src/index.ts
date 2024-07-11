@@ -56,7 +56,8 @@ const SM: GameStateMachineInitializer = {
     databaseInfo,
     randomnessProtocolEnum,
     gameStateTransitionRouter,
-    startBlockHeight
+    startBlockHeight,
+    precompiles
   ) => {
     const DBConn: Pool = getConnection(databaseInfo);
     const persistentReadonlyDBConn: Client = getPersistentConnection(databaseInfo);
@@ -230,7 +231,8 @@ const SM: GameStateMachineInitializer = {
           latestChainData,
           dbTx,
           gameStateTransition,
-          randomnessGenerator
+          randomnessGenerator,
+          precompiles.precompiles
         );
 
         // Execute user submitted input data

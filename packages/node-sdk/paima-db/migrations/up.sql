@@ -20,6 +20,11 @@ CREATE TABLE scheduled_data_extension (
   cde_name TEXT NOT NULL
 );
 
+CREATE TABLE scheduled_data_precompile (
+  id INTEGER PRIMARY KEY REFERENCES scheduled_data(id) ON DELETE CASCADE,
+  precompile TEXT NOT NULL
+);
+
 CREATE TABLE nonces (
   nonce TEXT PRIMARY KEY,
   block_height INTEGER NOT NULL
