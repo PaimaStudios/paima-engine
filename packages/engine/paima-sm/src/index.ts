@@ -173,6 +173,7 @@ const SM: GameStateMachineInitializer = {
               suppliedValue: '0',
               scheduled: false,
               dryRun: true,
+              caip2Prefix: '',
             },
             blockHeight,
             new Prando('1234567890'),
