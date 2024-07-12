@@ -9,7 +9,7 @@ import { keepRunning, gameInputValidatorClosed, webserverClosed } from '@paima/b
 import { hashBatchSubunit, buildBatchData } from '@paima/concise';
 import { wait } from '@paima/utils';
 
-class BatchedTransactionPosterBase {
+abstract class BatchedTransactionPosterBase {
   private maxSize: number;
   private pool: Pool;
 
@@ -49,9 +49,7 @@ class BatchedTransactionPosterBase {
     }
   };
 
-  protected postMessage = async (_msg: string): Promise<[number, string]> => {
-    throw new Error('unimplemented');
-  };
+  abstract postMessage(_msg: string): Promise<[number, string]>;
 
   // Returns number of input successfully posted, or a negative number on failure.
   private postingRound = async (): Promise<number> => {
