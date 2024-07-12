@@ -177,8 +177,7 @@ const SM: GameStateMachineInitializer = {
               scheduled: false,
               dryRun: true,
               caip2: '',
-              // FIXME: TODO
-              txHash: 'TODO',
+              txHash: '',
             },
             blockHeight,
             new Prando('1234567890'),
@@ -379,8 +378,8 @@ async function processScheduledData(
   // Used to disambiguate when two primitives have events in the same tx. This
   // means the hash depends on the order we process the primitives (which is the
   // order in the configuration).
-  let previousTx = undefined;
-  let index = -1;
+  // note that events triggered by the same tx may not be consecutive.
+  let indexPerTx: Map<string, number> = new Map();
 
   for (const data of scheduledData) {
     try {
@@ -394,11 +393,13 @@ async function processScheduledData(
       }
 
       if (data.cde_name && data.tx_hash) {
-        if (previousTx && data.tx_hash === previousTx) {
-          index += 1;
-        } else {
-          index = 0;
+        let index = 0;
+
+        if (indexPerTx.has(data.tx_hash)) {
+          index = indexPerTx.get(data.tx_hash)! + 1;
         }
+
+        indexPerTx.set(data.tx_hash, index);
 
         txHash = '0x' + sha3_256(data.tx_hash + index);
       } else {
