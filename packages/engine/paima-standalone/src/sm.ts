@@ -9,7 +9,7 @@ export const gameSM = (): GameStateMachine => {
   const precompiles = importPrecompiles();
   return PaimaSM.initialize(
     poolConfig,
-    4,
+    4, // https://xkcd.com/221/
     gameStateTransitionRouter,
     ENV.START_BLOCKHEIGHT,
     precompiles
