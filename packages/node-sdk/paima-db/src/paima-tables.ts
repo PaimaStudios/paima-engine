@@ -80,7 +80,8 @@ const TABLE_DATA_SCHEDULED_DATA_TX_HASH: TableData = {
 const QUERY_CREATE_TABLE_SCHEDULED_DATA_EXTENSION = `
 CREATE TABLE scheduled_data_extension (
   id INTEGER PRIMARY KEY REFERENCES scheduled_data(id) ON DELETE CASCADE,
-  cde_name TEXT NOT NULL
+  cde_name TEXT NOT NULL,
+  network TEXT NOT NULL
 );
 `;
 
@@ -90,6 +91,7 @@ const TABLE_DATA_SCHEDULED_DATA_EXTENSION: TableData = {
   columnData: packTuples([
     ['id', 'integer', 'NO', ''],
     ['cde_name', 'text', 'NO', ''],
+    ['network', 'text', 'NO', ''],
   ]),
   serialColumns: [],
   creationQuery: QUERY_CREATE_TABLE_SCHEDULED_DATA_EXTENSION,
