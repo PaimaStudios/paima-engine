@@ -3,6 +3,7 @@ import type { PoolClient, Client } from 'pg';
 
 import type { STFSubmittedData } from '@paima/utils';
 import {
+  caip2PrefixFor,
   doLog,
   ENV,
   GlobalConfig,
@@ -381,6 +382,8 @@ async function processScheduledData(
   // note that events triggered by the same tx may not be consecutive.
   let indexPerTx: Map<string, number> = new Map();
 
+  const networks = await GlobalConfig.getInstance();
+
   for (const data of scheduledData) {
     try {
       let txHash;
@@ -401,7 +404,9 @@ async function processScheduledData(
 
         indexPerTx.set(data.tx_hash, index);
 
-        txHash = '0x' + sha3_256(data.tx_hash + index);
+        const caip2 = caip2PrefixFor(networks[data.network!]);
+
+        txHash = '0x' + sha3_256(caip2 + data.tx_hash + index);
       } else {
         // it has to be an scheduled timer if we don't have a cde_name
         timerIndexRelativeToBlock += 1;

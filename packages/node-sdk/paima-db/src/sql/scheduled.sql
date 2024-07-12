@@ -10,8 +10,8 @@ insert_hash AS (
 	WHERE :tx_hash IS NOT NULL
 ),
 insert_extension AS (
-  INSERT INTO scheduled_data_extension(id, cde_name)
-  SELECT (SELECT id FROM new_row), :cde_name::TEXT
+  INSERT INTO scheduled_data_extension(id, cde_name, network)
+  SELECT (SELECT id FROM new_row), :cde_name::TEXT, :network::TEXT
   WHERE :cde_name IS NOT NULL
 )
 INSERT INTO scheduled_data_precompile(id, precompile)
@@ -24,6 +24,7 @@ SELECT scheduled_data.id,
   input_data,
   tx_hash as "tx_hash?",
   cde_name as "cde_name?",
+  network as "network?",
   precompile as "precompile?"
 FROM scheduled_data
 LEFT JOIN scheduled_data_tx_hash

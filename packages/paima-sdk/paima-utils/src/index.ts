@@ -17,6 +17,7 @@ import {
   defaultCardanoNetworkName,
   defaultMinaNetworkName,
   BaseConfigWithoutDefaults,
+  caip2PrefixFor,
 } from './config/loading.js';
 
 export * from './config.js';
@@ -46,6 +47,7 @@ export {
   defaultCardanoNetworkName,
   defaultMinaNetworkName,
   BaseConfigWithoutDefaults,
+  caip2PrefixFor,
 };
 
 export const DEFAULT_GAS_PRICE = '61000000000' as const;

@@ -17,7 +17,8 @@ CREATE TABLE scheduled_data_tx_hash (
 
 CREATE TABLE scheduled_data_extension (
   id INTEGER PRIMARY KEY REFERENCES scheduled_data(id) ON DELETE CASCADE,
-  cde_name TEXT NOT NULL
+  cde_name TEXT NOT NULL,
+  network TEXT NOT NULL
 );
 
 CREATE TABLE scheduled_data_precompile (

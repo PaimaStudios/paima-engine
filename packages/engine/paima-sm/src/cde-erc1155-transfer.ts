@@ -39,6 +39,7 @@ export default async function processErc1155TransferDatum(
       createScheduledData(scheduledInputData, scheduledBlockHeight, {
         cdeName: cdeDatum.cdeName,
         txHash: cdeDatum.transactionHash,
+        network: cdeDatum.network,
       })
     );
   }
@@ -56,6 +57,7 @@ export default async function processErc1155TransferDatum(
       createScheduledData(burnData, scheduledBlockHeight, {
         cdeName: cdeDatum.cdeName,
         txHash: cdeDatum.transactionHash,
+        network: cdeDatum.network,
       })
     );
   }

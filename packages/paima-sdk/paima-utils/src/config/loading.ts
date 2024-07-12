@@ -76,6 +76,7 @@ export const MinaConfigSchema = Type.Object({
   delay: Type.Number(),
   paginationLimit: Type.Number({ default: 50 }),
   confirmationDepth: Type.Optional(Type.Number()),
+  networkId: Type.String(),
 });
 
 export type MinaConfig = Static<typeof MinaConfigSchema>;
@@ -309,4 +310,20 @@ function checkOrError<T extends TSchema>(name: string, structure: T, config: unk
 
   const decoded = Value.Decode(structure, config);
   return decoded;
+}
+
+const InstantiatedConfigsUnion = TaggedConfig(true);
+
+export function caip2PrefixFor(config: Static<typeof InstantiatedConfigsUnion>): string {
+  switch (config.type) {
+    case ConfigNetworkType.EVM:
+    case ConfigNetworkType.EVM_OTHER:
+      return `eip155:${config.chainId}`;
+    case ConfigNetworkType.MINA:
+      return `mina:${config.networkId}`;
+    case ConfigNetworkType.CARDANO:
+    // TODO: is this cip34 ?
+  }
+
+  throw new Error('Unknown caip2 prefix for this network');
 }

@@ -22,6 +22,7 @@ export default async function processDatum(
     createScheduledData(scheduledInputData, scheduledBlockHeight, {
       cdeName: cdeDatum.cdeName,
       txHash: cdeDatum.transactionHash,
+      network: cdeDatum.network,
     }),
     [
       cdeCardanoMintBurnInsert,
