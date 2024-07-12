@@ -412,8 +412,9 @@ async function processScheduledData(
         continue;
       }
 
+      let caip2 = '';
       if (data.cde_name && data.tx_hash) {
-        const caip2 = caip2PrefixFor(networks[data.network!]);
+        caip2 = caip2PrefixFor(networks[data.network!]);
 
         txHash = '0x' + sha3_256(caip2 + data.tx_hash + indexForEvent(data.tx_hash));
       } else {
@@ -433,7 +434,7 @@ async function processScheduledData(
         suppliedValue: '0',
         scheduled: true,
         txHash: txHash,
-        caip2: '',
+        caip2,
       };
 
       if (data.tx_hash) {
