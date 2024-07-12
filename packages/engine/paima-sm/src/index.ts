@@ -230,13 +230,34 @@ const SM: GameStateMachineInitializer = {
 
         await processInternalEvents(latestChainData.internalEvents, dbTx);
 
+        // Used to disambiguate when two primitives have events in the same tx. This
+        // means the hash depends on the order we process the primitives (which is the
+        // order in the configuration).
+        // note that events triggered by the same tx may not be consecutive.
+        const indexPerTx = new Map();
+
+        // This is shared across processScheduledData and processUserInputs in
+        // case a primitive is triggered in the same tx as an input is
+        // submitted, otherwise there would be a collision.
+        const indexForEventByTx = (txHash: string): number => {
+          let index = 0;
+
+          if (indexPerTx.has(txHash)) {
+            index = indexPerTx.get(txHash)! + 1;
+          }
+
+          indexPerTx.set(txHash, index);
+          return index;
+        };
+
         // Fetch and execute scheduled input data
         const scheduledInputsLength = await processScheduledData(
           latestChainData,
           dbTx,
           gameStateTransition,
           randomnessGenerator,
-          precompiles.precompiles
+          precompiles.precompiles,
+          indexForEventByTx
         );
 
         // Execute user submitted input data
@@ -244,7 +265,8 @@ const SM: GameStateMachineInitializer = {
           latestChainData,
           dbTx,
           gameStateTransition,
-          randomnessGenerator
+          randomnessGenerator,
+          indexForEventByTx
         );
 
         // Extra logging
@@ -366,7 +388,8 @@ async function processScheduledData(
   DBConn: PoolClient,
   gameStateTransition: GameStateTransitionFunction,
   randomnessGenerator: Prando,
-  precompiles: Precompiles['precompiles']
+  precompiles: Precompiles['precompiles'],
+  indexForEvent: (txHash: string) => number
 ): Promise<number> {
   const scheduledData = await getScheduledDataByBlockHeight.run(
     { block_height: latestChainData.blockNumber },
@@ -375,12 +398,6 @@ async function processScheduledData(
 
   // just in case there are two timers in the same block with the same exact contents.
   let timerIndexRelativeToBlock = -1;
-
-  // Used to disambiguate when two primitives have events in the same tx. This
-  // means the hash depends on the order we process the primitives (which is the
-  // order in the configuration).
-  // note that events triggered by the same tx may not be consecutive.
-  let indexPerTx: Map<string, number> = new Map();
 
   const networks = await GlobalConfig.getInstance();
 
@@ -396,17 +413,9 @@ async function processScheduledData(
       }
 
       if (data.cde_name && data.tx_hash) {
-        let index = 0;
-
-        if (indexPerTx.has(data.tx_hash)) {
-          index = indexPerTx.get(data.tx_hash)! + 1;
-        }
-
-        indexPerTx.set(data.tx_hash, index);
-
         const caip2 = caip2PrefixFor(networks[data.network!]);
 
-        txHash = '0x' + sha3_256(caip2 + data.tx_hash + index);
+        txHash = '0x' + sha3_256(caip2 + data.tx_hash + indexForEvent(data.tx_hash));
       } else {
         // it has to be an scheduled timer if we don't have a cde_name
         timerIndexRelativeToBlock += 1;
@@ -471,14 +480,9 @@ async function processUserInputs(
   latestChainData: ChainData,
   DBConn: PoolClient,
   gameStateTransition: GameStateTransitionFunction,
-  randomnessGenerator: Prando
+  randomnessGenerator: Prando,
+  indexForEvent: (txHash: string) => number
 ): Promise<number> {
-  // Used to disambiguate when two primitives have events in the same tx. This
-  // means the hash depends on the order we process the primitives (which is the
-  // order in the configuration).
-  let previousTx = undefined;
-  let index = -1;
-
   for (const submittedData of latestChainData.submittedData) {
     // Check nonce is valid
     if (submittedData.inputNonce === '') {
@@ -492,17 +496,13 @@ async function processUserInputs(
     }
     const address = await getMainAddress(submittedData.realAddress, DBConn);
 
-    if (previousTx && submittedData.txHash === previousTx) {
-      index += 1;
-    } else {
-      index = 0;
-    }
-
     const inputData: STFSubmittedData = {
       ...submittedData,
       userAddress: address.address,
       userId: address.id,
-      txHash: '0x' + sha3_256(submittedData.caip2 + submittedData.txHash + index),
+      txHash:
+        '0x' +
+        sha3_256(submittedData.caip2 + submittedData.txHash + indexForEvent(submittedData.txHash)),
     };
     try {
       // Check if internal Concise Command
