@@ -403,8 +403,6 @@ async function processScheduledData(
 
   for (const data of scheduledData) {
     try {
-      let txHash;
-
       const userAddress = data.precompile ? precompiles[data.precompile] : SCHEDULED_DATA_ADDRESS;
 
       if (data.precompile && !precompiles[data.precompile]) {
@@ -412,18 +410,26 @@ async function processScheduledData(
         continue;
       }
 
-      let caip2 = '';
-      if (data.cde_name && data.tx_hash) {
-        caip2 = caip2PrefixFor(networks[data.network!]);
+      const { txHash, caip2 } = (() => {
+        if (data.cde_name && data.tx_hash) {
+          const caip2Prefix = caip2PrefixFor(networks[data.network!]);
 
-        txHash = '0x' + sha3_256(caip2 + data.tx_hash + indexForEvent(data.tx_hash));
-      } else {
-        // it has to be an scheduled timer if we don't have a cde_name
-        timerIndexRelativeToBlock += 1;
+          return {
+            caip2: caip2PrefixFor(networks[data.network!]),
+            txHash: '0x' + sha3_256(caip2Prefix + data.tx_hash + indexForEvent(data.tx_hash)),
+          };
+        } else {
+          // it has to be an scheduled timer if we don't have a cde_name
+          timerIndexRelativeToBlock += 1;
 
-        txHash =
-          '0x' + sha3_256(userAddress + sha3_256(data.input_data) + timerIndexRelativeToBlock);
-      }
+          return {
+            txHash:
+              '0x' + sha3_256(userAddress + sha3_256(data.input_data) + timerIndexRelativeToBlock),
+            // if there is a timer, there is not really a way to associate it with a particular network
+            caip2: '',
+          };
+        }
+      })();
 
       const inputData: STFSubmittedData = {
         userId: SCHEDULED_DATA_ID,
@@ -433,7 +439,7 @@ async function processScheduledData(
         inputNonce: '',
         suppliedValue: '0',
         scheduled: true,
-        txHash: txHash,
+        txHash,
         caip2,
       };
 
