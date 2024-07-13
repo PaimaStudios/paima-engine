@@ -301,7 +301,7 @@ async function runSync(
         let emulated: number | undefined;
         let blockNumber: number = chainData.blockNumber;
 
-        if (true) { // count
+        if (count) {
           if (ENV.EMULATED_BLOCKS) {
             const [e] = await emulatedSelectLatestPrior.run(
               {

@@ -23,7 +23,10 @@ export class PaimaEventListener {
   constructor(private env: typeof e1 | typeof e2) {}
 
   /* Subscribe to System or Custom Events */
-  public subscribe<T extends Record<string, unknown>>(protocol: PaimaEventBrokerProtocols, event: PaimaEvent<T>): void {
+  public subscribe<T extends Record<string, unknown>>(
+    protocol: PaimaEventBrokerProtocols,
+    event: PaimaEvent<T>
+  ): void {
     if (PaimaEventListener.subscriptions.find(e => e.name === event.name)) {
       throw new Error('Already subscribed to events for ' + event.name);
     }
@@ -43,13 +46,12 @@ export class PaimaEventListener {
     const clientSubscribe = (): void => {
       client.subscribe(event.path.fullPath, (err: any) => {
         if (err) console.log(`MQTT[${event.broker}] ERROR`, err);
-        console.log('MQTT Subscription for', event.name, event.broker, event.path.fullPath)
+        console.log('MQTT Subscription for', event.name, event.broker, event.path.fullPath);
       });
-    }
+    };
 
     if (client.connected) clientSubscribe();
     else client.on('connect', clientSubscribe);
     PaimaEventListener.subscriptions.push(event);
   }
-
 }

@@ -17,5 +17,7 @@ export class PaimaEvent<Message extends Record<string, unknown>> {
     return false;
   }
 
-  public getTopic(): string { return this.path.fullPath; }
+  public getTopic(): string {
+    return this.path.fullPath;
+  }
 }
