@@ -31,7 +31,6 @@ export * from './constants.js';
 export * from './contracts.js';
 export type * from './contracts.js';
 export * from './captcha.js';
-export * from './mqtt/index.js';
 
 export {
   AddressType,

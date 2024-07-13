@@ -1,4 +1,4 @@
-# MQTT Publisher & Broker
+# Paima Broker
 
 ## Usage
 

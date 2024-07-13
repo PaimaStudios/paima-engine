@@ -14,5 +14,7 @@
     { "path": "../../paima-sdk/paima-utils/tsconfig.build.json" },
     { "path": "../../node-sdk/paima-utils-backend" },
     { "path": "../../paima-sdk/paima-mw-core/tsconfig.json" },
+    { "path": "../../paima-sdk/paima-events/tsconfig.build.json" },
+    { "path": "../../node-sdk/paima-broker/tsconfig.build.json" },
   ]
 }

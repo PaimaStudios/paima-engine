@@ -1,11 +1,12 @@
 {
-  "extends": "./tsconfig.json",
+  "extends": "../tsconfig.json",
   "compilerOptions": {
     "rootDir": "src",
     "outDir": "build",
-    "noEmit": false
+    "resolveJsonModule": true
   },
   "include": [
     "src/**/*",
     "src/**/*.json"
-  ]}
+  ]
+}

@@ -22,8 +22,12 @@ import { cleanNoncesIfTime } from './nonce-gc.js';
 import type { PoolClient } from 'pg';
 import { FUNNEL_PRESYNC_FINISHED, ConfigNetworkType } from '@paima/utils';
 import type { CardanoConfig, EvmConfig } from '@paima/utils';
-import { MQTTBroker } from './mqtt/mqtt-broker.js';
-import { MQTTPublisher, MQTTSystemEvents } from './mqtt/mqtt-publisher.js';
+import {
+  PaimaEventBrokerProtocols,
+  PaimaEventPublisher,
+  PaimaEventSystemSTFGlobal,
+} from '@paima/events';
+import { PaimaEventBroker } from '@paima/broker';
 
 // The core logic of paima runtime which polls the funnel and processes the resulting chain data using the game's state machine.
 // Of note, the runtime is designed to continue running/attempting to process the next required block no matter what errors propagate upwards.
@@ -236,6 +240,13 @@ async function runSync(
       '-------------------------------------\nBeginning Syncing & Processing Blocks\n-------------------------------------'
     );
   }
+
+  const eventPublisher = new PaimaEventPublisher(
+    new PaimaEventSystemSTFGlobal(),
+    PaimaEventBrokerProtocols.WEBSOCKET,
+    ENV
+  );
+
   while (run) {
     // Initializing the latest read block height and snapshotting
     // do not use a DB transaction, as we need to generate a snapshot
@@ -288,9 +299,9 @@ async function runSync(
         if (count === -1) break;
 
         let emulated: number | undefined;
-        let block_chain: number = chainData.blockNumber;
+        let blockNumber: number = chainData.blockNumber;
 
-        if (count) {
+        if (true) { // count
           if (ENV.EMULATED_BLOCKS) {
             const [e] = await emulatedSelectLatestPrior.run(
               {
@@ -298,10 +309,10 @@ async function runSync(
               },
               gameStateMachine.getReadWriteDbConn()
             );
-            emulated = block_chain;
-            block_chain = e.deployment_chain_block_height;
+            emulated = blockNumber;
+            blockNumber = e.deployment_chain_block_height;
           }
-          MQTTPublisher.sendMessage({ block: block_chain, emulated }, MQTTSystemEvents.STF);
+          eventPublisher.sendMessage({ block: blockNumber, emulated });
         }
       }
     } catch (err) {
@@ -456,14 +467,7 @@ async function blockPostProcess(
 
 const startMQTTBroker = async (): Promise<void> => {
   if (ENV.MQTT_BROKER) {
-    // Load Server
-    MQTTBroker.getServer();
-    // TODO is this necessary?
-    await wait(1000);
+    new PaimaEventBroker(ENV).getServer();
   }
-  // Listen to all system events
-  MQTTPublisher.startListener(MQTTSystemEvents.STF).catch((e: any) => console.log(e));
-  MQTTPublisher.startListener(MQTTSystemEvents.BATCHER_HASH).catch((e: any) => console.log(e));
-
   return;
 };

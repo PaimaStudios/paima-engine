@@ -27,6 +27,7 @@
   "devDependencies": {},
   "dependencies": {
     "@paima/db": "2.4.0",
-    "@paima/utils-backend": "2.4.0"
+    "@paima/utils-backend": "2.4.0",
+    "@paima/broker": "2.4.0"
   }
 }
