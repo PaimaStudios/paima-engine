@@ -233,7 +233,7 @@ const SM: GameStateMachineInitializer = {
         // Used to disambiguate when two primitives have events in the same tx. This
         // means the hash depends on the order we process the primitives (which is the
         // order in the configuration).
-        // note that events triggered by the same tx may not be consecutive.
+        // note: this means that events triggered by the same tx may, in some cases, not be consecutive.
         const indexPerTx = new Map();
 
         // This is shared across processScheduledData and processUserInputs in
