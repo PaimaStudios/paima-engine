@@ -1,0 +1,30 @@
+{
+  "name": "@paima/broker",
+  "version": "2.4.0",
+  "publishConfig": {
+    "access": "public"
+  },
+  "description": "Paima Event System. Broker, Publisher and Listener",
+  "type": "module",
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
+  "files": [
+    "/build"
+  ],
+  "author": "Paima Studios",
+  "license": "See license file",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PaimaStudios/paima-engine.git"
+  },
+  "homepage": "https://docs.paimastudios.com",
+  "scripts": {
+    "lint:eslint": "eslint .",
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+  }
+}

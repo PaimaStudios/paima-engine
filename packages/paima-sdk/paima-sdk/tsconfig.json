@@ -18,5 +18,6 @@
     { "path": "../paima-concise/tsconfig.build.json" },
     { "path": "../paima-executors" },
     { "path": "../paima-mw-core" },
+    { "path": "../paima-events/tsconfig.build.json" }
   ]
 }

@@ -132,18 +132,24 @@ export class ENV {
     return ENV.isTrue(process.env.MQTT_BROKER, true);
   }
   static get MQTT_BROKER_PORT(): number {
-    return parseInt(process.env.MQTT_PORT || '1884', 10);
+    return parseInt(process.env.MQTT_BROKER_PORT || '1884', 10);
   }
   static get MQTT_BROKER_WS_PORT(): number {
-    return parseInt(process.env.MQTT_WS_PORT || '8884', 10);
+    return parseInt(process.env.MQTT_BROKER_WS_PORT || '8884', 10);
   }
   // MQTT CLIENT
-  static get MQTT_BROKER_URL(): string {
-    return process.env.MQTT_BROKER || 'mqtt://127.0.0.1:1884';
+  static get MQTT_ENGINE_BROKER_URL(): string {
+    return process.env.MQTT_ENGINE_BROKER_URL || 'mqtt://127.0.0.1:1883';
+  }
+  static get MQTT_BATCHER_BROKER_URL(): string {
+    return process.env.MQTT_BATCHER_BROKER_URL || 'mqtt://127.0.0.1:1884';
   }
   // MQTT WS CLIENT
-  static get MQTT_BROKER_WS_URL(): string {
-    return process.env.MQTT_BROKER || 'ws://127.0.0.1:8884';
+  static get MQTT_ENGINE_BROKER_WS_URL(): string {
+    return process.env.MQTT_ENGINE_BROKER_WS_URL || 'ws://127.0.0.1:8883';
+  }
+  static get MQTT_BATCHER_BROKER_WS_URL(): string {
+    return process.env.MQTT_BATCHER_BROKER_WS_URL || 'ws://127.0.0.1:8884';
   }
 
   // Utils

@@ -14,7 +14,7 @@ import { hashBatchSubunit, buildBatchData } from '@paima/concise';
 import { contractAbis, wait } from '@paima/utils';
 import { utf8ToHex } from 'web3-utils';
 import { ethers } from 'ethers';
-import { MQTTPublisher, MQTTSystemEvents } from './mqtt/mqtt-publisher.js';
+import { PaimaEventBrokerProtocols, PaimaEventPublisher, PaimaEventSystemBatcherHashAddress } from '@paima/events';
 
 class BatchedTransactionPoster {
   private provider: EthersEvmProvider;
@@ -195,13 +195,13 @@ class BatchedTransactionPoster {
     for (let hash of hashes) {
       try {
         for (let address of addresses) {
-          // Update with latest mqtt publisher when available
-          const topic: any = `${MQTTSystemEvents.BATCHER_HASH}/${address}`;
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-          MQTTPublisher.sendMessage({ hash, blockHeight, addresses }, topic);
+          const publisher = new PaimaEventPublisher(
+            new PaimaEventSystemBatcherHashAddress(address),
+            PaimaEventBrokerProtocols.WEBSOCKET,
+            ENV
+          );
+          publisher.sendMessage({ hash, blockHeight, address });
         }
-        // Emit new hash.
-        MQTTPublisher.sendMessage({ hash, blockHeight, addresses }, MQTTSystemEvents.BATCHER_HASH);
 
         await updateStatePosted.run(
           {

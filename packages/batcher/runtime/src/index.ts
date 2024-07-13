@@ -29,8 +29,8 @@ import { setLogger } from '@paima/utils';
 import * as fs from 'fs';
 import { parseSecurityYaml } from '@paima/utils-backend';
 import { getRemoteBackendVersion, initMiddlewareCore } from '@paima/mw-core';
-import { MQTTBroker } from './mqtt/mqtt-broker.js';
-import { MQTTPublisher, MQTTSystemEvents } from './mqtt/mqtt-publisher.js';
+import { PaimaEventListener } from '@paima/events';
+import { PaimaEventBroker } from '@paima/broker';
 
 setLogger(s => {
   try {
@@ -107,20 +107,10 @@ const BatcherRuntime: BatcherRuntimeInitializer = {
         batchedTransactionPoster: BatchedTransactionPoster,
         provider: EthersEvmProvider
       ): Promise<void> {
+        if (ENV.MQTT_BROKER) {
+          new PaimaEventBroker(ENV).getServer();
+        }
         // pass endpoints to web server and run
-
-        // if (ENV.MQTT_BROKER) {
-        // Load Server
-        MQTTBroker.getServer();
-        // TODO is this necessary?
-        const wait = (n: number): Promise<void> => new Promise(resolve => setTimeout(resolve, n));
-        await wait(1000);
-        // }
-        // Listen to all system events
-        MQTTPublisher.startListener(MQTTSystemEvents.BATCHER_HASH).catch((e: any) =>
-          console.log(e)
-        );
-
         // do not await on these as they may run forever
         void Promise.all([
           startServer(pool, errorCodeToMessage, provider).catch(e => {
