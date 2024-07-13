@@ -429,10 +429,6 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
     startingBlockHeight: number,
     chainName: string
   ): Promise<CarpFunnel> {
-    if (!config.confirmationDepth) {
-      throw new Error('[carp-funnel] Missing CARDANO_CONFIRMATION_DEPTH setting.');
-    }
-
     const confirmationDepth = config.confirmationDepth;
 
     const cacheEntry = (async (): Promise<CarpFunnelCacheEntry> => {

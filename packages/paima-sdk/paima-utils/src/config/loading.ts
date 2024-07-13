@@ -4,6 +4,9 @@ import type { Static, TSchema } from '@sinclair/typebox';
 import { Value, ValueErrorType } from '@sinclair/typebox/value';
 import { Type } from '@sinclair/typebox';
 import { ENV, doLog } from '../index.js';
+import { toChainId } from '@dcspark/cip34-js';
+import registry from '@dcspark/cip34-js/registry';
+import assertNever from 'assert-never';
 
 export enum ConfigNetworkType {
   EVM = 'evm-main',
@@ -61,13 +64,27 @@ const OtherEvmConfigSchema = Type.Intersect([
   Type.Object({ type: Type.Literal(ConfigNetworkType.EVM_OTHER) }),
 ]);
 
-export const CardanoConfigSchema = Type.Object({
+export const CardanoNetwork = Type.Union([
+  Type.Literal('preview'),
+  Type.Literal('preprod'),
+  Type.Literal('mainnet'),
+]);
+
+export const CardanoRequiredProperties = Type.Object({
   carpUrl: Type.String(),
-  network: Type.String(),
+  network: CardanoNetwork,
   confirmationDepth: Type.Number(),
+});
+
+export const CardanoOptionalProperties = Type.Object({
   presyncStepSize: Type.Number({ default: 1000 }),
   paginationLimit: Type.Number({ default: 50 }),
 });
+
+export const CardanoConfigSchema = Type.Intersect([
+  CardanoRequiredProperties,
+  CardanoOptionalProperties,
+]);
 
 export type CardanoConfig = Static<typeof CardanoConfigSchema>;
 
@@ -76,6 +93,7 @@ export const MinaConfigSchema = Type.Object({
   delay: Type.Number(),
   paginationLimit: Type.Number({ default: 50 }),
   confirmationDepth: Type.Optional(Type.Number()),
+  networkId: Type.String(),
 });
 
 export type MinaConfig = Static<typeof MinaConfigSchema>;
@@ -104,7 +122,8 @@ export const TaggedEvmOtherConfig = <T extends boolean>(T: T) => TaggedEvmConfig
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const TaggedCardanoConfig = <T extends boolean>(T: T) =>
   Type.Intersect([
-    T ? CardanoConfigSchema : Type.Partial(CardanoConfigSchema),
+    CardanoRequiredProperties,
+    T ? CardanoOptionalProperties : Type.Partial(CardanoOptionalProperties),
     Type.Object({ type: Type.Literal(ConfigNetworkType.CARDANO) }),
   ]);
 
@@ -181,9 +200,15 @@ export async function loadConfig(): Promise<Static<typeof BaseConfigWithDefaults
     };
 
     if (ENV.CARP_URL) {
+      if (!ENV.CARDANO_CONFIRMATION_DEPTH) {
+        throw new Error('[carp-funnel] Missing CARDANO_CONFIRMATION_DEPTH setting.');
+      }
+
+      const network = Value.Decode(CardanoNetwork, ENV.CARDANO_NETWORK);
+
       baseConfig[defaultCardanoNetworkName] = {
         carpUrl: ENV.CARP_URL,
-        network: ENV.CARDANO_NETWORK,
+        network,
         confirmationDepth: ENV.CARDANO_CONFIRMATION_DEPTH,
         presyncStepSize: ENV.DEFAULT_PRESYNC_STEP_SIZE,
         type: ConfigNetworkType.CARDANO,
@@ -309,4 +334,48 @@ function checkOrError<T extends TSchema>(name: string, structure: T, config: unk
 
   const decoded = Value.Decode(structure, config);
   return decoded;
+}
+
+const InstantiatedConfigsUnion = TaggedConfig(true);
+
+export function caip2PrefixFor(config: Static<typeof InstantiatedConfigsUnion>): string {
+  const type = config.type;
+
+  switch (type) {
+    case ConfigNetworkType.EVM:
+    case ConfigNetworkType.EVM_OTHER:
+      return `eip155:${config.chainId}`;
+    case ConfigNetworkType.MINA:
+      return `mina:${config.networkId}`;
+    case ConfigNetworkType.CARDANO:
+      return networkToCip34(config);
+    default:
+      assertNever(type);
+  }
+}
+function networkToCip34(
+  config: Static<typeof InstantiatedConfigsUnion> & { type: ConfigNetworkType.CARDANO }
+) {
+  // TODO: why is this needed? should this be imported in a different way?
+  // @ts-ignore
+  let reg = registry['default'];
+  switch (config.network) {
+    case 'mainnet':
+      return toChainId({
+        networkId: reg.Mainnet.NetworkId,
+        networkMagic: reg.Mainnet.NetworkMagic,
+      });
+    case 'preprod':
+      return toChainId({
+        networkId: reg.PreProduction.NetworkId,
+        networkMagic: reg.PreProduction.NetworkMagic,
+      });
+    case 'preview':
+      return toChainId({
+        networkId: reg.Preview.NetworkId,
+        networkMagic: reg.Preview.NetworkMagic,
+      });
+    default:
+      assertNever(config.network);
+  }
 }

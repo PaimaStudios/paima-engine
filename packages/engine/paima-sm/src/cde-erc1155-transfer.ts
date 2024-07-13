@@ -36,12 +36,11 @@ export default async function processErc1155TransferDatum(
       JSON.stringify(values),
     ].join('|');
     updateList.push(
-      createScheduledData(
-        scheduledInputData,
-        scheduledBlockHeight,
-        cdeDatum.cdeName,
-        cdeDatum.transactionHash
-      )
+      createScheduledData(scheduledInputData, scheduledBlockHeight, {
+        cdeName: cdeDatum.cdeName,
+        txHash: cdeDatum.transactionHash,
+        network: cdeDatum.network,
+      })
     );
   }
 
@@ -55,12 +54,11 @@ export default async function processErc1155TransferDatum(
       JSON.stringify(values),
     ].join('|');
     updateList.push(
-      createScheduledData(
-        burnData,
-        scheduledBlockHeight,
-        cdeDatum.cdeName,
-        cdeDatum.transactionHash
-      )
+      createScheduledData(burnData, scheduledBlockHeight, {
+        cdeName: cdeDatum.cdeName,
+        txHash: cdeDatum.transactionHash,
+        network: cdeDatum.network,
+      })
     );
   }
 
