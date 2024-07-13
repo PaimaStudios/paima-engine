@@ -10,7 +10,11 @@ import type { PaimaEvent } from './events.js';
  * This class provides a PaimaEventPublisher Singleton.
  */
 export class PaimaEventPublisher<T extends Record<string, any>> {
-  constructor(private event: PaimaEvent<T>, private protocol: PaimaEventBrokerProtocols, private env: typeof e1 | typeof e2) {}
+  constructor(
+    private event: PaimaEvent<T>,
+    private protocol: PaimaEventBrokerProtocols,
+    private env: typeof e1 | typeof e2
+  ) {}
 
   private getClient(): mqtt.MqttClient {
     switch (this.event.broker) {

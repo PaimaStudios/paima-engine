@@ -35,13 +35,18 @@ export class PaimaEventBroker {
     // MQTT PROTOCOL SERVER
     PaimaEventBroker.server[PaimaEventBrokerProtocols.MQTT].listen(
       this.getPort(PaimaEventBrokerProtocols.MQTT),
-      () => console.log('MQTT Server Started at PORT ', this.getPort(PaimaEventBrokerProtocols.MQTT))
+      () =>
+        console.log('MQTT Server Started at PORT ', this.getPort(PaimaEventBrokerProtocols.MQTT))
     );
 
     // WEBSOCKET PROTOCOL SERVER
     PaimaEventBroker.server[PaimaEventBrokerProtocols.WEBSOCKET].listen(
       this.getPort(PaimaEventBrokerProtocols.WEBSOCKET),
-      () => console.log('MQTT-WS Server Started at PORT', this.getPort(PaimaEventBrokerProtocols.WEBSOCKET))
+      () =>
+        console.log(
+          'MQTT-WS Server Started at PORT',
+          this.getPort(PaimaEventBrokerProtocols.WEBSOCKET)
+        )
     );
     return PaimaEventBroker.server;
   }

@@ -14,7 +14,11 @@ import { hashBatchSubunit, buildBatchData } from '@paima/concise';
 import { contractAbis, wait } from '@paima/utils';
 import { utf8ToHex } from 'web3-utils';
 import { ethers } from 'ethers';
-import { PaimaEventBrokerProtocols, PaimaEventPublisher, PaimaEventSystemBatcherHashAddress } from '@paima/events';
+import {
+  PaimaEventBrokerProtocols,
+  PaimaEventPublisher,
+  PaimaEventSystemBatcherHashAddress,
+} from '@paima/events';
 
 class BatchedTransactionPoster {
   private provider: EthersEvmProvider;
