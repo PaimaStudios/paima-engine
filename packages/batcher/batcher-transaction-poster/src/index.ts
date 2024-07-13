@@ -109,9 +109,8 @@ class BatchedTransactionPoster {
   private postingRound = async (): Promise<number> => {
     const hashes: string[] = [];
     const ids: number[] = [];
-    const addresses: Set<string> = new Set();
 
-    const batchedTransaction = await this.buildBatchedTransaction(hashes, ids, addresses);
+    const batchedTransaction = await this.buildBatchedTransaction(hashes, ids);
     if (!batchedTransaction) {
       return 0;
     }
@@ -138,7 +137,7 @@ class BatchedTransactionPoster {
         return ids.length;
       }
 
-      await this.updatePostedStates(hashes, blockHeight, transactionHash, addresses);
+      await this.updatePostedStates(hashes, blockHeight, transactionHash);
       await this.deletePostedInputs(ids);
 
       if (!keepRunning) {
@@ -159,7 +158,6 @@ class BatchedTransactionPoster {
   private buildBatchedTransaction = async (
     hashes: string[],
     ids: number[],
-    address: Set<string>
   ): Promise<string> => {
     const validatedInputs = await getValidatedInputs.run(undefined, this.pool);
 
@@ -182,7 +180,6 @@ class BatchedTransactionPoster {
       }))
     );
     for (let i = 0; i < batchData.selectedInputs.length; i++) {
-      address.add(batchData.selectedInputs[i].userAddress);
       hashes.push(hashBatchSubunit(batchData.selectedInputs[i]));
       ids.push(validatedInputs[i].id);
     }
@@ -194,27 +191,21 @@ class BatchedTransactionPoster {
     hashes: string[],
     blockHeight: number,
     transactionHash: string,
-    addresses: Set<string>
   ): Promise<void> => {
     for (let hash of hashes) {
       try {
-        for (let address of addresses) {
-          const publisher = new PaimaEventPublisher(
-            new PaimaEventSystemBatcherHashAddress(address),
-            PaimaEventBrokerProtocols.WEBSOCKET,
-            ENV
-          );
-          publisher.sendMessage({ hash, blockHeight, address });
-        }
-
-        await updateStatePosted.run(
-          {
-            input_hash: hash,
-            block_height: blockHeight,
-            transaction_hash: transactionHash,
-          },
-          this.pool
+        const packagedData = {
+          input_hash: hash,
+          block_height: blockHeight,
+          transaction_hash: transactionHash,
+        };
+        const publisher = new PaimaEventPublisher(
+          new PaimaEventSystemBatcherHashAddress(hash),
+          PaimaEventBrokerProtocols.WEBSOCKET,
+          ENV
         );
+        publisher.sendMessage(packagedData);
+        await updateStatePosted.run(packagedData, this.pool);
       } catch (err) {
         console.log(
           "[batcher-transaction-poster] Error while updating posted inputs' states:",

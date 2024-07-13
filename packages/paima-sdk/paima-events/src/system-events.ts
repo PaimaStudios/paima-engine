@@ -74,9 +74,9 @@ export class PaimaEventSystemSTFGlobal extends PaimaEvent<{
 }
 
 export class PaimaEventSystemBatcherHashGlobal extends PaimaEvent<{
-  hash: string;
-  blockHeight: number;
-  address: string;
+  input_hash: string;
+  block_height: number;
+  transaction_hash: string;
 }> {
   constructor() {
     super(
@@ -88,9 +88,9 @@ export class PaimaEventSystemBatcherHashGlobal extends PaimaEvent<{
 }
 
 export class PaimaEventSystemBatcherHashAddress extends PaimaEvent<{
-  hash: string;
-  blockHeight: number;
-  address: string;
+  input_hash: string;
+  block_height: number;
+  transaction_hash: string;
 }> {
   constructor(address: string) {
     super(
