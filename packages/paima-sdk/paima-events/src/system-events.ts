@@ -54,8 +54,12 @@ enum PaimaEventSystemName {
 }
 
 /*
- * Default System Events. Custom events can be defined in the way.
+ * Default System Events.
  */
+const systemEvent = (path: string[]): string => {
+  return ['system', ...path].join('/');
+}
+
 export class PaimaEventSystemSTFGlobal extends PaimaEvent<{
   block: number;
   emulated: number | undefined;
@@ -64,8 +68,7 @@ export class PaimaEventSystemSTFGlobal extends PaimaEvent<{
     super(
       PaimaEventSystemName.STF_GLOBAL,
       PaimaEventBrokerNames.PaimaEngine,
-      { type: 'exact', fullPath: '/sys/stf' },
-      undefined
+      systemEvent(['engine', 'stf'])
     );
   }
 }
@@ -79,8 +82,7 @@ export class PaimaEventSystemBatcherHashGlobal extends PaimaEvent<{
     super(
       PaimaEventSystemName.BATCHER_HASH_GLOBAL,
       PaimaEventBrokerNames.Batcher,
-      { type: 'exact', fullPath: `/sys/batch_hash` },
-      undefined
+      systemEvent(['batcher', 'hash'])
     );
   }
 }
@@ -94,12 +96,11 @@ export class PaimaEventSystemBatcherHashAddress extends PaimaEvent<{
     super(
       PaimaEventSystemName.BATCHER_HASH_$ADDRESS,
       PaimaEventBrokerNames.Batcher,
-      { type: 'dynamic', fullPath: `/sys/batch_hash/${address}`, commonPath: `/sys/batch_hash/` },
-      undefined
+      PaimaEventSystemBatcherHashAddress.buildTopic(address)
     );
   }
 
   public static buildTopic(address: string): string {
-    return `/sys/batch_hash/${address}`;
+    return systemEvent(['batcher', address]);
   }
 }

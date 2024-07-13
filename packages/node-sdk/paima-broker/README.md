@@ -2,6 +2,12 @@
 
 ## Usage
 
+### Start MQTT Server
+```typescript
+new PaimaBroker(ENV).getServer();
+```
+This creates a mqtt and websocket MQTT server  
+
 ## Architecture
 
 ### Error handling
