@@ -29,7 +29,6 @@ import { setLogger } from '@paima/utils';
 import * as fs from 'fs';
 import { parseSecurityYaml } from '@paima/utils-backend';
 import { getRemoteBackendVersion, initMiddlewareCore } from '@paima/mw-core';
-import { PaimaEventListener } from '@paima/events';
 import { PaimaEventBroker } from '@paima/broker';
 
 setLogger(s => {

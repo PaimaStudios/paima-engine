@@ -15,6 +15,10 @@ export type MQTTCallback = (
   rawObject: object
 ) => void;
 
+
+/* 
+ * This class subscribes to specific topics, and stores the callbacks for event processing.
+ */
 export class PaimaEventListener {
   /* List of event processors */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -27,9 +31,49 @@ export class PaimaEventListener {
     protocol: PaimaEventBrokerProtocols,
     event: PaimaEvent<T>
   ): void {
-    if (PaimaEventListener.subscriptions.find(e => e.name === event.name)) {
-      throw new Error('Already subscribed to events for ' + event.name);
+    if (PaimaEventListener.subscriptions.find(e => e.topic === event.topic)) {
+      throw new Error('Already subscribed to events for ' + event.name + ' ' + event.topic);
     }
+    const client = this.getClient(protocol, event);
+
+    const clientSubscribe = (): void => {
+      client.subscribe(event.topic, (err: any) => {
+        if (err) console.log(`MQTT[${event.broker}] ERROR`, err);
+        // console.log('MQTT Subscription for', event.name, event.broker, event.topic);
+      });
+    };
+
+    if (client.connected) clientSubscribe();
+    else client.on('connect', clientSubscribe);
+    PaimaEventListener.subscriptions.push(event);
+  }
+
+  public unsubscribe<T extends Record<string, unknown>>(
+    protocol: PaimaEventBrokerProtocols,
+    event: PaimaEvent<T>
+  ): boolean {
+    const client = this.getClient(protocol, event);
+
+     const clientUnsubscribe = (): void => {
+      client.unsubscribe(event.topic, (err: any) => {
+        if (err) console.log(`MQTT[${event.broker}] ERROR`, err);
+        // console.log('MQTT Unsubscription for', event.name, event.broker, event.topic);
+      });
+    };
+
+    if (client.connected) clientUnsubscribe();
+    else client.on('connect', clientUnsubscribe);
+    client.unsubscribe(event.topic)
+    const index = PaimaEventListener.subscriptions.findIndex(e => e.topic === event.topic);
+    if (index >= 0) PaimaEventListener.subscriptions.splice(index, 1);
+    else console.log('Subscription not found', event.name + ' ' + event.topic);
+    return true;
+  }
+
+  private getClient<T extends Record<string, unknown>>(
+    protocol: PaimaEventBrokerProtocols,
+    event: PaimaEvent<T>
+  ): mqtt.MqttClient {
     let client: mqtt.MqttClient;
     switch (event.broker) {
       case PaimaEventBrokerNames.PaimaEngine: {
@@ -42,16 +86,6 @@ export class PaimaEventListener {
     }
 
     if (!client) throw new Error('Unknown client');
-
-    const clientSubscribe = (): void => {
-      client.subscribe(event.path.fullPath, (err: any) => {
-        if (err) console.log(`MQTT[${event.broker}] ERROR`, err);
-        console.log('MQTT Subscription for', event.name, event.broker, event.path.fullPath);
-      });
-    };
-
-    if (client.connected) clientSubscribe();
-    else client.on('connect', clientSubscribe);
-    PaimaEventListener.subscriptions.push(event);
+    return client;
   }
 }
