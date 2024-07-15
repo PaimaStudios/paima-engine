@@ -31,10 +31,6 @@ export class PaimaEventSystemParser {
         case PaimaEventSystemName.STF_GLOBAL:
           PaimaEventSystemParser.lastSTFBlock = data.block as number;
           break;
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
-        case PaimaEventSystemName.BATCHER_HASH_$ADDRESS:
-          PaimaEventSystemParser.hashes[data.hash as string] = data.blockHeight as number;
-          break;
       }
 
       if (mqttEvent.callback) {
@@ -49,7 +45,6 @@ export class PaimaEventSystemParser {
  */
 enum PaimaEventSystemName {
   STF_GLOBAL = 'STF_GLOBAL',
-  BATCHER_HASH_GLOBAL = 'BATCHER_HASH_GLOBAL',
   BATCHER_HASH_$ADDRESS = 'BATCHER_HASH_$ADDRESS',
 }
 
@@ -69,20 +64,6 @@ export class PaimaEventSystemSTFGlobal extends PaimaEvent<{
       PaimaEventSystemName.STF_GLOBAL,
       PaimaEventBrokerNames.PaimaEngine,
       systemEvent(['engine', 'stf'])
-    );
-  }
-}
-
-export class PaimaEventSystemBatcherHashGlobal extends PaimaEvent<{
-  input_hash: string;
-  block_height: number;
-  transaction_hash: string;
-}> {
-  constructor() {
-    super(
-      PaimaEventSystemName.BATCHER_HASH_GLOBAL,
-      PaimaEventBrokerNames.Batcher,
-      systemEvent(['batcher', 'hash'])
     );
   }
 }

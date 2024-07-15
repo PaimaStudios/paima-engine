@@ -99,8 +99,7 @@ class BatchedTransactionPoster {
       value: '0x' + Number(this.fee).toString(16),
       gasLimit: estimateGasLimit(msg.length),
     });
-    // TODO ONLY ACTIVATE IN ASYNC MODE!!!1!
-    const receipt = (await transaction.extra.wait(0))!;
+    const receipt = (await transaction.extra.wait(ENV.BATCHER_CONFIRMATIONS))!;
     return [receipt.blockNumber, receipt.hash];
   };
 

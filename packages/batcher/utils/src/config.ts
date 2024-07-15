@@ -144,6 +144,9 @@ export class ENV {
   static get MQTT_BATCHER_BROKER_URL(): string {
     return process.env.MQTT_BATCHER_BROKER_URL || 'ws://127.0.0.1:8884';
   }
+  static get BATCHER_CONFIRMATIONS(): number {
+    return parseInt(process.env.BATCHER_CONFIRMATIONS ?? '1', 10);
+  }
 
 
   // Utils

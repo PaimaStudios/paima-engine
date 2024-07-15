@@ -31,6 +31,7 @@ export class PaimaEventBroker {
   }
 
   private checkEnabled(): void {
+    if (process.env.MQTT_BROKER == null) return;
     if (!['true', '1', 'yes'].includes(String(process.env.MQTT_BROKER).toLocaleLowerCase())) {
       throw new Error('Local MQTT Broker is disabled.');
     }
