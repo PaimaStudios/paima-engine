@@ -198,10 +198,7 @@ class BatchedTransactionPoster {
           block_height: blockHeight,
           transaction_hash: transactionHash,
         };
-        const publisher = new PaimaEventPublisher(
-          new PaimaEventSystemBatcherHashAddress(hash),
-          ENV
-        );
+        const publisher = new PaimaEventPublisher(new PaimaEventSystemBatcherHashAddress(hash));
         publisher.sendMessage(packagedData);
         await updateStatePosted.run(packagedData, this.pool);
       } catch (err) {

@@ -9,8 +9,5 @@
     "src/**/*",
   ],
   "references": [
-    { "path": "../../paima-sdk/paima-utils/tsconfig.build.json" },
-    { "path": "../../batcher/utils" },
-    { "path": "../../paima-sdk/paima-events/tsconfig.build.json" },
   ]
 }

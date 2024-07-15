@@ -4,7 +4,7 @@
 
 ### Start MQTT Server
 ```typescript
-new PaimaBroker(ENV).getServer();
+new PaimaBroker().getServer('Paima-Engine');
 ```
 This creates a mqtt and websocket MQTT server  
 

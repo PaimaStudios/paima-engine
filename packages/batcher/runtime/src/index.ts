@@ -107,7 +107,7 @@ const BatcherRuntime: BatcherRuntimeInitializer = {
         provider: EthersEvmProvider
       ): Promise<void> {
         if (ENV.MQTT_BROKER) {
-          new PaimaEventBroker(ENV).getServer();
+          new PaimaEventBroker('Batcher').getServer();
         }
         // pass endpoints to web server and run
         // do not await on these as they may run forever

@@ -1,6 +1,4 @@
 import mqtt from 'mqtt';
-import type { ENV as e1 } from '@paima/utils';
-import type { ENV as e2 } from '@paima/batcher-utils';
 import { PaimaEventSystemParser } from './system-events.js';
 import { PaimaEventBrokerNames } from './event-utils.js';
 
@@ -14,8 +12,6 @@ export class PaimaEventConnect {
     engine?: mqtt.MqttClient;
     batcher?: mqtt.MqttClient;
   } = {};
-
-  constructor(private env: typeof e1 | typeof e2) {}
 
   public getClient(broker: PaimaEventBrokerNames): mqtt.MqttClient {
     switch (broker) {
@@ -36,7 +32,8 @@ export class PaimaEventConnect {
   private connectPaimaEngine(): mqtt.MqttClient {
     if (!PaimaEventConnect.clients.engine) {
       PaimaEventConnect.clients.engine = this.setupClient(
-        this.env.MQTT_ENGINE_BROKER_URL,
+        // keep in sync with paima-engine config.ts
+        process.env.MQTT_ENGINE_BROKER_URL ?? 'ws://127.0.0.1:8883',
         PaimaEventBrokerNames.PaimaEngine
       );
     }
@@ -46,7 +43,8 @@ export class PaimaEventConnect {
   private connectBatcher(): mqtt.MqttClient {
     if (!PaimaEventConnect.clients.batcher) {
       PaimaEventConnect.clients.batcher = this.setupClient(
-        this.env.MQTT_BATCHER_BROKER_URL,
+        // keep in sync with batcher config.ts
+        process.env.MQTT_BATCHER_BROKER_URL ?? 'ws://127.0.0.1:8884',
         PaimaEventBrokerNames.Batcher
       );
     }
