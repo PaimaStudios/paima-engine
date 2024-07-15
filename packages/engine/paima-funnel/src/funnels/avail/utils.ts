@@ -39,11 +39,11 @@ export async function getTimestampForBlockAt(api: ApiPromise, mid: number): Prom
 
 export function slotToTimestamp(slot: number, api: ApiPromise): number {
   // this is how it's computed by the pallet
-  // https://paritytech.github.io/polkadot-sdk/master/src/pallet_babe/lib.rs.html#533
+  // https://github.com/paritytech/polkadot-sdk/blob/7ecf3f757a5d6f622309cea7f788e8a547a5dce8/substrate/frame/babe/src/lib.rs#L566
   const slotDuration = (Number.parseInt(api.consts.timestamp.minimumPeriod.toString()) * 2) / 1000;
 
   // slots start at unix epoch:
-  // https://paritytech.github.io/polkadot-sdk/master/src/pallet_babe/lib.rs.html#902
+  // https://github.com/paritytech/polkadot-sdk/blob/7ecf3f757a5d6f622309cea7f788e8a547a5dce8/substrate/frame/babe/src/lib.rs#L935
   return slot * slotDuration;
 }
 
