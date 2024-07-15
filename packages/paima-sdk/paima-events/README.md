@@ -27,7 +27,7 @@ class MyEvent extends PaimaEvent<{
 Create a listener and subscribe.
 ```typescript
 const listener = new PaimaEventListener(ENV);
-listener.subscribe(PaimaEventBrokerProtocols.WEBSOCKET, new MyEvent());
+listener.subscribe(new MyEvent());
 ```
 
 ### Send Messages
@@ -36,7 +36,6 @@ Create a publisher and send messages
 ```typescript
 const publisher = new PaimaEventPublisher(
                     new MyEvent(),
-                    PaimaEventBrokerProtocols.WEBSOCKET,
                     ENV
                   );
 
