@@ -9,8 +9,6 @@ import { PaimaEvent } from './events.js';
 export class PaimaEventSystemParser {
   /* Shared storage for last blocked STF processed */
   public static lastSTFBlock = 0;
-  /* Map of known hashes */
-  public static hashes: Record<string, number> = {};
 
   /* Processes new messages, applies system transformations and side effects before calling the user "callback" */
   public static systemParser =
