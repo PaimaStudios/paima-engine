@@ -7,15 +7,15 @@ import {
   Struct,
   UInt8,
   ZkProgram,
-  createEcdsaV2,
-  createForeignCurveV2,
+  createEcdsa,
+  createForeignCurve,
 } from 'o1js';
 
 // ----------------------------------------------------------------------------
 // Common data types
 
 /** A Mina foreign curve for Secp256k1, like Ethereum uses. */
-export class Secp256k1 extends createForeignCurveV2(Crypto.CurveParams.Secp256k1) {
+export class Secp256k1 extends createForeignCurve(Crypto.CurveParams.Secp256k1) {
   /** Convert a standard hex public key into this provable struct. */
   static fromHex(publicKey: `0x${string}`): Secp256k1 {
     if (publicKey.startsWith('0x04') && publicKey.length === 4 + 64 + 64) {
@@ -35,7 +35,7 @@ export class Secp256k1 extends createForeignCurveV2(Crypto.CurveParams.Secp256k1
 }
 
 /** A Mina-provable ECDSA signature on the Secp256k1 curve, like Ethereum uses. */
-export class Ecdsa extends createEcdsaV2(Secp256k1) {
+export class Ecdsa extends createEcdsa(Secp256k1) {
   // o1js-provided fromHex is good enough
 }
 
