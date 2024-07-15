@@ -28,7 +28,7 @@
     "o1js"
   ],
   "dependencies": {
-    "o1js": "^1.4.0"
+    "o1js": "^1.5.0"
   },
   "devDependencies": {
     "eslint-plugin-o1js": "^0.4.0",
