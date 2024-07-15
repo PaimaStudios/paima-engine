@@ -147,15 +147,14 @@ export class ENV {
   }
   // MQTT CLIENT
   static get MQTT_ENGINE_BROKER_URL(): string {
-    return process.env.MQTT_ENGINE_BROKER_URL || 'ws://127.0.0.1:8883';
+    return process.env.MQTT_ENGINE_BROKER_URL || 'ws://127.0.0.1:' + ENV.MQTT_ENGINE_BROKER_PORT;
   }
   static get MQTT_BATCHER_BROKER_URL(): string {
-    return process.env.MQTT_BATCHER_BROKER_URL || 'ws://127.0.0.1:8884';
+    return process.env.MQTT_BATCHER_BROKER_URL || 'ws://127.0.0.1:' + ENV.MQTT_BATCHER_BROKER_PORT;
   }
   static get BATCHER_CONFIRMATIONS(): number {
     return parseInt(process.env.BATCHER_CONFIRMATIONS ?? '1', 10);
   }
-
 
   // Utils
   private static isTrue(value: string | undefined, defaultValue = false): boolean {
