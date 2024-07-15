@@ -9,22 +9,24 @@ export enum PaimaEventBrokerNames {
 /*
  * Helper to wait when batcher hash is processed by the STF
  */
-export async function awaitBlock(hash: string, maxTimeSec = 20): Promise<number> {
-  // eslint-disable-next-line no-console
-  console.log('Waiting for hash:', hash);
+export async function awaitBlock(data: { hash: string } | { blockHeight: number}, maxTimeSec = 20): Promise<number> {
   const startTime = new Date().getTime();
-  const checkTime = (): boolean => {
-    return startTime + maxTimeSec * 1000 > new Date().getTime();
-  };
-  while (!PaimaEventSystemParser.hashes[hash] && checkTime()) {
-    await wait(100);
-  }
-  const blockHeightTX = PaimaEventSystemParser.hashes[hash];
+  const checkTime = (): boolean => startTime + maxTimeSec * 1000 > new Date().getTime();
 
-  // eslint-disable-next-line no-console
-  console.log('Waiting for block:', blockHeightTX);
-  while (PaimaEventSystemParser.lastSTFBlock < blockHeightTX && checkTime()) {
-    await wait(100);
+  if ('blockHeight' in data ) {
+    while (PaimaEventSystemParser.lastSTFBlock < data.blockHeight) {
+      if (!checkTime) throw new Error('Block not processed');
+      await wait(100);
+    }
+    return PaimaEventSystemParser.lastSTFBlock;
+  } else if ('hash' in data) {
+    while (!PaimaEventSystemParser.hashes[data.hash]) {
+      if (!checkTime) throw new Error('Block not processed');
+      await wait(100);
+    }
+    return await awaitBlock({
+      blockHeight: PaimaEventSystemParser.hashes[data.hash]},
+      maxTimeSec * 1000 - (new Date().getTime() - startTime));
   }
-  return blockHeightTX;
+  throw new Error('Unknown awaitBlock');
 }
