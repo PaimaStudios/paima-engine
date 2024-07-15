@@ -92,9 +92,15 @@ export async function getDAData(
   for (let curr = from; curr <= to; curr++) {
     const responseRaw = await fetch(`${lc}/v2/blocks/${curr}/data?fields=data,extrinsic`);
 
-    // TODO: handle better the status code ( not documented in the api though ).
-    if (responseRaw.status !== 200) {
+    if (responseRaw.status >= 400 && responseRaw.status < 500) {
       continue;
+    }
+
+    if (responseRaw.status !== 200) {
+      // we don't want to accidentally skip blocks if there is something wrong with the light client.
+      throw new Error(
+        `Unexpected error encountered when fetching data from Avail's light client. Error: ${responseRaw.status}`
+      );
     }
 
     const response = (await responseRaw.json()) as unknown as {
