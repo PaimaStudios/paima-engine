@@ -31,9 +31,10 @@ export class PaimaEventConnect {
 
   private connectPaimaEngine(): mqtt.MqttClient {
     if (!PaimaEventConnect.clients.engine) {
+      // keep in sync with paima-engine config.ts
+      const port = process.env.MQTT_ENGINE_BROKER_PORT ?? '8883';
       PaimaEventConnect.clients.engine = this.setupClient(
-        // keep in sync with paima-engine config.ts
-        process.env.MQTT_ENGINE_BROKER_URL ?? 'ws://127.0.0.1:8883',
+        process.env.MQTT_ENGINE_BROKER_URL ?? 'ws://127.0.0.1:' + port,
         PaimaEventBrokerNames.PaimaEngine
       );
     }
@@ -42,9 +43,10 @@ export class PaimaEventConnect {
 
   private connectBatcher(): mqtt.MqttClient {
     if (!PaimaEventConnect.clients.batcher) {
+      // keep in sync with batcher config.ts
+      const port = process.env.MQTT_BATCHER_BROKER_PORT ?? '8883';
       PaimaEventConnect.clients.batcher = this.setupClient(
-        // keep in sync with batcher config.ts
-        process.env.MQTT_BATCHER_BROKER_URL ?? 'ws://127.0.0.1:8884',
+        process.env.MQTT_BATCHER_BROKER_URL ?? 'ws://127.0.0.1:' + port,
         PaimaEventBrokerNames.Batcher
       );
     }
