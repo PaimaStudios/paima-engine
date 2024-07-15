@@ -1,11 +1,6 @@
 import { wait } from '@paima/utils';
 import { PaimaEventSystemParser } from './system-events.js';
 
-export enum PaimaEventBrokerProtocols {
-  WEBSOCKET = 'ws',
-  MQTT = 'mqtt',
-}
-
 export enum PaimaEventBrokerNames {
   PaimaEngine = 'paima-engine',
   Batcher = 'batcher',

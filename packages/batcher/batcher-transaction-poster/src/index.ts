@@ -15,7 +15,6 @@ import { contractAbis, wait } from '@paima/utils';
 import { utf8ToHex } from 'web3-utils';
 import { ethers } from 'ethers';
 import {
-  PaimaEventBrokerProtocols,
   PaimaEventPublisher,
   PaimaEventSystemBatcherHashAddress,
 } from '@paima/events';
@@ -201,7 +200,6 @@ class BatchedTransactionPoster {
         };
         const publisher = new PaimaEventPublisher(
           new PaimaEventSystemBatcherHashAddress(hash),
-          PaimaEventBrokerProtocols.WEBSOCKET,
           ENV
         );
         publisher.sendMessage(packagedData);

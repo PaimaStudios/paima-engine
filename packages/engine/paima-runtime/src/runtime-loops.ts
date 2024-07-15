@@ -23,7 +23,6 @@ import type { PoolClient } from 'pg';
 import { FUNNEL_PRESYNC_FINISHED, ConfigNetworkType } from '@paima/utils';
 import type { CardanoConfig, EvmConfig } from '@paima/utils';
 import {
-  PaimaEventBrokerProtocols,
   PaimaEventPublisher,
   PaimaEventSystemSTFGlobal,
 } from '@paima/events';
@@ -239,7 +238,6 @@ async function runSync(
 
   const eventPublisher = new PaimaEventPublisher(
     new PaimaEventSystemSTFGlobal(),
-    PaimaEventBrokerProtocols.WEBSOCKET,
     ENV
   );
 
