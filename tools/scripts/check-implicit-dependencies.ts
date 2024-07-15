@@ -51,7 +51,10 @@ let hasError = false;
 async function main() {
   const graph = await createProjectGraphAsync();
 
-  const ownPkgs = Object.keys(graph.nodes).filter(key => isPackage(graph.nodes[key].data.root));
+  const ownPkgs = Object.keys(graph.nodes)
+    .filter(key => isPackage(graph.nodes[key].data.root))
+    // skip projects that aren't typescript-based
+    .filter(pkg => fs.existsSync(`./${graph.nodes[pkg].data.root}/tsconfig.json`));
   const ownPkgSet = new Set(ownPkgs);
 
   // cache the content of each package so we can look it up faster later

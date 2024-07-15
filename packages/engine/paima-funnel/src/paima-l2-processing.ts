@@ -21,10 +21,11 @@ const TIMESTAMP_LIMIT = 24 * 3600;
 export async function extractSubmittedData(
   events: PaimaGameInteraction[],
   blockTimestamp: number,
-  DBConn: PoolClient
+  DBConn: PoolClient,
+  caip2: string
 ): Promise<SubmittedData[]> {
   const unflattenedList = await Promise.all(
-    events.map(e => eventMapper(e, blockTimestamp, DBConn))
+    events.map(e => eventMapper(e, blockTimestamp, DBConn, caip2))
   );
   return unflattenedList.flat();
 }
@@ -32,7 +33,8 @@ export async function extractSubmittedData(
 async function eventMapper(
   e: PaimaGameInteraction,
   blockTimestamp: number,
-  DBConn: PoolClient
+  DBConn: PoolClient,
+  caip2: string
 ): Promise<SubmittedData[]> {
   const decodedData = decodeEventData(e.returnValues.data);
   return await processDataUnit(
@@ -42,6 +44,8 @@ async function eventMapper(
       inputNonce: '', // placeholder that will be filled later
       suppliedValue: e.returnValues.value,
       scheduled: false,
+      caip2,
+      txHash: e.transactionHash,
     },
     e.blockNumber,
     blockTimestamp,
@@ -86,7 +90,15 @@ async function processDataUnit(
     const subunitValue = toBN(unit.suppliedValue).div(toBN(subunits.length)).toString(10);
     const validatedSubUnits = await Promise.all(
       subunits.map(elem =>
-        processBatchedSubunit(elem, subunitValue, blockHeight, blockTimestamp, DBConn)
+        processBatchedSubunit(
+          elem,
+          subunitValue,
+          blockHeight,
+          blockTimestamp,
+          DBConn,
+          unit.caip2,
+          unit.txHash
+        )
       )
     );
     return validatedSubUnits.filter(item => item.validated).map(unpackValidatedData);
@@ -101,7 +113,9 @@ async function processBatchedSubunit(
   suppliedValue: string,
   blockHeight: number,
   blockTimestamp: number,
-  DBConn: PoolClient
+  DBConn: PoolClient,
+  caip2: string,
+  txHash: string
 ): Promise<ValidatedSubmittedData> {
   const INVALID_INPUT: ValidatedSubmittedData = {
     inputData: '',
@@ -112,6 +126,8 @@ async function processBatchedSubunit(
     suppliedValue: '0',
     scheduled: false,
     validated: false,
+    caip2: '',
+    txHash: '',
   };
 
   const elems = input.split(INNER_BATCH_DIVIDER);
@@ -150,6 +166,8 @@ async function processBatchedSubunit(
     suppliedValue,
     scheduled: false,
     validated,
+    caip2,
+    txHash,
   };
 }
 

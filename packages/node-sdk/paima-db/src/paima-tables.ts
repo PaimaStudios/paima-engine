@@ -80,7 +80,8 @@ const TABLE_DATA_SCHEDULED_DATA_TX_HASH: TableData = {
 const QUERY_CREATE_TABLE_SCHEDULED_DATA_EXTENSION = `
 CREATE TABLE scheduled_data_extension (
   id INTEGER PRIMARY KEY REFERENCES scheduled_data(id) ON DELETE CASCADE,
-  cde_name TEXT NOT NULL
+  cde_name TEXT NOT NULL,
+  network TEXT NOT NULL
 );
 `;
 
@@ -90,9 +91,28 @@ const TABLE_DATA_SCHEDULED_DATA_EXTENSION: TableData = {
   columnData: packTuples([
     ['id', 'integer', 'NO', ''],
     ['cde_name', 'text', 'NO', ''],
+    ['network', 'text', 'NO', ''],
   ]),
   serialColumns: [],
   creationQuery: QUERY_CREATE_TABLE_SCHEDULED_DATA_EXTENSION,
+};
+
+const QUERY_CREATE_TABLE_SCHEDULED_DATA_PRECOMPILE = `
+CREATE TABLE scheduled_data_precompile (
+  id INTEGER PRIMARY KEY REFERENCES scheduled_data(id) ON DELETE CASCADE,
+  precompile TEXT NOT NULL
+);
+`;
+
+const TABLE_DATA_SCHEDULED_DATA_PRECOMPILE: TableData = {
+  tableName: 'scheduled_data_precompile',
+  primaryKeyColumns: ['id'],
+  columnData: packTuples([
+    ['id', 'integer', 'NO', ''],
+    ['precompile', 'text', 'NO', ''],
+  ]),
+  serialColumns: [],
+  creationQuery: QUERY_CREATE_TABLE_SCHEDULED_DATA_PRECOMPILE,
 };
 
 const QUERY_CREATE_TABLE_HISTORICAL = `
@@ -742,6 +762,7 @@ export const TABLES: TableData[] = [
   TABLE_DATA_SCHEDULED_DATA,
   TABLE_DATA_SCHEDULED_DATA_TX_HASH,
   TABLE_DATA_SCHEDULED_DATA_EXTENSION,
+  TABLE_DATA_SCHEDULED_DATA_PRECOMPILE,
   TABLE_DATA_HISTORICAL,
   TABLE_DATA_CDE_TRACKING,
   TABLE_DATA_CDE_TRACKING_CARDANO,

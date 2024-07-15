@@ -3,6 +3,7 @@ import type { PoolClient, Client } from 'pg';
 
 import type { STFSubmittedData } from '@paima/utils';
 import {
+  caip2PrefixFor,
   doLog,
   ENV,
   GlobalConfig,
@@ -44,9 +45,11 @@ import type {
   GameStateTransitionFunction,
   GameStateMachineInitializer,
   InternalEvent,
+  Precompiles,
 } from './types.js';
 import { ConfigNetworkType } from '@paima/utils';
 import assertNever from 'assert-never';
+import { sha3_256 } from 'js-sha3';
 
 export * from './types.js';
 export type * from './types.js';
@@ -56,7 +59,8 @@ const SM: GameStateMachineInitializer = {
     databaseInfo,
     randomnessProtocolEnum,
     gameStateTransitionRouter,
-    startBlockHeight
+    startBlockHeight,
+    precompiles
   ) => {
     const DBConn: Pool = getConnection(databaseInfo);
     const persistentReadonlyDBConn: Client = getPersistentConnection(databaseInfo);
@@ -173,6 +177,8 @@ const SM: GameStateMachineInitializer = {
               suppliedValue: '0',
               scheduled: false,
               dryRun: true,
+              caip2: '',
+              txHash: '',
             },
             blockHeight,
             new Prando('1234567890'),
@@ -224,12 +230,34 @@ const SM: GameStateMachineInitializer = {
 
         await processInternalEvents(latestChainData.internalEvents, dbTx);
 
+        // Used to disambiguate when two primitives have events in the same tx. This
+        // means the hash depends on the order we process the primitives (which is the
+        // order in the configuration).
+        // note: this means that events triggered by the same tx may, in some cases, not be consecutive.
+        const indexPerTx = new Map();
+
+        // This is shared across processScheduledData and processUserInputs in
+        // case a primitive is triggered in the same tx as an input is
+        // submitted, otherwise there would be a collision.
+        const indexForEventByTx = (txHash: string): number => {
+          let index = 0;
+
+          if (indexPerTx.has(txHash)) {
+            index = indexPerTx.get(txHash)! + 1;
+          }
+
+          indexPerTx.set(txHash, index);
+          return index;
+        };
+
         // Fetch and execute scheduled input data
         const scheduledInputsLength = await processScheduledData(
           latestChainData,
           dbTx,
           gameStateTransition,
-          randomnessGenerator
+          randomnessGenerator,
+          precompiles.precompiles,
+          indexForEventByTx
         );
 
         // Execute user submitted input data
@@ -237,7 +265,8 @@ const SM: GameStateMachineInitializer = {
           latestChainData,
           dbTx,
           gameStateTransition,
-          randomnessGenerator
+          randomnessGenerator,
+          indexForEventByTx
         );
 
         // Extra logging
@@ -358,25 +387,70 @@ async function processScheduledData(
   latestChainData: ChainData,
   DBConn: PoolClient,
   gameStateTransition: GameStateTransitionFunction,
-  randomnessGenerator: Prando
+  randomnessGenerator: Prando,
+  precompiles: Precompiles['precompiles'],
+  indexForEvent: (txHash: string) => number
 ): Promise<number> {
   const scheduledData = await getScheduledDataByBlockHeight.run(
     { block_height: latestChainData.blockNumber },
     DBConn
   );
+
+  // just in case there are two timers in the same block with the same exact contents.
+  let timerIndexRelativeToBlock = -1;
+
+  const networks = await GlobalConfig.getInstance();
+
   for (const data of scheduledData) {
     try {
+      const userAddress = data.precompile ? precompiles[data.precompile] : SCHEDULED_DATA_ADDRESS;
+
+      if (data.precompile && !precompiles[data.precompile]) {
+        doLog(`[paima-sm] Precompile for scheduled event not found ${data.precompile}. Skipping.`);
+        continue;
+      }
+
+      const { txHash, caip2 } = (() => {
+        if (data.cde_name && data.tx_hash) {
+          const caip2Prefix = caip2PrefixFor(networks[data.network!]);
+
+          return {
+            caip2: caip2PrefixFor(networks[data.network!]),
+            txHash: '0x' + sha3_256(caip2Prefix + data.tx_hash + indexForEvent(data.tx_hash)),
+          };
+        } else {
+          // it has to be an scheduled timer if we don't have a cde_name
+          timerIndexRelativeToBlock += 1;
+
+          return {
+            txHash:
+              '0x' + sha3_256(userAddress + sha3_256(data.input_data) + timerIndexRelativeToBlock),
+            // if there is a timer, there is not really a way to associate it with a particular network
+            caip2: '',
+          };
+        }
+      })();
+
       const inputData: STFSubmittedData = {
         userId: SCHEDULED_DATA_ID,
         realAddress: SCHEDULED_DATA_ADDRESS,
-        userAddress: SCHEDULED_DATA_ADDRESS,
+        userAddress,
         inputData: data.input_data,
         inputNonce: '',
         suppliedValue: '0',
         scheduled: true,
-        scheduledTxHash: data.tx_hash,
-        extensionName: data.cde_name,
+        txHash,
+        caip2,
       };
+
+      if (data.tx_hash) {
+        inputData.scheduledTxHash = data.tx_hash;
+      }
+
+      if (data.cde_name) {
+        inputData.extensionName = data.cde_name;
+      }
+
       // Trigger STF
       let sqlQueries: SQLUpdate[] = [];
       try {
@@ -413,7 +487,8 @@ async function processUserInputs(
   latestChainData: ChainData,
   DBConn: PoolClient,
   gameStateTransition: GameStateTransitionFunction,
-  randomnessGenerator: Prando
+  randomnessGenerator: Prando,
+  indexForEvent: (txHash: string) => number
 ): Promise<number> {
   for (const submittedData of latestChainData.submittedData) {
     // Check nonce is valid
@@ -432,6 +507,9 @@ async function processUserInputs(
       ...submittedData,
       userAddress: address.address,
       userId: address.id,
+      txHash:
+        '0x' +
+        sha3_256(submittedData.caip2 + submittedData.txHash + indexForEvent(submittedData.txHash)),
     };
     try {
       // Check if internal Concise Command

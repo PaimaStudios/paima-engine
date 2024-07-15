@@ -1,0 +1,13 @@
+{
+  "name": "@paima/inverse-whirlpool",
+  "version": "1.0.0",
+  "description": "package.json wrapper for commands for this aiken project",
+  "scripts": {
+    "build": "aiken build && aiken check -D",
+    "lint:eslint": "aiken fmt --check"
+  },
+  "author": "Paima Studios",
+  "license": "MIT",
+  "dependencies": {
+  }
+}

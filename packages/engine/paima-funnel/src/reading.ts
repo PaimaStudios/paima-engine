@@ -31,16 +31,21 @@ export async function getBaseChainDataMulti(
   fromBlock: number,
   toBlock: number,
   DBConn: PoolClient,
-  network: string
+  caip2Prefix: string
 ): Promise<ChainData[]> {
   const [blockData, events] = await Promise.all([
-    getMultipleBlockData(web3, fromBlock, toBlock, network),
+    getMultipleBlockData(web3, fromBlock, toBlock),
     getPaimaEvents(paimaL2Contract, fromBlock, toBlock),
   ]);
   const resultList: ChainData[] = [];
   for (const block of blockData) {
     const blockEvents = events.filter(e => e.blockNumber === block.blockNumber);
-    const submittedData = await extractSubmittedData(blockEvents, block.timestamp, DBConn);
+    const submittedData = await extractSubmittedData(
+      blockEvents,
+      block.timestamp,
+      DBConn,
+      caip2Prefix
+    );
     resultList.push({
       ...block,
       submittedData,
@@ -54,30 +59,35 @@ export async function getBaseChainDataSingle(
   paimaL2Contract: PaimaL2Contract,
   blockNumber: number,
   DBConn: PoolClient,
-  network: string
+  caip2Prefix: string
 ): Promise<ChainData> {
   const [blockData, events] = await Promise.all([
-    getBlockData(web3, blockNumber, network),
+    getBlockData(web3, blockNumber),
     getPaimaEvents(paimaL2Contract, blockNumber, blockNumber),
   ]);
-  const submittedData = await extractSubmittedData(events, blockData.timestamp, DBConn);
+  const submittedData = await extractSubmittedData(
+    events,
+    blockData.timestamp,
+    DBConn,
+    caip2Prefix
+  );
   return {
     ...blockData,
     submittedData, // merge in the data
   };
 }
 
-async function getBlockData(web3: Web3, blockNumber: number, network: string): Promise<ChainData> {
+async function getBlockData(web3: Web3, blockNumber: number): Promise<ChainData> {
   const block = await timeout(web3.eth.getBlock(blockNumber), DEFAULT_FUNNEL_TIMEOUT);
   if (block == null) {
     throw new Error(
       `Unable to find block number ${blockNumber}. Perhaps it no long exists due to a rollback or load-balancing`
     );
   }
-  return blockDataToChainData(block, network);
+  return blockDataToChainData(block);
 }
 
-function blockDataToChainData(block: BlockTransactionString, network: string): ChainData {
+function blockDataToChainData(block: BlockTransactionString): ChainData {
   const timestamp =
     typeof block.timestamp === 'string' ? parseInt(block.timestamp, 10) : block.timestamp;
   return {
@@ -91,8 +101,7 @@ function blockDataToChainData(block: BlockTransactionString, network: string): C
 export async function getMultipleBlockData(
   web3: Web3,
   fromBlock: number,
-  toBlock: number,
-  network: string
+  toBlock: number
 ): Promise<ChainData[]> {
   const batch = new web3.BatchRequest();
 
@@ -105,7 +114,7 @@ export async function getMultipleBlockData(
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         web3.eth.getBlock.request(blockNumber, (error, result: BlockTransactionString) => {
           if (error) reject(error);
-          else resolve(blockDataToChainData(result, network));
+          else resolve(blockDataToChainData(result));
         })
       );
     });
