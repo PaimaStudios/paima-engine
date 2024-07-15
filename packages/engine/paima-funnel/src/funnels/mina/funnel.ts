@@ -341,8 +341,7 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
     dbTx: PoolClient,
     baseFunnel: ChainFunnel,
     chainName: string,
-    config: MinaConfig,
-    startingBlockHeight: number
+    config: MinaConfig
   ): Promise<MinaFunnel> {
     const cacheEntry = (async (): Promise<MinaFunnelCacheEntry> => {
       const entry = sharedData.cacheManager.cacheEntries[MinaFunnelCacheEntry.SYMBOL];
@@ -405,14 +404,7 @@ export async function wrapToMinaFunnel(
   config: MinaConfig
 ): Promise<ChainFunnel> {
   try {
-    const ebp = await MinaFunnel.recoverState(
-      sharedData,
-      dbTx,
-      chainFunnel,
-      chainName,
-      config,
-      ENV.START_BLOCKHEIGHT
-    );
+    const ebp = await MinaFunnel.recoverState(sharedData, dbTx, chainFunnel, chainName, config);
     return ebp;
   } catch (err) {
     doLog('[paima-funnel] Unable to initialize mina cde events processor:');
