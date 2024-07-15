@@ -2,9 +2,6 @@
 import { PaimaEventConnect } from './event-connect.js';
 import type { PaimaEvent } from './events.js';
 
-import type { ENV as e1 } from '@paima/utils';
-import type { ENV as e2 } from '@paima/batcher-utils';
-
 export type MQTTCallback = (
   target: string,
   path: string | ((address: string) => string),
@@ -20,8 +17,6 @@ export class PaimaEventListener {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   public static subscriptions: PaimaEvent<any>[] = [];
 
-  constructor(private env: typeof e1 | typeof e2) {}
-
   /* Subscribe to System or Custom Events */
   public subscribe<T extends Record<string, unknown>>(
     event: PaimaEvent<T>
@@ -29,7 +24,7 @@ export class PaimaEventListener {
     if (PaimaEventListener.subscriptions.find(e => e.topic === event.topic)) {
       throw new Error('Already subscribed to events for ' + event.name + ' ' + event.topic);
     }
-    const client = new PaimaEventConnect(this.env).getClient(event.broker);
+    const client = new PaimaEventConnect().getClient(event.broker);
 
     const clientSubscribe = (): void => {
       client.subscribe(event.topic, (err: any) => {
@@ -45,7 +40,7 @@ export class PaimaEventListener {
   public unsubscribe<T extends Record<string, unknown>>(
     event: PaimaEvent<T>
   ): void {
-    const client = new PaimaEventConnect(this.env).getClient(event.broker);
+    const client = new PaimaEventConnect().getClient(event.broker);
 
      const clientUnsubscribe = (): void => {
       client.unsubscribe(event.topic, (err: any) => {

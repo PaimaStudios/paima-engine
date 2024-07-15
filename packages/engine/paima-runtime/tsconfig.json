@@ -6,11 +6,11 @@
   },
   "include": ["src/**/*", "test/**/*"],
   "references": [
+    { "path": "../../paima-sdk/paima-events/tsconfig.build.json" },
     { "path": "../../paima-sdk/paima-utils/tsconfig.build.json" },
     { "path": "../../node-sdk/paima-db" },
     { "path": "../paima-rest/tsconfig.build.json" },
     { "path": "../paima-sm" },
-    { "path": "../../paima-sdk/paima-events/tsconfig.build.json" },
     { "path": "../../node-sdk/paima-broker/tsconfig.build.json" },
   ]
 }

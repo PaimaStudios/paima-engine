@@ -1,7 +1,4 @@
 /* eslint-disable no-console */
-
-import type { ENV as e1 } from '@paima/utils';
-import type { ENV as e2 } from '@paima/batcher-utils';
 import Aedes from 'aedes';
 import type { Server } from 'aedes-server-factory';
 import { createServer } from 'aedes-server-factory';
@@ -10,8 +7,7 @@ import { createServer } from 'aedes-server-factory';
  * This class implements a local MQTT Broker.
  */
 export class PaimaEventBroker {
-  // Batcher & PaimaEngine Share MQTT ENV Variables.
-  constructor(private env: typeof e1 | typeof e2) {}
+  constructor(private broker: 'Paima-Engine' | 'Batcher') {}
   private static aedes: Aedes | null = null;
   private static server: Server | null = null;
 
@@ -19,9 +15,7 @@ export class PaimaEventBroker {
    * Get & Init Server Singleton
    */
   public getServer(): Server {
-    if (!this.env.MQTT_BROKER) {
-      throw new Error('Local MQTT Broker is disabled.');
-    }
+    this.checkEnabled();
     if (PaimaEventBroker.server) return PaimaEventBroker.server;
 
     PaimaEventBroker.aedes = new Aedes();
@@ -29,10 +23,30 @@ export class PaimaEventBroker {
 
     // WEBSOCKET PROTOCOL SERVER
     PaimaEventBroker.server.listen(
-      this.env.MQTT_BROKER_PORT,
+      this.getPort(),
       () =>
-        console.log('MQTT-WS Server Started at PORT ' + this.env.MQTT_BROKER_PORT)
+        console.log('MQTT-WS Server Started at PORT ' + this.getPort())
     );
     return PaimaEventBroker.server;
+  }
+
+  private checkEnabled(): void {
+    if (!['true', '1', 'yes'].includes(String(process.env.MQTT_BROKER).toLocaleLowerCase())) {
+      throw new Error('Local MQTT Broker is disabled.');
+    }
+  }
+
+  private getPort(): number {
+    switch (this.broker) {
+      // Default values 8883 / 8884
+      // Keep in sync with paima-engine / batcher config.ts
+      case 'Paima-Engine': {
+        return parseInt(process.env.MQTT_ENGINE_BROKER_PORT ?? '8883', 10);
+      }
+      case 'Batcher': {
+        return parseInt(process.env.MQTT_BATCHER_BROKER_PORT ?? '8884', 10);
+      }
+    }
+    throw new Error('Unknown engine');
   }
 }

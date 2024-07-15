@@ -23,6 +23,7 @@ import type { PoolClient } from 'pg';
 import { FUNNEL_PRESYNC_FINISHED, ConfigNetworkType } from '@paima/utils';
 import type { CardanoConfig, EvmConfig } from '@paima/utils';
 import {
+  PaimaEventBrokerNames,
   PaimaEventPublisher,
   PaimaEventSystemSTFGlobal,
 } from '@paima/events';
@@ -242,7 +243,6 @@ async function runSync(
 
   const eventPublisher = new PaimaEventPublisher(
     new PaimaEventSystemSTFGlobal(),
-    ENV
   );
 
   while (run) {
@@ -465,7 +465,7 @@ async function blockPostProcess(
 
 const startMQTTBroker = async (): Promise<void> => {
   if (ENV.MQTT_BROKER) {
-    new PaimaEventBroker(ENV).getServer();
+    new PaimaEventBroker('Paima-Engine').getServer();
   }
   return;
 };
