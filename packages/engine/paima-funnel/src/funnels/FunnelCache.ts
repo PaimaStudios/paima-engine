@@ -1,5 +1,5 @@
 import type { ChainData } from '@paima/sm';
-import pg from 'pg';
+import type pg from 'pg';
 
 export interface FunnelCacheEntry {
   /**

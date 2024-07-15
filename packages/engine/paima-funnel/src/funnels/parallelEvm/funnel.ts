@@ -125,8 +125,7 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
       const parallelEvmBlocks = await getMultipleBlockData(
         this.web3,
         cachedState.lastBlock + 1,
-        to,
-        this.chainName
+        to
       );
 
       blocks.push(...parallelEvmBlocks);

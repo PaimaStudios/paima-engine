@@ -1,0 +1,12 @@
+# Aiken compilation artifacts
+artifacts/
+# Aiken's project working directory
+build/
+# Aiken's default documentation export
+docs/
+
+# JS deployment artifcats
+.env
+src/seed.txt
+src/package-lock.json
+src/node_modules

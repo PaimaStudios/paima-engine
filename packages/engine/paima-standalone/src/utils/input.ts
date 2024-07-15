@@ -264,6 +264,6 @@ const pickGameTemplate = async (templateArg: string): Promise<Template> => {
   return defaultTemplate;
 };
 
-function genConfigSchemaCommand() {
+function genConfigSchemaCommand(): void {
   doLog(JSON.stringify(BaseConfigWithoutDefaults));
 }

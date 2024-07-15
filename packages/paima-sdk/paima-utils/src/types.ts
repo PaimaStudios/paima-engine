@@ -45,6 +45,8 @@ export interface SubmittedData {
   suppliedValue: string;
   scheduled: boolean;
   dryRun?: boolean;
+  caip2: string;
+  txHash: string;
 }
 
 export interface STFSubmittedData extends SubmittedData {

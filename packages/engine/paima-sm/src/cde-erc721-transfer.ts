@@ -40,12 +40,11 @@ export default async function processErc721Datum(
             : cdeDatum.blockNumber;
 
           updateList.push(
-            createScheduledData(
-              scheduledInputData,
-              scheduledBlockHeight,
-              cdeDatum.cdeName,
-              cdeDatum.transactionHash
-            )
+            createScheduledData(scheduledInputData, scheduledBlockHeight, {
+              cdeName: cdeDatum.cdeName,
+              txHash: cdeDatum.transactionHash,
+              network: cdeDatum.network,
+            })
           );
         }
 

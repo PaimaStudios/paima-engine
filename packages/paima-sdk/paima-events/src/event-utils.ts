@@ -1,5 +1,4 @@
-import { wait } from '@paima/utils';
-import { PaimaEventSystemBatcherHashAddress, PaimaEventSystemParser, PaimaEventSystemSTFGlobal } from './system-events.js';
+import { PaimaEventSystemBatcherHashAddress, PaimaEventSystemParser } from './system-events.js';
 import { PaimaEventListener } from './event-listener.js';
 
 export enum PaimaEventBrokerNames {
@@ -47,3 +46,8 @@ export function awaitBatcherHash(hash: string, maxTimeSec = 20): Promise<number>
     listener.unsubscribe(event);
   });
 }
+
+const wait = async (ms: number): Promise<void> =>
+  await new Promise<void>(resolve => {
+    setTimeout(() => resolve(), ms);
+  });

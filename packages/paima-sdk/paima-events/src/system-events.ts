@@ -1,4 +1,3 @@
-import { doLog } from '@paima/utils';
 import { PaimaEventBrokerNames } from './event-utils.js';
 import { PaimaEventListener } from './event-listener.js';
 import { PaimaEvent } from './events.js';
@@ -20,7 +19,7 @@ export class PaimaEventSystemParser {
       const data: Record<string, unknown> = JSON.parse(m);
       const mqttEvent = PaimaEventListener.subscriptions.find(s => s.match(broker, path));
       if (!mqttEvent) {
-        doLog('Critical error not event manager for', { broker, path, message: m });
+        console.log('Critical error not event manager for', { broker, path, message: m });
         return;
       }
       // Default system behaviors

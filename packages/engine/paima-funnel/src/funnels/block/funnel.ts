@@ -102,7 +102,7 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
           this.sharedData.paimaL2Contract,
           blockNumber,
           this.dbTx,
-          this.chainName
+          this.caip2Prefix()
         ),
         getUngroupedCdeData(
           this.sharedData.web3,
@@ -153,7 +153,7 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
           fromBlock,
           toBlock,
           this.dbTx,
-          this.chainName
+          this.caip2Prefix()
         ),
         getUngroupedCdeData(
           this.sharedData.web3,
@@ -178,6 +178,11 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
       throw err;
     }
   };
+
+  private caip2Prefix(): string {
+    // TODO: we may want to actually validate this against eth_chainId ?
+    return `eip155:${this.config.chainId}`;
+  }
 
   public override async readPresyncData(
     args: ReadPresyncDataFrom

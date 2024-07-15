@@ -643,12 +643,15 @@ export type GameStateTransitionFunction = (
   DBConn: PoolClient
 ) => Promise<SQLUpdate[]>;
 
+export type Precompiles = { precompiles: { [name: string]: string } };
+
 export interface GameStateMachineInitializer {
   initialize: (
     databaseInfo: PoolConfig,
     randomnessProtocolEnum: number,
     gameStateTransitionRouter: GameStateTransitionFunctionRouter,
-    startBlockHeight: number
+    startBlockHeight: number,
+    precompiles: Precompiles
   ) => GameStateMachine;
 }
 

@@ -40,6 +40,7 @@
       "@paima/crypto/*": ["./packages/paima-sdk/paima-crypto/*"],
       "@paima/db/*": ["./packages/node-sdk/paima-db/*"],
       "@paima/events/*": ["./packages/paima-sdk/paima-events/*"],
+      "@paima/aiken-mdx/*": ["./packages/cardano-contracts/aiken-mdx/*"],
       "@paima/evm-contracts/*": ["./packages/contracts/evm-contracts/*"],
       "@paima/executors/*": ["./packages/paima-sdk/paima-executors/*"],
       "@paima/funnel/*": ["./packages/engine/paima-funnel/*"],
@@ -53,6 +54,7 @@
       "@paima/sm/*": ["./packages/engine/paima-sm/*"],
       "@paima/utils-backend/*": ["./packages/node-sdk/paima-utils-backend/*"],
       "@paima/utils/*": ["./packages/paima-sdk/paima-utils/*"],
+      "@paima/precompiles/*": ["./packages/paima-sdk/paima-precompiles/*"],
       "@standalone/paima-batcher/*": ["./packages/batcher/batcher-standalone/*"],
       "@standalone/paima-engine/*": ["./packages/engine/paima-standalone/*"]
     }
