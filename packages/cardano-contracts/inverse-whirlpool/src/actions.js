@@ -77,32 +77,37 @@ export const mint_token = async (wallet) => {
 
   // Build the First TX --------------------------------------------------------
   if (VERBOSE) { console.log("INFO: Building the TX"); }
-  const tx = await lucid.newTx()
-  .payToAddressWithData(
-    Address_ContractMint, 
-    {inline: scriptDatum},
-    { 
-      ['lovelace']: BigInt(1000000),
-    },
-  ) 
-  .payToAddress(
-    wallet.userAddress, 
-    { 
-      [asset_token1]: BigInt(quantity_token1)
-    },
-  ) 
-  .mintAssets({[asset_token1]: BigInt(quantity_token1)}, mintRedeemer)
-  .attachMintingPolicy(Validator_Mint)
-  .attachMetadata(721n, metaDatum)
-  .addSigner(wallet.userAddress)
-  .complete();
-  if (VERBOSE) { console.log("INFO: Raw TX 1", tx.toString()); }
+  // build a tx just to be able to compute what the script data hash will be
+  const script_data_hash = await (async () => {
+    const tx = await lucid.newTx()
+    .payToAddressWithData(
+      Address_ContractMint, 
+      {inline: scriptDatum},
+      { 
+        ['lovelace']: BigInt(1000000),
+      },
+    ) 
+    .payToAddress(
+      wallet.userAddress, 
+      { 
+        [asset_token1]: BigInt(quantity_token1)
+      },
+    ) 
+    .mintAssets({[asset_token1]: BigInt(quantity_token1)}, mintRedeemer)
+    .attachMintingPolicy(Validator_Mint)
+    .attachMetadata(721n, metaDatum)
+    .addSigner(wallet.userAddress)
+    .complete();
+    if (VERBOSE) { console.log("INFO: Raw TX 1", tx.toString()); }
+
+    return tx.txComplete.body().script_data_hash().to_hex();
+  })();
 
   // Define Primary Token Information ------------------------------------------
   if (VERBOSE) { console.log("INFO: Defining Sacrificial and Primary Asset") };
 
   // Token 2 - Token with scriptDataHash as the asset name
-  const assetName_token2 = tx.txComplete.body().script_data_hash().to_hex()
+  const assetName_token2 = script_data_hash;
   const quantity_token2 = 1 
   const asset_token2 = `${policyId_Mint2}${(assetName_token2)}`
   

@@ -251,6 +251,8 @@ validator {
 
         expect [Pair(script_data_hash, 1), ..] =
           mint
+            // this is the script hash of true.mint
+            // WARNING: this has to be updated if the true.mint compiled code changes
             |> value.tokens(
                 #"9fc33a6ffaa8d1f600c161aa383739d5af37807ed83347cc133521c9",
               )
