@@ -160,7 +160,7 @@ export class ENV {
   // Utils
   private static isTrue(value: string | undefined, defaultValue = false): boolean {
     if (value == null || value === '') return defaultValue;
-    return ['true', '1', 'yes'].includes((value ?? '').toLowerCase());
+    return ['true', '1', 'yes'].includes(value.toLowerCase());
   }
 
   static get SECURITY_NAMESPACE(): string {
