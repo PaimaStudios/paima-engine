@@ -104,7 +104,6 @@ export const AvailConfigSchema = Type.Object({
   rpc: Type.String(),
   lightClient: Type.String(),
   delay: Type.Number(),
-  confirmationDepth: Type.Optional(Type.Number()),
   funnelBlockGroupSize: Type.Number({ default: 100 }),
   presyncStepSize: Type.Number({ default: 1000 }),
   type: Type.Union([
@@ -201,8 +200,7 @@ const minaConfigDefaults = {
 
 const availConfigDefaults = {
   funnelBlockGroupSize: 100,
-  confirmationDepth: 10,
-  delay: 10 * 20,
+  delay: 3 * 20,
   presyncStepSize: 1000,
 };
 

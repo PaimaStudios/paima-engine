@@ -316,29 +316,27 @@ export class AvailParallelFunnel extends BaseFunnel implements ChainFunnel {
   private async updateLatestBlock(): Promise<number> {
     const config = this.config;
 
-    const delayedHeader = await timeout(
+    const latestHeader = await timeout(
       (async (): Promise<Header> => {
         const latestNumber = await getLatestAvailableBlockNumberFromLightClient(config.lightClient);
 
-        const delayedBlock = Math.max(latestNumber - (this.config.confirmationDepth ?? 0), 1);
+        const latestBlockHash = await this.api.rpc.chain.getBlockHash(latestNumber);
+        const latestHeader = await this.api.rpc.chain.getHeader(latestBlockHash);
 
-        const delayedBlockHash = await this.api.rpc.chain.getBlockHash(delayedBlock);
-        const delayedHeader = await this.api.rpc.chain.getHeader(delayedBlockHash);
-
-        return delayedHeader as unknown as Header;
+        return latestHeader as unknown as Header;
       })(),
       LATEST_BLOCK_UPDATE_TIMEOUT
     );
 
-    const slot = getSlotFromHeader(delayedHeader, this.api);
+    const slot = getSlotFromHeader(latestHeader, this.api);
 
     this.sharedData.cacheManager.cacheEntries[AvailFunnelCacheEntry.SYMBOL]?.updateLatestBlock({
-      number: delayedHeader.number.toNumber(),
-      hash: delayedHeader.hash.toString(),
+      number: latestHeader.number.toNumber(),
+      hash: latestHeader.hash.toString(),
       slot: slot,
     });
 
-    return delayedHeader.number.toNumber();
+    return latestHeader.number.toNumber();
   }
 
   private getCacheEntry(): AvailFunnelCacheEntry {
