@@ -1,6 +1,8 @@
 import mqtt from 'mqtt';
-import { PaimaEventSystemParser } from './system-events.js';
-import { PaimaEventBrokerNames } from './event-utils.js';
+import { PaimaEventBrokerNames, setupInitialListeners } from './event-utils.js';
+import { PaimaEventListener } from './event-listener.js';
+import { toPattern } from './builtin-events.js';
+import { extract, matches } from 'mqtt-pattern';
 
 /*
  * Paima Event Connector
@@ -13,6 +15,10 @@ export class PaimaEventConnect {
     batcher?: mqtt.MqttClient;
   } = {};
 
+  /**
+   * Get client for broker
+   * note: we lazy-load the client to avoid overhead if MQTT is never used
+   */
   public getClient(broker: PaimaEventBrokerNames): mqtt.MqttClient {
     switch (broker) {
       case PaimaEventBrokerNames.PaimaEngine: {
@@ -25,7 +31,26 @@ export class PaimaEventConnect {
 
   private setupClient(url: string, broker: PaimaEventBrokerNames): mqtt.MqttClient {
     const client = mqtt.connect(url);
-    client.on('message', PaimaEventSystemParser.systemParser(broker));
+    setupInitialListeners();
+    client.on('message', (topic: string, message: Buffer) => {
+      for (const [_broker, info] of Object.entries(PaimaEventListener.Instance.callbacksForTopic)) {
+        for (const [pattern, callbacks] of Object.entries(info)) {
+          if (matches(pattern, topic)) {
+            for (const callbackInfo of Object.values<(typeof callbacks)[keyof typeof callbacks]>(
+              callbacks
+            )) {
+              const data: Record<string, unknown> = JSON.parse(message.toString());
+
+              const resolved = extract(toPattern(callbackInfo.event.path), topic);
+              callbackInfo.callback({
+                val: data,
+                resolvedPath: resolved,
+              });
+            }
+          }
+        }
+      }
+    });
     return client;
   }
 

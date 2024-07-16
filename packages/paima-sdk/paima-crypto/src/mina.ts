@@ -1,7 +1,7 @@
 import { doLog } from '@paima/utils';
 import type { IVerify } from './IVerify.js';
 import bs58check from 'bs58check';
-import type { NetworkId } from 'mina-signer/dist/node/mina-signer/src/signature.js';
+import type { NetworkId } from 'mina-signer';
 
 export class MinaCrypto implements IVerify {
   verifyAddress = async (address: string): Promise<boolean> => {

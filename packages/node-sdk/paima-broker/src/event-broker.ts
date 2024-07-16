@@ -19,19 +19,19 @@ export class PaimaEventBroker {
     if (PaimaEventBroker.server) return PaimaEventBroker.server;
 
     PaimaEventBroker.aedes = new Aedes();
-    PaimaEventBroker.server = createServer(PaimaEventBroker.aedes, { ws: true });;
+    PaimaEventBroker.server = createServer(PaimaEventBroker.aedes, { ws: true });
 
     // WEBSOCKET PROTOCOL SERVER
-    PaimaEventBroker.server.listen(
-      this.getPort(),
-      () =>
-        console.log('MQTT-WS Server Started at PORT ' + this.getPort())
+    PaimaEventBroker.server.listen(this.getPort(), () =>
+      console.log('MQTT-WS Server Started at PORT ' + this.getPort())
     );
     return PaimaEventBroker.server;
   }
 
   private checkEnabled(): void {
+    // TODO: keep in sync with paima-engine config.ts
     if (process.env.MQTT_BROKER == null) return;
+    // TODO: keep in sync with paima-engine config.ts
     if (!['true', '1', 'yes'].includes(String(process.env.MQTT_BROKER).toLocaleLowerCase())) {
       throw new Error('Local MQTT Broker is disabled.');
     }
@@ -39,8 +39,7 @@ export class PaimaEventBroker {
 
   private getPort(): number {
     switch (this.broker) {
-      // Default values 8883 / 8884
-      // Keep in sync with paima-engine / batcher config.ts
+      // TODO: use env vars without duplicating default here
       case 'Paima-Engine': {
         return parseInt(process.env.MQTT_ENGINE_BROKER_PORT ?? '8883', 10);
       }
