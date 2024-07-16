@@ -56,7 +56,10 @@ export class DelegationOrder extends Struct({
   signer: Secp256k1.provable,
 }) {
   private static _innerMessage(target: PublicKey): Bytes {
-    return Bytes.from([...delegationPrefix.bytes, ...encodeKey(target)]);
+    return Bytes.from([
+      ...delegationPrefix.bytes,
+      ...Bytes.from(encodeKey(target)).base64Encode().bytes,
+    ]);
   }
 
   /** Get the message for an Etherum wallet to sign, WITHOUT the Ethereum prefix. */
@@ -69,6 +72,7 @@ export class DelegationOrder extends Struct({
     const inner = DelegationOrder._innerMessage(this.target);
     const fullMessage = Bytes.from([
       ...ethereumPrefix.bytes,
+      // NOTE: `inner.length` is effectively a constant so it's okay to bake it in.
       ...Bytes.fromString(String(inner.length)).bytes,
       ...inner.bytes,
     ]);
