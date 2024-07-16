@@ -175,7 +175,7 @@ async function main(): Promise<void> {
   let batchedTransactionPoster;
   let getCurrentBlock;
 
-  if (!ENV.BATCHER_AVAIL_LIGHT_CLIENT) {
+  if (!ENV.BATCHER_NETWORK || ENV.BATCHER_NETWORK === 'evm') {
     const privateKey = ENV.BATCHER_PRIVATE_KEY;
     const prov = await getWalletWeb3AndAddress(ENV.CHAIN_URI, privateKey);
 
@@ -196,7 +196,11 @@ async function main(): Promise<void> {
     };
 
     provider = prov;
-  } else {
+  } else if (ENV.BATCHER_NETWORK === 'avail') {
+    if (!ENV.BATCHER_AVAIL_LIGHT_CLIENT) {
+      throw new Error('Missing BATCHER_AVAIL_LIGHT_CLIENT configuration variable.');
+    }
+
     batchedTransactionPoster = new AvailBatchedTransactionPoster(
       ENV.BATCHER_AVAIL_LIGHT_CLIENT,
       ENV.BATCHED_MESSAGE_SIZE_LIMIT,
@@ -229,6 +233,8 @@ async function main(): Promise<void> {
 
       return last;
     };
+  } else {
+    throw new Error(`Unrecognized network: ${ENV.BATCHER_NETWORK}. Allowed values are: evm, avail`);
   }
 
   if (ENV.RECAPTCHA_V3_BACKEND) {

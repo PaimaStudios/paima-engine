@@ -25,6 +25,10 @@ export class ENV {
     return process.env.BATCHER_PRIVATE_KEY || '';
   }
 
+  static get BATCHER_NETWORK(): string | undefined {
+    return process.env.BATCHER_NETWORK;
+  }
+
   static get BATCHER_AVAIL_LIGHT_CLIENT(): string | undefined {
     return process.env.BATCHER_AVAIL_LIGHT_CLIENT;
   }
