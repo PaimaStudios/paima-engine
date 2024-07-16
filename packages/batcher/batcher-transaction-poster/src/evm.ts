@@ -43,7 +43,7 @@ class EvmBatchedTransactionPoster extends BatchedTransactionPosterBase {
     this.provider = newProvider;
   };
 
-  protected override postMessage = async (msg: string): Promise<[number, string]> => {
+  public override postMessage = async (msg: string): Promise<[number, string]> => {
     const hexMsg = utf8ToHex(msg);
     // todo: unify with buildDirectTx
     const iface = new ethers.Interface([

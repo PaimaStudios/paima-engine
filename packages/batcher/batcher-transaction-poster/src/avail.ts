@@ -10,7 +10,7 @@ class AvailBatchedTransactionPoster extends BatchedTransactionPosterBase {
     this.provider = provider;
   }
 
-  protected override postMessage = async (msg: string): Promise<[number, string]> => {
+  public override postMessage = async (msg: string): Promise<[number, string]> => {
     const bytesMsg = new TextEncoder().encode(msg);
     const data = base64Encode(bytesMsg);
 
