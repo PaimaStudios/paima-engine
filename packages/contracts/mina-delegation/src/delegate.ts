@@ -62,8 +62,12 @@ export class DelegationOrder extends Struct({
     ]);
   }
 
-  /** Get the message for an Etherum wallet to sign, WITHOUT the Ethereum prefix. */
-  static bytesToSign(target: PublicKey): Uint8Array {
+  /**
+   * Get the message for an Etherum wallet to sign, WITHOUT the Ethereum prefix.
+   * This is printable and should be passed to something like `personal_sign`.
+   */
+  static bytesToSign({ target }: { target: PublicKey }): Uint8Array {
+    // Accepts an object so you can pass just a PublicKey OR a DelegationOrder.
     return this._innerMessage(target).toBytes();
   }
 
