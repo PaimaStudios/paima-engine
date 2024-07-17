@@ -4,6 +4,7 @@ import type { SubmittedData } from '@paima/sm';
 import { base64Decode } from '@polkadot/util-crypto';
 import { BaseFunnelSharedApi } from '../BaseFunnel.js';
 import { createApi } from './createApi.js';
+import { caip2PrefixFor } from '@paima/utils/src/config/loading.js';
 
 export const GET_DATA_TIMEOUT = 10000;
 
@@ -85,7 +86,8 @@ export async function getDAData(
   api: ApiPromise,
   lc: string,
   from: number,
-  to: number
+  to: number,
+  caip2: string
 ): Promise<{ blockNumber: number; submittedData: SubmittedData[] }[]> {
   const data = [] as { blockNumber: number; submittedData: SubmittedData[] }[];
 
@@ -133,6 +135,8 @@ export async function getDAData(
             // block producer.
             suppliedValue: '0',
             scheduled: false,
+            caip2,
+            txHash: decoded.hash.toHex(),
           };
         }),
       });

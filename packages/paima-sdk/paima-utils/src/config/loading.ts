@@ -100,17 +100,23 @@ export const MinaConfigSchema = Type.Object({
 
 export type MinaConfig = Static<typeof MinaConfigSchema>;
 
-export const AvailConfigSchema = Type.Object({
+export const AvailRequiredProperties = Type.Object({
   rpc: Type.String(),
   lightClient: Type.String(),
-  delay: Type.Number(),
-  funnelBlockGroupSize: Type.Number({ default: 100 }),
-  presyncStepSize: Type.Number({ default: 1000 }),
+  genesisHash: Type.String({ maxLength: 66, minLength: 66, pattern: '^0x[a-fA-F0-9]+$' }),
   type: Type.Union([
     Type.Literal(ConfigNetworkType.AVAIL_MAIN),
     Type.Literal(ConfigNetworkType.AVAIL_OTHER),
   ]),
 });
+
+export const AvailOptionalProperties = Type.Object({
+  delay: Type.Number(),
+  funnelBlockGroupSize: Type.Number({ default: 100 }),
+  presyncStepSize: Type.Number({ default: 1000 }),
+});
+
+export const AvailConfigSchema = Type.Intersect([AvailRequiredProperties, AvailOptionalProperties]);
 
 export type AvailConfig = Static<typeof AvailConfigSchema>;
 
@@ -153,14 +159,16 @@ export const TaggedMinaConfig = <T extends boolean>(T: T) =>
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const TaggedAvailMainConfig = <T extends boolean>(T: T) =>
   Type.Intersect([
-    T ? AvailConfigSchema : Type.Partial(AvailConfigSchema),
+    AvailRequiredProperties,
+    T ? AvailOptionalProperties : Type.Partial(AvailOptionalProperties),
     Type.Object({ type: Type.Literal(ConfigNetworkType.AVAIL_MAIN) }),
   ]);
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const TaggedAvailOtherConfig = <T extends boolean>(T: T) =>
   Type.Intersect([
-    T ? AvailConfigSchema : Type.Partial(AvailConfigSchema),
+    AvailRequiredProperties,
+    T ? AvailOptionalProperties : Type.Partial(AvailOptionalProperties),
     Type.Object({ type: Type.Literal(ConfigNetworkType.AVAIL_OTHER) }),
   ]);
 
@@ -413,6 +421,9 @@ export function caip2PrefixFor(config: Static<typeof InstantiatedConfigsUnion>):
       return `mina:${config.networkId}`;
     case ConfigNetworkType.CARDANO:
       return networkToCip34(config);
+    case ConfigNetworkType.AVAIL_MAIN:
+    case ConfigNetworkType.AVAIL_OTHER:
+      return `polkadot:${config.genesisHash.slice(2, 32 + 2)}`;
     default:
       assertNever(type);
   }

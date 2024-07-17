@@ -1,5 +1,5 @@
 import type { AvailConfig, SubmittedData } from '@paima/utils';
-import { doLog, logError, delay, InternalEventType, timeout } from '@paima/utils';
+import { doLog, logError, delay, InternalEventType, timeout, caip2PrefixFor } from '@paima/utils';
 import type { ChainFunnel, ReadPresyncDataFrom } from '@paima/runtime';
 import { type ChainData, type PresyncChainData } from '@paima/sm';
 import { BaseFunnel } from '../BaseFunnel.js';
@@ -113,7 +113,13 @@ export class AvailParallelFunnel extends BaseFunnel implements ChainFunnel {
       doLog(`Avail funnel #${cachedState.lastBlock + 1}-${to}`);
 
       const roundParallelData = await timeout(
-        getDAData(this.api, this.config.lightClient, cachedState.lastBlock + 1, to),
+        getDAData(
+          this.api,
+          this.config.lightClient,
+          cachedState.lastBlock + 1,
+          to,
+          caip2PrefixFor(this.config)
+        ),
         GET_DATA_TIMEOUT
       );
 

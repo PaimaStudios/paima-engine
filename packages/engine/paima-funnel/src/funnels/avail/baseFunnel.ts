@@ -1,5 +1,5 @@
 import type { AvailConfig } from '@paima/utils';
-import { doLog, timeout } from '@paima/utils';
+import { caip2PrefixFor, doLog, timeout } from '@paima/utils';
 import type { ChainFunnel, ReadPresyncDataFrom } from '@paima/runtime';
 import { type ChainData, type PresyncChainData } from '@paima/sm';
 import { BaseFunnel } from '../BaseFunnel.js';
@@ -104,7 +104,7 @@ export class AvailBlockFunnel extends BaseFunnel implements ChainFunnel {
 
     const data = [];
     const submittedData = await timeout(
-      getDAData(this.api, this.config.lightClient, fromBlock, toBlock),
+      getDAData(this.api, this.config.lightClient, fromBlock, toBlock, caip2PrefixFor(this.config)),
       GET_DATA_TIMEOUT
     );
 
