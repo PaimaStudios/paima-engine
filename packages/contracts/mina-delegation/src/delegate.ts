@@ -55,6 +55,16 @@ export class DelegationOrder extends Struct({
   /** Ethereum public key that signed the delegation order. */
   signer: Secp256k1.provable,
 }) {
+  constructor(value: { target: PublicKey; signer: Secp256k1 }) {
+    if (!(value.target instanceof PublicKey)) {
+      // Compensate for the possibility of duplicate o1js libraries that aren't
+      // `instanceof` each other, which messes up checks inside o1js. Can be
+      // caused by `npm link`ing to this package, for example.
+      value = { ...value, target: PublicKey.fromBase58((value.target as PublicKey).toBase58()) };
+    }
+    super(value);
+  }
+
   private static _innerMessage(target: PublicKey): Bytes {
     return Bytes.from([
       ...delegationPrefix.bytes,
