@@ -14,7 +14,7 @@
   },
   "author": "Paima Studios",
   "devDependencies": {
-    "typescript": "^5.3.3"
+    "typescript": "^5.5.3"
   },
   "dependencies": {
     "@dcspark/cardano-multiplatform-lib-nodejs": "5.2.0",

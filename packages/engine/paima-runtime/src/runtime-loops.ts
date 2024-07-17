@@ -22,7 +22,7 @@ import { cleanNoncesIfTime } from './nonce-gc.js';
 import type { PoolClient } from 'pg';
 import { FUNNEL_PRESYNC_FINISHED, ConfigNetworkType } from '@paima/utils';
 import type { CardanoConfig, EvmConfig } from '@paima/utils';
-import { BuiltinEvents, PaimaEventListener } from '@paima/events';
+import { BuiltinEvents, PaimaEventManager } from '@paima/events';
 import { PaimaEventBroker } from '@paima/broker';
 
 // The core logic of paima runtime which polls the funnel and processes the resulting chain data using the game's state machine.
@@ -298,14 +298,10 @@ async function runSync(
             emulated = blockNumber;
             blockNumber = e.deployment_chain_block_height;
           }
-          PaimaEventListener.Instance.sendMessage(
-            BuiltinEvents.RollupBlock,
-            { blockId: blockNumber },
-            {
-              blockHeight: blockNumber,
-              emulated,
-            }
-          );
+          PaimaEventManager.Instance.sendMessage(BuiltinEvents.RollupBlock, {
+            block: blockNumber,
+            emulated,
+          });
         }
       }
     } catch (err) {

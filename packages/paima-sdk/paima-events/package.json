@@ -24,7 +24,7 @@
     "test": "NODE_OPTIONS=--experimental-vm-modules jest --runInBand"
   },
   "devDependencies": {
-    "typescript": "^5.3.3"
+    "typescript": "^5.5.3"
   },
   "dependencies": {
     "mqtt-pattern": "^2.1.0"

@@ -1,8 +1,9 @@
 /* eslint-disable no-console */
-import { EventPathAndDef, fillPath, ResolvedPath, Undefined } from './builtin-events.js';
+import { fillPath, keysForPath } from './utils.js';
 import { PaimaEventConnect } from './event-connect.js';
-import { PaimaEventBrokerNames } from './event-utils.js';
+import { PaimaEventBrokerNames } from './builtin-event-utils.js';
 import type { Static } from '@sinclair/typebox';
+import { EventPathAndDef, ResolvedPath, UserFilledPath } from './types.js';
 
 export type CallbackArgs<Event extends EventPathAndDef> = {
   // schema of the content emitted
@@ -21,7 +22,7 @@ export type CallbackAndMetadata<Event extends EventPathAndDef> = {
 /*
  * This class subscribes to specific topics, and stores the callbacks for event processing.
  */
-export class PaimaEventListener {
+export class PaimaEventManager {
   public callbacksForTopic: Record<
     PaimaEventBrokerNames,
     Record<
@@ -34,26 +35,55 @@ export class PaimaEventListener {
   };
   public symbolToSubscription: Record<symbol, { broker: PaimaEventBrokerNames; topic: string }> =
     {};
-  static Instance: PaimaEventListener = new PaimaEventListener();
+  static Instance: PaimaEventManager = new PaimaEventManager();
 
   /**
+   * Subscribe to events for a topic filtered by a set of indexed variables
    * @param broker
-   * @param topic a topic using MQTT syntax to monitor for new events
+   * @param filter a filter to generate the MQTT topic syntax to monitor for new events
    * @param callback a callback to call when a message matching this topic is encountered
    * @returns a unique symbol to use to unsubscribe the specific callback
    */
   public subscribe<Event extends EventPathAndDef>(
-    event: Event,
-    topicArgs: Partial<Undefined<ResolvedPath<Event['path']>>>,
+    args: {
+      topic: Event;
+      filter: UserFilledPath<Event['path']>;
+    },
+    callback: (args: Static<Event['type']> & ResolvedPath<Event['path']>) => void
+  ): symbol {
+    return this.subscribeExplicit<Event>(
+      {
+        topic: args.topic,
+        filter: args.filter,
+      },
+      ({ val, resolvedPath }) => callback({ ...val, ...resolvedPath })
+    );
+  }
+  /**
+   * Subscribe to events for a topic filtered by a set of indexed variables
+   *
+   * This is an explicit version of the `subscribe` function
+   * by explicit, it means MQTT topic vars and content are treated differently
+   * this is worse devx, but supports cases where topic & content have vars with overlapping names
+   * @param broker
+   * @param filter a filter to generate the MQTT topic syntax to monitor for new events
+   * @param callback a callback to call when a message matching this topic is encountered
+   * @returns a unique symbol to use to unsubscribe the specific callback
+   */
+  public subscribeExplicit<Event extends EventPathAndDef>(
+    args: {
+      topic: Event;
+      filter: UserFilledPath<Event['path']>;
+    },
     callback: (args: CallbackArgs<Event>) => void
   ): symbol {
-    const client = new PaimaEventConnect().getClient(event.broker);
-    const topic = fillPath(event.path, topicArgs);
+    const client = new PaimaEventConnect().getClient(args.topic.broker);
+    const topic = fillPath(args.topic.path, args.filter);
 
     const clientSubscribe = (): void => {
       client.subscribe(topic, (err: any) => {
         if (err) {
-          console.log(`MQTT[${event.broker}] ERROR`, err);
+          console.log(`MQTT[${args.topic.broker}] ERROR`, err);
         }
       });
     };
@@ -64,16 +94,16 @@ export class PaimaEventListener {
     // keep track of a unique symbol for the subscription that can be used to unsubscribe later
     const symbol = Symbol(topic);
     this.symbolToSubscription[symbol] = {
-      broker: event.broker,
+      broker: args.topic.broker,
       topic,
     };
 
-    const callbacksForTopic = this.callbacksForTopic[event.broker][topic] ?? {};
+    const callbacksForTopic = this.callbacksForTopic[args.topic.broker][topic] ?? {};
     callbacksForTopic[symbol] = {
       callback,
-      event,
+      event: args.topic,
     };
-    this.callbacksForTopic[event.broker][topic] = callbacksForTopic;
+    this.callbacksForTopic[args.topic.broker][topic] = callbacksForTopic;
 
     return symbol;
   }
@@ -107,12 +137,27 @@ export class PaimaEventListener {
   }
 
   public sendMessage<Event extends EventPathAndDef>(
-    event: Event,
-    topicArgs: ResolvedPath<Event['path']>,
+    topic: Event,
+    event: ResolvedPath<Event['path']> & Static<Event['type']>
+  ): void {
+    const filterKeys = new Set(keysForPath(topic.path));
+    const filter = Object.fromEntries(
+      Object.entries(event).filter(([key, _]) => filterKeys.has(key))
+    ) as any; // typescript can't know this filter actually matches the static type
+    const message = Object.fromEntries(
+      Object.entries(event).filter(([key, _]) => !filterKeys.has(key))
+    ) as any; // typescript can't know this filter actually matches the static type
+    return this.sendMessageExplicit<Event>({ topic, filter }, message);
+  }
+  public sendMessageExplicit<Event extends EventPathAndDef>(
+    args: {
+      topic: Event;
+      filter: ResolvedPath<Event['path']>;
+    },
     message: Static<Event['type']>
   ): void {
-    const client = new PaimaEventConnect().getClient(event.broker);
-    const topic = fillPath(event.path, topicArgs);
-    client.publishAsync(topic, JSON.stringify(message));
+    const client = new PaimaEventConnect().getClient(args.topic.broker);
+    const topicPath = fillPath(args.topic.path, args.filter);
+    client.publish(topicPath, JSON.stringify(message));
   }
 }

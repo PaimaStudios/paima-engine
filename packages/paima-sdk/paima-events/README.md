@@ -5,13 +5,21 @@
 ### First create a Topic and define it's topic and behavior.
 
 ```typescript
-const MyEvent = {
-  path: [TopicPrefix.Game, 'clear', { name: 'questId', type: Type.Integer() }],
-  broker: PaimaEventBrokerNames.Batcher,
-  type: Type.Object({
-    playerId: Type.Integer(),
-  }),
-};
+const QuestCompletionEvent = genEvent({
+  name: 'QuestCompletion',
+  inputs: [
+    {
+      indexed: true,
+      name: 'questId',
+      type: Type.Integer(),
+    },
+    {
+      indexed: false,
+      name: 'playerId',
+      type: Type.Integer(),
+    },
+  ],
+} as const);
 ```
 
 ### Listen to Messages
@@ -19,11 +27,13 @@ const MyEvent = {
 Create a listener and subscribe.
 
 ```typescript
-PaimaEventListener.Instance.subscribe(
-  MyEvent,
-  { questId: undefined }, // all quests
-  ({ val, resolvedPath }) => {
-    console.log(`Quest ${resolvedPath.questId} cleared by ${val.playerId}`);
+PaimaEventManager.Instance.subscribe(
+  {
+    topic: QuestCompletionEvent,
+    filter: { questId: undefined }, // all quests
+  },
+  event => {
+    console.log(`Quest ${event.questId} cleared by ${event.playerId}`);
   }
 );
 ```
@@ -33,7 +43,7 @@ PaimaEventListener.Instance.subscribe(
 Create a publisher and send messages
 
 ```typescript
-PaimaEventListener.Instance.sendMessage(MyEvent, { questId: 5 }, { playerId: 10 });
+PaimaEventListener.Instance.sendMessage(QuestCompletionEvent, { questId: 5, playerId: 10 });
 ```
 
 ## Architecture

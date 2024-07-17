@@ -1,5 +1,5 @@
 import { BuiltinEvents } from './builtin-events.js';
-import { PaimaEventListener } from './event-listener.js';
+import { PaimaEventManager } from './event-listener.js';
 
 export enum PaimaEventBrokerNames {
   PaimaEngine = 'paima-engine',
@@ -9,11 +9,13 @@ export enum PaimaEventBrokerNames {
 let bestBlock = 0;
 
 export function setupInitialListeners() {
-  PaimaEventListener.Instance.subscribe(
-    BuiltinEvents.RollupBlock,
-    { blockId: undefined },
-    ({ val }) => {
-      bestBlock = Math.max(val.blockHeight, bestBlock);
+  PaimaEventManager.Instance.subscribe(
+    {
+      topic: BuiltinEvents.RollupBlock,
+      filter: { block: undefined },
+    },
+    event => {
+      bestBlock = Math.max(event.block, bestBlock);
     }
   );
 }
@@ -45,12 +47,14 @@ export function awaitBatcherHash(batchHash: string, maxTimeSec = 20): Promise<nu
       throw new Error('TIMEOUT');
     })(),
     new Promise<number>((resolve, reject) => {
-      subscriptionSymbol = PaimaEventListener.Instance.subscribe(
-        BuiltinEvents.BatcherHash,
-        { batchHash },
-        ({ val }) => {
+      subscriptionSymbol = PaimaEventManager.Instance.subscribe(
+        {
+          topic: BuiltinEvents.BatcherHash,
+          filter: { batch: batchHash },
+        },
+        event => {
           const remainingTime = maxTimeSec - (new Date().getTime() - startTime);
-          awaitBlockWS(val.block_height, remainingTime)
+          awaitBlockWS(event.blockHeight, remainingTime)
             .then(resolve)
             .catch(e => reject(e.message));
         }
@@ -58,7 +62,7 @@ export function awaitBatcherHash(batchHash: string, maxTimeSec = 20): Promise<nu
     }),
   ]).finally(() => {
     if (subscriptionSymbol != null) {
-      PaimaEventListener.Instance.unsubscribe(subscriptionSymbol);
+      PaimaEventManager.Instance.unsubscribe(subscriptionSymbol);
     }
   });
 }

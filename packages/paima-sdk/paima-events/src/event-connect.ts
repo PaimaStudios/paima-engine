@@ -1,7 +1,7 @@
 import mqtt from 'mqtt';
-import { PaimaEventBrokerNames, setupInitialListeners } from './event-utils.js';
-import { PaimaEventListener } from './event-listener.js';
-import { toPattern } from './builtin-events.js';
+import { PaimaEventBrokerNames, setupInitialListeners } from './builtin-event-utils.js';
+import { PaimaEventManager } from './event-listener.js';
+import { toPattern } from './utils.js';
 import { extract, matches } from 'mqtt-pattern';
 
 /*
@@ -33,7 +33,7 @@ export class PaimaEventConnect {
     const client = mqtt.connect(url);
     setupInitialListeners();
     client.on('message', (topic: string, message: Buffer) => {
-      for (const [_broker, info] of Object.entries(PaimaEventListener.Instance.callbacksForTopic)) {
+      for (const [_broker, info] of Object.entries(PaimaEventManager.Instance.callbacksForTopic)) {
         for (const [pattern, callbacks] of Object.entries(info)) {
           if (matches(pattern, topic)) {
             for (const callbackInfo of Object.values<(typeof callbacks)[keyof typeof callbacks]>(

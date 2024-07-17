@@ -14,7 +14,7 @@ import { hashBatchSubunit, buildBatchData } from '@paima/concise';
 import { contractAbis, wait } from '@paima/utils';
 import { utf8ToHex } from 'web3-utils';
 import { ethers } from 'ethers';
-import { BuiltinEvents, PaimaEventListener } from '@paima/events';
+import { BuiltinEvents, PaimaEventManager } from '@paima/events';
 
 class BatchedTransactionPoster {
   private provider: EthersEvmProvider;
@@ -191,11 +191,11 @@ class BatchedTransactionPoster {
           block_height: blockHeight,
           transaction_hash: transactionHash,
         };
-        PaimaEventListener.Instance.sendMessage(
-          BuiltinEvents.BatcherHash,
-          { batchHash: hash },
-          packagedData
-        );
+        PaimaEventManager.Instance.sendMessage(BuiltinEvents.BatcherHash, {
+          batch: hash,
+          blockHeight,
+          transactionHash,
+        });
         await updateStatePosted.run(packagedData, this.pool);
       } catch (err) {
         console.log(
