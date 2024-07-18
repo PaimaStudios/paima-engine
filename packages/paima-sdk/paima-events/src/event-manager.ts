@@ -83,7 +83,7 @@ export class PaimaEventManager {
 
     const clientSubscribe = async (): Promise<void> => {
       try {
-        await client.subscribeAsync(topic);
+        await client.subscribeAsync(topic, { qos: 2 });
       } catch (err: unknown) {
         console.log(`MQTT[${args.topic.broker}] ERROR`, err);
       }
@@ -174,6 +174,6 @@ export class PaimaEventManager {
   ): Promise<void> {
     const client = await new PaimaEventConnect().getClient(args.topic.broker);
     const topicPath = fillPath(args.topic.path, args.filter);
-    await client.publishAsync(topicPath, JSON.stringify(message));
+    await client.publishAsync(topicPath, JSON.stringify(message), { qos: 2 });
   }
 }
