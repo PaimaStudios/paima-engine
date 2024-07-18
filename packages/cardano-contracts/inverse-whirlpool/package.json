@@ -8,6 +8,8 @@
   },
   "author": "Paima Studios",
   "license": "MIT",
-  "dependencies": {
+  "dependencies": {},
+  "devDependencies": {
+    "@aiken-lang/aiken": "1.0.29-alpha"
   }
 }
