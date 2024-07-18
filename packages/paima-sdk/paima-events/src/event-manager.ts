@@ -15,6 +15,7 @@ export type CallbackArgs<Event extends EventPathAndDef> = {
 };
 
 export type CallbackAndMetadata<Event extends EventPathAndDef> = {
+  // note: explicitly not async since we need it to be sync to guarantee ordering in MQTT.js (as far as I can tell)
   callback: (args: CallbackArgs<Event>) => void;
   event: Event;
 };
@@ -44,14 +45,14 @@ export class PaimaEventManager {
    * @param callback a callback to call when a message matching this topic is encountered
    * @returns a unique symbol to use to unsubscribe the specific callback
    */
-  public subscribe<Event extends EventPathAndDef>(
+  public async subscribe<Event extends EventPathAndDef>(
     args: {
       topic: Event;
       filter: UserFilledPath<Event['path']>;
     },
     callback: (args: Static<Event['type']> & ResolvedPath<Event['path']>) => void
-  ): symbol {
-    return this.subscribeExplicit<Event>(
+  ): Promise<symbol> {
+    return await this.subscribeExplicit<Event>(
       {
         topic: args.topic,
         filter: args.filter,
@@ -70,26 +71,32 @@ export class PaimaEventManager {
    * @param callback a callback to call when a message matching this topic is encountered
    * @returns a unique symbol to use to unsubscribe the specific callback
    */
-  public subscribeExplicit<Event extends EventPathAndDef>(
+  public async subscribeExplicit<Event extends EventPathAndDef>(
     args: {
       topic: Event;
       filter: UserFilledPath<Event['path']>;
     },
     callback: (args: CallbackArgs<Event>) => void
-  ): symbol {
-    const client = new PaimaEventConnect().getClient(args.topic.broker);
+  ): Promise<symbol> {
+    const client = await new PaimaEventConnect().getClient(args.topic.broker);
     const topic = fillPath(args.topic.path, args.filter);
 
-    const clientSubscribe = (): void => {
-      client.subscribe(topic, (err: any) => {
-        if (err) {
-          console.log(`MQTT[${args.topic.broker}] ERROR`, err);
-        }
-      });
+    const clientSubscribe = async (): Promise<void> => {
+      try {
+        await client.subscribeAsync(topic);
+      } catch (err: unknown) {
+        console.log(`MQTT[${args.topic.broker}] ERROR`, err);
+      }
     };
 
-    if (client.connected) clientSubscribe();
-    else client.on('connect', clientSubscribe);
+    if (client.connected) await clientSubscribe();
+    else
+      await new Promise<void>(resolve => {
+        client.on('connect', async () => {
+          await clientSubscribe();
+          resolve();
+        });
+      });
 
     // keep track of a unique symbol for the subscription that can be used to unsubscribe later
     const symbol = Symbol(topic);
@@ -108,7 +115,7 @@ export class PaimaEventManager {
     return symbol;
   }
 
-  public unsubscribe(event: symbol): void {
+  public async unsubscribe(event: symbol): Promise<void> {
     const { topic, broker } = this.symbolToSubscription[event];
     if (topic == null) {
       console.error('Subscription not found', event.description);
@@ -122,24 +129,32 @@ export class PaimaEventManager {
 
     // if there are no references left to this topic, we can unsubscribe from it
     if (numCallbacks === 0) {
-      const client = new PaimaEventConnect().getClient(broker);
+      const client = await new PaimaEventConnect().getClient(broker);
       delete this.callbacksForTopic[broker][topic];
 
-      const clientUnsubscribe = (): void => {
-        client.unsubscribe(topic, (err: any) => {
-          if (err) console.log(`MQTT[${broker}] ERROR`, err);
-        });
+      const clientUnsubscribe = async (): Promise<void> => {
+        try {
+          await client.unsubscribeAsync(topic);
+        } catch (err: unknown) {
+          console.log(`MQTT[${broker}] ERROR`, err);
+        }
       };
 
-      if (client.connected) clientUnsubscribe();
-      else client.on('connect', clientUnsubscribe);
+      if (client.connected) await clientUnsubscribe();
+      else
+        await new Promise<void>(resolve => {
+          client.on('connect', async () => {
+            await clientUnsubscribe();
+            resolve();
+          });
+        });
     }
   }
 
-  public sendMessage<Event extends EventPathAndDef>(
+  public async sendMessage<Event extends EventPathAndDef>(
     topic: Event,
     event: ResolvedPath<Event['path']> & Static<Event['type']>
-  ): void {
+  ): Promise<void> {
     const filterKeys = new Set(keysForPath(topic.path));
     const filter = Object.fromEntries(
       Object.entries(event).filter(([key, _]) => filterKeys.has(key))
@@ -147,17 +162,18 @@ export class PaimaEventManager {
     const message = Object.fromEntries(
       Object.entries(event).filter(([key, _]) => !filterKeys.has(key))
     ) as any; // typescript can't know this filter actually matches the static type
-    return this.sendMessageExplicit<Event>({ topic, filter }, message);
+
+    return await this.sendMessageExplicit<Event>({ topic, filter }, message);
   }
-  public sendMessageExplicit<Event extends EventPathAndDef>(
+  public async sendMessageExplicit<Event extends EventPathAndDef>(
     args: {
       topic: Event;
       filter: ResolvedPath<Event['path']>;
     },
     message: Static<Event['type']>
-  ): void {
-    const client = new PaimaEventConnect().getClient(args.topic.broker);
+  ): Promise<void> {
+    const client = await new PaimaEventConnect().getClient(args.topic.broker);
     const topicPath = fillPath(args.topic.path, args.filter);
-    client.publish(topicPath, JSON.stringify(message));
+    await client.publishAsync(topicPath, JSON.stringify(message));
   }
 }

@@ -8,8 +8,8 @@ export enum PaimaEventBrokerNames {
 
 let bestBlock = 0;
 
-export function setupInitialListeners() {
-  PaimaEventManager.Instance.subscribe(
+export async function setupInitialListeners(): Promise<void> {
+  await PaimaEventManager.Instance.subscribe(
     {
       topic: BuiltinEvents.RollupBlock,
       filter: { block: undefined },
@@ -40,7 +40,7 @@ export async function awaitBlockWS(blockHeight: number, maxTimeSec = 20): Promis
 export function awaitBatcherHash(batchHash: string, maxTimeSec = 20): Promise<number> {
   const startTime = new Date().getTime();
 
-  let subscriptionSymbol: symbol;
+  let subscriptionSymbol: Promise<symbol>;
   return Promise.race([
     (async (): Promise<number> => {
       await wait(maxTimeSec * 1000);
@@ -62,7 +62,8 @@ export function awaitBatcherHash(batchHash: string, maxTimeSec = 20): Promise<nu
     }),
   ]).finally(() => {
     if (subscriptionSymbol != null) {
-      PaimaEventManager.Instance.unsubscribe(subscriptionSymbol);
+      /// note: it's okay that this doesn't happen right away
+      void subscriptionSymbol.then(PaimaEventManager.Instance.unsubscribe);
     }
   });
 }

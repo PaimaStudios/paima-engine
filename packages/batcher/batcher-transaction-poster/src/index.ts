@@ -191,7 +191,7 @@ class BatchedTransactionPoster {
           block_height: blockHeight,
           transaction_hash: transactionHash,
         };
-        PaimaEventManager.Instance.sendMessage(BuiltinEvents.BatcherHash, {
+        await PaimaEventManager.Instance.sendMessage(BuiltinEvents.BatcherHash, {
           batch: hash,
           blockHeight,
           transactionHash,
