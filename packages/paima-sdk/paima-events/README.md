@@ -7,14 +7,13 @@
 ```typescript
 const QuestCompletionEvent = genEvent({
   name: 'QuestCompletion',
-  inputs: [
+  fields: [
     {
-      indexed: true,
       name: 'questId',
       type: Type.Integer(),
+      indexed: true,
     },
     {
-      indexed: false,
       name: 'playerId',
       type: Type.Integer(),
     },

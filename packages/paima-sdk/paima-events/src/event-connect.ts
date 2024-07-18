@@ -1,6 +1,6 @@
 import mqtt from 'mqtt';
 import { PaimaEventBrokerNames, setupInitialListeners } from './builtin-event-utils.js';
-import { PaimaEventManager } from './event-listener.js';
+import { PaimaEventManager } from './event-manager.js';
 import { toPattern } from './utils.js';
 import { extract, matches } from 'mqtt-pattern';
 

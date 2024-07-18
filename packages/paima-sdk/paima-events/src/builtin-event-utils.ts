@@ -1,5 +1,5 @@
 import { BuiltinEvents } from './builtin-events.js';
-import { PaimaEventManager } from './event-listener.js';
+import { PaimaEventManager } from './event-manager.js';
 
 export enum PaimaEventBrokerNames {
   PaimaEngine = 'paima-engine',

@@ -28,14 +28,14 @@ export type EventPath = (SimplePath | ArgPath)[];
  * ===================================================
  */
 
-export type LogEventInputs<Schema extends TSchema> = {
+export type LogEventFields<Schema extends TSchema> = {
   indexed: boolean;
   name: string;
   type: Schema;
 };
-export type LogEvent<Inputs extends LogEventInputs<any>[]> = {
+export type LogEvent<Fields extends LogEventFields<any>[]> = {
   name: string;
-  inputs: Inputs;
+  fields: Fields;
 };
 
 /**
@@ -80,8 +80,8 @@ export type UserFilledPath<Path extends EventPath> = Partial<Undefined<ResolvedP
  * ======================================================================
  */
 
-// Turn LogEventInputs into typebox object types
-type ToTObject<T extends Record<string, LogEventInputs<any>>> = {
+// Turn LogEventFields into typebox object types
+type ToTObject<T extends Record<string, LogEventFields<any>>> = {
   -readonly [P in keyof T]: TObject<{
     indexed: TLiteral<T[P]['indexed']>;
     name: TLiteral<T[P]['name']>;
@@ -113,18 +113,18 @@ export function toSchema<T extends LogEvent<any>>(
   event: T
 ): TObject<{
   name: TLiteral<T['name']>;
-  inputs: AsTuple<CustomTuple<ToTObject<T['inputs']>>>;
+  fields: AsTuple<CustomTuple<ToTObject<T['fields']>>>;
 }> {
   return Type.Object({
     name: Type.Literal(event.name),
-    inputs: Type.Tuple(
-      event.inputs.map((input: any) =>
+    fields: Type.Tuple(
+      event.fields.map((input: any) =>
         Type.Object({
           indexed: Type.Literal(input.indexed),
           name: Type.Literal(input.name),
           type: input.type,
         })
-      ) as T['inputs'] // map(..) converts it to an array, but we need to consider it a tuple
+      ) as T['fields'] // map(..) converts it to an array, but we need to consider it a tuple
     ),
   }) as any; // typescript can't really know this dynamic object matches our static type
 }
@@ -137,14 +137,14 @@ export function toSchema<T extends LogEvent<any>>(
 
 // 1) Filter by entries that are "indexed" as they need to go in the path
 type FilterIndexed<T> = T extends { indexed: true } ? T : never;
-type RemoveAllUnindexed<T extends LogEventInputs<TSchema>[]> = {
+type RemoveAllUnindexed<T extends LogEventFields<TSchema>[]> = {
   [P in keyof T]: FilterIndexed<T[P]>;
 };
 // 2) Transform the types into ArgPath
 type TransformEventInput<T> = T extends { readonly name: infer N; readonly type: infer U }
   ? { name: N; type: U }
   : never;
-type TransformAllEventInput<T extends LogEventInputs<TSchema>[]> = {
+type TransformAllEventInput<T extends LogEventFields<TSchema>[]> = {
   [P in keyof T]: TransformEventInput<T[P]>;
 };
 
@@ -166,7 +166,7 @@ type AddStringPath<T extends any[]> = T extends [
 
 // 5) Filter by entries that are not "indexed" as they need to go in the output
 type FilterNonIndexed<T> = T extends { indexed: false } ? T : never;
-type RemoveAllIndexed<T extends LogEventInputs<TSchema>[]> = {
+type RemoveAllIndexed<T extends LogEventFields<TSchema>[]> = {
   [P in keyof T]: FilterNonIndexed<T[P]>;
 };
 // 6) Merge the type together into a single object
@@ -181,24 +181,24 @@ type BrokerName<T extends TopicPrefix> = T extends TopicPrefix.Batcher
   ? PaimaEventBrokerNames.Batcher
   : PaimaEventBrokerNames.PaimaEngine;
 
-export function toPath<T extends LogEvent<LogEventInputs<TSchema>[]>, Prefix extends TopicPrefix>(
+export function toPath<T extends LogEvent<LogEventFields<TSchema>[]>, Prefix extends TopicPrefix>(
   prefix: Prefix,
   event: T
 ): {
   path: AddStringPath<
-    ExcludeFromTuple<TransformAllEventInput<RemoveAllUnindexed<T['inputs']>>, never>
+    ExcludeFromTuple<TransformAllEventInput<RemoveAllUnindexed<T['fields']>>, never>
   >;
   broker: BrokerName<Prefix>;
   type: TObject<
     OutputKeypairToObj<
-      ExcludeFromTuple<TransformAllEventInput<RemoveAllIndexed<T['inputs']>>, never>
+      ExcludeFromTuple<TransformAllEventInput<RemoveAllIndexed<T['fields']>>, never>
     >
   >;
 } {
   return {
     path: [
       prefix,
-      ...event.inputs
+      ...event.fields
         .filter(input => input.indexed)
         .map(input => ({
           name: input.name,
@@ -218,7 +218,7 @@ export function toPath<T extends LogEvent<LogEventInputs<TSchema>[]>, Prefix ext
       }
     })(),
     type: Type.Object(
-      event.inputs
+      event.fields
         .filter(input => !input.indexed)
         .reduce(
           (acc, curr) => {
@@ -231,11 +231,42 @@ export function toPath<T extends LogEvent<LogEventInputs<TSchema>[]>, Prefix ext
   } as any; // typescript can't really know this dynamic object matches our static type
 }
 
-// These two just type-check the user provided object for them instead of requiring the `satisfies` keyword
-type Ensure<T extends LogEvent<LogEventInputs<TSchema>[]>, U> =
-  LogEvent<LogEventInputs<TSchema>[]> extends U ? T : never;
-export function genEvent<T extends LogEvent<LogEventInputs<TSchema>[]>>(
-  event: Ensure<T, LogEvent<any>>
-): T {
+/**
+ * ================================================================
+ * Wrap interface to make it more dev-friendly and less error-prone
+ * ================================================================
+ */
+
+// 1) define a version where the `indexed` field is not required (defaults to false)
+export type MaybeIndexedLogEventFields<Schema extends TSchema> = {
+  indexed?: boolean;
+  name: string;
+  type: Schema;
+};
+export type MaybeIndexedLogEvent<Fields extends MaybeIndexedLogEventFields<any>[]> = {
+  name: string;
+  fields: Fields;
+};
+type DefaultToFalse<T> = T extends true ? true : false;
+
+// 2) Write a conversion from the optional indexed to the required indexed (with default filled)
+type ToDefinitelyIndexedObject<T extends MaybeIndexedLogEventFields<any>[]> = {
+  -readonly [P in keyof T]: {
+    indexed: DefaultToFalse<T[P]['indexed']>;
+    name: T[P]['name'];
+    type: T[P]['type'];
+  };
+};
+type ToLog<T extends MaybeIndexedLogEvent<MaybeIndexedLogEventFields<TSchema>[]>> = {
+  name: T['name'];
+  fields: ToDefinitelyIndexedObject<T['fields']>;
+};
+
+// 3) Expose the public function. These two just type-check the user provided object for them instead of requiring the `satisfies` keyword
+type Ensure<T extends MaybeIndexedLogEvent<MaybeIndexedLogEventFields<TSchema>[]>, U> =
+  MaybeIndexedLogEvent<MaybeIndexedLogEventFields<TSchema>[]> extends U ? T : never;
+export function genEvent<T extends MaybeIndexedLogEvent<MaybeIndexedLogEventFields<TSchema>[]>>(
+  event: Ensure<T, MaybeIndexedLogEvent<any>>
+): ToLog<T> {
   return event as any;
 }

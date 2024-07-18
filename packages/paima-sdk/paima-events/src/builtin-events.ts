@@ -3,19 +3,17 @@ import { EventPathAndDef, genEvent, toPath, TopicPrefix } from './types';
 
 const BatcherHash = genEvent({
   name: 'BatcherHash',
-  inputs: [
+  fields: [
     {
-      indexed: true,
       name: 'batch', // batch hash
       type: Type.String(),
+      indexed: true,
     },
     {
-      indexed: false,
       name: 'blockHeight',
       type: Type.Integer(),
     },
     {
-      indexed: false,
       name: 'transactionHash',
       type: Type.String(),
     },
@@ -24,14 +22,13 @@ const BatcherHash = genEvent({
 
 const RollupBlock = genEvent({
   name: 'RollupBlock',
-  inputs: [
+  fields: [
     {
-      indexed: true,
       name: 'block', // block height
       type: Type.Integer(),
+      indexed: true,
     },
     {
-      indexed: false,
       name: 'emulated',
       type: Type.Union([Type.Undefined(), Type.Integer()]),
     },
