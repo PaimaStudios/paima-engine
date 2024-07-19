@@ -2,7 +2,6 @@ import {
   Bool,
   Bytes,
   Crypto,
-  Poseidon,
   PublicKey,
   Struct,
   UInt8,
@@ -91,15 +90,6 @@ export class DelegationOrder extends Struct({
       ...inner.bytes,
     ]);
     signature.verifyV2(fullMessage, this.signer).assertTrue();
-  }
-
-  /** Hash this entire order for use as a MerkleMap key. */
-  hash() {
-    return Poseidon.hashWithPrefix('DelegationOrder', [
-      ...this.target.toFields(),
-      ...this.signer.x.toFields(),
-      ...this.signer.y.toFields(),
-    ]);
   }
 }
 
