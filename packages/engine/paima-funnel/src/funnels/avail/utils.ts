@@ -94,13 +94,6 @@ export async function getDAData(
   for (let curr = from; curr <= to; curr++) {
     const responseRaw = await fetch(`${lc}/v2/blocks/${curr}/data?fields=data,extrinsic`);
 
-    // the error code of this endpoint is a bit strange, see:
-    // https://github.com/availproject/avail-light/issues/627
-    // we need to consider a 400 (Bad request) the same as a 404 (Not found).
-    if (responseRaw.status === 400 || responseRaw.status === 404) {
-      continue;
-    }
-
     if (responseRaw.status !== 200) {
       // we don't want to accidentally skip blocks if there is something wrong with the light client.
       throw new Error(
