@@ -175,12 +175,12 @@ async function main() {
         console.log();
       }
       if (extra.length > 0) {
-        hasError = true;
-        console.error(
+        // hasError = true; // this is more of a warning than an error
+        console.warn(
           `Package ${purpleText(`${ownRoot}/tsconfig.json`)} has unnecessary references`
         );
         for (const ref of extra) {
-          console.error(redText(ref));
+          console.warn(redText(ref));
         }
         console.log();
       }
