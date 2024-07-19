@@ -1,5 +1,6 @@
 import { Type } from '@sinclair/typebox';
-import { EventPathAndDef, genEvent, toPath, TopicPrefix } from './types';
+import type { EventPathAndDef } from './types.js';
+import { genEvent, toPath, TopicPrefix } from './types.js';
 
 const BatcherHash = genEvent({
   name: 'BatcherHash',

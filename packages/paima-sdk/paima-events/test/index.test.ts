@@ -1,5 +1,5 @@
 import { describe, expect, test } from '@jest/globals';
-import { fillPath } from '../src';
+import { fillPath } from '../src/index.js';
 import { Type } from '@sinclair/typebox';
 
 export const TestEvent = {

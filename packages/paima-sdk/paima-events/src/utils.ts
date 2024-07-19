@@ -1,4 +1,4 @@
-import type { EventPath, UserFilledPath } from './types';
+import type { EventPath, UserFilledPath } from './types.js';
 
 /**
  * Creates an MQTT path filling in specified variables in the path
@@ -6,9 +6,8 @@ import type { EventPath, UserFilledPath } from './types';
  * @param args the args to fill the path.
  * - `undefined` (explicitly or omitted) variables will be treated as `+`
  * - if all trailing variables are `undefined`, it will be replaced by `#`
- * @returns
  */
-export function fillPath<Path extends EventPath>(path: Path, args: UserFilledPath<Path>) {
+export function fillPath<Path extends EventPath>(path: Path, args: UserFilledPath<Path>): string {
   const keys = new Set(Object.keys(args));
 
   const possibleArgs = path
@@ -84,13 +83,13 @@ export function fillPath<Path extends EventPath>(path: Path, args: UserFilledPat
  * Convert our internal definition of an event path to an mqtt-pattern compatible path
  * This is useful to later deconstruct topics for pattern matching
  */
-export function toPattern(path: EventPath) {
+export function toPattern(path: EventPath): string {
   let result = '';
   for (const entry of path) {
     if (typeof entry === 'string') {
       result += entry;
     } else {
-      result == `+${entry.name}`;
+      result += `+${entry.name}`;
     }
   }
   return result;

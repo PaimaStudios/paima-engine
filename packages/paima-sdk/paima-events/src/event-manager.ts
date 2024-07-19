@@ -3,7 +3,7 @@ import { fillPath, keysForPath } from './utils.js';
 import { PaimaEventConnect } from './event-connect.js';
 import { PaimaEventBrokerNames } from './builtin-event-utils.js';
 import type { Static } from '@sinclair/typebox';
-import { EventPathAndDef, ResolvedPath, UserFilledPath } from './types.js';
+import type { EventPathAndDef, ResolvedPath, UserFilledPath } from './types.js';
 
 export type CallbackArgs<Event extends EventPathAndDef> = {
   // schema of the content emitted
@@ -28,7 +28,7 @@ export class PaimaEventManager {
     PaimaEventBrokerNames,
     Record<
       string, // topic
-      Record<symbol, CallbackAndMetadata<any>>
+      Record<symbol, CallbackAndMetadata<EventPathAndDef>>
     >
   > = {
     [PaimaEventBrokerNames.PaimaEngine]: {},
@@ -92,6 +92,7 @@ export class PaimaEventManager {
     if (client.connected) await clientSubscribe();
     else
       await new Promise<void>(resolve => {
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises
         client.on('connect', async () => {
           await clientSubscribe();
           resolve();
@@ -107,7 +108,9 @@ export class PaimaEventManager {
 
     const callbacksForTopic = this.callbacksForTopic[args.topic.broker][topic] ?? {};
     callbacksForTopic[symbol] = {
-      callback,
+      // in practice, casting to any shouldn't be problem
+      // since callbacks are only called for specific topics where we know the type matches
+      callback: callback as any, // eslint-disable-line @typescript-eslint/no-explicit-any
       event: args.topic,
     };
     this.callbacksForTopic[args.topic.broker][topic] = callbacksForTopic;
@@ -143,6 +146,7 @@ export class PaimaEventManager {
       if (client.connected) await clientUnsubscribe();
       else
         await new Promise<void>(resolve => {
+          // eslint-disable-next-line @typescript-eslint/no-misused-promises
           client.on('connect', async () => {
             await clientUnsubscribe();
             resolve();
@@ -156,12 +160,14 @@ export class PaimaEventManager {
     event: ResolvedPath<Event['path']> & Static<Event['type']>
   ): Promise<void> {
     const filterKeys = new Set(keysForPath(topic.path));
+
     const filter = Object.fromEntries(
       Object.entries(event).filter(([key, _]) => filterKeys.has(key))
-    ) as any; // typescript can't know this filter actually matches the static type
+    ) as ResolvedPath<Event['path']>; // typescript can't know this filter actually matches the static type
+
     const message = Object.fromEntries(
       Object.entries(event).filter(([key, _]) => !filterKeys.has(key))
-    ) as any; // typescript can't know this filter actually matches the static type
+    ) as Static<Event['type']>; // typescript can't know this filter actually matches the static type
 
     return await this.sendMessageExplicit<Event>({ topic, filter }, message);
   }

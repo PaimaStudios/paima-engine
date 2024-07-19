@@ -1,6 +1,6 @@
-import { Kind, Type } from '@sinclair/typebox';
-import type { TTuple, TLiteral, TObject, Static, TSchema } from '@sinclair/typebox';
-import { PaimaEventBrokerNames } from './builtin-event-utils';
+import { Type } from '@sinclair/typebox';
+import type { Kind, TTuple, TLiteral, TObject, Static, TSchema } from '@sinclair/typebox';
+import { PaimaEventBrokerNames } from './builtin-event-utils.js';
 import assertNever from 'assert-never';
 
 /**
@@ -205,7 +205,7 @@ export function toPath<T extends LogEvent<LogEventFields<TSchema>[]>, Prefix ext
           type: input.type,
         })),
     ],
-    broker: (() => {
+    broker: ((): PaimaEventBrokerNames => {
       switch (prefix) {
         case TopicPrefix.Batcher:
           return PaimaEventBrokerNames.Batcher;

@@ -8,7 +8,7 @@ export enum PaimaEventBrokerNames {
 
 let bestBlock = 0;
 
-export async function setupInitialListeners(): Promise<void> {
+export async function setupInitialListeners(_broker: PaimaEventBrokerNames): Promise<void> {
   await PaimaEventManager.Instance.subscribe(
     {
       topic: BuiltinEvents.RollupBlock,
@@ -62,7 +62,7 @@ export function awaitBatcherHash(batchHash: string, maxTimeSec = 20): Promise<nu
     }),
   ]).finally(() => {
     if (subscriptionSymbol != null) {
-      /// note: it's okay that this doesn't happen right away
+      // note: it's okay that this doesn't happen right away
       void subscriptionSymbol.then(PaimaEventManager.Instance.unsubscribe);
     }
   });
