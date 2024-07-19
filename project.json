@@ -1,0 +1,15 @@
+
+{
+  "name": "@paima/source",
+  "$schema": "node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "local-registry": {
+      "executor": "@nx/js:verdaccio",
+      "options": {
+        "port": 4873,
+        "config": ".verdaccio/config.yml",
+        "storage": "bin/npm/tmp/local-registry/storage"
+      }
+    }
+  }
+}
