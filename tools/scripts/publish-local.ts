@@ -85,6 +85,7 @@ const program = new Command();
   }
 
   if (options.targetPath != null) {
+    console.log();
     const targetPath = resolve(process.cwd(), options.targetPath, 'node_modules', '@paima');
     rmIfExists(targetPath);
     cpSync(outputFolder, targetPath, { recursive: true });
