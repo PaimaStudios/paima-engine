@@ -672,16 +672,10 @@ export async function wrapToCarpFunnel(
   chainFunnel: ChainFunnel,
   sharedData: FunnelSharedData,
   dbTx: PoolClient,
-  startingBlockHeight: number
+  startingBlockHeight: number,
+  chainName: string,
+  cardanoConfig: CardanoConfig
 ): Promise<ChainFunnel> {
-  const config = await GlobalConfig.cardanoConfig();
-
-  if (!config) {
-    return chainFunnel;
-  }
-
-  const [chainName, cardanoConfig] = config;
-
   try {
     const ebp = await CarpFunnel.recoverState(
       sharedData,
