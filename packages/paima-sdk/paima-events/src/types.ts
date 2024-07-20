@@ -204,10 +204,13 @@ export function toPath<T extends LogEvent<LogEventFields<TSchema>[]>, Prefix ext
       prefix,
       ...event.fields
         .filter(input => input.indexed)
-        .map(input => ({
-          name: input.name,
-          type: input.type,
-        })),
+        .flatMap(input => [
+          input.name,
+          {
+            name: input.name,
+            type: input.type,
+          },
+        ]),
     ],
     broker: ((): PaimaEventBrokerNames => {
       switch (prefix) {

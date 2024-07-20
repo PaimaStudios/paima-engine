@@ -85,7 +85,10 @@ export function fillPath<Path extends EventPath>(path: Path, args: UserFilledPat
  */
 export function toPattern(path: EventPath): string {
   let result = '';
-  for (const entry of path) {
+  for (let i = 0; i < path.length; i++) {
+    const entry = path[i];
+    if (i > 0) result += '/'; // fencepost problem
+
     if (typeof entry === 'string') {
       result += entry;
     } else {
