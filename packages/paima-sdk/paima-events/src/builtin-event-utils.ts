@@ -59,7 +59,7 @@ export function awaitBatcherHash(batchHash: string, maxTimeSec = 20): Promise<nu
   ]).finally(() => {
     if (subscriptionSymbol != null) {
       // note: it's okay that this doesn't happen right away
-      void subscriptionSymbol.then(PaimaEventManager.Instance.unsubscribe);
+      void subscriptionSymbol.then(sym => PaimaEventManager.Instance.unsubscribe(sym));
     }
   });
 }

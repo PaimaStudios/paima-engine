@@ -16,6 +16,14 @@ export class PaimaEventConnect {
     batcher?: mqtt.MqttClient;
   } = {};
 
+  constructor() {
+    // TODO: replace once TS5 decorators are better supported
+    this.getClient.bind(this);
+    this.setupClient.bind(this);
+    this.connectPaimaEngine.bind(this);
+    this.connectBatcher.bind(this);
+  }
+
   /**
    * Get client for broker
    * note: we lazy-load the client to avoid overhead if MQTT is never used

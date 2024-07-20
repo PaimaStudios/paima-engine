@@ -38,6 +38,15 @@ export class PaimaEventManager {
     {};
   static Instance: PaimaEventManager = new PaimaEventManager();
 
+  constructor() {
+    // TODO: replace once TS5 decorators are better supported
+    this.subscribe.bind(this);
+    this.subscribeExplicit.bind(this);
+    this.unsubscribe.bind(this);
+    this.sendMessage.bind(this);
+    this.sendMessageExplicit.bind(this);
+  }
+
   /**
    * Subscribe to events for a topic filtered by a set of indexed variables
    * @param broker
