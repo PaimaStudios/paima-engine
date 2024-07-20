@@ -19,24 +19,19 @@ uplinks:
     fail_timeout: 2m
 
 packages:
-  '@*/*':
-    # scoped packages
+  # for @paima packages, we never want to fallback to the npm registry
+  # otherwise, the local version will get rejected because the npm registry has a package with the same version
+  '@paima/*':
+    # allow all users full access (since it's a local registry)
     access: $all
     publish: $all
     unpublish: $all
-    # proxy: npmjs
 
   '**':
-    # allow all users (including non-authenticated users) to read and
-    # publish all packages
     access: $all
-
-    # allow all users (including non-authenticated users) to publish/publish packages
     publish: $all
     unpublish: $all
-
-    # if package is not available locally, proxy requests to 'yarn' registry
-    # proxy: npmjs
+    proxy: npmjs # fallback to npmjs for non-paima package. This is needed for transitive dependencies to work
 
 # log settings
 log:

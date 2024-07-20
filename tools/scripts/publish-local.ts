@@ -1,7 +1,17 @@
 /**
- * This script helps testing new versions by generating a node_modules friendly '@paima' folder
- * You can copy-paste it into a project to test versions early, or use --targetPath to override automatically
+ * This script helps testing new versions of Paima NPM packages without having to publish to the NPM registry
+ *
+ * This package has 2 modes of operation:
+ * 1. (default) it creates a local package registry using Verdaccio
+ *    In your game, you can add `@paima:registry=http://localhost:4873` to the .npmrc file
+ *    And now paima packages will be pulled from your local registry
+ *    Unfortunately, it won't auto update with `npm install` is the versions are the same
+ * 2. Direct file replacement. It will update the files directly in the target project's node_modules
+ *    This way is more flexible than the Verdaccio option,
+ *    but since it means you're bypassing `npm install` entirely, transitive dependencies will not be installed
+ *    so this option is only good if your change didn't introduce any new npm dependencies
  */
+
 import { startLocalRegistry } from '@nx/js/plugins/jest/local-registry';
 import {
   existsSync,
@@ -87,16 +97,22 @@ const program = new Command();
   if (options.targetPath != null) {
     console.log();
     const targetPath = resolve(process.cwd(), options.targetPath, 'node_modules', '@paima');
-    rmIfExists(targetPath);
-    cpSync(outputFolder, targetPath, { recursive: true });
-    console.log(`Copied result to ${targetPath}`);
-  }
+    if (existsSync(targetPath)) {
+      rmIfExists(targetPath);
+      cpSync(outputFolder, targetPath, { recursive: true });
+      console.log(`Copied result to ${targetPath}`);
+    } else {
+      console.error('Not found: ', targetPath);
+    }
 
-  /**
-   * Final: When installation is done, no need to have Verdaccio
-   */
-  stopLocalRegistry();
-  rmSync(storage, { recursive: true });
+    // in the case we're overriding directly, we don't need Verdaccio after this step
+    stopLocalRegistry();
+    rmSync(storage, { recursive: true });
+  } else {
+    console.log();
+    console.log('Verdaccio (local package registry) started');
+    console.log(`To kill it, run: kill -9 $(ps aux | grep '[v]erdaccio' | awk '{print $2}')`);
+  }
 
   process.exit(publishStatus);
 })().catch(e => {

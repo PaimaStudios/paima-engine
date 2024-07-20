@@ -3,6 +3,11 @@
   "name": "@paima/source",
   "$schema": "node_modules/nx/schemas/project-schema.json",
   "targets": {
+    "prebuild": {},
+    "build": {},
+    "test": {},
+    "lint:eslint": {},
+    "release": {},
     "local-registry": {
       "executor": "@nx/js:verdaccio",
       "options": {
