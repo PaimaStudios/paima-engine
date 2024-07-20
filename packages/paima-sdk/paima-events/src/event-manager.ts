@@ -1,9 +1,9 @@
 /* eslint-disable no-console */
 import { fillPath, keysForPath } from './utils.js';
 import { PaimaEventConnect } from './event-connect.js';
-import { PaimaEventBrokerNames } from './builtin-event-utils.js';
 import type { Static } from '@sinclair/typebox';
 import type { EventPathAndDef, ResolvedPath, UserFilledPath } from './types.js';
+import { PaimaEventBrokerNames } from './types.js';
 
 export type CallbackArgs<Event extends EventPathAndDef> = {
   // schema of the content emitted

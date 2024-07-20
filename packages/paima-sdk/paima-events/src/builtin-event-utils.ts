@@ -1,10 +1,6 @@
 import { BuiltinEvents } from './builtin-events.js';
 import { PaimaEventManager } from './event-manager.js';
-
-export enum PaimaEventBrokerNames {
-  PaimaEngine = 'paima-engine',
-  Batcher = 'batcher',
-}
+import { PaimaEventBrokerNames } from './types.js';
 
 let bestBlock = 0;
 

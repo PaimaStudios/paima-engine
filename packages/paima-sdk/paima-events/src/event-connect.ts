@@ -1,8 +1,9 @@
 import mqtt from 'mqtt';
-import { PaimaEventBrokerNames, setupInitialListeners } from './builtin-event-utils.js';
+import { setupInitialListeners } from './builtin-event-utils.js';
 import { PaimaEventManager } from './event-manager.js';
 import { toPattern } from './utils.js';
 import { extract, matches } from 'mqtt-pattern';
+import { PaimaEventBrokerNames } from './types.js';
 
 /*
  * Paima Event Connector
@@ -29,14 +30,14 @@ export class PaimaEventConnect {
     }
   }
 
-  private async setupClient(url: string, broker: PaimaEventBrokerNames): Promise<mqtt.MqttClient> {
+  private async setupClient(url: string): Promise<mqtt.MqttClient> {
     const client = await mqtt.connectAsync(url);
     client.on('message', (topic: string, message: Buffer) => {
       for (const [_broker, info] of Object.entries(PaimaEventManager.Instance.callbacksForTopic)) {
         for (const [pattern, callbacks] of Object.entries(info)) {
           if (matches(pattern, topic)) {
-            for (const callbackInfo of Object.values<(typeof callbacks)[keyof typeof callbacks]>(
-              callbacks
+            for (const callbackInfo of Object.getOwnPropertySymbols(callbacks).map(
+              sym => callbacks[sym]
             )) {
               const data: Record<string, unknown> = JSON.parse(message.toString());
 
@@ -59,8 +60,7 @@ export class PaimaEventConnect {
       // keep in sync with paima-engine config.ts
       const port = process.env.MQTT_ENGINE_BROKER_PORT ?? '8883';
       PaimaEventConnect.clients.engine = await this.setupClient(
-        process.env.MQTT_ENGINE_BROKER_URL ?? 'ws://127.0.0.1:' + port,
-        broker
+        process.env.MQTT_ENGINE_BROKER_URL ?? 'ws://127.0.0.1:' + port
       );
       await setupInitialListeners(broker);
     }
@@ -73,8 +73,7 @@ export class PaimaEventConnect {
       // keep in sync with batcher config.ts
       const port = process.env.MQTT_BATCHER_BROKER_PORT ?? '8883';
       PaimaEventConnect.clients.batcher = await this.setupClient(
-        process.env.MQTT_BATCHER_BROKER_URL ?? 'ws://127.0.0.1:' + port,
-        broker
+        process.env.MQTT_BATCHER_BROKER_URL ?? 'ws://127.0.0.1:' + port
       );
       await setupInitialListeners(broker);
     }

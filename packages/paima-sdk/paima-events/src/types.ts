@@ -1,7 +1,11 @@
 import { Type } from '@sinclair/typebox';
 import type { Kind, TTuple, TLiteral, TObject, Static, TSchema } from '@sinclair/typebox';
-import { PaimaEventBrokerNames } from './builtin-event-utils.js';
 import assertNever from 'assert-never';
+
+export enum PaimaEventBrokerNames {
+  PaimaEngine = 'paima-engine',
+  Batcher = 'batcher',
+}
 
 /**
  * Name inspired from https://docs.aws.amazon.com/whitepapers/latest/designing-mqtt-topics-aws-iot-core/mqtt-design-best-practices.html#:~:text=Since%20MQTT%20topics%20are%20case,when%20creating%20each%20topic%20level
