@@ -1,6 +1,6 @@
 import { BuiltinEvents } from './builtin-events.js';
 import { PaimaEventManager } from './event-manager.js';
-import { PaimaEventBrokerNames } from './types.js';
+import type { PaimaEventBrokerNames } from './types.js';
 
 let bestBlock = 0;
 
