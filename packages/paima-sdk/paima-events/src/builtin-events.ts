@@ -2,6 +2,14 @@ import { Type } from '@sinclair/typebox';
 import type { EventPathAndDef } from './types.js';
 import { genEvent, toPath, TopicPrefix } from './types.js';
 
+// careful: the most steps you add, the more responsive, but also the slower
+//          since status updates themselves need to be sent over the network
+export enum BatcherStatus {
+  Posting = 'posting',
+  Finalizing = 'Finalizing',
+  Finalized = 'finalized', // after waiting X blocks
+  Rejected = 'rejected',
+}
 const BatcherHash = genEvent({
   name: 'BatcherHash',
   fields: [
@@ -12,11 +20,15 @@ const BatcherHash = genEvent({
     },
     {
       name: 'blockHeight',
-      type: Type.Integer(),
+      type: Type.Optional(Type.Integer()),
     },
     {
       name: 'transactionHash',
       type: Type.String(),
+    },
+    {
+      name: 'status',
+      type: Type.Enum(BatcherStatus),
     },
   ],
 } as const);
@@ -31,12 +43,12 @@ const RollupBlock = genEvent({
     },
     {
       name: 'emulated',
-      type: Type.Union([Type.Undefined(), Type.Integer()]),
+      type: Type.Optional(Type.Integer()),
     },
   ],
 } as const);
 
 export const BuiltinEvents = {
   BatcherHash: toPath(TopicPrefix.Batcher, BatcherHash),
-  RollupBlock: toPath(TopicPrefix.Stf, RollupBlock),
+  RollupBlock: toPath(TopicPrefix.Node, RollupBlock),
 } as const satisfies Record<string, EventPathAndDef>;

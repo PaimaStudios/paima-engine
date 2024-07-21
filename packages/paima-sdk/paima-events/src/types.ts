@@ -12,8 +12,8 @@ export enum PaimaEventBrokerNames {
  */
 export enum TopicPrefix {
   Batcher = 'batcher',
-  Stf = 'stf',
-  Game = 'game',
+  Node = 'node',
+  App = 'app',
 }
 
 /**
@@ -216,9 +216,9 @@ export function toPath<T extends LogEvent<LogEventFields<TSchema>[]>, Prefix ext
       switch (prefix) {
         case TopicPrefix.Batcher:
           return PaimaEventBrokerNames.Batcher;
-        case TopicPrefix.Stf:
+        case TopicPrefix.Node:
           return PaimaEventBrokerNames.PaimaEngine;
-        case TopicPrefix.Game:
+        case TopicPrefix.App:
           return PaimaEventBrokerNames.PaimaEngine;
         default:
           assertNever(prefix);
@@ -275,5 +275,13 @@ type Ensure<T extends MaybeIndexedLogEvent<MaybeIndexedLogEventFields<TSchema>[]
 export function genEvent<T extends MaybeIndexedLogEvent<MaybeIndexedLogEventFields<TSchema>[]>>(
   event: Ensure<T, MaybeIndexedLogEvent<any>>
 ): ToLog<T> {
+  for (const { name } of event.fields) {
+    const invalidCharacters = ['$', '/', '+', '#'];
+    for (const invalid of invalidCharacters) {
+      if (name.includes(invalid)) {
+        throw new Error(`Event ${event.name} has field ${name} with invalid character ${invalid}.`);
+      }
+    }
+  }
   return event as any;
 }

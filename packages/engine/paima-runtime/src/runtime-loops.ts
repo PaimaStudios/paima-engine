@@ -298,6 +298,8 @@ async function runSync(
             emulated = blockNumber;
             blockNumber = e.deployment_chain_block_height;
           }
+
+          // TODO: this is dangerous because this event is skipped if Paima shuts down before it gets emitted
           await PaimaEventManager.Instance.sendMessage(BuiltinEvents.RollupBlock, {
             block: blockNumber,
             emulated,

@@ -1,4 +1,4 @@
-import { BuiltinEvents } from './builtin-events.js';
+import { BatcherStatus, BuiltinEvents } from './builtin-events.js';
 import { PaimaEventManager } from './event-manager.js';
 import type { PaimaEventBrokerNames } from './types.js';
 
@@ -49,6 +49,7 @@ export function awaitBatcherHash(batchHash: string, maxTimeSec = 20): Promise<nu
           filter: { batch: batchHash },
         },
         event => {
+          if (event.blockHeight == null || event.status !== BatcherStatus.Finalized) return; // only care about when a tx makes it into a block
           const remainingTime = maxTimeSec - (new Date().getTime() - startTime);
           awaitBlockWS(event.blockHeight, remainingTime)
             .then(resolve)

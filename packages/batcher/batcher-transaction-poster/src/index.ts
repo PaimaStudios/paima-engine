@@ -14,7 +14,7 @@ import { hashBatchSubunit, buildBatchData } from '@paima/concise';
 import { contractAbis, wait } from '@paima/utils';
 import { utf8ToHex } from 'web3-utils';
 import { ethers } from 'ethers';
-import { BuiltinEvents, PaimaEventManager } from '@paima/events';
+import { BatcherStatus, BuiltinEvents, PaimaEventManager } from '@paima/events';
 
 class BatchedTransactionPoster {
   private provider: EthersEvmProvider;
@@ -82,22 +82,47 @@ class BatchedTransactionPoster {
     this.provider = newProvider;
   };
 
-  private postMessage = async (msg: string): Promise<[number, string]> => {
+  private postMessage = async (msg: string, hashes: string[]): Promise<[number, string]> => {
     const hexMsg = utf8ToHex(msg);
     // todo: unify with buildDirectTx
     const iface = new ethers.Interface([
       'function paimaSubmitGameInput(bytes calldata data) payable',
     ]);
     const encodedData = iface.encodeFunctionData('paimaSubmitGameInput', [hexMsg]);
-    const transaction = await this.provider.sendTransaction({
+
+    const txRequest = {
       data: encodedData,
       to: this.contractAddress,
       from: this.provider.getAddress().address,
       value: '0x' + Number(this.fee).toString(16),
       gasLimit: estimateGasLimit(msg.length),
-    });
-    const receipt = (await transaction.extra.wait(ENV.BATCHER_CONFIRMATIONS))!;
-    return [receipt.blockNumber, receipt.hash];
+    };
+    const populatedTx = await this.provider.finalizeTransaction(txRequest);
+    const serializedSignedTx = ethers.Transaction.from(
+      await this.provider.getConnection().api.signTransaction(populatedTx)
+    );
+
+    const [transaction] = await Promise.all([
+      this.provider.sendTransaction(txRequest),
+      ...this.updateMqttStatus(
+        hashes,
+        undefined,
+        serializedSignedTx.hash ?? '',
+        BatcherStatus.Posting
+      ),
+    ]);
+
+    const [receipt] = await Promise.all([
+      transaction.extra.wait(ENV.BATCHER_CONFIRMATIONS),
+      ...this.updateMqttStatus(
+        hashes,
+        transaction.extra.blockNumber ?? undefined,
+        transaction.txHash,
+        BatcherStatus.Finalizing
+      ),
+    ]);
+
+    return [receipt!.blockNumber, receipt!.hash];
   };
 
   // Returns number of input successfully posted, or a negative number on failure.
@@ -121,7 +146,7 @@ class BatchedTransactionPoster {
       let blockHeight: number;
       let transactionHash: string;
       try {
-        const postedMessage = await this.postMessage(batchedTransaction);
+        const postedMessage = await this.postMessage(batchedTransaction, hashes);
         blockHeight = postedMessage[0];
         transactionHash = postedMessage[1];
       } catch (postError) {
@@ -184,27 +209,40 @@ class BatchedTransactionPoster {
     blockHeight: number,
     transactionHash: string
   ): Promise<void> => {
-    for (let hash of hashes) {
-      try {
-        const packagedData = {
+    await Promise.all([
+      ...this.updateMqttStatus(hashes, blockHeight, transactionHash, BatcherStatus.Finalized),
+      ...hashes
+        .map(hash => ({
           input_hash: hash,
           block_height: blockHeight,
           transaction_hash: transactionHash,
-        };
-        await PaimaEventManager.Instance.sendMessage(BuiltinEvents.BatcherHash, {
-          batch: hash,
-          blockHeight,
-          transactionHash,
-        });
-        await updateStatePosted.run(packagedData, this.pool);
-      } catch (err) {
-        console.log(
-          "[batcher-transaction-poster] Error while updating posted inputs' states:",
-          err
-        );
-        throw err;
-      }
-    }
+        }))
+        .map(packagedData =>
+          updateStatePosted.run(packagedData, this.pool).catch(err => {
+            console.log(
+              "[batcher-transaction-poster] Error while updating posted inputs' states:",
+              err
+            );
+            throw err;
+          })
+        ),
+    ]);
+  };
+
+  private updateMqttStatus = (
+    hashes: string[],
+    blockHeight: undefined | number,
+    transactionHash: string,
+    status: BatcherStatus
+  ): Promise<void>[] => {
+    return hashes.map(hash =>
+      PaimaEventManager.Instance.sendMessage(BuiltinEvents.BatcherHash, {
+        batch: hash,
+        blockHeight,
+        transactionHash,
+        status,
+      })
+    );
   };
 
   private rejectPostedStates = async (hashes: string[]): Promise<void> => {
