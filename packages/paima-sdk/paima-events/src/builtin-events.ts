@@ -19,16 +19,17 @@ const BatcherHash = genEvent({
       indexed: true,
     },
     {
+      name: 'status',
+      type: Type.Enum(BatcherStatus),
+      indexed: true,
+    },
+    {
       name: 'blockHeight',
       type: Type.Optional(Type.Integer()),
     },
     {
       name: 'transactionHash',
       type: Type.String(),
-    },
-    {
-      name: 'status',
-      type: Type.Enum(BatcherStatus),
     },
   ],
 } as const);

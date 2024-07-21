@@ -46,10 +46,10 @@ export function awaitBatcherHash(batchHash: string, maxTimeSec = 20): Promise<nu
       subscriptionSymbol = PaimaEventManager.Instance.subscribe(
         {
           topic: BuiltinEvents.BatcherHash,
-          filter: { batch: batchHash },
+          filter: { batch: batchHash, status: BatcherStatus.Finalized },
         },
         event => {
-          if (event.blockHeight == null || event.status !== BatcherStatus.Finalized) return; // only care about when a tx makes it into a block
+          if (event.blockHeight == null) return; // should never happen thanks to the filter
           const remainingTime = maxTimeSec - (new Date().getTime() - startTime);
           awaitBlockWS(event.blockHeight, remainingTime)
             .then(resolve)
