@@ -2,11 +2,11 @@ use aiken/builtin
 use aiken/bytearray
 use aiken/cbor
 use aiken/dict
-use aiken/hash
+use aiken/hash.{blake2b_256}
 use aiken/list
+use aiken/merkle_patricia_forestry.{from_root, insert}
 use aiken/option
 use aiken/pairs
-use aiken/sparse_merkle_tree_blake256.{verify_added_member}
 use aiken/transaction.{
   InlineDatum, Input, Mint, Output, OutputReference, ScriptContext, Spend,
   Transaction,
@@ -22,7 +22,9 @@ use inverse_whirlpool/conversion.{
 use inverse_whirlpool/types/actions.{
   BurnToken, MintActionType, MintToken, TransactionBodyPieces,
 }
-use inverse_whirlpool/utils.{get_inline_datum, list_at, skip_to}
+use inverse_whirlpool/utils.{
+  get_inline_datum, integer_to_bytes, list_at, skip_to,
+}
 use inverse_whirlpool/validation.{
   Account, BurnAccount, CreateAccount, DestroyAccount, IncrementAccount,
   InitMerkle, Merkle, MintActions, SpendMerkleRoot, State, ValidateActions,
@@ -87,13 +89,12 @@ validator(init_ref: OutputReference) {
 
         and {
           // Verify new and old merkle roots
-          verify_added_member(
-            account,
-            fn(a) { builtin.serialise_data(a) },
+          insert(
+            input_root |> from_root,
+            account_hash |> blake2b_256,
+            account_hash,
             merkle_proof_block,
-            input_root,
-            output_root,
-          ),
+          ) == from_root(output_root),
           // Verify utxo is preserved
           value.without_lovelace(input_value) == expected_value,
           output_address == expected_address,
@@ -213,7 +214,7 @@ validator(init_ref: OutputReference) {
   }
 }
 
-validator {
+validator(merkle_policy: ByteArray, validate_match: Bool) {
   fn mint(action: Data, context: ScriptContext) -> Bool {
     let ScriptContext { transaction, purpose } = context
     let Transaction { inputs, outputs, extra_signatories, mint, fee, id, .. } =
@@ -241,19 +242,19 @@ validator {
             amount == -1
           },
         )
-      MintToken(_, tx_body, _) -> {
+      MintToken(input_ref, tx_body, metadata) -> {
         let TransactionBodyPieces {
           collateral_inputs,
           collateral_output,
           collateral_fee,
-          ..
+          metadata_hash,
         } = tx_body
 
         expect [Pair(script_data_hash, 1), ..] =
-          mint
-            // this is the script hash of true.mint
+          mint // this is the script hash of true.mint
             // WARNING: this has to be updated if the true.mint compiled code changes
-            |> value.tokens(
+            
+          |> value.tokens(
                 #"9fc33a6ffaa8d1f600c161aa383739d5af37807ed83347cc133521c9",
               )
             |> dict.to_pairs
@@ -297,22 +298,40 @@ validator {
 
         trace bytearray.to_hex(id.hash)
 
-        // expect Some(input) =
-        //   list.find(inputs, fn(input) { input_ref == input.output_reference })
-        // let Input { output: Output { value, datum, .. }, .. } = input
-        // expect Account(credential, amount): State = get_inline_datum(datum)
-        // let expected_value =
-        //   value.from_asset(
-        //     merkle_policy,
-        //     credential |> builtin.serialise_data |> hash.blake2b_256,
-        //     1,
-        //   )
+        expect Some(input) =
+          list.find(inputs, fn(input) { input_ref == input.output_reference })
+
+        let Input { output: Output { value, datum, .. }, .. } = input
+
+        expect Account(credential, amount): State = get_inline_datum(datum)
+
+        let expected_value =
+          value.from_asset(
+            merkle_policy,
+            credential |> builtin.serialise_data |> hash.blake2b_256,
+            1,
+          )
         expect [Pair(token_name, 1)] =
           mint |> value.tokens(script_policy_id) |> dict.to_pairs
 
+        // let expected_metadata =
+        //   "const format" |> bytearray.concat(url) |> bytearray.concat("ending")
         and {
-          id.hash != ( tx_cbor |> builtin.blake2b_256 ),
-          token_name == token_name,
+          if validate_match {
+            id.hash == ( tx_cbor |> builtin.blake2b_256 )
+          } else {
+            id.hash != ( tx_cbor |> builtin.blake2b_256 )
+          }?,
+          (value.without_lovelace(value) == expected_value)?,
+          (token_name == (
+            credential
+              |> builtin.serialise_data
+              |> bytearray.concat(amount |> builtin.serialise_data)
+              |> hash.blake2b_256
+          ))?,
+          (blake2b_256(metadata) == metadata_hash)?,
+          // Metadata validation here
+          True,
         }
       }
     }

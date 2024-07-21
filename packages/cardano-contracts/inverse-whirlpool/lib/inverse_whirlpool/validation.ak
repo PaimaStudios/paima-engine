@@ -1,16 +1,17 @@
 use aiken/dict
 use aiken/list
-use aiken/sparse_merkle_tree/merkle_blake256.{MerkleProofBlock}
-use aiken/sparse_merkle_tree_blake256.{init_root}
+use aiken/merkle_patricia_forestry.{Proof}
+use aiken/merkle_patricia_forestry/merkling.{null_hash}
 use aiken/transaction.{InlineDatum, Output, OutputReference, Transaction}
 use aiken/transaction/credential.{Address, Credential}
 use aiken/transaction/value.{PolicyId, Value}
+use inverse_whirlpool/types/data.{RootHash}
 
 pub type MintActions {
   InitMerkle
   CreateAccount {
     account: Credential,
-    merkle_proof_block: MerkleProofBlock<Credential>,
+    merkle_proof_block: Proof,
     output_index: Int,
   }
   BurnAccount
@@ -21,9 +22,6 @@ pub type ValidateActions {
   IncrementAccount(Int)
   DestroyAccount
 }
-
-pub type RootHash =
-  ByteArray
 
 pub type State {
   Merkle { root: RootHash, own_hash: PolicyId }
@@ -41,7 +39,7 @@ pub fn init_merkle(
     tx.inputs |> list.find(fn(i) { i.output_reference == init_ref })
 
   let expected_data =
-    init_root()
+    null_hash
       |> Merkle(own_policy)
       |> InlineDatum
 
