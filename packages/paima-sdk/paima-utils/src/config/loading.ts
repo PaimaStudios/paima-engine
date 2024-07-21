@@ -1,4 +1,3 @@
-import * as fs from 'fs/promises';
 import YAML from 'yaml';
 import type { Static, TSchema } from '@sinclair/typebox';
 import { Value, ValueErrorType } from '@sinclair/typebox/value';
@@ -13,6 +12,8 @@ export enum ConfigNetworkType {
   EVM_OTHER = 'evm-other',
   CARDANO = 'cardano',
   MINA = 'mina',
+  AVAIL_MAIN = 'avail-main',
+  AVAIL_OTHER = 'avail-other',
 }
 
 export type EvmConfig = Static<typeof EvmConfigSchema>;
@@ -98,6 +99,27 @@ export const MinaConfigSchema = Type.Object({
 
 export type MinaConfig = Static<typeof MinaConfigSchema>;
 
+export const AvailRequiredProperties = Type.Object({
+  rpc: Type.String(),
+  lightClient: Type.String(),
+  genesisHash: Type.String({ maxLength: 66, minLength: 66, pattern: '^0x[a-fA-F0-9]+$' }),
+  type: Type.Union([
+    Type.Literal(ConfigNetworkType.AVAIL_MAIN),
+    Type.Literal(ConfigNetworkType.AVAIL_OTHER),
+  ]),
+});
+
+export const AvailOptionalProperties = Type.Object({
+  delay: Type.Number(),
+  funnelBlockGroupSize: Type.Number({ default: 100 }),
+  presyncStepSize: Type.Number({ default: 1000 }),
+});
+
+export const AvailConfigSchema = Type.Intersect([AvailRequiredProperties, AvailOptionalProperties]);
+
+export type AvailMainConfig = AvailConfig & { type: ConfigNetworkType.AVAIL_MAIN };
+export type AvailConfig = Static<typeof AvailConfigSchema>;
+
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const TaggedEvmConfig = <T extends boolean, U extends boolean>(T: T, MAIN_CONFIG: U) =>
   Type.Union([
@@ -135,12 +157,30 @@ export const TaggedMinaConfig = <T extends boolean>(T: T) =>
   ]);
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+export const TaggedAvailMainConfig = <T extends boolean>(T: T) =>
+  Type.Intersect([
+    AvailRequiredProperties,
+    T ? AvailOptionalProperties : Type.Partial(AvailOptionalProperties),
+    Type.Object({ type: Type.Literal(ConfigNetworkType.AVAIL_MAIN) }),
+  ]);
+
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+export const TaggedAvailOtherConfig = <T extends boolean>(T: T) =>
+  Type.Intersect([
+    AvailRequiredProperties,
+    T ? AvailOptionalProperties : Type.Partial(AvailOptionalProperties),
+    Type.Object({ type: Type.Literal(ConfigNetworkType.AVAIL_OTHER) }),
+  ]);
+
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const TaggedConfig = <T extends boolean>(T: T) =>
   Type.Union([
     TaggedEvmMainConfig(T),
     TaggedEvmOtherConfig(T),
     TaggedCardanoConfig(T),
     TaggedMinaConfig(T),
+    TaggedAvailMainConfig(T),
+    TaggedAvailOtherConfig(T),
   ]);
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
@@ -166,6 +206,12 @@ const minaConfigDefaults = {
   delay: 30 * 40,
 };
 
+const availConfigDefaults = {
+  funnelBlockGroupSize: 100,
+  delay: 3 * 20,
+  presyncStepSize: 1000,
+};
+
 // used as a placeholder name for the ENV fallback mechanism
 // will need to be removed afterwards
 export const defaultEvmMainNetworkName = 'evm';
@@ -175,47 +221,54 @@ export const defaultMinaNetworkName = 'mina';
 export async function loadConfig(): Promise<Static<typeof BaseConfigWithDefaults> | undefined> {
   let configFileData: string;
   try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const fs = require('fs/promises');
     try {
       configFileData = await fs.readFile(`config.${ENV.NETWORK}.yml`, 'utf8');
     } catch (error) {
       configFileData = await fs.readFile(`config.${ENV.NETWORK}.yaml`, 'utf8');
     }
   } catch (err) {
-    // fallback to the ENV config for now to keep backwards compatibility
-    const mainConfig: EvmConfig = {
-      chainUri: ENV.CHAIN_URI,
-      chainId: ENV.CHAIN_ID,
-      chainCurrencyName: ENV.CHAIN_CURRENCY_NAME,
-      chainCurrencySymbol: ENV.CHAIN_CURRENCY_SYMBOL,
-      chainCurrencyDecimals: ENV.CHAIN_CURRENCY_DECIMALS,
-      chainExplorerUri: ENV.CHAIN_EXPLORER_URI,
-      funnelBlockGroupSize: ENV.DEFAULT_FUNNEL_GROUP_SIZE,
-      presyncStepSize: ENV.DEFAULT_PRESYNC_STEP_SIZE,
-      paimaL2ContractAddress: ENV.CONTRACT_ADDRESS,
-      type: ConfigNetworkType.EVM,
-    };
+    // injected at build time with the middleware esbuild template
+    if (process.env.BUILT_TIME_INJECTED_CONFIGURATION) {
+      configFileData = process.env.BUILT_TIME_INJECTED_CONFIGURATION;
+    } else {
+      // fallback to the ENV config for now to keep backwards compatibility
+      const mainConfig: EvmConfig = {
+        chainUri: ENV.CHAIN_URI,
+        chainId: ENV.CHAIN_ID,
+        chainCurrencyName: ENV.CHAIN_CURRENCY_NAME,
+        chainCurrencySymbol: ENV.CHAIN_CURRENCY_SYMBOL,
+        chainCurrencyDecimals: ENV.CHAIN_CURRENCY_DECIMALS,
+        chainExplorerUri: ENV.CHAIN_EXPLORER_URI,
+        funnelBlockGroupSize: ENV.DEFAULT_FUNNEL_GROUP_SIZE,
+        presyncStepSize: ENV.DEFAULT_PRESYNC_STEP_SIZE,
+        paimaL2ContractAddress: ENV.CONTRACT_ADDRESS,
+        type: ConfigNetworkType.EVM,
+      };
 
-    const baseConfig: Static<typeof BaseConfigWithDefaults> = {
-      [defaultEvmMainNetworkName]: mainConfig,
-    };
+      const baseConfig: Static<typeof BaseConfigWithDefaults> = {
+        [defaultEvmMainNetworkName]: mainConfig,
+      };
 
-    if (ENV.CARP_URL) {
-      if (!ENV.CARDANO_CONFIRMATION_DEPTH) {
-        throw new Error('[carp-funnel] Missing CARDANO_CONFIRMATION_DEPTH setting.');
+      if (ENV.CARP_URL) {
+        if (!ENV.CARDANO_CONFIRMATION_DEPTH) {
+          throw new Error('[carp-funnel] Missing CARDANO_CONFIRMATION_DEPTH setting.');
+        }
+
+        const network = Value.Decode(CardanoNetwork, ENV.CARDANO_NETWORK);
+
+        baseConfig[defaultCardanoNetworkName] = {
+          carpUrl: ENV.CARP_URL,
+          network,
+          confirmationDepth: ENV.CARDANO_CONFIRMATION_DEPTH,
+          presyncStepSize: ENV.DEFAULT_PRESYNC_STEP_SIZE,
+          type: ConfigNetworkType.CARDANO,
+        };
       }
 
-      const network = Value.Decode(CardanoNetwork, ENV.CARDANO_NETWORK);
-
-      baseConfig[defaultCardanoNetworkName] = {
-        carpUrl: ENV.CARP_URL,
-        network,
-        confirmationDepth: ENV.CARDANO_CONFIRMATION_DEPTH,
-        presyncStepSize: ENV.DEFAULT_PRESYNC_STEP_SIZE,
-        type: ConfigNetworkType.CARDANO,
-      };
+      return baseConfig;
     }
-
-    return baseConfig;
   }
 
   try {
@@ -236,6 +289,10 @@ export async function loadConfig(): Promise<Static<typeof BaseConfigWithDefaults
           break;
         case ConfigNetworkType.MINA:
           config[network] = Object.assign(minaConfigDefaults, networkConfig);
+          break;
+        case ConfigNetworkType.AVAIL_MAIN:
+        case ConfigNetworkType.AVAIL_OTHER:
+          config[network] = Object.assign(availConfigDefaults, networkConfig);
           break;
         default:
           throw new Error('unknown network type');
@@ -294,6 +351,20 @@ export function parseConfigFile(configFileData: string): Static<typeof BaseConfi
           baseStructure[network]
         );
         break;
+      case ConfigNetworkType.AVAIL_MAIN:
+        baseConfig[network] = checkOrError(
+          'avail main config entry',
+          TaggedAvailMainConfig(false),
+          baseStructure[network]
+        );
+        break;
+      case ConfigNetworkType.AVAIL_OTHER:
+        baseConfig[network] = checkOrError(
+          'avail other config entry',
+          TaggedAvailOtherConfig(false),
+          baseStructure[network]
+        );
+        break;
       default:
         throw new Error('Unknown config network type.');
     }
@@ -309,6 +380,14 @@ function validateConfig(configs: Static<typeof BaseConfigWithoutDefaults>): void
 
   if (paimaContractEntries.length > 1) {
     throw new Error('There can only be a single network with the paimaL2ContractAddress setting');
+  }
+
+  const mainNetworks = Object.values(configs).filter(
+    config => config.type === ConfigNetworkType.EVM || config.type === ConfigNetworkType.AVAIL_MAIN
+  );
+
+  if (mainNetworks.length > 1) {
+    throw new Error('There can only be a single main network (evm or avail_main types)');
   }
 }
 
@@ -349,6 +428,9 @@ export function caip2PrefixFor(config: Static<typeof InstantiatedConfigsUnion>):
       return `mina:${config.networkId}`;
     case ConfigNetworkType.CARDANO:
       return networkToCip34(config);
+    case ConfigNetworkType.AVAIL_MAIN:
+    case ConfigNetworkType.AVAIL_OTHER:
+      return `polkadot:${config.genesisHash.slice(2, 32 + 2)}`;
     default:
       assertNever(type);
   }

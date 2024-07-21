@@ -138,7 +138,11 @@ async function getPresyncStartBlockheight(
       continue;
     }
 
-    const earliestCdeSbh = getEarliestStartBlockheight(CDEs, network);
+    // avail doesn't have extensions
+    const earliestCdeSbh =
+      config[network].type === ConfigNetworkType.AVAIL_MAIN
+        ? 1
+        : getEarliestStartBlockheight(CDEs, network);
 
     const freshPresyncStart = earliestCdeSbh >= 0 ? earliestCdeSbh : maximumPresyncBlockheight + 1;
 

@@ -151,7 +151,7 @@ export class MinaProvider implements IProvider<MinaApi> {
       // only these two options are used
       // https://github.com/aurowallet/auro-wallet-browser-extension/blob/624de322dd99baaa09617bbad4a4a838f0a88edc/src/background/lib/index.js#L17
       // this is part of the hashed message
-      const network = networkKind.chainId === 'mainnet' ? 'mainnet' : 'testnet';
+      const network = networkKind.networkID === 'mainnet' ? 'mainnet' : 'testnet';
 
       return `${signature.field};${signature.scalar};${network}`;
     } else {

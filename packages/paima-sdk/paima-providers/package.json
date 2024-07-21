@@ -29,11 +29,13 @@
     "@paima/crypto": "2.4.0",
     "@paima/utils": "2.4.0",
     "@perawallet/connect": "^1.2.3",
-    "@polkadot/extension-dapp": "^0.44.9",
+    "@polkadot/extension-dapp": "^0.47.6",
     "@aurowallet/mina-provider": "^1.0.2",
     "bech32": "^2.0.0",
     "web3": "1.10.0",
     "web3-utils": "1.10.0",
-    "assert-never": "^1.2.1"
+    "assert-never": "^1.2.1",
+    "avail-js-sdk": "^0.2.12",
+    "@polkadot/api": "^12.0.2"
   }
 }

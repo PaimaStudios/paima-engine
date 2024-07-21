@@ -151,9 +151,15 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
       lastTimestamp = cachedState.timestamp;
     } else {
       lastTimestamp = await timeout(
-        this.sharedData.web3.eth.getBlock(blockHeight - 1),
+        this.sharedData.mainNetworkApi.getBlock(blockHeight - 1),
         DEFAULT_FUNNEL_TIMEOUT
       );
+
+      if (!lastTimestamp) {
+        // FIXME: this funnel shouldn't actually be doing this, it should be
+        // doing what the other funnels do.
+        throw new Error("Couldn't get main network timestamp at known block height");
+      }
 
       lastTimestamp = lastTimestamp.timestamp as number;
     }
@@ -441,7 +447,7 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
       newEntry.updateStartingSlot(
         timestampToAbsoluteSlot(
           shelleyEra(config),
-          (await sharedData.web3.eth.getBlock(startingBlockHeight)).timestamp as number,
+          (await sharedData.mainNetworkApi.getBlock(startingBlockHeight))!.timestamp as number,
           confirmationDepth
         )
       );

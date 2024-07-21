@@ -25,6 +25,14 @@ export class ENV {
     return process.env.BATCHER_PRIVATE_KEY || '';
   }
 
+  static get BATCHER_NETWORK(): string | undefined {
+    return process.env.BATCHER_NETWORK;
+  }
+
+  static get BATCHER_AVAIL_LIGHT_CLIENT(): string | undefined {
+    return process.env.BATCHER_AVAIL_LIGHT_CLIENT;
+  }
+
   static get MAX_BASE_GAS(): number {
     return process.env.MAX_BASE_GAS ? parseInt(process.env.MAX_BASE_GAS, 10) : 50000;
   }
@@ -129,6 +137,10 @@ export class ENV {
 
   private static isTrue(value: string | undefined): boolean {
     return ['true', '1', 'yes'].includes((value ?? '').toLowerCase());
+  }
+
+  static get SECURITY_NAMESPACE(): string {
+    return ENGINE_ENV.SECURITY_NAMESPACE;
   }
 }
 

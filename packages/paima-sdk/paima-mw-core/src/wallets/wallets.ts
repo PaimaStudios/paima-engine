@@ -10,6 +10,7 @@ import type { IProvider } from '@paima/providers';
 import { WalletMode } from '@paima/providers';
 import { PostingMode, addLogin, setDefaultProvider, setPostingMode } from '../state.js';
 import { minaLoginWrapper } from './mina.js';
+import { availJsLoginWrapper } from './avail.js';
 
 export async function specificWalletLogin(
   loginInfo: LoginInfo,
@@ -36,6 +37,9 @@ export async function specificWalletLogin(
       }
       case WalletMode.Mina: {
         return await minaLoginWrapper(loginInfo);
+      }
+      case WalletMode.AvailJs: {
+        return await availJsLoginWrapper(loginInfo);
       }
       default:
         assertNever(loginInfo, true);

@@ -341,8 +341,7 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
     dbTx: PoolClient,
     baseFunnel: ChainFunnel,
     chainName: string,
-    config: MinaConfig,
-    startingBlockHeight: number
+    config: MinaConfig
   ): Promise<MinaFunnel> {
     const cacheEntry = (async (): Promise<MinaFunnelCacheEntry> => {
       const entry = sharedData.cacheManager.cacheEntries[MinaFunnelCacheEntry.SYMBOL];
@@ -354,7 +353,12 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
       const pg = new Client({ connectionString: config.archiveConnectionString });
       await pg.connect();
 
-      const startingBlock = await sharedData.web3.eth.getBlock(startingBlockHeight);
+      const startingBlock = await sharedData.mainNetworkApi.getStartingBlock();
+
+      if (!startingBlock) {
+        throw new Error("Couldn't get main's network staring block timestamp");
+      }
+
       const startingBlockTimestamp = startingBlock.timestamp as number;
 
       const minaTimestamp = baseChainTimestampToMina(startingBlockTimestamp, config.delay);
@@ -396,19 +400,11 @@ export async function wrapToMinaFunnel(
   chainFunnel: ChainFunnel,
   sharedData: FunnelSharedData,
   dbTx: PoolClient,
-  startingBlockHeight: number,
   chainName: string,
   config: MinaConfig
 ): Promise<ChainFunnel> {
   try {
-    const ebp = await MinaFunnel.recoverState(
-      sharedData,
-      dbTx,
-      chainFunnel,
-      chainName,
-      config,
-      startingBlockHeight
-    );
+    const ebp = await MinaFunnel.recoverState(sharedData, dbTx, chainFunnel, chainName, config);
     return ebp;
   } catch (err) {
     doLog('[paima-funnel] Unable to initialize mina cde events processor:');

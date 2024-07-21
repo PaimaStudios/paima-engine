@@ -13,11 +13,14 @@ import {
   MinaConfig,
   ConfigNetworkType,
   OtherEvmConfig,
+  MainEvmConfig,
   defaultEvmMainNetworkName,
   defaultCardanoNetworkName,
   defaultMinaNetworkName,
   BaseConfigWithoutDefaults,
   caip2PrefixFor,
+  AvailMainConfig,
+  AvailConfig,
 } from './config/loading.js';
 
 export * from './config.js';
@@ -40,8 +43,11 @@ export {
   GlobalConfig,
   EvmConfig,
   OtherEvmConfig,
+  MainEvmConfig,
   CardanoConfig,
   MinaConfig,
+  AvailConfig,
+  AvailMainConfig,
   ConfigNetworkType,
   defaultEvmMainNetworkName,
   defaultCardanoNetworkName,
