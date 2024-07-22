@@ -23,10 +23,59 @@ const app = new Command();
 app.name('minter').description('Inverse Whirlpool Minter').version('0.0.1');
 
 // App Command: Mint -----------------------------------------------------------
-// Executes the mint action
 app
   .command('mint')
   .description('Mints a token with a verifiable metadata hash')
+  .addOption(previewOption)            // Network
+  .addOption(blockfrostUrlOption)      // Provider Option
+  .addOption(kupoUrlOption)            // Provider Option
+  .addOption(ogmiosUrlOption)          // Provider Option
+  .action(async ({ preview }) => {
+
+    // Set up wallet API and provider API to broadcast the built TX
+    // const provider = new Kupmios(kupoUrl, ogmiosUrl);
+    const lucid = await api_blockfrost(preview ? 'Preview' : 'Mainnet' )
+    await lucid.selectWalletFromSeed(fs.readFileSync('seed.txt', { encoding: 'utf-8' }));
+   
+    console.log(lucid)
+    // Initialize Lucid ----------------------------------------------------------
+
+    // Try to execute the TX
+    try {
+      const tx_info = await mint_token(lucid)
+    } catch (e) {
+      console.log(e);
+    }
+  });
+
+// App Command: Burn -----------------------------------------------------------
+app
+  .command('burn')
+  .description('Burns a token')
+  .addOption(previewOption)            // Network
+  .addOption(blockfrostUrlOption)      // Provider Option
+  .addOption(kupoUrlOption)            // Provider Option
+  .addOption(ogmiosUrlOption)          // Provider Option
+  .action(async ({ preview }) => {
+
+    // Set up wallet API and provider API to broadcast the built TX
+    // const provider = new Kupmios(kupoUrl, ogmiosUrl);
+    const lucid = await api_blockfrost(preview ? 'Preview' : 'Mainnet' )
+    await lucid.selectWalletFromSeed(fs.readFileSync('seed.txt', { encoding: 'utf-8' }));
+
+    // Try to execute the TX
+    try {
+      const tx_info = await mint_token(lucid)
+    } catch (e) {
+      console.log(e);
+    }
+  });
+
+
+// App Command: Update -----------------------------------------------------------
+app
+  .command('update')
+  .description("Updates a token's metadata")
   .addOption(previewOption)            // Network
   .addOption(blockfrostUrlOption)      // Provider Option
   .addOption(kupoUrlOption)            // Provider Option

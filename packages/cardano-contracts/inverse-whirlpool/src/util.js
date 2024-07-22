@@ -38,8 +38,5 @@ export function getValidators(endpoints, contract)  {
       script: contract.validators.find((v) => v.title === endpoint.validator).compiledCode,
     }
   });
-  console.log('contract:', contract)
-  console.log('end points:', endpoints)
-  console.log('Validators:', Validators)
   return Validators
 }
