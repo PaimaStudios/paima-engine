@@ -71,7 +71,7 @@ export const mint_token = async (API) => {
   // Configure Script Datum and Redeemer ----------------------------------------
   if (VERBOSE) { console.log("INFO: Configuring Datum"); }
 
-  // Mint Action: AssetCollateral -> Mint
+  // Mint Action: InitMerkle (ref: validation.ak)
   const mintRedeemer = Data.to(
     new Constr(0, [])
   ); 
@@ -82,22 +82,18 @@ export const mint_token = async (API) => {
   const scriptDatum = Data.to({credential: BigInt(1), amnt: BigInt(1)}, scriptDatumStructure)
 
   // Build the First TX --------------------------------------------------------
-  if (VERBOSE) { console.log("INFO: Building the TX"); }
   // build a tx just to be able to compute what the script data hash will be
+  if (VERBOSE) { console.log("INFO: Building the TX"); }
   const script_data_hash = await (async () => {
     const tx = await API.newTx()
     .payToAddressWithData(
       Address_Contract_AlwaysTrue, 
       {inline: scriptDatum},
-      { 
-        ['lovelace']: BigInt(1000000),
-      },
+      {['lovelace']: BigInt(1000000)},
     ) 
     .payToAddress(
       userAddress, 
-      { 
-        [asset_token1]: BigInt(quantity_token1)
-      },
+      {[asset_token1]: BigInt(quantity_token1)},
     ) 
     .mintAssets({[asset_token1]: BigInt(quantity_token1)}, mintRedeemer)
     .attachMintingPolicy(Validator_AlwaysTrue)
@@ -125,15 +121,11 @@ export const mint_token = async (API) => {
   .payToAddressWithData(
     Address_Contract_Merkle_Minter, 
     {inline: scriptDatum},
-    { 
-      ['lovelace']: BigInt(1000000),
-    },
+    {['lovelace']: BigInt(1000000)},
   ) 
   .payToAddress(
     userAddress, 
-    { 
-      [asset_token2]: BigInt(quantity_token2)
-    },
+    {[asset_token2]: BigInt(quantity_token2)},
   ) 
   .mintAssets({[asset_token2]: BigInt(quantity_token2)}, mintRedeemer)
   .attachMintingPolicy(Validator_Merkle_Minter)
@@ -168,35 +160,39 @@ export const mint_token = async (API) => {
 // #############################################################################
 // ## Burn TOKEN
 // #############################################################################
-export const burn_token = async (wallet) => {
+export const burn_token = async (API) => {
 
-  if (VERBOSE) { console.log({
-    "wallet": wallet,
+  // Contract Initialization ---------------------------------------------------
+  if (VERBOSE) { console.log("INFO: Parameterizing Contracts"); }
+
+  // User Address
+  const userAddress = await API.wallet.address()
+  if (VERBOSE) { 
+    console.log({
+      "User Address": userAddress,
+      "Network": API.network
     })
   }
 
-  // Initialize Lucid ----------------------------------------------------------
-  const lucid = await lucidAPI(wallet)
-
-  // Parameterize Contracts ----------------------------------------------------
-  if (VERBOSE) { console.log("INFO: Parameterizing Contracts"); }
-
   // Mint Validators
-  const Validator_Mint = {type: "PlutusV2", script: Validators.Mint.script };
+  const Validator_AlwaysTrue = {type: "PlutusV2", script: Validators.AlwaysTrue.script };
+  const Validator_Merkle_Minter = {type: "PlutusV2", script: Validators.Merkle_Minter.script };
 
   // Contract Addresses
-  const Address_ContractMint = lucid.utils.validatorToAddress(Validator_Mint);
+  const Address_Contract_AlwaysTrue = API.utils.validatorToAddress(Validator_AlwaysTrue);
+  const Address_Contract_Merkle_Minter = API.utils.validatorToAddress(Validator_Merkle_Minter);
 
   // Policy IDs
-  const policyId_Mint = lucid.utils.validatorToScriptHash(Validator_Mint)
+  const policyId_AlwaysTrue = API.utils.validatorToScriptHash(Validator_AlwaysTrue)
+  const policyId_Merkle_Minter = API.utils.validatorToScriptHash(Validator_Merkle_Minter)
   
   // Define Sacrificial Token Information --------------------------------------
   if (VERBOSE) { console.log("INFO: Defining Sacrificial and Primary Asset") };
 
   // Token 1 - Sacrificial token
-  const assetName_token = "SomeTokenName"
-  const quantity_token = 1 
-  const asset_token = `${policyId_Mint}${fromText(assetName_token)}`
+  const assetName_token1 = "SomeTokenName"
+  const quantity_token1 = 1 
+  const asset_token1 = `${policyId_AlwaysTrue}${fromText(assetName_token1)}`
 
   // Token Metadata
   const metaDatum = {
@@ -207,9 +203,13 @@ export const burn_token = async (wallet) => {
   // Configure Script Datum and Redeemer ----------------------------------------
   if (VERBOSE) { console.log("INFO: Configuring Datum"); }
 
-  // Mint Action: AssetCollateral -> Mint
-  const mintRedeemer = Data.to(
+  // Mint Action: InitMerkle (ref: validation.ak)
+  const mintRedeemer1 = Data.to(
     new Constr(0, [])
+  ); 
+  // Mint Action: BurnAccount (ref: validation.ak)
+  const mintRedeemer2 = Data.to(
+    new Constr(2, [])
   ); 
   const scriptDatumStructure = Data.Object({
     credential: Data.Bytes,
@@ -217,37 +217,52 @@ export const burn_token = async (wallet) => {
   })
   const scriptDatum = Data.to({credential: BigInt(1), amnt: BigInt(1)}, scriptDatumStructure)
 
+  // Build the First TX --------------------------------------------------------
+  // build a tx just to be able to compute what the script data hash will be
+  if (VERBOSE) { console.log("INFO: Building the TX"); }
+  const script_data_hash = await (async () => {
+    const tx = await API.newTx()
+    .payToAddressWithData(
+      Address_Contract_AlwaysTrue, 
+      {inline: scriptDatum},
+      {['lovelace']: BigInt(1000000)},
+    ) 
+    .payToAddress(
+      userAddress, 
+      {[asset_token1]: BigInt(quantity_token1)},
+    ) 
+    .mintAssets({[asset_token1]: BigInt(quantity_token1)}, mintRedeemer1)
+    .attachMintingPolicy(Validator_AlwaysTrue)
+    .attachMetadata(721n, metaDatum)
+    .addSigner(userAddress)
+    .complete();
+    if (VERBOSE) { console.log("INFO: Raw TX 1", tx.toString()); }
+
+    return tx.txComplete.body().script_data_hash().to_hex();
+  })();
+
   // Define Primary Token Information ------------------------------------------
   if (VERBOSE) { console.log("INFO: Defining Sacrificial and Primary Asset") };
+
+  // Token 2 - Token with scriptDataHash as the asset name
+  const assetName_token2 = script_data_hash;
+  const quantity_token2 = 1 
+  const asset_token2 = `${policyId_Merkle_Minter}${(assetName_token2)}`
   
   if (VERBOSE) { console.log("INFO: scriptDataHash (to be used as assetName):", assetName_token2); }
 
   // Build the Second TX -------------------------------------------------------
   if (VERBOSE) { console.log("INFO: Building the Secondary TX"); }
-  const tx = await lucid.newTx()
-  .payToAddressWithData(
-    Address_ContractMint, 
-    {inline: scriptDatum},
-    { 
-      ['lovelace']: BigInt(1000000),
-    },
-  ) 
-  .payToAddress(
-    wallet.userAddress, 
-    { 
-      [asset_token]: BigInt(-quantity_token)
-    },
-  ) 
-  .mintAssets({[asset_token]: BigInt(-quantity_token)}, mintRedeemer)
+  const tx2 = await API.newTx()
+  .mintAssets({[asset_token2]: BigInt(-quantity_token2)}, mintRedeemer2)
   .attachMintingPolicy(Validator_Merkle_Minter)
-  .attachMetadata(721n, metaDatum)
-  .addSigner(wallet.userAddress)
+  .addSigner(userAddress)
   .complete();
-  if (VERBOSE) { console.log("INFO: Raw TX 2", tx.toString()); }
+  if (VERBOSE) { console.log("INFO: Raw TX 2", tx2.toString()); }
 
   // Request User Signature ----------------------------------------------------
   console.log("INFO: Requesting TX signature");
-  const signedTx = await tx.sign().complete();
+  const signedTx = await tx2.sign().complete();
 
   // Submit the TX -------------------------------------------------------------
   console.log("INFO: Attempting to submit the transaction");
@@ -263,8 +278,8 @@ export const burn_token = async (wallet) => {
   // Return with TX hash -------------------------------------------------------
   return {
     tx_id: txHash,
-    address: Address_ContractMint,
-    policy_id: policyId_Mint,
+    address: Address_Contract_Merkle_Minter,
+    policy_id: policyId_Merkle_Minter,
   };
 }
 

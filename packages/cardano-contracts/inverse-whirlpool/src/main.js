@@ -1,7 +1,7 @@
 
 import 'dotenv/config';
 import { Command, Option } from '@commander-js/extra-typings';
-import { mint_token } from './actions.js';
+import { mint_token, burn_token, update_token } from './actions.js';
 import { api_blockfrost } from './util.js';
 import { generateSeedPhrase } from "lucid-cardano";
 import fs from 'fs';
@@ -65,7 +65,7 @@ app
 
     // Try to execute the TX
     try {
-      const tx_info = await mint_token(lucid)
+      const tx_info = await burn_token(lucid)
     } catch (e) {
       console.log(e);
     }
@@ -89,7 +89,7 @@ app
 
     // Try to execute the TX
     try {
-      const tx_info = await mint_token(lucid)
+      const tx_info = await update_token(lucid)
     } catch (e) {
       console.log(e);
     }
