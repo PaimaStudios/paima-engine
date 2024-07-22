@@ -1,4 +1,5 @@
 import contract from "../plutus.json" assert {type: 'json'};
+import metadata from "./metadata.json" assert {type: 'json'};
 import { getValidators} from "./util.js";
 
 import {
@@ -62,12 +63,6 @@ export const mint_token = async (API) => {
   const quantity_token1 = 1 
   const asset_token1 = `${policyId_AlwaysTrue}${fromText(assetName_token1)}`
 
-  // Token Metadata
-  const metaDatum = {
-    name: "Some Name",
-    description: "Testing this contract.",
-  };
-
   // Configure Script Datum and Redeemer ----------------------------------------
   if (VERBOSE) { console.log("INFO: Configuring Datum"); }
 
@@ -97,7 +92,7 @@ export const mint_token = async (API) => {
     ) 
     .mintAssets({[asset_token1]: BigInt(quantity_token1)}, mintRedeemer)
     .attachMintingPolicy(Validator_AlwaysTrue)
-    .attachMetadata(721n, metaDatum)
+    .attachMetadata(721n, metadata)
     .addSigner(userAddress)
     .complete();
     if (VERBOSE) { console.log("INFO: Raw TX 1", tx.toString()); }
@@ -129,7 +124,7 @@ export const mint_token = async (API) => {
   ) 
   .mintAssets({[asset_token2]: BigInt(quantity_token2)}, mintRedeemer)
   .attachMintingPolicy(Validator_Merkle_Minter)
-  .attachMetadata(721n, metaDatum)
+  .attachMetadata(721n, metadata)
   .addSigner(userAddress)
   .complete();
   if (VERBOSE) { console.log("INFO: Raw TX 2", tx2.toString()); }
@@ -194,12 +189,6 @@ export const burn_token = async (API) => {
   const quantity_token1 = 1 
   const asset_token1 = `${policyId_AlwaysTrue}${fromText(assetName_token1)}`
 
-  // Token Metadata
-  const metaDatum = {
-    name: "Some Name",
-    description: "Testing this contract.",
-  };
-
   // Configure Script Datum and Redeemer ----------------------------------------
   if (VERBOSE) { console.log("INFO: Configuring Datum"); }
 
@@ -233,7 +222,7 @@ export const burn_token = async (API) => {
     ) 
     .mintAssets({[asset_token1]: BigInt(quantity_token1)}, mintRedeemer1)
     .attachMintingPolicy(Validator_AlwaysTrue)
-    .attachMetadata(721n, metaDatum)
+    .attachMetadata(721n, metadata)
     .addSigner(userAddress)
     .complete();
     if (VERBOSE) { console.log("INFO: Raw TX 1", tx.toString()); }
@@ -319,12 +308,6 @@ export const update_token = async (wallet) => {
   const quantity_token1 = 1 
   const asset_token1 = `${policyId_Mint1}${fromText(assetName_token1)}`
 
-  // Token Metadata
-  const metaDatum = {
-    name: "Some Name",
-    description: "Testing this contract.",
-  };
-
   // Configure Script Datum and Redeemer ----------------------------------------
   if (VERBOSE) { console.log("INFO: Configuring Datum"); }
 
@@ -358,7 +341,7 @@ export const update_token = async (wallet) => {
     ) 
     .mintAssets({[asset_token1]: BigInt(quantity_token1)}, mintRedeemer)
     .attachMintingPolicy(Validator_Mint)
-    .attachMetadata(721n, metaDatum)
+    .attachMetadata(721n, metadata)
     .addSigner(wallet.userAddress)
     .complete();
     if (VERBOSE) { console.log("INFO: Raw TX 1", tx.toString()); }
@@ -394,7 +377,7 @@ export const update_token = async (wallet) => {
   ) 
   .mintAssets({[asset_token2]: BigInt(quantity_token2)}, mintRedeemer)
   .attachMintingPolicy(Validator_Merkle_Minter)
-  .attachMetadata(721n, metaDatum)
+  .attachMetadata(721n, metadata)
   .addSigner(wallet.userAddress)
   .complete();
   if (VERBOSE) { console.log("INFO: Raw TX 2", tx2.toString()); }
