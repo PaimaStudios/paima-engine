@@ -2,6 +2,9 @@ import 'dotenv/config';
 import {
   Blockfrost, 
   Lucid, 
+  fromText,
+  Data,
+  Constr
 } from "lucid-cardano";
 
 // Initialize Lucid ------------------------------------------------------------
@@ -40,3 +43,49 @@ export function getValidators(endpoints, contract)  {
   });
   return Validators
 }
+
+// Build pseudo-TX -------------------------------------------------------------
+export  const buildPseudoTX = async (API, Validator_AlwaysTrue, metadata, scriptDatum, VERBOSE=false) => {
+
+  const userAddress = await API.wallet.address()
+  const Address_Contract_AlwaysTrue = API.utils.validatorToAddress(Validator_AlwaysTrue);
+  const policyId_AlwaysTrue = API.utils.validatorToScriptHash(Validator_AlwaysTrue)
+
+  // Token 1 - Sacrificial token
+  const assetName_token = "SampleTokenName"
+  const quantity_token = 1 
+  const asset_token = `${policyId_AlwaysTrue}${fromText(assetName_token)}`
+
+  // Mint Action: InitMerkle (ref: validation.ak)
+  const mintRedeemer = Data.to(
+    new Constr(0, [])
+  ); 
+
+  // Build the First TX --------------------------------------------------------
+  // build a tx just to be able to compute what the script data hash will be
+  if (VERBOSE) { console.log("INFO: Building the Pseudo TX"); }
+  const script_data_hash = await (async () => {
+    const tx = await API.newTx()
+    .payToAddressWithData(
+      Address_Contract_AlwaysTrue, 
+      {inline: scriptDatum},
+      {},
+    ) 
+    .payToAddress(
+      userAddress, 
+      {[asset_token]: BigInt(quantity_token)},
+    ) 
+    .mintAssets({[asset_token]: BigInt(quantity_token)}, mintRedeemer)
+    .attachMintingPolicy(Validator_AlwaysTrue)
+    .attachMetadata(721n, metadata)
+    .addSigner(userAddress)
+    .complete();
+    if (VERBOSE) { console.log("INFO: Raw Pseudo TX", tx.toString()); }
+
+    return tx.txComplete.body().script_data_hash().to_hex();
+  })();
+
+  return script_data_hash
+}
+
+
