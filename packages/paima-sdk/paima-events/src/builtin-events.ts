@@ -6,7 +6,7 @@ import { genEvent, toPath, TopicPrefix } from './types.js';
 //          since status updates themselves need to be sent over the network
 export enum BatcherStatus {
   Posting = 'posting',
-  Finalizing = 'Finalizing',
+  Finalizing = 'finalizing',
   Finalized = 'finalized', // after waiting X blocks
   Rejected = 'rejected',
 }
