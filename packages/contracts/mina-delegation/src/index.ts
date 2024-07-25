@@ -2,9 +2,13 @@ import {
   Bool,
   Bytes,
   Crypto,
+  DynamicProof,
+  ForeignCurve,
+  Proof,
   PublicKey,
   Struct,
   UInt8,
+  Void,
   ZkProgram,
   createEcdsa,
   createForeignCurve,
@@ -58,6 +62,18 @@ function encodeKey(k: PublicKey): UInt8[] {
 function boolToU8(bool: Bool): UInt8 {
   return UInt8.from(bool.toField());
 }
+
+export type DelegationOrderProof = Proof<
+  {
+    // real data
+    target: PublicKey;
+    signer: ForeignCurve;
+    // sort of a type system marker that the interior is a DelegationOrder?
+    assertSignatureMatches(signature: Ecdsa): void;
+  },
+  void
+>;
+type _DelegationOrderProof = DelegationOrderProof;
 
 /**
  * Prepare a ZkProgram that verifies an EVM signature delegating to a Mina
@@ -142,7 +158,15 @@ export function delegateEvmToMina(prefix: string) {
     },
   });
 
-  class DelegationOrderProof extends ZkProgram.Proof(DelegationOrderProgram) {}
+  class DelegationOrderProof
+    extends ZkProgram.Proof(DelegationOrderProgram)
+    implements _DelegationOrderProof {}
+
+  class DynamicDelegationOrderProof extends DynamicProof<typeof DelegationOrder, void> {
+    static override publicInputType = DelegationOrder;
+    static override publicOutputType = Void;
+    static override maxProofsVerified = 0 as const;
+  }
 
   return {
     /**
@@ -157,5 +181,7 @@ export function delegateEvmToMina(prefix: string) {
     DelegationOrderProgram,
     /** A verifiable proof of {@link DelegationOrderProgram}'s success. */
     DelegationOrderProof,
+    // /** A dynamic version of {@link DelegationOrderProof}. */
+    // DynamicDelegationOrderProof, <- causes ts4904 until we explicitly declare the return type
   };
 }
