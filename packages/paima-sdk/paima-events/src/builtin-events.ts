@@ -6,8 +6,17 @@ import { genEvent, toPath, TopicPrefix } from './types.js';
 //          since status updates themselves need to be sent over the network
 export enum BatcherStatus {
   Posting = 'posting',
+  /**
+   * note: it's entirely possible the Paima Engine node finds and processes the block before the batcher notifies it got posted
+   *       so you may get a node/block event before receiving a Finalizing event
+   */
   Finalizing = 'finalizing',
-  Finalized = 'finalized', // after waiting X blocks
+  /**
+   * after waiting X blocks (X depends on the batcher configuration)
+   * note: it's entirely possible the Paima Engine node finds and processes the block before the batcher finds it
+   *       so you may get a node/block event before receiving a Finalized event
+   */
+  Finalized = 'finalized',
   Rejected = 'rejected',
 }
 const BatcherHash = genEvent({
