@@ -47,8 +47,21 @@ function isLib(path: string): boolean {
   return false;
 }
 
+async function checkLocalhostPackage() {
+  const packageLock = JSON.parse(fs.readFileSync(`./package-lock.json`, 'utf-8'));
+
+  const packages = packageLock['packages'];
+  for (const pkg of Object.keys(packages)) {
+    if (packages[pkg]?.resolved?.startsWith('http://localhost')) {
+      hasError = true;
+      console.error(`Package ${purpleText(pkg)} is using local registry ${packages[pkg].resolved}`);
+    }
+  }
+}
+
 let hasError = false;
 async function main() {
+  await checkLocalhostPackage();
   const graph = await createProjectGraphAsync();
 
   const ownPkgs = Object.keys(graph.nodes)
