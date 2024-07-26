@@ -22,11 +22,7 @@ import { cleanNoncesIfTime } from './nonce-gc.js';
 import type { PoolClient } from 'pg';
 import { FUNNEL_PRESYNC_FINISHED, ConfigNetworkType } from '@paima/utils';
 import type { CardanoConfig, EvmConfig } from '@paima/utils';
-import {
-  PaimaEventBrokerNames,
-  PaimaEventPublisher,
-  PaimaEventSystemSTFGlobal,
-} from '@paima/events';
+import { BuiltinEvents, PaimaEventManager } from '@paima/events';
 import { PaimaEventBroker } from '@paima/broker';
 
 // The core logic of paima runtime which polls the funnel and processes the resulting chain data using the game's state machine.
@@ -241,10 +237,6 @@ async function runSync(
     );
   }
 
-  const eventPublisher = new PaimaEventPublisher(
-    new PaimaEventSystemSTFGlobal(),
-  );
-
   while (run) {
     // Initializing the latest read block height and snapshotting
     // do not use a DB transaction, as we need to generate a snapshot
@@ -310,7 +302,12 @@ async function runSync(
             emulated = blockNumber;
             blockNumber = e.deployment_chain_block_height;
           }
-          eventPublisher.sendMessage({ block: blockNumber, emulated });
+
+          // TODO: this is dangerous because this event is skipped if Paima shuts down before it gets emitted
+          await PaimaEventManager.Instance.sendMessage(BuiltinEvents.RollupBlock, {
+            block: blockNumber,
+            emulated,
+          });
         }
       }
     } catch (err) {

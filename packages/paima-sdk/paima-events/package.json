@@ -20,11 +20,14 @@
   "homepage": "https://docs.paimastudios.com",
   "scripts": {
     "lint:eslint": "eslint .",
-    "build": "tsc"
+    "build": "tsc --build tsconfig.build.json",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest --runInBand"
   },
   "devDependencies": {
-    "typescript": "^5.3.3"
+    "typescript": "^5.5.3"
   },
   "dependencies": {
+    "mqtt": "^5.7.3",
+    "mqtt-pattern": "^2.1.0"
   }
 }

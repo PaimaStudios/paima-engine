@@ -47,8 +47,21 @@ function isLib(path: string): boolean {
   return false;
 }
 
+async function checkLocalhostPackage() {
+  const packageLock = JSON.parse(fs.readFileSync(`./package-lock.json`, 'utf-8'));
+
+  const packages = packageLock['packages'];
+  for (const pkg of Object.keys(packages)) {
+    if (packages[pkg]?.resolved?.startsWith('http://localhost')) {
+      hasError = true;
+      console.error(`Package ${purpleText(pkg)} is using local registry ${packages[pkg].resolved}`);
+    }
+  }
+}
+
 let hasError = false;
 async function main() {
+  await checkLocalhostPackage();
   const graph = await createProjectGraphAsync();
 
   const ownPkgs = Object.keys(graph.nodes)
@@ -175,12 +188,12 @@ async function main() {
         console.log();
       }
       if (extra.length > 0) {
-        hasError = true;
-        console.error(
+        // hasError = true; // this is more of a warning than an error
+        console.warn(
           `Package ${purpleText(`${ownRoot}/tsconfig.json`)} has unnecessary references`
         );
         for (const ref of extra) {
-          console.error(redText(ref));
+          console.warn(redText(ref));
         }
         console.log();
       }
