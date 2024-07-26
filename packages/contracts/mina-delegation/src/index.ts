@@ -63,17 +63,17 @@ function boolToU8(bool: Bool): UInt8 {
   return UInt8.from(bool.toField());
 }
 
-export type DelegationOrderProof = Proof<
+export type DelegationCommandProof = Proof<
   {
     // real data
     target: PublicKey;
     signer: ForeignCurve;
-    // sort of a type system marker that the interior is a DelegationOrder?
+    // sort of a type system marker that the interior is a DelegationCommand?
     assertSignatureMatches(signature: Ecdsa): void;
   },
   void
 >;
-type _DelegationOrderProof = DelegationOrderProof;
+type _DelegationCommandProof = DelegationCommandProof;
 
 /**
  * Prepare a ZkProgram that verifies an EVM signature delegating to a Mina
@@ -85,7 +85,7 @@ type _DelegationOrderProof = DelegationOrderProof;
  * @returns An o1js Struct, ZkProgram, and Proof tied to that prefix.
  *
  * @example
- * const { DelegationOrder, DelegationOrderProgram, DelegationOrderProof } =
+ * const { DelegationCommand, DelegationCommandProgram, DelegationCommandProof } =
  *   delegateEvmToMina('Click & Moo login: ');
  */
 export function delegateEvmToMina(prefix: string) {
@@ -93,7 +93,7 @@ export function delegateEvmToMina(prefix: string) {
   // Per-prefix data types
   const delegationPrefix = Bytes.fromString(prefix);
 
-  class DelegationOrder extends Struct({
+  class DelegationCommand extends Struct({
     /** Mina public key that the delegation order is issued for. */
     target: PublicKey,
     /** Ethereum public key that signed the delegation order. */
@@ -122,13 +122,13 @@ export function delegateEvmToMina(prefix: string) {
      * This is printable and should be passed to something like `personal_sign`.
      */
     static bytesToSign({ target }: { target: PublicKey }): Uint8Array {
-      // Accepts an object so you can pass just a PublicKey OR a DelegationOrder.
+      // Accepts an object so you can pass just a PublicKey OR a DelegationCommand.
       return this.#_innerMessage(target).toBytes();
     }
 
     /** Validate that the given Ethereum signature matches this order, WITH the Ethereum prefix. */
     assertSignatureMatches(signature: Ecdsa) {
-      const inner = DelegationOrder.#_innerMessage(this.target);
+      const inner = DelegationCommand.#_innerMessage(this.target);
       const fullMessage = Bytes.from([
         ...ethereumPrefix.bytes,
         // NOTE: `inner.length` is effectively a constant so it's okay to bake it in.
@@ -142,28 +142,28 @@ export function delegateEvmToMina(prefix: string) {
   // ----------------------------------------------------------------------------
   // The provable program itself
 
-  const DelegationOrderProgram = ZkProgram({
-    name: `${prefix}DelegationOrderProgram`,
+  const DelegationCommandProgram = ZkProgram({
+    name: `${prefix}DelegationCommandProgram`,
 
-    publicInput: DelegationOrder,
+    publicInput: DelegationCommand,
 
     methods: {
       sign: {
         privateInputs: [Ecdsa.provable],
 
-        async method(order: DelegationOrder, signature: Ecdsa) {
+        async method(order: DelegationCommand, signature: Ecdsa) {
           order.assertSignatureMatches(signature);
         },
       },
     },
   });
 
-  class DelegationOrderProof
-    extends ZkProgram.Proof(DelegationOrderProgram)
-    implements _DelegationOrderProof {}
+  class DelegationCommandProof
+    extends ZkProgram.Proof(DelegationCommandProgram)
+    implements _DelegationCommandProof {}
 
-  class DynamicDelegationOrderProof extends DynamicProof<typeof DelegationOrder, void> {
-    static override publicInputType = DelegationOrder;
+  class DynamicDelegationCommandProof extends DynamicProof<typeof DelegationCommand, void> {
+    static override publicInputType = DelegationCommand;
     static override publicOutputType = Void;
     static override maxProofsVerified = 0 as const;
   }
@@ -173,15 +173,15 @@ export function delegateEvmToMina(prefix: string) {
      * An order that a particular EVM address has signed to authorize (delegate)
      * a Mina address to act on its behalf.
      */
-    DelegationOrder,
+    DelegationCommand,
     /**
      * A simple {@link ZkProgram} that proves that a valid signature exists for an
-     * input {@link DelegationOrder}.
+     * input {@link DelegationCommand}.
      */
-    DelegationOrderProgram,
-    /** A verifiable proof of {@link DelegationOrderProgram}'s success. */
-    DelegationOrderProof,
-    // /** A dynamic version of {@link DelegationOrderProof}. */
-    // DynamicDelegationOrderProof, <- causes ts4904 until we explicitly declare the return type
+    DelegationCommandProgram,
+    /** A verifiable proof of {@link DelegationCommandProgram}'s success. */
+    DelegationCommandProof,
+    // /** A dynamic version of {@link DelegationCommandProof}. */
+    // DynamicDelegationCommandProof, <- causes ts4904 until we explicitly declare the return type
   };
 }
