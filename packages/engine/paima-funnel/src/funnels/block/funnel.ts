@@ -220,7 +220,12 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
       const ungroupedCdeData = (
         await getUngroupedCdeData(
           this.web3,
-          this.sharedData.extensions.filter(extension => extension.network === this.chainName),
+          this.sharedData.extensions.filter(
+            extension =>
+              extension.network === this.chainName &&
+              // these are fetched above
+              extension.cdeType !== ChainDataExtensionType.DynamicEvmPrimitive
+          ),
           fromBlock,
           toBlock,
           this.chainName
