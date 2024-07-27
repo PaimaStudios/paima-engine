@@ -99,6 +99,6 @@ The two negatives of note with this approach are:
 1. No parallelization, thus some performance left on the table (though not a big deal in general until we grow substantially)
 2. We commit to the database after each input data is processed, rather than after all input data is processed all at once.
 
-Negative #1 is reasonably minor based off of our requirement for today. Negative #2 on the other hand is a bit more annoying, because it means that we have these "intermediary states" where users querying the database about some sub-set of global game state may happen to do so while the latest Chain Data is being processed and get a different answer than when all of the state transitions finish processing.
+Negative #1 is reasonably minor based off our requirement for today. Negative #2 on the other hand is a bit more annoying, because it means that we have these "intermediary states" where users querying the database about some sub-set of global game state may happen to do so while the latest Chain Data is being processed and get a different answer than when all of the state transitions finish processing.
 
 This is not a major problem however, as the state transition function should be designed such that every intermediary state is perfectly valid. Furthermore, using a lobby/match/room model naturally leans into this, meaning that we don't have to do any new engineering yet we still maintain state coherency.
