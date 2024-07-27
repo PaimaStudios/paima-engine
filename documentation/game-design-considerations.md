@@ -41,7 +41,7 @@ That said, there are two kinds of turn-based PvP games which we must consider:
 
 For both of these kinds of games we have an important limitation at hand to consider. Paima Engine uses no private centralized server where we can hide the inputs that users submit. All inputs are submitted onto the blockchain, and thus are public. This means that all moves players submit are (technically, though by default not easily) visible.
 
-As such, games should be designed with this mind. Games where users act one-at-a-time typically are "open board" games anyways, and thus should not be affected. Games where users submit their input at the same time run into more issues however, as someone who submits their input early is publicly making their input available to the other players who can theoretically take a look and then try to counter the moves directly.
+As such, games should be designed with this in mind. Games where users act one-at-a-time typically are "open board" games anyways, and thus should not be affected. Games where users submit their input at the same time run into more issues however, as someone who submits their input early is publicly making their input available to the other players who can theoretically take a look and then try to counter the moves directly.
 
 This means that games either need to be designed one of four ways:
 
