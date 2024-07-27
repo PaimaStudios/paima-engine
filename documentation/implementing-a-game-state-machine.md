@@ -55,7 +55,7 @@ This is the default logic that will work for most games, but more complex games 
 
 #### Round Executor
 
-Each game must implement their own round executor (where the gameplay logic is actually implemented).
+Each game must implement its own round executor (where the gameplay logic is actually implemented).
 
 The round executor is an object which is initialized by providing:
 
