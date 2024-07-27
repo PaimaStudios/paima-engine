@@ -131,7 +131,7 @@ For the NFT assertion processor, it will be hitting the `historical-owner` endpo
 
 #### Weak Assertion
 
-This weak assertion makes the claim that the user who submitted the game input has ownership of the given NFT at the block height it is processed. In other words, if the weak assertion was `retry`ed and originally was for block height X, it is now verified by the processor for the current block height X+5.
+This weak assertion makes the claim that the user who submitted the game input has ownership of the given NFT at the block height when it is processed. In other words, if the weak assertion was `retry`ed and originally was for block height X, it is now verified by the processor for the current block height X+5.
 
 This weak assertion has a `n` prefix, and two input values. The first input value is the ERC721 contract address, and the second value is the id of the NFT that the user is claiming to own.
 
