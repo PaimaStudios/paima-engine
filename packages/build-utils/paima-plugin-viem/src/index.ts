@@ -26,6 +26,7 @@ export function genChainDefinition<
     }
     return env[key];
   };
+  // TODO: this needs to be migrated to use config.NETWORK.yml
   return defineChain({
     id: Number.parseInt(tryGetEnv('CHAIN_ID'), 10),
     name: tryGetEnv('CHAIN_NAME'),

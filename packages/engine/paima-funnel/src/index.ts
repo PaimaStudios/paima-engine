@@ -144,7 +144,8 @@ export class FunnelFactory implements IFunnelFactory {
       chainFunnel = await wrapToMinaFunnel(chainFunnel, this.sharedData, dbTx, chainName, config);
     }
 
-    for (const [chainName, config] of await GlobalConfig.otherAvailConfig()) {
+    const otherAvailConfig = await GlobalConfig.otherAvailConfig();
+    for (const [chainName, config] of otherAvailConfig == null ? [] : [otherAvailConfig]) {
       chainFunnel = await wrapToAvailParallelFunnel(
         chainFunnel,
         this.sharedData,

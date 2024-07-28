@@ -15,6 +15,18 @@ export enum ConfigNetworkType {
   AVAIL_OTHER = 'avail-other',
 }
 
+export type ConfigMapping = {
+  [ConfigNetworkType.EVM]: MainEvmConfig;
+  [ConfigNetworkType.EVM_OTHER]: OtherEvmConfig;
+  [ConfigNetworkType.CARDANO]: CardanoConfig;
+  [ConfigNetworkType.MINA]: MinaConfig;
+  [ConfigNetworkType.AVAIL_MAIN]: AvailMainConfig;
+  [ConfigNetworkType.AVAIL_OTHER]: AvailConfig;
+};
+
+export type TypeToConfig<T extends ConfigNetworkType> = ConfigMapping[T];
+export type TypesToConfigs<T extends ConfigNetworkType[]> = TypeToConfig<T[number]>;
+
 export type EvmConfig = Static<typeof EvmConfigSchema>;
 
 export type MainEvmConfig = Static<typeof MainEvmConfigSchema>;

@@ -1,19 +1,28 @@
 import { buildEndpointErrorFxn, PaimaMiddlewareErrorCode } from '../../errors.js';
-import { getChainId, getGameName } from '../../state.js';
+import { getGameName } from '../../state.js';
 import type { LoginInfoMap, Result } from '../../types.js';
 import { updateFee } from '../../helpers/posting.js';
 
 import type { ApiForMode, EthersApi, IProvider, WalletMode } from '@paima/providers';
 import { EthersConnector } from '@paima/providers';
+import { GlobalConfig } from '@paima/utils';
 
 async function connectWallet(
   loginInfo: LoginInfoMap[WalletMode.EvmEthers]
 ): Promise<Result<IProvider<EthersApi>>> {
   const errorFxn = buildEndpointErrorFxn('ethersLoginWrapper');
 
+  const evmConfig = await GlobalConfig.mainEvmConfig();
+  if (evmConfig == null) {
+    return errorFxn(
+      PaimaMiddlewareErrorCode.EVM_LOGIN,
+      new Error(`No EVM network found in configuration`)
+    );
+  }
+  const [_, config] = evmConfig;
   const gameInfo = {
     gameName: getGameName(),
-    gameChainId: '0x' + getChainId().toString(16),
+    gameChainId: '0x' + config.chainId.toString(16),
   };
   const name = loginInfo.connection.metadata.name;
   try {

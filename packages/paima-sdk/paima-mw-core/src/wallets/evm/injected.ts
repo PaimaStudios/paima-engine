@@ -1,5 +1,5 @@
 import { buildEndpointErrorFxn, PaimaMiddlewareErrorCode } from '../../errors.js';
-import { getChainId, getChainUri, getGameName, hasLogin } from '../../state.js';
+import { getGameName, hasLogin } from '../../state.js';
 import type { LoginInfoMap, OldResult, Result } from '../../types.js';
 import { updateFee } from '../../helpers/posting.js';
 
@@ -107,9 +107,17 @@ export async function evmLoginWrapper(
 ): Promise<Result<IProvider<ApiForMode<WalletMode.EvmInjected>>>> {
   const errorFxn = buildEndpointErrorFxn('evmLoginWrapper');
 
+  const evmConfig = await GlobalConfig.mainEvmConfig();
+  if (evmConfig == null) {
+    return errorFxn(
+      PaimaMiddlewareErrorCode.EVM_LOGIN,
+      new Error(`No EVM network found in configuration`)
+    );
+  }
+  const [_, config] = evmConfig;
   const gameInfo = {
     gameName: getGameName(),
-    gameChainId: '0x' + getChainId().toString(16),
+    gameChainId: '0x' + config.chainId.toString(16),
   };
   const loginResult = await connectInjected(
     'evmLoginWrapper',
