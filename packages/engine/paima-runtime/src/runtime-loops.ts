@@ -40,6 +40,9 @@ export async function startRuntime(
 ): Promise<void> {
   const pollingPeriod = pollingRate * 1000;
 
+  // Enable broker
+  await startMQTTBroker();
+
   // Presync:
   await runPresync(
     gameStateMachine,
@@ -48,9 +51,6 @@ export async function startRuntime(
     startBlockHeight,
     emulatedBlocks ? null : stopBlockHeight
   );
-
-  // Enable broker
-  await startMQTTBroker();
 
   // Main sync:
   await runSync(gameStateMachine, funnelFactory, pollingPeriod, stopBlockHeight);
