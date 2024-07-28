@@ -33,11 +33,11 @@ export function getInvalidEnvVars(): string[] {
   }
 
   if (ENV.BATCHER_NETWORK && ENV.BATCHER_NETWORK === 'avail') {
-    if (!ENV['SECURITY_NAMESPACE']) {
+    if (!ENV.SECURITY_NAMESPACE) {
       missingVars.push('SECURITY_NAMESPACE');
     }
   } else {
-    if (!ENV['CONTRACT_ADDRESS']) {
+    if (!ENV.CONTRACT_ADDRESS) {
       missingVars.push('CONTRACT_ADDRESS');
     }
   }

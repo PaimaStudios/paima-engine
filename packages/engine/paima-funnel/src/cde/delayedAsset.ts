@@ -19,8 +19,8 @@ export default async function getCdeData(
   fromTx: BlockTxPair | undefined,
   paginationLimit: number,
   network: string
-): Promise<ChainDataExtensionDatum[]> {
-  let result = [] as ChainDataExtensionDatum[];
+): Promise<CdeCardanoAssetUtxoDatum[]> {
+  let result = [] as CdeCardanoAssetUtxoDatum[];
 
   while (true) {
     const events = await timeout(

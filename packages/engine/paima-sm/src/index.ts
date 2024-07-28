@@ -412,7 +412,8 @@ async function processScheduledData(
         continue;
       }
 
-      const { txHash, caip2 } = (() => {
+      // eslint-disable-next-line @typescript-eslint/no-loop-func -- incorrect error fixed when @typescript-eslint v8 comes out
+      const { txHash, caip2 } = ((): { txHash: string; caip2: string } => {
         if (data.cde_name && data.tx_hash) {
           const caip2Prefix = caip2PrefixFor(networks[data.network!]);
 

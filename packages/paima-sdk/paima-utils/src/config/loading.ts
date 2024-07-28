@@ -448,25 +448,22 @@ export function caip2PrefixFor(config: Static<typeof InstantiatedConfigsUnion>):
 }
 function networkToCip34(
   config: Static<typeof InstantiatedConfigsUnion> & { type: ConfigNetworkType.CARDANO }
-) {
-  // TODO: why is this needed? should this be imported in a different way?
-  // @ts-ignore
-  let reg = registry['default'];
+): string {
   switch (config.network) {
     case 'mainnet':
       return toChainId({
-        networkId: reg.Mainnet.NetworkId,
-        networkMagic: reg.Mainnet.NetworkMagic,
+        networkId: registry.Mainnet.NetworkId,
+        networkMagic: registry.Mainnet.NetworkMagic,
       });
     case 'preprod':
       return toChainId({
-        networkId: reg.PreProduction.NetworkId,
-        networkMagic: reg.PreProduction.NetworkMagic,
+        networkId: registry.PreProduction.NetworkId,
+        networkMagic: registry.PreProduction.NetworkMagic,
       });
     case 'preview':
       return toChainId({
-        networkId: reg.Preview.NetworkId,
-        networkMagic: reg.Preview.NetworkMagic,
+        networkId: registry.Preview.NetworkId,
+        networkMagic: registry.Preview.NetworkMagic,
       });
     default:
       assertNever(config.network);

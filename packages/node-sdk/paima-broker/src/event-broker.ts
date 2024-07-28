@@ -34,7 +34,7 @@ export class PaimaEventBroker {
     if (PaimaEventBroker.server) return PaimaEventBroker.server;
 
     PaimaEventBroker.aedes = new Aedes();
-    PaimaEventBroker.aedes.authorizePublish = (client, packet, callback) => {
+    PaimaEventBroker.aedes.authorizePublish = (client, packet, callback): void => {
       if (client?.req?.socket?.remoteAddress == null)
         return callback(
           new Error('Error: no remove address found for  PaimaEventBroker connection')

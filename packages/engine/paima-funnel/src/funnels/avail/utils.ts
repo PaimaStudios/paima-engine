@@ -4,7 +4,6 @@ import type { SubmittedData } from '@paima/sm';
 import { base64Decode } from '@polkadot/util-crypto';
 import { BaseFunnelSharedApi } from '../BaseFunnel.js';
 import { createApi } from './createApi.js';
-import { caip2PrefixFor } from '@paima/utils/src/config/loading.js';
 
 export const GET_DATA_TIMEOUT = 10000;
 

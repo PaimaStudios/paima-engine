@@ -9,7 +9,12 @@ import {
   timeout,
   ConfigNetworkType,
 } from '@paima/utils';
-import type { CardanoPresyncChainData, EvmPresyncChainData, InternalEvent } from '@paima/sm';
+import type {
+  CardanoPresyncChainData,
+  EvmPresyncChainData,
+  InternalEvent,
+  PaginationCursor,
+} from '@paima/sm';
 import {
   type ChainData,
   type ChainDataExtension,
@@ -230,23 +235,27 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
     }
 
     const cache = this.cache;
-    const mapCursorPaginatedData = (cdeName: string) => (datums: any) => {
-      // we are providing the entire indexed range, so if carp
-      // returns nothing we know the presync is finished for this
-      // CDE.
-      const finished = datums.length === 0 || datums.length < this.config.paginationLimit;
+    const mapCursorPaginatedData =
+      (cdeName: string) =>
+      <T extends { paginationCursor: PaginationCursor }>(datums: T[]): T[] => {
+        // we are providing the entire indexed range, so if carp
+        // returns nothing we know the presync is finished for this
+        // CDE.
+        const finished = datums.length === 0 || datums.length < this.config.paginationLimit;
 
-      cache.updateCursor(cdeName, {
-        cursor: datums[datums.length - 1] ? datums[datums.length - 1].paginationCursor.cursor : '',
-        finished,
-      });
+        cache.updateCursor(cdeName, {
+          cursor: datums[datums.length - 1]
+            ? datums[datums.length - 1].paginationCursor.cursor
+            : '',
+          finished,
+        });
 
-      if (datums.length > 0) {
-        datums[datums.length - 1].paginationCursor.finished = finished;
-      }
+        if (datums.length > 0) {
+          datums[datums.length - 1].paginationCursor.finished = finished;
+        }
 
-      return datums;
-    };
+        return datums;
+      };
 
     const [carpEvents, data] = await Promise.all([
       Promise.all(

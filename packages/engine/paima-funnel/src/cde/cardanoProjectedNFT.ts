@@ -1,8 +1,4 @@
-import type {
-  CdeCardanoProjectedNFTDatum,
-  ChainDataExtensionCardanoProjectedNFT,
-  ChainDataExtensionDatum,
-} from '@paima/sm';
+import type { CdeCardanoProjectedNFTDatum, ChainDataExtensionCardanoProjectedNFT } from '@paima/sm';
 import { ChainDataExtensionDatumType, DEFAULT_FUNNEL_TIMEOUT, timeout } from '@paima/utils';
 import { Routes, query } from '@dcspark/carp-client';
 import { ProjectedNftStatus } from '@dcspark/carp-client';
@@ -20,8 +16,8 @@ export default async function getCdeProjectedNFTData(
   fromTx: BlockTxPair | undefined,
   paginationLimit: number,
   network: string
-): Promise<ChainDataExtensionDatum[]> {
-  let result = [] as ChainDataExtensionDatum[];
+): Promise<CdeCardanoProjectedNFTDatum[]> {
+  let result = [] as CdeCardanoProjectedNFTDatum[];
 
   while (true) {
     const events = await timeout(
@@ -53,7 +49,6 @@ export default async function getCdeProjectedNFTData(
       )
       .map(e => eventToCdeDatum(e, extension, getBlockNumber(e.actionSlot), network))
       .filter(e => e != null)
-      .map(e => e!)
       .forEach(element => {
         result.push(element);
       });

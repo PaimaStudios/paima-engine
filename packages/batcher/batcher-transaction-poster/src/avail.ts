@@ -3,14 +3,13 @@ import { base64Encode } from '@polkadot/util-crypto';
 import BatchedTransactionPosterBase from './transactionPoster.js';
 import { BatcherStatus } from '@paima/events';
 import { AvailConnector } from '@paima/providers';
-import type { ISubmittableResult } from '@polkadot/types/types';
 
 class AvailBatchedTransactionPoster extends BatchedTransactionPosterBase {
-  private provider: string;
+  private _provider: string;
 
   constructor(provider: string, maxSize: number, pool: Pool) {
     super(maxSize, pool);
-    this.provider = provider;
+    this._provider = provider;
   }
 
   public override postMessage = async (
@@ -20,46 +19,47 @@ class AvailBatchedTransactionPoster extends BatchedTransactionPosterBase {
     const bytesMsg = new TextEncoder().encode(msg);
     const data = base64Encode(bytesMsg);
 
-    const provider = AvailConnector.instance().getProvider();
-    if (provider == null) {
+    const rpcProvider = AvailConnector.instance().getProvider();
+    if (rpcProvider == null) {
       throw new Error(`Batcher failed to find Avail JS provider`);
     }
-    const tx = provider.getConnection().api.rpc.tx.dataAvailability.submitData(data);
+    const tx = rpcProvider.getConnection().api.rpc.tx.dataAvailability.submitData(data);
 
     let sentPosted = false;
-    const result = await new Promise<[number, string]>((res, rej) =>
-      tx.signAndSend(provider.getAddress().address, { nonce: -1 }, async result => {
-        if (result.isError) {
-          rej(result);
-        }
-        if (!sentPosted) {
-          sentPosted = true;
-          await this.updateMqttStatus(
-            hashes,
-            undefined,
-            result.txHash.toHex(),
-            BatcherStatus.Posting
-          );
-        }
-        if (result.isInBlock) {
-          const signedBlock = await provider
-            .getConnection()
-            .api.rpc.derive.chain.getBlock(result.status.asInBlock.toHex());
-          await this.updateMqttStatus(
-            hashes,
-            signedBlock.block.header.number.toNumber(),
-            result.txHash.toHex(),
-            BatcherStatus.Finalizing
-          );
-        }
-        if (result.isFinalized) {
-          const signedBlock = await provider
-            .getConnection()
-            .api.rpc.derive.chain.getBlock(result.status.asInBlock.toHex());
-          res([signedBlock.block.header.number.toNumber(), result.txHash.toHex()]);
-        }
-      })
-    );
+    const result = await new Promise<[number, string]>((resolve, reject): void => {
+      void tx
+        .signAndSend(rpcProvider.getAddress().address, { nonce: -1 }, async result => {
+          if (result.isError) {
+            reject(result);
+          }
+          if (!sentPosted) {
+            sentPosted = true;
+            await Promise.all(
+              this.updateMqttStatus(hashes, undefined, result.txHash.toHex(), BatcherStatus.Posting)
+            );
+          }
+          if (result.isInBlock) {
+            const signedBlock = await rpcProvider
+              .getConnection()
+              .api.rpc.derive.chain.getBlock(result.status.asInBlock.toHex());
+            await Promise.all(
+              this.updateMqttStatus(
+                hashes,
+                signedBlock.block.header.number.toNumber(),
+                result.txHash.toHex(),
+                BatcherStatus.Finalizing
+              )
+            );
+          }
+          if (result.isFinalized) {
+            const signedBlock = await rpcProvider
+              .getConnection()
+              .api.rpc.derive.chain.getBlock(result.status.asInBlock.toHex());
+            resolve([signedBlock.block.header.number.toNumber(), result.txHash.toHex()]);
+          }
+        })
+        .catch(reject);
+    });
     return result;
   };
 }

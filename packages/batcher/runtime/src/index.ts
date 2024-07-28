@@ -15,9 +15,9 @@ import type { Pool } from 'pg';
 
 import {
   AvailBatchedTransactionPoster,
-  BatchedTransactionPoster,
   EvmBatchedTransactionPoster,
 } from '@paima/batcher-transaction-poster';
+import type { BatchedTransactionPoster } from '@paima/batcher-transaction-poster';
 import { server, startServer } from '@paima/batcher-webserver';
 import GameInputValidator, {
   DefaultInputValidatorCoreInitializator,
@@ -25,7 +25,7 @@ import GameInputValidator, {
   getErrors,
 } from '@paima/batcher-game-input-validator';
 
-import { AvailJsProvider, EthersEvmProvider } from '@paima/providers';
+import type { AvailJsProvider, EthersEvmProvider } from '@paima/providers';
 import type { ErrorCode, ErrorMessageFxn, GameInputValidatorCore } from '@paima/batcher-utils';
 
 import { initializePool } from './pg/pgPool.js';
@@ -257,7 +257,7 @@ async function main(): Promise<void> {
 
 main().catch(e => {
   // we catch the error here instead of relying on `uncaughtException` monitoring
-  // because if an exception causes us to reach this line, it means the error was thrown during initalization
+  // because if an exception causes us to reach this line, it means the error was thrown during initialization
   // which is typically something we cannot recover from
   console.error(e);
   process.exit(1);

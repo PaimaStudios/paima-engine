@@ -7,8 +7,9 @@ import type {
 } from './IProvider.js';
 import { ProviderNotInitialized } from './errors.js';
 import { utf8ToHex } from 'web3-utils';
-import { AddressType, PolkadotAddress } from '@paima/utils';
-import { ApiPromise, Keyring } from 'avail-js-sdk';
+import { AddressType } from '@paima/utils';
+import type { PolkadotAddress } from '@paima/utils';
+import type { ApiPromise, Keyring } from 'avail-js-sdk';
 import { u8aToHex } from '@polkadot/util';
 
 export type AvailJsApi = { rpc: ApiPromise; keyring: Keyring };

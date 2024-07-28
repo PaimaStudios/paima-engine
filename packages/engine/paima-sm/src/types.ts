@@ -252,48 +252,50 @@ export interface CdeErc6551RegistryDatum extends CdeDatumBase {
   payload: CdeDatumErc6551RegistryPayload;
 }
 
+export type PaginationCursor = { cursor: string; finished: boolean };
+
 export interface CdeCardanoPoolDatum extends CdeDatumBase {
   cdeDatumType: ChainDataExtensionDatumType.CardanoPool;
   payload: CdeDatumCardanoPoolPayload;
   scheduledPrefix: string;
-  paginationCursor: { cursor: string; finished: boolean };
+  paginationCursor: PaginationCursor;
 }
 
 export interface CdeCardanoProjectedNFTDatum extends CdeDatumBase {
   cdeDatumType: ChainDataExtensionDatumType.CardanoProjectedNFT;
   payload: CdeDatumCardanoProjectedNFTPayload;
   scheduledPrefix: string | undefined;
-  paginationCursor: { cursor: string; finished: boolean };
+  paginationCursor: PaginationCursor;
 }
 
 export interface CdeCardanoAssetUtxoDatum extends CdeDatumBase {
   cdeDatumType: ChainDataExtensionDatumType.CardanoAssetUtxo;
   payload: CdeDatumCardanoAssetUtxoPayload;
-  paginationCursor: { cursor: string; finished: boolean };
+  paginationCursor: PaginationCursor;
 }
 
 export interface CdeCardanoTransferDatum extends CdeDatumBase {
   cdeDatumType: ChainDataExtensionDatumType.CardanoTransfer;
   payload: CdeDatumCardanoTransferPayload;
   scheduledPrefix: string | undefined;
-  paginationCursor: { cursor: string; finished: boolean };
+  paginationCursor: PaginationCursor;
 }
 
 export interface CdeCardanoMintBurnDatum extends CdeDatumBase {
   cdeDatumType: ChainDataExtensionDatumType.CardanoMintBurn;
   payload: CdeDatumCardanoMintBurnPayload;
   scheduledPrefix: string | undefined;
-  paginationCursor: { cursor: string; finished: boolean };
+  paginationCursor: PaginationCursor;
 }
 
 export interface CdeMinaEventGenericDatum extends CdeDatumBase {
   cdeDatumType: ChainDataExtensionDatumType.MinaEventGeneric;
-  paginationCursor: { cursor: string; finished: boolean };
+  paginationCursor: PaginationCursor;
   scheduledPrefix: string;
 }
 export interface CdeMinaActionGenericDatum extends CdeDatumBase {
   cdeDatumType: ChainDataExtensionDatumType.MinaActionGeneric;
-  paginationCursor: { cursor: string; finished: boolean };
+  paginationCursor: PaginationCursor;
   scheduledPrefix: string;
 }
 export interface CdeDynamicEvmPrimitiveDatum extends CdeDatumBase {

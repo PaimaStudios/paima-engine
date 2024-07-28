@@ -11,6 +11,7 @@ import type {
   ChainData,
   ChainDataExtensionDatum,
   MinaPresyncChainData,
+  PaginationCursor,
   PresyncChainData,
 } from '@paima/sm';
 import { composeChainData, groupCdeData } from '../../utils.js';
@@ -56,7 +57,7 @@ async function findMinaConfirmedTimestamp(
     row = res.rows;
   }
 
-  return Number.parseInt(row[0]['timestamp'], 10);
+  return Number.parseInt(row[0].timestamp as string, 10);
 }
 
 // mina timestamps are in milliseconds, while evm timestamps are in seconds.
@@ -118,19 +119,21 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
 
     const toTimestamp = maxBaseTimestamp;
 
-    const getBlockNumber = (state: { curr: number }) => (ts: number) => {
-      while (
-        state.curr < baseData.length &&
-        baseChainTimestampToMina(baseData[state.curr].timestamp, this.config.delay) <= ts
-      )
-        state.curr++;
+    const getBlockNumber =
+      (state: { curr: number }) =>
+      (ts: number): number => {
+        while (
+          state.curr < baseData.length &&
+          baseChainTimestampToMina(baseData[state.curr].timestamp, this.config.delay) <= ts
+        )
+          state.curr++;
 
-      if (state.curr < baseData.length) {
-        return baseData[state.curr].blockNumber;
-      } else {
-        throw new Error('got event out of the expected range');
-      }
-    };
+        if (state.curr < baseData.length) {
+          return baseData[state.curr].blockNumber;
+        } else {
+          throw new Error('got event out of the expected range');
+        }
+      };
 
     const ungroupedCdeData = await Promise.all(
       this.sharedData.extensions.reduce(
@@ -216,20 +219,24 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
       return data;
     }
 
-    const mapCursorPaginatedData = (cdeName: string) => (datums: any) => {
-      const finished = datums.length === 0 || datums.length < this.config.paginationLimit;
+    const mapCursorPaginatedData =
+      (cdeName: string) =>
+      <T extends { paginationCursor: PaginationCursor }>(datums: T[]): T[] => {
+        const finished = datums.length === 0 || datums.length < this.config.paginationLimit;
 
-      this.cache.updateCursor(cdeName, {
-        cursor: datums[datums.length - 1] ? datums[datums.length - 1].paginationCursor.cursor : '',
-        finished,
-      });
+        this.cache.updateCursor(cdeName, {
+          cursor: datums[datums.length - 1]
+            ? datums[datums.length - 1].paginationCursor.cursor
+            : '',
+          finished,
+        });
 
-      if (datums.length > 0) {
-        datums[datums.length - 1].paginationCursor.finished = finished;
-      }
+        if (datums.length > 0) {
+          datums[datums.length - 1].paginationCursor.finished = finished;
+        }
 
-      return datums;
-    };
+        return datums;
+      };
 
     const startingSlotTimestamp = this.cache.getState().startingSlotTimestamp;
 

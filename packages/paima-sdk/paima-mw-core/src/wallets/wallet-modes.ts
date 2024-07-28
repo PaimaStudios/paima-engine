@@ -17,7 +17,7 @@ import type { EndpointErrorFxn } from '../errors.js';
 import type { Result } from '../types.js';
 import type { PaimaMiddlewareErrorCode } from '../errors.js';
 import { FE_ERR_SPECIFIC_WALLET_NOT_INSTALLED } from '../errors.js';
-import { ApiPromise } from 'avail-js-sdk';
+import type { ApiPromise } from 'avail-js-sdk';
 
 export type BaseLoginInfo<Api> = {
   preference?: InjectionPreference<Api>;
