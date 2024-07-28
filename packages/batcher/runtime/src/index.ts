@@ -34,6 +34,7 @@ import { setLogger } from '@paima/utils';
 import * as fs from 'fs';
 import { parseSecurityYaml } from '@paima/utils-backend';
 import { getRemoteBackendVersion, initMiddlewareCore } from '@paima/mw-core';
+import { PaimaEventBroker } from '@paima/broker';
 
 setLogger(s => {
   try {
@@ -112,8 +113,10 @@ const BatcherRuntime: BatcherRuntimeInitializer = {
         provider: EthersEvmProvider | AvailJsProvider,
         getCurrentBlock: () => Promise<number>
       ): Promise<void> {
+        if (ENV.MQTT_BROKER) {
+          new PaimaEventBroker('Batcher').getServer();
+        }
         // pass endpoints to web server and run
-
         // do not await on these as they may run forever
         void Promise.all([
           startServer(pool, errorCodeToMessage, provider, getCurrentBlock).catch(e => {

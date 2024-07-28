@@ -135,8 +135,31 @@ export class ENV {
     return process.env.SELF_SIGNING_API_KEY || '';
   }
 
-  private static isTrue(value: string | undefined): boolean {
-    return ['true', '1', 'yes'].includes((value ?? '').toLowerCase());
+  // MQTT BROKER
+  static get MQTT_BROKER(): boolean {
+    return ENV.isTrue(process.env.MQTT_BROKER, true);
+  }
+  static get MQTT_ENGINE_BROKER_PORT(): number {
+    return parseInt(process.env.MQTT_BROKER_PORT || '8883', 10);
+  }
+  static get MQTT_BATCHER_BROKER_PORT(): number {
+    return parseInt(process.env.MQTT_BROKER_PORT || '8884', 10);
+  }
+  // MQTT CLIENT
+  static get MQTT_ENGINE_BROKER_URL(): string {
+    return process.env.MQTT_ENGINE_BROKER_URL || 'ws://127.0.0.1:' + ENV.MQTT_ENGINE_BROKER_PORT;
+  }
+  static get MQTT_BATCHER_BROKER_URL(): string {
+    return process.env.MQTT_BATCHER_BROKER_URL || 'ws://127.0.0.1:' + ENV.MQTT_BATCHER_BROKER_PORT;
+  }
+  static get BATCHER_CONFIRMATIONS(): number {
+    return parseInt(process.env.BATCHER_CONFIRMATIONS ?? '1', 10);
+  }
+
+  // Utils
+  private static isTrue(value: string | undefined, defaultValue = false): boolean {
+    if (value == null || value === '') return defaultValue;
+    return ['true', '1', 'yes'].includes(value.toLowerCase());
   }
 
   static get SECURITY_NAMESPACE(): string {

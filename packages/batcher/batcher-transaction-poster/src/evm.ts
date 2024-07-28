@@ -6,6 +6,7 @@ import { contractAbis } from '@paima/utils';
 import { utf8ToHex } from 'web3-utils';
 import { ethers } from 'ethers';
 import BatchedTransactionPosterBase from './transactionPoster.js';
+import { BatcherStatus } from '@paima/events';
 
 class EvmBatchedTransactionPoster extends BatchedTransactionPosterBase {
   private provider: EthersEvmProvider;
@@ -43,22 +44,50 @@ class EvmBatchedTransactionPoster extends BatchedTransactionPosterBase {
     this.provider = newProvider;
   };
 
-  public override postMessage = async (msg: string): Promise<[number, string]> => {
+  public override postMessage = async (
+    msg: string,
+    hashes: string[]
+  ): Promise<[number, string]> => {
     const hexMsg = utf8ToHex(msg);
     // todo: unify with buildDirectTx
     const iface = new ethers.Interface([
       'function paimaSubmitGameInput(bytes calldata data) payable',
     ]);
     const encodedData = iface.encodeFunctionData('paimaSubmitGameInput', [hexMsg]);
-    const transaction = await this.provider.sendTransaction({
+
+    const txRequest = {
       data: encodedData,
       to: this.contractAddress,
       from: this.provider.getAddress().address,
       value: '0x' + Number(this.fee).toString(16),
       gasLimit: estimateGasLimit(msg.length),
-    });
-    const receipt = (await transaction.extra.wait())!;
-    return [receipt.blockNumber, receipt.hash];
+    };
+    const populatedTx = await this.provider.finalizeTransaction(txRequest);
+    const serializedSignedTx = ethers.Transaction.from(
+      await this.provider.getConnection().api.signTransaction(populatedTx)
+    );
+
+    const [transaction] = await Promise.all([
+      this.provider.sendTransaction(txRequest),
+      ...this.updateMqttStatus(
+        hashes,
+        undefined,
+        serializedSignedTx.hash ?? '',
+        BatcherStatus.Posting
+      ),
+    ]);
+
+    const [receipt] = await Promise.all([
+      transaction.extra.wait(ENV.BATCHER_CONFIRMATIONS),
+      ...this.updateMqttStatus(
+        hashes,
+        transaction.extra.blockNumber ?? undefined,
+        transaction.txHash,
+        BatcherStatus.Finalizing
+      ),
+    ]);
+
+    return [receipt!.blockNumber, receipt!.hash];
   };
 }
 

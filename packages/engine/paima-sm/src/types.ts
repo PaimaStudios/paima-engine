@@ -673,7 +673,7 @@ export interface GameStateMachine {
   getReadonlyDbConn: () => Pool;
   getPersistentReadonlyDbConn: () => Client;
   getReadWriteDbConn: () => Pool;
-  process: (dbTx: PoolClient, chainData: ChainData) => Promise<void>;
+  process: (dbTx: PoolClient, chainData: ChainData) => Promise<number>;
   presyncProcess: (dbTx: PoolClient, latestCdeData: PresyncChainData) => Promise<void>;
   markPresyncMilestone: (blockHeight: number, network: string) => Promise<void>;
   dryRun: (gameInput: string, userAddress: string) => Promise<boolean>;

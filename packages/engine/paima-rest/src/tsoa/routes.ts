@@ -156,16 +156,23 @@ const templateService = new ExpressTemplateService(models, {"noImplicitAdditiona
 
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 
+
+
+
 export function RegisterRoutes(app: Router) {
+
     // ###########################################################################################################
     //  NOTE: If you do not see routes for all of your controllers in this file, then you might not have informed tsoa of where to look
     //      Please look into the "controllerPathGlobs" config option described in the readme: https://github.com/lukeautry/tsoa
     // ###########################################################################################################
+
+
+    
         app.get('/dry_run',
             ...(fetchMiddlewares<RequestHandler>(DryRunController)),
             ...(fetchMiddlewares<RequestHandler>(DryRunController.prototype.get)),
 
-            function DryRunController_get(request: ExRequest, response: ExResponse, next: any) {
+            async function DryRunController_get(request: ExRequest, response: ExResponse, next: any) {
             const args: Record<string, TsoaRoute.ParameterSchema> = {
                     gameInput: {"in":"query","name":"gameInput","required":true,"dataType":"string"},
                     userAddress: {"in":"query","name":"userAddress","required":true,"dataType":"string"},
@@ -179,7 +186,7 @@ export function RegisterRoutes(app: Router) {
 
                 const controller = new DryRunController();
 
-              templateService.apiHandler({
+              await templateService.apiHandler({
                 methodName: 'get',
                 controller,
                 response,
@@ -196,7 +203,7 @@ export function RegisterRoutes(app: Router) {
             ...(fetchMiddlewares<RequestHandler>(VersionController)),
             ...(fetchMiddlewares<RequestHandler>(VersionController.prototype.get)),
 
-            function VersionController_get(request: ExRequest, response: ExResponse, next: any) {
+            async function VersionController_get(request: ExRequest, response: ExResponse, next: any) {
             const args: Record<string, TsoaRoute.ParameterSchema> = {
             };
 
@@ -208,7 +215,7 @@ export function RegisterRoutes(app: Router) {
 
                 const controller = new VersionController();
 
-              templateService.apiHandler({
+              await templateService.apiHandler({
                 methodName: 'get',
                 controller,
                 response,
@@ -225,7 +232,7 @@ export function RegisterRoutes(app: Router) {
             ...(fetchMiddlewares<RequestHandler>(LatestProcessedBlockheightController)),
             ...(fetchMiddlewares<RequestHandler>(LatestProcessedBlockheightController.prototype.get)),
 
-            function LatestProcessedBlockheightController_get(request: ExRequest, response: ExResponse, next: any) {
+            async function LatestProcessedBlockheightController_get(request: ExRequest, response: ExResponse, next: any) {
             const args: Record<string, TsoaRoute.ParameterSchema> = {
             };
 
@@ -237,7 +244,7 @@ export function RegisterRoutes(app: Router) {
 
                 const controller = new LatestProcessedBlockheightController();
 
-              templateService.apiHandler({
+              await templateService.apiHandler({
                 methodName: 'get',
                 controller,
                 response,
@@ -254,7 +261,7 @@ export function RegisterRoutes(app: Router) {
             ...(fetchMiddlewares<RequestHandler>(EmulatedBlockActiveController)),
             ...(fetchMiddlewares<RequestHandler>(EmulatedBlockActiveController.prototype.get)),
 
-            function EmulatedBlockActiveController_get(request: ExRequest, response: ExResponse, next: any) {
+            async function EmulatedBlockActiveController_get(request: ExRequest, response: ExResponse, next: any) {
             const args: Record<string, TsoaRoute.ParameterSchema> = {
             };
 
@@ -266,7 +273,7 @@ export function RegisterRoutes(app: Router) {
 
                 const controller = new EmulatedBlockActiveController();
 
-              templateService.apiHandler({
+              await templateService.apiHandler({
                 methodName: 'get',
                 controller,
                 response,
@@ -283,7 +290,7 @@ export function RegisterRoutes(app: Router) {
             ...(fetchMiddlewares<RequestHandler>(DeploymentBlockheightToEmulatedController)),
             ...(fetchMiddlewares<RequestHandler>(DeploymentBlockheightToEmulatedController.prototype.get)),
 
-            function DeploymentBlockheightToEmulatedController_get(request: ExRequest, response: ExResponse, next: any) {
+            async function DeploymentBlockheightToEmulatedController_get(request: ExRequest, response: ExResponse, next: any) {
             const args: Record<string, TsoaRoute.ParameterSchema> = {
                     deploymentBlockheight: {"in":"query","name":"deploymentBlockheight","required":true,"dataType":"double"},
             };
@@ -296,7 +303,7 @@ export function RegisterRoutes(app: Router) {
 
                 const controller = new DeploymentBlockheightToEmulatedController();
 
-              templateService.apiHandler({
+              await templateService.apiHandler({
                 methodName: 'get',
                 controller,
                 response,
@@ -313,7 +320,7 @@ export function RegisterRoutes(app: Router) {
             ...(fetchMiddlewares<RequestHandler>(ConfirmInputAcceptanceController)),
             ...(fetchMiddlewares<RequestHandler>(ConfirmInputAcceptanceController.prototype.get)),
 
-            function ConfirmInputAcceptanceController_get(request: ExRequest, response: ExResponse, next: any) {
+            async function ConfirmInputAcceptanceController_get(request: ExRequest, response: ExResponse, next: any) {
             const args: Record<string, TsoaRoute.ParameterSchema> = {
                     gameInput: {"in":"query","name":"gameInput","required":true,"dataType":"string"},
                     userAddress: {"in":"query","name":"userAddress","required":true,"dataType":"string"},
@@ -328,7 +335,7 @@ export function RegisterRoutes(app: Router) {
 
                 const controller = new ConfirmInputAcceptanceController();
 
-              templateService.apiHandler({
+              await templateService.apiHandler({
                 methodName: 'get',
                 controller,
                 response,
@@ -345,7 +352,7 @@ export function RegisterRoutes(app: Router) {
             ...(fetchMiddlewares<RequestHandler>(AchievementsController)),
             ...(fetchMiddlewares<RequestHandler>(AchievementsController.prototype.public_list)),
 
-            function AchievementsController_public_list(request: ExRequest, response: ExResponse, next: any) {
+            async function AchievementsController_public_list(request: ExRequest, response: ExResponse, next: any) {
             const args: Record<string, TsoaRoute.ParameterSchema> = {
                     category: {"in":"query","name":"category","dataType":"string"},
                     isActive: {"in":"query","name":"isActive","dataType":"boolean"},
@@ -360,7 +367,7 @@ export function RegisterRoutes(app: Router) {
 
                 const controller = new AchievementsController();
 
-              templateService.apiHandler({
+              await templateService.apiHandler({
                 methodName: 'public_list',
                 controller,
                 response,
@@ -377,7 +384,7 @@ export function RegisterRoutes(app: Router) {
             ...(fetchMiddlewares<RequestHandler>(AchievementsController)),
             ...(fetchMiddlewares<RequestHandler>(AchievementsController.prototype.wallet)),
 
-            function AchievementsController_wallet(request: ExRequest, response: ExResponse, next: any) {
+            async function AchievementsController_wallet(request: ExRequest, response: ExResponse, next: any) {
             const args: Record<string, TsoaRoute.ParameterSchema> = {
                     wallet: {"in":"path","name":"wallet","required":true,"dataType":"string"},
                     name: {"in":"query","name":"name","dataType":"string"},
@@ -391,7 +398,7 @@ export function RegisterRoutes(app: Router) {
 
                 const controller = new AchievementsController();
 
-              templateService.apiHandler({
+              await templateService.apiHandler({
                 methodName: 'wallet',
                 controller,
                 response,
@@ -408,7 +415,7 @@ export function RegisterRoutes(app: Router) {
             ...(fetchMiddlewares<RequestHandler>(AchievementsController)),
             ...(fetchMiddlewares<RequestHandler>(AchievementsController.prototype.nft)),
 
-            function AchievementsController_nft(request: ExRequest, response: ExResponse, next: any) {
+            async function AchievementsController_nft(request: ExRequest, response: ExResponse, next: any) {
             const args: Record<string, TsoaRoute.ParameterSchema> = {
                     erc: {"in":"path","name":"erc","required":true,"dataType":"string"},
                     cde: {"in":"path","name":"cde","required":true,"dataType":"string"},
@@ -424,7 +431,7 @@ export function RegisterRoutes(app: Router) {
 
                 const controller = new AchievementsController();
 
-              templateService.apiHandler({
+              await templateService.apiHandler({
                 methodName: 'nft',
                 controller,
                 response,

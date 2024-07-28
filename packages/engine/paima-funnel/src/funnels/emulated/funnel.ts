@@ -118,7 +118,7 @@ export class EmulatedBlocksFunnel extends BaseFunnel {
           if (synced) break;
           if (fetchedData.length === 0) break;
           const queueTimeRange =
-            fetchedData[fetchedData.length - 1].timestamp - this.processingQueue[0].timestamp;
+            fetchedData[fetchedData.length - 1].timestamp - fetchedData[0].timestamp;
           if (queueTimeRange >= ENV.BLOCK_TIME) {
             break;
           }

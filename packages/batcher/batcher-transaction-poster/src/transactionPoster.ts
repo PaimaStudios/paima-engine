@@ -8,6 +8,7 @@ import {
 import { keepRunning, gameInputValidatorClosed, webserverClosed } from '@paima/batcher-utils';
 import { hashBatchSubunit, buildBatchData } from '@paima/concise';
 import { wait } from '@paima/utils';
+import { BatcherStatus, BuiltinEvents, PaimaEventManager } from '@paima/events';
 
 abstract class BatchedTransactionPosterBase {
   private maxSize: number;
@@ -49,7 +50,7 @@ abstract class BatchedTransactionPosterBase {
     }
   };
 
-  abstract postMessage(_msg: string): Promise<[number, string]>;
+  abstract postMessage(_msg: string, hashes: string[]): Promise<[number, string]>;
 
   // Returns number of input successfully posted, or a negative number on failure.
   private postingRound = async (): Promise<number> => {
@@ -72,7 +73,7 @@ abstract class BatchedTransactionPosterBase {
       let blockHeight: number;
       let transactionHash: string;
       try {
-        const postedMessage = await this.postMessage(batchedTransaction);
+        const postedMessage = await this.postMessage(batchedTransaction, hashes);
         blockHeight = postedMessage[0];
         transactionHash = postedMessage[1];
         console.log('transaction posted at', blockHeight, transactionHash);
@@ -136,24 +137,40 @@ abstract class BatchedTransactionPosterBase {
     blockHeight: number,
     transactionHash: string
   ): Promise<void> => {
-    for (let hash of hashes) {
-      try {
-        await updateStatePosted.run(
-          {
-            input_hash: hash,
-            block_height: blockHeight,
-            transaction_hash: transactionHash,
-          },
-          this.pool
-        );
-      } catch (err) {
-        console.log(
-          "[batcher-transaction-poster] Error while updating posted inputs' states:",
-          err
-        );
-        throw err;
-      }
-    }
+    await Promise.all([
+      ...this.updateMqttStatus(hashes, blockHeight, transactionHash, BatcherStatus.Finalized),
+      ...hashes
+        .map(hash => ({
+          input_hash: hash,
+          block_height: blockHeight,
+          transaction_hash: transactionHash,
+        }))
+        .map(packagedData =>
+          updateStatePosted.run(packagedData, this.pool).catch(err => {
+            console.log(
+              "[batcher-transaction-poster] Error while updating posted inputs' states:",
+              err
+            );
+            throw err;
+          })
+        ),
+    ]);
+  };
+
+  protected updateMqttStatus = (
+    hashes: string[],
+    blockHeight: undefined | number,
+    transactionHash: string,
+    status: BatcherStatus
+  ): Promise<void>[] => {
+    return hashes.map(hash =>
+      PaimaEventManager.Instance.sendMessage(BuiltinEvents.BatcherHash, {
+        batch: hash,
+        blockHeight,
+        transactionHash,
+        status,
+      })
+    );
   };
 
   private rejectPostedStates = async (hashes: string[]): Promise<void> => {

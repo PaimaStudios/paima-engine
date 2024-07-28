@@ -1,4 +1,4 @@
-import type { Signer } from 'ethers';
+import type { Signer, TransactionLike } from 'ethers';
 import type { TransactionRequest, TransactionResponse } from 'ethers';
 import type {
   ActiveConnection,
@@ -77,18 +77,19 @@ export class EthersEvmProvider implements IProvider<EthersApi> {
     const signature = await this.conn.api.signMessage(buffer);
     return signature;
   };
+  finalizeTransaction = async (tx: TransactionRequest): Promise<TransactionLike<string>> => {
+    return await this.conn.api.populateTransaction({
+      gasLimit: DEFAULT_GAS_LIMIT,
+      ...tx,
+    });
+  };
   sendTransaction = async (
     tx: TransactionRequest
   ): Promise<{
     txHash: string;
     extra: TransactionResponse;
   }> => {
-    const nonce = await this.conn.api.getNonce();
-    const finalTx = {
-      nonce,
-      gasLimit: DEFAULT_GAS_LIMIT,
-      ...tx,
-    };
+    const finalTx = await this.finalizeTransaction(tx);
     const result = await this.conn.api.sendTransaction(finalTx);
     return {
       txHash: result.hash,
