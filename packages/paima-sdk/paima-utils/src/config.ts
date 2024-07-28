@@ -98,7 +98,7 @@ export class ENV {
     return ENV.isTrue(process.env.STORE_HISTORICAL_GAME_INPUTS, true);
   }
   static get CDE_CONFIG_PATH(): string {
-    return process.env.CDE_CONFIG_PATH || 'extensions.yml';
+    return process.env.CDE_CONFIG_PATH || `extensions.${ENV.NETWORK}.yml`;
   }
   static get ENABLE_DRY_RUN(): boolean {
     return ENV.isTrue(process.env.ENABLE_DRY_RUN);
