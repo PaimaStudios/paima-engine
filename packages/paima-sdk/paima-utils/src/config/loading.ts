@@ -3,8 +3,7 @@ import type { Static, TSchema } from '@sinclair/typebox';
 import { Value, ValueErrorType } from '@sinclair/typebox/value';
 import { Type } from '@sinclair/typebox';
 import { ENV, doLog } from '../index.js';
-import { toChainId } from '@dcspark/cip34-js';
-import registry from '@dcspark/cip34-js/registry';
+import { toChainId, registry } from '@dcspark/cip34-js';
 import assertNever from 'assert-never';
 
 export enum ConfigNetworkType {
