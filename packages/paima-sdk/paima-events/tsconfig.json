@@ -6,5 +6,7 @@
     "noEmit": true
   },
   "include": ["test/**/*", "src/**/*"],
-  "references": []
+  "references": [
+    { "path": "../paima-utils/tsconfig.build.json" },
+  ]
 }

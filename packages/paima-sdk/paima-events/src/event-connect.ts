@@ -4,6 +4,7 @@ import { PaimaEventManager } from './event-manager.js';
 import { toPattern } from './utils.js';
 import { extract, matches } from 'mqtt-pattern';
 import { PaimaEventBrokerNames } from './types.js';
+import { ENV } from '@paima/utils';
 
 /*
  * Paima Event Connector
@@ -65,11 +66,7 @@ export class PaimaEventConnect {
   private async connectPaimaEngine(): Promise<mqtt.MqttClient> {
     if (!PaimaEventConnect.clients.engine) {
       const broker = PaimaEventBrokerNames.PaimaEngine;
-      // keep in sync with paima-engine config.ts
-      const port = process.env.MQTT_ENGINE_BROKER_PORT ?? '8883';
-      PaimaEventConnect.clients.engine = await this.setupClient(
-        process.env.MQTT_ENGINE_BROKER_URL ?? 'ws://127.0.0.1:' + port
-      );
+      PaimaEventConnect.clients.engine = await this.setupClient(ENV.MQTT_ENGINE_BROKER_URL);
       await setupInitialListeners(broker);
     }
     return PaimaEventConnect.clients.engine;
@@ -78,11 +75,7 @@ export class PaimaEventConnect {
   private async connectBatcher(): Promise<mqtt.MqttClient> {
     if (!PaimaEventConnect.clients.batcher) {
       const broker = PaimaEventBrokerNames.Batcher;
-      // keep in sync with batcher config.ts
-      const port = process.env.MQTT_BATCHER_BROKER_PORT ?? '8883';
-      PaimaEventConnect.clients.batcher = await this.setupClient(
-        process.env.MQTT_BATCHER_BROKER_URL ?? 'ws://127.0.0.1:' + port
-      );
+      PaimaEventConnect.clients.batcher = await this.setupClient(ENV.MQTT_BATCHER_BROKER_URL);
       await setupInitialListeners(broker);
     }
     return PaimaEventConnect.clients.batcher;

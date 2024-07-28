@@ -3,6 +3,7 @@ import Aedes from 'aedes';
 import type { Server } from 'aedes-server-factory';
 import { createServer } from 'aedes-server-factory';
 import ip from 'ip';
+import { ENV } from '@paima/utils';
 
 function isLocalhost(ipAddress: string): boolean {
   // note: this only detects simple cases (ex: you're not mapping different hostnames to localhost)
@@ -70,10 +71,7 @@ export class PaimaEventBroker {
   }
 
   private checkEnabled(): void {
-    // TODO: keep in sync with paima-engine config.ts
-    if (process.env.MQTT_BROKER == null) return;
-    // TODO: keep in sync with paima-engine config.ts
-    if (!['true', '1', 'yes'].includes(String(process.env.MQTT_BROKER).toLocaleLowerCase())) {
+    if (!ENV.MQTT_BROKER) {
       throw new Error('Local MQTT Broker is disabled.');
     }
   }
@@ -82,10 +80,10 @@ export class PaimaEventBroker {
     switch (this.broker) {
       // TODO: use env vars without duplicating default here
       case 'Paima-Engine': {
-        return parseInt(process.env.MQTT_ENGINE_BROKER_PORT ?? '8883', 10);
+        return ENV.MQTT_ENGINE_BROKER_PORT;
       }
       case 'Batcher': {
-        return parseInt(process.env.MQTT_BATCHER_BROKER_PORT ?? '8884', 10);
+        return ENV.MQTT_BATCHER_BROKER_PORT;
       }
     }
     throw new Error('Unknown engine');

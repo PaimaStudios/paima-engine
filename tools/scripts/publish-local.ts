@@ -52,6 +52,7 @@ const program = new Command();
   /**
    * Step 1: Start Verdaccio
    */
+  console.log('Starting Verdaccio...');
   stopLocalRegistry = await startLocalRegistry({
     localRegistryTarget,
     storage,
@@ -62,6 +63,7 @@ const program = new Command();
   /**
    * Step 2: Publish Library on Verdaccio
    */
+  console.log('Publishing local packages...');
   const nxConfig = JSON.parse(readFileSync(resolve(process.cwd(), `nx.json`)).toString());
   const publishStatus = await releasePublish({
     groups: Object.keys(nxConfig['release']['groups']),
