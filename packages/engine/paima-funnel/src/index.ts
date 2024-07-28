@@ -32,6 +32,7 @@ export class Web3SharedApi extends BaseFunnelSharedApi {
 }
 
 export class FunnelFactory implements IFunnelFactory {
+  private printedInitialFunnel: boolean = false;
   private constructor(public sharedData: FunnelSharedData) {}
 
   public static async initialize(db: PoolClient): Promise<FunnelFactory> {
@@ -71,6 +72,7 @@ export class FunnelFactory implements IFunnelFactory {
       )
     );
 
+    console.log(`Loading extensions from ${ENV.CDE_CONFIG_PATH}`);
     const [extensions, extensionsValid] = await loadChainDataExtensions(
       Object.fromEntries(web3s),
       ENV.CDE_CONFIG_PATH,
@@ -162,6 +164,12 @@ export class FunnelFactory implements IFunnelFactory {
       ENV.EMULATED_BLOCKS,
       ENV.EMULATED_BLOCKS_MAX_WAIT
     );
+
+    if (!this.printedInitialFunnel) {
+      this.printedInitialFunnel = true;
+      console.log('Initial funnel:');
+      console.log(JSON.stringify(chainFunnel.configPrint(), null, 4));
+    }
     return chainFunnel;
   }
 }

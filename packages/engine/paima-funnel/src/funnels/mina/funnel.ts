@@ -6,7 +6,7 @@ import {
   ENV,
   InternalEventType,
 } from '@paima/utils';
-import type { ChainFunnel, ReadPresyncDataFrom } from '@paima/runtime';
+import type { ChainFunnel, FunnelJson, ReadPresyncDataFrom } from '@paima/runtime';
 import type {
   ChainData,
   ChainDataExtensionDatum,
@@ -81,6 +81,7 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
     this.readData.bind(this);
     this.readPresyncData.bind(this);
     this.getDbTx.bind(this);
+    this.configPrint.bind(this);
     this.config = config;
     this.chainName = chainName;
   }
@@ -400,6 +401,14 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
     })();
 
     return new MinaFunnel(sharedData, dbTx, config, chainName, baseFunnel, await cacheEntry);
+  }
+
+  public override configPrint(): FunnelJson {
+    return {
+      type: 'BlockFunnel',
+      chainName: this.chainName,
+      child: this.baseFunnel.configPrint(),
+    };
   }
 }
 

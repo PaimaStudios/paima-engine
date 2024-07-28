@@ -1,6 +1,6 @@
 import type { PoolClient } from 'pg';
 import Prando from '@paima/prando';
-import type { ChainFunnel, ReadPresyncDataFrom } from '@paima/runtime';
+import type { ChainFunnel, FunnelJson, ReadPresyncDataFrom } from '@paima/runtime';
 import type { ChainData, EvmPresyncChainData, PresyncChainData } from '@paima/sm';
 import { ENV, GlobalConfig, doLog } from '@paima/utils';
 import {
@@ -65,6 +65,7 @@ export class EmulatedBlocksFunnel extends BaseFunnel {
     this.readData.bind(this);
     this.readPresyncData.bind(this);
     this.getDbTx.bind(this);
+    this.configPrint.bind(this);
   }
 
   /**
@@ -466,4 +467,12 @@ export class EmulatedBlocksFunnel extends BaseFunnel {
     }
     return hashTogether([blockNumber.toString(10), ...randomPriorHashes.map(block => block.seed)]);
   };
+
+  public override configPrint(): FunnelJson {
+    return {
+      type: 'BlockFunnel',
+      chainName: this.chainName,
+      child: this.ctorData.baseFunnel.configPrint(),
+    };
+  }
 }

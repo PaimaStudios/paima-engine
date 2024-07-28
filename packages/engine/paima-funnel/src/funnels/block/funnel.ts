@@ -1,6 +1,6 @@
 import type { EvmConfig, MainEvmConfig, PaimaL2Contract, Web3 } from '@paima/utils';
 import { ChainDataExtensionType, ENV, doLog, timeout } from '@paima/utils';
-import type { ChainFunnel, ReadPresyncDataFrom } from '@paima/runtime';
+import type { ChainFunnel, FunnelJson, ReadPresyncDataFrom } from '@paima/runtime';
 import { type ChainData, type PresyncChainData } from '@paima/sm';
 import {
   fetchDynamicEvmPrimitives,
@@ -34,6 +34,7 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
     this.readData.bind(this);
     this.readPresyncData.bind(this);
     this.getDbTx.bind(this);
+    this.configPrint.bind(this);
     this.config = config;
     this.chainName = chainName;
   }
@@ -265,5 +266,12 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
     cacheEntry.updateState(config.chainId, latestBlock);
 
     return new BlockFunnel(sharedData, dbTx, config, chainName, web3, paimaL2Contract);
+  }
+
+  public override configPrint(): FunnelJson {
+    return {
+      type: 'BlockFunnel',
+      chainName: this.chainName,
+    };
   }
 }

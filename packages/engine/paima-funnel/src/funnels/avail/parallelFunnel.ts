@@ -1,6 +1,6 @@
 import type { AvailConfig, SubmittedData } from '@paima/utils';
 import { doLog, logError, delay, InternalEventType, timeout, caip2PrefixFor } from '@paima/utils';
-import type { ChainFunnel, ReadPresyncDataFrom } from '@paima/runtime';
+import type { ChainFunnel, FunnelJson, ReadPresyncDataFrom } from '@paima/runtime';
 import { type ChainData, type PresyncChainData } from '@paima/sm';
 import { BaseFunnel } from '../BaseFunnel.js';
 import type { FunnelSharedData } from '../BaseFunnel.js';
@@ -62,6 +62,7 @@ export class AvailParallelFunnel extends BaseFunnel implements ChainFunnel {
     this.readData.bind(this);
     this.readPresyncData.bind(this);
     this.getDbTx.bind(this);
+    this.configPrint.bind(this);
     this.config = config;
     this.chainName = chainName;
   }
@@ -360,6 +361,14 @@ export class AvailParallelFunnel extends BaseFunnel implements ChainFunnel {
     }
 
     return bufferedState;
+  }
+
+  public override configPrint(): FunnelJson {
+    return {
+      type: 'AvailParallelFunnel',
+      chainName: this.chainName,
+      child: this.baseFunnel.configPrint(),
+    };
   }
 }
 

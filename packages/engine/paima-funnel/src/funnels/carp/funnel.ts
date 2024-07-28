@@ -25,7 +25,7 @@ import { composeChainData, groupCdeData } from '../../utils.js';
 import type { FunnelSharedData } from '../BaseFunnel.js';
 import { BaseFunnel } from '../BaseFunnel.js';
 import type { PoolClient } from 'pg';
-import type { ChainFunnel, ReadPresyncDataFrom } from '@paima/runtime';
+import type { ChainFunnel, FunnelJson, ReadPresyncDataFrom } from '@paima/runtime';
 import getCdePoolData from '../../cde/cardanoPool.js';
 import getCdeProjectedNFTData from '../../cde/cardanoProjectedNFT.js';
 import getCdeDelayedAsset from '../../cde/delayedAsset.js';
@@ -126,6 +126,7 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
     this.readData.bind(this);
     this.readPresyncData.bind(this);
     this.getDbTx.bind(this);
+    this.configPrint.bind(this);
     this.bufferedData = null;
     this.era = shelleyEra(config);
     this.config = config;
@@ -498,6 +499,13 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
       config,
       chainName
     );
+  }
+
+  public override configPrint(): FunnelJson {
+    return {
+      type: 'CarpFunnel',
+      chainName: this.chainName,
+    };
   }
 }
 

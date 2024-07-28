@@ -1,4 +1,4 @@
-import type { ChainFunnel, ReadPresyncDataFrom } from '@paima/runtime';
+import type { ChainFunnel, FunnelJson, ReadPresyncDataFrom } from '@paima/runtime';
 import type { ChainData, ChainDataExtension, PresyncChainData } from '@paima/sm';
 import type { PoolClient } from 'pg';
 import { ENV, type FUNNEL_PRESYNC_FINISHED } from '@paima/utils';
@@ -39,6 +39,7 @@ export class BaseFunnel implements ChainFunnel {
     this.readData.bind(this);
     this.readPresyncData.bind(this);
     this.getDbTx.bind(this);
+    this.configPrint.bind(this);
   }
 
   public async readData(_blockHeight: number): Promise<ChainData[]> {
@@ -53,5 +54,11 @@ export class BaseFunnel implements ChainFunnel {
 
   public getDbTx(): PoolClient {
     return this.dbTx;
+  }
+
+  public configPrint(): FunnelJson {
+    return {
+      type: 'BaseFunnel',
+    };
   }
 }

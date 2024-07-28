@@ -1,6 +1,6 @@
 import type { AvailConfig } from '@paima/utils';
 import { caip2PrefixFor, doLog, timeout } from '@paima/utils';
-import type { ChainFunnel, ReadPresyncDataFrom } from '@paima/runtime';
+import type { ChainFunnel, FunnelJson, ReadPresyncDataFrom } from '@paima/runtime';
 import { type ChainData, type PresyncChainData } from '@paima/sm';
 import { BaseFunnel } from '../BaseFunnel.js';
 import type { FunnelSharedData } from '../BaseFunnel.js';
@@ -35,6 +35,7 @@ export class AvailBlockFunnel extends BaseFunnel implements ChainFunnel {
     this.readData.bind(this);
     this.readPresyncData.bind(this);
     this.getDbTx.bind(this);
+    this.configPrint.bind(this);
     this.config = config;
     this.chainName = chainName;
     this.api = api;
@@ -178,5 +179,12 @@ export class AvailBlockFunnel extends BaseFunnel implements ChainFunnel {
     cacheEntry.updateState(chainName, latestBlock);
 
     return new AvailBlockFunnel(sharedData, dbTx, config, chainName, api);
+  }
+
+  public override configPrint(): FunnelJson {
+    return {
+      type: 'AvailBlockFunnel',
+      chainName: this.chainName,
+    };
   }
 }

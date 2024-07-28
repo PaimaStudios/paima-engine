@@ -8,7 +8,7 @@ import {
   InternalEventType,
   ChainDataExtensionType,
 } from '@paima/utils';
-import type { ChainFunnel, ReadPresyncDataFrom } from '@paima/runtime';
+import type { ChainFunnel, FunnelJson, ReadPresyncDataFrom } from '@paima/runtime';
 import { type ChainData, type EvmPresyncChainData, type PresyncChainData } from '@paima/sm';
 import { getUngroupedCdeData } from '../../cde/reading.js';
 import {
@@ -49,6 +49,7 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
     this.readData.bind(this);
     this.readPresyncData.bind(this);
     this.getDbTx.bind(this);
+    this.configPrint.bind(this);
     this.config = config;
     this.chainName = chainName;
   }
@@ -532,6 +533,14 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
     }
 
     return bufferedState.result;
+  }
+
+  public override configPrint(): FunnelJson {
+    return {
+      type: 'BlockFunnel',
+      chainName: this.chainName,
+      child: this.baseFunnel.configPrint(),
+    };
   }
 }
 
