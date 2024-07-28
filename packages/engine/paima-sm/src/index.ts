@@ -49,7 +49,7 @@ import type {
 } from './types.js';
 import { ConfigNetworkType } from '@paima/utils';
 import assertNever from 'assert-never';
-import { sha3_256 } from 'js-sha3';
+import { keccak_256 } from 'js-sha3';
 
 export * from './types.js';
 export type * from './types.js';
@@ -418,7 +418,7 @@ async function processScheduledData(
 
           return {
             caip2: caip2PrefixFor(networks[data.network!]),
-            txHash: '0x' + sha3_256(caip2Prefix + data.tx_hash + indexForEvent(data.tx_hash)),
+            txHash: '0x' + keccak_256(caip2Prefix + data.tx_hash + indexForEvent(data.tx_hash)),
           };
         } else {
           // it has to be an scheduled timer if we don't have a cde_name
@@ -426,7 +426,8 @@ async function processScheduledData(
 
           return {
             txHash:
-              '0x' + sha3_256(userAddress + sha3_256(data.input_data) + timerIndexRelativeToBlock),
+              '0x' +
+              keccak_256(userAddress + keccak_256(data.input_data) + timerIndexRelativeToBlock),
             // if there is a timer, there is not really a way to associate it with a particular network
             caip2: '',
           };
@@ -511,7 +512,9 @@ async function processUserInputs(
       userId: address.id,
       txHash:
         '0x' +
-        sha3_256(submittedData.caip2 + submittedData.txHash + indexForEvent(submittedData.txHash)),
+        keccak_256(
+          submittedData.caip2 + submittedData.txHash + indexForEvent(submittedData.txHash)
+        ),
     };
     try {
       // Check if internal Concise Command

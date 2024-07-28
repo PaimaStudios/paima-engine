@@ -1,6 +1,7 @@
 import * as fs from 'fs/promises';
 import YAML from 'yaml';
 import type Web3 from 'web3';
+import { keccak_256 } from 'js-sha3';
 import { Type, type Static, type TSchema } from '@sinclair/typebox';
 import { Value, ValueErrorType } from '@sinclair/typebox/value';
 
@@ -412,7 +413,7 @@ export async function isPaimaErc721(
   web3: Web3
 ): Promise<boolean> {
   const PAIMA_EXTENDED_MINT_SIGNATURE = 'mint(address,string)';
-  const interfaceId = web3.utils.keccak256(PAIMA_EXTENDED_MINT_SIGNATURE).substring(0, 10);
+  const interfaceId = keccak_256(PAIMA_EXTENDED_MINT_SIGNATURE).substring(0, 10);
   try {
     const erc165Contract = getErc165Contract(cdeConfig.contractAddress, web3);
     return await erc165Contract.methods.supportsInterface(interfaceId).call();
@@ -432,7 +433,7 @@ export async function instantiateCdeGeneric(
     throw new Error('[cde-config] Event signature invalid!');
   }
   const eventName = eventMatch[0];
-  const eventSignatureHash = web3.utils.keccak256(eventSignature);
+  const eventSignatureHash = keccak_256(eventSignature);
 
   const parsedContractAbi = await loadAbi(config.abiPath);
   if (parsedContractAbi.length === 0) {
@@ -469,7 +470,7 @@ async function instantiateCdeDynamicEvmPrimitive(
     throw new Error('[cde-config] Event signature invalid!');
   }
   const eventName = eventMatch[0];
-  const eventSignatureHash = web3.utils.keccak256(eventSignature);
+  const eventSignatureHash = keccak_256(eventSignature);
 
   const parsedContractAbi = await loadAbi(config.abiPath);
   if (parsedContractAbi.length === 0) {
