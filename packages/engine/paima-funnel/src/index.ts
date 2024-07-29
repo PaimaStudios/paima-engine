@@ -1,15 +1,6 @@
 import type { PoolClient } from 'pg';
-import {
-  CardanoConfig,
-  ENV,
-  GlobalConfig,
-  MinaConfig,
-  OtherEvmConfig,
-  getPaimaL2Contract,
-  initWeb3,
-  validatePaimaL2ContractAddress,
-  AvailConfig,
-} from '@paima/utils';
+import { ENV, GlobalConfig, getPaimaL2Contract, initWeb3 } from '@paima/utils';
+import type { CardanoConfig, MinaConfig, OtherEvmConfig, AvailConfig } from '@paima/utils';
 import { loadChainDataExtensions } from '@paima/runtime';
 import type { ChainFunnel, IFunnelFactory } from '@paima/runtime';
 import type { ChainDataExtension } from '@paima/sm';
