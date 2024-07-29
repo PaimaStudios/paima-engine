@@ -1,5 +1,6 @@
 import type { PoolClient } from 'pg';
 import { ENV, GlobalConfig, getPaimaL2Contract, initWeb3 } from '@paima/utils';
+import type { CardanoConfig, MinaConfig, OtherEvmConfig, AvailConfig } from '@paima/utils';
 import { loadChainDataExtensions } from '@paima/runtime';
 import type { ChainFunnel, IFunnelFactory } from '@paima/runtime';
 import type { ChainDataExtension } from '@paima/sm';
@@ -15,6 +16,7 @@ import type Web3 from 'web3';
 import { wrapToMinaFunnel } from './funnels/mina/funnel.js';
 import { AvailBlockFunnel } from './funnels/avail/baseFunnel.js';
 import { AvailSharedApi } from './funnels/avail/utils.js';
+import assertNever from 'assert-never';
 
 export class Web3SharedApi extends BaseFunnelSharedApi {
   public constructor(protected web3: Web3) {
@@ -132,30 +134,60 @@ export class FunnelFactory implements IFunnelFactory {
       throw new Error('No configuration found for the main network');
     }
 
-    for (const [chainName, config] of await GlobalConfig.otherEvmConfig()) {
-      chainFunnel = await wrapToParallelEvmFunnel(
-        chainFunnel,
-        this.sharedData,
-        dbTx,
-        chainName,
-        config
-      );
-    }
-    chainFunnel = await wrapToCarpFunnel(chainFunnel, this.sharedData, dbTx, ENV.START_BLOCKHEIGHT);
-    for (const [chainName, config] of await GlobalConfig.minaConfig()) {
-      chainFunnel = await wrapToMinaFunnel(chainFunnel, this.sharedData, dbTx, chainName, config);
+    const configs = await GlobalConfig.getInstance();
+
+    for (const chainName of Object.keys(configs)) {
+      const config = configs[chainName];
+      const type = config.type;
+
+      switch (type) {
+        case ConfigNetworkType.EVM_OTHER:
+          chainFunnel = await wrapToParallelEvmFunnel(
+            chainFunnel,
+            this.sharedData,
+            dbTx,
+            chainName,
+            config as OtherEvmConfig
+          );
+          break;
+        case ConfigNetworkType.MINA:
+          chainFunnel = await wrapToMinaFunnel(
+            chainFunnel,
+            this.sharedData,
+            dbTx,
+            chainName,
+            config as MinaConfig
+          );
+          break;
+        case ConfigNetworkType.CARDANO:
+          chainFunnel = await wrapToCarpFunnel(
+            chainFunnel,
+            this.sharedData,
+            dbTx,
+            ENV.START_BLOCKHEIGHT,
+            chainName,
+            config as CardanoConfig
+          );
+          break;
+        case ConfigNetworkType.AVAIL_OTHER:
+          chainFunnel = await wrapToAvailParallelFunnel(
+            chainFunnel,
+            this.sharedData,
+            dbTx,
+            chainName,
+            config as AvailConfig
+          );
+          break;
+        case ConfigNetworkType.EVM:
+        case ConfigNetworkType.AVAIL_MAIN:
+          // the base funnel has to go first (even if it's not the first in the
+          // order) and it's already initialized
+          break;
+        default:
+          assertNever(type);
+      }
     }
 
-    const otherAvailConfig = await GlobalConfig.otherAvailConfig();
-    for (const [chainName, config] of otherAvailConfig == null ? [] : [otherAvailConfig]) {
-      chainFunnel = await wrapToAvailParallelFunnel(
-        chainFunnel,
-        this.sharedData,
-        dbTx,
-        chainName,
-        config
-      );
-    }
     chainFunnel = await wrapToEmulatedBlocksFunnel(
       chainFunnel,
       this.sharedData,
