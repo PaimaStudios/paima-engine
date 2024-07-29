@@ -5,7 +5,9 @@
   "targets": {
     "prebuild": {},
     "build": {},
-    "test": {},
+    "test": {
+      "executor": "nx:noop"
+    },
     "lint:eslint": {},
     "release": {},
     "local-registry": {
