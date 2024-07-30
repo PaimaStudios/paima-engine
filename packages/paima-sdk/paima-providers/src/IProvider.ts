@@ -59,6 +59,6 @@ export type AddressAndType = {
 };
 export interface IProvider<T> {
   getConnection(): ActiveConnection<T>;
-  signMessage(message: string | Uint8Array): Promise<UserSignature>;
+  signMessage(message: string): Promise<UserSignature>;
   getAddress(): AddressAndType;
 }
