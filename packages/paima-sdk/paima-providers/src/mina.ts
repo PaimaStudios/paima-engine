@@ -18,6 +18,8 @@ import {
 import { getWindow } from './window.js';
 import type AuroMinaApi from '@aurowallet/mina-provider';
 
+export { MinaDelegationCache } from './mina/delegation.js';
+
 export type MinaApi = AuroMinaApi;
 
 type MinaAddress = any;

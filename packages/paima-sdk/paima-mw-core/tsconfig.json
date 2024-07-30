@@ -9,6 +9,6 @@
     { "path": "../paima-utils/tsconfig.build.json" },
     { "path": "../paima-prando" },
     { "path": "../paima-concise/tsconfig.build.json" },
-    { "path": "../paima-providers/tsconfig.build.json" }
+    { "path": "../paima-providers" }
   ]
 }

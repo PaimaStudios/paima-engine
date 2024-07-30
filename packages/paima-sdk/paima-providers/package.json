@@ -5,8 +5,8 @@
     "access": "public"
   },
   "description": "Library for dApp connection for blockchains supported by Paima",
-  "main": "build/index.js",
   "type": "module",
+  "main": "build/index.js",
   "types": "build/index.d.ts",
   "files": [
     "/build"
@@ -20,7 +20,9 @@
   "homepage": "https://docs.paimastudios.com",
   "scripts": {
     "lint:eslint": "eslint .",
-    "build": "tsc --build tsconfig.build.json",
+    "build": "tsc",
+    "postbuild": "node build/mina/build_worker.js",
+    "pretest": "npm run build",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest --runInBand"
   },
   "dependencies": {
