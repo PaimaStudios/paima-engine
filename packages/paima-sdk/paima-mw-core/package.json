@@ -1,6 +1,6 @@
 {
   "name": "@paima/mw-core",
-  "version": "2.4.0",
+  "version": "3.0.0",
   "publishConfig": {
     "access": "public"
   },
@@ -36,10 +36,10 @@
     "@polkadot/extension-dapp": "^0.47.6",
     "algosdk": "^2.3.0",
     "bech32": "^2.0.0",
-    "@paima/utils": "2.4.0",
-    "@paima/providers": "2.4.0",
-    "@paima/concise": "2.4.0",
-    "@paima/prando": "2.4.0",
+    "@paima/utils": "3.0.0",
+    "@paima/providers": "3.0.0",
+    "@paima/concise": "3.0.0",
+    "@paima/prando": "3.0.0",
     "assert-never": "^1.2.1",
     "js-sha256": "^0.9.0",
     "avail-js-sdk": "^0.2.12"
