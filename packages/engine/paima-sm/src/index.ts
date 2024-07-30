@@ -419,7 +419,8 @@ async function processScheduledData(
 
           return {
             caip2: caip2PrefixFor(networks[data.network!]),
-            txHash: '0x' + keccak_256(caip2Prefix + data.tx_hash + indexForEvent(data.tx_hash)),
+            txHash:
+              '0x' + keccak_256(`${caip2Prefix}}|${data.tx_hash}|${indexForEvent(data.tx_hash)}`),
           };
         } else {
           // it has to be an scheduled timer if we don't have a cde_name
@@ -428,7 +429,9 @@ async function processScheduledData(
           return {
             txHash:
               '0x' +
-              keccak_256(userAddress + keccak_256(data.input_data) + timerIndexRelativeToBlock),
+              keccak_256(
+                `${userAddress}|${keccak_256(data.input_data)}|${latestChainData.blockNumber}|${timerIndexRelativeToBlock}`
+              ),
             // if there is a timer, there is not really a way to associate it with a particular network
             caip2: '',
           };
@@ -514,7 +517,7 @@ async function processUserInputs(
       txHash:
         '0x' +
         keccak_256(
-          submittedData.caip2 + submittedData.txHash + indexForEvent(submittedData.txHash)
+          `${submittedData.caip2}|${submittedData.txHash}|${indexForEvent(submittedData.txHash)}`
         ),
     };
     try {
