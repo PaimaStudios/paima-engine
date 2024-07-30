@@ -1,7 +1,7 @@
 
 import 'dotenv/config';
 import { Command, Option } from '@commander-js/extra-typings';
-import { mint_token, burn_token, update_token } from './actions.js';
+import { mint_token, burn_token, update_token, init_merkle } from './actions.js';
 import { api_blockfrost } from './util.js';
 import { generateSeedPhrase } from "lucid-cardano";
 import fs from 'fs';
@@ -21,6 +21,32 @@ const previewOption = new Option('-p, --preview', 'Use testnet').default(true);
 // App -------------------------------------------------------------------------
 const app = new Command();
 app.name('minter').description('Inverse Whirlpool Minter').version('0.0.1');
+
+// App Command: Init -----------------------------------------------------------
+app
+  .command('init_merkle')
+  .description('Initializes Contract')
+  .addOption(previewOption)            // Network
+  .addOption(blockfrostUrlOption)      // Provider Option
+  .addOption(kupoUrlOption)            // Provider Option
+  .addOption(ogmiosUrlOption)          // Provider Option
+  .action(async ({ preview }) => {
+
+    // Set up wallet API and provider API to broadcast the built TX
+    // const provider = new Kupmios(kupoUrl, ogmiosUrl);
+    const lucid = await api_blockfrost(preview ? 'Preview' : 'Mainnet' )
+    await lucid.selectWalletFromSeed(fs.readFileSync('seed.txt', { encoding: 'utf-8' }));
+   
+    console.log(lucid)
+    // Initialize Lucid ----------------------------------------------------------
+
+    // Try to execute the TX
+    try {
+      const tx_info = await init_merkle(lucid)
+    } catch (e) {
+      console.log(e);
+    }
+  });
 
 // App Command: Mint -----------------------------------------------------------
 app
