@@ -1,10 +1,27 @@
 
 import 'dotenv/config';
+//import contract from "../plutus.json" assert {type: 'json'};
 import { Command, Option } from '@commander-js/extra-typings';
-import { mint_token, burn_token, update_token, init_merkle } from './actions.js';
-import { api_blockfrost } from './util.js';
+import { mint_token, burn_token, update_token, init_merkle, create_account } from './actions.js';
+import { api_blockfrost, getValidators } from './util.js';
 import { generateSeedPhrase } from "lucid-cardano";
 import fs from 'fs';
+
+// Config: Contracts
+const contracts = [
+  { 
+    alias: 'AlwaysTrue',
+    validator: 'true.mint',
+  },
+  { 
+    alias: 'Merkle_Minter',
+    validator: 'whirl.merkle_minter',
+  },
+  { 
+    alias: 'Metadata_Minter',
+    validator: 'whirl.mint',
+  },
+];
 
 // Config: Option Flags --------------------------------------------------------
 const kupoUrlOption = new Option('-k, --kupo-url <string>', 'Kupo URL')
@@ -24,7 +41,7 @@ app.name('minter').description('Inverse Whirlpool Minter').version('0.0.1');
 
 // App Command: Init -----------------------------------------------------------
 app
-  .command('init_merkle')
+  .command('init_contract')
   .description('Initializes Contract')
   .addOption(previewOption)            // Network
   .addOption(blockfrostUrlOption)      // Provider Option
@@ -36,13 +53,54 @@ app
     // const provider = new Kupmios(kupoUrl, ogmiosUrl);
     const lucid = await api_blockfrost(preview ? 'Preview' : 'Mainnet' )
     await lucid.selectWalletFromSeed(fs.readFileSync('seed.txt', { encoding: 'utf-8' }));
-   
-    console.log(lucid)
-    // Initialize Lucid ----------------------------------------------------------
+
+    // Try to the the built contract code
+    let Validators;
+    try {
+      const contract = JSON.parse(fs.readFileSync('../plutus.json',{ encoding: 'utf-8' }));
+      Validators = getValidators(contracts, contract);
+    } catch (e) {
+      console.log(e);
+      console.log("No contract script found, ensure you've compiled the aiken code.");
+      return
+    }
 
     // Try to execute the TX
     try {
-      const tx_info = await init_merkle(lucid)
+      const tx_info = await init_merkle(lucid, Validators)
+    } catch (e) {
+      console.log(e);
+    }
+  });
+
+// App Command: Init -----------------------------------------------------------
+app
+  .command('create_account')
+  .description('Creates an Account')
+  .addOption(previewOption)            // Network
+  .addOption(blockfrostUrlOption)      // Provider Option
+  .addOption(kupoUrlOption)            // Provider Option
+  .addOption(ogmiosUrlOption)          // Provider Option
+  .action(async ({ preview }) => {
+
+    // Set up wallet API and provider API to broadcast the built TX
+    // const provider = new Kupmios(kupoUrl, ogmiosUrl);
+    const lucid = await api_blockfrost(preview ? 'Preview' : 'Mainnet' )
+    await lucid.selectWalletFromSeed(fs.readFileSync('seed.txt', { encoding: 'utf-8' }));
+
+    // Try to the parameterized contract code
+    let parameterized_validator;
+    try {
+      parameterized_validator = await JSON.parse(fs.readFileSync('./data/param_script.json',{ encoding: 'utf-8' }));
+
+      console.log(parameterized_validator);
+    } catch (e) {
+      console.log(e);
+      console.log("No parameterized script in src/data found. Make sure to initialize the contract with init_contract first");
+    }
+    // Try to execute the TX
+    try {
+      const tx_info = await create_account(lucid, parameterized_validator)
     } catch (e) {
       console.log(e);
     }

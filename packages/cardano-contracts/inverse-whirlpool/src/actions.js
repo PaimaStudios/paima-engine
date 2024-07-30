@@ -1,7 +1,5 @@
-import contract from "../plutus.json" assert {type: 'json'};
 import metadata from "./metadata.json" assert {type: 'json'};
-import {getValidators, buildPseudoTX} from "./util.js";
-
+import {buildPseudoTX} from "./util.js";
 import {
   Data,
   fromText,
@@ -11,24 +9,9 @@ import {
   applyDoubleCborEncoding,
   fromHex
 } from "lucid-cardano";
+import fs from 'fs';
 
 const VERBOSE = true;
-
-const contracts = [
-  { 
-    alias: 'AlwaysTrue',
-    validator: 'true.mint',
-  },
-  { 
-    alias: 'Merkle_Minter',
-    validator: 'whirl.merkle_minter',
-  },
-  { 
-    alias: 'Metadata_Minter',
-    validator: 'whirl.mint',
-  },
-];
-const Validators = getValidators(contracts, contract);
 
 // #############################################################################
 // ## MINT TOKEN
@@ -66,7 +49,7 @@ export const mint_token = async (API) => {
   // Mint Action: InitMerkle (ref: validation.ak)
   const mintRedeemer = Data.to(
     new Constr(0, [])
-  ); 
+  );
   const scriptDatumStructure = Data.Object({
     credential: Data.Bytes,
     amnt: Data.Integer(),
@@ -132,7 +115,7 @@ export const mint_token = async (API) => {
 // #############################################################################
 // ## MINT MERKLE INIT
 // #############################################################################
-export const init_merkle = async (API) => {
+export const init_merkle = async (API, Validators) => {
 
   // Contract Initialization ---------------------------------------------------
   if (VERBOSE) { console.log("INFO: Parameterizing Contracts"); }
@@ -154,12 +137,13 @@ export const init_merkle = async (API) => {
   //   return Object.keys(object.assets).includes(asset_baseToken);
   // });
   // todo: improve utxo selection
-  console.log('UTXOs to select from:',utxos_user)
+  //console.log('INFO: UTXOs to select from:',utxos_user)
   const utxo = utxos_user[0];
   const outputReference = {
     txHash: utxo.txHash,
     outputIndex: utxo.outputIndex,
   };
+
   const consumingUserUTXO = new Constr(0, [
     new Constr(0, [outputReference.txHash]),
     BigInt(outputReference.outputIndex),
@@ -171,6 +155,8 @@ export const init_merkle = async (API) => {
     [consumingUserUTXO],    
   );
   const Validator_Merkle_Minter = { type: "PlutusV2", script: applyDoubleCborEncoding(paramScript_Merkle_Minter) };
+
+  fs.writeFileSync('data/param_script.json', JSON.stringify(Validator_Merkle_Minter), { encoding: 'utf-8' });
 
   // Contract Addresses
   const Address_Contract_Merkle_Minter = API.utils.validatorToAddress(Validator_Merkle_Minter);
@@ -239,6 +225,99 @@ export const init_merkle = async (API) => {
     policy_id: policyId_Merkle_Minter,
   };
 }
+
+
+// #############################################################################
+// ## MINT MERKLE INIT
+// #############################################################################
+export const create_account = async (API, Validator_Merkle_Minter) => {
+
+  // Contract Initialization ---------------------------------------------------
+  if (VERBOSE) { console.log("INFO: Parameterizing Contracts"); }
+
+  // User Address
+  const userAddress = await API.wallet.address()
+  if (VERBOSE) { 
+    console.log({
+      "User Address": userAddress,
+      "Network": API.network
+    })
+  }
+
+  const paymentCredentialHash = paymentCredentialOf(userAddress).hash
+
+  // Contract Addresses
+  console.log(Validator_Merkle_Minter)
+  const Address_Contract_Merkle_Minter = API.utils.validatorToAddress(Validator_Merkle_Minter);
+
+  // Policy IDs
+  const policyId_Merkle_Minter = API.utils.validatorToScriptHash(Validator_Merkle_Minter)
+  
+  // Define Sacrificial Token Information --------------------------------------
+  if (VERBOSE) { console.log("INFO: Defining Sacrificial and Primary Asset") };
+
+  // Configure Script Datum and Redeemer ----------------------------------------
+  if (VERBOSE) { console.log("INFO: Configuring Datum"); }
+
+  // Mint Action: InitMerkle (ref: validation.ak)
+  const mintRedeemer = Data.to(
+    new Constr(1, [])
+  ); 
+  const spendRedeemer = Data.to(
+    new Constr(1, [new Constr(0, [])])
+  ); 
+  const scriptDatum = Data.to(
+    new Constr(0, ["0000000000000000000000000000000000000000000000000000000000000000", policyId_Merkle_Minter])      
+  ); 
+  /* REF: 
+    pub type State {
+      Merkle { root: RootHash, own_hash: PolicyId }
+      Account(Credential, Int)
+    }
+  */
+
+  // Token 2 - Token with scriptDataHash as the asset name
+  const quantity_token = 1 
+  const asset_token = `${policyId_Merkle_Minter}${""}`
+
+  // Build the Second TX -------------------------------------------------------
+  if (VERBOSE) { console.log("INFO: Building the TX"); }
+  const tx = await API.newTx()
+    .payToContract(
+      Address_Contract_Merkle_Minter, 
+      {inline: scriptDatum},
+      {[asset_token]: BigInt(quantity_token)},
+    ) 
+    .mintAssets({[asset_token]: BigInt(quantity_token)}, mintRedeemer)
+    .attachMintingPolicy(Validator_Merkle_Minter)
+    .attachSpendingValidator(Validator_Merkle_Minter)
+    .addSigner(userAddress)
+    .complete();
+  if (VERBOSE) { console.log("INFO: Raw TX", tx.toString()); }
+
+  // Request User Signature ----------------------------------------------------
+  console.log("INFO: Requesting TX signature");
+  const signedTx = await tx.sign().complete();
+
+  // Submit the TX -------------------------------------------------------------
+  console.log("INFO: Attempting to submit the transaction");
+  const txHash = await signedTx.submit();
+
+  if (!txHash) {
+    console.log("There was a change to the script's metadata")
+  }
+   else {
+    console.log(`TX Hash Submitted: ${txHash}`);
+  }
+
+  // Return with TX hash -------------------------------------------------------
+  return {
+    tx_id: txHash,
+    address: Address_Contract_Merkle_Minter,
+    policy_id: policyId_Merkle_Minter,
+  };
+}
+
 
 // #############################################################################
 // ## Burn TOKEN
