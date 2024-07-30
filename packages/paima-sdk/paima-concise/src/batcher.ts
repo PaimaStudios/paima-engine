@@ -1,5 +1,5 @@
 import type { AddressType, WalletAddress, UserSignature, InputDataString } from '@paima/utils';
-import { sha3 } from 'web3-utils';
+import { keccak_256 } from 'js-sha3';
 
 export const OUTER_BATCH_DIVIDER: string = '\x02';
 export const INNER_BATCH_DIVIDER: string = '\x03';
@@ -30,10 +30,8 @@ export function createMessageForBatcher(
  *       So it contains the address indirectly
  */
 export function hashBatchSubunit(input: BatchedSubunit): string {
-  return hashFxn(input.userAddress + input.gameInput + input.millisecondTimestamp);
+  return '0x' + keccak_256(input.userAddress + input.gameInput + input.millisecondTimestamp);
 }
-
-const hashFxn = (s: string): string => sha3(s) || '0x0';
 
 export function packInput(input: BatchedSubunit): string {
   return [
