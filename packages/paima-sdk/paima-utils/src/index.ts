@@ -13,11 +13,14 @@ import {
   MinaConfig,
   ConfigNetworkType,
   OtherEvmConfig,
+  MainEvmConfig,
   defaultEvmMainNetworkName,
   defaultCardanoNetworkName,
   defaultMinaNetworkName,
   BaseConfigWithoutDefaults,
   caip2PrefixFor,
+  AvailMainConfig,
+  AvailConfig,
 } from './config/loading.js';
 
 export * from './config.js';
@@ -40,8 +43,11 @@ export {
   GlobalConfig,
   EvmConfig,
   OtherEvmConfig,
+  MainEvmConfig,
   CardanoConfig,
   MinaConfig,
+  AvailConfig,
+  AvailMainConfig,
   ConfigNetworkType,
   defaultEvmMainNetworkName,
   defaultCardanoNetworkName,
@@ -50,7 +56,7 @@ export {
   caip2PrefixFor,
 };
 
-export const DEFAULT_GAS_PRICE = '61000000000' as const;
+export const DEFAULT_GAS_PRICE = '61000000000';
 
 export const SCHEDULED_DATA_ADDRESS = '0x0';
 export const SCHEDULED_DATA_ID = 0;

@@ -1,17 +1,31 @@
-import type { ChainFunnel, ReadPresyncDataFrom } from '@paima/runtime';
+import type { ChainFunnel, FunnelJson, ReadPresyncDataFrom } from '@paima/runtime';
 import type { ChainData, ChainDataExtension, PresyncChainData } from '@paima/sm';
-import type { PaimaL2Contract, Web3 } from '@paima/utils';
-import type { FunnelCacheManager } from './FunnelCache.js';
 import type { PoolClient } from 'pg';
-import type { FUNNEL_PRESYNC_FINISHED } from '@paima/utils';
+import { ENV, type FUNNEL_PRESYNC_FINISHED } from '@paima/utils';
+import type { FunnelCacheManager } from './FunnelCache.js';
 
 export type FunnelSharedData = {
-  readonly web3: Web3;
-  readonly paimaL2Contract: PaimaL2Contract;
+  mainNetworkApi: BaseFunnelSharedApi;
   extensions: ChainDataExtension[];
   readonly extensionsValid: boolean;
   readonly cacheManager: FunnelCacheManager;
 };
+
+export class BaseFunnelSharedApi {
+  private startingBlockTimestamp: Promise<{ timestamp: number | string } | undefined> | undefined;
+
+  public async getStartingBlock(): Promise<{ timestamp: number | string } | undefined> {
+    if (!this.startingBlockTimestamp) {
+      this.startingBlockTimestamp = this.getBlock(ENV.START_BLOCKHEIGHT);
+    }
+
+    return await this.startingBlockTimestamp;
+  }
+
+  public async getBlock(_height: number): Promise<{ timestamp: number | string } | undefined> {
+    return undefined;
+  }
+}
 
 /**
  * Base funnel that implements the bare-bones required functionality of the Paima Funnel
@@ -25,6 +39,7 @@ export class BaseFunnel implements ChainFunnel {
     this.readData.bind(this);
     this.readPresyncData.bind(this);
     this.getDbTx.bind(this);
+    this.configPrint.bind(this);
   }
 
   public async readData(_blockHeight: number): Promise<ChainData[]> {
@@ -39,5 +54,11 @@ export class BaseFunnel implements ChainFunnel {
 
   public getDbTx(): PoolClient {
     return this.dbTx;
+  }
+
+  public configPrint(): FunnelJson {
+    return {
+      type: 'BaseFunnel',
+    };
   }
 }

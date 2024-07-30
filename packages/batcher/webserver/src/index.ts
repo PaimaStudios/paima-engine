@@ -14,12 +14,11 @@ import {
 } from '@paima/batcher-db';
 import { ENV, keepRunning, setWebserverClosed, unsetWebserverClosed } from '@paima/batcher-utils';
 import type { ErrorMessageFxn } from '@paima/batcher-utils';
-import type { EthersEvmProvider } from '@paima/providers';
+import type { AvailJsProvider, EthersEvmProvider } from '@paima/providers';
 import type { BatchedSubunit } from '@paima/concise';
 import { createMessageForBatcher } from '@paima/concise';
 import { AddressType, getWriteNamespace, wait } from '@paima/utils';
 import { hashBatchSubunit } from '@paima/concise';
-import { GlobalConfig } from '@paima/utils';
 import { RecaptchaError, reCaptchaValidation } from './recaptcha.js';
 
 const port = ENV.BATCHER_PORT;
@@ -111,11 +110,10 @@ TODO: This will be fixed in express v5 when it comes out
 async function initializeServer(
   pool: Pool,
   errorCodeToMessage: ErrorMessageFxn,
-  provider: EthersEvmProvider
+  provider: EthersEvmProvider | AvailJsProvider,
+  getCurrentBlock: () => Promise<number>
 ): Promise<void> {
-  const [chainName, config] = await GlobalConfig.mainEvmConfig();
-  const addressValidator = new AddressValidator(config.chainUri, pool);
-  await addressValidator.initialize();
+  const addressValidator = new AddressValidator(pool);
 
   server.get(
     '/track_user_input',
@@ -230,7 +228,7 @@ async function initializeServer(
           return;
         }
 
-        const addressType = AddressType.EVM;
+        const addressType = provider.getAddress().type;
 
         const message: string = createMessageForBatcher(
           await getWriteNamespace(),
@@ -387,7 +385,7 @@ async function initializeServer(
           } else {
             console.log('BlockNumber cache miss');
             try {
-              blockHeight = await provider.getConnection().api.provider!.getBlockNumber();
+              blockHeight = await getCurrentBlock();
               blockHeightCache.height = blockHeight;
               blockHeightCache.time = new Date().getTime();
             } catch (e) {
@@ -464,10 +462,11 @@ async function initializeServer(
 async function startServer(
   _pool: Pool,
   errorCodeToMessage: ErrorMessageFxn,
-  provider: EthersEvmProvider
+  provider: EthersEvmProvider | AvailJsProvider,
+  getCurrentBlock: () => Promise<number>
 ): Promise<void> {
   pool = _pool;
-  await initializeServer(pool, errorCodeToMessage, provider);
+  await initializeServer(pool, errorCodeToMessage, provider, getCurrentBlock);
   setWebserverClosed();
   server.listen(port, () => {
     console.log(`server started at http://localhost:${port}`);

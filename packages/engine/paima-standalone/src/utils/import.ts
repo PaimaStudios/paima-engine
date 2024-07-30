@@ -59,7 +59,7 @@ export function importOpenApiJson(): OpenApiImport | undefined {
   }
 }
 
-export type PreCompilesImport = { precompiles: { [name: string]: string } };
+export type PreCompilesImport = { precompiles: { [name: string]: `0x${string}` } };
 const PRECOMPILES_FILENAME = 'packaged/precompiles.cjs';
 /**
  * Reads repackaged user's code placed next to the executable in `precompiles.cjs` file

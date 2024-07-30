@@ -105,7 +105,7 @@ export class EvmInjectedConnector implements IInjectedConnector<EvmApi> {
           displayName: info.name,
           icon: info.icon,
         },
-        api: () => Promise.resolve(provider),
+        api: (): Promise<MetaMaskInpageProvider> => Promise.resolve(provider),
       }));
       allWallets.push(...eip6963Options);
     }
@@ -119,7 +119,7 @@ export class EvmInjectedConnector implements IInjectedConnector<EvmApi> {
             displayName: provider.info.name,
             icon: provider.info.icon,
           },
-          api: () => Promise.resolve(provider),
+          api: (): Promise<EIP5749ProviderWithInfo> => Promise.resolve(provider),
         })
       );
       allWallets.push(...eip5749Options);

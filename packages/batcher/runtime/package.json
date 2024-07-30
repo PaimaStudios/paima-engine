@@ -12,12 +12,13 @@
     "prod": "node ./build/index.js"
   },
   "devDependencies": {
-    "@types/pg": "^8.10.9",
-    "@types/express": "^4.17.20"
+    "@types/express": "^4.17.20",
+    "@types/pg": "^8.10.9"
   },
   "dependencies": {
+    "ethers": "6.11.1",
     "express": "^4.18.1",
     "pg": "^8.11.3",
-    "ethers": "6.11.1"
+    "@paima/broker": "2.4.0"
   }
 }

@@ -35,7 +35,11 @@ export interface ChainData {
   internalEvents?: InternalEvent[];
 }
 
-export type InternalEvent = CardanoEpochEvent | EvmLastBlockEvent | MinaLastTimestampEvent;
+export type InternalEvent =
+  | CardanoEpochEvent
+  | EvmLastBlockEvent
+  | MinaLastTimestampEvent
+  | AvailLastBlockEvent;
 export type CardanoEpochEvent = { type: InternalEventType.CardanoBestEpoch; epoch: number };
 export type EvmLastBlockEvent = {
   type: InternalEventType.EvmLastBlock;
@@ -45,6 +49,11 @@ export type EvmLastBlockEvent = {
 export type MinaLastTimestampEvent = {
   type: InternalEventType.MinaLastTimestamp;
   timestamp: string;
+  network: string;
+};
+export type AvailLastBlockEvent = {
+  type: InternalEventType.AvailLastBlock;
+  block: number;
   network: string;
 };
 
@@ -243,48 +252,50 @@ export interface CdeErc6551RegistryDatum extends CdeDatumBase {
   payload: CdeDatumErc6551RegistryPayload;
 }
 
+export type PaginationCursor = { cursor: string; finished: boolean };
+
 export interface CdeCardanoPoolDatum extends CdeDatumBase {
   cdeDatumType: ChainDataExtensionDatumType.CardanoPool;
   payload: CdeDatumCardanoPoolPayload;
   scheduledPrefix: string;
-  paginationCursor: { cursor: string; finished: boolean };
+  paginationCursor: PaginationCursor;
 }
 
 export interface CdeCardanoProjectedNFTDatum extends CdeDatumBase {
   cdeDatumType: ChainDataExtensionDatumType.CardanoProjectedNFT;
   payload: CdeDatumCardanoProjectedNFTPayload;
   scheduledPrefix: string | undefined;
-  paginationCursor: { cursor: string; finished: boolean };
+  paginationCursor: PaginationCursor;
 }
 
 export interface CdeCardanoAssetUtxoDatum extends CdeDatumBase {
   cdeDatumType: ChainDataExtensionDatumType.CardanoAssetUtxo;
   payload: CdeDatumCardanoAssetUtxoPayload;
-  paginationCursor: { cursor: string; finished: boolean };
+  paginationCursor: PaginationCursor;
 }
 
 export interface CdeCardanoTransferDatum extends CdeDatumBase {
   cdeDatumType: ChainDataExtensionDatumType.CardanoTransfer;
   payload: CdeDatumCardanoTransferPayload;
   scheduledPrefix: string | undefined;
-  paginationCursor: { cursor: string; finished: boolean };
+  paginationCursor: PaginationCursor;
 }
 
 export interface CdeCardanoMintBurnDatum extends CdeDatumBase {
   cdeDatumType: ChainDataExtensionDatumType.CardanoMintBurn;
   payload: CdeDatumCardanoMintBurnPayload;
   scheduledPrefix: string | undefined;
-  paginationCursor: { cursor: string; finished: boolean };
+  paginationCursor: PaginationCursor;
 }
 
 export interface CdeMinaEventGenericDatum extends CdeDatumBase {
   cdeDatumType: ChainDataExtensionDatumType.MinaEventGeneric;
-  paginationCursor: { cursor: string; finished: boolean };
+  paginationCursor: PaginationCursor;
   scheduledPrefix: string;
 }
 export interface CdeMinaActionGenericDatum extends CdeDatumBase {
   cdeDatumType: ChainDataExtensionDatumType.MinaActionGeneric;
-  paginationCursor: { cursor: string; finished: boolean };
+  paginationCursor: PaginationCursor;
   scheduledPrefix: string;
 }
 export interface CdeDynamicEvmPrimitiveDatum extends CdeDatumBase {
@@ -643,7 +654,7 @@ export type GameStateTransitionFunction = (
   DBConn: PoolClient
 ) => Promise<SQLUpdate[]>;
 
-export type Precompiles = { precompiles: { [name: string]: string } };
+export type Precompiles = { precompiles: { [name: string]: `0x${string}` } };
 
 export interface GameStateMachineInitializer {
   initialize: (
@@ -664,7 +675,7 @@ export interface GameStateMachine {
   getReadonlyDbConn: () => Pool;
   getPersistentReadonlyDbConn: () => Client;
   getReadWriteDbConn: () => Pool;
-  process: (dbTx: PoolClient, chainData: ChainData) => Promise<void>;
+  process: (dbTx: PoolClient, chainData: ChainData) => Promise<number>;
   presyncProcess: (dbTx: PoolClient, latestCdeData: PresyncChainData) => Promise<void>;
   markPresyncMilestone: (blockHeight: number, network: string) => Promise<void>;
   dryRun: (gameInput: string, userAddress: string) => Promise<boolean>;

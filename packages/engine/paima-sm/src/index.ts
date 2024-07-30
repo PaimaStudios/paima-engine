@@ -49,7 +49,7 @@ import type {
 } from './types.js';
 import { ConfigNetworkType } from '@paima/utils';
 import assertNever from 'assert-never';
-import { sha3_256 } from 'js-sha3';
+import { keccak_256 } from 'js-sha3';
 
 export * from './types.js';
 export type * from './types.js';
@@ -193,7 +193,7 @@ const SM: GameStateMachineInitializer = {
         }
       },
       // Core function which triggers state transitions
-      process: async (dbTx: PoolClient, latestChainData: ChainData): Promise<void> => {
+      process: async (dbTx: PoolClient, latestChainData: ChainData): Promise<number> => {
         // Acquire correct STF based on router (based on block height)
         const gameStateTransition = gameStateTransitionRouter(latestChainData.blockNumber);
         // Save blockHeight and randomness seed
@@ -269,14 +269,16 @@ const SM: GameStateMachineInitializer = {
           indexForEventByTx
         );
 
+        const processedCount = cdeDataLength + userInputsLength + scheduledInputsLength;
         // Extra logging
-        if (cdeDataLength + userInputsLength + scheduledInputsLength > 0)
+        if (processedCount > 0)
           doLog(
             `Processed ${userInputsLength} user inputs, ${scheduledInputsLength} scheduled inputs and ${cdeDataLength} CDE events in block #${latestChainData.blockNumber}`
           );
 
         // Commit finishing of processing to DB
         await blockHeightDone.run({ block_height: latestChainData.blockNumber }, dbTx);
+        return processedCount;
       },
     };
   },
@@ -341,7 +343,7 @@ async function processCdeData(
   dbTx: PoolClient,
   inPresync: boolean
 ): Promise<number> {
-  const [mainNetwork, _] = await GlobalConfig.mainEvmConfig();
+  const [mainNetwork, _] = await GlobalConfig.mainConfig();
   return await processCdeDataBase(cdeData, dbTx, inPresync, async () => {
     // During the presync,
     //     we know that the block_height is for that network in particular,
@@ -410,13 +412,14 @@ async function processScheduledData(
         continue;
       }
 
-      const { txHash, caip2 } = (() => {
+      // eslint-disable-next-line @typescript-eslint/no-loop-func -- incorrect error fixed when @typescript-eslint v8 comes out
+      const { txHash, caip2 } = ((): { txHash: string; caip2: string } => {
         if (data.cde_name && data.tx_hash) {
           const caip2Prefix = caip2PrefixFor(networks[data.network!]);
 
           return {
             caip2: caip2PrefixFor(networks[data.network!]),
-            txHash: '0x' + sha3_256(caip2Prefix + data.tx_hash + indexForEvent(data.tx_hash)),
+            txHash: '0x' + keccak_256(caip2Prefix + data.tx_hash + indexForEvent(data.tx_hash)),
           };
         } else {
           // it has to be an scheduled timer if we don't have a cde_name
@@ -424,7 +427,8 @@ async function processScheduledData(
 
           return {
             txHash:
-              '0x' + sha3_256(userAddress + sha3_256(data.input_data) + timerIndexRelativeToBlock),
+              '0x' +
+              keccak_256(userAddress + keccak_256(data.input_data) + timerIndexRelativeToBlock),
             // if there is a timer, there is not really a way to associate it with a particular network
             caip2: '',
           };
@@ -509,7 +513,9 @@ async function processUserInputs(
       userId: address.id,
       txHash:
         '0x' +
-        sha3_256(submittedData.caip2 + submittedData.txHash + indexForEvent(submittedData.txHash)),
+        keccak_256(
+          submittedData.caip2 + submittedData.txHash + indexForEvent(submittedData.txHash)
+        ),
     };
     try {
       // Check if internal Concise Command
@@ -590,6 +596,7 @@ async function processInternalEvents(
       case InternalEventType.CardanoBestEpoch:
         await updateCardanoEpoch.run({ epoch: event.epoch }, dbTx);
         break;
+      case InternalEventType.AvailLastBlock:
       case InternalEventType.EvmLastBlock:
         await markCdeBlockheightProcessed.run(
           {

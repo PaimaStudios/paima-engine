@@ -18,7 +18,7 @@ docker compose --env-file $ENV_FILE build
 # so when using a localhost network, we instead run the paima-batcher directly on the machine
 if [ -z "${NETWORK:-}" ] || [ "${NETWORK:-}" = "localhost" ]; then
   cp ../.env.${NETWORK:-localhost} .
-  docker compose --env-file $ENV_FILE up paima-batcher-db & sleep 3 && $executable
+  docker compose --env-file $ENV_FILE up paima-batcher-db & sleep 3 && BATCHER_DB_HOST=localhost $executable
 else
   if [[ ! -f "./paima-batcher-linux" ]]; then
     echo "Error: paima-batcher-linux binary not found. Docker requires the linux binary for the application."

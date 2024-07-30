@@ -18,12 +18,17 @@ export type ReadPresyncDataFrom = {
   to: number;
 }[];
 
+export interface FunnelJson {
+  [key: string]: string | FunnelJson;
+}
+
 export interface ChainFunnel {
   readData: (blockHeight: number) => Promise<ChainData[]>;
   readPresyncData: (
     args: ReadPresyncDataFrom
   ) => Promise<{ [network: string]: PresyncChainData[] | typeof FUNNEL_PRESYNC_FINISHED }>;
   getDbTx(): PoolClient;
+  configPrint(): FunnelJson;
 }
 
 export interface IFunnelFactory {

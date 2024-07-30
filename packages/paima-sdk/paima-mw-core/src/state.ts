@@ -1,5 +1,5 @@
 import type { ContractAddress, Deployment, URI, VersionString, Web3 } from '@paima/utils';
-import { ENV } from '@paima/utils';
+import { ENV, GlobalConfig } from '@paima/utils';
 import { initWeb3 } from '@paima/utils';
 
 import { PaimaMiddlewareErrorCode, paimaErrorMessageFxn } from './errors.js';
@@ -16,14 +16,6 @@ let gameName: string = '';
 
 let backendUri: URI = ENV.BACKEND_URI;
 const batcherUri: URI = ENV.BATCHER_URI;
-
-const chainUri: URI = ENV.CHAIN_URI;
-const chainExplorerUri: URI = ENV.CHAIN_EXPLORER_URI;
-const chainId: number = ENV.CHAIN_ID;
-const chainName: string = ENV.CHAIN_NAME;
-const chainCurrencyName: string = ENV.CHAIN_CURRENCY_NAME;
-const chainCurrencySymbol: string = ENV.CHAIN_CURRENCY_SYMBOL;
-const chainCurrencyDecimals: number = ENV.CHAIN_CURRENCY_DECIMALS;
 
 const storageAddress: ContractAddress = ENV.CONTRACT_ADDRESS;
 
@@ -57,14 +49,6 @@ export const getGameVersion = (): VersionString => gameVersion;
 export const setGameName = (newGameName: string): string => (gameName = newGameName);
 export const getGameName = (): string => gameName;
 
-export const getChainUri = (): URI => chainUri;
-export const getChainExplorerUri = (): URI => chainExplorerUri;
-export const getChainId = (): number => chainId;
-export const getChainName = (): string => chainName;
-export const getChainCurrencyName = (): string => chainCurrencyName;
-export const getChainCurrencySymbol = (): string => chainCurrencySymbol;
-export const getChainCurrencyDecimals = (): number => chainCurrencyDecimals;
-
 export const getStorageAddress = (): ContractAddress => storageAddress;
 
 export const getDeployment = (): Deployment => deployment;
@@ -97,7 +81,12 @@ export const getFee = (): undefined | FeeCache => fee;
 
 export const getWeb3 = async (): Promise<Web3> => {
   if (typeof web3 === 'undefined') {
-    web3 = await initWeb3(getChainUri());
+    const evmConfig = await GlobalConfig.mainEvmConfig();
+    if (evmConfig == null) {
+      throw new Error(`getWeb3 called, but no EVM configuration was set`);
+    }
+    const [_, config] = evmConfig;
+    web3 = await initWeb3(config.chainUri);
   }
   return web3;
 };

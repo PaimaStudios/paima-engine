@@ -1,5 +1,6 @@
 import type { ChainData } from '@paima/sm';
 import type pg from 'pg';
+import type { AvailFunnelCacheEntry } from './avail/cache.js';
 
 export interface FunnelCacheEntry {
   /**
@@ -15,6 +16,7 @@ export type CacheMapType = {
   [CarpFunnelCacheEntry.SYMBOL]?: CarpFunnelCacheEntry;
   [EvmFunnelCacheEntry.SYMBOL]?: EvmFunnelCacheEntry;
   [MinaFunnelCacheEntry.SYMBOL]?: MinaFunnelCacheEntry;
+  [AvailFunnelCacheEntry.SYMBOL]?: AvailFunnelCacheEntry;
 };
 export class FunnelCacheManager {
   public cacheEntries: CacheMapType = {};
@@ -53,17 +55,17 @@ export type RpcRequestResult<T> =
   | { state: RpcRequestState.HasResult; result: T };
 
 export class RpcCacheEntry implements FunnelCacheEntry {
-  private rpcResult: Record<number, RpcRequestResult<number>> = {};
+  private rpcResult: Record<number | string, RpcRequestResult<number>> = {};
   public static readonly SYMBOL = Symbol('RpcCacheEntry');
 
-  public updateState = (chainId: number, height: number): void => {
+  public updateState = (chainId: number | string, height: number): void => {
     this.rpcResult[chainId] = {
       state: RpcRequestState.HasResult,
       result: height,
     };
   };
 
-  public getState(chainId: number): Readonly<RpcRequestResult<number>> {
+  public getState(chainId: number | string): Readonly<RpcRequestResult<number>> {
     return (
       this.rpcResult[chainId] ?? {
         state: RpcRequestState.NotRequested,

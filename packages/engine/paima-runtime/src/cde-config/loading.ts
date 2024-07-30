@@ -1,6 +1,7 @@
 import * as fs from 'fs/promises';
 import YAML from 'yaml';
 import type Web3 from 'web3';
+import { keccak_256 } from 'js-sha3';
 import { Type, type Static, type TSchema } from '@sinclair/typebox';
 import { Value, ValueErrorType } from '@sinclair/typebox/value';
 
@@ -65,11 +66,17 @@ export async function loadChainDataExtensions(
   db: PoolClient
 ): Promise<ValidationResult> {
   let configFileData: string;
+
   try {
     configFileData = await fs.readFile(configFilePath, 'utf8');
   } catch (err) {
-    doLog(`[cde-config] config file not found: ${configFilePath}, assuming no CDEs.`);
-    return [[], true];
+    try {
+      // try falling back to previous default from Paima Engine v2.4.0
+      configFileData = await fs.readFile(`extensions.yml`, 'utf8');
+    } catch (err) {
+      doLog(`[cde-config] config file not found: ${configFilePath}, assuming no CDEs.`);
+      return [[], true];
+    }
   }
 
   let dynamicExtensions: { name: string; type: CdeEntryTypeName }[];
@@ -265,14 +272,38 @@ export function hashConfig(config: any): number {
   return Math.floor(unsignedInt / 2);
 }
 
+// TODO: probably we should remove extensions.yml and move it entirely into config to avoid this
+function getNetworkName(
+  config: Static<typeof CdeConfig>['extensions'][0],
+  network: string | undefined,
+  defaultName: string,
+  web3s: { [network: string]: Web3 }
+): string {
+  if (network != null) return network;
+  for (const web3 of Object.keys(web3s)) {
+    if (web3 === defaultName) {
+      return defaultName;
+    }
+  }
+  throw new Error(
+    `No "network" key specified for ${config.name}, but no network in config.yml matched the default: ${defaultName}`
+  );
+}
+
 // Do type-specific initialization and construct contract objects
 async function instantiateExtension(
   config: Static<typeof CdeConfig>['extensions'][0],
   web3s: { [network: string]: Web3 }
 ): Promise<ChainDataExtension> {
-  const network = config.network || defaultEvmMainNetworkName;
+  const getDefaultEvmNetwork = (): string =>
+    getNetworkName(config, config.network, defaultEvmMainNetworkName, web3s);
+  const getDefaultCardanoNetwork = (): string =>
+    getNetworkName(config, config.network, defaultCardanoNetworkName, web3s);
+  const getDefaultMinaNetwork = (): string =>
+    getNetworkName(config, config.network, defaultMinaNetworkName, web3s);
   switch (config.type) {
-    case CdeEntryTypeName.ERC20:
+    case CdeEntryTypeName.ERC20: {
+      const network = getDefaultEvmNetwork();
       return {
         ...config,
         network,
@@ -281,7 +312,9 @@ async function instantiateExtension(
         cdeType: ChainDataExtensionType.ERC20,
         contract: getErc20Contract(config.contractAddress, web3s[network]),
       };
-    case CdeEntryTypeName.ERC721:
+    }
+    case CdeEntryTypeName.ERC721: {
+      const network = getDefaultEvmNetwork();
       if (await isPaimaErc721(config, web3s[network])) {
         return {
           ...config,
@@ -301,7 +334,9 @@ async function instantiateExtension(
           contract: getErc721Contract(config.contractAddress, web3s[network]),
         };
       }
-    case CdeEntryTypeName.ERC20Deposit:
+    }
+    case CdeEntryTypeName.ERC20Deposit: {
+      const network = getDefaultEvmNetwork();
       return {
         ...config,
         network,
@@ -310,7 +345,9 @@ async function instantiateExtension(
         cdeType: ChainDataExtensionType.ERC20Deposit,
         contract: getErc20Contract(config.contractAddress, web3s[network]),
       };
-    case CdeEntryTypeName.ERC1155:
+    }
+    case CdeEntryTypeName.ERC1155: {
+      const network = getDefaultEvmNetwork();
       return {
         ...config,
         network,
@@ -319,12 +356,16 @@ async function instantiateExtension(
         cdeType: ChainDataExtensionType.ERC1155,
         contract: getErc1155Contract(config.contractAddress, web3s[network]),
       };
-    case CdeEntryTypeName.Generic:
+    }
+    case CdeEntryTypeName.Generic: {
+      const network = getDefaultEvmNetwork();
       return {
         ...(await instantiateCdeGeneric(config, web3s[network])),
         network,
       };
-    case CdeEntryTypeName.ERC6551Registry:
+    }
+    case CdeEntryTypeName.ERC6551Registry: {
+      const network = getDefaultEvmNetwork();
       const contractAddress = config.contractAddress ?? ERC6551_REGISTRY_DEFAULT.New;
       return {
         ...config,
@@ -341,67 +382,84 @@ async function instantiateExtension(
           return getErc6551RegistryContract(contractAddress, web3s[network]);
         })(),
       };
-    case CdeEntryTypeName.DynamicEvmPrimitive:
+    }
+    case CdeEntryTypeName.DynamicEvmPrimitive: {
+      const network = getDefaultEvmNetwork();
       return {
         ...(await instantiateCdeDynamicEvmPrimitive(config, web3s[network])),
         network,
       };
-    case CdeEntryTypeName.CardanoDelegation:
+    }
+    case CdeEntryTypeName.CardanoDelegation: {
+      const network = getDefaultCardanoNetwork();
       return {
         ...config,
-        network: config.network || defaultCardanoNetworkName,
+        network,
         cdeName: config.name,
         hash: hashConfig(config),
         cdeType: ChainDataExtensionType.CardanoPool,
       };
-    case CdeEntryTypeName.CardanoProjectedNFT:
+    }
+    case CdeEntryTypeName.CardanoProjectedNFT: {
+      const network = getDefaultCardanoNetwork();
       return {
         ...config,
-        network: config.network || defaultCardanoNetworkName,
+        network,
         cdeName: config.name,
         hash: hashConfig(config),
         cdeType: ChainDataExtensionType.CardanoProjectedNFT,
       };
-    case CdeEntryTypeName.CardanoDelayedAsset:
+    }
+    case CdeEntryTypeName.CardanoDelayedAsset: {
+      const network = getDefaultCardanoNetwork();
       return {
         ...config,
-        network: config.network || defaultCardanoNetworkName,
+        network,
         cdeName: config.name,
         hash: hashConfig(config),
         cdeType: ChainDataExtensionType.CardanoAssetUtxo,
       };
-    case CdeEntryTypeName.CardanoTransfer:
+    }
+    case CdeEntryTypeName.CardanoTransfer: {
+      const network = getDefaultCardanoNetwork();
       return {
         ...config,
-        network: config.network || defaultCardanoNetworkName,
+        network,
         cdeName: config.name,
         hash: hashConfig(config),
         cdeType: ChainDataExtensionType.CardanoTransfer,
       };
-    case CdeEntryTypeName.CardanoMintBurn:
+    }
+    case CdeEntryTypeName.CardanoMintBurn: {
+      const network = getDefaultCardanoNetwork();
       return {
         ...config,
-        network: config.network || defaultCardanoNetworkName,
+        network,
         cdeName: config.name,
         hash: hashConfig(config),
         cdeType: ChainDataExtensionType.CardanoMintBurn,
       };
-    case CdeEntryTypeName.MinaEventGeneric:
+    }
+    case CdeEntryTypeName.MinaEventGeneric: {
+      const network = getDefaultMinaNetwork();
       return {
         ...config,
-        network: config.network || defaultMinaNetworkName,
+        network,
         cdeName: config.name,
         hash: hashConfig(config),
         cdeType: ChainDataExtensionType.MinaEventGeneric,
       };
-    case CdeEntryTypeName.MinaActionGeneric:
+    }
+    case CdeEntryTypeName.MinaActionGeneric: {
+      const network = getDefaultMinaNetwork();
       return {
         ...config,
-        network: config.network || defaultMinaNetworkName,
+        network,
         cdeName: config.name,
         hash: hashConfig(config),
         cdeType: ChainDataExtensionType.MinaActionGeneric,
       };
+    }
     default:
       assertNever(config);
   }
@@ -412,7 +470,7 @@ export async function isPaimaErc721(
   web3: Web3
 ): Promise<boolean> {
   const PAIMA_EXTENDED_MINT_SIGNATURE = 'mint(address,string)';
-  const interfaceId = web3.utils.keccak256(PAIMA_EXTENDED_MINT_SIGNATURE).substring(0, 10);
+  const interfaceId = keccak_256(PAIMA_EXTENDED_MINT_SIGNATURE).substring(0, 10);
   try {
     const erc165Contract = getErc165Contract(cdeConfig.contractAddress, web3);
     return await erc165Contract.methods.supportsInterface(interfaceId).call();
@@ -432,7 +490,7 @@ export async function instantiateCdeGeneric(
     throw new Error('[cde-config] Event signature invalid!');
   }
   const eventName = eventMatch[0];
-  const eventSignatureHash = web3.utils.keccak256(eventSignature);
+  const eventSignatureHash = keccak_256(eventSignature);
 
   const parsedContractAbi = await loadAbi(config.abiPath);
   if (parsedContractAbi.length === 0) {
@@ -469,7 +527,7 @@ async function instantiateCdeDynamicEvmPrimitive(
     throw new Error('[cde-config] Event signature invalid!');
   }
   const eventName = eventMatch[0];
-  const eventSignatureHash = web3.utils.keccak256(eventSignature);
+  const eventSignatureHash = keccak_256(eventSignature);
 
   const parsedContractAbi = await loadAbi(config.abiPath);
   if (parsedContractAbi.length === 0) {

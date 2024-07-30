@@ -14,13 +14,17 @@ const bodyParser = express.json();
 server.use(cors());
 server.use(bodyParser);
 
+const REST_DOCS_PATH = 'docs';
+
 function startServer(): void {
   // Assign the port
   let port = process.env.WEBSERVER_PORT;
   if (!port) port = '3333';
 
   server.listen(port, () => {
+    // note: this server is publicly accessible through BACKEND_URI
     doLog(`Game Node Webserver Started At: http://localhost:${port}`);
+    doLog(`    See REST docs at: http://localhost:${port}/${REST_DOCS_PATH}`);
   });
 }
 
@@ -76,6 +80,6 @@ function registerDocs(userStateMachineApi: object | undefined): void {
     express.static(swaggerUiPath, {}),
   ];
   const openApi = getOpenApiJson(userStateMachineApi);
-  server.use('/docs', swaggerServer, swaggerUi.setup(openApi, { explorer: false }));
+  server.use(`/${REST_DOCS_PATH}`, swaggerServer, swaggerUi.setup(openApi, { explorer: false }));
 }
 export { server, startServer, registerDocs, registerValidationErrorHandler };

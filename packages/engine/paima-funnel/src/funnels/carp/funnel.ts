@@ -9,7 +9,12 @@ import {
   timeout,
   ConfigNetworkType,
 } from '@paima/utils';
-import type { CardanoPresyncChainData, EvmPresyncChainData, InternalEvent } from '@paima/sm';
+import type {
+  CardanoPresyncChainData,
+  EvmPresyncChainData,
+  InternalEvent,
+  PaginationCursor,
+} from '@paima/sm';
 import {
   type ChainData,
   type ChainDataExtension,
@@ -20,7 +25,7 @@ import { composeChainData, groupCdeData } from '../../utils.js';
 import type { FunnelSharedData } from '../BaseFunnel.js';
 import { BaseFunnel } from '../BaseFunnel.js';
 import type { PoolClient } from 'pg';
-import type { ChainFunnel, ReadPresyncDataFrom } from '@paima/runtime';
+import type { ChainFunnel, FunnelJson, ReadPresyncDataFrom } from '@paima/runtime';
 import getCdePoolData from '../../cde/cardanoPool.js';
 import getCdeProjectedNFTData from '../../cde/cardanoProjectedNFT.js';
 import getCdeDelayedAsset from '../../cde/delayedAsset.js';
@@ -121,6 +126,7 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
     this.readData.bind(this);
     this.readPresyncData.bind(this);
     this.getDbTx.bind(this);
+    this.configPrint.bind(this);
     this.bufferedData = null;
     this.era = shelleyEra(config);
     this.config = config;
@@ -151,9 +157,15 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
       lastTimestamp = cachedState.timestamp;
     } else {
       lastTimestamp = await timeout(
-        this.sharedData.web3.eth.getBlock(blockHeight - 1),
+        this.sharedData.mainNetworkApi.getBlock(blockHeight - 1),
         DEFAULT_FUNNEL_TIMEOUT
       );
+
+      if (!lastTimestamp) {
+        // FIXME: this funnel shouldn't actually be doing this, it should be
+        // doing what the other funnels do.
+        throw new Error("Couldn't get main network timestamp at known block height");
+      }
 
       lastTimestamp = lastTimestamp.timestamp as number;
     }
@@ -224,23 +236,27 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
     }
 
     const cache = this.cache;
-    const mapCursorPaginatedData = (cdeName: string) => (datums: any) => {
-      // we are providing the entire indexed range, so if carp
-      // returns nothing we know the presync is finished for this
-      // CDE.
-      const finished = datums.length === 0 || datums.length < this.config.paginationLimit;
+    const mapCursorPaginatedData =
+      (cdeName: string) =>
+      <T extends { paginationCursor: PaginationCursor }>(datums: T[]): T[] => {
+        // we are providing the entire indexed range, so if carp
+        // returns nothing we know the presync is finished for this
+        // CDE.
+        const finished = datums.length === 0 || datums.length < this.config.paginationLimit;
 
-      cache.updateCursor(cdeName, {
-        cursor: datums[datums.length - 1] ? datums[datums.length - 1].paginationCursor.cursor : '',
-        finished,
-      });
+        cache.updateCursor(cdeName, {
+          cursor: datums[datums.length - 1]
+            ? datums[datums.length - 1].paginationCursor.cursor
+            : '',
+          finished,
+        });
 
-      if (datums.length > 0) {
-        datums[datums.length - 1].paginationCursor.finished = finished;
-      }
+        if (datums.length > 0) {
+          datums[datums.length - 1].paginationCursor.finished = finished;
+        }
 
-      return datums;
-    };
+        return datums;
+      };
 
     const [carpEvents, data] = await Promise.all([
       Promise.all(
@@ -441,7 +457,7 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
       newEntry.updateStartingSlot(
         timestampToAbsoluteSlot(
           shelleyEra(config),
-          (await sharedData.web3.eth.getBlock(startingBlockHeight)).timestamp as number,
+          (await sharedData.mainNetworkApi.getBlock(startingBlockHeight))!.timestamp as number,
           confirmationDepth
         )
       );
@@ -483,6 +499,13 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
       config,
       chainName
     );
+  }
+
+  public override configPrint(): FunnelJson {
+    return {
+      type: 'CarpFunnel',
+      chainName: this.chainName,
+    };
   }
 }
 
@@ -649,16 +672,10 @@ export async function wrapToCarpFunnel(
   chainFunnel: ChainFunnel,
   sharedData: FunnelSharedData,
   dbTx: PoolClient,
-  startingBlockHeight: number
+  startingBlockHeight: number,
+  chainName: string,
+  cardanoConfig: CardanoConfig
 ): Promise<ChainFunnel> {
-  const config = await GlobalConfig.cardanoConfig();
-
-  if (!config) {
-    return chainFunnel;
-  }
-
-  const [chainName, cardanoConfig] = config;
-
   try {
     const ebp = await CarpFunnel.recoverState(
       sharedData,

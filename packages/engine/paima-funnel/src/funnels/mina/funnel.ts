@@ -6,11 +6,12 @@ import {
   ENV,
   InternalEventType,
 } from '@paima/utils';
-import type { ChainFunnel, ReadPresyncDataFrom } from '@paima/runtime';
+import type { ChainFunnel, FunnelJson, ReadPresyncDataFrom } from '@paima/runtime';
 import type {
   ChainData,
   ChainDataExtensionDatum,
   MinaPresyncChainData,
+  PaginationCursor,
   PresyncChainData,
 } from '@paima/sm';
 import { composeChainData, groupCdeData } from '../../utils.js';
@@ -56,7 +57,7 @@ async function findMinaConfirmedTimestamp(
     row = res.rows;
   }
 
-  return Number.parseInt(row[0]['timestamp'], 10);
+  return Number.parseInt(row[0].timestamp as string, 10);
 }
 
 // mina timestamps are in milliseconds, while evm timestamps are in seconds.
@@ -80,6 +81,7 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
     this.readData.bind(this);
     this.readPresyncData.bind(this);
     this.getDbTx.bind(this);
+    this.configPrint.bind(this);
     this.config = config;
     this.chainName = chainName;
   }
@@ -118,19 +120,21 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
 
     const toTimestamp = maxBaseTimestamp;
 
-    const getBlockNumber = (state: { curr: number }) => (ts: number) => {
-      while (
-        state.curr < baseData.length &&
-        baseChainTimestampToMina(baseData[state.curr].timestamp, this.config.delay) <= ts
-      )
-        state.curr++;
+    const getBlockNumber =
+      (state: { curr: number }) =>
+      (ts: number): number => {
+        while (
+          state.curr < baseData.length &&
+          baseChainTimestampToMina(baseData[state.curr].timestamp, this.config.delay) <= ts
+        )
+          state.curr++;
 
-      if (state.curr < baseData.length) {
-        return baseData[state.curr].blockNumber;
-      } else {
-        throw new Error('got event out of the expected range');
-      }
-    };
+        if (state.curr < baseData.length) {
+          return baseData[state.curr].blockNumber;
+        } else {
+          throw new Error('got event out of the expected range');
+        }
+      };
 
     const ungroupedCdeData = await Promise.all(
       this.sharedData.extensions.reduce(
@@ -216,20 +220,24 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
       return data;
     }
 
-    const mapCursorPaginatedData = (cdeName: string) => (datums: any) => {
-      const finished = datums.length === 0 || datums.length < this.config.paginationLimit;
+    const mapCursorPaginatedData =
+      (cdeName: string) =>
+      <T extends { paginationCursor: PaginationCursor }>(datums: T[]): T[] => {
+        const finished = datums.length === 0 || datums.length < this.config.paginationLimit;
 
-      this.cache.updateCursor(cdeName, {
-        cursor: datums[datums.length - 1] ? datums[datums.length - 1].paginationCursor.cursor : '',
-        finished,
-      });
+        this.cache.updateCursor(cdeName, {
+          cursor: datums[datums.length - 1]
+            ? datums[datums.length - 1].paginationCursor.cursor
+            : '',
+          finished,
+        });
 
-      if (datums.length > 0) {
-        datums[datums.length - 1].paginationCursor.finished = finished;
-      }
+        if (datums.length > 0) {
+          datums[datums.length - 1].paginationCursor.finished = finished;
+        }
 
-      return datums;
-    };
+        return datums;
+      };
 
     const startingSlotTimestamp = this.cache.getState().startingSlotTimestamp;
 
@@ -341,8 +349,7 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
     dbTx: PoolClient,
     baseFunnel: ChainFunnel,
     chainName: string,
-    config: MinaConfig,
-    startingBlockHeight: number
+    config: MinaConfig
   ): Promise<MinaFunnel> {
     const cacheEntry = (async (): Promise<MinaFunnelCacheEntry> => {
       const entry = sharedData.cacheManager.cacheEntries[MinaFunnelCacheEntry.SYMBOL];
@@ -354,7 +361,12 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
       const pg = new Client({ connectionString: config.archiveConnectionString });
       await pg.connect();
 
-      const startingBlock = await sharedData.web3.eth.getBlock(startingBlockHeight);
+      const startingBlock = await sharedData.mainNetworkApi.getStartingBlock();
+
+      if (!startingBlock) {
+        throw new Error("Couldn't get main's network staring block timestamp");
+      }
+
       const startingBlockTimestamp = startingBlock.timestamp as number;
 
       const minaTimestamp = baseChainTimestampToMina(startingBlockTimestamp, config.delay);
@@ -390,25 +402,25 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
 
     return new MinaFunnel(sharedData, dbTx, config, chainName, baseFunnel, await cacheEntry);
   }
+
+  public override configPrint(): FunnelJson {
+    return {
+      type: 'BlockFunnel',
+      chainName: this.chainName,
+      child: this.baseFunnel.configPrint(),
+    };
+  }
 }
 
 export async function wrapToMinaFunnel(
   chainFunnel: ChainFunnel,
   sharedData: FunnelSharedData,
   dbTx: PoolClient,
-  startingBlockHeight: number,
   chainName: string,
   config: MinaConfig
 ): Promise<ChainFunnel> {
   try {
-    const ebp = await MinaFunnel.recoverState(
-      sharedData,
-      dbTx,
-      chainFunnel,
-      chainName,
-      config,
-      startingBlockHeight
-    );
+    const ebp = await MinaFunnel.recoverState(sharedData, dbTx, chainFunnel, chainName, config);
     return ebp;
   } catch (err) {
     doLog('[paima-funnel] Unable to initialize mina cde events processor:');

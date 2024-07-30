@@ -1,38 +1,59 @@
 import type { PoolClient } from 'pg';
-import {
-  ENV,
-  GlobalConfig,
-  getPaimaL2Contract,
-  initWeb3,
-  validatePaimaL2ContractAddress,
-} from '@paima/utils';
+import { ENV, GlobalConfig, getPaimaL2Contract, initWeb3 } from '@paima/utils';
+import type { CardanoConfig, MinaConfig, OtherEvmConfig, AvailConfig } from '@paima/utils';
 import { loadChainDataExtensions } from '@paima/runtime';
 import type { ChainFunnel, IFunnelFactory } from '@paima/runtime';
 import type { ChainDataExtension } from '@paima/sm';
 import { wrapToEmulatedBlocksFunnel } from './funnels/emulated/utils.js';
 import { BlockFunnel } from './funnels/block/funnel.js';
-import type { FunnelSharedData } from './funnels/BaseFunnel.js';
+import { BaseFunnelSharedApi, type FunnelSharedData } from './funnels/BaseFunnel.js';
 import { FunnelCacheManager } from './funnels/FunnelCache.js';
 import { wrapToCarpFunnel } from './funnels/carp/funnel.js';
 import { wrapToParallelEvmFunnel } from './funnels/parallelEvm/funnel.js';
+import { wrapToAvailParallelFunnel } from './funnels/avail/parallelFunnel.js';
 import { ConfigNetworkType } from '@paima/utils';
 import type Web3 from 'web3';
 import { wrapToMinaFunnel } from './funnels/mina/funnel.js';
+import { AvailBlockFunnel } from './funnels/avail/baseFunnel.js';
+import { AvailSharedApi } from './funnels/avail/utils.js';
+import assertNever from 'assert-never';
+
+export class Web3SharedApi extends BaseFunnelSharedApi {
+  public constructor(protected web3: Web3) {
+    super();
+    this.getBlock.bind(this);
+  }
+
+  public override async getBlock(
+    height: number
+  ): Promise<{ timestamp: number | string } | undefined> {
+    const block = await this.web3.eth.getBlock(height);
+
+    return block;
+  }
+}
 
 export class FunnelFactory implements IFunnelFactory {
+  private printedInitialFunnel: boolean = false;
   private constructor(public sharedData: FunnelSharedData) {}
 
   public static async initialize(db: PoolClient): Promise<FunnelFactory> {
     const configs = await GlobalConfig.getInstance();
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [_, mainConfig] = await GlobalConfig.mainEvmConfig();
+    const [_, mainConfig] = await GlobalConfig.mainConfig();
 
-    const nodeUrl = mainConfig.chainUri;
-    const paimaL2ContractAddress = mainConfig.paimaL2ContractAddress;
+    let mainNetworkApi;
 
-    validatePaimaL2ContractAddress(paimaL2ContractAddress);
-    const web3 = await initWeb3(nodeUrl);
-    const paimaL2Contract = getPaimaL2Contract(paimaL2ContractAddress, web3);
+    if (mainConfig.type === ConfigNetworkType.EVM) {
+      const nodeUrl = mainConfig.chainUri;
+      const web3 = await initWeb3(nodeUrl);
+
+      mainNetworkApi = new Web3SharedApi(web3);
+    }
+
+    if (mainConfig.type === ConfigNetworkType.AVAIL_MAIN) {
+      mainNetworkApi = new AvailSharedApi(mainConfig.rpc);
+    }
 
     const web3s = await Promise.all(
       Object.keys(configs).reduce(
@@ -53,15 +74,19 @@ export class FunnelFactory implements IFunnelFactory {
       )
     );
 
+    console.log(`Loading extensions from ${ENV.CDE_CONFIG_PATH}`);
     const [extensions, extensionsValid] = await loadChainDataExtensions(
       Object.fromEntries(web3s),
       ENV.CDE_CONFIG_PATH,
       db
     );
 
+    if (!mainNetworkApi) {
+      throw new Error("Failed to initialize main's network shared api");
+    }
+
     return new FunnelFactory({
-      web3,
-      paimaL2Contract,
+      mainNetworkApi,
       extensions,
       extensionsValid,
       cacheManager: new FunnelCacheManager(),
@@ -83,28 +108,86 @@ export class FunnelFactory implements IFunnelFactory {
   async generateFunnel(dbTx: PoolClient): Promise<ChainFunnel> {
     // start with a base funnel
     // and wrap it with dynamic decorators as needed
-    let chainFunnel: ChainFunnel = await BlockFunnel.recoverState(this.sharedData, dbTx);
-    for (const [chainName, config] of await GlobalConfig.otherEvmConfig()) {
-      chainFunnel = await wrapToParallelEvmFunnel(
-        chainFunnel,
+    let chainFunnel: ChainFunnel | undefined;
+
+    const [chainName, config] = await GlobalConfig.mainConfig();
+
+    if (config.type === ConfigNetworkType.EVM) {
+      const web3 = await initWeb3(config.chainUri);
+      const paimaL2Contract = getPaimaL2Contract(config.paimaL2ContractAddress, web3);
+
+      chainFunnel = await BlockFunnel.recoverState(
         this.sharedData,
         dbTx,
-        ENV.START_BLOCKHEIGHT,
         chainName,
-        config
+        config,
+        web3,
+        paimaL2Contract
       );
     }
-    chainFunnel = await wrapToCarpFunnel(chainFunnel, this.sharedData, dbTx, ENV.START_BLOCKHEIGHT);
-    for (const [chainName, config] of await GlobalConfig.minaConfig()) {
-      chainFunnel = await wrapToMinaFunnel(
-        chainFunnel,
-        this.sharedData,
-        dbTx,
-        ENV.START_BLOCKHEIGHT,
-        chainName,
-        config
-      );
+
+    if (config.type === ConfigNetworkType.AVAIL_MAIN) {
+      chainFunnel = await AvailBlockFunnel.recoverState(this.sharedData, dbTx, chainName, config);
     }
+
+    if (!chainFunnel) {
+      throw new Error('No configuration found for the main network');
+    }
+
+    const configs = await GlobalConfig.getInstance();
+
+    for (const chainName of Object.keys(configs)) {
+      const config = configs[chainName];
+      const type = config.type;
+
+      switch (type) {
+        case ConfigNetworkType.EVM_OTHER:
+          chainFunnel = await wrapToParallelEvmFunnel(
+            chainFunnel,
+            this.sharedData,
+            dbTx,
+            chainName,
+            config as OtherEvmConfig
+          );
+          break;
+        case ConfigNetworkType.MINA:
+          chainFunnel = await wrapToMinaFunnel(
+            chainFunnel,
+            this.sharedData,
+            dbTx,
+            chainName,
+            config as MinaConfig
+          );
+          break;
+        case ConfigNetworkType.CARDANO:
+          chainFunnel = await wrapToCarpFunnel(
+            chainFunnel,
+            this.sharedData,
+            dbTx,
+            ENV.START_BLOCKHEIGHT,
+            chainName,
+            config as CardanoConfig
+          );
+          break;
+        case ConfigNetworkType.AVAIL_OTHER:
+          chainFunnel = await wrapToAvailParallelFunnel(
+            chainFunnel,
+            this.sharedData,
+            dbTx,
+            chainName,
+            config as AvailConfig
+          );
+          break;
+        case ConfigNetworkType.EVM:
+        case ConfigNetworkType.AVAIL_MAIN:
+          // the base funnel has to go first (even if it's not the first in the
+          // order) and it's already initialized
+          break;
+        default:
+          assertNever(type);
+      }
+    }
+
     chainFunnel = await wrapToEmulatedBlocksFunnel(
       chainFunnel,
       this.sharedData,
@@ -113,6 +196,12 @@ export class FunnelFactory implements IFunnelFactory {
       ENV.EMULATED_BLOCKS,
       ENV.EMULATED_BLOCKS_MAX_WAIT
     );
+
+    if (!this.printedInitialFunnel) {
+      this.printedInitialFunnel = true;
+      console.log('Initial funnel:');
+      console.log(JSON.stringify(chainFunnel.configPrint(), null, 4));
+    }
     return chainFunnel;
   }
 }

@@ -5,7 +5,6 @@ export function getInvalidEnvVars(): string[] {
 
   const MANDATORY_TRUTHY_VARS: ReadonlyArray<keyof typeof ENV> = [
     // Blockchain
-    'CONTRACT_ADDRESS',
     'DEFAULT_FEE',
     'BATCHER_PRIVATE_KEY',
 
@@ -30,6 +29,16 @@ export function getInvalidEnvVars(): string[] {
   for (const varname of MANDATORY_TRUTHY_VARS) {
     if (!ENV[varname]) {
       missingVars.push(varname);
+    }
+  }
+
+  if (ENV.BATCHER_NETWORK && ENV.BATCHER_NETWORK === 'avail') {
+    if (!ENV.SECURITY_NAMESPACE) {
+      missingVars.push('SECURITY_NAMESPACE');
+    }
+  } else {
+    if (!ENV.CONTRACT_ADDRESS) {
+      missingVars.push('CONTRACT_ADDRESS');
     }
   }
 

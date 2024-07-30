@@ -7,3 +7,4 @@ packages/contracts/evm-contracts/test-lib
 packages/contracts/evm-contracts/typechain-types
 **/dist
 **/build
+bin/

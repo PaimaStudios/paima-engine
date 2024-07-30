@@ -1,15 +1,5 @@
 import { buildEndpointErrorFxn, PaimaMiddlewareErrorCode } from '../../errors.js';
-import {
-  getChainCurrencyDecimals,
-  getChainCurrencyName,
-  getChainCurrencySymbol,
-  getChainExplorerUri,
-  getChainId,
-  getChainName,
-  getChainUri,
-  getGameName,
-  hasLogin,
-} from '../../state.js';
+import { getGameName, hasLogin } from '../../state.js';
 import type { LoginInfoMap, OldResult, Result } from '../../types.js';
 import { updateFee } from '../../helpers/posting.js';
 
@@ -17,19 +7,40 @@ import { connectInjected } from '../wallet-modes.js';
 import { WalletMode } from '@paima/providers';
 import type { ApiForMode, IProvider } from '@paima/providers';
 import { EvmInjectedConnector } from '@paima/providers';
-import { EvmConfig, GlobalConfig } from '@paima/utils';
+import { ConfigNetworkType, GlobalConfig } from '@paima/utils';
 
 interface SwitchError {
   code: number;
 }
 
-async function switchChain(): Promise<boolean> {
-  const [chainName, config] = await GlobalConfig.mainEvmConfig();
+async function switchChain(chainName: string | undefined): Promise<boolean> {
+  let config = undefined;
+  if (chainName) {
+    const allConfigs = await GlobalConfig.getInstance();
+
+    config = allConfigs[chainName];
+
+    if (!config) {
+      throw new Error('Configuration for network not found.');
+    }
+    if (config.type !== ConfigNetworkType.EVM && config.type !== ConfigNetworkType.EVM_OTHER) {
+      throw new Error('Configuration is not for an EVM based network.');
+    }
+  } else {
+    const evmConfig = await GlobalConfig.mainEvmConfig();
+
+    if (!evmConfig) {
+      return true;
+    }
+
+    chainName = evmConfig[0];
+    config = evmConfig[1];
+  }
 
   const errorFxn = buildEndpointErrorFxn('switchChain');
 
   const CHAIN_NOT_ADDED_ERROR_CODE = 4902;
-  const hexChainId = '0x' + getChainId().toString(16);
+  const hexChainId = '0x' + config.chainId.toString(16);
 
   try {
     await EvmInjectedConnector.instance().getOrThrowProvider().switchChain(hexChainId);
@@ -49,7 +60,7 @@ async function switchChain(): Promise<boolean> {
               symbol: config.chainCurrencySymbol,
               decimals: config.chainCurrencyDecimals,
             },
-            rpcUrls: [getChainUri()],
+            rpcUrls: [config.chainUri],
             // blockExplorerUrls: Chain not added with empty string.
             blockExplorerUrls: config.chainExplorerUri ? [config.chainExplorerUri] : undefined,
           });
@@ -96,9 +107,17 @@ export async function evmLoginWrapper(
 ): Promise<Result<IProvider<ApiForMode<WalletMode.EvmInjected>>>> {
   const errorFxn = buildEndpointErrorFxn('evmLoginWrapper');
 
+  const evmConfig = await GlobalConfig.mainEvmConfig();
+  if (evmConfig == null) {
+    return errorFxn(
+      PaimaMiddlewareErrorCode.EVM_LOGIN,
+      new Error(`No EVM network found in configuration`)
+    );
+  }
+  const [_, config] = evmConfig;
   const gameInfo = {
     gameName: getGameName(),
-    gameChainId: '0x' + getChainId().toString(16),
+    gameChainId: '0x' + config.chainId.toString(16),
   };
   const loginResult = await connectInjected(
     'evmLoginWrapper',
@@ -122,7 +141,7 @@ export async function evmLoginWrapper(
   try {
     if (loginInfo.checkChainId !== false) {
       if (!(await verifyWalletChain())) {
-        if (!(await switchChain())) {
+        if (!(await switchChain(undefined))) {
           return errorFxn(PaimaMiddlewareErrorCode.EVM_CHAIN_SWITCH);
         }
       }

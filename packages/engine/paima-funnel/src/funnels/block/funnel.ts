@@ -1,6 +1,6 @@
-import type { EvmConfig } from '@paima/utils';
-import { ChainDataExtensionType, ENV, GlobalConfig, doLog, timeout } from '@paima/utils';
-import type { ChainFunnel, ReadPresyncDataFrom } from '@paima/runtime';
+import type { EvmConfig, MainEvmConfig, PaimaL2Contract, Web3 } from '@paima/utils';
+import { ChainDataExtensionType, ENV, doLog, timeout } from '@paima/utils';
+import type { ChainFunnel, FunnelJson, ReadPresyncDataFrom } from '@paima/runtime';
 import { type ChainData, type PresyncChainData } from '@paima/sm';
 import {
   fetchDynamicEvmPrimitives,
@@ -25,13 +25,16 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
     sharedData: FunnelSharedData,
     dbTx: PoolClient,
     config: EvmConfig,
-    chainName: string
+    chainName: string,
+    readonly web3: Web3,
+    readonly paimaL2Contract: PaimaL2Contract
   ) {
     super(sharedData, dbTx);
     // TODO: replace once TS5 decorators are better supported
     this.readData.bind(this);
     this.readPresyncData.bind(this);
     this.getDbTx.bind(this);
+    this.configPrint.bind(this);
     this.config = config;
     this.chainName = chainName;
   }
@@ -91,21 +94,21 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
       const dynamicDatums = await fetchDynamicEvmPrimitives(
         blockNumber,
         blockNumber,
-        this.sharedData.web3,
+        this.web3,
         this.sharedData,
         this.chainName
       );
 
       const [baseChainData, cdeData] = await Promise.all([
         getBaseChainDataSingle(
-          this.sharedData.web3,
-          this.sharedData.paimaL2Contract,
+          this.web3,
+          this.paimaL2Contract,
           blockNumber,
           this.dbTx,
           this.caip2Prefix()
         ),
         getUngroupedCdeData(
-          this.sharedData.web3,
+          this.web3,
           this.sharedData.extensions.filter(
             extension =>
               extension.network === this.chainName &&
@@ -141,22 +144,22 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
       const dynamicDatums = await fetchDynamicEvmPrimitives(
         fromBlock,
         toBlock,
-        this.sharedData.web3,
+        this.web3,
         this.sharedData,
         this.chainName
       );
 
       const [baseChainData, ungroupedCdeData] = await Promise.all([
         getBaseChainDataMulti(
-          this.sharedData.web3,
-          this.sharedData.paimaL2Contract,
+          this.web3,
+          this.paimaL2Contract,
           fromBlock,
           toBlock,
           this.dbTx,
           this.caip2Prefix()
         ),
         getUngroupedCdeData(
-          this.sharedData.web3,
+          this.web3,
           this.sharedData.extensions.filter(
             extension =>
               extension.network === this.chainName &&
@@ -210,15 +213,20 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
       const dynamicDatums = await fetchDynamicEvmPrimitives(
         fromBlock,
         toBlock,
-        this.sharedData.web3,
+        this.web3,
         this.sharedData,
         this.chainName
       );
 
       const ungroupedCdeData = (
         await getUngroupedCdeData(
-          this.sharedData.web3,
-          this.sharedData.extensions.filter(extension => extension.network === this.chainName),
+          this.web3,
+          this.sharedData.extensions.filter(
+            extension =>
+              extension.network === this.chainName &&
+              // these are fetched above
+              extension.cdeType !== ChainDataExtensionType.DynamicEvmPrimitive
+          ),
           fromBlock,
           toBlock,
           this.chainName
@@ -236,15 +244,16 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
 
   public static async recoverState(
     sharedData: FunnelSharedData,
-    dbTx: PoolClient
+    dbTx: PoolClient,
+    chainName: string,
+    config: MainEvmConfig,
+    web3: Web3,
+    paimaL2Contract: PaimaL2Contract
   ): Promise<BlockFunnel> {
     // we always write to this cache instead of reading from it
     // as other funnels used may want to read from this cached data
 
-    const latestBlock: number = await timeout(
-      sharedData.web3.eth.getBlockNumber(),
-      GET_BLOCK_NUMBER_TIMEOUT
-    );
+    const latestBlock: number = await timeout(web3.eth.getBlockNumber(), GET_BLOCK_NUMBER_TIMEOUT);
     const cacheEntry = ((): RpcCacheEntry => {
       const entry = sharedData.cacheManager.cacheEntries[RpcCacheEntry.SYMBOL];
       if (entry != null) return entry;
@@ -254,10 +263,15 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
       return newEntry;
     })();
 
-    const [chainName, config] = await GlobalConfig.mainEvmConfig();
-
     cacheEntry.updateState(config.chainId, latestBlock);
 
-    return new BlockFunnel(sharedData, dbTx, config, chainName);
+    return new BlockFunnel(sharedData, dbTx, config, chainName, web3, paimaL2Contract);
+  }
+
+  public override configPrint(): FunnelJson {
+    return {
+      type: 'BlockFunnel',
+      chainName: this.chainName,
+    };
   }
 }

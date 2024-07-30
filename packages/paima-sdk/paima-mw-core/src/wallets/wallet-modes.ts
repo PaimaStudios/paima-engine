@@ -17,6 +17,7 @@ import type { EndpointErrorFxn } from '../errors.js';
 import type { Result } from '../types.js';
 import type { PaimaMiddlewareErrorCode } from '../errors.js';
 import { FE_ERR_SPECIFIC_WALLET_NOT_INSTALLED } from '../errors.js';
+import type { ApiPromise } from 'avail-js-sdk';
 
 export type BaseLoginInfo<Api> = {
   preference?: InjectionPreference<Api>;
@@ -39,6 +40,11 @@ export type LoginInfoMap = {
   [WalletMode.Polkadot]: BaseLoginInfo<PolkadotApi>;
   [WalletMode.Algorand]: BaseLoginInfo<AlgorandApi>;
   [WalletMode.Mina]: BaseLoginInfo<MinaApi>;
+  [WalletMode.AvailJs]: {
+    connection: ActiveConnection<ApiPromise>;
+    preferBatchedMode: boolean;
+    seed: string;
+  };
 };
 
 type ToUnion<T> = {
