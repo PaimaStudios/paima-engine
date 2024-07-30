@@ -1,0 +1,37 @@
+{
+  "name": "@paima/mina-delegation",
+  "version": "3.1.0",
+  "description": "Mina ZkProgram for EVM->Mina delegation",
+  "author": "Paima Studios",
+  "license": "MIT",
+  "type": "module",
+  "files": [
+    "build"
+  ],
+  "main": "./build/index.js",
+  "types": "./build/index.d.ts",
+  "exports": {
+    ".": {
+      "default": "./build/index.js",
+      "types": "./build/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -r tsconfig.tsbuildinfo build/",
+    "prepare": "npm run build",
+    "prepack": "npm run clean"
+  },
+  "keywords": [
+    "mina",
+    "zk",
+    "o1js"
+  ],
+  "dependencies": {
+    "o1js": "^1.3.1"
+  },
+  "devDependencies": {
+    "eslint-plugin-o1js": "^0.4.0",
+    "typescript": "^5.3.3"
+  }
+}
