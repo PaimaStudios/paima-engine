@@ -8,9 +8,10 @@ import {
   createMessageForBatcher,
   extractBatches,
 } from '@paima/concise';
-import { toBN, hexToUtf8, sha3 } from 'web3-utils';
+import { toBN, hexToUtf8 } from 'web3-utils';
 import type { PoolClient } from 'pg';
 import { getMainAddress } from '@paima/db';
+import { keccak_256 } from 'js-sha3';
 
 interface ValidatedSubmittedData extends STFSubmittedData {
   validated: boolean;
@@ -222,14 +223,12 @@ export function createBatchNonce(
   userAddress: string,
   inputData: string
 ): string {
-  return hashFxn(millisecondTimestamp + userAddress + inputData);
+  return '0x' + keccak_256(millisecondTimestamp + userAddress + inputData);
 }
 export function createUnbatchedNonce(
   blockHeight: number,
   userAddress: string,
   inputData: string
 ): string {
-  return hashFxn(blockHeight.toString(10) + userAddress + inputData);
+  return '0x' + keccak_256(blockHeight.toString(10) + userAddress + inputData);
 }
-
-const hashFxn = (s: string): string => sha3(s) || '0x0';
