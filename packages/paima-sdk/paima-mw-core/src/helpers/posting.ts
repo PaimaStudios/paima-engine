@@ -62,7 +62,10 @@ export async function updateFee(): Promise<void> {
     setFee(newFee);
     pushLog(`[updateFee] retrieved fee ${newFee}, ${newFee.length} symbols`);
   } catch (err) {
-    pushLog('[updateFee] error while updating fee:', err);
+    pushLog(
+      '[updateFee] error while updating fee. Possibly you did not deploy a Paima L2 contract? Learn more:',
+      err
+    );
   }
 }
 

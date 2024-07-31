@@ -8,6 +8,7 @@ import {
   ENV,
   GlobalConfig,
   InternalEventType,
+  logError,
   SCHEDULED_DATA_ADDRESS,
   SCHEDULED_DATA_ID,
 } from '@paima/utils';
@@ -479,6 +480,9 @@ async function processScheduledData(
           }
         });
       }
+    } catch (e) {
+      logError(e);
+      throw e;
     } finally {
       // guarantee we run this no matter if there is an error or a continue
       await deleteScheduled.run({ id: data.id }, DBConn);
