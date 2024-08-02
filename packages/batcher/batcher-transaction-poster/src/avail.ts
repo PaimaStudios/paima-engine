@@ -24,11 +24,12 @@ class AvailBatchedTransactionPoster extends BatchedTransactionPosterBase {
       throw new Error(`Batcher failed to find Avail JS provider`);
     }
     const tx = rpcProvider.getConnection().api.rpc.tx.dataAvailability.submitData(data);
+    const signer = rpcProvider.getConnection().api.keyring.getPairs()[0];
 
     let sentPosted = false;
     const result = await new Promise<[number, string]>((resolve, reject): void => {
       void tx
-        .signAndSend(rpcProvider.getAddress().address, { nonce: -1 }, async result => {
+        .signAndSend(signer, { nonce: -1 }, async result => {
           if (result.isError) {
             reject(result);
           }
@@ -54,7 +55,7 @@ class AvailBatchedTransactionPoster extends BatchedTransactionPosterBase {
           if (result.isFinalized) {
             const signedBlock = await rpcProvider
               .getConnection()
-              .api.rpc.derive.chain.getBlock(result.status.asInBlock.toHex());
+              .api.rpc.derive.chain.getBlock(result.status.asFinalized.toHex());
             resolve([signedBlock.block.header.number.toNumber(), result.txHash.toHex()]);
           }
         })
