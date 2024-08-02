@@ -1,6 +1,15 @@
 import { Type } from '@sinclair/typebox';
-import type { EventPathAndDef } from './types.js';
-import { genEvent, toPath, TopicPrefix } from './types.js';
+import type { EventAddHashFields, EventPathAndDef, LogEvent, LogEventFields } from './types.js';
+import { addHashes, genEvent, PaimaEventBrokerNames, toPath, TopicPrefix } from './types.js';
+import type {
+  Operations,
+  Channels,
+  ChannelMessages,
+  Parameters,
+  AsyncAPI300Schema,
+} from './asyncapi.js';
+
+import type { TSchema } from '@sinclair/typebox';
 
 // careful: the most steps you add, the more responsive, but also the slower
 //          since status updates themselves need to be sent over the network
@@ -41,7 +50,7 @@ const BatcherHash = genEvent({
       type: Type.String(),
     },
   ],
-} as const);
+});
 
 const RollupBlock = genEvent({
   name: 'RollupBlock',
@@ -56,9 +65,144 @@ const RollupBlock = genEvent({
       type: Type.Optional(Type.Integer()),
     },
   ],
-} as const);
+});
 
-export const BuiltinEvents = {
-  BatcherHash: toPath(TopicPrefix.Batcher, BatcherHash),
-  RollupBlock: toPath(TopicPrefix.Node, RollupBlock),
-} as const satisfies Record<string, EventPathAndDef>;
+const Events = [
+  [TopicPrefix.Batcher, BatcherHash],
+  [TopicPrefix.Node, RollupBlock],
+] as const;
+
+export const toPathFromEntries = <
+  const T extends ReadonlyArray<readonly [TopicPrefix, LogEvent<LogEventFields<TSchema>[]>]>,
+>(
+  entries: T
+): { [K in T[number] as K[1]['name']]: ReturnType<typeof toPath<K[1], K[0]>> } => {
+  let result: Record<string, any> = {}; // we can't know the type here
+  for (const event of entries) {
+    result[event[1].name] = toPath(event[0], event[1]);
+  }
+  return result as any;
+};
+export const toPathWithHashFromEntries = <
+  const T extends ReadonlyArray<readonly [TopicPrefix, LogEvent<LogEventFields<TSchema>[]>]>,
+>(
+  entries: T
+): {
+  [K in T[number] as K[1]['name']]: ReturnType<typeof toPath<EventAddHashFields<K[1]>, K[0]>>;
+} => {
+  let result: Record<string, any> = {}; // we can't know the type here
+  for (const event of entries) {
+    result[event[1].name] = toPath(event[0], addHashes(event[1]));
+  }
+  return result as any;
+};
+
+export const BuiltinEvents = toPathFromEntries(Events) satisfies Record<string, EventPathAndDef>;
+export const BuiltinHashedEvents = toPathWithHashFromEntries(Events) satisfies Record<
+  string,
+  EventPathAndDef
+>;
+
+type HostInfo = {
+  backendUri: string;
+  batcherUri?: string;
+};
+export function toAsyncApi(
+  info: HostInfo,
+  events: Record<string, EventPathAndDef>
+): AsyncAPI300Schema {
+  const servers: NonNullable<AsyncAPI300Schema['servers']> = {
+    [PaimaEventBrokerNames.PaimaEngine]: {
+      host: info.backendUri,
+      protocol: 'mqtt',
+      title: 'Paima Engine node MQTT broker',
+    },
+  };
+  if (info.batcherUri != null) {
+    servers[PaimaEventBrokerNames.Batcher] = {
+      host: info.batcherUri,
+      protocol: 'mqtt',
+      summary: 'Paima Engine batcher MQTT broker',
+    };
+  }
+
+  const channels: Channels = {};
+  for (const [k, v] of Object.entries(events)) {
+    if (v.broker === PaimaEventBrokerNames.Batcher && info.batcherUri == null) {
+      continue;
+    }
+    const parameters: Parameters = {};
+    for (const param of v.path) {
+      if (typeof param === 'string') continue;
+      // TODO: properly handle enums
+      parameters[param.name] = {
+        // description: 'todo',
+      };
+    }
+
+    const messages: ChannelMessages = {
+      content: {
+        payload: v.type,
+        contentType: 'application/json',
+      },
+    };
+
+    channels[`on${k}`] = {
+      address: v.path.map(path => (typeof path === 'string' ? path : `{${path.name}}`)).join('/'),
+      messages,
+      parameters,
+      servers: [
+        {
+          $ref: `#/servers/${v.broker}`,
+        },
+      ],
+      // description: 'todo',
+    };
+  }
+
+  const operations: Operations = {};
+  for (const [k, v] of Object.entries(events)) {
+    if (v.broker === PaimaEventBrokerNames.Batcher && info.batcherUri == null) {
+      continue;
+    }
+    operations[`receive${k}`] = {
+      action: 'receive',
+      channel: {
+        $ref: `#/channels/on${k}`,
+      },
+      traits: [
+        {
+          $ref: '#/components/operationTraits/mqtt',
+        },
+      ],
+    };
+  }
+  const definition: AsyncAPI300Schema = {
+    asyncapi: '3.0.0',
+    info: {
+      title: 'Paima MQTT API',
+      version: '1.0.0',
+      description: 'Documentation for the MQTT channels for this Paima node',
+      externalDocs: {
+        description: 'Official Paima Engine documentation',
+        url: 'https://docs.paimastudios.com',
+      },
+    },
+    defaultContentType: 'application/json',
+    servers,
+    channels,
+    operations,
+    components: {
+      operationTraits: {
+        mqtt: {
+          bindings: {
+            mqtt: {
+              qos: 2,
+            },
+          },
+        },
+      },
+    },
+  };
+  return definition;
+}

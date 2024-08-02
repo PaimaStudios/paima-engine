@@ -1,5 +1,16 @@
 import { Type } from '@sinclair/typebox';
-import type { Kind, TTuple, TLiteral, TObject, Static, TSchema } from '@sinclair/typebox';
+import type {
+  TString,
+  TNumber,
+  TInteger,
+  TExtends,
+  Kind,
+  TTuple,
+  TLiteral,
+  TObject,
+  Static,
+  TSchema,
+} from '@sinclair/typebox';
 import assertNever from 'assert-never';
 
 export enum PaimaEventBrokerNames {
@@ -14,6 +25,19 @@ export enum TopicPrefix {
   Batcher = 'batcher',
   Node = 'node',
   App = 'app',
+}
+
+export function topicToBroker(topic: TopicPrefix): PaimaEventBrokerNames {
+  switch (topic) {
+    case TopicPrefix.Batcher:
+      return PaimaEventBrokerNames.Batcher;
+    case TopicPrefix.Node:
+      return PaimaEventBrokerNames.PaimaEngine;
+    case TopicPrefix.App:
+      return PaimaEventBrokerNames.PaimaEngine;
+    default:
+      assertNever(topic);
+  }
 }
 
 /**
@@ -32,8 +56,17 @@ export type EventPath = (SimplePath | ArgPath)[];
  * ===================================================
  */
 
+// MQTT parameters are just URLs, so they can only really be data types that are convertible to strings
+type EnsureExtendsString<A extends TSchema> =
+  TExtends<A, TString, TLiteral<true>, TLiteral<false>> extends TLiteral<true> ? A : never;
+type EnsureExtendsNumber<A extends TSchema> =
+  TExtends<A, TInteger, TLiteral<true>, TLiteral<false>> extends TLiteral<true> ? A : never;
+type ValidMqttParameter<A extends TSchema> = EnsureExtendsString<A> | EnsureExtendsNumber<A>;
+
 export type LogEventFields<Schema extends TSchema> = {
   indexed: boolean;
+  /** keeps track if this indexed field is the string version of a complex data type (ex: if it's an object type) */
+  hashed?: boolean;
   name: string;
   type: Schema;
 };
@@ -90,6 +123,7 @@ type ToTObject<T extends Record<string, LogEventFields<any>>> = {
     indexed: TLiteral<T[P]['indexed']>;
     name: TLiteral<T[P]['name']>;
     type: T[P]['type'];
+    hashed: TLiteral<DefaultToFalse<T[P]['hashed']>>;
   }>;
 };
 
@@ -127,6 +161,7 @@ export function toSchema<T extends LogEvent<any>>(
           indexed: Type.Literal(input.indexed),
           name: Type.Literal(input.name),
           type: input.type,
+          hashed: Type.Literal(input.hashed ?? false),
         })
       ) as T['fields'] // map(..) converts it to an array, but we need to consider it a tuple
     ),
@@ -145,8 +180,12 @@ type RemoveAllUnindexed<T extends LogEventFields<TSchema>[]> = {
   [P in keyof T]: FilterIndexed<T[P]>;
 };
 // 2) Transform the types into ArgPath
-type TransformEventInput<T> = T extends { readonly name: infer N; readonly type: infer U }
-  ? { name: N; type: U }
+type TransformEventInput<T> = T extends {
+  readonly hashed?: infer Hashed;
+  readonly name: infer N;
+  readonly type: infer U;
+}
+  ? { hashed?: Hashed; name: N; type: U }
   : never;
 type TransformAllEventInput<T extends LogEventFields<TSchema>[]> = {
   [P in keyof T]: TransformEventInput<T[P]>;
@@ -160,12 +199,17 @@ type ExcludeFromTuple<T extends readonly any[], E> = T extends [infer F, ...infe
     : [F, ...ExcludeFromTuple<R, E>]
   : [];
 
+type RemoveHashSuffix<T extends string> = T extends `${infer Prefix}Hash` ? Prefix : T;
 // 4) add SimplePath with the same name in front of each ArgPath
 type AddStringPath<T extends any[]> = T extends [
-  { name: infer Name; type: infer Type },
+  { hashed?: infer Hashed; name: infer Name extends string; type: infer Type },
   ...infer Rest,
 ]
-  ? [Name, { name: Name; type: Type }, ...AddStringPath<Rest>]
+  ? [
+      Hashed extends true ? RemoveHashSuffix<Name> : Name,
+      { name: Name; type: Type },
+      ...AddStringPath<Rest>,
+    ]
   : [];
 
 // 5) Filter by entries that are not "indexed" as they need to go in the output
@@ -185,13 +229,16 @@ type BrokerName<T extends TopicPrefix> = T extends TopicPrefix.Batcher
   ? PaimaEventBrokerNames.Batcher
   : PaimaEventBrokerNames.PaimaEngine;
 
+type IndexedFields<T extends LogEventFields<TSchema>[]> = ExcludeFromTuple<
+  TransformAllEventInput<RemoveAllUnindexed<T>>,
+  never
+>;
+
 export function toPath<T extends LogEvent<LogEventFields<TSchema>[]>, Prefix extends TopicPrefix>(
   prefix: Prefix,
   event: T
 ): {
-  path: AddStringPath<
-    ExcludeFromTuple<TransformAllEventInput<RemoveAllUnindexed<T['fields']>>, never>
-  >;
+  path: AddStringPath<IndexedFields<T['fields']>>;
   broker: BrokerName<Prefix>;
   type: TObject<
     OutputKeypairToObj<
@@ -205,25 +252,16 @@ export function toPath<T extends LogEvent<LogEventFields<TSchema>[]>, Prefix ext
       ...event.fields
         .filter(input => input.indexed)
         .flatMap(input => [
-          input.name,
+          input.hashed === true
+            ? input.name.substring(0, input.name.length - 'Hash'.length)
+            : input.name,
           {
             name: input.name,
             type: input.type,
           },
         ]),
     ],
-    broker: ((): PaimaEventBrokerNames => {
-      switch (prefix) {
-        case TopicPrefix.Batcher:
-          return PaimaEventBrokerNames.Batcher;
-        case TopicPrefix.Node:
-          return PaimaEventBrokerNames.PaimaEngine;
-        case TopicPrefix.App:
-          return PaimaEventBrokerNames.PaimaEngine;
-        default:
-          assertNever(prefix);
-      }
-    })(),
+    broker: topicToBroker(prefix),
     type: Type.Object(
       event.fields
         .filter(input => !input.indexed)
@@ -247,6 +285,7 @@ export function toPath<T extends LogEvent<LogEventFields<TSchema>[]>, Prefix ext
 // 1) define a version where the `indexed` field is not required (defaults to false)
 export type MaybeIndexedLogEventFields<Schema extends TSchema> = {
   indexed?: boolean;
+  hashed?: boolean;
   name: string;
   type: Schema;
 };
@@ -260,6 +299,7 @@ type DefaultToFalse<T> = T extends true ? true : false;
 type ToDefinitelyIndexedObject<T extends MaybeIndexedLogEventFields<any>[]> = {
   -readonly [P in keyof T]: {
     indexed: DefaultToFalse<T[P]['indexed']>;
+    hashed: DefaultToFalse<T[P]['hashed']>;
     name: T[P]['name'];
     type: T[P]['type'];
   };
@@ -272,9 +312,9 @@ type ToLog<T extends MaybeIndexedLogEvent<MaybeIndexedLogEventFields<TSchema>[]>
 // 3) Expose the public function. These two just type-check the user provided object for them instead of requiring the `satisfies` keyword
 type Ensure<T extends MaybeIndexedLogEvent<MaybeIndexedLogEventFields<TSchema>[]>, U> =
   MaybeIndexedLogEvent<MaybeIndexedLogEventFields<TSchema>[]> extends U ? T : never;
-export function genEvent<T extends MaybeIndexedLogEvent<MaybeIndexedLogEventFields<TSchema>[]>>(
-  event: Ensure<T, MaybeIndexedLogEvent<any>>
-): ToLog<T> {
+export function genEvent<
+  const T extends MaybeIndexedLogEvent<MaybeIndexedLogEventFields<TSchema>[]>,
+>(event: Ensure<T, MaybeIndexedLogEvent<any>>): ToLog<T> {
   for (const { name } of event.fields) {
     const invalidCharacters = ['$', '/', '+', '#'];
     for (const invalid of invalidCharacters) {
@@ -285,3 +325,92 @@ export function genEvent<T extends MaybeIndexedLogEvent<MaybeIndexedLogEventFiel
   }
   return event as any;
 }
+
+/**
+ * ======================================================================
+ * Replace indexed objects with hashes so they can be used as MQTT topics
+ * ======================================================================
+ */
+
+type AddHashFields<T extends any[]> = T extends [
+  { indexed: infer Indexed; name: infer Name extends string; type: infer Type extends TSchema },
+  ...infer Rest,
+]
+  ? Indexed extends true
+    ? ValidMqttParameter<Type> extends never
+      ? [
+          { hashed: true; indexed: true; name: `${Name}Hash`; type: TString },
+          { indexed: false; name: Name; type: Type },
+          ...AddHashFields<Rest>,
+        ]
+      : [{ indexed: Indexed; name: Name; type: Type }, ...AddHashFields<Rest>]
+    : [{ indexed: Indexed; name: Name; type: Type }, ...AddHashFields<Rest>]
+  : [];
+
+export type EventAddHashFields<
+  T extends { name: string; fields: MaybeIndexedLogEventFields<TSchema>[] },
+> = {
+  name: T['name'];
+  fields: AddHashFields<T['fields']>;
+};
+
+export function addHashes<T extends LogEvent<LogEventFields<TSchema>[]>>(
+  event: T
+): EventAddHashFields<T> {
+  return {
+    name: event.name,
+    fields: event.fields.flatMap(field => {
+      if (field.indexed === false) return field;
+      const isString = Type.Extends(
+        field.type,
+        Type.String(),
+        Type.Literal(true),
+        Type.Literal(false)
+      ).const;
+      const isNumber = Type.Extends(
+        field.type,
+        Type.Number(),
+        Type.Literal(true),
+        Type.Literal(false)
+      ).const;
+      if (isString || isNumber) {
+        return field;
+      }
+      return [
+        {
+          indexed: true,
+          type: Type.String(),
+          name: `${field.name}Hash`,
+          hashed: true,
+        },
+        {
+          ...field,
+          indexed: false,
+        },
+      ];
+    }) as any,
+  };
+}
+
+/**
+ * ================================
+ * Unused (but may be useful later)
+ * ================================
+ */
+
+// Disallows fields that aren't strings statically
+type DisallowComplexFields<T extends MaybeIndexedLogEventFields<TSchema>[]> = {
+  [P in keyof T]: T[P]['indexed'] extends false
+    ? T[P]
+    : ValidMqttParameter<T[P]['type']> extends never
+      ? {
+          indexed: T[P]['indexed'];
+          name: T[P]['name'];
+          type: never;
+        }
+      : T[P];
+};
+
+type DisallowComplexEventFields<T extends { fields: MaybeIndexedLogEventFields<TSchema>[] }> = {
+  fields: DisallowComplexFields<T['fields']>;
+};
