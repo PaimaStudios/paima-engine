@@ -9,12 +9,12 @@ info:
 defaultContentType: application/json
 servers:
   paima-engine:
-    host: http://localhost:3333
-    protocol: mqtt
+    host: localhost:3333
+    protocol: http
     title: Paima Engine node MQTT broker
   batcher:
-    host: http://localhost:1234
-    protocol: mqtt
+    host: localhost:1234
+    protocol: http
     summary: Paima Engine batcher MQTT broker
 channels:
   onBatcherHash:

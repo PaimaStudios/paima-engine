@@ -112,17 +112,21 @@ export function toAsyncApi(
   info: HostInfo,
   events: Record<string, EventPathAndDef>
 ): AsyncAPI300Schema {
+  const parsedUrl = new URL(info.backendUri);
   const servers: NonNullable<AsyncAPI300Schema['servers']> = {
     [PaimaEventBrokerNames.PaimaEngine]: {
-      host: info.backendUri,
-      protocol: 'mqtt',
+      host: parsedUrl.host,
+      // cut off trailing `:`
+      protocol: parsedUrl.protocol.substring(0, parsedUrl.protocol.length - 1),
       title: 'Paima Engine node MQTT broker',
     },
   };
   if (info.batcherUri != null) {
+    const parsedBatcherUrl = new URL(info.batcherUri);
     servers[PaimaEventBrokerNames.Batcher] = {
-      host: info.batcherUri,
-      protocol: 'mqtt',
+      host: parsedBatcherUrl.host,
+      // cut off trailing `:`
+      protocol: parsedBatcherUrl.protocol.substring(0, parsedUrl.protocol.length - 1),
       summary: 'Paima Engine batcher MQTT broker',
     };
   }
