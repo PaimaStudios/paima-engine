@@ -4,17 +4,28 @@ import express from 'express';
 import swaggerUi from 'swagger-ui-express';
 import { basicControllerJson } from '@paima/rest';
 import { merge, isErrorResult } from 'openapi-merge';
-import { doLog, logError } from '@paima/utils';
+import { doLog, ENV, logError } from '@paima/utils';
 import path from 'path';
 import { ValidateError } from 'tsoa';
+import { BuiltinEvents, toAsyncApi } from '@paima/events';
+import YAML from 'yaml';
 
 const server: Express = express();
 const bodyParser = express.json();
 
+server.use(express.static(path.join(__dirname, 'public')));
 server.use(cors());
 server.use(bodyParser);
 
-const REST_DOCS_PATH = 'docs';
+const DocPaths = {
+  Root: 'docs',
+  Rest: 'rest',
+  AsyncApi: {
+    Root: 'asyncapi',
+    Yml: 'spec.yml',
+    Ui: 'ui',
+  },
+} as const;
 
 function startServer(): void {
   // Assign the port
@@ -24,7 +35,10 @@ function startServer(): void {
   server.listen(port, () => {
     // note: this server is publicly accessible through BACKEND_URI
     doLog(`Game Node Webserver Started At: http://localhost:${port}`);
-    doLog(`    See REST docs at: http://localhost:${port}/${REST_DOCS_PATH}`);
+    doLog(`    See REST docs at: http://localhost:${port}/${DocPaths.Root}/${DocPaths.Rest}`);
+    doLog(
+      `    See MQTT event docs at http://localhost:${port}/${DocPaths.Root}/${DocPaths.AsyncApi.Root}/${DocPaths.AsyncApi.Ui}`
+    );
   });
 }
 
@@ -80,6 +94,27 @@ function registerDocs(userStateMachineApi: object | undefined): void {
     express.static(swaggerUiPath, {}),
   ];
   const openApi = getOpenApiJson(userStateMachineApi);
-  server.use(`/${REST_DOCS_PATH}`, swaggerServer, swaggerUi.setup(openApi, { explorer: false }));
+  server.use(
+    `/${DocPaths.Root}/${DocPaths.Rest}`,
+    swaggerServer,
+    swaggerUi.setup(openApi, { explorer: false })
+  );
 }
+
+server.get(`/${DocPaths.Root}/${DocPaths.AsyncApi.Root}/${DocPaths.AsyncApi.Yml}`, (_, res) => {
+  const asyncApi = toAsyncApi(
+    {
+      backendUri: ENV.MQTT_ENGINE_BROKER_URL,
+      // TODO: batcher docs theoretically should be hosted separately in some batcher-managed server
+      batcherUri: ENV.MQTT_BATCHER_BROKER_URL,
+    },
+    BuiltinEvents
+  );
+  res.send(YAML.stringify(asyncApi, null, 2));
+});
+
+server.get(`/${DocPaths.Root}/${DocPaths.AsyncApi.Root}/${DocPaths.AsyncApi.Ui}`, (_, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'asyncapi.html'));
+});
+
 export { server, startServer, registerDocs, registerValidationErrorHandler };
