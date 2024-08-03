@@ -105,6 +105,7 @@ server.get(`/${DocPaths.Root}/${DocPaths.AsyncApi.Root}/${DocPaths.AsyncApi.Yml}
   const asyncApi = toAsyncApi(
     {
       backendUri: ENV.MQTT_ENGINE_BROKER_URL,
+      // TODO: batcher docs theoretically should be hosted separately in some batcher-managed server
       batcherUri: ENV.MQTT_BATCHER_BROKER_URL,
     },
     BuiltinEvents
