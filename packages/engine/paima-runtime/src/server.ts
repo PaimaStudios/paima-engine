@@ -37,7 +37,7 @@ function startServer(): void {
     doLog(`Game Node Webserver Started At: http://localhost:${port}`);
     doLog(`    See REST docs at: http://localhost:${port}/${DocPaths.Root}/${DocPaths.Rest}`);
     doLog(
-      `    See MQTT event docs at http://localhost:${port}/${DocPaths.Root}/${DocPaths.AsyncApi}/${DocPaths.AsyncApi.Ui}`
+      `    See MQTT event docs at http://localhost:${port}/${DocPaths.Root}/${DocPaths.AsyncApi.Root}/${DocPaths.AsyncApi.Ui}`
     );
   });
 }
