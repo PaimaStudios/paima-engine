@@ -7,9 +7,10 @@ import type {
   ChannelMessages,
   Parameters,
   AsyncAPI300Schema,
+  Parameter,
 } from './asyncapi.js';
 
-import type { TSchema } from '@sinclair/typebox';
+import type { TLiteral, TSchema } from '@sinclair/typebox';
 
 // careful: the most steps you add, the more responsive, but also the slower
 //          since status updates themselves need to be sent over the network
@@ -134,10 +135,13 @@ export function toAsyncApi(
     const parameters: Parameters = {};
     for (const param of v.path) {
       if (typeof param === 'string') continue;
-      // TODO: properly handle enums
-      parameters[param.name] = {
+      const parameter: Parameter = {
         // description: 'todo',
       };
+      if ('anyOf' in param.type) {
+        parameter.enum = param.type.anyOf.map((entry: TLiteral<string>) => entry.const);
+      }
+      parameters[param.name] = parameter;
     }
 
     const messages: ChannelMessages = {

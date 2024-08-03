@@ -33,7 +33,12 @@ channels:
         contentType: application/json
     parameters:
       batch: {}
-      status: {}
+      status:
+        enum:
+          - posting
+          - finalizing
+          - finalized
+          - rejected
     servers:
       - $ref: '#/servers/batcher'
   onRollupBlock:
