@@ -32,6 +32,7 @@
       "./batcher/**/*",
       "./documentation/**/*",
       "./swagger-ui/**/*",
+      "./public/**/*",
       "./cardano_multiplatform_lib_bg.wasm"
     ],
     "targets": [

@@ -7,7 +7,7 @@
   "types": "build/index.d.ts",
   "scripts": {
     "lint:eslint": "eslint .",
-    "build": "tsc --build tsconfig.build.json",
+    "build": "tsc --build tsconfig.build.json && cp -r ./public ./build/public",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest --runInBand"
   },
   "author": "Paima Studios",
