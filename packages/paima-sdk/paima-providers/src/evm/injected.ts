@@ -9,10 +9,9 @@ import type {
   AddressAndType,
 } from '../IProvider.js';
 import { optionToActive } from '../IProvider.js';
-import { utf8ToHex } from 'web3-utils';
 import { ProviderApiError, ProviderNotInitialized, WalletNotFound } from '../errors.js';
 import type { EvmAddress } from './types.js';
-import { AddressType } from '@paima/utils';
+import { AddressType, uint8ArrayToHexString } from '@paima/utils';
 import { getWindow } from '../window.js';
 
 type EIP1193Provider = MetaMaskInpageProvider;
@@ -269,8 +268,9 @@ export class EvmInjectedProvider implements IProvider<EvmApi> {
       address: this.address.toLowerCase(),
     };
   };
-  signMessage = async (message: string): Promise<UserSignature> => {
-    const hexMessage = utf8ToHex(message);
+  signMessage = async (message: string | Uint8Array): Promise<UserSignature> => {
+    const msgArray = message instanceof Uint8Array ? message : new TextEncoder().encode(message);
+    const hexMessage = '0x' + uint8ArrayToHexString(msgArray);
     const signature = await this.conn.api.request({
       method: 'personal_sign',
       params: [hexMessage, this.getAddress().address, ''],

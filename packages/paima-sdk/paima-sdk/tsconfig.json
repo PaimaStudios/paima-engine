@@ -14,7 +14,7 @@
     { "path": "../paima-prando" },
     { "path": "../paima-utils/tsconfig.build.json" },
     { "path": "../paima-crypto/tsconfig.build.json" },
-    { "path": "../paima-providers/tsconfig.build.json" },
+    { "path": "../paima-providers" },
     { "path": "../paima-concise/tsconfig.build.json" },
     { "path": "../paima-executors" },
     { "path": "../paima-mw-core" },

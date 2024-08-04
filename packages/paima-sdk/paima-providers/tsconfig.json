@@ -1,12 +1,14 @@
 {
   "extends": "../tsconfig.json",
   "compilerOptions": {
-    "rootDir": ".",
-    "noEmit": true,
+    "rootDir": "src",
+    "outDir": "build",
+    "resolveJsonModule": true
   },
-  "include": ["test/**/*", "src/**/*"],
+  "include": ["src/**/*", "src/**/*.json"],
   "references": [
     { "path": "../paima-crypto/tsconfig.build.json" },
     { "path": "../paima-utils/tsconfig.build.json" },
+    { "path": "../../contracts/mina-delegation/tsconfig.json" },
   ]
 }

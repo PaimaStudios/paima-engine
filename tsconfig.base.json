@@ -42,6 +42,7 @@
       "@paima/db/*": ["./packages/node-sdk/paima-db/*"],
       "@paima/events/*": ["./packages/paima-sdk/paima-events/*"],
       "@paima/evm-contracts/*": ["./packages/contracts/evm-contracts/*"],
+      "@paima/mina-delegation/*": ["./packages/contracts/mina-delegation/*"],
       "@paima/executors/*": ["./packages/paima-sdk/paima-executors/*"],
       "@paima/funnel/*": ["./packages/engine/paima-funnel/*"],
       "@paima/mw-core/*": ["./packages/paima-sdk/paima-mw-core/*"],

@@ -18,6 +18,8 @@ import {
 import { getWindow } from './window.js';
 import type AuroMinaApi from '@aurowallet/mina-provider';
 
+export { MinaDelegationCache } from './mina/delegation.js';
+
 export type MinaApi = AuroMinaApi;
 
 type MinaAddress = any;
@@ -141,7 +143,7 @@ export class MinaProvider implements IProvider<MinaApi> {
   signMessage = async (message: string): Promise<UserSignature> => {
     // There is no way of choosing the signing account here. At most we could
     // monitor the changed events and erroring out if it changed.
-    const signed = await this.conn.api.signMessage({ message: message });
+    const signed = await this.conn.api.signMessage({ message });
 
     if ('signature' in signed) {
       const { signature } = signed;
