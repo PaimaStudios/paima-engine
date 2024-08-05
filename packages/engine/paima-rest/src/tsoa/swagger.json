@@ -136,6 +136,53 @@
 			"ConfirmInputAcceptanceResponse": {
 				"$ref": "#/components/schemas/Result_boolean_"
 			},
+			"TransactionCountResponse": {
+				"properties": {
+					"gameInputs": {
+						"type": "number",
+						"format": "double"
+					},
+					"scheduledData": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"gameInputs",
+					"scheduledData"
+				],
+				"type": "object"
+			},
+			"SuccessfulResult_TransactionCountResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean",
+						"enum": [
+							true
+						],
+						"nullable": false
+					},
+					"result": {
+						"$ref": "#/components/schemas/TransactionCountResponse"
+					}
+				},
+				"required": [
+					"success",
+					"result"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"Result_TransactionCountResponse_": {
+				"anyOf": [
+					{
+						"$ref": "#/components/schemas/SuccessfulResult_TransactionCountResponse_"
+					},
+					{
+						"$ref": "#/components/schemas/FailedResult"
+					}
+				]
+			},
 			"Achievement": {
 				"properties": {
 					"name": {
@@ -514,6 +561,72 @@
 						"in": "query",
 						"name": "blockHeight",
 						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
+			}
+		},
+		"/transaction_count/blockHeight": {
+			"get": {
+				"operationId": "TransactionCountBlockHeight",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Result_TransactionCountResponse_"
+								}
+							}
+						}
+					}
+				},
+				"security": [],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "blockHeight",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
+			}
+		},
+		"/transaction_count/address": {
+			"get": {
+				"operationId": "TransactionCountGet",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Result_TransactionCountResponse_"
+								}
+							}
+						}
+					}
+				},
+				"security": [],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "address",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "blockHeight",
+						"required": false,
 						"schema": {
 							"format": "double",
 							"type": "number"

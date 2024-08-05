@@ -1,4 +1,6 @@
-import { getBackendUri, getBatcherUri } from '../state.js';
+// TODO: delete this file and move it to use paima-rest-schema once the batcher supports it
+
+import { getBatcherUri } from '../state.js';
 import type { QueryOptions, QueryValue } from '../types.js';
 
 function queryValueToString(value: QueryValue): string {
@@ -26,38 +28,8 @@ export function buildQuery(endpoint: string, options: QueryOptions): string {
   }
 }
 
-export function buildBackendQuery(endpoint: string, options: QueryOptions): string {
-  return `${getBackendUri()}/${buildQuery(endpoint, options)}`;
-}
-
 export function buildBatcherQuery(endpoint: string, options: QueryOptions): string {
   return `${getBatcherUri()}/${buildQuery(endpoint, options)}`;
-}
-
-export function backendQueryLatestProcessedBlockHeight(): string {
-  const endpoint = 'latest_processed_blockheight';
-  const options = {};
-  return buildBackendQuery(endpoint, options);
-}
-
-export function backendQueryBackendVersion(): string {
-  const endpoint = 'backend_version';
-  const options = {};
-  return buildBackendQuery(endpoint, options);
-}
-
-export function backendQueryEmulatedBlocksActive(): string {
-  const endpoint = 'emulated_blocks_active';
-  const options = {};
-  return buildBackendQuery(endpoint, options);
-}
-
-export function backendQueryDeploymentBlockheightToEmulated(deploymentBlockheight: number): string {
-  const endpoint = 'deployment_blockheight_to_emulated';
-  const options = {
-    deploymentBlockheight,
-  };
-  return buildBackendQuery(endpoint, options);
 }
 
 export function batcherQuerySubmitUserInput(): string {

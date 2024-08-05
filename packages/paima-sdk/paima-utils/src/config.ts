@@ -1,4 +1,12 @@
 import type { VersionString } from './types.js';
+import { config } from 'dotenv';
+
+// https://github.com/flexdinesh/browser-or-node/blob/master/src/index.ts
+const isNode: boolean =
+  typeof process !== 'undefined' && process.versions != null && process.versions.node != null;
+if (isNode) {
+  config({ path: `${process.cwd()}/.env.${process.env.NETWORK || 'localhost'}` });
+}
 
 /**
  * Careful: this class uses `process.env`

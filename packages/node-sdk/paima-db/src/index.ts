@@ -15,6 +15,8 @@ export * from './sql/block-heights.queries.js';
 export type * from './sql/block-heights.queries.js';
 export * from './sql/scheduled.queries.js';
 export type * from './sql/scheduled.queries.js';
+export * from './sql/statistics.queries.js';
+export type * from './sql/statistics.queries.js';
 export * from './sql/nonces.queries.js';
 export type * from './sql/nonces.queries.js';
 export * from './sql/historical.queries.js';

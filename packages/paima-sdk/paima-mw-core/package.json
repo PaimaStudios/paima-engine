@@ -11,6 +11,9 @@
   "files": [
     "/build"
   ],
+  "nx": {
+    "implicitDependencies": ["@paima/rest"]
+  },
   "author": "Paima Studios",
   "license": "See license file",
   "repository": {
@@ -20,7 +23,10 @@
   "homepage": "https://docs.paimastudios.com",
   "scripts": {
     "lint:eslint": "eslint .",
-    "build": "tsc",
+    "gen:node": "openapi-typescript ../../engine/paima-rest/src/tsoa/swagger.json -o ./src/helpers/paima-node-rest-schema.d.ts",
+    "gen:batcher": "",
+    "gen:api": "npm run gen:node && npm run gen:batcher",
+    "build": "npm run gen:api && tsc",
     "build:standalone-web-ui": "DOTENV_CONFIG_PATH=\"../../.env.{$NETWORK:-localhost}\" node --require dotenv/config ./esbuildconfig.cjs",
     "start:standalone-web-ui": "npx http-server ./web -o --port 9123"
   },
@@ -28,20 +34,22 @@
     "dotenv": "^16.3.1",
     "esbuild": "^0.19.11",
     "esbuild-plugin-polyfill-node": "^0.3.0",
-    "typescript": "^5.5.3"
+    "typescript": "^5.5.3",
+    "openapi-typescript": "^7.3.0"
   },
   "dependencies": {
     "@metamask/providers": "^10.2.1",
+    "@paima/concise": "3.0.1",
+    "@paima/prando": "3.0.1",
+    "@paima/providers": "3.0.1",
+    "@paima/utils": "3.0.1",
     "@perawallet/connect": "^1.2.3",
     "@polkadot/extension-dapp": "^0.47.6",
     "algosdk": "^2.3.0",
-    "bech32": "^2.0.0",
-    "@paima/utils": "3.0.1",
-    "@paima/providers": "3.0.1",
-    "@paima/concise": "3.0.1",
-    "@paima/prando": "3.0.1",
     "assert-never": "^1.2.1",
+    "avail-js-sdk": "^0.2.12",
+    "bech32": "^2.0.0",
     "js-sha256": "^0.9.0",
-    "avail-js-sdk": "^0.2.12"
+    "openapi-fetch": "^0.10.5"
   }
 }

@@ -5,7 +5,10 @@ import {
   deploymentChainBlockheightToEmulated,
   emulatedSelectLatestPrior,
   getGameInput,
+  getInputsForAddress,
+  getInputsForBlock,
 } from '@paima/db';
+import type { Pool } from 'pg';
 
 export interface SuccessfulResult<T> {
   success: true;
@@ -187,5 +190,84 @@ export class ConfirmInputAcceptanceController extends Controller {
         errorMessage: 'Unknown error, please contact game node operator',
       };
     }
+  }
+}
+
+type TransactionCountResponse = {
+  scheduledData: number;
+  gameInputs: number;
+};
+
+@Route('transaction_count')
+export class TransactionCountController extends Controller {
+  async fetchTxCount(
+    fetch: (db: Pool) => Promise<
+      {
+        game_inputs: string;
+        scheduled_data: string;
+      }[]
+    >
+  ): Promise<Result<TransactionCountResponse>> {
+    const gameStateMachine = EngineService.INSTANCE.getSM();
+    try {
+      if (!ENV.STORE_HISTORICAL_GAME_INPUTS) {
+        this.setStatus(500);
+        return {
+          success: false,
+          errorMessage: 'Game input storing turned off in the game node',
+        };
+      }
+      const DBConn = gameStateMachine.getReadonlyDbConn();
+      const [total] = await fetch(DBConn);
+
+      const result =
+        total == null
+          ? { scheduledData: 0, gameInputs: 0 }
+          : {
+              scheduledData: Number.parseInt(total.scheduled_data),
+              gameInputs: Number.parseInt(total.game_inputs),
+            };
+      return {
+        success: true,
+        result,
+      };
+    } catch (err) {
+      doLog(`Unexpected webserver error:`);
+      logError(err);
+      this.setStatus(500);
+      return {
+        success: false,
+        errorMessage: 'Unknown error, please contact game node operator',
+      };
+    }
+  }
+  @Get('/blockHeight')
+  public async blockHeight(
+    @Query() blockHeight: undefined | number
+  ): Promise<Result<TransactionCountResponse>> {
+    return this.fetchTxCount(db =>
+      getInputsForBlock.run(
+        {
+          block_height: blockHeight,
+        },
+        db
+      )
+    );
+  }
+
+  @Get('/address')
+  public async get(
+    @Query() address: string,
+    @Query() blockHeight?: number
+  ): Promise<Result<TransactionCountResponse>> {
+    return this.fetchTxCount(db =>
+      getInputsForAddress.run(
+        {
+          addr: address,
+          block_height: blockHeight,
+        },
+        db
+      )
+    );
   }
 }
