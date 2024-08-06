@@ -15,7 +15,7 @@ import {IOrderbookDex} from "../contracts/orderbook/IOrderbookDex.sol";
 import {OrderbookDex} from "../contracts/orderbook/OrderbookDex.sol";
 import {OrderbookDexProxy} from "../contracts/Proxy/OrderbookDexProxy.sol";
 
-contract AssetHandler is CTest {
+contract AssetHandler is CTest, ERC1155Holder {
     CheatCodes vm = CheatCodes(HEVM_ADDRESS);
     IOrderbookDex public dex;
     IInverseAppProjected1155 asset;

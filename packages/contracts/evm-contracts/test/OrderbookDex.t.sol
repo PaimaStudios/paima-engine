@@ -152,7 +152,7 @@ contract OrderbookDexTest is CTest, ERC1155Holder {
     function testFuzz_fillOrdersExactEth_transfersCorrectly(uint256 price) public {
         uint256 ordersCount = 5;
         vm.assume(price / ordersCount > 0);
-        vm.assume(price < type(uint256).max / ordersCount / 10000);
+        vm.assume(price < type(uint256).max / ordersCount / orderCreationFee);
         uint256[] memory orderIds = new uint256[](ordersCount);
         address payable[] memory sellers = new address payable[](ordersCount);
         uint256[] memory assetIds = new uint256[](ordersCount);
