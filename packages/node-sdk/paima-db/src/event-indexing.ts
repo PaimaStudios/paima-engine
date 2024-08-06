@@ -1,4 +1,4 @@
-import { PoolClient } from 'pg';
+import type { PoolClient } from 'pg';
 
 export async function createIndexesForEvents(
   pool: PoolClient,

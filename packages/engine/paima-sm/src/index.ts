@@ -52,7 +52,9 @@ import type {
 import { ConfigNetworkType } from '@paima/utils';
 import assertNever from 'assert-never';
 import { keccak_256 } from 'js-sha3';
-import { LogEventFields, toTopicHash } from '@paima/events';
+import { toTopicHash } from '@paima/events';
+import type { LogEventFields } from '@paima/events';
+import type { TSchema } from '@sinclair/typebox';
 
 export * from './types.js';
 export type * from './types.js';
@@ -107,7 +109,7 @@ const SM: GameStateMachineInitializer = {
             dbTx,
             Object.values(events).flatMap(eventsByName =>
               eventsByName.flatMap(event =>
-                event.fields.map((f: LogEventFields<any>) => ({
+                event.fields.map(f => ({
                   topic: toTopicHash(event),
                   fieldName: f.name,
                   indexed: f.indexed,

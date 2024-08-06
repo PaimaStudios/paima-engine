@@ -1,5 +1,5 @@
-import { PoolClient } from 'pg';
-import { getEventByTopic, getTopics, registerEventType } from './sql/events.queries';
+import type { PoolClient } from 'pg';
+import { getEventByTopic, getTopics, registerEventType } from './sql/events.queries.js';
 
 export async function registerEventTypes(
   pool: PoolClient,
