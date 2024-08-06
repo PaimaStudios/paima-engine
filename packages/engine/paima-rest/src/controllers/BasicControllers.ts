@@ -1,10 +1,11 @@
-import { Controller, Query, Get, Route } from 'tsoa';
+import { Controller, Query, Get, Route, Body, Post } from 'tsoa';
 import { doLog, logError, ENV } from '@paima/utils';
 import { EngineService } from '../EngineService.js';
 import {
   deploymentChainBlockheightToEmulated,
   emulatedSelectLatestPrior,
   getGameInput,
+  getEvents,
 } from '@paima/db';
 
 export interface SuccessfulResult<T> {
@@ -177,6 +178,56 @@ export class ConfirmInputAcceptanceController extends Controller {
       return {
         success: true,
         result: false,
+      };
+    } catch (err) {
+      doLog(`Unexpected webserver error:`);
+      logError(err);
+      this.setStatus(500);
+      return {
+        success: false,
+        errorMessage: 'Unknown error, please contact game node operator',
+      };
+    }
+  }
+}
+
+type GetLogsResponse = Result<any[]>;
+type GetLogsParams = {
+  fromBlock?: number;
+  toBlock?: number;
+  address?: string;
+  filters?: { [fieldName: string]: string };
+  topic: string;
+};
+
+@Route('get_logs')
+export class GetLogsController extends Controller {
+  @Post()
+  public async post(@Body() params: GetLogsParams): Promise<GetLogsResponse> {
+    const gameStateMachine = EngineService.INSTANCE.getSM();
+    try {
+      const DBConn = gameStateMachine.getReadonlyDbConn();
+      const base: Record<string, number | string | undefined> & { topic: string } = {
+        from: params.fromBlock,
+        to: params.toBlock,
+        address: params.address,
+        topic: params.topic,
+      };
+
+      if (params.filters) {
+        const keys = Object.keys(params.filters);
+
+        for (let i = 0; i < keys.length; i++) {
+          base['field' + i] = keys[i];
+          base['value' + i] = params.filters[keys[i]];
+        }
+      }
+
+      const rows = await getEvents.run(base, DBConn);
+
+      return {
+        success: true,
+        result: rows,
       };
     } catch (err) {
       doLog(`Unexpected webserver error:`);

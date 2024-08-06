@@ -278,3 +278,19 @@ CREATE TABLE cde_dynamic_primitive_config (
   config TEXT NOT NULL,
   PRIMARY KEY(cde_name)
 );
+
+CREATE TABLE event (
+  id SERIAL PRIMARY KEY,
+  topic TEXT NOT NULL,
+  address TEXT NOT NULL,
+  data JSONB NOT NULL,
+  block_height INTEGER NOT NULL,
+  tx INTEGER NOT NULL,
+  idx INTEGER NOT NULL
+);
+
+CREATE TABLE registered_event (
+  name TEXT NOT NULL,
+  topic TEXT  NOT NULL,
+  PRIMARY KEY(name, topic)
+);
