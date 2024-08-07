@@ -181,7 +181,8 @@ const SM: GameStateMachineInitializer = {
               caip2: '',
               txHash: '',
             },
-            blockHeight,
+            // TODO: fill this once we have the timestamp stored in the database
+            { blockHeight, timestamp: 0 },
             new Prando('1234567890'),
             dbTx
           );
@@ -464,7 +465,7 @@ async function processScheduledData(
       try {
         sqlQueries = await gameStateTransition(
           inputData,
-          data.block_height,
+          { blockHeight: data.block_height, timestamp: latestChainData.timestamp },
           randomnessGenerator,
           DBConn
         );
@@ -550,7 +551,7 @@ async function processUserInputs(
       try {
         sqlQueries = await gameStateTransition(
           inputData,
-          latestChainData.blockNumber,
+          { blockHeight: latestChainData.blockNumber, timestamp: latestChainData.timestamp },
           randomnessGenerator,
           DBConn
         );

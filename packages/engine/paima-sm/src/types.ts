@@ -647,9 +647,14 @@ export type GameStateTransitionFunctionRouter = (
   blockHeight: number
 ) => GameStateTransitionFunction;
 
+export type BlockHeader = {
+  blockHeight: number;
+  timestamp: number;
+};
+
 export type GameStateTransitionFunction = (
   inputData: STFSubmittedData,
-  blockHeight: number,
+  blockHeader: BlockHeader,
   randomnessGenerator: any,
   DBConn: PoolClient
 ) => Promise<SQLUpdate[]>;
