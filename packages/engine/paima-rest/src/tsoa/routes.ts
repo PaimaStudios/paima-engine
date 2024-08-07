@@ -17,6 +17,8 @@ import { ConfirmInputAcceptanceController } from './../controllers/BasicControll
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { TransactionCountController } from './../controllers/BasicControllers';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+import { TransactionContentController } from './../controllers/BasicControllers';
+// WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { AchievementsController } from './../controllers/AchievementsController';
 import type { Request as ExRequest, Response as ExResponse, RequestHandler, Router } from 'express';
 
@@ -110,6 +112,25 @@ const models: TsoaRoute.Models = {
     "Result_TransactionCountResponse_": {
         "dataType": "refAlias",
         "type": {"dataType":"union","subSchemas":[{"ref":"SuccessfulResult_TransactionCountResponse_"},{"ref":"FailedResult"}],"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "TransactionContentResponse": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"from":{"dataType":"string","required":true},"inputData":{"dataType":"string","required":true},"txIndex":{"dataType":"double","required":true},"blockNumber":{"dataType":"double","required":true}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "SuccessfulResult_TransactionContentResponse_": {
+        "dataType": "refObject",
+        "properties": {
+            "success": {"dataType":"enum","enums":[true],"required":true},
+            "result": {"ref":"TransactionContentResponse","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "Result_TransactionContentResponse_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"union","subSchemas":[{"ref":"SuccessfulResult_TransactionContentResponse_"},{"ref":"FailedResult"}],"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "Achievement": {
@@ -375,7 +396,7 @@ export function RegisterRoutes(app: Router) {
 
             async function TransactionCountController_blockHeight(request: ExRequest, response: ExResponse, next: any) {
             const args: Record<string, TsoaRoute.ParameterSchema> = {
-                    blockHeight: {"in":"query","name":"blockHeight","required":true,"dataType":"union","subSchemas":[{"dataType":"undefined"},{"dataType":"double"}]},
+                    blockHeight: {"in":"query","name":"blockHeight","required":true,"dataType":"double"},
             };
 
             // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
@@ -406,7 +427,7 @@ export function RegisterRoutes(app: Router) {
             async function TransactionCountController_get(request: ExRequest, response: ExResponse, next: any) {
             const args: Record<string, TsoaRoute.ParameterSchema> = {
                     address: {"in":"query","name":"address","required":true,"dataType":"string"},
-                    blockHeight: {"in":"query","name":"blockHeight","dataType":"double"},
+                    blockHeight: {"in":"query","name":"blockHeight","required":true,"dataType":"double"},
             };
 
             // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
@@ -419,6 +440,37 @@ export function RegisterRoutes(app: Router) {
 
               await templateService.apiHandler({
                 methodName: 'get',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        app.get('/transaction_content/blockNumberAndIndex',
+            ...(fetchMiddlewares<RequestHandler>(TransactionContentController)),
+            ...(fetchMiddlewares<RequestHandler>(TransactionContentController.prototype.blockHeight)),
+
+            async function TransactionContentController_blockHeight(request: ExRequest, response: ExResponse, next: any) {
+            const args: Record<string, TsoaRoute.ParameterSchema> = {
+                    blockHeight: {"in":"query","name":"blockHeight","required":true,"dataType":"double"},
+                    txIndex: {"in":"query","name":"txIndex","required":true,"dataType":"double"},
+            };
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args, request, response });
+
+                const controller = new TransactionContentController();
+
+              await templateService.apiHandler({
+                methodName: 'blockHeight',
                 controller,
                 response,
                 next,

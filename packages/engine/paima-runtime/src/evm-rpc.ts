@@ -8,8 +8,14 @@ import {
   RpcBlock,
   RpcTransaction,
   RpcTransactionReceipt,
+  prepareEncodeFunctionData,
+  encodeFunctionData,
+  stringToHex,
   type EIP1193Parameters,
   type PublicRpcSchema,
+  RpcBlockNumber,
+  RpcBlockIdentifier,
+  RpcError,
 } from 'viem';
 import { getPaimaNodeRestClient } from '@paima/mw-core';
 import { ENV } from '@paima/utils';
@@ -125,16 +131,37 @@ type EvmRpcReturn<Method extends string> = Extract<
  * ===============================
  */
 
-function parseBlock<T>(block: BlockTag | T): undefined | T {
+/**
+ * Most of the block tags aren't relevant for Paima, so we simplify them
+ */
+function simplifyBlockTag<T>(block: BlockTag | T): 'latest' | 'earliest' | T {
   // Paima doesn't support non-finalized blocks, so all these cases are the same
   if (block === 'latest' || block === 'pending' || block === 'safe' || block === 'finalized') {
-    return undefined;
+    return 'latest';
   }
   // we just let `undefined` mean the entire history
   if (block === 'earliest') {
-    return undefined;
+    return block;
   }
   return block;
+}
+
+async function toBlockNumber(
+  rpcBlock: RpcBlockNumber | BlockTag | RpcBlockIdentifier
+): Promise<number> {
+  const blockParam = simplifyBlockTag(rpcBlock);
+  if (blockParam == 'earliest') return ENV.START_BLOCKHEIGHT;
+  if (blockParam == 'latest') {
+    const { data, error } = await getPaimaNodeRestClient().GET('/latest_processed_blockheight');
+    if (error != null) {
+      throw new InternalRpcError(error);
+    }
+    return data.block_height;
+  }
+  if (typeof blockParam === 'string') return Number.parseInt(blockParam, 16);
+  if ('blockNumber' in blockParam) return Number.parseInt(blockParam.blockNumber, 16);
+  // TODO: block hash support. See `mockBlockHash`
+  throw new MethodNotSupportedRpcError(new Error(`Block hash RPC currently unsupported`));
 }
 
 /**
@@ -275,6 +302,18 @@ const mockExtraData = {
 
 const mockBlockHash = '0x0'; // TODO: do not mock this once we have block hashes in Paima
 
+const constInputData = prepareEncodeFunctionData({
+  abi: [
+    {
+      inputs: [{ internalType: 'string', name: 'input', type: 'string' }],
+      name: 'convertedPaimaData',
+      outputs: [],
+      stateMutability: 'nonpayable',
+      type: 'function',
+    },
+  ],
+});
+
 evmRpcEngine.push(
   createAsyncMiddleware(async (req, res, next) => {
     const evmRpc: typeof req & EIP1193Parameters<PaimaEvmRpcSchema> = req as any;
@@ -297,6 +336,7 @@ evmRpcEngine.push(
         const { data, error } = await getPaimaNodeRestClient().GET('/latest_processed_blockheight');
         if (error != null) {
           res.error = new InternalRpcError(error);
+          return;
         }
 
         setResult<typeof evmRpc.method>(`0x${data.block_height.toString(16)}`);
@@ -333,14 +373,13 @@ evmRpcEngine.push(
       }
       case 'eth_getTransactionCount': {
         const address = evmRpc.params[0];
-        const blockHeight = (() => {
-          const blockParam = parseBlock(evmRpc.params[1]);
-          if (blockParam == null) return undefined;
-          if (typeof blockParam === 'string') return Number.parseInt(blockParam, 16);
-          if ('blockNumber' in blockParam) return Number.parseInt(blockParam.blockNumber, 16);
-          // TODO: block hash support. See `mockBlockHash`
-          throw new MethodNotSupportedRpcError(new Error(`Block hash RPC currently unsupported`));
-        })();
+        let blockHeight: number;
+        try {
+          blockHeight = await toBlockNumber(evmRpc.params[1] ?? 'finalized');
+        } catch (err) {
+          res.error = err as RpcError;
+          return;
+        }
         const { data, error } = await getPaimaNodeRestClient().GET('/transaction_count/address', {
           params: { query: { blockHeight, address } },
         });
@@ -391,8 +430,13 @@ evmRpcEngine.push(
         return;
       }
       case 'eth_getBlockTransactionCountByNumber': {
-        const blockParam = parseBlock(evmRpc.params[0]);
-        const blockHeight = blockParam == null ? undefined : Number.parseInt(evmRpc.params[0], 16);
+        let blockHeight: number;
+        try {
+          blockHeight = await toBlockNumber(evmRpc.params[0] ?? 'finalized');
+        } catch (err) {
+          res.error = err as RpcError;
+          return;
+        }
         const { data, error } = await getPaimaNodeRestClient().GET(
           '/transaction_count/blockHeight',
           {
@@ -428,41 +472,41 @@ evmRpcEngine.push(
         return;
       }
       case 'eth_getBlockByNumber': {
-        // TODO
+        let blockHeight: number;
+        try {
+          blockHeight = await toBlockNumber(evmRpc.params[0] ?? 'finalized');
+        } catch (err) {
+          res.error = err as RpcError;
+          return;
+        }
+        const fullTx = evmRpc.params[1];
 
-        // scheduled_data(block_height, input_data)
-        // getScheduledDataByBlockHeight
-
-        // problem: removeScheduledData, removeAllScheduledDataByInputData, deleteScheduled
-        // maybe: SELECT block_height FROM cde_tracking
-
-        // findNonce
-
-        // SELECT * FROM historical_game_inputs WHERE block_height = :block_height!
-        // SELECT * FROM block_heights
-
-        // emulated_block_heights vs
-        const mock: RpcBlock = {
-          number: '0x1b4',
-          hash: mockBlockHash, // TODO
-          parentHash: mockBlockHash, // TODO
-
-          timestamp: '0x55ba467c',
-          size: '0x220',
-
-          transactions: [
-            // TODO
-          ],
-
-          ...mockExtraData,
-          ...mockRoots,
-          ...mockUncles,
-          ...mockMiner,
-          ...mockBlockGas,
-          ...mockLogBloom,
-        };
-        setResult<typeof evmRpc.method>(mock);
+        res.error = new MethodNotSupportedRpcError(
+          new Error(`${evmRpc.method} currently unsupported`)
+        );
         return;
+
+        // const mock: RpcBlock = {
+        //   number: '0x0', // TODO
+        //   hash: mockBlockHash, // TODO
+        //   parentHash: mockBlockHash, // TODO
+
+        //   timestamp: '0x0', // TODO
+        //   size: '0x0', // TODO: do we really need this? I doubt it
+
+        //   transactions: [
+        //     // TODO
+        //   ],
+
+        //   ...mockExtraData,
+        //   ...mockRoots,
+        //   ...mockUncles,
+        //   ...mockMiner,
+        //   ...mockBlockGas,
+        //   ...mockLogBloom,
+        // };
+        // setResult<typeof evmRpc.method>(mock);
+        // return;
       }
       case 'eth_getTransactionByHash': {
         // TODO
@@ -491,18 +535,57 @@ evmRpcEngine.push(
         return;
       }
       case 'eth_getTransactionByBlockNumberAndIndex': {
-        const blockParam = parseBlock(evmRpc.params[0]);
-        const blockHeight = blockParam == null ? undefined : Number.parseInt(evmRpc.params[0], 16);
-        const index = Number.parseInt(evmRpc.params[1], 16);
+        let blockHeight: number;
+        try {
+          blockHeight = await toBlockNumber(evmRpc.params[0]);
+        } catch (err) {
+          res.error = err as RpcError;
+          return;
+        }
+        const txIndex = Number.parseInt(evmRpc.params[1], 16);
+
+        const { data, error } = await getPaimaNodeRestClient().GET(
+          '/transaction_content/blockNumberAndIndex',
+          { params: { query: { blockHeight, txIndex } } }
+        );
+        if (error != null) {
+          res.error = new InternalRpcError(error);
+          return;
+        }
+        if (data.success === false) {
+          res.error = new InternalRpcError(new Error(data.errorMessage));
+          return;
+        }
+
+        const hexMsg = stringToHex(data.result.inputData);
+        /**
+         * Paima is not EVM so it doesn't have the same encoding of "inputData" in the EVM sense
+         * To convert between the two, we encode the Paima data with this fictional ABI
+         */
+        const input = encodeFunctionData({
+          // TODO: this string should be exposed somewhere 3rd parties can access
+          // https://github.com/wevm/viem/issues/2591
+          abi: [
+            {
+              inputs: [{ internalType: 'string', name: 'input', type: 'string' }],
+              name: 'convertedPaimaData',
+              outputs: [],
+              stateMutability: 'nonpayable',
+              type: 'function',
+            },
+          ],
+          args: [hexMsg],
+        });
 
         const mock: RpcTransaction = {
+          ...data,
           blockHash: mockBlockHash, // TODO
-          blockNumber: '0x0', // TODO
+          blockNumber: `0x${data.result.blockNumber.toString(16)}`,
           hash: '0x0', // TODO
-          input: '0x0', // TODO
-          transactionIndex: '0x0', // TODO
+          input,
+          transactionIndex: `0x${txIndex.toString(16)}`,
           value: '0x0', // TODO
-          from: '0x0', // TODO
+          from: data.result.from as any, // we can't guarantee EVM address format here
           nonce: '0x0', // TODO
           ...mockTxType,
           ...mockTxRecipient,
@@ -521,22 +604,22 @@ evmRpcEngine.push(
         );
         return;
 
-        const mock: RpcTransactionReceipt = {
-          transactionHash: '0x0', // TODO
-          blockHash: mockBlockHash, // TODO
-          blockNumber: '0x0', // TODO
-          transactionIndex: '0x0', // TODO
-          from: '0x0', // TODO
-          logs: [], // TODO
-          status: '0x1', // no failed txs in Paima
-          ...mockContractAddress,
-          ...mockTxGasPost,
-          ...mockTxRecipient,
-          ...mockTxType,
-          ...mockLogBloom,
-        };
-        setResult<typeof evmRpc.method>(mock);
-        return;
+        // const mock: RpcTransactionReceipt = {
+        //   transactionHash: '0x0', // TODO
+        //   blockHash: mockBlockHash, // TODO
+        //   blockNumber: '0x0', // TODO
+        //   transactionIndex: '0x0', // TODO
+        //   from: '0x0', // TODO
+        //   logs: [], // TODO
+        //   status: '0x1', // no failed txs in Paima
+        //   ...mockContractAddress,
+        //   ...mockTxGasPost,
+        //   ...mockTxRecipient,
+        //   ...mockTxType,
+        //   ...mockLogBloom,
+        // };
+        // setResult<typeof evmRpc.method>(mock);
+        // return;
       }
       case 'eth_getUncleByBlockHashAndIndex': {
         setResult<typeof evmRpc.method>(null); // no uncles in Paima
@@ -613,6 +696,7 @@ evmRpcEngine.push(
         const { data, error } = await getPaimaNodeRestClient().GET('/latest_processed_blockheight');
         if (error != null) {
           res.error = new InternalRpcError(error);
+          return;
         }
         setResult<typeof evmRpc.method>({
           startingBlock: `0x${ENV.START_BLOCKHEIGHT.toString(16)}`,

@@ -9,7 +9,6 @@ export type { paths as PaimaNodePaths } from './paima-node-rest-schema.js';
 // export type { paths as PaimaNodePaths } from './paima-batcher-rest-schema';
 
 export function getPaimaNodeRestClient(): Client<PaimaNodePaths> {
-  console.log('getBackendUri', getBackendUri());
   return createClient<PaimaNodePaths>({ baseUrl: getBackendUri() });
 }
 

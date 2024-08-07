@@ -31,7 +31,7 @@ export const getInputsTotal = new PreparedQuery<IGetInputsTotalParams,IGetInputs
 
 /** 'GetInputsForBlock' parameters type */
 export interface IGetInputsForBlockParams {
-  block_height?: number | null | void;
+  block_height: number;
 }
 
 /** 'GetInputsForBlock' return type */
@@ -46,7 +46,7 @@ export interface IGetInputsForBlockQuery {
   result: IGetInputsForBlockResult;
 }
 
-const getInputsForBlockIR: any = {"usedParamSet":{"block_height":true},"params":[{"name":"block_height","required":false,"transform":{"type":"scalar"},"locs":[{"a":82,"b":94},{"a":127,"b":139},{"a":239,"b":251},{"a":284,"b":296}]}],"statement":"SELECT\n    (\n      SELECT COUNT(*)\n      FROM historical_game_inputs\n      WHERE (:block_height::int is NULL OR block_height = :block_height::int)\n    ) AS \"game_inputs!\",\n    (\n      SELECT COUNT(*)\n      FROM scheduled_data\n      WHERE (:block_height::int is NULL OR block_height = :block_height::int)\n    ) AS \"scheduled_data!\""};
+const getInputsForBlockIR: any = {"usedParamSet":{"block_height":true},"params":[{"name":"block_height","required":true,"transform":{"type":"scalar"},"locs":[{"a":96,"b":109},{"a":217,"b":230}]}],"statement":"SELECT\n    (\n      SELECT COUNT(*)\n      FROM historical_game_inputs\n      WHERE block_height = :block_height!\n    ) AS \"game_inputs!\",\n    (\n      SELECT COUNT(*)\n      FROM scheduled_data\n      WHERE block_height = :block_height!\n    ) AS \"scheduled_data!\""};
 
 /**
  * Query generated from SQL:
@@ -55,12 +55,12 @@ const getInputsForBlockIR: any = {"usedParamSet":{"block_height":true},"params":
  *     (
  *       SELECT COUNT(*)
  *       FROM historical_game_inputs
- *       WHERE (:block_height::int is NULL OR block_height = :block_height::int)
+ *       WHERE block_height = :block_height!
  *     ) AS "game_inputs!",
  *     (
  *       SELECT COUNT(*)
  *       FROM scheduled_data
- *       WHERE (:block_height::int is NULL OR block_height = :block_height::int)
+ *       WHERE block_height = :block_height!
  *     ) AS "scheduled_data!"
  * ```
  */
@@ -70,7 +70,7 @@ export const getInputsForBlock = new PreparedQuery<IGetInputsForBlockParams,IGet
 /** 'GetInputsForAddress' parameters type */
 export interface IGetInputsForAddressParams {
   addr: string;
-  block_height?: number | null | void;
+  block_height: number;
 }
 
 /** 'GetInputsForAddress' return type */
@@ -85,7 +85,7 @@ export interface IGetInputsForAddressQuery {
   result: IGetInputsForAddressResult;
 }
 
-const getInputsForAddressIR: any = {"usedParamSet":{"addr":true,"block_height":true},"params":[{"name":"addr","required":true,"transform":{"type":"scalar"},"locs":[{"a":104,"b":109},{"a":395,"b":400}]},{"name":"block_height","required":false,"transform":{"type":"scalar"},"locs":[{"a":124,"b":136},{"a":169,"b":181},{"a":415,"b":427},{"a":460,"b":472}]}],"statement":"SELECT\n    (\n      SELECT COUNT(*)\n      FROM historical_game_inputs\n      WHERE\n        user_address = :addr! AND\n        (:block_height::int is NULL OR block_height = :block_height::int)\n    ) AS \"game_inputs!\",\n    (\n      SELECT COUNT(*)\n      FROM scheduled_data\n      LEFT JOIN scheduled_data_precompile ON scheduled_data.id = scheduled_data_precompile.id\n      WHERE\n        precompile = :addr! AND\n        (:block_height::int is NULL OR block_height = :block_height::int)\n    ) AS \"scheduled_data!\""};
+const getInputsForAddressIR: any = {"usedParamSet":{"addr":true,"block_height":true},"params":[{"name":"addr","required":true,"transform":{"type":"scalar"},"locs":[{"a":104,"b":109},{"a":359,"b":364}]},{"name":"block_height","required":true,"transform":{"type":"scalar"},"locs":[{"a":138,"b":151},{"a":393,"b":406}]}],"statement":"SELECT\n    (\n      SELECT COUNT(*)\n      FROM historical_game_inputs\n      WHERE\n        user_address = :addr! AND\n        block_height = :block_height!\n    ) AS \"game_inputs!\",\n    (\n      SELECT COUNT(*)\n      FROM scheduled_data\n      LEFT JOIN scheduled_data_precompile ON scheduled_data.id = scheduled_data_precompile.id\n      WHERE\n        precompile = :addr! AND\n        block_height = :block_height!\n    ) AS \"scheduled_data!\""};
 
 /**
  * Query generated from SQL:
@@ -96,7 +96,7 @@ const getInputsForAddressIR: any = {"usedParamSet":{"addr":true,"block_height":t
  *       FROM historical_game_inputs
  *       WHERE
  *         user_address = :addr! AND
- *         (:block_height::int is NULL OR block_height = :block_height::int)
+ *         block_height = :block_height!
  *     ) AS "game_inputs!",
  *     (
  *       SELECT COUNT(*)
@@ -104,7 +104,7 @@ const getInputsForAddressIR: any = {"usedParamSet":{"addr":true,"block_height":t
  *       LEFT JOIN scheduled_data_precompile ON scheduled_data.id = scheduled_data_precompile.id
  *       WHERE
  *         precompile = :addr! AND
- *         (:block_height::int is NULL OR block_height = :block_height::int)
+ *         block_height = :block_height!
  *     ) AS "scheduled_data!"
  * ```
  */

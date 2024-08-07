@@ -5,8 +5,10 @@ import {
   deploymentChainBlockheightToEmulated,
   emulatedSelectLatestPrior,
   getGameInput,
+  getGameInputForBlock,
   getInputsForAddress,
   getInputsForBlock,
+  getScheduledDataByBlockHeight,
 } from '@paima/db';
 import type { Pool } from 'pg';
 
@@ -243,7 +245,7 @@ export class TransactionCountController extends Controller {
   }
   @Get('/blockHeight')
   public async blockHeight(
-    @Query() blockHeight: undefined | number
+    @Query() blockHeight: number
   ): Promise<Result<TransactionCountResponse>> {
     return this.fetchTxCount(db =>
       getInputsForBlock.run(
@@ -258,7 +260,7 @@ export class TransactionCountController extends Controller {
   @Get('/address')
   public async get(
     @Query() address: string,
-    @Query() blockHeight?: number
+    @Query() blockHeight: number
   ): Promise<Result<TransactionCountResponse>> {
     return this.fetchTxCount(db =>
       getInputsForAddress.run(
@@ -269,5 +271,100 @@ export class TransactionCountController extends Controller {
         db
       )
     );
+  }
+}
+
+type TransactionContentResponse = {
+  // blockHash: string;
+  blockNumber: number;
+  // txHash: string;
+  txIndex: number;
+  inputData: string;
+  from: string;
+  // value: string;
+  // nonce: string;
+};
+
+@Route('transaction_content')
+export class TransactionContentController extends Controller {
+  @Get('/blockNumberAndIndex')
+  public async blockHeight(
+    @Query() blockHeight: number,
+    @Query() txIndex: number
+  ): Promise<Result<TransactionContentResponse>> {
+    if (!ENV.STORE_HISTORICAL_GAME_INPUTS) {
+      this.setStatus(500);
+      return {
+        success: false,
+        errorMessage: 'Game input storing turned off in the game node',
+      };
+    }
+    const gameStateMachine = EngineService.INSTANCE.getSM();
+    const DBConn = gameStateMachine.getReadonlyDbConn();
+    const scheduledData = await getScheduledDataByBlockHeight.run(
+      {
+        block_height: blockHeight,
+      },
+      DBConn
+    );
+    // note: scheduled data always comes before submitted input in STF processing
+    if (txIndex < scheduledData.length) {
+      const finalTx = scheduledData[txIndex];
+
+      // Primitives from the underlying chain don't have a clear "from" address
+      // but precompiles do
+      const from = finalTx.precompile == null ? '0x0' : finalTx.precompile;
+      return {
+        success: true,
+        result: {
+          // blockHash: string,
+          blockNumber: finalTx.block_height,
+          // txHash: string,
+          txIndex: txIndex,
+          inputData: finalTx.input_data,
+          from,
+          // value: string,
+          // nonce: string,
+        },
+      };
+    }
+    const submittedInputs = await getGameInputForBlock.run(
+      {
+        block_height: blockHeight,
+      },
+      DBConn
+    );
+
+    const totalInputsInBlock = submittedInputs.length + scheduledData.length;
+    if (txIndex >= totalInputsInBlock) {
+      this.setStatus(500);
+      let errorMsg = `Query for index ${txIndex}, but there were only ${totalInputsInBlock} inputs total for this block`;
+      if (totalInputsInBlock === 0) {
+        // ideally we would for-sure know if this block exists or not
+        // but that would slow down the endpoint
+        errorMsg += `. Are you sure block number ${blockHeight} exists?`;
+      }
+      return {
+        success: false,
+        errorMessage: errorMsg,
+      };
+    }
+
+    {
+      const finalTx = submittedInputs[txIndex - scheduledData.length];
+      return {
+        success: true,
+        result: {
+          // blockHash: string,
+          blockNumber: finalTx.block_height,
+          // txHash: string,
+          txIndex: txIndex,
+          inputData: finalTx.input_data,
+          from: finalTx.user_address,
+          // value: string,
+          // nonce: string,
+        },
+      };
+    }
   }
 }

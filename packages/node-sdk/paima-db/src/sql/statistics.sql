@@ -8,12 +8,12 @@ SELECT
     (
       SELECT COUNT(*)
       FROM historical_game_inputs
-      WHERE (:block_height::int is NULL OR block_height = :block_height::int)
+      WHERE block_height = :block_height!
     ) AS "game_inputs!",
     (
       SELECT COUNT(*)
       FROM scheduled_data
-      WHERE (:block_height::int is NULL OR block_height = :block_height::int)
+      WHERE block_height = :block_height!
     ) AS "scheduled_data!";
 
 /* @name getInputsForAddress */
@@ -23,7 +23,7 @@ SELECT
       FROM historical_game_inputs
       WHERE
         user_address = :addr! AND
-        (:block_height::int is NULL OR block_height = :block_height::int)
+        block_height = :block_height!
     ) AS "game_inputs!",
     (
       SELECT COUNT(*)
@@ -31,5 +31,5 @@ SELECT
       LEFT JOIN scheduled_data_precompile ON scheduled_data.id = scheduled_data_precompile.id
       WHERE
         precompile = :addr! AND
-        (:block_height::int is NULL OR block_height = :block_height::int)
+        block_height = :block_height!
     ) AS "scheduled_data!";

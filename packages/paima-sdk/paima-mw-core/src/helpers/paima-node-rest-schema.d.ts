@@ -132,6 +132,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/transaction_content/blockNumberAndIndex": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["TransactionContentBlockHeight"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/achievements/public/list": {
         parameters: {
             query?: never;
@@ -232,6 +248,20 @@ export interface components {
             result: components["schemas"]["TransactionCountResponse"];
         };
         Result_TransactionCountResponse_: components["schemas"]["SuccessfulResult_TransactionCountResponse_"] | components["schemas"]["FailedResult"];
+        TransactionContentResponse: {
+            from: string;
+            inputData: string;
+            /** Format: double */
+            txIndex: number;
+            /** Format: double */
+            blockNumber: number;
+        };
+        SuccessfulResult_TransactionContentResponse_: {
+            /** @enum {boolean} */
+            success: true;
+            result: components["schemas"]["TransactionContentResponse"];
+        };
+        Result_TransactionContentResponse_: components["schemas"]["SuccessfulResult_TransactionContentResponse_"] | components["schemas"]["FailedResult"];
         Achievement: {
             /** @description Unique Achievement String */
             name: string;
@@ -502,7 +532,7 @@ export interface operations {
         parameters: {
             query: {
                 address: string;
-                blockHeight?: number;
+                blockHeight: number;
             };
             header?: never;
             path?: never;
@@ -517,6 +547,29 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Result_TransactionCountResponse_"];
+                };
+            };
+        };
+    };
+    TransactionContentBlockHeight: {
+        parameters: {
+            query: {
+                blockHeight: number;
+                txIndex: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Ok */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_TransactionContentResponse_"];
                 };
             };
         };

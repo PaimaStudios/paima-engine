@@ -183,6 +183,61 @@
 					}
 				]
 			},
+			"TransactionContentResponse": {
+				"properties": {
+					"from": {
+						"type": "string"
+					},
+					"inputData": {
+						"type": "string"
+					},
+					"txIndex": {
+						"type": "number",
+						"format": "double"
+					},
+					"blockNumber": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"from",
+					"inputData",
+					"txIndex",
+					"blockNumber"
+				],
+				"type": "object"
+			},
+			"SuccessfulResult_TransactionContentResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean",
+						"enum": [
+							true
+						],
+						"nullable": false
+					},
+					"result": {
+						"$ref": "#/components/schemas/TransactionContentResponse"
+					}
+				},
+				"required": [
+					"success",
+					"result"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"Result_TransactionContentResponse_": {
+				"anyOf": [
+					{
+						"$ref": "#/components/schemas/SuccessfulResult_TransactionContentResponse_"
+					},
+					{
+						"$ref": "#/components/schemas/FailedResult"
+					}
+				]
+			},
 			"Achievement": {
 				"properties": {
 					"name": {
@@ -626,7 +681,45 @@
 					{
 						"in": "query",
 						"name": "blockHeight",
-						"required": false,
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
+			}
+		},
+		"/transaction_content/blockNumberAndIndex": {
+			"get": {
+				"operationId": "TransactionContentBlockHeight",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Result_TransactionContentResponse_"
+								}
+							}
+						}
+					}
+				},
+				"security": [],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "blockHeight",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "txIndex",
+						"required": true,
 						"schema": {
 							"format": "double",
 							"type": "number"
