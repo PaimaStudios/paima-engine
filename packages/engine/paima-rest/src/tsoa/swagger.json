@@ -18,6 +18,98 @@
 				],
 				"type": "object"
 			},
+			"SuccessfulResult_DryRunResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean",
+						"enum": [
+							true
+						],
+						"nullable": false
+					},
+					"result": {
+						"$ref": "#/components/schemas/DryRunResponse"
+					}
+				},
+				"required": [
+					"success",
+					"result"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"FailedResult": {
+				"properties": {
+					"success": {
+						"type": "boolean",
+						"enum": [
+							false
+						],
+						"nullable": false
+					},
+					"errorMessage": {
+						"type": "string"
+					},
+					"errorCode": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"success",
+					"errorMessage"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"Result_DryRunResponse_": {
+				"anyOf": [
+					{
+						"$ref": "#/components/schemas/SuccessfulResult_DryRunResponse_"
+					},
+					{
+						"$ref": "#/components/schemas/FailedResult"
+					}
+				]
+			},
+			"InternalServerErrorResult": {
+				"$ref": "#/components/schemas/FailedResult"
+			},
+			"FieldErrors": {
+				"properties": {},
+				"type": "object",
+				"additionalProperties": {
+					"properties": {
+						"value": {},
+						"message": {
+							"type": "string"
+						}
+					},
+					"required": [
+						"message"
+					],
+					"type": "object"
+				}
+			},
+			"ValidateErrorResult": {
+				"properties": {
+					"message": {
+						"type": "string",
+						"enum": [
+							"Validation Failed"
+						],
+						"nullable": false
+					},
+					"details": {
+						"$ref": "#/components/schemas/FieldErrors"
+					}
+				},
+				"required": [
+					"message"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
 			"VersionString": {
 				"type": "string",
 				"description": "tsoa doesn't support string interpolation in type names like `${number}`\nBut the real type of this is `${number}.${number}.${number}`\nhttps://github.com/lukeautry/tsoa/pull/1469"
@@ -62,30 +154,6 @@
 				"required": [
 					"success",
 					"result"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"FailedResult": {
-				"properties": {
-					"success": {
-						"type": "boolean",
-						"enum": [
-							false
-						],
-						"nullable": false
-					},
-					"errorMessage": {
-						"type": "string"
-					},
-					"errorCode": {
-						"type": "number",
-						"format": "double"
-					}
-				},
-				"required": [
-					"success",
-					"errorMessage"
 				],
 				"type": "object",
 				"additionalProperties": false
@@ -466,7 +534,46 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/DryRunResponse"
+									"$ref": "#/components/schemas/Result_DryRunResponse_"
+								}
+							}
+						}
+					},
+					"422": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ValidateErrorResult"
+								},
+								"examples": {
+									"Example 1": {}
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/InternalServerErrorResult"
+								},
+								"examples": {
+									"Example 1": {}
+								}
+							}
+						}
+					},
+					"501": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/FailedResult"
+								},
+								"examples": {
+									"Example 1": {}
 								}
 							}
 						}
@@ -506,6 +613,32 @@
 								}
 							}
 						}
+					},
+					"422": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ValidateErrorResult"
+								},
+								"examples": {
+									"Example 1": {}
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/InternalServerErrorResult"
+								},
+								"examples": {
+									"Example 1": {}
+								}
+							}
+						}
 					}
 				},
 				"security": [],
@@ -525,6 +658,32 @@
 								}
 							}
 						}
+					},
+					"422": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ValidateErrorResult"
+								},
+								"examples": {
+									"Example 1": {}
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/InternalServerErrorResult"
+								},
+								"examples": {
+									"Example 1": {}
+								}
+							}
+						}
 					}
 				},
 				"security": [],
@@ -541,6 +700,32 @@
 							"application/json": {
 								"schema": {
 									"$ref": "#/components/schemas/EmulatedBlockActiveResponse"
+								}
+							}
+						}
+					},
+					"422": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ValidateErrorResult"
+								},
+								"examples": {
+									"Example 1": {}
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/InternalServerErrorResult"
+								},
+								"examples": {
+									"Example 1": {}
 								}
 							}
 						}
@@ -592,6 +777,45 @@
 								}
 							}
 						}
+					},
+					"422": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ValidateErrorResult"
+								},
+								"examples": {
+									"Example 1": {}
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/InternalServerErrorResult"
+								},
+								"examples": {
+									"Example 1": {}
+								}
+							}
+						}
+					},
+					"501": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/FailedResult"
+								},
+								"examples": {
+									"Example 1": {}
+								}
+							}
+						}
 					}
 				},
 				"security": [],
@@ -637,6 +861,45 @@
 								}
 							}
 						}
+					},
+					"422": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ValidateErrorResult"
+								},
+								"examples": {
+									"Example 1": {}
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/InternalServerErrorResult"
+								},
+								"examples": {
+									"Example 1": {}
+								}
+							}
+						}
+					},
+					"501": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/FailedResult"
+								},
+								"examples": {
+									"Example 1": {}
+								}
+							}
+						}
 					}
 				},
 				"security": [],
@@ -663,6 +926,45 @@
 							"application/json": {
 								"schema": {
 									"$ref": "#/components/schemas/Result_TransactionCountResponse_"
+								}
+							}
+						}
+					},
+					"422": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ValidateErrorResult"
+								},
+								"examples": {
+									"Example 1": {}
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/InternalServerErrorResult"
+								},
+								"examples": {
+									"Example 1": {}
+								}
+							}
+						}
+					},
+					"501": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/FailedResult"
+								},
+								"examples": {
+									"Example 1": {}
 								}
 							}
 						}
@@ -703,6 +1005,58 @@
 								}
 							}
 						}
+					},
+					"404": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/FailedResult"
+								},
+								"examples": {
+									"Example 1": {}
+								}
+							}
+						}
+					},
+					"422": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ValidateErrorResult"
+								},
+								"examples": {
+									"Example 1": {}
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/InternalServerErrorResult"
+								},
+								"examples": {
+									"Example 1": {}
+								}
+							}
+						}
+					},
+					"501": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/FailedResult"
+								},
+								"examples": {
+									"Example 1": {}
+								}
+							}
+						}
 					}
 				},
 				"security": [],
@@ -738,6 +1092,45 @@
 							"application/json": {
 								"schema": {
 									"$ref": "#/components/schemas/AchievementPublicList"
+								}
+							}
+						}
+					},
+					"422": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ValidateErrorResult"
+								},
+								"examples": {
+									"Example 1": {}
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/InternalServerErrorResult"
+								},
+								"examples": {
+									"Example 1": {}
+								}
+							}
+						}
+					},
+					"501": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/FailedResult"
+								},
+								"examples": {
+									"Example 1": {}
 								}
 							}
 						}
@@ -785,6 +1178,32 @@
 								}
 							}
 						}
+					},
+					"422": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ValidateErrorResult"
+								},
+								"examples": {
+									"Example 1": {}
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/InternalServerErrorResult"
+								},
+								"examples": {
+									"Example 1": {}
+								}
+							}
+						}
 					}
 				},
 				"security": [],
@@ -819,6 +1238,58 @@
 							"application/json": {
 								"schema": {
 									"$ref": "#/components/schemas/PlayerAchievements"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/FailedResult"
+								},
+								"examples": {
+									"Example 1": {}
+								}
+							}
+						}
+					},
+					"422": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ValidateErrorResult"
+								},
+								"examples": {
+									"Example 1": {}
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/InternalServerErrorResult"
+								},
+								"examples": {
+									"Example 1": {}
+								}
+							}
+						}
+					},
+					"501": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/FailedResult"
+								},
+								"examples": {
+									"Example 1": {}
 								}
 							}
 						}

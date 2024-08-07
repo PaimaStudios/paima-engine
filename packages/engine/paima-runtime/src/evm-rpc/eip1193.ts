@@ -1,129 +1,36 @@
 import { JsonRpcEngine, createAsyncMiddleware } from '@metamask/json-rpc-engine';
-import type { JsonRpcParams, JsonRpcRequest } from '@metamask/utils';
 import {
-  BlockTag,
   InternalRpcError,
-  MethodNotFoundRpcError,
-  MethodNotSupportedRpcError,
-  RpcBlock,
-  RpcTransaction,
-  RpcTransactionReceipt,
   prepareEncodeFunctionData,
   encodeFunctionData,
   stringToHex,
-  type EIP1193Parameters,
-  type PublicRpcSchema,
-  RpcBlockNumber,
-  RpcBlockIdentifier,
-  RpcError,
+  isAddress,
 } from 'viem';
+import type { RpcTransaction, EIP1193Parameters, RpcError } from 'viem';
 import { getPaimaNodeRestClient } from '@paima/mw-core';
 import { ENV } from '@paima/utils';
 import { keccak_256 } from 'js-sha3';
+import { registerCacheMiddleware } from './cache.js';
+import type { EvmRpcReturn, PaimaEvmRpcSchema } from './types.js';
+import {
+  createInternalRpcError,
+  createInvalidParamsError,
+  createMethodNotFoundRpcError,
+  createMethodNotSupportedRpcError,
+  isValidHexadecimal,
+  isValidTxHash,
+  toBlockNumber,
+} from './validate.js';
+import {
+  mockBlockHash,
+  mockEvmEcdsaSignature,
+  mockTxGasPre,
+  mockTxRecipient,
+  mockTxType,
+} from './mock.js';
 
 export const evmRpcEngine = new JsonRpcEngine();
-
-/**
- * ==============
- * Cache handling
- * ==============
- */
-
-/**
- * Any JSON-compatible value.
- */
-export type Json =
-  | null
-  | boolean
-  | number
-  | string
-  | Json[]
-  | {
-      [prop: string]: Json;
-    };
-
-/** turn the RPC request into a string for easy comparison. We want to do this only once and reuse it */
-type StringifiedJsonRpcRequest = string;
-type CacheKey = StringifiedJsonRpcRequest;
-type CacheValue = { val: undefined | Json; time: number };
-type RequestCache = Record<CacheKey, CacheValue>;
-
-const requestCache: RequestCache = {};
-
-/**
- * Cache for half a block instead of a full block
- * Otherwise, if the cache is close to the block boundary, you could be missing entire blocks
- *
- * ex:
- *     - assume we're starting at block A
- *     - assume BLOCK_TIME = 10
- *     cache A occurs at timestamp 0
- *     block B happens at timestamp 1
- *     cache A invalidated at timestamp 10
- *     block C happens at timestamp 11
- * In this example, there was only a very small interval where B data was actually queryable since it was quickly replaced with C
- */
-const cacheLength = (ENV.BLOCK_TIME * 1000) / 2;
-
-function insertIntoCache(req: CacheKey, val: undefined | Json): void {
-  requestCache[req] = {
-    val,
-    time: new Date().getTime(),
-  };
-}
-
-function cacheCleanup(): void {
-  const currTime = new Date().getTime();
-  for (const key of Object.keys(requestCache)) {
-    if (requestCache[key].time < currTime - cacheLength) {
-      delete requestCache[key];
-    }
-  }
-}
-setInterval(cacheCleanup, cacheLength);
-
-function getResultFromCache(req: CacheKey): undefined | CacheValue {
-  return requestCache[req];
-}
-
-// cache middleware
-evmRpcEngine.push(
-  createAsyncMiddleware(async (req, res, next) => {
-    // remove the ID from the cache
-    // otherwise, identical queries with different IDs lead to wasted CPU
-    // different IDs happens more often with different users, but it could also be the same client spamming
-    const { id: _, ...rest } = req;
-    const stringifiedReq = JSON.stringify(rest);
-
-    const cacheEntry = getResultFromCache(stringifiedReq);
-    if (cacheEntry == null) {
-      await next(); // note: rely on this `next` call to fill res.result
-      insertIntoCache(stringifiedReq, res.result);
-    } else {
-      res.result = cacheEntry.val;
-    }
-  })
-);
-
-type PaimaEvmRpcSchema = [
-  ...PublicRpcSchema,
-  {
-    Method: 'eth_syncing';
-    Parameters?: undefined;
-    /**
-     * different EVM clients return different values for this
-     * but the two seemingly common fields are
-     * - startingBlock
-     * - currentBlock
-     */
-    ReturnType: boolean | { startingBlock: `0x${string}`; currentBlock: `0x${string}` };
-  },
-];
-
-type EvmRpcReturn<Method extends string> = Extract<
-  PaimaEvmRpcSchema[number],
-  { Method: Method }
->['ReturnType'];
+registerCacheMiddleware(evmRpcEngine);
 
 /**
  * ===============================
@@ -131,177 +38,7 @@ type EvmRpcReturn<Method extends string> = Extract<
  * ===============================
  */
 
-/**
- * Most of the block tags aren't relevant for Paima, so we simplify them
- */
-function simplifyBlockTag<T>(block: BlockTag | T): 'latest' | 'earliest' | T {
-  // Paima doesn't support non-finalized blocks, so all these cases are the same
-  if (block === 'latest' || block === 'pending' || block === 'safe' || block === 'finalized') {
-    return 'latest';
-  }
-  // we just let `undefined` mean the entire history
-  if (block === 'earliest') {
-    return block;
-  }
-  return block;
-}
-
-async function toBlockNumber(
-  rpcBlock: RpcBlockNumber | BlockTag | RpcBlockIdentifier
-): Promise<number> {
-  const blockParam = simplifyBlockTag(rpcBlock);
-  if (blockParam == 'earliest') return ENV.START_BLOCKHEIGHT;
-  if (blockParam == 'latest') {
-    const { data, error } = await getPaimaNodeRestClient().GET('/latest_processed_blockheight');
-    if (error != null) {
-      throw new InternalRpcError(error);
-    }
-    return data.block_height;
-  }
-  if (typeof blockParam === 'string') return Number.parseInt(blockParam, 16);
-  if ('blockNumber' in blockParam) return Number.parseInt(blockParam.blockNumber, 16);
-  // TODO: block hash support. See `mockBlockHash`
-  throw new MethodNotSupportedRpcError(new Error(`Block hash RPC currently unsupported`));
-}
-
-/**
- * We can't truly provide this for a few reasons:
- * 1. Transactions aren't guaranteed to be on Ethereum (could be from a non-EVM chain)
- * 2. Even on Ethereum, Paima txs aren't guaranteed to be from an EOA accounts
- *    i.e. it could be a game tick, it could be an internal tx (EVM internal txs are regular txs in Paima), etc.
- *
- * TODO: we could decide to add this for historical_game_inputs for EVM chains if we really want to
- */
-const mockEvmEcdsaSignature = {
-  /** ECDSA signature r */
-  r: '0x0',
-  /** ECDSA signature s */
-  s: '0x0',
-  /**
-   * ECDSA recovery ID
-   * note: replaced by yParity if type != 0x0
-   */
-  v: '0x0',
-} as const;
-
-/**
- * Gas specified before tx lands onchain (as part of the tx input given by the user)
- * Note: no concept of gas on Paima
- */
-const mockTxGasPre = {
-  gas: '0x0',
-  gasPrice: '0x0',
-  // TODO: some other gas fields needed if we ever use type != 0x0
-} as const;
-/**
- * Gas specified after tx lands onchain (after calculating how much gas is consumed in reality)
- * Note: no concept of gas on Paima
- */
-const mockTxGasPost = {
-  gasUsed: '0x0',
-  effectiveGasPrice: '0x0',
-  cumulativeGasUsed: '0x0',
-} as const;
-/**
- * Gas consumed for a block
- * Note: no concept of gas on Paima
- */
-const mockBlockGas = {
-  gasLimit: '0x0',
-  gasUsed: '0x0',
-} as const;
-
-/**
- * There is no concept of recipients in Paima since txs are to the state machine
- * TODO: there are some cases where, after processing the STF, we could determine if this tx was *to* a specific address
- *       or conversely, make that the STF fails if the state transition doesn't match some asserted *to* address
- *       so we could support some limited form of this if needed
- */
-const mockTxRecipient = {
-  to: '0x0',
-} as const;
-
-/**
- * EVM has multiple tx types
- * - 0x0 for legacy transactions
- * - 0x1 for access list types
- * - 0x2 for dynamic fees
- *
- * Not all chains use 0x2, so it's not clear which we should use for mock data in Paima
- * Note: making this an ENV var doesn't make sense either since it's not something the node can know ahead of time
- *       since it depends on which tool is making the RPC query, not the node itself
- * We pick 0x0 for best chance at compatibility
- *
- * Note: if we change this to something other than 0x0, we also have to
- * 1. change `v` to `yParity` in the signature
- * 2. change the gas fields
- */
-const mockTxType = {
-  type: '0x0',
-} as const;
-
-/**
- * Theoretically we could implement this in Paima, but it takes time to calculate and basically 0 dApps and tools use this
- * In fact, it's being set to empty-string with an EIP from 2024
- * https://github.com/ethereum/EIPs/blob/master/EIPS/eip-7668.md
- */
-const mockLogBloom = {
-  // TODO: unclear how this should be handled post-7668, but I assume `0x0` is the right approach
-  // https://github.com/wevm/viem/pull/2587
-  logsBloom: '0x0',
-} as const;
-
-/**
- * This is non-null when the transaction created a new contract
- * However, Paima doesn't support creating new contracts on the L2 side, so it's always null
- * Note: you could argue that maybe we might want this in a few cases:
- *       1. Dynamic primitives (so this would be the address in an underlying chain)
- *       2. Dynamically creating new precompiles
- */
-const mockContractAddress = {
-  contractAddress: null,
-} as const;
-
-/**
- * No concept of miners in Paima (it's a based rollup) nor PoW
- */
-const mockMiner = {
-  miner: '0x0',
-  mixHash: '0x0',
-  /** note: `nonce` here isn't a transaction nonce, but rather a nonce for PoW */
-  nonce: '0x0',
-  difficulty: '0x0',
-  totalDifficulty: '0x0',
-} as const;
-
-/**
- * No concept of uncles in Paima as we only consider finalized blocks
- */
-const mockUncles = {
-  sha3Uncles: '0x0',
-  uncles: [],
-} as const;
-
-/**
- * Paima, similar to other chains like Solana, does not Merklize state for performance reasons
- * TODO: we could expose this as an ENV var if we really want/need to
- */
-const mockRoots = {
-  transactionsRoot: '0x0',
-  stateRoot: '0x0',
-  receiptsRoot: '0x0',
-};
-
-/**
- * This has no purpose in Ethereum, but block creators can stuff whatever they want in here
- * No similar concept in Paima, but we could introduce a similar concept in theory when submitting to the L2 contract
- */
-const mockExtraData = {
-  extraData: '0x0',
-};
-
-const mockBlockHash = '0x0'; // TODO: do not mock this once we have block hashes in Paima
-
+// https://github.com/wevm/viem/issues/2591
 const constInputData = prepareEncodeFunctionData({
   abi: [
     {
@@ -315,7 +52,7 @@ const constInputData = prepareEncodeFunctionData({
 });
 
 evmRpcEngine.push(
-  createAsyncMiddleware(async (req, res, next) => {
+  createAsyncMiddleware(async (req, res) => {
     const evmRpc: typeof req & EIP1193Parameters<PaimaEvmRpcSchema> = req as any;
 
     const setResult = <Method extends string>(result: EvmRpcReturn<Method>): void => {
@@ -323,8 +60,6 @@ evmRpcEngine.push(
     };
 
     // TODO: missing these validity checks:
-    // - ParseRpcError
-    // - InvalidRequestRpcError
     // - InvalidInputRpcError / InvalidParamsRpcError
     switch (evmRpc.method) {
       /*
@@ -335,7 +70,7 @@ evmRpcEngine.push(
       case 'eth_blockNumber': {
         const { data, error } = await getPaimaNodeRestClient().GET('/latest_processed_blockheight');
         if (error != null) {
-          res.error = new InternalRpcError(error);
+          res.error = createInternalRpcError({}, error?.errorMessage);
           return;
         }
 
@@ -345,8 +80,9 @@ evmRpcEngine.push(
       case 'eth_sendRawTransaction': {
         // TODO: we can probably support this
         //       but supporting this conversion would have to be a Paima-level feature and not a EVM-RPC feature
-        res.error = new MethodNotSupportedRpcError(
-          new Error(`${evmRpc.method} currently unsupported`)
+        res.error = createMethodNotSupportedRpcError(
+          evmRpc.method,
+          `${evmRpc.method} currently unsupported`
         );
         return;
       }
@@ -359,20 +95,29 @@ evmRpcEngine.push(
 
       case 'eth_getBalance': {
         // TODO: support this eventually somehow
-        res.error = new MethodNotSupportedRpcError(
-          new Error(`${evmRpc.method} currently unsupported`)
+        res.error = createMethodNotSupportedRpcError(
+          evmRpc.method,
+          `${evmRpc.method} currently unsupported`
         );
         return;
       }
       case 'eth_getStorageAt': {
         // not possible in Paima Engine at the moment, but maybe in the future related to precompiles
-        res.error = new MethodNotSupportedRpcError(
-          new Error(`${evmRpc.method} currently unsupported`)
+        res.error = createMethodNotSupportedRpcError(
+          evmRpc.method,
+          `${evmRpc.method} currently unsupported`
         );
         return;
       }
       case 'eth_getTransactionCount': {
         const address = evmRpc.params[0];
+        if (!isAddress(address)) {
+          res.error = createInvalidParamsError(
+            { address },
+            `Address is not a valid Ethereum address`
+          );
+          return;
+        }
         let blockHeight: number;
         try {
           blockHeight = await toBlockNumber(evmRpc.params[1] ?? 'finalized');
@@ -384,11 +129,11 @@ evmRpcEngine.push(
           params: { query: { blockHeight, address } },
         });
         if (error != null) {
-          res.error = new InternalRpcError(error);
+          res.error = createInternalRpcError({}, error?.errorMessage);
           return;
         }
         if (data.success === false) {
-          res.error = new InternalRpcError(new Error(data.errorMessage));
+          res.error = createInternalRpcError({}, data.errorMessage);
           return;
         }
         setResult<typeof evmRpc.method>(
@@ -398,15 +143,17 @@ evmRpcEngine.push(
       }
       case 'eth_getCode': {
         // not possible in Paima Engine at the moment, but maybe in the future related to precompiles
-        res.error = new MethodNotSupportedRpcError(
-          new Error(`${evmRpc.method} currently unsupported`)
+        res.error = createMethodNotSupportedRpcError(
+          evmRpc.method,
+          `${evmRpc.method} currently unsupported`
         );
         return;
       }
       case 'eth_call': {
         // not possible in Paima Engine at the moment, but maybe in the future related to precompiles
-        res.error = new MethodNotSupportedRpcError(
-          new Error(`${evmRpc.method} currently unsupported`)
+        res.error = createMethodNotSupportedRpcError(
+          evmRpc.method,
+          `${evmRpc.method} currently unsupported`
         );
         return;
       }
@@ -424,8 +171,9 @@ evmRpcEngine.push(
 
       case 'eth_getBlockTransactionCountByHash': {
         // TODO: add this once we have block hashes in Paima. See `mockBlockHash`
-        res.error = new MethodNotSupportedRpcError(
-          new Error(`${evmRpc.method} currently unsupported`)
+        res.error = createMethodNotSupportedRpcError(
+          evmRpc.method,
+          `${evmRpc.method} currently unsupported`
         );
         return;
       }
@@ -444,11 +192,11 @@ evmRpcEngine.push(
           }
         );
         if (error != null) {
-          res.error = new InternalRpcError(error);
+          res.error = createInternalRpcError({}, error?.errorMessage);
           return;
         }
         if (data.success === false) {
-          res.error = new InternalRpcError(new Error(data.errorMessage));
+          res.error = createInternalRpcError({}, data.errorMessage);
           return;
         }
         setResult<typeof evmRpc.method>(
@@ -466,8 +214,9 @@ evmRpcEngine.push(
       }
       case 'eth_getBlockByHash': {
         // TODO: add this once we have block hashes in Paima
-        res.error = new MethodNotSupportedRpcError(
-          new Error(`${evmRpc.method} currently unsupported`)
+        res.error = createMethodNotSupportedRpcError(
+          evmRpc.method,
+          `${evmRpc.method} currently unsupported`
         );
         return;
       }
@@ -479,10 +228,18 @@ evmRpcEngine.push(
           res.error = err as RpcError;
           return;
         }
-        const fullTx = evmRpc.params[1];
+        const transactionDetails = evmRpc.params[1];
+        if (typeof transactionDetails !== 'boolean') {
+          res.error = createInvalidParamsError(
+            { transactionDetails },
+            `Transaction details must be specified as a boolean`
+          );
+          return;
+        }
 
-        res.error = new MethodNotSupportedRpcError(
-          new Error(`${evmRpc.method} currently unsupported`)
+        res.error = createMethodNotSupportedRpcError(
+          evmRpc.method,
+          `${evmRpc.method} currently unsupported`
         );
         return;
 
@@ -529,8 +286,9 @@ evmRpcEngine.push(
       }
       case 'eth_getTransactionByBlockHashAndIndex': {
         // TODO: add this once we have block hashes in Paima. See `mockBlockHash`
-        res.error = new MethodNotSupportedRpcError(
-          new Error(`${evmRpc.method} currently unsupported`)
+        res.error = createMethodNotSupportedRpcError(
+          evmRpc.method,
+          `${evmRpc.method} currently unsupported`
         );
         return;
       }
@@ -543,17 +301,24 @@ evmRpcEngine.push(
           return;
         }
         const txIndex = Number.parseInt(evmRpc.params[1], 16);
+        if (typeof txIndex !== 'number') {
+          res.error = createInvalidParamsError(
+            { txIndex },
+            `Transaction index must be specified as a number`
+          );
+          return;
+        }
 
         const { data, error } = await getPaimaNodeRestClient().GET(
           '/transaction_content/blockNumberAndIndex',
           { params: { query: { blockHeight, txIndex } } }
         );
         if (error != null) {
-          res.error = new InternalRpcError(error);
+          res.error = createInternalRpcError({}, error?.errorMessage);
           return;
         }
         if (data.success === false) {
-          res.error = new InternalRpcError(new Error(data.errorMessage));
+          res.error = createInternalRpcError({}, data.errorMessage);
           return;
         }
 
@@ -597,10 +362,18 @@ evmRpcEngine.push(
       }
       case 'eth_getTransactionReceipt': {
         const txHash = evmRpc.params[0];
+        if (!isValidTxHash(txHash)) {
+          res.error = createInvalidParamsError(
+            { txHash },
+            `Transaction hash did not match EVM format: ${txHash}`
+          );
+          return;
+        }
 
         // TODO once we have tx hash in the db
-        res.error = new MethodNotSupportedRpcError(
-          new Error(`${evmRpc.method} currently unsupported`)
+        res.error = createMethodNotSupportedRpcError(
+          evmRpc.method,
+          `${evmRpc.method} currently unsupported`
         );
         return;
 
@@ -647,8 +420,13 @@ evmRpcEngine.push(
         return;
       }
       case 'web3_sha3': {
+        const data = evmRpc.params[0];
+        if (!isValidHexadecimal(data)) {
+          res.error = createInvalidParamsError({ data }, `Data must be a hex-encoded string 0x...`);
+          return;
+        }
         // web3_sha3 passes the data as a hex-string, so we need to convert it
-        const hexString = evmRpc.params[0].substring('0x'.length);
+        const hexString = data.substring('0x'.length);
         const buffer = Buffer.from(hexString, 'hex');
 
         setResult<typeof evmRpc.method>(`0x${keccak_256(buffer)}`);
@@ -706,7 +484,7 @@ evmRpcEngine.push(
       }
 
       default: {
-        res.error = new MethodNotFoundRpcError(new Error(), { method: evmRpc.method });
+        res.error = createMethodNotFoundRpcError(evmRpc.method);
       }
     }
   })

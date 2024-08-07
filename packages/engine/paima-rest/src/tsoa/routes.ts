@@ -32,6 +32,51 @@ const models: TsoaRoute.Models = {
         "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"valid":{"dataType":"boolean","required":true}},"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "SuccessfulResult_DryRunResponse_": {
+        "dataType": "refObject",
+        "properties": {
+            "success": {"dataType":"enum","enums":[true],"required":true},
+            "result": {"ref":"DryRunResponse","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "FailedResult": {
+        "dataType": "refObject",
+        "properties": {
+            "success": {"dataType":"enum","enums":[false],"required":true},
+            "errorMessage": {"dataType":"string","required":true},
+            "errorCode": {"dataType":"double"},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "Result_DryRunResponse_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"union","subSchemas":[{"ref":"SuccessfulResult_DryRunResponse_"},{"ref":"FailedResult"}],"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "InternalServerErrorResult": {
+        "dataType": "refAlias",
+        "type": {"ref":"FailedResult","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "FieldErrors": {
+        "dataType": "refObject",
+        "properties": {
+        },
+        "additionalProperties": {"dataType":"nestedObjectLiteral","nestedProperties":{"value":{"dataType":"any"},"message":{"dataType":"string","required":true}}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ValidateErrorResult": {
+        "dataType": "refObject",
+        "properties": {
+            "message": {"dataType":"enum","enums":["Validation Failed"],"required":true},
+            "details": {"ref":"FieldErrors"},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "VersionString": {
         "dataType": "refAlias",
         "type": {"dataType":"string","validators":{}},
@@ -52,16 +97,6 @@ const models: TsoaRoute.Models = {
         "properties": {
             "success": {"dataType":"enum","enums":[true],"required":true},
             "result": {"dataType":"double","required":true},
-        },
-        "additionalProperties": false,
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "FailedResult": {
-        "dataType": "refObject",
-        "properties": {
-            "success": {"dataType":"enum","enums":[false],"required":true},
-            "errorMessage": {"dataType":"string","required":true},
-            "errorCode": {"dataType":"double"},
         },
         "additionalProperties": false,
     },

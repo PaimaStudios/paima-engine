@@ -9,8 +9,14 @@ import {
   type PlayerAchievements,
   type Validity,
 } from '@paima/utils-backend';
-import { Controller, Get, Header, Path, Query, Route } from 'tsoa';
+import { Controller, Get, Header, Path, Query, Response, Route } from 'tsoa';
 import { EngineService } from '../EngineService.js';
+import { StatusCodes } from 'http-status-codes';
+import type {
+  FailedResult,
+  InternalServerErrorResult,
+  ValidateErrorResult,
+} from './BasicControllers.js';
 
 // ----------------------------------------------------------------------------
 // Controller and routes per PRC-1
@@ -38,7 +44,7 @@ export class AchievementsController extends Controller {
   private async meta(): Promise<AchievementMetadata> {
     const meta = EngineService.INSTANCE.achievements;
     if (!meta) {
-      this.setStatus(501);
+      this.setStatus(StatusCodes.NOT_IMPLEMENTED);
       throw new Error('Achievements are not supported by this game');
     }
     return await meta;
@@ -46,13 +52,16 @@ export class AchievementsController extends Controller {
 
   private async validity(): Promise<Validity> {
     return {
-      // Note: will need updating when we support non-EVM data availability layers.
+      // TODO: will need updating when we support non-EVM data availability layers.
       caip2: `eip155:${ENV.CHAIN_ID}`,
       block: await EngineService.INSTANCE.getSM().latestProcessedBlockHeight(),
       time: new Date().toISOString(),
     };
   }
 
+  @Response<FailedResult>(StatusCodes.NOT_IMPLEMENTED)
+  @Response<InternalServerErrorResult>(StatusCodes.INTERNAL_SERVER_ERROR)
+  @Response<ValidateErrorResult>(StatusCodes.UNPROCESSABLE_ENTITY)
   @Get('public/list')
   public async public_list(
     @Query() category?: string,
@@ -78,6 +87,8 @@ export class AchievementsController extends Controller {
     };
   }
 
+  @Response<InternalServerErrorResult>(StatusCodes.INTERNAL_SERVER_ERROR)
+  @Response<ValidateErrorResult>(StatusCodes.UNPROCESSABLE_ENTITY)
   @Get('wallet/{wallet}')
   public async wallet(
     @Path() wallet: string,
@@ -115,6 +126,10 @@ export class AchievementsController extends Controller {
     };
   }
 
+  @Response<FailedResult>(StatusCodes.NOT_FOUND)
+  @Response<FailedResult>(StatusCodes.NOT_IMPLEMENTED)
+  @Response<InternalServerErrorResult>(StatusCodes.INTERNAL_SERVER_ERROR)
+  @Response<ValidateErrorResult>(StatusCodes.UNPROCESSABLE_ENTITY)
   @Get('erc/{erc}/{cde}/{token_id}')
   public async nft(
     @Path() erc: string,
@@ -131,12 +146,12 @@ export class AchievementsController extends Controller {
           return await this.wallet(wallet, name);
         } else {
           // Future improvement: throw a different error if no CDE with that name exists
-          this.setStatus(404);
+          this.setStatus(StatusCodes.NOT_FOUND);
           throw new Error('No owner for that NFT');
         }
       // Future improvement: erc6551
       default:
-        this.setStatus(404);
+        this.setStatus(StatusCodes.NOT_IMPLEMENTED);
         throw new Error(`No support for /erc/${erc}`);
     }
   }

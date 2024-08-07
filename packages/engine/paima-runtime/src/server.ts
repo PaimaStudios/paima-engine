@@ -9,7 +9,9 @@ import path from 'path';
 import { ValidateError } from 'tsoa';
 import { BuiltinEvents, toAsyncApi } from '@paima/events';
 import YAML from 'yaml';
-import { evmRpcEngine } from './evm-rpc';
+import { evmRpcEngine } from './evm-rpc/eip1193.js';
+import { StatusCodes } from 'http-status-codes';
+import type { ValidateErrorResult, InternalServerErrorResult } from '@paima/rest';
 
 const server: Express = express();
 const bodyParser = express.json();
@@ -76,18 +78,19 @@ function registerValidationErrorHandler(): void {
   ): ExResponse | void {
     if (err instanceof ValidateError) {
       console.warn(`Caught Validation Error for ${req.path}:`, err.fields);
-      return res.status(422).json({
+      return res.status(StatusCodes.UNPROCESSABLE_ENTITY).json({
         message: 'Validation Failed',
         details: err?.fields,
-      });
+      } satisfies ValidateErrorResult);
     }
     if (err instanceof Error) {
       // Log rather than swallowing silently, otherwise difficult to debug.
       console.warn(`${req.method} ${req.path}:`, err);
 
-      return res.status(500).json({
-        message: 'Internal Server Error',
-      });
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        errorMessage: 'Internal Server Error',
+      } satisfies InternalServerErrorResult);
     }
 
     next();
@@ -133,7 +136,8 @@ server.get(`/${DocPaths.Root}/${DocPaths.AsyncApi.Root}/${DocPaths.AsyncApi.Ui}`
 });
 
 server.post(`/${DocPaths.RPC.Root}/${DocPaths.RPC.EVM}`, (req, res) => {
-  evmRpcEngine.handle(req.body as any, (err, result) => {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+  evmRpcEngine.handle(req.body, (err, result) => {
     if (err) {
       res.status(500).json({ error: (err as any).message });
     } else {

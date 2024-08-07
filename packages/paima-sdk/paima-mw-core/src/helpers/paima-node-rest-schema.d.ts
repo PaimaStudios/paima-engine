@@ -203,6 +203,31 @@ export interface components {
         DryRunResponse: {
             valid: boolean;
         };
+        SuccessfulResult_DryRunResponse_: {
+            /** @enum {boolean} */
+            success: true;
+            result: components["schemas"]["DryRunResponse"];
+        };
+        FailedResult: {
+            /** @enum {boolean} */
+            success: false;
+            errorMessage: string;
+            /** Format: double */
+            errorCode?: number;
+        };
+        Result_DryRunResponse_: components["schemas"]["SuccessfulResult_DryRunResponse_"] | components["schemas"]["FailedResult"];
+        InternalServerErrorResult: components["schemas"]["FailedResult"];
+        FieldErrors: {
+            [key: string]: {
+                value?: unknown;
+                message: string;
+            };
+        };
+        ValidateErrorResult: {
+            /** @enum {string} */
+            message: "Validation Failed";
+            details?: components["schemas"]["FieldErrors"];
+        };
         /** @description tsoa doesn't support string interpolation in type names like `${number}`
          *     But the real type of this is `${number}.${number}.${number}`
          *     https://github.com/lukeautry/tsoa/pull/1469 */
@@ -219,13 +244,6 @@ export interface components {
             success: true;
             /** Format: double */
             result: number;
-        };
-        FailedResult: {
-            /** @enum {boolean} */
-            success: false;
-            errorMessage: string;
-            /** Format: double */
-            errorCode?: number;
         };
         Result_number_: components["schemas"]["SuccessfulResult_number_"] | components["schemas"]["FailedResult"];
         DeploymentBlockheightToEmulatedResponse: components["schemas"]["Result_number_"];
@@ -395,7 +413,31 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["DryRunResponse"];
+                    "application/json": components["schemas"]["Result_DryRunResponse_"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidateErrorResult"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternalServerErrorResult"];
+                };
+            };
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FailedResult"];
                 };
             };
         };
@@ -418,6 +460,22 @@ export interface operations {
                     "application/json": components["schemas"]["VersionString"];
                 };
             };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidateErrorResult"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternalServerErrorResult"];
+                };
+            };
         };
     };
     LatestProcessedBlockheightGet: {
@@ -438,6 +496,22 @@ export interface operations {
                     "application/json": components["schemas"]["LatestProcessedBlockheightResponse"];
                 };
             };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidateErrorResult"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternalServerErrorResult"];
+                };
+            };
         };
     };
     EmulatedBlockActiveGet: {
@@ -456,6 +530,22 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["EmulatedBlockActiveResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidateErrorResult"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternalServerErrorResult"];
                 };
             };
         };
@@ -504,6 +594,30 @@ export interface operations {
                     "application/json": components["schemas"]["ConfirmInputAcceptanceResponse"];
                 };
             };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidateErrorResult"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternalServerErrorResult"];
+                };
+            };
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FailedResult"];
+                };
+            };
         };
     };
     TransactionCountBlockHeight: {
@@ -524,6 +638,30 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Result_TransactionCountResponse_"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidateErrorResult"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternalServerErrorResult"];
+                };
+            };
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FailedResult"];
                 };
             };
         };
@@ -549,6 +687,30 @@ export interface operations {
                     "application/json": components["schemas"]["Result_TransactionCountResponse_"];
                 };
             };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidateErrorResult"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternalServerErrorResult"];
+                };
+            };
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FailedResult"];
+                };
+            };
         };
     };
     TransactionContentBlockHeight: {
@@ -570,6 +732,38 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Result_TransactionContentResponse_"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FailedResult"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidateErrorResult"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternalServerErrorResult"];
+                };
+            };
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FailedResult"];
                 };
             };
         };
@@ -597,6 +791,30 @@ export interface operations {
                     "application/json": components["schemas"]["AchievementPublicList"];
                 };
             };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidateErrorResult"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternalServerErrorResult"];
+                };
+            };
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FailedResult"];
+                };
+            };
         };
     };
     AchievementsWallet: {
@@ -620,6 +838,22 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PlayerAchievements"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidateErrorResult"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternalServerErrorResult"];
                 };
             };
         };
@@ -646,6 +880,38 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PlayerAchievements"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FailedResult"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidateErrorResult"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternalServerErrorResult"];
+                };
+            };
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FailedResult"];
                 };
             };
         };
