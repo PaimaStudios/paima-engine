@@ -13,7 +13,8 @@ import {
   postConciseData,
   postConciseDataAsync,
 } from './helpers/posting.js';
-import { buildQuery, buildBackendQuery } from './helpers/query-constructors.js';
+export * from './helpers/clients.js';
+import { buildQuery } from './helpers/query-constructors.js';
 import { pushLog } from './helpers/logging.js';
 
 import { walletToName } from './name-generation/index.js';
@@ -68,7 +69,6 @@ export {
   postConciselyEncodedData,
   awaitBlock,
   buildQuery,
-  buildBackendQuery,
   pushLog,
   postDataToEndpoint,
   EndpointErrorFxn,

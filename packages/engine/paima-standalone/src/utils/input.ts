@@ -22,6 +22,7 @@ import {
 import { checkForPackedGameCode, importOpenApiJson, importEndpoints } from './import.js';
 import type { Template } from './types.js';
 import RegisterRoutes, { EngineService } from '@paima/rest';
+import { poolConfig } from './index.js';
 
 // Prompt user for input in the CLI
 export const userPrompt = (query: string): Promise<string> => {
@@ -131,9 +132,9 @@ export const runPaimaEngine = async (): Promise<void> => {
 
     // Import & initialize state machine
     const stateMachine = gameSM();
-    const funnelFactory = await FunnelFactory.initialize(
-      await stateMachine.getReadonlyDbConn().connect()
-    );
+    console.log(`Connecting to database at ${poolConfig.host}:${poolConfig.port}`);
+    const dbConn = await stateMachine.getReadonlyDbConn().connect();
+    const funnelFactory = await FunnelFactory.initialize(dbConn);
     const engine = paimaRuntime.initialize(funnelFactory, stateMachine, ENV.GAME_NODE_VERSION);
 
     // Import & initialize REST server

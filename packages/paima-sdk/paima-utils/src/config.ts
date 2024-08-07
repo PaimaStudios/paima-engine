@@ -1,4 +1,14 @@
 import type { VersionString } from './types.js';
+import { config } from 'dotenv';
+
+// https://github.com/flexdinesh/browser-or-node/blob/master/src/index.ts
+const isNode: boolean =
+  typeof process !== 'undefined' && process.versions != null && process.versions.node != null;
+if (isNode) {
+  // for browser builds, we can't actually loads things from disk like this
+  // instead, for browsers we rely on bundlers like Vite or Webpack to fill these
+  config({ path: `${process.cwd()}/.env.${process.env.NETWORK || 'localhost'}` });
+}
 
 /**
  * Careful: this class uses `process.env`

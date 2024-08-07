@@ -221,8 +221,8 @@ async function getAdjustedHeight(deploymentChainBlockHeight: number): Promise<nu
     // TODO: magic number. -1 here means the block isn't part of the chain yet so we can't know the mapping
     let block = -1;
     while (block === -1) {
-      block = await deploymentChainBlockHeightToEmulated(deploymentChainBlockHeight);
-      if (block === -1) {
+      const remote = await deploymentChainBlockHeightToEmulated(deploymentChainBlockHeight);
+      if (remote.success === false || remote.result === -1) {
         await wait(BLOCK_DELAY);
       }
     }

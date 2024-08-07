@@ -61,5 +61,11 @@ export async function specificWalletLogin(
   })();
 
   setPostingMode(provider.result, postingMode);
-  return { success: true, result: { walletAddress: provider.result.getAddress().address } };
+  return {
+    success: true,
+    result: {
+      walletAddress: provider.result.getAddress().address,
+      metadata: provider.result.getConnection().metadata,
+    },
+  };
 }

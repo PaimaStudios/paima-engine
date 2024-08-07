@@ -3,58 +3,45 @@ import { buildEndpointErrorFxn, PaimaMiddlewareErrorCode } from '../errors.js';
 import { getGameVersion } from '../state.js';
 import type { Result } from '../types.js';
 import { pushLog } from './logging.js';
-import {
-  backendQueryBackendVersion,
-  backendQueryDeploymentBlockheightToEmulated,
-  backendQueryEmulatedBlocksActive,
-  backendQueryLatestProcessedBlockHeight,
-} from './query-constructors.js';
+import { getPaimaNodeRestClient } from './clients.js';
 
 export async function getRawLatestProcessedBlockHeight(): Promise<Result<number>> {
   const errorFxn = buildEndpointErrorFxn('getRawLatestProcessedBlockHeight');
 
-  let res: Response;
   try {
-    const query = backendQueryLatestProcessedBlockHeight();
-    res = await fetch(query);
+    const { data, error } = await getPaimaNodeRestClient().GET('/latest_processed_blockheight');
+    if (error != null) {
+      return errorFxn(PaimaMiddlewareErrorCode.INVALID_RESPONSE_FROM_BACKEND, error);
+    }
+    return {
+      success: true,
+      result: data.block_height,
+    };
   } catch (err) {
     return errorFxn(PaimaMiddlewareErrorCode.ERROR_QUERYING_BACKEND_ENDPOINT, err);
   }
-
-  try {
-    const j = (await res.json()) as { block_height: number };
-    // TODO: properly typecheck
-    return {
-      success: true,
-      result: j.block_height,
-    };
-  } catch (err) {
-    return errorFxn(PaimaMiddlewareErrorCode.INVALID_RESPONSE_FROM_BACKEND, err);
-  }
 }
 
-// TODO: reworking this to use serverEndpointCall requires the endpoint to return a JSON
-export async function getRemoteBackendVersion(): Promise<`${number}.${number}.${number}`> {
+export async function getRemoteBackendVersion(): Promise<Result<`${number}.${number}.${number}`>> {
   const errorFxn = buildEndpointErrorFxn('getRemoteBackendVersion');
 
-  let res: Response;
   try {
-    const query = backendQueryBackendVersion();
-    res = await fetch(query);
-  } catch (err) {
-    errorFxn(PaimaMiddlewareErrorCode.ERROR_QUERYING_BACKEND_ENDPOINT, err);
-    throw err;
-  }
-
-  try {
-    const versionString = await res.text();
-    if (versionString[0] !== '"' || versionString[versionString.length - 1] !== '"') {
-      throw new Error('Invalid version string: ' + versionString);
+    const { data: versionString, error } = await getPaimaNodeRestClient().GET('/backend_version');
+    if (error != null) {
+      return errorFxn(PaimaMiddlewareErrorCode.INVALID_RESPONSE_FROM_BACKEND, error);
     }
-    return versionString.slice(1, versionString.length - 1) as `${number}.${number}.${number}`;
+    if (versionString[0] !== '"' || versionString[versionString.length - 1] !== '"') {
+      return errorFxn(
+        PaimaMiddlewareErrorCode.INVALID_RESPONSE_FROM_BACKEND,
+        new Error('Invalid version string: ' + versionString)
+      );
+    }
+    return {
+      success: true,
+      result: versionString.slice(1, versionString.length - 1) as `${number}.${number}.${number}`,
+    };
   } catch (err) {
-    errorFxn(PaimaMiddlewareErrorCode.INVALID_RESPONSE_FROM_BACKEND, err);
-    throw err;
+    return errorFxn(PaimaMiddlewareErrorCode.ERROR_QUERYING_BACKEND_ENDPOINT, err);
   }
 }
 
@@ -78,9 +65,12 @@ export async function awaitBlock(awaitedBlock: number): Promise<void> {
 export async function localRemoteVersionsCompatible(): Promise<boolean> {
   const localVersion = getGameVersion();
   const remoteVersion = await getRemoteBackendVersion();
+  if (remoteVersion.success === false) {
+    throw new Error(remoteVersion.errorMessage);
+  }
 
   const localComponents = localVersion.split('.').map(parseInt);
-  const remoteComponents = remoteVersion.split('.').map(parseInt);
+  const remoteComponents = remoteVersion.result.split('.').map(parseInt);
 
   pushLog('Middleware version:', localVersion);
   pushLog('Backend version:   ', remoteVersion);
@@ -92,38 +82,38 @@ export async function localRemoteVersionsCompatible(): Promise<boolean> {
   }
 }
 
-export async function emulatedBlocksActiveOnBackend(): Promise<boolean> {
+export async function emulatedBlocksActiveOnBackend(): Promise<Result<boolean>> {
   const errorFxn = buildEndpointErrorFxn('emulatedBlocksActiveOnBackend');
 
-  let res: Response;
   try {
-    const query = backendQueryEmulatedBlocksActive();
-    res = await fetch(query);
+    const { data, error } = await getPaimaNodeRestClient().GET('/emulated_blocks_active');
+    if (error != null) {
+      return errorFxn(PaimaMiddlewareErrorCode.INVALID_RESPONSE_FROM_BACKEND, error);
+    }
+    return {
+      success: true,
+      result: data.emulatedBlocksActive,
+    };
   } catch (err) {
-    errorFxn(PaimaMiddlewareErrorCode.ERROR_QUERYING_BACKEND_ENDPOINT, err);
-    throw err;
-  }
-
-  try {
-    const emulatedBlocksResult = (await res.json()) as { emulatedBlocksActive: boolean };
-    return emulatedBlocksResult.emulatedBlocksActive;
-  } catch (err) {
-    errorFxn(PaimaMiddlewareErrorCode.INVALID_RESPONSE_FROM_BACKEND, err);
-    throw err;
+    return errorFxn(PaimaMiddlewareErrorCode.ERROR_QUERYING_BACKEND_ENDPOINT, err);
   }
 }
 
 export async function deploymentChainBlockHeightToEmulated(
   deploymentBlockheight: number
-): Promise<number> {
+): Promise<Result<number>> {
   const errorFxn = buildEndpointErrorFxn('deploymentChainBlockHeightToEmulated');
 
-  const query = backendQueryDeploymentBlockheightToEmulated(deploymentBlockheight);
-  const res = await fetch(query);
-
-  const conversionResult = (await res.json()) as Result<number>;
-  if (!conversionResult.success) {
-    throw new Error(`Error converting blockheight: ${conversionResult.errorMessage}`);
+  try {
+    const { data, error } = await getPaimaNodeRestClient().GET(
+      '/deployment_blockheight_to_emulated',
+      { params: { query: { deploymentBlockheight } } }
+    );
+    if (error != null) {
+      return errorFxn(PaimaMiddlewareErrorCode.INVALID_RESPONSE_FROM_BACKEND, error);
+    }
+    return data;
+  } catch (err) {
+    return errorFxn(PaimaMiddlewareErrorCode.ERROR_QUERYING_BACKEND_ENDPOINT, err);
   }
-  return conversionResult.result;
 }

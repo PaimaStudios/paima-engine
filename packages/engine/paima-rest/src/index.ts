@@ -3,3 +3,7 @@ import { default as basicControllerJson } from './tsoa/swagger.json' with { type
 export default RegisterRoutes;
 export { basicControllerJson };
 export { EngineService } from './EngineService.js';
+export type {
+  ValidateErrorResult,
+  InternalServerErrorResult,
+} from './controllers/BasicControllers.js';

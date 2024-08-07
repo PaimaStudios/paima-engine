@@ -1,3 +1,4 @@
+import type { WalletOption } from '@paima/providers';
 import type { Hash, WalletAddress, UserSignature } from '@paima/utils';
 export type * from './wallets/wallet-modes.js';
 
@@ -27,6 +28,7 @@ export type OldResult = SuccessfulResultMessage | FailedResult;
 
 export interface Wallet {
   walletAddress: WalletAddress;
+  metadata: WalletOption;
 }
 
 interface BatcherPostResponseSuccessful {

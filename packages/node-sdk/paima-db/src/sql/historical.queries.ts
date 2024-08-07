@@ -62,3 +62,34 @@ const getGameInputIR: any = {"usedParamSet":{"block_height":true,"user_address":
 export const getGameInput = new PreparedQuery<IGetGameInputParams,IGetGameInputResult>(getGameInputIR);
 
 
+/** 'GetGameInputForBlock' parameters type */
+export interface IGetGameInputForBlockParams {
+  block_height: number;
+}
+
+/** 'GetGameInputForBlock' return type */
+export interface IGetGameInputForBlockResult {
+  block_height: number;
+  id: number;
+  input_data: string;
+  user_address: string;
+}
+
+/** 'GetGameInputForBlock' query type */
+export interface IGetGameInputForBlockQuery {
+  params: IGetGameInputForBlockParams;
+  result: IGetGameInputForBlockResult;
+}
+
+const getGameInputForBlockIR: any = {"usedParamSet":{"block_height":true},"params":[{"name":"block_height","required":true,"transform":{"type":"scalar"},"locs":[{"a":58,"b":71}]}],"statement":"SELECT * FROM historical_game_inputs\nWHERE block_height = :block_height!"};
+
+/**
+ * Query generated from SQL:
+ * ```
+ * SELECT * FROM historical_game_inputs
+ * WHERE block_height = :block_height!
+ * ```
+ */
+export const getGameInputForBlock = new PreparedQuery<IGetGameInputForBlockParams,IGetGameInputForBlockResult>(getGameInputForBlockIR);
+
+

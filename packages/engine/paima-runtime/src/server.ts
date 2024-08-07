@@ -9,6 +9,9 @@ import path from 'path';
 import { ValidateError } from 'tsoa';
 import { BuiltinEvents, toAsyncApi } from '@paima/events';
 import YAML from 'yaml';
+import { evmRpcEngine } from './evm-rpc/eip1193.js';
+import { StatusCodes } from 'http-status-codes';
+import type { ValidateErrorResult, InternalServerErrorResult } from '@paima/rest';
 
 const server: Express = express();
 const bodyParser = express.json();
@@ -19,11 +22,19 @@ server.use(bodyParser);
 
 const DocPaths = {
   Root: 'docs',
-  Rest: 'rest',
+  Rest: {
+    Root: 'rest',
+    Ui: 'ui',
+    Spec: 'spec.json',
+  },
   AsyncApi: {
     Root: 'asyncapi',
-    Yml: 'spec.yml',
+    Spec: 'spec.yml',
     Ui: 'ui',
+  },
+  RPC: {
+    Root: 'rpc',
+    EVM: 'evm',
   },
 } as const;
 
@@ -35,7 +46,9 @@ function startServer(): void {
   server.listen(port, () => {
     // note: this server is publicly accessible through BACKEND_URI
     doLog(`Game Node Webserver Started At: http://localhost:${port}`);
-    doLog(`    See REST docs at: http://localhost:${port}/${DocPaths.Root}/${DocPaths.Rest}`);
+    doLog(
+      `    See REST docs at: http://localhost:${port}/${DocPaths.Root}/${DocPaths.Rest.Root}/${DocPaths.Rest.Ui}`
+    );
     doLog(
       `    See MQTT event docs at http://localhost:${port}/${DocPaths.Root}/${DocPaths.AsyncApi.Root}/${DocPaths.AsyncApi.Ui}`
     );
@@ -65,18 +78,19 @@ function registerValidationErrorHandler(): void {
   ): ExResponse | void {
     if (err instanceof ValidateError) {
       console.warn(`Caught Validation Error for ${req.path}:`, err.fields);
-      return res.status(422).json({
+      return res.status(StatusCodes.UNPROCESSABLE_ENTITY).json({
         message: 'Validation Failed',
         details: err?.fields,
-      });
+      } satisfies ValidateErrorResult);
     }
     if (err instanceof Error) {
       // Log rather than swallowing silently, otherwise difficult to debug.
       console.warn(`${req.method} ${req.path}:`, err);
 
-      return res.status(500).json({
-        message: 'Internal Server Error',
-      });
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        errorMessage: 'Internal Server Error',
+      } satisfies InternalServerErrorResult);
     }
 
     next();
@@ -94,14 +108,18 @@ function registerDocs(userStateMachineApi: object | undefined): void {
     express.static(swaggerUiPath, {}),
   ];
   const openApi = getOpenApiJson(userStateMachineApi);
+
+  server.get(`/${DocPaths.Root}/${DocPaths.Rest.Root}/${DocPaths.Rest.Spec}`, (_, res) => {
+    res.send(JSON.stringify(openApi, null, 2));
+  });
   server.use(
-    `/${DocPaths.Root}/${DocPaths.Rest}`,
+    `/${DocPaths.Root}/${DocPaths.Rest.Root}/${DocPaths.Rest.Ui}`,
     swaggerServer,
     swaggerUi.setup(openApi, { explorer: false })
   );
 }
 
-server.get(`/${DocPaths.Root}/${DocPaths.AsyncApi.Root}/${DocPaths.AsyncApi.Yml}`, (_, res) => {
+server.get(`/${DocPaths.Root}/${DocPaths.AsyncApi.Root}/${DocPaths.AsyncApi.Spec}`, (_, res) => {
   const asyncApi = toAsyncApi(
     {
       backendUri: ENV.MQTT_ENGINE_BROKER_URL,
@@ -115,6 +133,17 @@ server.get(`/${DocPaths.Root}/${DocPaths.AsyncApi.Root}/${DocPaths.AsyncApi.Yml}
 
 server.get(`/${DocPaths.Root}/${DocPaths.AsyncApi.Root}/${DocPaths.AsyncApi.Ui}`, (_, res) => {
   res.sendFile(path.join(__dirname, 'public', 'asyncapi.html'));
+});
+
+server.post(`/${DocPaths.RPC.Root}/${DocPaths.RPC.EVM}`, (req, res) => {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+  evmRpcEngine.handle(req.body, (err, result) => {
+    if (err) {
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: (err as any).message });
+    } else {
+      res.json(result);
+    }
+  });
 });
 
 export { server, startServer, registerDocs, registerValidationErrorHandler };

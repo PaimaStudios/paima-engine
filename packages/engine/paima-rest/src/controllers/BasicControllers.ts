@@ -1,11 +1,18 @@
-import { Controller, Query, Get, Route } from 'tsoa';
+import { Controller, Response, Query, Get, Route } from 'tsoa';
+import type { FieldErrors } from 'tsoa';
 import { doLog, logError, ENV } from '@paima/utils';
 import { EngineService } from '../EngineService.js';
 import {
   deploymentChainBlockheightToEmulated,
   emulatedSelectLatestPrior,
   getGameInput,
+  getGameInputForBlock,
+  getInputsForAddress,
+  getInputsForBlock,
+  getScheduledDataByBlockHeight,
 } from '@paima/db';
+import type { Pool } from 'pg';
+import { StatusCodes } from 'http-status-codes';
 
 export interface SuccessfulResult<T> {
   success: true;
@@ -17,6 +24,12 @@ export interface FailedResult {
   errorMessage: string;
   errorCode?: number;
 }
+export type InternalServerErrorResult = FailedResult;
+
+export interface ValidateErrorResult {
+  message: 'Validation Failed';
+  details?: FieldErrors;
+}
 
 export type Result<T> = SuccessfulResult<T> | FailedResult;
 
@@ -24,18 +37,28 @@ type DryRunResponse = { valid: boolean };
 
 @Route('dry_run')
 export class DryRunController extends Controller {
+  @Response<FailedResult>(StatusCodes.NOT_IMPLEMENTED)
+  @Response<InternalServerErrorResult>(StatusCodes.INTERNAL_SERVER_ERROR)
+  @Response<ValidateErrorResult>(StatusCodes.UNPROCESSABLE_ENTITY)
   @Get()
   public async get(
     @Query() gameInput: string,
     @Query() userAddress: string
-  ): Promise<DryRunResponse> {
+  ): Promise<Result<DryRunResponse>> {
     if (!ENV.ENABLE_DRY_RUN) {
-      this.setStatus(500);
+      this.setStatus(StatusCodes.NOT_IMPLEMENTED);
+      return {
+        success: false,
+        errorMessage: 'Dry run is disabled',
+      };
     }
     doLog(`[Input Validation] ${gameInput} ${userAddress}`);
     const isValid = await EngineService.INSTANCE.getSM().dryRun(gameInput, userAddress);
     return {
-      valid: isValid,
+      success: true,
+      result: {
+        valid: isValid,
+      },
     };
   }
 }
@@ -49,6 +72,8 @@ type VersionString = string;
 
 @Route('backend_version')
 export class VersionController extends Controller {
+  @Response<InternalServerErrorResult>(StatusCodes.INTERNAL_SERVER_ERROR)
+  @Response<ValidateErrorResult>(StatusCodes.UNPROCESSABLE_ENTITY)
   @Get()
   public async get(): Promise<VersionString> {
     return ENV.GAME_NODE_VERSION;
@@ -58,6 +83,8 @@ export class VersionController extends Controller {
 type LatestProcessedBlockheightResponse = { block_height: number };
 @Route('latest_processed_blockheight')
 export class LatestProcessedBlockheightController extends Controller {
+  @Response<InternalServerErrorResult>(StatusCodes.INTERNAL_SERVER_ERROR)
+  @Response<ValidateErrorResult>(StatusCodes.UNPROCESSABLE_ENTITY)
   @Get()
   public async get(): Promise<LatestProcessedBlockheightResponse> {
     const blockHeight = await EngineService.INSTANCE.getSM().latestProcessedBlockHeight();
@@ -69,6 +96,8 @@ export class LatestProcessedBlockheightController extends Controller {
 type EmulatedBlockActiveResponse = { emulatedBlocksActive: boolean };
 @Route('emulated_blocks_active')
 export class EmulatedBlockActiveController extends Controller {
+  @Response<InternalServerErrorResult>(StatusCodes.INTERNAL_SERVER_ERROR)
+  @Response<ValidateErrorResult>(StatusCodes.UNPROCESSABLE_ENTITY)
   @Get()
   public async get(): Promise<EmulatedBlockActiveResponse> {
     return { emulatedBlocksActive: ENV.EMULATED_BLOCKS };
@@ -80,7 +109,11 @@ type DeploymentBlockheightToEmulatedResponse = Result<number>;
 export class DeploymentBlockheightToEmulatedController extends Controller {
   @Get()
   public async get(
-    @Query() deploymentBlockheight: number
+    @Response<FailedResult>(StatusCodes.NOT_FOUND)
+    @Response<InternalServerErrorResult>(StatusCodes.INTERNAL_SERVER_ERROR)
+    @Response<ValidateErrorResult>(StatusCodes.UNPROCESSABLE_ENTITY)
+    @Query()
+    deploymentBlockheight: number
   ): Promise<DeploymentBlockheightToEmulatedResponse> {
     const gameStateMachine = EngineService.INSTANCE.getSM();
     try {
@@ -118,7 +151,7 @@ export class DeploymentBlockheightToEmulatedController extends Controller {
       const emulatedBlockheight = emulated.at(0)?.emulated_block_height;
 
       if (emulatedBlockheight == null) {
-        this.setStatus(500);
+        this.setStatus(StatusCodes.NOT_FOUND);
         return {
           success: false,
           errorMessage: `Supplied blockheight ${deploymentBlockheight} not found in DB`,
@@ -131,7 +164,7 @@ export class DeploymentBlockheightToEmulatedController extends Controller {
     } catch (err) {
       doLog(`Unexpected webserver error:`);
       logError(err);
-      this.setStatus(500);
+      this.setStatus(StatusCodes.INTERNAL_SERVER_ERROR);
       return {
         success: false,
         errorMessage: 'Unknown error, please contact game node operator',
@@ -143,6 +176,9 @@ export class DeploymentBlockheightToEmulatedController extends Controller {
 type ConfirmInputAcceptanceResponse = Result<boolean>;
 @Route('confirm_input_acceptance')
 export class ConfirmInputAcceptanceController extends Controller {
+  @Response<FailedResult>(StatusCodes.NOT_IMPLEMENTED)
+  @Response<InternalServerErrorResult>(StatusCodes.INTERNAL_SERVER_ERROR)
+  @Response<ValidateErrorResult>(StatusCodes.UNPROCESSABLE_ENTITY)
   @Get()
   public async get(
     @Query() gameInput: string,
@@ -152,7 +188,7 @@ export class ConfirmInputAcceptanceController extends Controller {
     const gameStateMachine = EngineService.INSTANCE.getSM();
     try {
       if (!ENV.STORE_HISTORICAL_GAME_INPUTS) {
-        this.setStatus(500);
+        this.setStatus(StatusCodes.NOT_IMPLEMENTED);
         return {
           success: false,
           errorMessage: 'Game input storing turned off in the game node',
@@ -181,10 +217,194 @@ export class ConfirmInputAcceptanceController extends Controller {
     } catch (err) {
       doLog(`Unexpected webserver error:`);
       logError(err);
-      this.setStatus(500);
+      this.setStatus(StatusCodes.INTERNAL_SERVER_ERROR);
       return {
         success: false,
         errorMessage: 'Unknown error, please contact game node operator',
+      };
+    }
+  }
+}
+
+type TransactionCountResponse = {
+  scheduledData: number;
+  gameInputs: number;
+};
+
+@Route('transaction_count')
+export class TransactionCountController extends Controller {
+  async fetchTxCount(
+    fetch: (db: Pool) => Promise<
+      {
+        game_inputs: string;
+        scheduled_data: string;
+      }[]
+    >
+  ): Promise<Result<TransactionCountResponse>> {
+    const gameStateMachine = EngineService.INSTANCE.getSM();
+    try {
+      if (!ENV.STORE_HISTORICAL_GAME_INPUTS) {
+        this.setStatus(StatusCodes.NOT_IMPLEMENTED);
+        return {
+          success: false,
+          errorMessage: 'Game input storing turned off in the game node',
+        };
+      }
+      const DBConn = gameStateMachine.getReadonlyDbConn();
+      const [total] = await fetch(DBConn);
+
+      const result =
+        total == null
+          ? { scheduledData: 0, gameInputs: 0 }
+          : {
+              scheduledData: Number.parseInt(total.scheduled_data),
+              gameInputs: Number.parseInt(total.game_inputs),
+            };
+      return {
+        success: true,
+        result,
+      };
+    } catch (err) {
+      doLog(`Unexpected webserver error:`);
+      logError(err);
+      this.setStatus(StatusCodes.INTERNAL_SERVER_ERROR);
+      return {
+        success: false,
+        errorMessage: 'Unknown error, please contact game node operator',
+      };
+    }
+  }
+  @Response<FailedResult>(StatusCodes.NOT_IMPLEMENTED)
+  @Response<InternalServerErrorResult>(StatusCodes.INTERNAL_SERVER_ERROR)
+  @Response<ValidateErrorResult>(StatusCodes.UNPROCESSABLE_ENTITY)
+  @Get('/blockHeight')
+  public async blockHeight(
+    @Query() blockHeight: number
+  ): Promise<Result<TransactionCountResponse>> {
+    return await this.fetchTxCount(db =>
+      getInputsForBlock.run(
+        {
+          block_height: blockHeight,
+        },
+        db
+      )
+    );
+  }
+
+  @Response<FailedResult>(StatusCodes.NOT_IMPLEMENTED)
+  @Response<InternalServerErrorResult>(StatusCodes.INTERNAL_SERVER_ERROR)
+  @Response<ValidateErrorResult>(StatusCodes.UNPROCESSABLE_ENTITY)
+  @Get('/address')
+  public async get(
+    @Query() address: string,
+    @Query() blockHeight: number
+  ): Promise<Result<TransactionCountResponse>> {
+    return await this.fetchTxCount(db =>
+      getInputsForAddress.run(
+        {
+          addr: address,
+          block_height: blockHeight,
+        },
+        db
+      )
+    );
+  }
+}
+
+type TransactionContentResponse = {
+  // blockHash: string;
+  blockNumber: number;
+  // txHash: string;
+  txIndex: number;
+  inputData: string;
+  from: string;
+  // value: string;
+  // nonce: string;
+};
+
+@Route('transaction_content')
+export class TransactionContentController extends Controller {
+  @Response<FailedResult>(StatusCodes.NOT_IMPLEMENTED)
+  @Response<FailedResult>(StatusCodes.NOT_FOUND)
+  @Response<InternalServerErrorResult>(StatusCodes.INTERNAL_SERVER_ERROR)
+  @Response<ValidateErrorResult>(StatusCodes.UNPROCESSABLE_ENTITY)
+  @Get('/blockNumberAndIndex')
+  public async blockHeight(
+    @Query() blockHeight: number,
+    @Query() txIndex: number
+  ): Promise<Result<TransactionContentResponse>> {
+    if (!ENV.STORE_HISTORICAL_GAME_INPUTS) {
+      this.setStatus(StatusCodes.NOT_IMPLEMENTED);
+      return {
+        success: false,
+        errorMessage: 'Game input storing turned off in the game node',
+      };
+    }
+    const gameStateMachine = EngineService.INSTANCE.getSM();
+    const DBConn = gameStateMachine.getReadonlyDbConn();
+    const scheduledData = await getScheduledDataByBlockHeight.run(
+      {
+        block_height: blockHeight,
+      },
+      DBConn
+    );
+    // note: scheduled data always comes before submitted input in STF processing
+    if (txIndex < scheduledData.length) {
+      const finalTx = scheduledData[txIndex];
+
+      // Primitives from the underlying chain don't have a clear "from" address
+      // but precompiles do
+      const from = finalTx.precompile == null ? '0x0' : finalTx.precompile;
+      return {
+        success: true,
+        result: {
+          // blockHash: string,
+          blockNumber: finalTx.block_height,
+          // txHash: string,
+          txIndex: txIndex,
+          inputData: finalTx.input_data,
+          from,
+          // value: string,
+          // nonce: string,
+        },
+      };
+    }
+    const submittedInputs = await getGameInputForBlock.run(
+      {
+        block_height: blockHeight,
+      },
+      DBConn
+    );
+
+    const totalInputsInBlock = submittedInputs.length + scheduledData.length;
+    if (txIndex >= totalInputsInBlock) {
+      this.setStatus(StatusCodes.NOT_FOUND);
+      let errorMsg = `Query for index ${txIndex}, but there were only ${totalInputsInBlock} inputs total for this block`;
+      if (totalInputsInBlock === 0) {
+        // ideally we would for-sure know if this block exists or not
+        // but that would slow down the endpoint
+        errorMsg += `. Are you sure block number ${blockHeight} exists?`;
+      }
+      return {
+        success: false,
+        errorMessage: errorMsg,
+      };
+    }
+
+    {
+      const finalTx = submittedInputs[txIndex - scheduledData.length];
+      return {
+        success: true,
+        result: {
+          // blockHash: string,
+          blockNumber: finalTx.block_height,
+          // txHash: string,
+          txIndex: txIndex,
+          inputData: finalTx.input_data,
+          from: finalTx.user_address,
+          // value: string,
+          // nonce: string,
+        },
       };
     }
   }

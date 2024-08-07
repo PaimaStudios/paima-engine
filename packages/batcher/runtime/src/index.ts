@@ -170,9 +170,11 @@ async function main(): Promise<void> {
   }
 
   const pool = initializePool();
+  const backendVersion = await getRemoteBackendVersion();
+  if (backendVersion.success == false) throw new Error(backendVersion.errorMessage);
   await initMiddlewareCore(
     'Game Batcher', // TODO: it doesn't matter now, but there is no way for the batcher to get the name of the game
-    await getRemoteBackendVersion()
+    backendVersion.result
   );
   let provider: EthersEvmProvider | AvailJsProvider;
   let batchedTransactionPoster;
