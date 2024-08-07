@@ -70,6 +70,7 @@ evmRpcEngine.push(
       case 'eth_blockNumber': {
         const { data, error } = await getPaimaNodeRestClient().GET('/latest_processed_blockheight');
         if (error != null) {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument -- seems like an eslint bug?
           res.error = createInternalRpcError({}, error?.errorMessage);
           return;
         }
@@ -129,10 +130,12 @@ evmRpcEngine.push(
           params: { query: { blockHeight, address } },
         });
         if (error != null) {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument -- seems like an eslint bug?
           res.error = createInternalRpcError({}, error?.errorMessage);
           return;
         }
         if (data.success === false) {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument -- seems like an eslint bug?
           res.error = createInternalRpcError({}, data.errorMessage);
           return;
         }
@@ -192,10 +195,12 @@ evmRpcEngine.push(
           }
         );
         if (error != null) {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument -- seems like an eslint bug?
           res.error = createInternalRpcError({}, error?.errorMessage);
           return;
         }
         if (data.success === false) {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument -- seems like an eslint bug?
           res.error = createInternalRpcError({}, data.errorMessage);
           return;
         }
@@ -314,14 +319,17 @@ evmRpcEngine.push(
           { params: { query: { blockHeight, txIndex } } }
         );
         if (error != null) {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument -- seems like an eslint bug?
           res.error = createInternalRpcError({}, error?.errorMessage);
           return;
         }
         if (data.success === false) {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument -- seems like an eslint bug?
           res.error = createInternalRpcError({}, data.errorMessage);
           return;
         }
 
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument -- seems like an eslint bug?
         const hexMsg = stringToHex(data.result.inputData);
         /**
          * Paima is not EVM so it doesn't have the same encoding of "inputData" in the EVM sense

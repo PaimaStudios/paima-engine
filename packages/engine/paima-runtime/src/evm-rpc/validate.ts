@@ -32,6 +32,7 @@ export async function toBlockNumber(
   if (blockParam == 'latest') {
     const { data, error } = await getPaimaNodeRestClient().GET('/latest_processed_blockheight');
     if (error != null) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument -- seems like an eslint bug?
       throw createInternalRpcError({ block: rpcBlock }, error?.errorMessage);
     }
     return data.block_height;
