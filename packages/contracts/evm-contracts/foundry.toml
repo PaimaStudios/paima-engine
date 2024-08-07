@@ -33,3 +33,4 @@ evm_version = 'berlin' # the evm version (by hardfork name)
 #block_difficulty = 0                                          # the value of `block.difficulty` in tests
 [invariant]
 fail_on_revert = true
+depth = 15
