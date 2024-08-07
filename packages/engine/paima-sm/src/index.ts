@@ -180,6 +180,7 @@ const SM: GameStateMachineInitializer = {
               caip2: '',
               txHash: '',
             },
+            // TODO: fill this once we have the timestamp stored in the database
             { blockHeight, timestamp: 0 },
             new Prando('1234567890'),
             dbTx
