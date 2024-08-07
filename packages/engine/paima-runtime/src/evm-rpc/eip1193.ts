@@ -481,7 +481,8 @@ evmRpcEngine.push(
         }
         const { data, error } = await getPaimaNodeRestClient().GET('/latest_processed_blockheight');
         if (error != null) {
-          res.error = new InternalRpcError(error);
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument -- seems like an eslint bug?
+          res.error = createInternalRpcError({}, error?.errorMessage);
           return;
         }
         setResult<typeof evmRpc.method>({
