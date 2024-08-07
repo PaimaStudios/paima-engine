@@ -8,18 +8,17 @@ import type { PoolClient } from 'pg';
 import { FUNNEL_PRESYNC_FINISHED } from '@paima/utils';
 import { createApi } from './createApi.js';
 import { getLatestProcessedCdeBlockheight } from '@paima/db';
-import type { Header } from './utils.js';
 import {
   getDAData,
-  getLatestBlockNumber,
   getMultipleHeaderData,
-  getSlotFromHeader,
   getTimestampForBlockAt,
   slotToTimestamp,
   timestampToSlot,
   GET_DATA_TIMEOUT,
   getLatestAvailableBlockNumberFromLightClient,
+  getBlockHeaderDataFromLightClient,
 } from './utils.js';
+import type { HeaderData } from './utils.js';
 import {
   addInternalCheckpointingEvent,
   buildParallelBlockMappings,
@@ -137,10 +136,16 @@ export class AvailParallelFunnel extends BaseFunnel implements ChainFunnel {
         }
 
         // get only headers for block that have data
-        parallelHeaders = await timeout(getMultipleHeaderData(this.api, numbers), GET_DATA_TIMEOUT);
+        parallelHeaders = await timeout(
+          getMultipleHeaderData(this.api, this.config.lightClient, numbers),
+          GET_DATA_TIMEOUT
+        );
       } else {
         // unless the range is empty
-        parallelHeaders = await timeout(getMultipleHeaderData(this.api, [to]), GET_DATA_TIMEOUT);
+        parallelHeaders = await timeout(
+          getMultipleHeaderData(this.api, this.config.lightClient, [to]),
+          GET_DATA_TIMEOUT
+        );
       }
 
       for (const blockData of roundParallelData) {
@@ -290,10 +295,11 @@ export class AvailParallelFunnel extends BaseFunnel implements ChainFunnel {
       const mappedStartingBlockHeight = await findBlockByTimestamp(
         // the genesis doesn't have a slot to extract a timestamp from
         1,
-        await getLatestBlockNumber(api),
+        await getLatestAvailableBlockNumberFromLightClient(config.lightClient),
         applyDelay(config, Number(startingBlock.timestamp)),
         chainName,
-        async (blockNumber: number) => await getTimestampForBlockAt(api, blockNumber)
+        async (blockNumber: number) =>
+          await getTimestampForBlockAt(config.lightClient, api, blockNumber)
       );
 
       availFunnelCacheEntry.initialize(mappedStartingBlockHeight);
@@ -324,26 +330,27 @@ export class AvailParallelFunnel extends BaseFunnel implements ChainFunnel {
     const config = this.config;
 
     const latestHeader = await timeout(
-      (async (): Promise<Header> => {
+      (async (): Promise<HeaderData> => {
         const latestNumber = await getLatestAvailableBlockNumberFromLightClient(config.lightClient);
 
-        const latestBlockHash = await this.api.rpc.chain.getBlockHash(latestNumber);
-        const latestHeader = await this.api.rpc.chain.getHeader(latestBlockHash);
+        const latestHeader = await getBlockHeaderDataFromLightClient(
+          config.lightClient,
+          latestNumber,
+          this.api
+        );
 
-        return latestHeader as unknown as Header;
+        return latestHeader;
       })(),
       LATEST_BLOCK_UPDATE_TIMEOUT
     );
 
-    const slot = getSlotFromHeader(latestHeader, this.api);
-
     this.sharedData.cacheManager.cacheEntries[AvailFunnelCacheEntry.SYMBOL]?.updateLatestBlock({
-      number: latestHeader.number.toNumber(),
+      number: latestHeader.number,
       hash: latestHeader.hash.toString(),
-      slot: slot,
+      slot: latestHeader.slot,
     });
 
-    return latestHeader.number.toNumber();
+    return latestHeader.number;
   }
 
   private getCacheEntry(): AvailFunnelCacheEntry {

@@ -99,7 +99,7 @@ export class AvailBlockFunnel extends BaseFunnel implements ChainFunnel {
     );
 
     const parallelHeaders = await timeout(
-      getMultipleHeaderData(this.api, numbers),
+      getMultipleHeaderData(this.api, this.config.lightClient, numbers),
       GET_DATA_TIMEOUT
     );
 

@@ -52,7 +52,7 @@ export class FunnelFactory implements IFunnelFactory {
     }
 
     if (mainConfig.type === ConfigNetworkType.AVAIL_MAIN) {
-      mainNetworkApi = new AvailSharedApi(mainConfig.rpc);
+      mainNetworkApi = new AvailSharedApi(mainConfig.rpc, mainConfig.lightClient);
     }
 
     const web3s = await Promise.all(
