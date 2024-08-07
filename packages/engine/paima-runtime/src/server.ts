@@ -139,7 +139,7 @@ server.post(`/${DocPaths.RPC.Root}/${DocPaths.RPC.EVM}`, (req, res) => {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
   evmRpcEngine.handle(req.body, (err, result) => {
     if (err) {
-      res.status(500).json({ error: (err as any).message });
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: (err as any).message });
     } else {
       res.json(result);
     }

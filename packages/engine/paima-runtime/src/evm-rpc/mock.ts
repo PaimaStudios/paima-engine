@@ -124,7 +124,7 @@ export const mockRoots = {
   transactionsRoot: '0x0',
   stateRoot: '0x0',
   receiptsRoot: '0x0',
-};
+} as const;
 
 /**
  * This has no purpose in Ethereum, but block creators can stuff whatever they want in here
@@ -132,6 +132,6 @@ export const mockRoots = {
  */
 export const mockExtraData = {
   extraData: '0x0',
-};
+} as const;
 
 export const mockBlockHash = '0x0'; // TODO: do not mock this once we have block hashes in Paima
