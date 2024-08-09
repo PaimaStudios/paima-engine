@@ -1,6 +1,5 @@
 import { Pool } from 'pg';
 import type { PoolClient, Client } from 'pg';
-
 import type { STFSubmittedData } from '@paima/utils';
 import {
   caip2PrefixFor,
@@ -32,10 +31,12 @@ import {
   updateCardanoEpoch,
   updatePaginationCursor,
   updateMinaCheckpoint,
+  insertEvent,
+  createIndexesForEvents,
+  registerEventTypes,
 } from '@paima/db';
 import type { SQLUpdate } from '@paima/db';
 import Prando from '@paima/prando';
-
 import { randomnessRouter } from './randomness.js';
 import { cdeTransitionFunction } from './cde-processing.js';
 import { DelegateWallet } from './delegate-wallet.js';
@@ -51,6 +52,7 @@ import type {
 import { ConfigNetworkType } from '@paima/utils';
 import assertNever from 'assert-never';
 import { keccak_256 } from 'js-sha3';
+import { LogEventFields, toTopicHash } from '@paima/events';
 
 export * from './types.js';
 export type * from './types.js';
@@ -61,7 +63,8 @@ const SM: GameStateMachineInitializer = {
     randomnessProtocolEnum,
     gameStateTransitionRouter,
     startBlockHeight,
-    precompiles
+    precompiles,
+    events
   ) => {
     const DBConn: Pool = getConnection(databaseInfo);
     const persistentReadonlyDBConn: Client = getPersistentConnection(databaseInfo);
@@ -97,6 +100,35 @@ const SM: GameStateMachineInitializer = {
       },
       initializeDatabase: async (force: boolean = false): Promise<boolean> => {
         return await tx<boolean>(DBConn, dbTx => initializePaimaTables(dbTx, force));
+      },
+      initializeEventIndexes: async (): Promise<boolean> => {
+        return await tx<boolean>(DBConn, dbTx =>
+          createIndexesForEvents(
+            dbTx,
+            Object.values(events).flatMap(eventsByName =>
+              eventsByName.flatMap(event =>
+                event.fields.map((f: LogEventFields<any>) => ({
+                  topic: toTopicHash(event),
+                  fieldName: f.name,
+                  indexed: f.indexed,
+                }))
+              )
+            )
+          )
+        );
+      },
+      initializeAndValidateRegisteredEvents: async (): Promise<boolean> => {
+        return await tx<boolean>(DBConn, dbTx =>
+          registerEventTypes(
+            dbTx,
+            Object.values(events).flatMap(eventByName =>
+              eventByName.flatMap(event => ({
+                name: event.name,
+                topic: toTopicHash(event),
+              }))
+            )
+          )
+        );
       },
       getReadonlyDbConn: (): Pool => {
         return readonlyDBConn;
@@ -186,7 +218,7 @@ const SM: GameStateMachineInitializer = {
             new Prando('1234567890'),
             dbTx
           );
-          return data && data.length > 0;
+          return data && data.stateTransitions.length > 0;
         };
         if (dbTxOrPool instanceof Pool) {
           return await tx<boolean>(dbTxOrPool, dbTx => internal(dbTx));
@@ -268,7 +300,8 @@ const SM: GameStateMachineInitializer = {
           dbTx,
           gameStateTransition,
           randomnessGenerator,
-          indexForEventByTx
+          indexForEventByTx,
+          scheduledInputsLength
         );
 
         const processedCount = cdeDataLength + userInputsLength + scheduledInputsLength;
@@ -405,6 +438,12 @@ async function processScheduledData(
 
   const networks = await GlobalConfig.getInstance();
 
+  // Note: this is not related to `indexForEvent`, since that one is used to
+  // keep a counter of the original tx that scheduled the input. This is just a
+  // global counter for the current block, so we can just increase it by one
+  // with each event.
+  let txIndexInBlock = 0;
+
   for (const data of scheduledData) {
     try {
       const userAddress = data.precompile ? precompiles[data.precompile] : SCHEDULED_DATA_ADDRESS;
@@ -463,12 +502,29 @@ async function processScheduledData(
       // Trigger STF
       let sqlQueries: SQLUpdate[] = [];
       try {
-        sqlQueries = await gameStateTransition(
+        const { stateTransitions, events } = await gameStateTransition(
           inputData,
           { blockHeight: data.block_height, timestamp: latestChainData.timestamp },
           randomnessGenerator,
           DBConn
         );
+
+        sqlQueries = stateTransitions;
+
+        for (let idx = 0; idx < events.length; idx++) {
+          const event = events[idx];
+          sqlQueries.push([
+            insertEvent,
+            {
+              topic: event.data.topic,
+              address: event.address,
+              data: event.data.fields,
+              tx: txIndexInBlock,
+              idx,
+              block_height: latestChainData.blockNumber,
+            },
+          ]);
+        }
       } catch (err) {
         // skip scheduled data where the STF fails
         doLog(`[paima-sm] Error on scheduled data STF call. Skipping`, err);
@@ -487,6 +543,7 @@ async function processScheduledData(
     } finally {
       // guarantee we run this no matter if there is an error or a continue
       await deleteScheduled.run({ id: data.id }, DBConn);
+      txIndexInBlock += 1;
     }
   }
   return scheduledData.length;
@@ -500,7 +557,8 @@ async function processUserInputs(
   DBConn: PoolClient,
   gameStateTransition: GameStateTransitionFunction,
   randomnessGenerator: Prando,
-  indexForEvent: (txHash: string) => number
+  indexForEvent: (txHash: string) => number,
+  txIndexInBlock: number
 ): Promise<number> {
   for (const submittedData of latestChainData.submittedData) {
     // Check nonce is valid
@@ -549,12 +607,29 @@ async function processUserInputs(
       // Trigger STF
       let sqlQueries: SQLUpdate[] = [];
       try {
-        sqlQueries = await gameStateTransition(
+        const { stateTransitions, events } = await gameStateTransition(
           inputData,
           { blockHeight: latestChainData.blockNumber, timestamp: latestChainData.timestamp },
           randomnessGenerator,
           DBConn
         );
+
+        sqlQueries = stateTransitions;
+
+        for (let idx = 0; idx < events.length; idx++) {
+          const event = events[idx];
+          sqlQueries.push([
+            insertEvent,
+            {
+              topic: event.data.topic,
+              address: event.address,
+              data: event.data.fields,
+              tx: txIndexInBlock,
+              idx,
+              block_height: latestChainData.blockNumber,
+            },
+          ]);
+        }
       } catch (err) {
         // skip inputs where the STF fails
         doLog(`[paima-sm] Error on user input STF call. Skipping`, err);
@@ -568,6 +643,7 @@ async function processUserInputs(
         });
       }
     } finally {
+      txIndexInBlock += 1;
       // guarantee we run this no matter if there is an error or a continue
       await insertNonce.run(
         {

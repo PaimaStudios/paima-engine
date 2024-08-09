@@ -1,7 +1,6 @@
 import { Type } from '@sinclair/typebox';
 import type {
   TString,
-  TNumber,
   TInteger,
   TExtends,
   Kind,
@@ -12,6 +11,7 @@ import type {
   TSchema,
 } from '@sinclair/typebox';
 import assertNever from 'assert-never';
+import { keccak_256 } from 'js-sha3';
 
 export enum PaimaEventBrokerNames {
   PaimaEngine = 'paima-engine',
@@ -414,3 +414,11 @@ type DisallowComplexFields<T extends MaybeIndexedLogEventFields<TSchema>[]> = {
 type DisallowComplexEventFields<T extends { fields: MaybeIndexedLogEventFields<TSchema>[] }> = {
   fields: DisallowComplexFields<T['fields']>;
 };
+
+export function toSignature<T extends LogEvent<LogEventFields<TSchema>[]>>(event: T): string {
+  return event.name + '(' + event.fields.map(f => f.type.type).join(',') + ')';
+}
+
+export function toTopicHash<T extends LogEvent<LogEventFields<TSchema>[]>>(event: T): string {
+  return keccak_256(toSignature(event));
+}

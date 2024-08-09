@@ -21,6 +21,7 @@ import type {
 import { Type } from '@sinclair/typebox';
 import type { Static } from '@sinclair/typebox';
 import type { ProjectedNftStatus } from '@dcspark/carp-client';
+import type { genEvent } from '@paima/events';
 
 export { SubmittedChainData, SubmittedData };
 
@@ -654,9 +655,13 @@ export type GameStateTransitionFunction = (
   blockHeader: BlockHeader,
   randomnessGenerator: any,
   DBConn: PoolClient
-) => Promise<SQLUpdate[]>;
+) => Promise<{
+  stateTransitions: SQLUpdate[];
+  events: { address: string; data: { name: string; fields: any; topic: string } }[];
+}>;
 
 export type Precompiles = { precompiles: { [name: string]: `0x${string}` } };
+export type UserEvents = Record<string, ReturnType<typeof genEvent>[]>;
 
 export interface GameStateMachineInitializer {
   initialize: (
@@ -664,12 +669,15 @@ export interface GameStateMachineInitializer {
     randomnessProtocolEnum: number,
     gameStateTransitionRouter: GameStateTransitionFunctionRouter,
     startBlockHeight: number,
-    precompiles: Precompiles
+    precompiles: Precompiles,
+    events: UserEvents
   ) => GameStateMachine;
 }
 
 export interface GameStateMachine {
   initializeDatabase: (force: boolean) => Promise<boolean>;
+  initializeAndValidateRegisteredEvents: () => Promise<boolean>;
+  initializeEventIndexes: () => Promise<boolean>;
   presyncStarted: (network: string) => Promise<boolean>;
   syncStarted: () => Promise<boolean>;
   latestProcessedBlockHeight: (dbTx?: PoolClient | Pool) => Promise<number>;

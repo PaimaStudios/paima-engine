@@ -307,6 +307,69 @@
 					}
 				]
 			},
+			"SuccessfulResult_any-Array_": {
+				"properties": {
+					"success": {
+						"type": "boolean",
+						"enum": [
+							true
+						],
+						"nullable": false
+					},
+					"result": {
+						"items": {},
+						"type": "array"
+					}
+				},
+				"required": [
+					"success",
+					"result"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"Result_any-Array_": {
+				"anyOf": [
+					{
+						"$ref": "#/components/schemas/SuccessfulResult_any-Array_"
+					},
+					{
+						"$ref": "#/components/schemas/FailedResult"
+					}
+				]
+			},
+			"GetLogsResponse": {
+				"$ref": "#/components/schemas/Result_any-Array_"
+			},
+			"GetLogsParams": {
+				"properties": {
+					"topic": {
+						"type": "string"
+					},
+					"filters": {
+						"properties": {},
+						"additionalProperties": {
+							"type": "string"
+						},
+						"type": "object"
+					},
+					"address": {
+						"type": "string"
+					},
+					"toBlock": {
+						"type": "number",
+						"format": "double"
+					},
+					"fromBlock": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"topic"
+				],
+				"type": "object"
+			},
 			"Achievement": {
 				"properties": {
 					"name": {
@@ -1081,6 +1144,35 @@
 						}
 					}
 				]
+			}
+		},
+		"/get_logs": {
+			"post": {
+				"operationId": "GetLogsPost",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/GetLogsResponse"
+								}
+							}
+						}
+					}
+				},
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/GetLogsParams"
+							}
+						}
+					}
+				}
 			}
 		},
 		"/achievements/public/list": {

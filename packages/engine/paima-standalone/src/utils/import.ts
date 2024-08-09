@@ -7,6 +7,7 @@ import fs from 'fs';
 import type { GameStateTransitionFunctionRouter } from '@paima/sm';
 import type { TsoaFunction } from '@paima/runtime';
 import type { AchievementMetadata } from '@paima/utils-backend';
+import type { genEvent } from '@paima/events';
 
 /**
  * Checks that the user packed their game code and it is available for Paima Engine to use to run
@@ -66,4 +67,14 @@ const PRECOMPILES_FILENAME = 'packaged/precompiles.cjs';
  */
 export function importPrecompiles(): PreCompilesImport {
   return importFile<PreCompilesImport>(PRECOMPILES_FILENAME);
+}
+
+const EVENTS_FILENAME = 'packaged/events.cjs';
+export type UserEvents = { GameEvents: Record<string, ReturnType<typeof genEvent>[]> };
+
+/**
+ * Reads repackaged user's code placed next to the executable in `events.cjs` file
+ */
+export function importEvents(): UserEvents {
+  return importFile<UserEvents>(EVENTS_FILENAME);
 }

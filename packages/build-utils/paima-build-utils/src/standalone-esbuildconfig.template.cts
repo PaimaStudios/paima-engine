@@ -4,7 +4,8 @@ import type esbuild from 'esbuild';
 export function generateConfig(
   apiFolder: string,
   stfFolder: string,
-  precompilesFolder: string
+  precompilesFolder: string,
+  eventsFolder: string
 ): {
   config: esbuild.BuildOptions;
   outFiles: Record<string, string>;
@@ -19,6 +20,7 @@ export function generateConfig(
     [apiFolder]: 'endpoints.cjs',
     [stfFolder]: 'gameCode.cjs',
     [precompilesFolder]: 'precompiles.cjs',
+    [eventsFolder]: 'events.cjs',
   };
 
   const config: esbuild.BuildOptions = {

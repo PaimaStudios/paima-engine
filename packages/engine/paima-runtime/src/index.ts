@@ -97,6 +97,18 @@ async function runInitializationProcedures(
     return false;
   }
 
+  const eventValidationResult = await gameStateMachine.initializeAndValidateRegisteredEvents();
+  if (!eventValidationResult) {
+    doLog('[paima-runtime] Failed to validate pre-existing events! Shutting down...');
+    return false;
+  }
+
+  const eventIndexesResult = await gameStateMachine.initializeEventIndexes();
+  if (!eventIndexesResult) {
+    doLog('[paima-runtime] Unable to initialize indexes for events! Shutting down...');
+    return false;
+  }
+
   // CDE config validation / storing:
   if (!funnelFactory.extensionsAreValid()) {
     doLog(

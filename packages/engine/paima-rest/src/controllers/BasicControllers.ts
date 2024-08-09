@@ -1,4 +1,4 @@
-import { Controller, Response, Query, Get, Route } from 'tsoa';
+import { Controller, Response, Query, Get, Route, Body, Post } from 'tsoa';
 import { doLog, logError, ENV } from '@paima/utils';
 import type {
   InternalServerErrorResult,
@@ -15,6 +15,7 @@ import {
   getInputsForAddress,
   getInputsForBlock,
   getScheduledDataByBlockHeight,
+  getEvents,
 } from '@paima/db';
 import type { Pool } from 'pg';
 import { StatusCodes } from 'http-status-codes';
@@ -393,6 +394,56 @@ export class TransactionContentController extends Controller {
           // value: string,
           // nonce: string,
         },
+      };
+    }
+  }
+}
+
+type GetLogsResponse = Result<any[]>;
+type GetLogsParams = {
+  fromBlock?: number;
+  toBlock?: number;
+  address?: string;
+  filters?: { [fieldName: string]: string };
+  topic: string;
+};
+
+@Route('get_logs')
+export class GetLogsController extends Controller {
+  @Post()
+  public async post(@Body() params: GetLogsParams): Promise<GetLogsResponse> {
+    const gameStateMachine = EngineService.INSTANCE.getSM();
+    try {
+      const DBConn = gameStateMachine.getReadonlyDbConn();
+      const base: Record<string, number | string | undefined> & { topic: string } = {
+        from: params.fromBlock,
+        to: params.toBlock,
+        address: params.address,
+        topic: params.topic,
+      };
+
+      if (params.filters) {
+        const keys = Object.keys(params.filters);
+
+        for (let i = 0; i < keys.length; i++) {
+          base['field' + i] = keys[i];
+          base['value' + i] = params.filters[keys[i]];
+        }
+      }
+
+      const rows = await getEvents.run(base, DBConn);
+
+      return {
+        success: true,
+        result: rows,
+      };
+    } catch (err) {
+      doLog(`Unexpected webserver error:`);
+      logError(err);
+      this.setStatus(StatusCodes.INTERNAL_SERVER_ERROR);
+      return {
+        success: false,
+        errorMessage: 'Unknown error, please contact game node operator',
       };
     }
   }
