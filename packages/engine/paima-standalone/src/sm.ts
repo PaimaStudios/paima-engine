@@ -1,10 +1,6 @@
 import type { GameStateMachine } from '@paima/sm';
 import PaimaSM from '@paima/sm';
-import {
-  importGameStateTransitionRouter,
-  importPrecompiles,
-  PreCompilesImport,
-} from './utils/import.js';
+import { importGameStateTransitionRouter, PreCompilesImport } from './utils/import.js';
 import { poolConfig } from './utils/index.js';
 import { ENV } from '@paima/utils';
 

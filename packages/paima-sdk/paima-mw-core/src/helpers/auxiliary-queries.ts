@@ -30,7 +30,7 @@ export async function getRemoteBackendVersion(): Promise<Result<`${number}.${num
     if (error != null) {
       return errorFxn(PaimaMiddlewareErrorCode.INVALID_RESPONSE_FROM_BACKEND, error);
     }
-    if (versionString[0] !== '"' || versionString[versionString.length - 1] !== '"') {
+    if (!/\d+\.\d+\.\d+/.test(versionString)) {
       return errorFxn(
         PaimaMiddlewareErrorCode.INVALID_RESPONSE_FROM_BACKEND,
         new Error('Invalid version string: ' + versionString)
@@ -38,7 +38,7 @@ export async function getRemoteBackendVersion(): Promise<Result<`${number}.${num
     }
     return {
       success: true,
-      result: versionString.slice(1, versionString.length - 1) as `${number}.${number}.${number}`,
+      result: versionString as `${number}.${number}.${number}`,
     };
   } catch (err) {
     return errorFxn(PaimaMiddlewareErrorCode.ERROR_QUERYING_BACKEND_ENDPOINT, err);
