@@ -54,7 +54,9 @@ async function checkLocalhostPackage() {
   for (const pkg of Object.keys(packages)) {
     if (packages[pkg]?.resolved?.startsWith('http://localhost')) {
       hasError = true;
-      console.error(`Package ${purpleText(pkg)} is using local registry ${packages[pkg].resolved}`);
+      console.error(
+        `${redText('error')}: package ${purpleText(pkg)} is using local registry ${packages[pkg].resolved}`
+      );
     }
   }
 }
@@ -116,7 +118,7 @@ async function main() {
       if (mismatches.length > 0) {
         hasError = true;
         console.error(
-          `Package ${purpleText(`${ownRoot}/package.json`)} has some version mismatches`
+          `${redText('error')}: package ${purpleText(`${ownRoot}/package.json`)} has some version mismatches`
         );
         for (const mismatch of mismatches) {
           console.log(redText(`- "${mismatch.name}": ${mismatch.used}"`));
@@ -136,7 +138,7 @@ async function main() {
       if (remainingDeps.size > 0) {
         hasError = true;
         console.error(
-          `Package ${purpleText(`${ownRoot}/package.json`)} is missing some dependencies`
+          `${redText('error')}: package ${purpleText(`${ownRoot}/package.json`)} is missing some dependencies`
         );
         for (const dep of Array.from(remainingDeps)) {
           console.error(greenText(`"${dep}": "${packageContent[dep].version}",`));
@@ -180,7 +182,7 @@ async function main() {
       if (wrongPath.length > 0) {
         hasError = true;
         console.error(
-          `Package ${purpleText(`${ownRoot}/tsconfig.json`)} has some incorrect references`
+          `${redText('error')}: package ${purpleText(`${ownRoot}/tsconfig.json`)} has some incorrect references`
         );
         for (const path of wrongPath) {
           console.error(`${redText(path.path)} → ${greenText(`${path.path}/tsconfig.build.json`)}`);
@@ -190,7 +192,7 @@ async function main() {
       if (extra.length > 0) {
         // hasError = true; // this is more of a warning than an error
         console.warn(
-          `Package ${purpleText(`${ownRoot}/tsconfig.json`)} has unnecessary references`
+          `${yellowText('warn')}: package ${purpleText(`${ownRoot}/tsconfig.json`)} has unnecessary references`
         );
         for (const ref of extra) {
           console.warn(redText(ref));
@@ -200,7 +202,7 @@ async function main() {
       if (depAndPaths.length > 0) {
         hasError = true;
         console.error(
-          `Package ${purpleText(`${ownRoot}/tsconfig.json`)} is missing some references`
+          `${redText('error')}: package ${purpleText(`${ownRoot}/tsconfig.json`)} is missing some references`
         );
         for (const depAndPath of depAndPaths) {
           const basePath = path.relative(ownRoot, depAndPath.path);
@@ -232,7 +234,9 @@ async function main() {
 
     if (extraPaths.size > 0 || missingPaths.size > 0) {
       hasError = true;
-      console.error(`Root ${purpleText(`$./tsconfig.base.json`)} has incorrect "paths"`);
+      console.error(
+        `${redText('error')}: root ${purpleText(`$./tsconfig.base.json`)} has incorrect "paths"`
+      );
     }
     if (extraPaths.size > 0) {
       for (const path of extraPaths) {
@@ -294,5 +298,6 @@ function getFilenameFromPath(filePath: string): string | null {
 const greenText = (text: string) => `\x1b[32m${text}\x1b[0m`;
 const redText = (text: string) => `\x1b[31m${text}\x1b[0m`;
 const purpleText = (text: string) => `\x1b[35m${text}\x1b[0m`;
+const yellowText = (text: string) => `\x1b[33m${text}\x1b[0m`;
 
 void main();

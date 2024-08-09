@@ -50,13 +50,16 @@ function startServer(): void {
     // note: this server is publicly accessible through BACKEND_URI
     doLog(`Game Node Webserver Started At: http://localhost:${port}`);
     doLog(
-      `    See REST docs at: http://localhost:${port}/${DocPaths.Root}/${DocPaths.Rest.Root}/${DocPaths.Rest.Ui}`
+      `    See EVM JSON-RPC wrapper at http://localhost:${port}/${RpcPaths.Root}/${RpcPaths.EVM}`
+    );
+    doLog(
+      `    See REST docs at http://localhost:${port}/${DocPaths.Root}/${DocPaths.Rest.Root}/${DocPaths.Rest.Ui}`
     );
     doLog(
       `    See MQTT event docs at http://localhost:${port}/${DocPaths.Root}/${DocPaths.AsyncApi.Root}/${DocPaths.AsyncApi.Ui}`
     );
     doLog(
-      `    See Precompiles event docs at http://localhost:${port}/${DocPaths.Root}/${DocPaths.Precompiles.Root}`
+      `    See Precompiles docs at http://localhost:${port}/${DocPaths.Root}/${DocPaths.Precompiles.Root}`
     );
   });
 }
