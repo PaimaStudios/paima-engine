@@ -1,6 +1,6 @@
 {
   "name": "@paima/mw-core",
-  "version": "3.0.1",
+  "version": "4.0.0",
   "publishConfig": {
     "access": "public"
   },
@@ -12,7 +12,9 @@
     "/build"
   ],
   "nx": {
-    "implicitDependencies": ["@paima/rest"]
+    "implicitDependencies": [
+      "@paima/rest"
+    ]
   },
   "author": "Paima Studios",
   "license": "See license file",
@@ -39,10 +41,10 @@
   },
   "dependencies": {
     "@metamask/providers": "^10.2.1",
-    "@paima/concise": "3.0.1",
-    "@paima/prando": "3.0.1",
-    "@paima/providers": "3.0.1",
-    "@paima/utils": "3.0.1",
+    "@paima/concise": "4.0.0",
+    "@paima/prando": "4.0.0",
+    "@paima/providers": "4.0.0",
+    "@paima/utils": "4.0.0",
     "@perawallet/connect": "^1.2.3",
     "@polkadot/extension-dapp": "^0.47.6",
     "algosdk": "^2.3.0",

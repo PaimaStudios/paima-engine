@@ -1,6 +1,6 @@
 {
   "name": "@paima/crypto",
-  "version": "3.0.1",
+  "version": "4.0.0",
   "publishConfig": {
     "access": "public"
   },
@@ -33,7 +33,7 @@
     "@polkadot/util": "^12.6.2",
     "@polkadot/util-crypto": "^12.6.2",
     "bech32": "^2.0.0",
-    "@paima/utils": "3.0.1",
+    "@paima/utils": "4.0.0",
     "mina-signer": "^2.1.1",
     "bs58check": "^4.0.0"
   }

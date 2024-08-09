@@ -13,7 +13,6 @@
   "author": "Paima Studios",
   "dependencies": {
     "@metamask/json-rpc-engine": "^9.0.2",
-    "@paima/broker": "3.0.1",
     "@sinclair/typebox": "^0.31.28",
     "@types/swagger-ui-express": "^4.1.6",
     "assert-never": "^1.2.1",

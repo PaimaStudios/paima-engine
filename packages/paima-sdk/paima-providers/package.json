@@ -1,6 +1,6 @@
 {
   "name": "@paima/providers",
-  "version": "3.0.1",
+  "version": "4.0.0",
   "publishConfig": {
     "access": "public"
   },
@@ -26,8 +26,8 @@
   "dependencies": {
     "@ethersproject/abstract-signer": "^5.7.0",
     "@metamask/providers": "^10.2.1",
-    "@paima/crypto": "3.0.1",
-    "@paima/utils": "3.0.1",
+    "@paima/crypto": "4.0.0",
+    "@paima/utils": "4.0.0",
     "@perawallet/connect": "^1.2.3",
     "@polkadot/extension-dapp": "^0.47.6",
     "@aurowallet/mina-provider": "^1.0.2",

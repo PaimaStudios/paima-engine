@@ -1,6 +1,6 @@
 {
   "name": "@paima/concise",
-  "version": "3.0.1",
+  "version": "4.0.0",
   "publishConfig": {
     "access": "public"
   },
@@ -29,6 +29,6 @@
   },
   "devDependencies": {
     "@types/node": "^20.11.0",
-    "@paima/utils": "3.0.1"
+    "@paima/utils": "4.0.0"
   }
 }

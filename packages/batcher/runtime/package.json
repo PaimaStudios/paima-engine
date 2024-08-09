@@ -18,7 +18,6 @@
   "dependencies": {
     "ethers": "6.11.1",
     "express": "^4.18.1",
-    "pg": "^8.11.3",
-    "@paima/broker": "3.0.1"
+    "pg": "^8.11.3"
   }
 }
