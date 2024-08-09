@@ -1,5 +1,9 @@
 import { FunnelFactory } from '@paima/funnel';
-import paimaRuntime, { registerDocs, registerValidationErrorHandler } from '@paima/runtime';
+import paimaRuntime, {
+  registerDocsOpenAPI,
+  registerDocsPrecompiles,
+  registerValidationErrorHandler,
+} from '@paima/runtime';
 import {
   ENV,
   GlobalConfig,
@@ -19,7 +23,12 @@ import {
   prepareDocumentation,
   prepareTemplate,
 } from './file.js';
-import { checkForPackedGameCode, importOpenApiJson, importEndpoints } from './import.js';
+import {
+  checkForPackedGameCode,
+  importOpenApiJson,
+  importPrecompiles,
+  importEndpoints,
+} from './import.js';
 import type { Template } from './types.js';
 import RegisterRoutes, { EngineService } from '@paima/rest';
 import { poolConfig } from './index.js';
@@ -131,7 +140,8 @@ export const runPaimaEngine = async (): Promise<void> => {
     }
 
     // Import & initialize state machine
-    const stateMachine = gameSM();
+    const precompilesImport = importPrecompiles();
+    const stateMachine = gameSM(precompilesImport);
     console.log(`Connecting to database at ${poolConfig.host}:${poolConfig.port}`);
     const dbConn = await stateMachine.getReadonlyDbConn().connect();
     const funnelFactory = await FunnelFactory.initialize(dbConn);
@@ -147,7 +157,8 @@ export const runPaimaEngine = async (): Promise<void> => {
     engine.setPollingRate(ENV.POLLING_RATE);
     engine.addEndpoints(endpointsJs.default);
     engine.addEndpoints(RegisterRoutes);
-    registerDocs(importOpenApiJson());
+    registerDocsOpenAPI(importOpenApiJson());
+    registerDocsPrecompiles(precompilesImport.precompiles);
     registerValidationErrorHandler();
 
     void engine.run(ENV.STOP_BLOCKHEIGHT, ENV.SERVER_ONLY_MODE);

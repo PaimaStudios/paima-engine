@@ -1,9 +1,10 @@
-import type { LoginInfoMap, Result } from '../types.js';
+import type { LoginInfoMap } from '../types.js';
 import { PaimaMiddlewareErrorCode, buildEndpointErrorFxn } from '../errors.js';
 import { MinaConnector } from '@paima/providers';
 import type { ApiForMode, IProvider, WalletMode } from '@paima/providers';
 import { getGameName } from '../state.js';
 import { connectInjected } from './wallet-modes.js';
+import type { Result } from '@paima/utils';
 
 export async function minaLoginWrapper(
   loginInfo: LoginInfoMap[WalletMode.Mina]

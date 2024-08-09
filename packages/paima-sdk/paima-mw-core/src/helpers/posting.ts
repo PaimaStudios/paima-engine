@@ -20,10 +20,8 @@ import {
 import type {
   BatcherPostResponse,
   BatcherTrackResponse,
-  FailedResult,
   PostDataResponse,
   PostDataResponseAsync,
-  Result,
 } from '../types.js';
 import { batchedToJsonString, buildBatchedSubunit } from './data-processing.js';
 import type { PostFxn } from './transaction-building.js';
@@ -39,6 +37,7 @@ import { EthersEvmProvider, EvmInjectedProvider, WalletModeMap } from '@paima/pr
 import type { WalletMode } from '@paima/providers';
 import type { BatchedSubunit } from '@paima/concise';
 import assertNever from 'assert-never';
+import type { FailedResult, Result } from '@paima/utils';
 
 const BATCHER_WAIT_PERIOD = 500;
 const BATCHER_RETRIES = 50;

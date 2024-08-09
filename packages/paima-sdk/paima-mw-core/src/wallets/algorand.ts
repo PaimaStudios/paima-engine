@@ -1,4 +1,5 @@
-import type { LoginInfoMap, Result } from '../types.js';
+import type { LoginInfoMap } from '../types.js';
+import type { Result } from '@paima/utils';
 import { PaimaMiddlewareErrorCode, buildEndpointErrorFxn } from '../errors.js';
 import { AlgorandConnector } from '@paima/providers';
 import type { ApiForMode, IProvider, WalletMode } from '@paima/providers';

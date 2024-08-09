@@ -1,4 +1,4 @@
-import type { VersionString } from './types.js';
+import type { VersionString } from './types';
 import { config } from 'dotenv';
 
 // https://github.com/flexdinesh/browser-or-node/blob/master/src/index.ts

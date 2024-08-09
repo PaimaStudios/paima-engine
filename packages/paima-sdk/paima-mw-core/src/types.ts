@@ -4,27 +4,8 @@ export type * from './wallets/wallet-modes.js';
 
 export type SignFunction = (message: string) => Promise<UserSignature>;
 
-export interface SuccessfulResultMessage {
-  success: true;
-  message: string;
-}
-
-export interface SuccessfulResult<T> {
-  success: true;
-  result: T;
-}
-
-export interface FailedResult {
-  success: false;
-  errorMessage: string;
-  errorCode?: number;
-}
-
 export type QueryValue = string | number | boolean;
 export type QueryOptions = Record<string, QueryValue>;
-
-export type Result<T> = SuccessfulResult<T> | FailedResult;
-export type OldResult = SuccessfulResultMessage | FailedResult;
 
 export interface Wallet {
   walletAddress: WalletAddress;

@@ -11,8 +11,9 @@ import {
   setEmulatedBlocksActive,
   setEmulatedBlocksInactive,
 } from '../state.js';
-import type { Result, OldResult, Wallet } from '../types.js';
+import type { Wallet } from '../types.js';
 import type { LoginInfo } from '../wallets/wallet-modes.js';
+import type { Result, OldResult } from '@paima/utils';
 
 /**
  * Wrapper function for all wallet status checking functions

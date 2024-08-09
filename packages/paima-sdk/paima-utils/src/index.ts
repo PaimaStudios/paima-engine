@@ -1,5 +1,4 @@
 import { doLog, setLogger, logError } from './logging.js';
-import type { ErrorCode, ErrorMessageFxn, ErrorMessageMapping } from './types.js';
 import {
   AddressType,
   DEFAULT_FUNNEL_TIMEOUT,
@@ -22,10 +21,10 @@ import {
   AvailMainConfig,
   AvailConfig,
 } from './config/loading.js';
+import { ErrorCode, ErrorMessageFxn, ErrorMessageMapping } from './types';
 
 export * from './config.js';
-export * from './types.js';
-export type * from './types.js';
+export type * from './types';
 export * from './security/parse.js';
 export * from './constants.js';
 export * from './contracts.js';

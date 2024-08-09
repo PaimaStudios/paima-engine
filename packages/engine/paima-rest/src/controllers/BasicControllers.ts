@@ -1,6 +1,11 @@
 import { Controller, Response, Query, Get, Route } from 'tsoa';
-import type { FieldErrors } from 'tsoa';
 import { doLog, logError, ENV } from '@paima/utils';
+import type {
+  InternalServerErrorResult,
+  FailedResult,
+  Result,
+  ValidateErrorResult,
+} from '@paima/utils';
 import { EngineService } from '../EngineService.js';
 import {
   deploymentChainBlockheightToEmulated,
@@ -14,24 +19,7 @@ import {
 import type { Pool } from 'pg';
 import { StatusCodes } from 'http-status-codes';
 
-export interface SuccessfulResult<T> {
-  success: true;
-  result: T;
-}
-
-export interface FailedResult {
-  success: false;
-  errorMessage: string;
-  errorCode?: number;
-}
-export type InternalServerErrorResult = FailedResult;
-
-export interface ValidateErrorResult {
-  message: 'Validation Failed';
-  details?: FieldErrors;
-}
-
-export type Result<T> = SuccessfulResult<T> | FailedResult;
+// Note: if you ever get `No declarations found for referenced type` in this folder, try running `npx nx reset`
 
 type DryRunResponse = { valid: boolean };
 

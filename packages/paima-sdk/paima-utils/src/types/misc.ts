@@ -1,8 +1,5 @@
+// TODO: delete
 export type Deployment = 'C1' | 'A1';
-
-export type ErrorCode = number;
-export type ErrorMessageFxn = (errorCode: ErrorCode) => string;
-export type ErrorMessageMapping = Record<ErrorCode, string>;
 
 // TOOD: remove?
 export type ETHAddress = string;
@@ -39,6 +36,11 @@ export type TransactionTemplate = {
 };
 
 export type NonceString = string;
+
+export type BlockHeader = {
+  blockHeight: number;
+  timestamp: number;
+};
 
 export interface SubmittedData {
   /** Address of the wallet that submitted the data (0x0 in the case of a primitive). */

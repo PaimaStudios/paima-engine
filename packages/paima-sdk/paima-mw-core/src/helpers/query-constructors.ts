@@ -1,6 +1,6 @@
 // TODO: delete this file and move it to use paima-rest-schema once the batcher supports it
 
-import { getBatcherUri } from '../state.js';
+import { getBackendUri, getBatcherUri } from '../state.js';
 import type { QueryOptions, QueryValue } from '../types.js';
 
 function queryValueToString(value: QueryValue): string {
@@ -13,6 +13,11 @@ function queryValueToString(value: QueryValue): string {
   } else {
     throw new Error('[queryValueToString] Invalid query value');
   }
+}
+
+// Note: use for backwards compatibility
+export function buildBackendQuery(endpoint: string, options: QueryOptions): string {
+  return `${getBackendUri()}/${buildQuery(endpoint, options)}`;
 }
 
 export function buildQuery(endpoint: string, options: QueryOptions): string {

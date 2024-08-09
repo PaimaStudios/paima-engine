@@ -14,10 +14,10 @@ import type {
 } from '@paima/providers';
 import { WalletNotFound, UnsupportedWallet, connectInjectedWallet } from '@paima/providers';
 import type { EndpointErrorFxn } from '../errors.js';
-import type { Result } from '../types.js';
 import type { PaimaMiddlewareErrorCode } from '../errors.js';
 import { FE_ERR_SPECIFIC_WALLET_NOT_INSTALLED } from '../errors.js';
 import type { ApiPromise } from 'avail-js-sdk';
+import type { Result } from '@paima/utils';
 
 export type BaseLoginInfo<Api> = {
   preference?: InjectionPreference<Api>;

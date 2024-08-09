@@ -8,7 +8,7 @@ import { builder } from '@paima/concise';
 import { buildEndpointErrorFxn, PaimaMiddlewareErrorCode } from '../errors.js';
 import { awaitBlock } from '../helpers/auxiliary-queries.js';
 import { postConciseData } from '../helpers/posting.js';
-import type { FailedResult, SuccessfulResult, PostDataResponse, LoginInfo } from '../types.js';
+import type { PostDataResponse, LoginInfo } from '../types.js';
 import type { IProvider } from '@paima/providers';
 import {
   EvmInjectedConnector,
@@ -19,6 +19,7 @@ import {
   MinaConnector,
 } from '@paima/providers';
 import { AddressType, ENV } from '@paima/utils';
+import type { FailedResult, SuccessfulResult } from '@paima/utils';
 import { paimaEndpoints } from '../index.js';
 import assertNever from 'assert-never';
 

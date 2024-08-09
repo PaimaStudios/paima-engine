@@ -1,5 +1,6 @@
 import { getAchievementProgress, getMainAddress } from '@paima/db';
 import { ENV } from '@paima/utils';
+import type { FailedResult, InternalServerErrorResult, ValidateErrorResult } from '@paima/utils';
 import {
   getNftOwner,
   type Achievement,
@@ -12,11 +13,8 @@ import {
 import { Controller, Get, Header, Path, Query, Response, Route } from 'tsoa';
 import { EngineService } from '../EngineService.js';
 import { StatusCodes } from 'http-status-codes';
-import type {
-  FailedResult,
-  InternalServerErrorResult,
-  ValidateErrorResult,
-} from './BasicControllers.js';
+
+// Note: if you ever get `No declarations found for referenced type` in this folder, try running `npx nx reset`
 
 // ----------------------------------------------------------------------------
 // Controller and routes per PRC-1

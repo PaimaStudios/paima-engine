@@ -82,6 +82,7 @@ export async function loadChainDataExtensions(
   let dynamicExtensions: { name: string; type: CdeEntryTypeName }[];
 
   try {
+    // note: this fails the first time, as db tables are not initialized yet. That's okay
     const dbResult = await getDynamicExtensions.run(undefined, db);
 
     dynamicExtensions = dbResult.map(ext =>

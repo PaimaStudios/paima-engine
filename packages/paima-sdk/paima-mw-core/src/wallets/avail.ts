@@ -1,10 +1,11 @@
 import { GlobalConfig } from '@paima/utils';
 import { buildEndpointErrorFxn, PaimaMiddlewareErrorCode } from '../errors.js';
 import { getGameName } from '../state.js';
-import type { LoginInfoMap, Result } from '../types.js';
+import type { LoginInfoMap } from '../types.js';
 import type { ApiForMode, AvailJsApi, IProvider, WalletMode } from '@paima/providers';
 import { AvailConnector } from '@paima/providers';
 import { Keyring } from 'avail-js-sdk';
+import type { Result } from '@paima/utils';
 
 async function connectWallet(
   loginInfo: LoginInfoMap[WalletMode.AvailJs]

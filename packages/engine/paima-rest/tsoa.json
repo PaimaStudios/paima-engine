@@ -9,12 +9,5 @@
   },
   "routes": {
     "routesDir": "src/tsoa"
-  },
-  "compilerOptions": {
-    "baseUrl": "./",
-    "paths": {
-      "@paima/utils": ["../../paima-sdk/paima-utils/build"],
-      "@paima/node-sdk/paima-utils-backend": ["../../node-sdk/paima-utils-backend/build"]
-    }
   }
 }

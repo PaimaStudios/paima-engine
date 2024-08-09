@@ -1,7 +1,7 @@
 import { wait } from '@paima/utils';
 import { buildEndpointErrorFxn, PaimaMiddlewareErrorCode } from '../errors.js';
 import { getGameVersion } from '../state.js';
-import type { Result } from '../types.js';
+import type { Result } from '@paima/utils';
 import { pushLog } from './logging.js';
 import { getPaimaNodeRestClient } from './clients.js';
 

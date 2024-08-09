@@ -217,6 +217,7 @@ export interface components {
         };
         Result_DryRunResponse_: components["schemas"]["SuccessfulResult_DryRunResponse_"] | components["schemas"]["FailedResult"];
         InternalServerErrorResult: components["schemas"]["FailedResult"];
+        /** @description comes from the `tsoa` package, but we don't want it as a dependency just for this type */
         FieldErrors: {
             [key: string]: {
                 value?: unknown;

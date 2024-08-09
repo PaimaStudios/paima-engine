@@ -1,6 +1,7 @@
 import assertNever from 'assert-never';
 import { buildEndpointErrorFxn, FE_ERR_SPECIFIC_WALLET_NOT_INSTALLED } from '../errors.js';
-import type { LoginInfo, Result, Wallet } from '../types.js';
+import type { LoginInfo, Wallet } from '../types.js';
+import type { Result } from '@paima/utils';
 import { algorandLoginWrapper } from './algorand.js';
 import { cardanoLoginWrapper } from './cardano.js';
 import { evmLoginWrapper } from './evm/injected.js';

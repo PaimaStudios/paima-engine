@@ -16,6 +16,7 @@ import type {
   ConfigNetworkType,
   STFSubmittedData,
   IERC1155Contract,
+  BlockHeader,
 } from '@paima/utils';
 import { Type } from '@sinclair/typebox';
 import type { Static } from '@sinclair/typebox';
@@ -646,11 +647,6 @@ export type ChainDataExtension = (
 export type GameStateTransitionFunctionRouter = (
   blockHeight: number
 ) => GameStateTransitionFunction;
-
-export type BlockHeader = {
-  blockHeight: number;
-  timestamp: number;
-};
 
 export type GameStateTransitionFunction = (
   inputData: STFSubmittedData,

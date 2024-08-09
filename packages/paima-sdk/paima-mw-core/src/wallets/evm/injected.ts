@@ -1,8 +1,8 @@
 import { buildEndpointErrorFxn, PaimaMiddlewareErrorCode } from '../../errors.js';
 import { getGameName, hasLogin } from '../../state.js';
-import type { LoginInfoMap, OldResult, Result } from '../../types.js';
+import type { LoginInfoMap } from '../../types.js';
 import { updateFee } from '../../helpers/posting.js';
-
+import type { OldResult, Result } from '@paima/utils';
 import { connectInjected } from '../wallet-modes.js';
 import { WalletMode } from '@paima/providers';
 import type { ApiForMode, IProvider } from '@paima/providers';

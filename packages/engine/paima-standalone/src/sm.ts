@@ -1,12 +1,15 @@
 import type { GameStateMachine } from '@paima/sm';
 import PaimaSM from '@paima/sm';
-import { importGameStateTransitionRouter, importPrecompiles } from './utils/import.js';
+import {
+  importGameStateTransitionRouter,
+  importPrecompiles,
+  PreCompilesImport,
+} from './utils/import.js';
 import { poolConfig } from './utils/index.js';
 import { ENV } from '@paima/utils';
 
-export const gameSM = (): GameStateMachine => {
+export const gameSM = (precompiles: PreCompilesImport): GameStateMachine => {
   const gameStateTransitionRouter = importGameStateTransitionRouter();
-  const precompiles = importPrecompiles();
   return PaimaSM.initialize(
     poolConfig,
     4, // https://xkcd.com/221/

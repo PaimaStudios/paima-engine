@@ -11,7 +11,7 @@ import { BuiltinEvents, toAsyncApi } from '@paima/events';
 import YAML from 'yaml';
 import { evmRpcEngine } from './evm-rpc/eip1193.js';
 import { StatusCodes } from 'http-status-codes';
-import type { ValidateErrorResult, InternalServerErrorResult } from '@paima/rest';
+import type { ValidateErrorResult, InternalServerErrorResult } from '@paima/utils';
 
 const server: Express = express();
 const bodyParser = express.json();
@@ -20,6 +20,10 @@ server.use(express.static(path.join(__dirname, 'public')));
 server.use(cors());
 server.use(bodyParser);
 
+const RpcPaths = {
+  Root: 'rpc',
+  EVM: 'evm',
+} as const;
 const DocPaths = {
   Root: 'docs',
   Rest: {
@@ -32,9 +36,8 @@ const DocPaths = {
     Spec: 'spec.yml',
     Ui: 'ui',
   },
-  RPC: {
-    Root: 'rpc',
-    EVM: 'evm',
+  Precompiles: {
+    Root: 'precompiles',
   },
 } as const;
 
@@ -51,6 +54,9 @@ function startServer(): void {
     );
     doLog(
       `    See MQTT event docs at http://localhost:${port}/${DocPaths.Root}/${DocPaths.AsyncApi.Root}/${DocPaths.AsyncApi.Ui}`
+    );
+    doLog(
+      `    See Precompiles event docs at http://localhost:${port}/${DocPaths.Root}/${DocPaths.Precompiles.Root}`
     );
   });
 }
@@ -97,7 +103,20 @@ function registerValidationErrorHandler(): void {
   });
 }
 
-function registerDocs(userStateMachineApi: object | undefined): void {
+function registerDocsPrecompiles(precompiles: { [name: string]: `0x${string}` }): void {
+  // It's possible in the future we add more information to this endpoint
+  // so I future proof it by making it a JSON object instead of a raw string
+  const futureproofJson: { [name: string]: { name: `0x${string}` } } = {};
+  for (const k of Object.keys(precompiles)) {
+    futureproofJson[k] = { name: precompiles[k] };
+  }
+
+  server.get(`/${DocPaths.Root}/${DocPaths.Precompiles.Root}`, (_, res) => {
+    res.send(JSON.stringify(futureproofJson, null, 2));
+  });
+}
+
+function registerDocsOpenAPI(userStateMachineApi: object | undefined): void {
   const swaggerUiPath = path.resolve(__dirname) + '/swagger-ui';
   const swaggerServer = [
     swaggerUi.serve[0],
@@ -135,7 +154,7 @@ server.get(`/${DocPaths.Root}/${DocPaths.AsyncApi.Root}/${DocPaths.AsyncApi.Ui}`
   res.sendFile(path.join(__dirname, 'public', 'asyncapi.html'));
 });
 
-server.post(`/${DocPaths.RPC.Root}/${DocPaths.RPC.EVM}`, (req, res) => {
+server.post(`/${RpcPaths.Root}/${RpcPaths.EVM}`, (req, res) => {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
   evmRpcEngine.handle(req.body, (err, result) => {
     if (err) {
@@ -146,4 +165,10 @@ server.post(`/${DocPaths.RPC.Root}/${DocPaths.RPC.EVM}`, (req, res) => {
   });
 });
 
-export { server, startServer, registerDocs, registerValidationErrorHandler };
+export {
+  server,
+  startServer,
+  registerDocsPrecompiles,
+  registerDocsOpenAPI,
+  registerValidationErrorHandler,
+};

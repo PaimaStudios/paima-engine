@@ -76,6 +76,7 @@
 				"$ref": "#/components/schemas/FailedResult"
 			},
 			"FieldErrors": {
+				"description": "comes from the `tsoa` package, but we don't want it as a dependency just for this type",
 				"properties": {},
 				"type": "object",
 				"additionalProperties": {

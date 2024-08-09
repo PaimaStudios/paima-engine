@@ -8,8 +8,13 @@ export type { paths as PaimaNodePaths } from './paima-node-rest-schema.d.js';
 // import type { paths as PaimaNodePaths } from './paima-batcher-rest-schema';
 // export type { paths as PaimaNodePaths } from './paima-batcher-rest-schema';
 
+let client: null | Client<PaimaNodePaths>;
+
 export function getPaimaNodeRestClient(): Client<PaimaNodePaths> {
-  return createClient<PaimaNodePaths>({ baseUrl: getBackendUri() });
+  if (client == null) {
+    client = createClient<PaimaNodePaths>({ baseUrl: getBackendUri() });
+  }
+  return client;
 }
 
 // export function getPaimaBatcherRestClient(): Client<paths> {

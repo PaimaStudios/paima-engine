@@ -1,9 +1,10 @@
-import type { LoginInfoMap, OldResult, Result } from '../types.js';
+import type { LoginInfoMap } from '../types.js';
 import { buildEndpointErrorFxn, PaimaMiddlewareErrorCode } from '../errors.js';
 import { connectInjected } from './wallet-modes.js';
 import { CardanoConnector, WalletMode } from '@paima/providers';
 import type { ApiForMode, IProvider } from '@paima/providers';
 import { getGameName, hasLogin } from '../state.js';
+import type { OldResult, Result } from '@paima/utils';
 
 export async function checkCardanoWalletStatus(): Promise<OldResult> {
   const errorFxn = buildEndpointErrorFxn('checkCardanoWalletStatus');
