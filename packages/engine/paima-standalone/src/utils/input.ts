@@ -28,6 +28,7 @@ import {
   importOpenApiJson,
   importPrecompiles,
   importEndpoints,
+  importEvents,
 } from './import.js';
 import type { Template } from './types.js';
 import RegisterRoutes, { EngineService } from '@paima/rest';
@@ -141,7 +142,8 @@ export const runPaimaEngine = async (): Promise<void> => {
 
     // Import & initialize state machine
     const precompilesImport = importPrecompiles();
-    const stateMachine = gameSM(precompilesImport);
+    const eventsImport = importEvents();
+    const stateMachine = gameSM(precompilesImport, eventsImport);
     console.log(`Connecting to database at ${poolConfig.host}:${poolConfig.port}`);
     const dbConn = await stateMachine.getReadonlyDbConn().connect();
     const funnelFactory = await FunnelFactory.initialize(dbConn);

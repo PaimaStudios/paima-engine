@@ -18,10 +18,17 @@ import type {
   IERC1155Contract,
   BlockHeader,
 } from '@paima/utils';
-import { Type } from '@sinclair/typebox';
+import { Type, TSchema } from '@sinclair/typebox';
 import type { Static } from '@sinclair/typebox';
 import type { ProjectedNftStatus } from '@dcspark/carp-client';
-import type { genEvent } from '@paima/events';
+import type {
+  EventPathAndDef,
+  generateAppEvents,
+  genEvent,
+  LogEvent,
+  LogEventFields,
+  ResolvedPath,
+} from '@paima/events';
 
 export { SubmittedChainData, SubmittedData };
 
@@ -646,31 +653,37 @@ export type ChainDataExtension = (
   | ChainDataExtensionDynamicEvmPrimitive
 ) & { network: string };
 
-export type GameStateTransitionFunctionRouter = (
+export type GameStateTransitionFunctionRouter<Event extends EventPathAndDef> = (
   blockHeight: number
-) => GameStateTransitionFunction;
+) => GameStateTransitionFunction<Event>;
 
-export type GameStateTransitionFunction = (
+export type GameStateTransitionFunction<Event extends EventPathAndDef> = (
   inputData: STFSubmittedData,
   blockHeader: BlockHeader,
   randomnessGenerator: any,
   DBConn: PoolClient
 ) => Promise<{
   stateTransitions: SQLUpdate[];
-  events: { address: string; data: { name: string; fields: any; topic: string } }[];
+  events: {
+    address: string;
+    data: {
+      name: string;
+      fields: ResolvedPath<Event['path']> & Event['type'];
+      topic: string;
+    };
+  }[];
 }>;
 
 export type Precompiles = { precompiles: { [name: string]: `0x${string}` } };
-export type UserEvents = Record<string, ReturnType<typeof genEvent>[]>;
 
 export interface GameStateMachineInitializer {
   initialize: (
     databaseInfo: PoolConfig,
     randomnessProtocolEnum: number,
-    gameStateTransitionRouter: GameStateTransitionFunctionRouter,
+    gameStateTransitionRouter: GameStateTransitionFunctionRouter<any>,
     startBlockHeight: number,
     precompiles: Precompiles,
-    events: UserEvents
+    events: ReturnType<typeof generateAppEvents>
   ) => GameStateMachine;
 }
 
