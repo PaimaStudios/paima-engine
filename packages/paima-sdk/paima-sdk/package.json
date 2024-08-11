@@ -1,6 +1,6 @@
 {
   "name": "@paima/sdk",
-  "version": "4.0.0",
+  "version": "5.0.0",
   "publishConfig": {
     "access": "public"
   },
@@ -25,14 +25,14 @@
   },
   "devDependencies": {},
   "dependencies": {
-    "@paima/concise": "4.0.0",
-    "@paima/crypto": "4.0.0",
-    "@paima/executors": "4.0.0",
-    "@paima/mw-core": "4.0.0",
-    "@paima/prando": "4.0.0",
-    "@paima/precompiles": "4.0.0",
-    "@paima/providers": "4.0.0",
-    "@paima/utils": "4.0.0",
-    "@paima/events": "4.0.0"
+    "@paima/concise": "5.0.0",
+    "@paima/crypto": "5.0.0",
+    "@paima/executors": "5.0.0",
+    "@paima/mw-core": "5.0.0",
+    "@paima/prando": "5.0.0",
+    "@paima/precompiles": "5.0.0",
+    "@paima/providers": "5.0.0",
+    "@paima/utils": "5.0.0",
+    "@paima/events": "5.0.0"
   }
 }
