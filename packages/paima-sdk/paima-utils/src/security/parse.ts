@@ -39,7 +39,7 @@ export function parseAndValidateYAML(fileContent: string): Static<typeof Config>
   if (securityNamespaceConfig != null) return securityNamespaceConfig;
   try {
     // Parse the YAML content into an object
-    const yamlObject = YAML.parse(fileContent);
+    const yamlObject = YAML.parse(fileContent, { merge: true });
 
     // Validate the YAML object against the schema
     const validationResult = Value.Check(Config, yamlObject);

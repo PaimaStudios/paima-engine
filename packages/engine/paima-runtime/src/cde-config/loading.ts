@@ -92,7 +92,7 @@ export async function loadChainDataExtensions(
           name: Type.String(),
           type: Type.Enum(CdeEntryTypeName),
         }),
-        { ...YAML.parse(ext.config), name: ext.cde_name, includeNameInInput: true }
+        { ...(ext.config as Record<string, unknown>), name: ext.cde_name, includeNameInInput: true }
       )
     );
   } catch (err) {
@@ -120,7 +120,7 @@ export function parseCdeConfigFile(
   extraExtensions: { name: string; type: CdeEntryTypeName }[]
 ): Static<typeof CdeConfig> {
   // Parse the YAML content into an object
-  const configObject = YAML.parse(configFileData);
+  const configObject = YAML.parse(configFileData, { merge: true });
 
   // Validate the YAML object against the schema
   const baseConfig = checkOrError(undefined, CdeBaseConfig, configObject);

@@ -15,6 +15,7 @@ INSERT INTO
         CDE_TYPE,
         CDE_NAME,
         CDE_HASH,
+        CDE_CAIP2,
         START_BLOCKHEIGHT,
         SCHEDULED_PREFIX
     )
@@ -22,6 +23,7 @@ VALUES (
     :cde_type!,
     :cde_name!,
     :cde_hash!,
+    :cde_caip2!,
     :start_blockheight!,
     :scheduled_prefix
 );
@@ -32,12 +34,14 @@ INSERT INTO
     chain_data_extensions (
         CDE_NAME,
         CDE_TYPE,
+        CDE_CAIP2,
         START_BLOCKHEIGHT,
         SCHEDULED_PREFIX
     )
 SELECT 
     :base_name! || COUNT(*),
     :cde_type!,
+    :cde_caip2!,
     :start_blockheight!,
     :scheduled_prefix!
 FROM

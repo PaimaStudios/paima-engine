@@ -199,6 +199,7 @@ CREATE TABLE chain_data_extensions (
   cde_name TEXT PRIMARY KEY,
   cde_type INTEGER NOT NULL,
   cde_hash INTEGER,
+  cde_caip2 TEXT NOT NULL,
   start_blockheight INTEGER NOT NULL,
   scheduled_prefix TEXT
 );
@@ -211,6 +212,7 @@ const TABLE_DATA_CDE: TableData = {
     ['cde_type', 'integer', 'NO', ''],
     ['cde_name', 'text', 'NO', ''],
     ['cde_hash', 'integer', 'YES', ''],
+    ['cde_caip2', 'text', 'NO', ''],
     ['start_blockheight', 'integer', 'NO', ''],
     ['scheduled_prefix', 'text', 'YES', ''],
   ]),
@@ -734,7 +736,7 @@ const QUERY_CREATE_TABLE_CDE_DYNAMIC_PRIMITIVE_CONFIG = `
 CREATE TABLE cde_dynamic_primitive_config (
   cde_name TEXT NOT NULL,
   parent TEXT NOT NULL,
-  config TEXT NOT NULL,
+  config JSONB NOT NULL,
   PRIMARY KEY(cde_name)
 );
 `;
@@ -745,7 +747,7 @@ const TABLE_DATA_CDE_DYNAMIC_PRIMITIVE_CONFIG: TableData = {
   columnData: packTuples([
     ['cde_name', 'text', 'NO', ''],
     ['parent', 'text', 'NO', ''],
-    ['config', 'text', 'NO', ''],
+    ['config', 'jsonb', 'NO', ''],
   ]),
   serialColumns: [],
   creationQuery: QUERY_CREATE_TABLE_CDE_DYNAMIC_PRIMITIVE_CONFIG,

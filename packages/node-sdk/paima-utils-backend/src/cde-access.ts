@@ -246,10 +246,11 @@ export function generateDynamicPrimitiveName(parentName: string, id: number): st
 export async function getDynamicExtensions(
   readonlyDBConn: Pool,
   parent: string
-): Promise<{ name: string; config: string }[]> {
+  // TODO: better type for this config result
+): Promise<{ name: string; config: Record<string, any> }[]> {
   const dbResult = await getDynamicExtensionsByParent.run({ parent: parent }, readonlyDBConn);
 
-  return dbResult.map(ext => ({ name: ext.cde_name, config: ext.config }));
+  return dbResult.map(ext => ({ name: ext.cde_name, config: ext.config as any }));
 }
 
 export async function getDynamicExtensionByName(
@@ -259,5 +260,5 @@ export async function getDynamicExtensionByName(
   const dbResult = await internalGetDynamicExtensionByName.run({ name: name }, readonlyDBConn);
 
   // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-  return dbResult.map(ext => JSON.parse(ext.config));
+  return dbResult.map(ext => ext.config as any);
 }

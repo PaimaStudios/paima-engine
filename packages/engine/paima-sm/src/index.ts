@@ -415,7 +415,7 @@ async function processScheduledData(
       }
 
       // eslint-disable-next-line @typescript-eslint/no-loop-func -- incorrect error fixed when @typescript-eslint v8 comes out
-      const { txHash, caip2 } = ((): { txHash: string; caip2: string } => {
+      const { txHash, caip2 } = ((): { txHash: string; caip2: null | string } => {
         if (data.cde_name && data.tx_hash) {
           const caip2Prefix = caip2PrefixFor(networks[data.network!]);
 
@@ -435,7 +435,7 @@ async function processScheduledData(
                 `${userAddress}|${keccak_256(data.input_data)}|${latestChainData.blockNumber}|${timerIndexRelativeToBlock}`
               ),
             // if there is a timer, there is not really a way to associate it with a particular network
-            caip2: '',
+            caip2: null,
           };
         }
       })();

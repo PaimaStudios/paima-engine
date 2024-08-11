@@ -1,9 +1,9 @@
 import type { ApiPromise } from 'avail-js-sdk';
 import type { Header as PolkadotHeader } from '@polkadot/types/interfaces/types';
-import type { SubmittedData } from '@paima/sm';
 import { base64Decode } from '@polkadot/util-crypto';
 import { BaseFunnelSharedApi } from '../BaseFunnel.js';
 import { createApi } from './createApi.js';
+import type { NonTimerSubmittedData } from '@paima/utils';
 
 export const GET_DATA_TIMEOUT = 10000;
 
@@ -87,8 +87,8 @@ export async function getDAData(
   from: number,
   to: number,
   caip2: string
-): Promise<{ blockNumber: number; submittedData: SubmittedData[] }[]> {
-  const data = [] as { blockNumber: number; submittedData: SubmittedData[] }[];
+): Promise<{ blockNumber: number; submittedData: NonTimerSubmittedData[] }[]> {
+  const data = [] as { blockNumber: number; submittedData: NonTimerSubmittedData[] }[];
 
   for (let curr = from; curr <= to; curr++) {
     const responseRaw = await fetch(`${lc}/v2/blocks/${curr}/data?fields=data,extrinsic`);

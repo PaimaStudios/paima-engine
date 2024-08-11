@@ -39,6 +39,7 @@ export type NonceString = string;
 
 export type BlockHeader = {
   blockHeight: number;
+  /** in seconds */
   timestamp: number;
 };
 
@@ -53,11 +54,19 @@ export interface SubmittedData {
   /** whether or not this came from an primitive/timer or a direct user transaction */
   scheduled: boolean;
   dryRun?: boolean;
-  /** multichain identifier: https://github.com/ChainAgnostic/CAIPs/blob/main/CAIPs/caip-2.md */
-  caip2: string;
+  /**
+   * multichain identifier: https://github.com/ChainAgnostic/CAIPs/blob/main/CAIPs/caip-2.md
+   * note: `null` when this is a timer (since timers do not inherently have a chain of origin)
+   */
+  caip2: null | string;
   /** See docs for how this is calculated */
   txHash: string;
 }
+
+/**
+ * When it's not a timer, the caip2 field is required
+ */
+export type NonTimerSubmittedData = SubmittedData & { caip2: NonNullable<SubmittedData['caip2']> };
 
 export interface STFSubmittedData extends SubmittedData {
   /** Mapped address to main wallet. */

@@ -38,6 +38,7 @@ CREATE TABLE historical_game_inputs (
   input_data TEXT NOT NULL
 );
 
+-- tracks the processed blocks for a given network to help with syncing
 CREATE TABLE cde_tracking (
   block_height INTEGER NOT NULL,
   network TEXT NOT NULL,
@@ -53,6 +54,7 @@ CREATE TABLE chain_data_extensions (
   cde_name TEXT PRIMARY KEY,
   cde_type INTEGER NOT NULL,
   cde_hash INTEGER,
+  cde_caip2 TEXT NOT NULL,
   start_blockheight INTEGER NOT NULL,
   scheduled_prefix TEXT
 );
@@ -275,6 +277,6 @@ CREATE TABLE achievement_progress(
 CREATE TABLE cde_dynamic_primitive_config (
   cde_name TEXT NOT NULL,
   parent TEXT NOT NULL,
-  config TEXT NOT NULL,
+  config JSONB NOT NULL,
   PRIMARY KEY(cde_name)
 );

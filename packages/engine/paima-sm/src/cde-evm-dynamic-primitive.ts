@@ -2,9 +2,14 @@ import { insertDynamicExtension, registerDynamicChainDataExtension } from '@paim
 import type { SQLUpdate } from '@paima/db';
 import type { TChainDataExtensionErc721Config, TChainDataExtensionGenericConfig } from './types.js';
 import { CdeEntryTypeName, type CdeDynamicEvmPrimitiveDatum } from './types.js';
-import { ChainDataExtensionType, DYNAMIC_PRIMITIVE_NAME_SEPARATOR } from '@paima/utils';
+import {
+  ChainDataExtensionType,
+  DYNAMIC_PRIMITIVE_NAME_SEPARATOR,
+  GlobalConfig,
+  caip2PrefixFor,
+} from '@paima/utils';
 
-// We omit storing the name from the config because it's dinamically generated
+// We omit storing the name from the config because it's dynamically generated
 // on the db insert as the primary key of the row. We can then recover it from
 // the row when needed.
 type StoredConfig<T> = Omit<T, 'name'> & { network: string };
@@ -50,12 +55,14 @@ export default async function processDatum(
       throw new Error('Unsupported dynamic primitive target');
   }
 
+  const configs = await GlobalConfig.getInstance();
   const updateList: SQLUpdate[] = [
     [
       registerDynamicChainDataExtension,
       {
         base_name: baseName,
         cde_type: type,
+        cde_caip2: caip2PrefixFor(configs[cdeDatum.network]),
         start_blockheight: cdeDatum.blockNumber,
         scheduled_prefix: config.scheduledPrefix,
       },
@@ -65,7 +72,7 @@ export default async function processDatum(
       {
         base_name: baseName,
         parent_name: cdeDatum.cdeName,
-        config: JSON.stringify(config),
+        config: config,
       },
     ],
   ];

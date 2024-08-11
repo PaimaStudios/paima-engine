@@ -1,13 +1,15 @@
 /** Types generated for queries found in "src/sql/dynamic-primitives.sql" */
 import { PreparedQuery } from '@pgtyped/runtime';
 
+export type Json = null | boolean | number | string | Json[] | { [key: string]: Json };
+
 /** 'GetDynamicExtensions' parameters type */
 export type IGetDynamicExtensionsParams = void;
 
 /** 'GetDynamicExtensions' return type */
 export interface IGetDynamicExtensionsResult {
   cde_name: string;
-  config: string;
+  config: Json;
   parent: string;
 }
 
@@ -36,7 +38,7 @@ export interface IGetDynamicExtensionsByParentParams {
 /** 'GetDynamicExtensionsByParent' return type */
 export interface IGetDynamicExtensionsByParentResult {
   cde_name: string;
-  config: string;
+  config: Json;
   parent: string;
 }
 
@@ -66,7 +68,7 @@ export interface IGetDynamicExtensionByNameParams {
 /** 'GetDynamicExtensionByName' return type */
 export interface IGetDynamicExtensionByNameResult {
   cde_name: string;
-  config: string;
+  config: Json;
   parent: string;
 }
 
@@ -91,7 +93,7 @@ export const getDynamicExtensionByName = new PreparedQuery<IGetDynamicExtensionB
 /** 'InsertDynamicExtension' parameters type */
 export interface IInsertDynamicExtensionParams {
   base_name: string;
-  config: string;
+  config: Json;
   parent_name: string;
 }
 

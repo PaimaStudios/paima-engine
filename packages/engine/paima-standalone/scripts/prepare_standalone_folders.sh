@@ -10,11 +10,11 @@ SWAGGER_UI="$PACKAGED_PATH/swagger-ui"
 PUBLIC="$PACKAGED_PATH/public"
 
 # Prepare smart contracts to be packed
-paima="evm-contracts"
-echo $CONTRACT_PATH
-rm -rf $CONTRACT_PATH
-mkdir -p $CONTRACT_PATH/$paima
-cp -r ../../contracts/$paima/contracts/* $CONTRACT_PATH/$paima
+# paima="evm-contracts"
+# echo $CONTRACT_PATH
+# rm -rf $CONTRACT_PATH
+# mkdir -p $CONTRACT_PATH/$paima
+# cp -r ../../contracts/$paima/contracts/* $CONTRACT_PATH/$paima
 
 # Prepare batcher:
 component="paima-batcher"
@@ -26,23 +26,23 @@ rm -rf $BATCHER_PATH-bin
 cp -r ../../batcher/batcher-standalone/packaged/@standalone/batcher-bin $BATCHER_PATH-bin
 
 # Fetch documentation
-echo $DOC_PATH
-rm -rf $DOC_PATH
-git clone --depth=1 https://github.com/PaimaStudios/paima-engine-docs.git $DOC_PATH
-# Remove everything except docs/home
-find $DOC_PATH/* -not -path "$DOC_PATH/docs*" -delete
-# Move the contents of docs/home to the root of $DOC_PATH
-mv $DOC_PATH/docs/home/* $DOC_PATH
-# Remove docs directory
-rm -rf $DOC_PATH/docs
-# remove all images (to limit standalone size)
-find $DOC_PATH -type f -regextype posix-extended -regex '.*\.(png|jpg|jpeg|svg|gif|webp|bmp)' -delete
-rm -rf $DOC_PATH/.git*
+# echo $DOC_PATH
+# rm -rf $DOC_PATH
+# git clone --depth=1 https://github.com/PaimaStudios/paima-engine-docs.git $DOC_PATH
+# # Remove everything except docs/home
+# find $DOC_PATH/* -not -path "$DOC_PATH/docs*" -delete
+# # Move the contents of docs/home to the root of $DOC_PATH
+# mv $DOC_PATH/docs/home/* $DOC_PATH
+# # Remove docs directory
+# rm -rf $DOC_PATH/docs
+# # remove all images (to limit standalone size)
+# find $DOC_PATH -type f -regextype posix-extended -regex '.*\.(png|jpg|jpeg|svg|gif|webp|bmp)' -delete
+# rm -rf $DOC_PATH/.git*
 
-# Fetch templates
-rm -rf $TEMPLATES_PATH
-git clone --depth=1 https://github.com/PaimaStudios/paima-standalone-templates.git $TEMPLATES_PATH
-rm -rf $TEMPLATES_PATH/.git
+# # Fetch templates
+# rm -rf $TEMPLATES_PATH
+# git clone --depth=1 https://github.com/PaimaStudios/paima-standalone-templates.git $TEMPLATES_PATH
+# rm -rf $TEMPLATES_PATH/.git
 
 # Add in swagger static UI
 cp -r ../../../node_modules/swagger-ui-dist/ $SWAGGER_UI

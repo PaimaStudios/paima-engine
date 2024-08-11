@@ -25,6 +25,7 @@ import type { ProjectedNftStatus } from '@dcspark/carp-client';
 export { SubmittedChainData, SubmittedData };
 
 export interface ChainData {
+  /** in seconds */
   timestamp: number;
   blockHash: string;
   blockNumber: number;
@@ -642,7 +643,7 @@ export type ChainDataExtension = (
   | ChainDataExtensionMinaEventGeneric
   | ChainDataExtensionMinaActionGeneric
   | ChainDataExtensionDynamicEvmPrimitive
-) & { network: string | undefined };
+) & { network: string };
 
 export type GameStateTransitionFunctionRouter = (
   blockHeight: number

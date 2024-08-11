@@ -320,7 +320,7 @@ export async function loadConfig(): Promise<Static<typeof BaseConfigWithDefaults
 // Validate the overall structure of the config file and extract the relevant data
 export function parseConfigFile(configFileData: string): Static<typeof BaseConfigWithoutDefaults> {
   // Parse the YAML content into an object
-  const configObject = YAML.parse(configFileData);
+  const configObject = YAML.parse(configFileData, { merge: true });
 
   const baseStructure = checkOrError(
     'configuration root',

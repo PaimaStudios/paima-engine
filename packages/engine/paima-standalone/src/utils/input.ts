@@ -51,9 +51,9 @@ export const userPrompt = (query: string): Promise<string> => {
 // Top level CLI argument parser/router
 export const argumentRouter = async (): Promise<void> => {
   switch (process.argv[2]) {
-    case 'init':
-      await initCommand();
-      break;
+    // case 'init':
+    //   await initCommand();
+    //   break;
 
     case 'run':
       await runPaimaEngine();
@@ -63,17 +63,17 @@ export const argumentRouter = async (): Promise<void> => {
       contractCommand();
       break;
 
-    case 'docs':
-      documentationCommand();
-      break;
+    // case 'docs':
+    //   documentationCommand();
+    //   break;
 
     case 'version':
       versionCommand();
       break;
 
-    case 'webui':
-      await startWebServer();
-      break;
+    // case 'webui':
+    //   await startWebServer();
+    //   break;
 
     case 'batcher':
       batcherCommand();
@@ -188,10 +188,10 @@ export const versionCommand = (): void => {
 export const helpCommand = (): void => {
   doLog(`v${getPaimaEngineVersion()} Usage: paima-engine [COMMAND] ARG`);
   doLog(`Commands:`);
-  doLog(`   init      Enables initializing project templates and the SDK.`);
+  // doLog(`   init      Enables initializing project templates and the SDK.`);
   doLog(`   run       Start your game node.`);
-  doLog(`   contracts Saves the bundled smart contracts to your local filesystem.`);
-  doLog(`   docs      Saves the Paima Engine documentation to your local filesystem.`);
+  // doLog(`   contracts Saves the bundled smart contracts to your local filesystem.`);
+  // doLog(`   docs      Saves the Paima Engine documentation to your local filesystem.`);
   // TODO: fix webui
   // doLog(`   webui     Starts Paima Game Input Tester WebUI.`);
   doLog(`   help      Shows list of commands currently available.`);

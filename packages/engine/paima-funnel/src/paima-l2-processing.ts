@@ -1,6 +1,6 @@
 import { AddressType, doLog, getReadNamespaces } from '@paima/utils';
 import type { SubmittedData } from '@paima/runtime';
-import type { PaimaGameInteraction, STFSubmittedData } from '@paima/utils';
+import type { NonTimerSubmittedData, PaimaGameInteraction, STFSubmittedData } from '@paima/utils';
 import { CryptoManager } from '@paima/crypto';
 import {
   INNER_BATCH_DIVIDER,
@@ -68,7 +68,7 @@ function decodeEventData(eventData: string): string {
 }
 
 export async function processDataUnit(
-  unit: SubmittedData,
+  unit: NonTimerSubmittedData,
   blockHeight: number,
   blockTimestamp: number,
   DBConn: PoolClient

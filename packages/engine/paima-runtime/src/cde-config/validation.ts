@@ -1,6 +1,6 @@
 import type { PoolClient, Pool } from 'pg';
 
-import { doLog } from '@paima/utils';
+import { caip2PrefixFor, doLog, GlobalConfig } from '@paima/utils';
 import { tx, getChainDataExtensions, registerChainDataExtension } from '@paima/db';
 
 import type { ChainDataExtension } from '@paima/sm';
@@ -57,6 +57,7 @@ export async function validatePersistentCdeConfig(
  */
 async function storeCdeConfig(config: ChainDataExtension[], DBConn: PoolClient): Promise<boolean> {
   try {
+    const configs = await GlobalConfig.getInstance();
     for (const cde of config) {
       await registerChainDataExtension.run(
         {
@@ -64,6 +65,7 @@ async function storeCdeConfig(config: ChainDataExtension[], DBConn: PoolClient):
           cde_name: cde.name,
           cde_hash: cde.hash,
           start_blockheight: 'startBlockHeight' in cde ? cde.startBlockHeight : cde.startSlot,
+          cde_caip2: caip2PrefixFor(configs[cde.network]),
           scheduled_prefix: 'scheduledPrefix' in cde ? cde.scheduledPrefix : '',
         },
         DBConn
