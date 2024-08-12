@@ -145,6 +145,16 @@ export const runPaimaEngine = async (): Promise<void> => {
     console.log(`Connecting to database at ${poolConfig.host}:${poolConfig.port}`);
     const dbConn = await stateMachine.getReadonlyDbConn().connect();
     const funnelFactory = await FunnelFactory.initialize(dbConn);
+    {
+      try {
+        const startingBlock = await funnelFactory.sharedData.mainNetworkApi.getStartingBlock();
+        if (startingBlock == null) throw new Error(`Failed to fetch timestamp for starting block`);
+      } catch (e) {
+        console.error('Could not find fetch starting block for main funnel');
+        console.error('Check your internet connection and/or START_BLOCKHEIGHT configuration');
+        throw e;
+      }
+    }
     const engine = paimaRuntime.initialize(funnelFactory, stateMachine, ENV.GAME_NODE_VERSION);
 
     // Import & initialize REST server
