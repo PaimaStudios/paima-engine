@@ -21,10 +21,10 @@ import {
   AvailMainConfig,
   AvailConfig,
 } from './config/loading.js';
-import { ErrorCode, ErrorMessageFxn, ErrorMessageMapping } from './types';
+import { ErrorCode, ErrorMessageFxn, ErrorMessageMapping } from './types/index.js';
 
 export * from './config.js';
-export type * from './types';
+export type * from './types/index.js';
 export * from './security/parse.js';
 export * from './constants.js';
 export * from './contracts.js';

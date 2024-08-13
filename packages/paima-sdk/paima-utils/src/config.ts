@@ -1,4 +1,4 @@
-import type { VersionString } from './types';
+import type { VersionString } from './types/index.js';
 
 // https://github.com/flexdinesh/browser-or-node/blob/master/src/index.ts
 const isNode: boolean =
