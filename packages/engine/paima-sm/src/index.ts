@@ -59,6 +59,8 @@ import { PaimaEventBroker } from '@paima/broker';
 export * from './types.js';
 export type * from './types.js';
 
+type ValueOf<T> = T[keyof T];
+
 const SM: GameStateMachineInitializer = {
   initialize: (
     databaseInfo,
@@ -510,7 +512,10 @@ async function processScheduledData<Event extends EventPathAndDef>(
 
       // Trigger STF
       let sqlQueries: SQLUpdate[] = [];
-      let eventsToEmit: [any, ResolvedPath<Event['path']> & Event['type']][] = [];
+      let eventsToEmit: [
+        ValueOf<ReturnType<typeof generateAppEvents>>[0],
+        ResolvedPath<Event['path']> & Event['type'],
+      ][] = [];
       try {
         const { stateTransitions, events } = await gameStateTransition(
           inputData,
@@ -543,7 +548,7 @@ async function processScheduledData<Event extends EventPathAndDef>(
             throw new Error('Event definition not found');
           }
 
-          eventsToEmit.push([eventDefinition as any, event.data.fields]);
+          eventsToEmit.push([eventDefinition, event.data.fields]);
         }
       } catch (err) {
         // skip scheduled data where the STF fails
@@ -635,7 +640,10 @@ async function processUserInputs<Event extends EventPathAndDef>(
 
       // Trigger STF
       let sqlQueries: SQLUpdate[] = [];
-      let eventsToEmit: [any, ResolvedPath<Event['path']> & Event['type']][] = [];
+      let eventsToEmit: [
+        ValueOf<ReturnType<typeof generateAppEvents>>[0],
+        ResolvedPath<Event['path']> & Event['type'],
+      ][] = [];
       try {
         const { stateTransitions, events } = await gameStateTransition(
           inputData,
@@ -668,7 +676,7 @@ async function processUserInputs<Event extends EventPathAndDef>(
             throw new Error('Event definition not found');
           }
 
-          eventsToEmit.push([eventDefinition as any, event.data.fields]);
+          eventsToEmit.push([eventDefinition, event.data.fields]);
         }
       } catch (err) {
         // skip inputs where the STF fails

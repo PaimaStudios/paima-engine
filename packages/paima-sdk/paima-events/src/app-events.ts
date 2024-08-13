@@ -16,8 +16,10 @@ export const generateAppEvents = <
 >(
   entries: T
 ): {
-  [K in T[number] as K['name']]: ReturnType<typeof toPath<K, typeof TopicPrefix.App>> &
-    { definition: T[0]; topicHash: string }[];
+  [K in T[number] as K['name']]: (ReturnType<typeof toPath<K, typeof TopicPrefix.App>> & {
+    definition: T[0];
+    topicHash: string;
+  })[];
 } => {
   let result: Record<string, any> = {}; // we can't know the type here
   for (const event of entries) {

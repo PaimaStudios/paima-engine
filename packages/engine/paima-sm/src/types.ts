@@ -18,17 +18,10 @@ import type {
   IERC1155Contract,
   BlockHeader,
 } from '@paima/utils';
-import { Type, TSchema } from '@sinclair/typebox';
+import { Type } from '@sinclair/typebox';
 import type { Static } from '@sinclair/typebox';
 import type { ProjectedNftStatus } from '@dcspark/carp-client';
-import type {
-  EventPathAndDef,
-  generateAppEvents,
-  genEvent,
-  LogEvent,
-  LogEventFields,
-  ResolvedPath,
-} from '@paima/events';
+import type { EventPathAndDef, generateAppEvents, ResolvedPath } from '@paima/events';
 
 export { SubmittedChainData, SubmittedData };
 
