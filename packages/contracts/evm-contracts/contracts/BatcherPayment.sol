@@ -21,6 +21,12 @@ contract BatcherPayment {
         emit Payment(msg.sender, batcherAddress, msg.value);
     }
 
+    /// @dev Emits the `Payment` event, logging the `msg.sender`, `batcherAddress`, and `msg.value`.
+    function payBatcherFor(address batcherAddress, address forAddress) public payable {
+        balance[batcherAddress] += msg.value;
+        emit Payment(forAddress, batcherAddress, msg.value);
+    }
+
     /// @dev Withdraws the accumulated funds to the batcher.
     /// Callable by only batcher
     function withdrawFunds() public {
