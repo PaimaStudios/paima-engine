@@ -21,7 +21,7 @@
   "scripts": {
     "lint:eslint": "eslint .",
     "build": "tsc --build tsconfig.build.json",
-    "test": "NODE_OPTIONS=--experimental-vm-modules jest --runInBand"
+    "test": "vitest run"
   },
   "dependencies": {
     "@ethersproject/abstract-signer": "^5.7.0",

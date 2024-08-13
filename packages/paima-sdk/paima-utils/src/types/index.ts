@@ -1,2 +1,2 @@
-export type * from './misc';
-export type * from './json-query';
+export type * from './misc.js';
+export type * from './json-query.js';
