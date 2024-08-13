@@ -14,9 +14,6 @@ export const gameSM = (
   return PaimaSM.initialize(
     poolConfig,
     4, // https://xkcd.com/221/
-    // there is no way of statically generating the event type here, since it's
-    // imported at runtime.
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     gameStateTransitionRouter,
     ENV.START_BLOCKHEIGHT,
     precompiles,
