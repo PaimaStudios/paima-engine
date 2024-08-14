@@ -413,6 +413,49 @@ export class GetLogsController extends Controller {
   @Post()
   public async post(@Body() params: GetLogsParams): Promise<GetLogsResponse> {
     const gameStateMachine = EngineService.INSTANCE.getSM();
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const eventDefinition = ((): any => {
+      const appEvents = gameStateMachine.getAppEvents();
+
+      for (const defs of Object.values(appEvents)) {
+        for (const def of defs) {
+          if (def.topicHash === params.topic) {
+            return def;
+          }
+        }
+      }
+
+      return undefined;
+    })();
+
+    if (!eventDefinition) {
+      this.setStatus(StatusCodes.NOT_FOUND);
+      return {
+        success: false,
+        errorMessage: 'Topic not found',
+      };
+    }
+
+    if (params.filters) {
+      const indexedFields = new Set();
+      for (const field of eventDefinition.definition.fields) {
+        if (field.indexed) {
+          indexedFields.add(field.name);
+        }
+      }
+
+      for (const fieldName of Object.keys(params.filters)) {
+        if (!indexedFields.has(fieldName)) {
+          this.setStatus(StatusCodes.NOT_FOUND);
+          return {
+            success: false,
+            errorMessage: `Field is not indexed: ${fieldName}`,
+          };
+        }
+      }
+    }
+
     try {
       const DBConn = gameStateMachine.getReadonlyDbConn();
       const base: Record<string, number | string | undefined> & { topic: string } = {

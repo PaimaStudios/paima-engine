@@ -695,4 +695,5 @@ export interface GameStateMachine {
   presyncProcess: (dbTx: PoolClient, latestCdeData: PresyncChainData) => Promise<void>;
   markPresyncMilestone: (blockHeight: number, network: string) => Promise<void>;
   dryRun: (gameInput: string, userAddress: string) => Promise<boolean>;
+  getAppEvents: () => ReturnType<typeof generateAppEvents>;
 }

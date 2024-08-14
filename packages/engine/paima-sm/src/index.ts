@@ -325,6 +325,9 @@ const SM: GameStateMachineInitializer = {
         await blockHeightDone.run({ block_height: latestChainData.blockNumber }, dbTx);
         return processedCount;
       },
+      getAppEvents(): ReturnType<typeof generateAppEvents> {
+        return events;
+      },
     };
   },
 };
