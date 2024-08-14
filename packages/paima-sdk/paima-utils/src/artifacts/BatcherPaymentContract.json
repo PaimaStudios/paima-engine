@@ -1,0 +1,198 @@
+{
+  "contractName": "BatcherPayment",
+  "abi": [
+    {
+      "type": "function",
+      "name": "balance",
+      "inputs": [{ "name": "", "type": "address", "internalType": "address" }],
+      "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "payBatcher",
+      "inputs": [{ "name": "batcherAddress", "type": "address", "internalType": "address" }],
+      "outputs": [],
+      "stateMutability": "payable"
+    },
+    {
+      "type": "function",
+      "name": "payBatcherFor",
+      "inputs": [
+        { "name": "batcherAddress", "type": "address", "internalType": "address" },
+        { "name": "forAddress", "type": "address", "internalType": "address" }
+      ],
+      "outputs": [],
+      "stateMutability": "payable"
+    },
+    {
+      "type": "function",
+      "name": "withdrawFunds",
+      "inputs": [],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "event",
+      "name": "FundsWithdrawn",
+      "inputs": [
+        { "name": "batcherAddress", "type": "address", "indexed": true, "internalType": "address" },
+        { "name": "amount", "type": "uint256", "indexed": false, "internalType": "uint256" }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "Payment",
+      "inputs": [
+        { "name": "userAddress", "type": "address", "indexed": true, "internalType": "address" },
+        { "name": "batcherAddress", "type": "address", "indexed": true, "internalType": "address" },
+        { "name": "value", "type": "uint256", "indexed": false, "internalType": "uint256" }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "error",
+      "name": "AddressInsufficientBalance",
+      "inputs": [{ "name": "account", "type": "address", "internalType": "address" }]
+    },
+    { "type": "error", "name": "FailedInnerCall", "inputs": [] }
+  ],
+  "bytecode": {
+    "object": "0x608060405234801561001057600080fd5b506103c5806100206000396000f3fe60806040526004361061003f5760003560e01c806324600fc3146100445780633ee0efa51461005b578063b903fa3e1461006e578063e3d670d714610081575b600080fd5b34801561005057600080fd5b506100596100c0565b005b610059610069366004610313565b61016b565b61005961007c366004610346565b6101eb565b34801561008d57600080fd5b506100ae61009c366004610346565b60006020819052908152604090205481565b60405190815260200160405180910390f35b33600090815260208190526040902054806101195760405162461bcd60e51b81526020600482015260146024820152734e6f2066756e647320746f20776974686472617760601b60448201526064015b60405180910390fd5b33600081815260208190526040812055610133908261025b565b60405181815233907feaff4b37086828766ad3268786972c0cd24259d4c87a80f9d3963a3c3d999b0d9060200160405180910390a250565b6001600160a01b03821660009081526020819052604081208054349290610193908490610368565b92505081905550816001600160a01b0316816001600160a01b03167f8ed7db30df47fbd87811a5e8a95a94838f0c0241263d9a1865d6a2a3e10516e2346040516101df91815260200190565b60405180910390a35050565b6001600160a01b03811660009081526020819052604081208054349290610213908490610368565b90915550506040513481526001600160a01b0382169033907f8ed7db30df47fbd87811a5e8a95a94838f0c0241263d9a1865d6a2a3e10516e29060200160405180910390a350565b8047101561027e5760405163cd78605960e01b8152306004820152602401610110565b6000826001600160a01b03168260405160006040518083038185875af1925050503d80600081146102cb576040519150601f19603f3d011682016040523d82523d6000602084013e6102d0565b606091505b50509050806102f257604051630a12f52160e11b815260040160405180910390fd5b505050565b80356001600160a01b038116811461030e57600080fd5b919050565b6000806040838503121561032657600080fd5b61032f836102f7565b915061033d602084016102f7565b90509250929050565b60006020828403121561035857600080fd5b610361826102f7565b9392505050565b8082018082111561038957634e487b7160e01b600052601160045260246000fd5b9291505056fea2646970667358221220decce11bdf292e284868f40e1f51968dd28a979e1daacea2c13aa8cf5abf2cc264736f6c63430008170033",
+    "sourceMap": "188:1398:1:-:0;;;;;;;;;;;;;;;;;;;",
+    "linkReferences": {}
+  },
+  "deployedBytecode": {
+    "object": "0x60806040526004361061003f5760003560e01c806324600fc3146100445780633ee0efa51461005b578063b903fa3e1461006e578063e3d670d714610081575b600080fd5b34801561005057600080fd5b506100596100c0565b005b610059610069366004610313565b61016b565b61005961007c366004610346565b6101eb565b34801561008d57600080fd5b506100ae61009c366004610346565b60006020819052908152604090205481565b60405190815260200160405180910390f35b33600090815260208190526040902054806101195760405162461bcd60e51b81526020600482015260146024820152734e6f2066756e647320746f20776974686472617760601b60448201526064015b60405180910390fd5b33600081815260208190526040812055610133908261025b565b60405181815233907feaff4b37086828766ad3268786972c0cd24259d4c87a80f9d3963a3c3d999b0d9060200160405180910390a250565b6001600160a01b03821660009081526020819052604081208054349290610193908490610368565b92505081905550816001600160a01b0316816001600160a01b03167f8ed7db30df47fbd87811a5e8a95a94838f0c0241263d9a1865d6a2a3e10516e2346040516101df91815260200190565b60405180910390a35050565b6001600160a01b03811660009081526020819052604081208054349290610213908490610368565b90915550506040513481526001600160a01b0382169033907f8ed7db30df47fbd87811a5e8a95a94838f0c0241263d9a1865d6a2a3e10516e29060200160405180910390a350565b8047101561027e5760405163cd78605960e01b8152306004820152602401610110565b6000826001600160a01b03168260405160006040518083038185875af1925050503d80600081146102cb576040519150601f19603f3d011682016040523d82523d6000602084013e6102d0565b606091505b50509050806102f257604051630a12f52160e11b815260040160405180910390fd5b505050565b80356001600160a01b038116811461030e57600080fd5b919050565b6000806040838503121561032657600080fd5b61032f836102f7565b915061033d602084016102f7565b90509250929050565b60006020828403121561035857600080fd5b610361826102f7565b9392505050565b8082018082111561038957634e487b7160e01b600052601160045260246000fd5b9291505056fea2646970667358221220decce11bdf292e284868f40e1f51968dd28a979e1daacea2c13aa8cf5abf2cc264736f6c63430008170033",
+    "sourceMap": "188:1398:1:-:0;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1317:267;;;;;;;;;;;;;:::i;:::-;;1021:196;;;;;;:::i;:::-;;:::i;741:173::-;;;;;;:::i;:::-;;:::i;591:42::-;;;;;;;;;;-1:-1:-1;591:42:1;;;;;:::i;:::-;;;;;;;;;;;;;;;;;;794:25:2;;;782:2;767:18;591:42:1;;;;;;;1317:267;1384:10;1359:14;1376:19;;;;;;;;;;;1413:10;1405:43;;;;-1:-1:-1;;;1405:43:1;;1032:2:2;1405:43:1;;;1014:21:2;1071:2;1051:18;;;1044:30;-1:-1:-1;;;1090:18:2;;;1083:50;1150:18;;1405:43:1;;;;;;;;;1466:10;1480:1;1458:19;;;;;;;;;;:23;1491:37;;1521:6;1491:29;:37::i;:::-;1543:34;;794:25:2;;;1558:10:1;;1543:34;;782:2:2;767:18;1543:34:1;;;;;;;1349:235;1317:267::o;1021:196::-;-1:-1:-1;;;;;1113:23:1;;:7;:23;;;;;;;;;;:36;;1140:9;;1113:7;:36;;1140:9;;1113:36;:::i;:::-;;;;;;;;1184:14;-1:-1:-1;;;;;1164:46:1;1172:10;-1:-1:-1;;;;;1164:46:1;;1200:9;1164:46;;;;794:25:2;;782:2;767:18;;648:177;1164:46:1;;;;;;;;1021:196;;:::o;741:173::-;-1:-1:-1;;;;;810:23:1;;:7;:23;;;;;;;;;;:36;;837:9;;810:7;:36;;837:9;;810:36;:::i;:::-;;;;-1:-1:-1;;861:46:1;;897:9;794:25:2;;-1:-1:-1;;;;;861:46:1;;;869:10;;861:46;;782:2:2;767:18;861:46:1;;;;;;;741:173;:::o;1531:331:0:-;1640:6;1616:21;:30;1612:109;;;1669:41;;-1:-1:-1;;;1669:41:0;;1704:4;1669:41;;;1552:51:2;1525:18;;1669:41:0;1406:203:2;1612:109:0;1732:12;1750:9;-1:-1:-1;;;;;1750:14:0;1772:6;1750:33;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1731:52;;;1798:7;1793:63;;1828:17;;-1:-1:-1;;;1828:17:0;;;;;;;;;;;1793:63;1602:260;1531:331;;:::o;14:173:2:-;82:20;;-1:-1:-1;;;;;131:31:2;;121:42;;111:70;;177:1;174;167:12;111:70;14:173;;;:::o;192:260::-;260:6;268;321:2;309:9;300:7;296:23;292:32;289:52;;;337:1;334;327:12;289:52;360:29;379:9;360:29;:::i;:::-;350:39;;408:38;442:2;431:9;427:18;408:38;:::i;:::-;398:48;;192:260;;;;;:::o;457:186::-;516:6;569:2;557:9;548:7;544:23;540:32;537:52;;;585:1;582;575:12;537:52;608:29;627:9;608:29;:::i;:::-;598:39;457:186;-1:-1:-1;;;457:186:2:o;1179:222::-;1244:9;;;1265:10;;;1262:133;;;1317:10;1312:3;1308:20;1305:1;1298:31;1352:4;1349:1;1342:15;1380:4;1377:1;1370:15;1262:133;1179:222;;;;:::o",
+    "linkReferences": {}
+  },
+  "methodIdentifiers": {
+    "balance(address)": "e3d670d7",
+    "payBatcher(address)": "b903fa3e",
+    "payBatcherFor(address,address)": "3ee0efa5",
+    "withdrawFunds()": "24600fc3"
+  },
+  "rawMetadata": "{\"compiler\":{\"version\":\"0.8.23+commit.f704f362\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"AddressInsufficientBalance\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"FailedInnerCall\",\"type\":\"error\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"batcherAddress\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"FundsWithdrawn\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"userAddress\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"batcherAddress\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"Payment\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"balance\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"batcherAddress\",\"type\":\"address\"}],\"name\":\"payBatcher\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"batcherAddress\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"forAddress\",\"type\":\"address\"}],\"name\":\"payBatcherFor\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"withdrawFunds\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"details\":\"A super simple contract to keep track of user payments to batchers.\",\"errors\":{\"AddressInsufficientBalance(address)\":[{\"details\":\"The ETH balance of the account is not enough to perform the operation.\"}],\"FailedInnerCall()\":[{\"details\":\"A call to an address target failed. The target may have reverted.\"}]},\"events\":{\"FundsWithdrawn(address,uint256)\":{\"details\":\"Emitted when a batcher withdraws funds accumulated to them\"},\"Payment(address,address,uint256)\":{\"details\":\"Emitted to keep track of user payments of native tokens to any given batcher\"}},\"kind\":\"dev\",\"methods\":{\"payBatcher(address)\":{\"details\":\"Emits the `Payment` event, logging the `msg.sender`, `batcherAddress`, and `msg.value`.\"},\"payBatcherFor(address,address)\":{\"details\":\"Emits the `Payment` event, logging the `msg.sender`, `batcherAddress`, and `msg.value`.\"},\"withdrawFunds()\":{\"details\":\"Withdraws the accumulated funds to the batcher. Callable by only batcher\"}},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/BatcherPayment.sol\":\"BatcherPayment\"},\"evmVersion\":\"berlin\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[\":@openzeppelin/=../../../node_modules/@openzeppelin/\"]},\"sources\":{\"../../../node_modules/@openzeppelin/contracts/utils/Address.sol\":{\"keccak256\":\"0xaf28a975a78550e45f65e559a3ad6a5ad43b9b8a37366999abd1b7084eb70721\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://b7bd24e224f67f65bfadf85dc2929fa965456bb2415478bd0125471b5ce35245\",\"dweb:/ipfs/QmRaydGr8BTHs1kvaZfsNU69pKzUAGFrvABn1KiRSbE51y\"]},\"contracts/BatcherPayment.sol\":{\"keccak256\":\"0xdb7818e9e65442b85489f1197d458a808a878f4514fe1dab308febf03a7ac833\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://9826cf2b67f29d59c5c05872b8d6b6fe4a5a206b16fffb605a5faffa4f55dd14\",\"dweb:/ipfs/QmNguyuwZ76u6CeotDb8uh86BAz6ijrrvPRwr5QB1WEzz4\"]}},\"version\":1}",
+  "metadata": {
+    "compiler": { "version": "0.8.23+commit.f704f362" },
+    "language": "Solidity",
+    "output": {
+      "abi": [
+        {
+          "inputs": [{ "internalType": "address", "name": "account", "type": "address" }],
+          "type": "error",
+          "name": "AddressInsufficientBalance"
+        },
+        { "inputs": [], "type": "error", "name": "FailedInnerCall" },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "batcherAddress",
+              "type": "address",
+              "indexed": true
+            },
+            { "internalType": "uint256", "name": "amount", "type": "uint256", "indexed": false }
+          ],
+          "type": "event",
+          "name": "FundsWithdrawn",
+          "anonymous": false
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "userAddress",
+              "type": "address",
+              "indexed": true
+            },
+            {
+              "internalType": "address",
+              "name": "batcherAddress",
+              "type": "address",
+              "indexed": true
+            },
+            { "internalType": "uint256", "name": "value", "type": "uint256", "indexed": false }
+          ],
+          "type": "event",
+          "name": "Payment",
+          "anonymous": false
+        },
+        {
+          "inputs": [{ "internalType": "address", "name": "", "type": "address" }],
+          "stateMutability": "view",
+          "type": "function",
+          "name": "balance",
+          "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }]
+        },
+        {
+          "inputs": [{ "internalType": "address", "name": "batcherAddress", "type": "address" }],
+          "stateMutability": "payable",
+          "type": "function",
+          "name": "payBatcher"
+        },
+        {
+          "inputs": [
+            { "internalType": "address", "name": "batcherAddress", "type": "address" },
+            { "internalType": "address", "name": "forAddress", "type": "address" }
+          ],
+          "stateMutability": "payable",
+          "type": "function",
+          "name": "payBatcherFor"
+        },
+        {
+          "inputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function",
+          "name": "withdrawFunds"
+        }
+      ],
+      "devdoc": {
+        "kind": "dev",
+        "methods": {
+          "payBatcher(address)": {
+            "details": "Emits the `Payment` event, logging the `msg.sender`, `batcherAddress`, and `msg.value`."
+          },
+          "payBatcherFor(address,address)": {
+            "details": "Emits the `Payment` event, logging the `msg.sender`, `batcherAddress`, and `msg.value`."
+          },
+          "withdrawFunds()": {
+            "details": "Withdraws the accumulated funds to the batcher. Callable by only batcher"
+          }
+        },
+        "version": 1
+      },
+      "userdoc": { "kind": "user", "methods": {}, "version": 1 }
+    },
+    "settings": {
+      "remappings": ["@openzeppelin/=../../../node_modules/@openzeppelin/"],
+      "optimizer": { "enabled": true, "runs": 200 },
+      "metadata": { "bytecodeHash": "ipfs" },
+      "compilationTarget": { "contracts/BatcherPayment.sol": "BatcherPayment" },
+      "evmVersion": "berlin",
+      "libraries": {}
+    },
+    "sources": {
+      "../../../node_modules/@openzeppelin/contracts/utils/Address.sol": {
+        "keccak256": "0xaf28a975a78550e45f65e559a3ad6a5ad43b9b8a37366999abd1b7084eb70721",
+        "urls": [
+          "bzz-raw://b7bd24e224f67f65bfadf85dc2929fa965456bb2415478bd0125471b5ce35245",
+          "dweb:/ipfs/QmRaydGr8BTHs1kvaZfsNU69pKzUAGFrvABn1KiRSbE51y"
+        ],
+        "license": "MIT"
+      },
+      "contracts/BatcherPayment.sol": {
+        "keccak256": "0xdb7818e9e65442b85489f1197d458a808a878f4514fe1dab308febf03a7ac833",
+        "urls": [
+          "bzz-raw://9826cf2b67f29d59c5c05872b8d6b6fe4a5a206b16fffb605a5faffa4f55dd14",
+          "dweb:/ipfs/QmNguyuwZ76u6CeotDb8uh86BAz6ijrrvPRwr5QB1WEzz4"
+        ],
+        "license": "MIT"
+      }
+    },
+    "version": 1
+  },
+  "id": 1
+}

@@ -17,6 +17,7 @@ import type {
   STFSubmittedData,
   IERC1155Contract,
   BlockHeader,
+  BatcherPaymentContract,
 } from '@paima/utils';
 import { Type } from '@sinclair/typebox';
 import type { Static } from '@sinclair/typebox';
@@ -189,6 +190,12 @@ interface CdeDatumDynamicEvmPrimitivePayload {
       };
 }
 
+type CdeDatumBatcherPaymentPayload = {
+  userAddress: string;
+  batcherAddress: string;
+  value: string;
+};
+
 type ChainDataExtensionPayload =
   | CdeDatumErc20TransferPayload
   | CdeDatumErc721MintPayload
@@ -200,7 +207,8 @@ type ChainDataExtensionPayload =
   | CdeDatumErc6551RegistryPayload
   | CdeDatumCardanoPoolPayload
   | CdeDatumCardanoProjectedNFTPayload
-  | CdeDatumDynamicEvmPrimitivePayload;
+  | CdeDatumDynamicEvmPrimitivePayload
+  | CdeDatumBatcherPaymentPayload;
 
 interface CdeDatumBase {
   cdeName: string;
@@ -305,6 +313,11 @@ export interface CdeDynamicEvmPrimitiveDatum extends CdeDatumBase {
   payload: CdeDatumDynamicEvmPrimitivePayload;
 }
 
+export interface CdeBatcherPaymentDatum extends CdeDatumBase {
+  cdeDatumType: ChainDataExtensionDatumType.BatcherPayment;
+  payload: CdeDatumBatcherPaymentPayload;
+}
+
 export type ChainDataExtensionDatum =
   | CdeErc20TransferDatum
   | CdeErc721MintDatum
@@ -320,7 +333,8 @@ export type ChainDataExtensionDatum =
   | CdeCardanoMintBurnDatum
   | CdeMinaEventGenericDatum
   | CdeMinaActionGenericDatum
-  | CdeDynamicEvmPrimitiveDatum;
+  | CdeDynamicEvmPrimitiveDatum
+  | CdeBatcherPaymentDatum;
 
 export enum CdeEntryTypeName {
   Generic = 'generic',
@@ -337,6 +351,7 @@ export enum CdeEntryTypeName {
   MinaEventGeneric = 'mina-event-generic',
   MinaActionGeneric = 'mina-action-generic',
   DynamicEvmPrimitive = 'dynamic-evm-primitive',
+  BatcherPayment = 'batcher-payment',
 }
 
 const EvmAddress = Type.Transform(Type.RegExp('0x[0-9a-fA-F]{40}'))
@@ -402,6 +417,21 @@ export type ChainDataExtensionErc20Deposit = ChainDataExtensionBase &
   Static<typeof ChainDataExtensionErc20DepositConfig> & {
     cdeType: ChainDataExtensionType.ERC20Deposit;
     contract: ERC20Contract;
+  };
+
+export const ChainDataExtensionBatcherPaymentConfig = Type.Intersect([
+  ChainDataExtensionConfigBase,
+  Type.Object({
+    type: Type.Literal(CdeEntryTypeName.BatcherPayment),
+    contractAddress: EvmAddress,
+    scheduledPrefix: Type.Optional(Type.String()),
+    burnScheduledPrefix: Type.Optional(Type.String()),
+  }),
+]);
+export type ChainDataExtensionBatcherPayment = ChainDataExtensionBase &
+  Static<typeof ChainDataExtensionBatcherPaymentConfig> & {
+    cdeType: ChainDataExtensionType.BatcherPayment;
+    contract: BatcherPaymentContract;
   };
 
 export const ChainDataExtensionErc1155Config = Type.Intersect([
@@ -608,6 +638,7 @@ export const CdeConfig = Type.Object({
         ChainDataExtensionMinaEventGenericConfig,
         ChainDataExtensionMinaActionGenericConfig,
         ChainDataExtensionDynamicEvmPrimitiveConfig,
+        ChainDataExtensionBatcherPaymentConfig,
       ]),
       Type.Partial(Type.Object({ network: Type.String() })),
     ])
@@ -643,6 +674,7 @@ export type ChainDataExtension = (
   | ChainDataExtensionMinaEventGeneric
   | ChainDataExtensionMinaActionGeneric
   | ChainDataExtensionDynamicEvmPrimitive
+  | ChainDataExtensionBatcherPayment
 ) & { network: string };
 
 export type GameStateTransitionFunctionRouter = (

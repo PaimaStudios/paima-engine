@@ -9,7 +9,7 @@ import {
   ChainDataExtensionType,
   getErc721Contract,
 } from '@paima/utils';
-import type { PaimaL2Contract } from '@paima/utils';
+import type { PaimaL2Contract, SubmittedData } from '@paima/utils';
 import { TimeoutError, instantiateCdeGeneric } from '@paima/runtime';
 import type { ChainDataExtension, TChainDataExtensionGenericConfig } from '@paima/sm';
 import {
@@ -24,6 +24,8 @@ import { extractSubmittedData } from './paima-l2-processing.js';
 import type { FunnelSharedData } from './funnels/BaseFunnel.js';
 import { getUngroupedCdeData } from './cde/reading.js';
 import { generateDynamicPrimitiveName } from '@paima/utils-backend';
+import type { ICdeBatcherPaymentUpdateBalanceParams } from '@paima/db';
+import { cdeBatcherPaymentUpdateBalance } from '@paima/db';
 
 export async function getBaseChainDataMulti(
   web3: Web3,
@@ -40,12 +42,21 @@ export async function getBaseChainDataMulti(
   const resultList: ChainData[] = [];
   for (const block of blockData) {
     const blockEvents = events.filter(e => e.blockNumber === block.blockNumber);
+    console.log('block 1', block);
+
     const submittedData = await extractSubmittedData(
       blockEvents,
       block.timestamp,
       DBConn,
       caip2Prefix
     );
+
+    const batcherSubmittedData = submittedData.filter(s => s.fromBatcher);
+    if (batcherSubmittedData.length) {
+      const totalGasUsed = await getTotalGas(web3, blockEvents);
+      await splitGasCost(totalGasUsed, batcherSubmittedData, DBConn);
+    }
+
     resultList.push({
       ...block,
       submittedData,
@@ -65,16 +76,63 @@ export async function getBaseChainDataSingle(
     getBlockData(web3, blockNumber),
     getPaimaEvents(paimaL2Contract, blockNumber, blockNumber),
   ]);
+  console.log('block 2', blockData);
+
   const submittedData = await extractSubmittedData(
     events,
     blockData.timestamp,
     DBConn,
     caip2Prefix
   );
+  const batcherSubmittedData = submittedData.filter(s => s.fromBatcher);
+  if (batcherSubmittedData.length) {
+    const totalGasUsed = await getTotalGas(web3, events);
+    await splitGasCost(totalGasUsed, batcherSubmittedData, DBConn);
+  }
   return {
     ...blockData,
     submittedData, // merge in the data
   };
+}
+
+async function getTotalGas(
+  web3: Web3,
+  blockEvents: PaimaGameInteraction[]
+): Promise<{ gasUsed: number; txHash: string; batcherAddress: string }[]> {
+  if (blockEvents.length === 0) return [];
+
+  const transactionReceipts = await Promise.all(
+    blockEvents.map(blockEvent => web3.eth.getTransactionReceipt(blockEvent.transactionHash))
+  );
+  console.log('transactionReceipts', transactionReceipts);
+  return transactionReceipts.map(receipt => ({
+    gasUsed: receipt.cumulativeGasUsed * receipt.effectiveGasPrice,
+    txHash: receipt.transactionHash,
+    batcherAddress: receipt.from,
+  }));
+}
+
+async function splitGasCost(
+  totalGasUsed: { gasUsed: number; txHash: string; batcherAddress: string }[],
+  batchedSubmittedData: SubmittedData[],
+  DBConn: PoolClient
+): Promise<void> {
+  const operations: ICdeBatcherPaymentUpdateBalanceParams[] = [];
+  console.log('operations', operations);
+  totalGasUsed.forEach(g => {
+    const submissions = batchedSubmittedData.filter(b => b.txHash === g.txHash);
+    const weight = 1 / submissions.length;
+    submissions.forEach(s =>
+      operations.push({
+        balance: -1 * weight * g.gasUsed,
+        batcher_address: g.batcherAddress,
+        cde_name: 'generic-batcher-contract',
+        user_address: s.realAddress,
+      })
+    );
+  });
+
+  await Promise.all(operations.map(o => cdeBatcherPaymentUpdateBalance.run(o, DBConn)));
 }
 
 async function getBlockData(web3: Web3, blockNumber: number): Promise<ChainData> {

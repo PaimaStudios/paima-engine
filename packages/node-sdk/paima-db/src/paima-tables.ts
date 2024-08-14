@@ -575,6 +575,29 @@ const TABLE_DATA_CDE_CARDANO_MINT_BURN: TableData = {
   creationQuery: QUERY_CREATE_TABLE_CDE_CARDANO_MINT_BURN,
 };
 
+const QUERY_CREATE_TABLE_CDE_BATCHER_PAYMENT = `
+CREATE TABLE cde_batcher_payment_data (
+  cde_name TEXT NOT NULL,
+  batcher_address TEXT NOT NULL,
+  user_address TEXT NOT NULL,
+  balance BIGINT NOT NULL DEFAULT 0,
+  PRIMARY KEY (cde_name, batcher_address, user_address)
+);
+`;
+
+const TABLE_DATA_CDE_CDE_BATCHER_PAYMENT: TableData = {
+  tableName: 'cde_batcher_payment_data',
+  primaryKeyColumns: ['cde_name', 'batcher_address', 'user_address'],
+  columnData: packTuples([
+    ['cde_name', 'text', 'NO', ''],
+    ['batcher_address', 'text', 'NO', ''],
+    ['user_address', 'text', 'NO', ''],
+    ['balance', 'bigint', 'NO', ''],
+  ]),
+  serialColumns: [],
+  creationQuery: QUERY_CREATE_TABLE_CDE_BATCHER_PAYMENT,
+};
+
 const QUERY_CREATE_TABLE_EMULATED = `
 CREATE TABLE emulated_block_heights (
   deployment_chain_block_height INTEGER PRIMARY KEY,
@@ -780,6 +803,7 @@ export const TABLES: TableData[] = [
   TABLE_DATA_CDE_CARDANO_POOL,
   TABLE_DATA_CDE_CARDANO_PROJECTED_NFT,
   TABLE_DATA_CDE_CARDANO_ASSET_UTXOS,
+  TABLE_DATA_CDE_CDE_BATCHER_PAYMENT,
   TABLE_DATA_EMULATED,
   TABLE_DATA_ADDRESSES,
   TABLE_DATA_DELEGATIONS,
