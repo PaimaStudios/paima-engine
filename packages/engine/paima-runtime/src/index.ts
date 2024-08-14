@@ -19,6 +19,7 @@ export {
   registerDocsPrecompiles,
   registerDocsOpenAPI,
   registerValidationErrorHandler,
+  registerDocsAppEvents,
 } from './server.js';
 export { TimeoutError } from './utils.js';
 

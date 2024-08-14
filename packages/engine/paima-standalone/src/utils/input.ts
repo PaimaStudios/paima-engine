@@ -1,5 +1,6 @@
 import { FunnelFactory } from '@paima/funnel';
 import paimaRuntime, {
+  registerDocsAppEvents,
   registerDocsOpenAPI,
   registerDocsPrecompiles,
   registerValidationErrorHandler,
@@ -172,6 +173,7 @@ export const runPaimaEngine = async (): Promise<void> => {
     registerDocsOpenAPI(importOpenApiJson());
     registerDocsPrecompiles(precompilesImport.precompiles);
     registerValidationErrorHandler();
+    registerDocsAppEvents(eventsImport.events);
 
     void engine.run(ENV.STOP_BLOCKHEIGHT, ENV.SERVER_ONLY_MODE);
   } else {

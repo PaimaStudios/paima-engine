@@ -7,7 +7,7 @@ import { merge, isErrorResult } from 'openapi-merge';
 import { doLog, ENV, logError } from '@paima/utils';
 import path from 'path';
 import { ValidateError } from 'tsoa';
-import { BuiltinEvents, toAsyncApi } from '@paima/events';
+import { BuiltinEvents, EventPathAndDef, toAsyncApi } from '@paima/events';
 import YAML from 'yaml';
 import { evmRpcEngine } from './evm-rpc/eip1193.js';
 import { StatusCodes } from 'http-status-codes';
@@ -141,17 +141,27 @@ function registerDocsOpenAPI(userStateMachineApi: object | undefined): void {
   );
 }
 
-server.get(`/${DocPaths.Root}/${DocPaths.AsyncApi.Root}/${DocPaths.AsyncApi.Spec}`, (_, res) => {
-  const asyncApi = toAsyncApi(
-    {
-      backendUri: ENV.MQTT_ENGINE_BROKER_URL,
-      // TODO: batcher docs theoretically should be hosted separately in some batcher-managed server
-      batcherUri: ENV.MQTT_BATCHER_BROKER_URL,
-    },
-    BuiltinEvents
+function registerDocsAppEvents(events: Record<string, EventPathAndDef[]>): void {
+  const appEvents: [string, EventPathAndDef][] = Object.entries(events).flatMap(
+    ([name, definitions]) =>
+      definitions.map((definition: EventPathAndDef, index: number): [string, EventPathAndDef] => [
+        name + index,
+        definition,
+      ])
   );
-  res.send(YAML.stringify(asyncApi, null, 2));
-});
+
+  server.get(`/${DocPaths.Root}/${DocPaths.AsyncApi.Root}/${DocPaths.AsyncApi.Spec}`, (_, res) => {
+    const asyncApi = toAsyncApi(
+      {
+        backendUri: ENV.MQTT_ENGINE_BROKER_URL,
+        // TODO: batcher docs theoretically should be hosted separately in some batcher-managed server
+        batcherUri: ENV.MQTT_BATCHER_BROKER_URL,
+      },
+      (Object.entries(BuiltinEvents) as [string, EventPathAndDef][]).concat(appEvents)
+    );
+    res.send(YAML.stringify(asyncApi, null, 2));
+  });
+}
 
 server.get(`/${DocPaths.Root}/${DocPaths.AsyncApi.Root}/${DocPaths.AsyncApi.Ui}`, (_, res) => {
   res.sendFile(path.join(__dirname, 'public', 'asyncapi.html'));
@@ -174,4 +184,5 @@ export {
   registerDocsPrecompiles,
   registerDocsOpenAPI,
   registerValidationErrorHandler,
+  registerDocsAppEvents,
 };
