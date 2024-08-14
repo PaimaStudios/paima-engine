@@ -47,10 +47,13 @@ export const generateAppEvents = <
 
 // create payload for the stf from an object.
 export function createEventForStf<T extends ReturnType<typeof genEvent>>(
-  address: string,
+  address: `0x${string}`,
   event: T,
   fields: KeypairToObj<T['fields']>
-): { address: string; data: { name: string; fields: KeypairToObj<T['fields']>; topic: string } } {
+): {
+  address: `0x${string}`;
+  data: { name: string; fields: KeypairToObj<T['fields']>; topic: string };
+} {
   return { address, data: { name: event.name, fields, topic: toTopicHash(event) } };
 }
 
@@ -76,7 +79,7 @@ type EmitFunction<
   T extends ReadonlyArray<LogEvent<LogEventFields<TSchema>[]>>,
   Name extends string,
 > = {
-  emit: (name: Name, address: string, fields: UnionForOverloadedEvents<T, Name>) => void;
+  emit: (name: Name, address: `0x${string}`, fields: UnionForOverloadedEvents<T, Name>) => void;
 };
 
 type EventQueue<T extends ReadonlyArray<LogEvent<LogEventFields<TSchema>[]>>> = EmitFunction<
@@ -84,7 +87,7 @@ type EventQueue<T extends ReadonlyArray<LogEvent<LogEventFields<TSchema>[]>>> = 
   T[number]['name']
 > & {
   get: () => {
-    address: string;
+    address: `0x${string}`;
     data: { name: string; fields: KeypairToObj<T[number]['fields']>; topic: string };
   }[];
 };
@@ -185,7 +188,7 @@ export function eventQueueFactory<
 
       obj.buffer = buffer;
       obj.get = (): {
-        address: string;
+        address: `0x${string}`;
         data: { name: string; fields: KeypairToObj<T[number]['fields']>; topic: string };
       } => {
         return buffer;

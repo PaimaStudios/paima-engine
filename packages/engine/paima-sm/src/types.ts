@@ -658,7 +658,7 @@ export type GameStateTransitionFunction<Event extends EventPathAndDef> = (
 ) => Promise<{
   stateTransitions: SQLUpdate[];
   events: {
-    address: string;
+    address: `0x${string}`;
     data: {
       name: string;
       fields: ResolvedPath<Event['path']> & Event['type'];
