@@ -1159,6 +1159,32 @@
 								}
 							}
 						}
+					},
+					"404": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/FailedResult"
+								},
+								"examples": {
+									"Example 1": {}
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/InternalServerErrorResult"
+								},
+								"examples": {
+									"Example 1": {}
+								}
+							}
+						}
 					}
 				},
 				"security": [],

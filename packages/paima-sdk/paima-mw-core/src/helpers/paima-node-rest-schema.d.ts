@@ -825,6 +825,22 @@ export interface operations {
                     "application/json": components["schemas"]["GetLogsResponse"];
                 };
             };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FailedResult"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternalServerErrorResult"];
+                };
+            };
         };
     };
     AchievementsPublic_list: {

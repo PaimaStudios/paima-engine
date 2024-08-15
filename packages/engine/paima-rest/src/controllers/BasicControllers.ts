@@ -410,6 +410,8 @@ type GetLogsParams = {
 
 @Route('get_logs')
 export class GetLogsController extends Controller {
+  @Response<FailedResult>(StatusCodes.NOT_FOUND)
+  @Response<InternalServerErrorResult>(StatusCodes.INTERNAL_SERVER_ERROR)
   @Post()
   public async post(@Body() params: GetLogsParams): Promise<GetLogsResponse> {
     const gameStateMachine = EngineService.INSTANCE.getSM();
