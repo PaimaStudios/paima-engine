@@ -309,11 +309,11 @@ export interface components {
             filters?: {
                 [key: string]: string;
             };
-            address?: string;
+            address: string;
             /** Format: double */
-            toBlock?: number;
+            toBlock: number;
             /** Format: double */
-            fromBlock?: number;
+            fromBlock: number;
         };
         Achievement: {
             /** @description Unique Achievement String */
@@ -823,6 +823,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["GetLogsResponse"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FailedResult"];
                 };
             };
             404: {

@@ -401,9 +401,9 @@ export class TransactionContentController extends Controller {
 
 type GetLogsResponse = Result<any[]>;
 type GetLogsParams = {
-  fromBlock?: number;
-  toBlock?: number;
-  address?: string;
+  fromBlock: number;
+  toBlock: number;
+  address: string;
   filters?: { [fieldName: string]: string };
   topic: string;
 };
@@ -411,9 +411,21 @@ type GetLogsParams = {
 @Route('get_logs')
 export class GetLogsController extends Controller {
   @Response<FailedResult>(StatusCodes.NOT_FOUND)
+  @Response<FailedResult>(StatusCodes.BAD_REQUEST)
   @Response<InternalServerErrorResult>(StatusCodes.INTERNAL_SERVER_ERROR)
   @Post()
   public async post(@Body() params: GetLogsParams): Promise<GetLogsResponse> {
+    if (
+      params.toBlock < params.fromBlock ||
+      params.toBlock - params.fromBlock > ENV.GET_LOGS_MAX_BLOCK_RANGE
+    ) {
+      this.setStatus(StatusCodes.BAD_REQUEST);
+      return {
+        success: false,
+        errorMessage: 'Invalid block range',
+      };
+    }
+
     const gameStateMachine = EngineService.INSTANCE.getSM();
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

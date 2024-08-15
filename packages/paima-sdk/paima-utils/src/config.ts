@@ -157,6 +157,10 @@ export class ENV {
     return process.env.MQTT_BATCHER_BROKER_URL || 'ws://127.0.0.1:' + ENV.MQTT_BATCHER_BROKER_PORT;
   }
 
+  static get GET_LOGS_MAX_BLOCK_RANGE(): number {
+    return parseFloat(process.env.GET_LOGS_MAX_BLOCK_RANGE || '5000');
+  }
+
   // Utils
   private static isTrue(value: string | undefined, defaultValue = false): boolean {
     if (value == null || value === '') return defaultValue;

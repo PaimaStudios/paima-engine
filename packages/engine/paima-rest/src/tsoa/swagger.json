@@ -366,7 +366,10 @@
 					}
 				},
 				"required": [
-					"topic"
+					"topic",
+					"address",
+					"toBlock",
+					"fromBlock"
 				],
 				"type": "object"
 			},
@@ -1156,6 +1159,19 @@
 							"application/json": {
 								"schema": {
 									"$ref": "#/components/schemas/GetLogsResponse"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/FailedResult"
+								},
+								"examples": {
+									"Example 1": {}
 								}
 							}
 						}
