@@ -93,7 +93,7 @@ type EventQueue<T extends ReadonlyArray<LogEvent<LogEventFields<TSchema>[]>>> = 
 };
 
 // Typed stateful builder that handles overloaded topics. There is a performance
-// cost of using this, since it dinamically finds the matching overloaded topic
+// cost of using this, since it dynamically finds the matching overloaded topic
 // from the provided fields, but this way there is no need to use indexing to
 // provide the right event type. If this is a concern then the other helper
 // function can be used to explicitly provide the event type.
