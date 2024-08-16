@@ -76,5 +76,9 @@ export type AppEventsImport = { events: ReturnType<typeof generateAppEvents> };
  * Reads repackaged user's code placed next to the executable in `events.cjs` file
  */
 export function importEvents(): AppEventsImport {
-  return importFile<AppEventsImport>(EVENTS_FILENAME);
+  try {
+    return importFile<AppEventsImport>(EVENTS_FILENAME);
+  } catch (error) {
+    return { events: {} };
+  }
 }
