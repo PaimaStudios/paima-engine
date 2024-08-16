@@ -66,7 +66,11 @@ const PRECOMPILES_FILENAME = 'packaged/precompiles.cjs';
  * Reads repackaged user's code placed next to the executable in `precompiles.cjs` file
  */
 export function importPrecompiles(): PreCompilesImport {
-  return importFile<PreCompilesImport>(PRECOMPILES_FILENAME);
+  try {
+    return importFile<PreCompilesImport>(PRECOMPILES_FILENAME);
+  } catch (error) {
+    return { precompiles: {} };
+  }
 }
 
 const EVENTS_FILENAME = 'packaged/events.cjs';
