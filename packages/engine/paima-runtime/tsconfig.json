@@ -12,5 +12,6 @@
     { "path": "../paima-rest/tsconfig.build.json" },
     { "path": "../paima-sm" },
     { "path": "../../paima-sdk/paima-mw-core" },
+    { "path": "../../node-sdk/paima-broker/tsconfig.build.json" },
   ]
 }
