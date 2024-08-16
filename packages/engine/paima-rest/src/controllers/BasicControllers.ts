@@ -7,6 +7,7 @@ import type {
   ValidateErrorResult,
 } from '@paima/utils';
 import { EngineService } from '../EngineService.js';
+import type { IGetEventsResult } from '@paima/db';
 import {
   deploymentChainBlockheightToEmulated,
   emulatedSelectLatestPrior,
@@ -15,7 +16,6 @@ import {
   getInputsForAddress,
   getInputsForBlock,
   getScheduledDataByBlockHeight,
-  getEvents,
 } from '@paima/db';
 import type { Pool } from 'pg';
 import { StatusCodes } from 'http-status-codes';
@@ -399,7 +399,17 @@ export class TransactionContentController extends Controller {
   }
 }
 
-type GetLogsResponse = Result<any[]>;
+type GetLogsResponse = Result<
+  {
+    topic: string;
+    address: string;
+    blockNumber: number;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    data: { [fieldName: string]: any };
+    tx: number;
+    idx: number;
+  }[]
+>;
 type GetLogsParams = {
   fromBlock: number;
   toBlock: number;
@@ -472,27 +482,58 @@ export class GetLogsController extends Controller {
 
     try {
       const DBConn = gameStateMachine.getReadonlyDbConn();
-      const base: Record<string, number | string | undefined> & { topic: string } = {
-        from: params.fromBlock,
-        to: params.toBlock,
-        address: params.address,
-        topic: params.topic,
-      };
 
+      let dynamicPart = '';
+      const dynamicFilters = [];
+
+      // it does not seem to be possible to build this dynamic filter with
+      // pgtyped, so we instead build a dynamic parametrized query.
       if (params.filters) {
         const keys = Object.keys(params.filters);
 
         for (let i = 0; i < keys.length; i++) {
-          base['field' + i] = keys[i];
-          base['value' + i] = params.filters[keys[i]];
+          dynamicPart = dynamicPart.concat(
+            `COALESCE(data->>$${5 + i * 2} = $${5 + i * 2 + 1}, 1=1) AND\n`
+          );
+
+          dynamicFilters.push(keys[i]);
+          dynamicFilters.push(params.filters[keys[i]]);
         }
       }
 
-      const rows = await getEvents.run(base, DBConn);
+      const query = `
+        SELECT * FROM event WHERE
+          COALESCE(block_height >= $1, 1=1) AND
+          COALESCE(block_height <= $2, 1=1) AND
+          COALESCE(address = $3, 1=1) AND
+          ${dynamicPart}
+          topic = $4;
+      `;
+
+      // casting to IGetEventsResult is sound, since both are a select from the
+      // same table with the same rows, and at least if the table changes there
+      // is a chance that this will not typecheck anymore.
+      const rows = (
+        await DBConn.query(query, [
+          params.fromBlock,
+          params.toBlock,
+          params.address,
+          params.topic,
+          ...dynamicFilters,
+        ])
+      ).rows as IGetEventsResult[];
 
       return {
         success: true,
-        result: rows,
+        result: rows.map(row => ({
+          topic: row.topic,
+          blockNumber: row.block_height,
+          address: row.address,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          data: row.data as { [fieldName: string]: any },
+          tx: row.tx,
+          idx: row.idx,
+        })),
       };
     } catch (err) {
       doLog(`Unexpected webserver error:`);

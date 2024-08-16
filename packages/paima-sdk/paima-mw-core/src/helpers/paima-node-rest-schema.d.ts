@@ -297,13 +297,25 @@ export interface components {
             result: components["schemas"]["TransactionContentResponse"];
         };
         Result_TransactionContentResponse_: components["schemas"]["SuccessfulResult_TransactionContentResponse_"] | components["schemas"]["FailedResult"];
-        "SuccessfulResult_any-Array_": {
+        "SuccessfulResult__topic-string--address-string--blockNumber-number--data_58___91_fieldName-string_93__58_any_--tx-number--idx-number_-Array_": {
             /** @enum {boolean} */
             success: true;
-            result: unknown[];
+            result: {
+                /** Format: double */
+                idx: number;
+                /** Format: double */
+                tx: number;
+                data: {
+                    [key: string]: unknown;
+                };
+                /** Format: double */
+                blockNumber: number;
+                address: string;
+                topic: string;
+            }[];
         };
-        "Result_any-Array_": components["schemas"]["SuccessfulResult_any-Array_"] | components["schemas"]["FailedResult"];
-        GetLogsResponse: components["schemas"]["Result_any-Array_"];
+        "Result__topic-string--address-string--blockNumber-number--data_58___91_fieldName-string_93__58_any_--tx-number--idx-number_-Array_": components["schemas"]["SuccessfulResult__topic-string--address-string--blockNumber-number--data_58___91_fieldName-string_93__58_any_--tx-number--idx-number_-Array_"] | components["schemas"]["FailedResult"];
+        GetLogsResponse: components["schemas"]["Result__topic-string--address-string--blockNumber-number--data_58___91_fieldName-string_93__58_any_--tx-number--idx-number_-Array_"];
         GetLogsParams: {
             topic: string;
             filters?: {

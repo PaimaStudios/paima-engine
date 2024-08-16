@@ -170,23 +170,23 @@ const models: TsoaRoute.Models = {
         "type": {"dataType":"union","subSchemas":[{"ref":"SuccessfulResult_TransactionContentResponse_"},{"ref":"FailedResult"}],"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "SuccessfulResult_any-Array_": {
+    "SuccessfulResult__topic-string--address-string--blockNumber-number--data_58___91_fieldName-string_93__58_any_--tx-number--idx-number_-Array_": {
         "dataType": "refObject",
         "properties": {
             "success": {"dataType":"enum","enums":[true],"required":true},
-            "result": {"dataType":"array","array":{"dataType":"any"},"required":true},
+            "result": {"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"idx":{"dataType":"double","required":true},"tx":{"dataType":"double","required":true},"data":{"dataType":"nestedObjectLiteral","nestedProperties":{},"additionalProperties":{"dataType":"any"},"required":true},"blockNumber":{"dataType":"double","required":true},"address":{"dataType":"string","required":true},"topic":{"dataType":"string","required":true}}},"required":true},
         },
         "additionalProperties": false,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "Result_any-Array_": {
+    "Result__topic-string--address-string--blockNumber-number--data_58___91_fieldName-string_93__58_any_--tx-number--idx-number_-Array_": {
         "dataType": "refAlias",
-        "type": {"dataType":"union","subSchemas":[{"ref":"SuccessfulResult_any-Array_"},{"ref":"FailedResult"}],"validators":{}},
+        "type": {"dataType":"union","subSchemas":[{"ref":"SuccessfulResult__topic-string--address-string--blockNumber-number--data_58___91_fieldName-string_93__58_any_--tx-number--idx-number_-Array_"},{"ref":"FailedResult"}],"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "GetLogsResponse": {
         "dataType": "refAlias",
-        "type": {"ref":"Result_any-Array_","validators":{}},
+        "type": {"ref":"Result__topic-string--address-string--blockNumber-number--data_58___91_fieldName-string_93__58_any_--tx-number--idx-number_-Array_","validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "GetLogsParams": {

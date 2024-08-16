@@ -6,29 +6,9 @@ export type Json = null | boolean | number | string | Json[] | { [key: string]: 
 /** 'GetEvents' parameters type */
 export interface IGetEventsParams {
   address?: string | null | void;
-  field0?: string | null | void;
-  field1?: string | null | void;
-  field2?: string | null | void;
-  field3?: string | null | void;
-  field4?: string | null | void;
-  field5?: string | null | void;
-  field6?: string | null | void;
-  field7?: string | null | void;
-  field8?: string | null | void;
-  field9?: string | null | void;
   from?: number | null | void;
   to?: number | null | void;
   topic: string;
-  value0?: string | null | void;
-  value1?: string | null | void;
-  value2?: string | null | void;
-  value3?: string | null | void;
-  value4?: string | null | void;
-  value5?: string | null | void;
-  value6?: string | null | void;
-  value7?: string | null | void;
-  value8?: string | null | void;
-  value9?: string | null | void;
 }
 
 /** 'GetEvents' return type */
@@ -48,22 +28,12 @@ export interface IGetEventsQuery {
   result: IGetEventsResult;
 }
 
-const getEventsIR: any = {"usedParamSet":{"field0":true,"value0":true,"field1":true,"value1":true,"field2":true,"value2":true,"field3":true,"value3":true,"field4":true,"value4":true,"field5":true,"value5":true,"field6":true,"value6":true,"field7":true,"value7":true,"field8":true,"value8":true,"field9":true,"value9":true,"from":true,"to":true,"address":true,"topic":true},"params":[{"name":"field0","required":false,"transform":{"type":"scalar"},"locs":[{"a":44,"b":50}]},{"name":"value0","required":false,"transform":{"type":"scalar"},"locs":[{"a":54,"b":60}]},{"name":"field1","required":false,"transform":{"type":"scalar"},"locs":[{"a":90,"b":96}]},{"name":"value1","required":false,"transform":{"type":"scalar"},"locs":[{"a":100,"b":106}]},{"name":"field2","required":false,"transform":{"type":"scalar"},"locs":[{"a":136,"b":142}]},{"name":"value2","required":false,"transform":{"type":"scalar"},"locs":[{"a":146,"b":152}]},{"name":"field3","required":false,"transform":{"type":"scalar"},"locs":[{"a":182,"b":188}]},{"name":"value3","required":false,"transform":{"type":"scalar"},"locs":[{"a":192,"b":198}]},{"name":"field4","required":false,"transform":{"type":"scalar"},"locs":[{"a":228,"b":234}]},{"name":"value4","required":false,"transform":{"type":"scalar"},"locs":[{"a":238,"b":244}]},{"name":"field5","required":false,"transform":{"type":"scalar"},"locs":[{"a":274,"b":280}]},{"name":"value5","required":false,"transform":{"type":"scalar"},"locs":[{"a":284,"b":290}]},{"name":"field6","required":false,"transform":{"type":"scalar"},"locs":[{"a":320,"b":326}]},{"name":"value6","required":false,"transform":{"type":"scalar"},"locs":[{"a":330,"b":336}]},{"name":"field7","required":false,"transform":{"type":"scalar"},"locs":[{"a":366,"b":372}]},{"name":"value7","required":false,"transform":{"type":"scalar"},"locs":[{"a":376,"b":382}]},{"name":"field8","required":false,"transform":{"type":"scalar"},"locs":[{"a":412,"b":418}]},{"name":"value8","required":false,"transform":{"type":"scalar"},"locs":[{"a":422,"b":428}]},{"name":"field9","required":false,"transform":{"type":"scalar"},"locs":[{"a":458,"b":464}]},{"name":"value9","required":false,"transform":{"type":"scalar"},"locs":[{"a":468,"b":474}]},{"name":"from","required":false,"transform":{"type":"scalar"},"locs":[{"a":513,"b":517}]},{"name":"to","required":false,"transform":{"type":"scalar"},"locs":[{"a":556,"b":558}]},{"name":"address","required":false,"transform":{"type":"scalar"},"locs":[{"a":591,"b":598}]},{"name":"topic","required":true,"transform":{"type":"scalar"},"locs":[{"a":620,"b":626}]}],"statement":"SELECT * FROM event WHERE\n  COALESCE(data->>:field0 = :value0, 1=1) AND\n  COALESCE(data->>:field1 = :value1, 1=1) AND\n  COALESCE(data->>:field2 = :value2, 1=1) AND\n  COALESCE(data->>:field3 = :value3, 1=1) AND\n  COALESCE(data->>:field4 = :value4, 1=1) AND\n  COALESCE(data->>:field5 = :value5, 1=1) AND\n  COALESCE(data->>:field6 = :value6, 1=1) AND\n  COALESCE(data->>:field7 = :value7, 1=1) AND\n  COALESCE(data->>:field8 = :value8, 1=1) AND\n  COALESCE(data->>:field9 = :value9, 1=1) AND\n  COALESCE(block_height >= :from, 1=1) AND\n  COALESCE(block_height <= :to, 1=1) AND\n  COALESCE(address = :address, 1=1) AND\n  topic = :topic!"};
+const getEventsIR: any = {"usedParamSet":{"from":true,"to":true,"address":true,"topic":true},"params":[{"name":"from","required":false,"transform":{"type":"scalar"},"locs":[{"a":53,"b":57}]},{"name":"to","required":false,"transform":{"type":"scalar"},"locs":[{"a":96,"b":98}]},{"name":"address","required":false,"transform":{"type":"scalar"},"locs":[{"a":131,"b":138}]},{"name":"topic","required":true,"transform":{"type":"scalar"},"locs":[{"a":160,"b":166}]}],"statement":"SELECT * FROM event WHERE\n  COALESCE(block_height >= :from, 1=1) AND\n  COALESCE(block_height <= :to, 1=1) AND\n  COALESCE(address = :address, 1=1) AND\n  topic = :topic!"};
 
 /**
  * Query generated from SQL:
  * ```
  * SELECT * FROM event WHERE
- *   COALESCE(data->>:field0 = :value0, 1=1) AND
- *   COALESCE(data->>:field1 = :value1, 1=1) AND
- *   COALESCE(data->>:field2 = :value2, 1=1) AND
- *   COALESCE(data->>:field3 = :value3, 1=1) AND
- *   COALESCE(data->>:field4 = :value4, 1=1) AND
- *   COALESCE(data->>:field5 = :value5, 1=1) AND
- *   COALESCE(data->>:field6 = :value6, 1=1) AND
- *   COALESCE(data->>:field7 = :value7, 1=1) AND
- *   COALESCE(data->>:field8 = :value8, 1=1) AND
- *   COALESCE(data->>:field9 = :value9, 1=1) AND
  *   COALESCE(block_height >= :from, 1=1) AND
  *   COALESCE(block_height <= :to, 1=1) AND
  *   COALESCE(address = :address, 1=1) AND
