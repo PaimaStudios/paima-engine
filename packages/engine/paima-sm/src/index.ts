@@ -515,10 +515,7 @@ async function processScheduledData<Event extends EventPathAndDef>(
 
       // Trigger STF
       let sqlQueries: SQLUpdate[] = [];
-      let eventsToEmit: [
-        ValueOf<ReturnType<typeof generateAppEvents>>[0],
-        ResolvedPath<Event['path']> & Event['type'],
-      ][] = [];
+      let eventsToEmit: EventsToEmit<Event> = [];
       try {
         const { stateTransitions, events } = await gameStateTransition(
           inputData,
@@ -529,30 +526,14 @@ async function processScheduledData<Event extends EventPathAndDef>(
 
         sqlQueries = stateTransitions;
 
-        for (let idx = 0; idx < events.length; idx++) {
-          const event = events[idx];
-          sqlQueries.push([
-            insertEvent,
-            {
-              topic: event.data.topic,
-              address: event.address,
-              data: event.data.fields,
-              tx: txIndexInBlock,
-              idx,
-              block_height: latestChainData.blockNumber,
-            },
-          ]);
-
-          const eventDefinition = eventDefinitions[event.data.name].find(
-            eventDefinition => eventDefinition.topicHash === event.data.topic
-          );
-
-          if (!eventDefinition) {
-            throw new Error('Event definition not found');
-          }
-
-          eventsToEmit.push([eventDefinition, event.data.fields]);
-        }
+        handleEvents<Event>(
+          events,
+          sqlQueries,
+          txIndexInBlock,
+          latestChainData,
+          eventDefinitions,
+          eventsToEmit
+        );
       } catch (err) {
         // skip scheduled data where the STF fails
         doLog(`[paima-sm] Error on scheduled data STF call. Skipping`, err);
@@ -567,10 +548,8 @@ async function processScheduledData<Event extends EventPathAndDef>(
           return true;
         });
 
-        if (ENV.MQTT_BROKER && success) {
-          for (const [eventDefinition, fields] of eventsToEmit) {
-            await PaimaEventManager.Instance.sendMessage(eventDefinition, fields);
-          }
+        if (success) {
+          await sendEventsToBroker<Event>(eventsToEmit);
         }
       }
     } catch (e) {
@@ -643,10 +622,7 @@ async function processUserInputs<Event extends EventPathAndDef>(
 
       // Trigger STF
       let sqlQueries: SQLUpdate[] = [];
-      let eventsToEmit: [
-        ValueOf<ReturnType<typeof generateAppEvents>>[0],
-        ResolvedPath<Event['path']> & Event['type'],
-      ][] = [];
+      let eventsToEmit: EventsToEmit<Event> = [];
       try {
         const { stateTransitions, events } = await gameStateTransition(
           inputData,
@@ -657,30 +633,14 @@ async function processUserInputs<Event extends EventPathAndDef>(
 
         sqlQueries = stateTransitions;
 
-        for (let idx = 0; idx < events.length; idx++) {
-          const event = events[idx];
-          sqlQueries.push([
-            insertEvent,
-            {
-              topic: event.data.topic,
-              address: event.address,
-              data: event.data.fields,
-              tx: txIndexInBlock,
-              idx,
-              block_height: latestChainData.blockNumber,
-            },
-          ]);
-
-          const eventDefinition = eventDefinitions[event.data.name].find(
-            eventDefinition => eventDefinition.topicHash === event.data.topic
-          );
-
-          if (!eventDefinition) {
-            throw new Error('Event definition not found');
-          }
-
-          eventsToEmit.push([eventDefinition, event.data.fields]);
-        }
+        handleEvents<Event>(
+          events,
+          sqlQueries,
+          txIndexInBlock,
+          latestChainData,
+          eventDefinitions,
+          eventsToEmit
+        );
       } catch (err) {
         // skip inputs where the STF fails
         doLog(`[paima-sm] Error on user input STF call. Skipping`, err);
@@ -695,10 +655,8 @@ async function processUserInputs<Event extends EventPathAndDef>(
           return true;
         });
 
-        if (ENV.MQTT_BROKER && success) {
-          for (const [eventDefinition, fields] of eventsToEmit) {
-            await PaimaEventManager.Instance.sendMessage(eventDefinition, fields);
-          }
+        if (success) {
+          await sendEventsToBroker<Event>(eventsToEmit);
         }
       }
     } finally {
@@ -724,6 +682,17 @@ async function processUserInputs<Event extends EventPathAndDef>(
     }
   }
   return latestChainData.submittedData.length;
+}
+
+async function sendEventsToBroker<Event extends EventPathAndDef>(
+  eventsToEmit: EventsToEmit<Event>
+) {
+  if (ENV.MQTT_BROKER) {
+    // we probably don't want to use Promise.all since it will change the order.
+    for (const [eventDefinition, fields] of eventsToEmit) {
+      await PaimaEventManager.Instance.sendMessage(eventDefinition, fields);
+    }
+  }
 }
 
 async function processInternalEvents(
@@ -761,6 +730,48 @@ async function processInternalEvents(
       default:
         assertNever(event);
     }
+  }
+}
+
+type EventsToEmit<Event extends EventPathAndDef> = [
+  ValueOf<ReturnType<typeof generateAppEvents>>[0],
+  ResolvedPath<Event['path']> & Event['type'],
+][];
+
+function handleEvents<Event extends EventPathAndDef>(
+  events: {
+    address: `0x${string}`;
+    data: { name: string; fields: ResolvedPath<Event['path']> & Event['type']; topic: string };
+  }[],
+  sqlQueries: SQLUpdate[],
+  txIndexInBlock: number,
+  latestChainData: ChainData,
+  eventDefinitions: ReturnType<typeof generateAppEvents>,
+  eventsToEmit: EventsToEmit<Event>
+): void {
+  for (let idx = 0; idx < events.length; idx++) {
+    const event = events[idx];
+    sqlQueries.push([
+      insertEvent,
+      {
+        topic: event.data.topic,
+        address: event.address,
+        data: event.data.fields,
+        tx: txIndexInBlock,
+        idx,
+        block_height: latestChainData.blockNumber,
+      },
+    ]);
+
+    const eventDefinition = eventDefinitions[event.data.name].find(
+      eventDefinition => eventDefinition.topicHash === event.data.topic
+    );
+
+    if (!eventDefinition) {
+      throw new Error('Event definition not found');
+    }
+
+    eventsToEmit.push([eventDefinition, event.data.fields]);
   }
 }
 
