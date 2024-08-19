@@ -765,6 +765,10 @@ CREATE TABLE event (
 );
 `;
 
+const QUERY_CREATE_INDEX_EVENT_TOPIC = `
+CREATE INDEX EVENT_TOPIC_INDEX ON "event" (topic);
+`;
+
 const TABLE_DATA_EVENT: TableData = {
   tableName: 'event',
   primaryKeyColumns: ['id'],
@@ -779,6 +783,10 @@ const TABLE_DATA_EVENT: TableData = {
   ]),
   serialColumns: [],
   creationQuery: QUERY_CREATE_TABLE_EVENT,
+  index: {
+    name: 'EVENT_TOPIC_INDEX',
+    creationQuery: QUERY_CREATE_INDEX_EVENT_TOPIC,
+  },
 };
 
 const QUERY_CREATE_TABLE_REGISTERED_EVENT = `
