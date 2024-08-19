@@ -29,9 +29,10 @@ export const generateAppEvents = <
     if (!result[event.name]) {
       result[event.name] = [];
     }
+    const topicHash = toTopicHash(event);
 
     result[event.name].push({
-      ...toPath(TopicPrefix.App, event),
+      ...toPath(TopicPrefix.App, event, topicHash),
       // keep the original definition around since it's nicer to work with, it
       // also has the advantage that it allows recovering the initial order in
       // case the signature/topicHash needs to be computed again, which can't be
@@ -39,7 +40,7 @@ export const generateAppEvents = <
       // between each indexed field).
       definition: event,
       // we add this to avoid having to re-compute it all the time.
-      topicHash: toTopicHash(event),
+      topicHash,
     });
   }
   return result as any;
