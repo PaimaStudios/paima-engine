@@ -403,7 +403,6 @@
 				"required": [
 					"topic",
 					"address",
-					"toBlock",
 					"fromBlock"
 				],
 				"type": "object"

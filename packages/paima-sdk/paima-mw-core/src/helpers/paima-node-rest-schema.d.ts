@@ -323,7 +323,7 @@ export interface components {
             };
             address: string;
             /** Format: double */
-            toBlock: number;
+            toBlock?: number;
             /** Format: double */
             fromBlock: number;
         };

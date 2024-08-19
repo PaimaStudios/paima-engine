@@ -412,7 +412,7 @@ type GetLogsResponse = Result<
 >;
 type GetLogsParams = {
   fromBlock: number;
-  toBlock: number;
+  toBlock?: number;
   address: string;
   filters?: { [fieldName: string]: string };
   topic: string;
@@ -425,6 +425,10 @@ export class GetLogsController extends Controller {
   @Response<InternalServerErrorResult>(StatusCodes.INTERNAL_SERVER_ERROR)
   @Post()
   public async post(@Body() params: GetLogsParams): Promise<GetLogsResponse> {
+    const gameStateMachine = EngineService.INSTANCE.getSM();
+
+    params.toBlock = params.toBlock ?? (await gameStateMachine.latestProcessedBlockHeight());
+
     if (
       params.toBlock < params.fromBlock ||
       params.toBlock - params.fromBlock > ENV.GET_LOGS_MAX_BLOCK_RANGE
@@ -435,8 +439,6 @@ export class GetLogsController extends Controller {
         errorMessage: 'Invalid block range',
       };
     }
-
-    const gameStateMachine = EngineService.INSTANCE.getSM();
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const eventDefinition = ((): any => {
