@@ -1,7 +1,7 @@
 import { Pool } from 'pg';
 import type { PoolClient, Client } from 'pg';
 
-import type { BlockHeader, PostExecutionBlockHeader, STFSubmittedData } from '@paima/utils';
+import type { STFSubmittedData } from '@paima/utils';
 import {
   caip2PrefixFor,
   doLog,
@@ -55,12 +55,6 @@ import { keccak_256 } from 'js-sha3';
 export * from './types.js';
 export type * from './types.js';
 
-function blockHash(chainData: ChainData): PostExecutionBlockHeader {
-  const header = {
-    blockHeight: chainData.blockNumber,
-    timestamp: chainData.timestamp,
-  };
-}
 const SM: GameStateMachineInitializer = {
   initialize: (
     databaseInfo,

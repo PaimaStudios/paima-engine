@@ -37,20 +37,10 @@ export type TransactionTemplate = {
 
 export type NonceString = string;
 
-/**
- * Block header (see: ChainData for the full block)
- */
-export type PreExecutionBlockHeader = {
-  version: 1;
-  mainChainBlochHash: string;
+export type BlockHeader = {
   blockHeight: number;
-  prevBlockHash: string;
   /** in seconds */
   timestamp: number;
-};
-export type PostExecutionBlockHeader = PreExecutionBlockHeader & {
-  successTxsHash: string;
-  failedTxsHash: string;
 };
 
 export interface SubmittedData {
