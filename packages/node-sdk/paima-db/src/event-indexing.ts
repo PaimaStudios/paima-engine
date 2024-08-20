@@ -5,7 +5,7 @@ export async function createIndexesForEvents(
   eventDescriptions: { topic: string; fieldName: string; indexed: boolean }[]
 ): Promise<boolean> {
   for (const event of eventDescriptions) {
-    const indexName = `index_${event.topic.slice(0, 20)}_${event.fieldName}`;
+    const indexName = `index_${event.topic.slice(0, 20)}_${event.fieldName.toLowerCase()}`;
 
     const checkQuery = `SELECT * FROM pg_indexes WHERE indexname = '${indexName}';`;
 
