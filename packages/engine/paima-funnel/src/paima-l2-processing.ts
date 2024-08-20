@@ -42,7 +42,6 @@ async function eventMapper(
   caip2: string
 ): Promise<SubmittedDataExt[]> {
   const decodedData = decodeEventData(e.returnValues.data);
-  console.log('decodedData', decodedData, e);
   return await processDataUnit(
     {
       senderAddress: e.address,
@@ -90,8 +89,6 @@ export async function processDataUnit(
         },
       ];
     }
-
-    console.log('BATCHER HASH', unit.txHash, unit.realAddress, unit);
 
     const subunits = extractBatches(unit.inputData);
     if (subunits.length === 0) return [];

@@ -128,6 +128,14 @@ export class ENV {
     }
     return '';
   }
+  static get BATCHER_PAYMENT_ADDRESS(): string {
+    return process.env.BATCHER_PAYMENT_ADDRESS || '';
+  }
+
+  // Batcher Payment Contract
+  static get BATCHER_PAYMENT_ENABLED(): boolean {
+    return ENV.isTrue(process.env.BATCHER_PAYMENT_ENABLED);
+  }
 
   static get CARP_URL(): string | undefined {
     return process.env.CARP_URL;

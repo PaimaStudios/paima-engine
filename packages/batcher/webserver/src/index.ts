@@ -20,6 +20,7 @@ import { createMessageForBatcher } from '@paima/concise';
 import { AddressType, getWriteNamespace, wait } from '@paima/utils';
 import { hashBatchSubunit } from '@paima/concise';
 import { RecaptchaError, reCaptchaValidation } from './recaptcha.js';
+import { BatcherPayment, BatcherPaymentError } from './payment.js';
 
 const port = ENV.BATCHER_PORT;
 
@@ -405,42 +406,7 @@ async function initializeServer(
           return;
         }
 
-        if (validity === 0) {
-          try {
-            await reCaptchaValidation(captcha);
-            unsetWebserverClosed();
-            await insertStateValidating.run({ input_hash: hash }, pool);
-            await insertUnvalidatedInput.run(
-              {
-                address_type: addressType,
-                user_address: userAddress,
-                game_input: gameInput,
-                millisecond_timestamp: millisecondTimestamp,
-                user_signature: userSignature,
-              },
-              pool
-            );
-            setWebserverClosed();
-          } catch (err) {
-            if (err instanceof RecaptchaError) {
-              console.log('[webserver] Recaptcha validation failed.');
-              console.log({ addressType, userAddress, gameInput, millisecondTimestamp });
-            } else {
-              console.log('[webserver] Error while setting input as validated.');
-            }
-            res.status(500).json({
-              success: false,
-              message: 'Internal server error',
-            });
-            return;
-          }
-          console.log('[webserver] Input has been accepted!');
-          res.status(200).json({
-            success: true,
-            hash: hash,
-          });
-          return;
-        } else {
+        if (validity !== 0) {
           res.status(400).json({
             success: false,
             message: errorCodeToMessage(validity),
@@ -448,6 +414,58 @@ async function initializeServer(
           });
           return;
         }
+        const payload = {
+          address_type: addressType,
+          user_address: userAddress,
+          game_input: gameInput,
+          millisecond_timestamp: millisecondTimestamp,
+          user_signature: userSignature,
+        };
+
+        let weiUsed = BigInt(0);
+        if (ENV.BATCHER_PAYMENT_ENABLED) {
+          try {
+            weiUsed = await BatcherPayment.estimateGasFeeInWei(JSON.stringify(payload));
+            await BatcherPayment.hasEnoughBalance(userAddress, weiUsed);
+            BatcherPayment.addTemporalGasFee(userAddress, weiUsed);
+          } catch (err) {
+            console.log('[webserver] Not enough funds.');
+            res.status(400).json({
+              success: false,
+              message: 'Insufficient funds',
+            });
+            return;
+          }
+        }
+
+        try {
+          await reCaptchaValidation(captcha);
+          unsetWebserverClosed();
+          await insertStateValidating.run({ input_hash: hash }, pool);
+          await insertUnvalidatedInput.run(payload, pool);
+          setWebserverClosed();
+        } catch (err) {
+          if (err instanceof RecaptchaError) {
+            console.log('[webserver] Recaptcha validation failed.');
+            console.log({ addressType, userAddress, gameInput, millisecondTimestamp });
+          } else {
+            console.log('[webserver] Error while setting input as validated.');
+          }
+          if (ENV.BATCHER_PAYMENT_ENABLED) {
+            BatcherPayment.revertTemporalGasFee(userAddress, weiUsed);
+          }
+          res.status(500).json({
+            success: false,
+            message: 'Internal server error',
+          });
+          return;
+        }
+        console.log('[webserver] Input has been accepted!');
+        res.status(200).json({
+          success: true,
+          hash: hash,
+        });
+        return;
       } catch (err) {
         console.log('[webserver/submit_user_input] error:', err);
         res.status(500).json({

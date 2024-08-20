@@ -44,10 +44,19 @@ class EvmBatchedTransactionPoster extends BatchedTransactionPosterBase {
     this.provider = newProvider;
   };
 
-  public override postMessage = async (
-    msg: string,
-    hashes: string[]
-  ): Promise<[number, string]> => {
+  public estimateGasLimit = async (msg: string): Promise<bigint> => {
+    const { populatedTx } = await this.buildTransaction(msg);
+    const estimate = await this.provider.estimateGasLimit(populatedTx);
+    return estimate;
+  };
+
+  private buildTransaction = async (
+    msg: string
+  ): Promise<{
+    txRequest: ethers.TransactionRequest;
+    populatedTx: ethers.TransactionRequest;
+    serializedSignedTx: ethers.Transaction;
+  }> => {
     const hexMsg = utf8ToHex(msg);
     // todo: unify with buildDirectTx
     const iface = new ethers.Interface([
@@ -66,6 +75,14 @@ class EvmBatchedTransactionPoster extends BatchedTransactionPosterBase {
     const serializedSignedTx = ethers.Transaction.from(
       await this.provider.getConnection().api.signTransaction(populatedTx)
     );
+    return { txRequest, populatedTx, serializedSignedTx };
+  };
+
+  public override postMessage = async (
+    msg: string,
+    hashes: string[]
+  ): Promise<[number, string]> => {
+    const { txRequest, serializedSignedTx } = await this.buildTransaction(msg);
 
     const [transaction] = await Promise.all([
       this.provider.sendTransaction(txRequest),
