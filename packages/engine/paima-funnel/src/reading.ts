@@ -135,7 +135,6 @@ async function splitGasCost(
       operations.push({
         balance: -1 * weight * g.gasUsed,
         batcher_address: g.batcherAddress,
-        cde_name: 'generic-batcher-contract',
         user_address: s.realAddress,
       })
     );

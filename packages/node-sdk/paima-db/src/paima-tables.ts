@@ -577,19 +577,17 @@ const TABLE_DATA_CDE_CARDANO_MINT_BURN: TableData = {
 
 const QUERY_CREATE_TABLE_CDE_BATCHER_PAYMENT = `
 CREATE TABLE cde_batcher_payment_data (
-  cde_name TEXT NOT NULL,
   batcher_address TEXT NOT NULL,
   user_address TEXT NOT NULL,
   balance BIGINT NOT NULL DEFAULT 0,
-  PRIMARY KEY (cde_name, batcher_address, user_address)
+  PRIMARY KEY (batcher_address, user_address)
 );
 `;
 
 const TABLE_DATA_CDE_CDE_BATCHER_PAYMENT: TableData = {
   tableName: 'cde_batcher_payment_data',
-  primaryKeyColumns: ['cde_name', 'batcher_address', 'user_address'],
+  primaryKeyColumns: ['batcher_address', 'user_address'],
   columnData: packTuples([
-    ['cde_name', 'text', 'NO', ''],
     ['batcher_address', 'text', 'NO', ''],
     ['user_address', 'text', 'NO', ''],
     ['balance', 'bigint', 'NO', ''],

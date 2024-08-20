@@ -299,6 +299,10 @@ function getNetworkName(
   );
 }
 
+// Batcher Payment Contract initialized
+// There can be only zero or one instance of Batcher Payment Contract
+let batcherPaymentContractInit = false;
+
 // Do type-specific initialization and construct contract objects
 async function instantiateExtension(
   config: Static<typeof CdeConfig>['extensions'][0],
@@ -470,6 +474,8 @@ async function instantiateExtension(
       };
     }
     case CdeEntryTypeName.BatcherPayment: {
+      if (batcherPaymentContractInit) throw new Error('Only one Batcher Payment contract allowed');
+      batcherPaymentContractInit = true;
       const network = getDefaultEvmNetwork();
       return {
         ...config,
@@ -477,7 +483,7 @@ async function instantiateExtension(
         cdeName: config.name,
         hash: hashConfig(config),
         cdeType: ChainDataExtensionType.BatcherPayment,
-        contract: getBatcherPaymentContract(config.contractAddress as string, web3s[network]),
+        contract: getBatcherPaymentContract(config.contractAddress, web3s[network]),
       };
     }
     default:

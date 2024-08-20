@@ -57,7 +57,7 @@ export async function cdeTransitionFunction(
     case ChainDataExtensionDatumType.DynamicEvmPrimitive:
       return await processDynamicEvmPrimitive(cdeDatum, inPresync);
     case ChainDataExtensionDatumType.BatcherPayment:
-      return await processBatcherPayment(readonlyDBConn, cdeDatum, inPresync);
+      return await processBatcherPayment(cdeDatum, inPresync);
     default:
       assertNever(cdeDatum);
   }

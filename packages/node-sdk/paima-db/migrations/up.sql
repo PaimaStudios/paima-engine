@@ -260,11 +260,10 @@ CREATE TABLE cde_cardano_mint_burn(
 );
 
 CREATE TABLE cde_batcher_payment_data (
-  cde_name TEXT NOT NULL,
   batcher_address TEXT NOT NULL,
   user_address TEXT NOT NULL,
   balance BIGINT NOT NULL DEFAULT 0,
-  PRIMARY KEY (cde_name, batcher_address, user_address)
+  PRIMARY KEY (batcher_address, user_address)
 );
 
 CREATE TABLE mina_checkpoint (

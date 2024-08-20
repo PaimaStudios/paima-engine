@@ -32,7 +32,6 @@ export class BatcherPaymentController extends Controller {
     const [balance] = await cdeBatcherPaymentByAddress.run(
       {
         batcher_address: batcher_address.toLocaleLowerCase(),
-        cde_name: 'generic-batcher-contract',
         user_address: user_address.toLocaleLowerCase(),
       },
       DBConn
