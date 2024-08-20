@@ -21,7 +21,7 @@ import type {
 import { Type } from '@sinclair/typebox';
 import type { Static } from '@sinclair/typebox';
 import type { ProjectedNftStatus } from '@dcspark/carp-client';
-import type { EventPathAndDef, generateAppEvents, ResolvedPath } from '@paima/events';
+import type { AppEvents, generateAppEvents, ResolvedPath } from '@paima/events';
 
 export { SubmittedChainData, SubmittedData };
 
@@ -646,11 +646,11 @@ export type ChainDataExtension = (
   | ChainDataExtensionDynamicEvmPrimitive
 ) & { network: string };
 
-export type GameStateTransitionFunctionRouter<Event extends EventPathAndDef> = (
+export type GameStateTransitionFunctionRouter<Events extends AppEvents> = (
   blockHeight: number
-) => GameStateTransitionFunction<Event>;
+) => GameStateTransitionFunction<Events>;
 
-export type GameStateTransitionFunction<Event extends EventPathAndDef> = (
+export type GameStateTransitionFunction<Events extends AppEvents> = (
   inputData: STFSubmittedData,
   blockHeader: BlockHeader,
   randomnessGenerator: any,
@@ -661,7 +661,7 @@ export type GameStateTransitionFunction<Event extends EventPathAndDef> = (
     address: `0x${string}`;
     data: {
       name: string;
-      fields: ResolvedPath<Event['path']> & Event['type'];
+      fields: ResolvedPath<Events[string][number]['path']> & Events[string][number]['type'];
       topic: string;
     };
   }[];

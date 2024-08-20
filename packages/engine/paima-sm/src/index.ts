@@ -52,7 +52,7 @@ import type {
 import { ConfigNetworkType } from '@paima/utils';
 import assertNever from 'assert-never';
 import { keccak_256 } from 'js-sha3';
-import type { EventPathAndDef, generateAppEvents, ResolvedPath } from '@paima/events';
+import type { AppEvents, EventPathAndDef, generateAppEvents, ResolvedPath } from '@paima/events';
 import { PaimaEventManager } from '@paima/events';
 import { PaimaEventBroker } from '@paima/broker';
 
@@ -433,10 +433,10 @@ async function processPaginatedCdeData(
 // Process all of the scheduled data inputs by running each of them through the game STF,
 // saving the results to the DB, and deleting the schedule data all together in one postgres tx.
 // Function returns number of scheduled inputs that were processed.
-async function processScheduledData<Event extends EventPathAndDef>(
+async function processScheduledData<Events extends AppEvents>(
   latestChainData: ChainData,
   DBConn: PoolClient,
-  gameStateTransition: GameStateTransitionFunction<Event>,
+  gameStateTransition: GameStateTransitionFunction<Events>,
   randomnessGenerator: Prando,
   precompiles: Precompiles['precompiles'],
   indexForEvent: (txHash: string) => number,
@@ -515,7 +515,7 @@ async function processScheduledData<Event extends EventPathAndDef>(
 
       // Trigger STF
       let sqlQueries: SQLUpdate[] = [];
-      let eventsToEmit: EventsToEmit<Event> = [];
+      let eventsToEmit: EventsToEmit<Events[string][number]> = [];
       try {
         const { stateTransitions, events } = await gameStateTransition(
           inputData,
@@ -526,7 +526,7 @@ async function processScheduledData<Event extends EventPathAndDef>(
 
         sqlQueries = stateTransitions;
 
-        handleEvents<Event>(
+        handleEvents<Events[string][number]>(
           events,
           sqlQueries,
           txIndexInBlock,
@@ -549,7 +549,7 @@ async function processScheduledData<Event extends EventPathAndDef>(
         });
 
         if (success) {
-          await sendEventsToBroker<Event>(eventsToEmit);
+          await sendEventsToBroker<Events[string][number]>(eventsToEmit);
         }
       }
     } catch (e) {
@@ -567,10 +567,10 @@ async function processScheduledData<Event extends EventPathAndDef>(
 // Process all of the user inputs data inputs by running each of them through the game STF,
 // saving the results to the DB with the nonces, all together in one postgres tx.
 // Function returns number of user inputs that were processed.
-async function processUserInputs<Event extends EventPathAndDef>(
+async function processUserInputs<Events extends AppEvents>(
   latestChainData: ChainData,
   DBConn: PoolClient,
-  gameStateTransition: GameStateTransitionFunction<Event>,
+  gameStateTransition: GameStateTransitionFunction<Events>,
   randomnessGenerator: Prando,
   indexForEvent: (txHash: string) => number,
   txIndexInBlock: number,
@@ -622,7 +622,7 @@ async function processUserInputs<Event extends EventPathAndDef>(
 
       // Trigger STF
       let sqlQueries: SQLUpdate[] = [];
-      let eventsToEmit: EventsToEmit<Event> = [];
+      let eventsToEmit: EventsToEmit<Events[string][number]> = [];
       try {
         const { stateTransitions, events } = await gameStateTransition(
           inputData,
@@ -633,7 +633,7 @@ async function processUserInputs<Event extends EventPathAndDef>(
 
         sqlQueries = stateTransitions;
 
-        handleEvents<Event>(
+        handleEvents<Events[string][number]>(
           events,
           sqlQueries,
           txIndexInBlock,
@@ -656,7 +656,7 @@ async function processUserInputs<Event extends EventPathAndDef>(
         });
 
         if (success) {
-          await sendEventsToBroker<Event>(eventsToEmit);
+          await sendEventsToBroker<Events[string][number]>(eventsToEmit);
         }
       }
     } finally {
@@ -686,7 +686,7 @@ async function processUserInputs<Event extends EventPathAndDef>(
 
 async function sendEventsToBroker<Event extends EventPathAndDef>(
   eventsToEmit: EventsToEmit<Event>
-) {
+): Promise<void> {
   if (ENV.MQTT_BROKER) {
     // we probably don't want to use Promise.all since it will change the order.
     for (const [eventDefinition, fields] of eventsToEmit) {
