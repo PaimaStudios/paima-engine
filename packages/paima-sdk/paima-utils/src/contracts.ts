@@ -17,7 +17,6 @@ import paimaErc721ContractBuild from './artifacts/PaimaERC721Contract.js';
 import erc1155ContractBuild from './artifacts/IERC1155Contract.js';
 import erc6551RegistryContractBuild from './artifacts/ERC6551RegistryContract.js';
 import oldErc6551RegistryContractBuild from './artifacts/OldERC6551RegistryContract.js';
-import batcherPaymentContractBuild from './artifacts/BatcherPaymentContract.js';
 export const contractAbis = {
   paimaL2ContractBuild,
   erc20ContractBuild,
@@ -27,7 +26,6 @@ export const contractAbis = {
   erc1155ContractBuild,
   erc6551RegistryContractBuild,
   oldErc6551RegistryContractBuild,
-  batcherPaymentContractBuild,
 };
 
 // Re-export contract types.
@@ -43,7 +41,7 @@ export type {
   TransferBatch as Erc1155TransferBatch,
 } from './contract-types/IERC1155Contract.js';
 export type { AccountCreated } from './contract-types/ERC6551RegistryContract.js';
-export type { Payment as BatcherPaymentEvent } from './contract-types/BatcherPaymentContract.js';
+export type { Payment as BatcherPaymentEvent } from './contract-types/PaimaL2Contract.js';
 
 export type { Web3, Contract, AbiItem, EventData };
 export { AddressType, ChainDataExtensionType, ChainDataExtensionDatumType };
@@ -158,17 +156,6 @@ export function getOldErc6551RegistryContract(
     oldErc6551RegistryContractBuild.abi as AbiItem[],
     web3
   ) as unknown as Contracts.OldERC6551RegistryContract;
-}
-
-export function getBatcherPaymentContract(
-  address: string,
-  web3?: Web3
-): Contracts.BatcherPaymentContract {
-  return getAbiContract(
-    address,
-    batcherPaymentContractBuild.abi as AbiItem[],
-    web3
-  ) as unknown as Contracts.BatcherPaymentContract;
 }
 
 export function validatePaimaL2ContractAddress(address: string): void {

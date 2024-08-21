@@ -16,7 +16,6 @@ import processCardanoAssetUtxoDatum from './cde-cardano-delayed-asset.js';
 import processCardanoTransferDatum from './cde-cardano-transfer.js';
 import processCardanoMintBurnDatum from './cde-cardano-mint-burn.js';
 import processDynamicEvmPrimitive from './cde-evm-dynamic-primitive.js';
-import processBatcherPayment from './cde-evm-batcher-payment.js';
 import assertNever from 'assert-never';
 import type { SQLUpdate } from '@paima/db';
 
@@ -56,8 +55,6 @@ export async function cdeTransitionFunction(
       return await processGenericDatum(cdeDatum, inPresync);
     case ChainDataExtensionDatumType.DynamicEvmPrimitive:
       return await processDynamicEvmPrimitive(cdeDatum, inPresync);
-    case ChainDataExtensionDatumType.BatcherPayment:
-      return await processBatcherPayment(cdeDatum, inPresync);
     default:
       assertNever(cdeDatum);
   }

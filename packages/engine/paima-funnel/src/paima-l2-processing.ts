@@ -107,9 +107,7 @@ export async function processDataUnit(
         )
       )
     );
-    return validatedSubUnits
-      .filter(item => item.validated)
-      .map(v => unpackValidatedData(unit.senderAddress!, v));
+    return validatedSubUnits.filter(item => item.validated).map(v => unpackValidatedData(v));
   } catch (err) {
     doLog(`[funnel::processDataUnit] error: ${err}`);
     return [];
@@ -218,10 +216,7 @@ async function validateSubunitSignature(
   return false;
 }
 
-function unpackValidatedData(
-  batcherAddress: string,
-  validatedData: ValidatedSubmittedData
-): SubmittedDataExt {
+function unpackValidatedData(validatedData: ValidatedSubmittedData): SubmittedDataExt {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const o = validatedData as any;
   delete o.validated;

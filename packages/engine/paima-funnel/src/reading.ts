@@ -8,9 +8,8 @@ import {
   doLog,
   ChainDataExtensionType,
   getErc721Contract,
-  ENV,
 } from '@paima/utils';
-import type { PaimaL2Contract, SubmittedData } from '@paima/utils';
+import type { BatcherPaymentEvent, PaimaL2Contract } from '@paima/utils';
 import { TimeoutError, instantiateCdeGeneric } from '@paima/runtime';
 import type { ChainDataExtension, TChainDataExtensionGenericConfig } from '@paima/sm';
 import {
@@ -25,10 +24,10 @@ import { extractSubmittedData } from './paima-l2-processing.js';
 import type { FunnelSharedData } from './funnels/BaseFunnel.js';
 import { getUngroupedCdeData } from './cde/reading.js';
 import { generateDynamicPrimitiveName } from '@paima/utils-backend';
-import type { ICdeBatcherPaymentUpdateBalanceParams } from '@paima/db';
-import { cdeBatcherPaymentUpdateBalance } from '@paima/db';
-import { BuiltinEvents } from '@paima/events';
-import { PaimaEventManager } from '@paima/events';
+import {
+  BatcherPaymentEventProcessor,
+  BatcherPaymentsFeeProcessor,
+} from './paima-l2-batcher-payment.js';
 
 export async function getBaseChainDataMulti(
   web3: Web3,
@@ -38,13 +37,15 @@ export async function getBaseChainDataMulti(
   DBConn: PoolClient,
   caip2Prefix: string
 ): Promise<ChainData[]> {
-  const [blockData, events] = await Promise.all([
+  const [blockData, events, paymentEvents] = await Promise.all([
     getMultipleBlockData(web3, fromBlock, toBlock),
     getPaimaEvents(paimaL2Contract, fromBlock, toBlock),
+    getBatcherPaymentEvents(paimaL2Contract, fromBlock, toBlock),
   ]);
-  const resultList: ChainData[] = [];
+  const chainData: ChainData[] = [];
   for (const block of blockData) {
     const blockEvents = events.filter(e => e.blockNumber === block.blockNumber);
+    const batcherPaymentEvents = paymentEvents.filter(e => e.blockNumber === block.blockNumber);
 
     const submittedData = await extractSubmittedData(
       blockEvents,
@@ -53,16 +54,23 @@ export async function getBaseChainDataMulti(
       caip2Prefix
     );
 
-    if (ENV.BATCHER_PAYMENT_ENABLED) {
-      await processBatcherPayments(web3, blockEvents, submittedData, DBConn);
-    }
+    const batcherFees = await new BatcherPaymentsFeeProcessor(
+      web3,
+      blockEvents,
+      submittedData
+    ).process();
+    const batcherAddFunds = new BatcherPaymentEventProcessor(batcherPaymentEvents).process();
 
-    resultList.push({
+    chainData.push({
       ...block,
       submittedData,
+      batcher: {
+        sqlUpdates: [...batcherFees.sqlUpdates, ...batcherAddFunds.sqlUpdates],
+        events: [...batcherFees.events, ...batcherAddFunds.events],
+      },
     });
   }
-  return resultList;
+  return chainData;
 }
 
 export async function getBaseChainDataSingle(
@@ -72,11 +80,11 @@ export async function getBaseChainDataSingle(
   DBConn: PoolClient,
   caip2Prefix: string
 ): Promise<ChainData> {
-  const [blockData, events] = await Promise.all([
+  const [blockData, events, paymentEvents] = await Promise.all([
     getBlockData(web3, blockNumber),
     getPaimaEvents(paimaL2Contract, blockNumber, blockNumber),
+    getBatcherPaymentEvents(paimaL2Contract, blockNumber, blockNumber),
   ]);
-
   const submittedData = await extractSubmittedData(
     events,
     blockData.timestamp,
@@ -84,73 +92,17 @@ export async function getBaseChainDataSingle(
     caip2Prefix
   );
 
-  if (ENV.BATCHER_PAYMENT_ENABLED) {
-    await processBatcherPayments(web3, events, submittedData, DBConn);
-  }
+  const batcherFees = await new BatcherPaymentsFeeProcessor(web3, events, submittedData).process();
+  const batcherAddFunds = new BatcherPaymentEventProcessor(paymentEvents).process();
+
   return {
     ...blockData,
     submittedData, // merge in the data
+    batcher: {
+      sqlUpdates: [...batcherFees.sqlUpdates, ...batcherAddFunds.sqlUpdates],
+      events: [...batcherFees.events, ...batcherAddFunds.events],
+    },
   };
-}
-
-async function processBatcherPayments(
-  web3: Web3,
-  events: PaimaGameInteraction[],
-  submittedData: (SubmittedData & { fromBatcher?: boolean })[],
-  DBConn: PoolClient
-): Promise<void> {
-  const batcherSubmittedData = submittedData.filter(s => s.fromBatcher);
-  if (batcherSubmittedData.length) {
-    const totalGasUsed = await getTotalGas(web3, events);
-    await splitGasCost(totalGasUsed, batcherSubmittedData, DBConn);
-  }
-}
-
-async function getTotalGas(
-  web3: Web3,
-  blockEvents: PaimaGameInteraction[]
-): Promise<{ gasUsed: number; txHash: string; batcherAddress: string }[]> {
-  if (blockEvents.length === 0) return [];
-
-  const transactionReceipts = await Promise.all(
-    blockEvents.map(blockEvent => web3.eth.getTransactionReceipt(blockEvent.transactionHash))
-  );
-  return transactionReceipts.map(receipt => ({
-    gasUsed: receipt.gasUsed * receipt.effectiveGasPrice,
-    txHash: receipt.transactionHash,
-    batcherAddress: receipt.from,
-  }));
-}
-
-async function splitGasCost(
-  totalGasUsed: { gasUsed: number; txHash: string; batcherAddress: string }[],
-  batchedSubmittedData: SubmittedData[],
-  DBConn: PoolClient
-): Promise<void> {
-  const operations: ICdeBatcherPaymentUpdateBalanceParams[] = [];
-  totalGasUsed.forEach(g => {
-    const submissions = batchedSubmittedData.filter(b => b.txHash === g.txHash);
-    const weight = 1 / submissions.length;
-    submissions.forEach(s =>
-      operations.push({
-        balance: -1 * weight * g.gasUsed,
-        batcher_address: g.batcherAddress,
-        user_address: s.realAddress,
-      })
-    );
-  });
-
-  await Promise.all([
-    ...operations.map(o => cdeBatcherPaymentUpdateBalance.run(o, DBConn)),
-    ...operations.map(o =>
-      PaimaEventManager.Instance.sendMessage(BuiltinEvents.BatcherPayment, {
-        userAddress: o.user_address,
-        batcherAddress: o.batcher_address,
-        operation: 'payGas',
-        wei: String(-1 * (o.balance as number)),
-      })
-    ),
-  ]);
 }
 
 async function getBlockData(web3: Web3, blockNumber: number): Promise<ChainData> {
@@ -236,6 +188,22 @@ async function getPaimaEvents(
     }),
     DEFAULT_FUNNEL_TIMEOUT
   )) as unknown as PaimaGameInteraction[];
+}
+
+async function getBatcherPaymentEvents(
+  paimaL2Contract: PaimaL2Contract,
+  fromBlock: number,
+  toBlock: number
+): Promise<BatcherPaymentEvent[]> {
+  // TODO: typechain is missing the proper type generation for getPastEvents
+  // https://github.com/dethcrypto/TypeChain/issues/767
+  return (await timeout(
+    paimaL2Contract.getPastEvents('Payment', {
+      fromBlock,
+      toBlock,
+    }),
+    DEFAULT_FUNNEL_TIMEOUT
+  )) as unknown as BatcherPaymentEvent[];
 }
 
 // We need to fetch these before the rest of the primitives, because this may

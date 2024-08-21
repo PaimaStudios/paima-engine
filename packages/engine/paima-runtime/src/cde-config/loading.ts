@@ -21,7 +21,6 @@ import {
   defaultCardanoNetworkName,
   getErc1155Contract,
   defaultMinaNetworkName,
-  getBatcherPaymentContract,
 } from '@paima/utils';
 
 import type {
@@ -51,7 +50,6 @@ import {
   ChainDataExtensionMinaEventGenericConfig,
   ChainDataExtensionMinaActionGenericConfig,
   ChainDataExtensionDynamicEvmPrimitiveConfig,
-  ChainDataExtensionBatcherPaymentConfig,
 } from '@paima/sm';
 import { loadAbi } from './utils.js';
 import assertNever from 'assert-never';
@@ -224,12 +222,6 @@ export function parseCdeConfigFile(
         return checkOrError(
           entry.name,
           Type.Intersect([ChainDataExtensionMinaActionGenericConfig, networkTagType]),
-          entry
-        );
-      case CdeEntryTypeName.BatcherPayment:
-        return checkOrError(
-          entry.name,
-          Type.Intersect([ChainDataExtensionBatcherPaymentConfig, networkTagType]),
           entry
         );
       default:
@@ -471,19 +463,6 @@ async function instantiateExtension(
         cdeName: config.name,
         hash: hashConfig(config),
         cdeType: ChainDataExtensionType.MinaActionGeneric,
-      };
-    }
-    case CdeEntryTypeName.BatcherPayment: {
-      if (batcherPaymentContractInit) throw new Error('Only one Batcher Payment contract allowed');
-      batcherPaymentContractInit = true;
-      const network = getDefaultEvmNetwork();
-      return {
-        ...config,
-        network,
-        cdeName: config.name,
-        hash: hashConfig(config),
-        cdeType: ChainDataExtensionType.BatcherPayment,
-        contract: getBatcherPaymentContract(config.contractAddress, web3s[network]),
       };
     }
     default:

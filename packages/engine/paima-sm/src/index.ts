@@ -35,7 +35,7 @@ import {
 } from '@paima/db';
 import type { SQLUpdate } from '@paima/db';
 import Prando from '@paima/prando';
-
+import { PaimaEventManager, BuiltinEvents } from '@paima/events';
 import { randomnessRouter } from './randomness.js';
 import { cdeTransitionFunction } from './cde-processing.js';
 import { DelegateWallet } from './delegate-wallet.js';
@@ -271,7 +271,9 @@ const SM: GameStateMachineInitializer = {
           indexForEventByTx
         );
 
-        const processedCount = cdeDataLength + userInputsLength + scheduledInputsLength;
+        const batcherPaymentEvents = await processBatcherPayments(latestChainData, dbTx);
+        const processedCount =
+          cdeDataLength + userInputsLength + scheduledInputsLength + batcherPaymentEvents;
         // Extra logging
         if (processedCount > 0)
           doLog(
@@ -382,6 +384,30 @@ async function processPaginatedCdeData(
 
     return;
   });
+}
+
+// Process Batcher Payments
+async function processBatcherPayments(
+  latestChainData: ChainData,
+  DBConn: PoolClient
+): Promise<number> {
+  let count = 0;
+
+  // Update batcher payments and fees.
+  for (const [query, params] of latestChainData.batcher?.sqlUpdates ?? []) {
+    count += 1;
+    await query.run(params, DBConn);
+  }
+
+  for (const e of latestChainData.batcher?.events ?? []) {
+    await PaimaEventManager.Instance.sendMessage(BuiltinEvents.BatcherPayment, {
+      userAddress: e.userAddress,
+      batcherAddress: e.batcherAddress,
+      operation: e.operation,
+      wei: e.wei,
+    });
+  }
+  return count;
 }
 
 // Process all of the scheduled data inputs by running each of them through the game STF,
