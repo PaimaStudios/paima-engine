@@ -5,6 +5,7 @@ const isNode: boolean =
   typeof process !== 'undefined' && process.versions != null && process.versions.node != null;
 if (isNode) {
   // dynamic import to avoid requiring a polyfill for this in browsers
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const { config } = require('dotenv');
   // for browser builds, we can't actually loads things from disk like this
   // instead, for browsers we rely on bundlers like Vite or Webpack to fill these
