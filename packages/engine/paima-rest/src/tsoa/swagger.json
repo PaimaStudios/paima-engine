@@ -578,19 +578,6 @@
 							}
 						}
 					},
-					"400": {
-						"description": "",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/InternalServerErrorResult"
-								},
-								"examples": {
-									"Example 1": {}
-								}
-							}
-						}
-					},
 					"404": {
 						"description": "",
 						"content": {

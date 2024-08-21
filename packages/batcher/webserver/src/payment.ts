@@ -8,77 +8,50 @@ import {
 import { BuiltinEvents, PaimaEventManager } from '@paima/events';
 export class BatcherPaymentError extends Error {}
 
-type AccountBalance = { balance: bigint; temporalFees: bigint[] };
+type TemporalFees = bigint[];
+type Address = string;
 
 export class BatcherPayment {
   private static isInitialized = false;
 
   /** In memory storage for user balances */
-  private static userAddressBalance: Map<string, AccountBalance> = new Map();
-
-  /** Get account balance from memory, account must exists or error is thrown */
-  private static getAccountBalance(user_address: string): AccountBalance {
-    const accountBalance = BatcherPayment.userAddressBalance.get(user_address);
-    if (!accountBalance) {
-      throw new BatcherPaymentError();
-    }
-    return accountBalance;
-  }
+  private static userAddressBalance: Map<Address, TemporalFees> = new Map();
 
   /** Subtract funds temporally from account until updated */
   public static addTemporalGasFee(user_address: string, fee: bigint): void {
     if (fee < 0) throw new BatcherPaymentError('Expected Positive Value');
-    const accountBalance = BatcherPayment.getAccountBalance(user_address);
-    accountBalance.temporalFees.push(fee);
+    let accountBalance = BatcherPayment.userAddressBalance.get(user_address);
+    if (!accountBalance) {
+      accountBalance = [];
+      BatcherPayment.userAddressBalance.set(user_address, accountBalance);
+    }
+    accountBalance.push(fee);
   }
 
   /** Revert funds that where temporally subtracted from account */
   public static revertTemporalGasFee(user_address: string, fee: bigint): void {
     if (fee < 0) throw new BatcherPaymentError('Expected Positive Value');
-    const accountBalance = BatcherPayment.getAccountBalance(user_address);
-    const index = accountBalance.temporalFees.indexOf(fee);
-    if (index < 0) throw new BatcherPaymentError('Fee not found');
-    accountBalance.temporalFees.splice(index, 1);
+    const accountBalance = BatcherPayment.userAddressBalance.get(user_address);
+    if (!accountBalance) return;
+
+    const index = accountBalance.indexOf(fee);
+    if (index >= 0) accountBalance.splice(index, 1);
+    if (accountBalance.length === 0) BatcherPayment.userAddressBalance.delete(user_address);
   }
 
-  /** Increments account currently hold funds */
-  private static addFundsToAccount(user_address: string, amount: bigint): void {
-    if (amount < 0) throw new BatcherPaymentError('Expected Positive Value');
-    try {
-      const accountBalance = BatcherPayment.getAccountBalance(user_address);
-      accountBalance.balance += amount;
-    } catch {
-      // If account does not exist do not add funds,
-      // We need to fetch the initial balance from the game-node first.
-    }
-  }
-
-  /** Subtract permanently funds from account, and removes best temporal match, from real gas usage vs estimate  */
+  /** Removes best temporal match  */
   private static chargeGasFee(user_address: string, fee: bigint): void {
     if (fee < 0) throw new BatcherPaymentError('Expected Positive Value');
-    const accountBalance = BatcherPayment.getAccountBalance(user_address);
-    const bestMatch = accountBalance.temporalFees
+    const accountBalance = BatcherPayment.userAddressBalance.get(user_address);
+    if (!accountBalance) return;
+
+    const bestMatch = accountBalance
       .map(f => ({ error: f - fee, value: f }))
       .sort((a, b) => Number(a.error - b.error)) // we want to remove the closest match
       .map(f => f.value);
     bestMatch.shift();
-    accountBalance.temporalFees = bestMatch;
-    accountBalance.balance -= fee;
-  }
-
-  /** Create new account in-memory */
-  private static createBalanceInMemory(user_address: string, balance: bigint): void {
-    const accountBalance = BatcherPayment.userAddressBalance.get(user_address);
-    if (!accountBalance) {
-      BatcherPayment.userAddressBalance.set(user_address, { balance, temporalFees: [] });
-    }
-  }
-
-  /** Gets balance (real - temporal fees) */
-  private static getBalanceFromMemory(user_address: string): bigint | null {
-    const balance = BatcherPayment.userAddressBalance.get(user_address);
-    if (!balance) return null;
-    return balance.balance - balance.temporalFees.reduce((a, b) => a + b, BigInt(0));
+    if (bestMatch.length === 0) BatcherPayment.userAddressBalance.delete(user_address);
+    else BatcherPayment.userAddressBalance.set(user_address, bestMatch);
   }
 
   /** Get estimation of gas used for message */
@@ -102,25 +75,19 @@ export class BatcherPayment {
     if (balance <= gasInWei) throw new BatcherPaymentError();
   }
 
-  /** Tries to get balance from memory, otherwise fetches initial value from game-node */
+  /** Fetch current balance from game-node and subtract temporal fees  */
   public static async getBalance(user_address: string): Promise<bigint> {
-    // First check local cache.
-    const b = BatcherPayment.getBalanceFromMemory(user_address);
-    if (b !== null) return b;
-
-    // If not in memory, fetch from node
+    // Fetch balance from Game Node
     const address = new Web3().eth.accounts.privateKeyToAccount(ENV.BATCHER_PRIVATE_KEY);
-
     const url = `${ENV.GAME_NODE_URI}/batcher_payment`;
-
     const result = await axios.get<{ result: { balance: string } }>(url, {
       params: { batcher_address: address.address, user_address },
     });
     if (result.status < 200 || result.status >= 300)
       throw new BatcherPaymentError('Error fetching balance');
 
-    BatcherPayment.createBalanceInMemory(user_address, BigInt(result.data.result.balance));
-    return BigInt(result.data.result.balance);
+    const temporalFees = BatcherPayment.userAddressBalance.get(user_address) ?? [];
+    return BigInt(result.data.result.balance) - temporalFees.reduce((a, b) => a + b, 0n);
   }
 
   /** Initialize BatcherPayment System. Read Paima-Events that contain real fees and added funds. */
@@ -140,7 +107,7 @@ export class BatcherPayment {
             BatcherPayment.chargeGasFee(userAddress as string, BigInt(wei as string));
             break;
           case 'addFunds':
-            BatcherPayment.addFundsToAccount(userAddress as string, BigInt(wei as string));
+            // Do nothing, as current balance is fetched from game-node
             break;
         }
       }

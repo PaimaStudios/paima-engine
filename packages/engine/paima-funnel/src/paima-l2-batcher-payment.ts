@@ -62,24 +62,17 @@ export class BatcherPaymentEventProcessor {
 
   private storeBatcherPaymentFees(event: BatcherPaymentEventExtracted): SQLUpdate[] {
     const { batcherAddress, userAddress, value } = event.payload;
-    const updateList: SQLUpdate[] = [];
-    try {
-      if (ENV.BATCHER_PAYMENT_ENABLED) {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-        updateList.push([
-          cdeBatcherPaymentUpdateBalance,
-          {
-            batcher_address: batcherAddress,
-            user_address: userAddress,
-            balance: value,
-          },
-        ]);
-      }
-      return updateList;
-    } catch (err) {
-      doLog(`[paima-sm] error while storing batcher payment datum: ${err}`);
-      return [];
-    }
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    return [
+      [
+        cdeBatcherPaymentUpdateBalance,
+        {
+          batcher_address: batcherAddress,
+          user_address: userAddress,
+          balance: value,
+        },
+      ],
+    ];
   }
 }
 
