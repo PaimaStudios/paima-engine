@@ -37,10 +37,27 @@ export type TransactionTemplate = {
 
 export type NonceString = string;
 
-export type BlockHeader = {
+/**
+ * Block header (see: ChainData for the full block)
+ */
+export type PreExecutionBlockHeader = {
+  version: 1;
+  mainChainBlochHash: string;
   blockHeight: number;
-  /** in seconds */
-  timestamp: number;
+  /**
+   * If there is no previous block, this is null
+   */
+  prevBlockHash: string | null;
+  /** in milliseconds */
+  msTimestamp: number;
+};
+export type PostExecutionBlockHeader = PreExecutionBlockHeader & {
+  successTxsHash: string;
+  /**
+   * note: this may not contain all failed txs
+   *       notably, it excludes any tx that failed before it got to the STF call
+   */
+  failedTxsHash: string;
 };
 
 export interface SubmittedData {

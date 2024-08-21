@@ -70,6 +70,13 @@ export function buildErrorCodeTranslator(obj: ErrorMessageMapping): ErrorMessage
   };
 }
 
+export function strip0x(str: string): string {
+  if (str.startsWith('0x')) {
+    return str.substring(2);
+  }
+  return str;
+}
+
 // Timeout function for promises
 export const timeout = <T>(prom: Promise<T>, time: number): Promise<Awaited<T>> =>
   Promise.race([

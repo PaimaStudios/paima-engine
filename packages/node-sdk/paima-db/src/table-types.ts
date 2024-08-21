@@ -1,7 +1,7 @@
 type ColumnDataTuple = [
   column_name: string,
   data_type: string,
-  nullable: string,
+  nullable: 'NO' | 'YES',
   default_value: string,
 ];
 

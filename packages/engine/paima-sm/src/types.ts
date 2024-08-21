@@ -16,7 +16,7 @@ import type {
   ConfigNetworkType,
   STFSubmittedData,
   IERC1155Contract,
-  BlockHeader,
+  PreExecutionBlockHeader,
 } from '@paima/utils';
 import { Type } from '@sinclair/typebox';
 import type { Static } from '@sinclair/typebox';
@@ -28,6 +28,7 @@ export { SubmittedChainData, SubmittedData };
 export interface ChainData {
   /** in seconds */
   timestamp: number;
+  /** block hash of the underlying main chain */
   blockHash: string;
   blockNumber: number;
   submittedData: SubmittedData[];
@@ -652,7 +653,7 @@ export type GameStateTransitionFunctionRouter<Events extends AppEvents> = (
 
 export type GameStateTransitionFunction<Events extends AppEvents> = (
   inputData: STFSubmittedData,
-  blockHeader: BlockHeader,
+  blockHeader: PreExecutionBlockHeader,
   randomnessGenerator: any,
   DBConn: PoolClient
 ) => Promise<{
