@@ -73,7 +73,7 @@ app
     }
   });
 
-// App Command: Init -----------------------------------------------------------
+// App Command: Create Account -----------------------------------------------------------
 app
   .command('create_account')
   .description('Creates an Account')
@@ -92,8 +92,6 @@ app
     let parameterized_validator;
     try {
       parameterized_validator = await JSON.parse(fs.readFileSync('./data/param_script.json',{ encoding: 'utf-8' }));
-
-      console.log(parameterized_validator);
     } catch (e) {
       console.log(e);
       console.log("No parameterized script in src/data found. Make sure to initialize the contract with init_contract first");

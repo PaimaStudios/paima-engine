@@ -7,9 +7,13 @@ import {
   paymentCredentialOf,
   applyParamsToScript,
   applyDoubleCborEncoding,
-  fromHex
+  fromHex,
+  toHex
 } from "lucid-cardano";
 import fs from 'fs';
+import { Store, Trie } from '@aiken-lang/merkle-patricia-forestry';
+import blake2b from 'blake2b';
+import { Encoder, decode } from 'cbor-x';
 
 const VERBOSE = true;
 
@@ -129,8 +133,6 @@ export const init_merkle = async (API, Validators) => {
     })
   }
 
-  const paymentCredentialHash = paymentCredentialOf(userAddress).hash
-
   // Get the User's UTXOs ------------------------------------------------------
   const utxos_user = await API.utxosAt(userAddress)
   // const utxos_base_asset = utxos_user.filter((object) => {
@@ -243,31 +245,83 @@ export const create_account = async (API, Validator_Merkle_Minter) => {
       "Network": API.network
     })
   }
-
   const paymentCredentialHash = paymentCredentialOf(userAddress).hash
 
   // Contract Addresses
-  console.log(Validator_Merkle_Minter)
   const Address_Contract_Merkle_Minter = API.utils.validatorToAddress(Validator_Merkle_Minter);
 
   // Policy IDs
   const policyId_Merkle_Minter = API.utils.validatorToScriptHash(Validator_Merkle_Minter)
   
-  // Define Sacrificial Token Information --------------------------------------
-  if (VERBOSE) { console.log("INFO: Defining Sacrificial and Primary Asset") };
 
   // Configure Script Datum and Redeemer ----------------------------------------
   if (VERBOSE) { console.log("INFO: Configuring Datum"); }
 
-  // Mint Action: InitMerkle (ref: validation.ak)
+  const asset_token_root = `${policyId_Merkle_Minter}${""}`
+  const quantity_token_root = 1
+
+  const scriptUtxos = await API.utxosAt(Address_Contract_Merkle_Minter)
+  const assetCollateralTokenUTXO = scriptUtxos.filter((object) => {
+    return Object.keys(object.assets).includes(asset_token_root);
+  });
+  console.log("Contract Token in at UTXO:", assetCollateralTokenUTXO)
+  console.log("Output index:", assetCollateralTokenUTXO[0].outputIndex)
+
+  // Mint Action: CreateAccount (ref: validation.ak)
+
+  const output_index =  BigInt(assetCollateralTokenUTXO[0].outputIndex)
+  
+  console.log('pkh', paymentCredentialHash)
+  const account = Data.to(
+  new Constr(1, 
+    [
+      new Constr(0, [paymentCredentialHash]), BigInt(1)
+    ]
+  ))
+
+  let accountSerialized =  Data.to(new Constr(0, [paymentCredentialHash]))
+  let accountHashed = blake2b(32).update(fromHex(accountSerialized)).digest('hex')
+  
+  console.log('Serialized Account:', accountSerialized)
+  console.log('Blake2b Account Hash:', accountHashed)
+
+  let merkle_tree = await new Trie(new Store('data/merkle_forest_db'));
+  await merkle_tree.insert(accountHashed, accountHashed);
+  //merkle_tree = await merkle_tree.insert("abc", "def");
+  // await merkle_tree.save()
+  console.log('Merkle Tree:', merkle_tree)
+
+  const merkle_tree_hash = await merkle_tree.hash;
+//  const merkle_tree_proof = await merkle_tree.prove(Buffer.from(accountHashed))
+  const merkle_tree_proof = await merkle_tree.prove(accountHashed)
+  const merkle_tree_proof_hex = await merkle_tree_proof.toCBOR().toString('hex');
+
+  console.log('merkle_tree_proof_hex', merkle_tree_proof_hex)
+  console.log('Merkle Tree Info:',
+  {
+  'merkle_proof_hash': toHex(merkle_tree_hash),
+  })
+  console.log('Redeemer Parameters:', {
+    'account' : paymentCredentialHash,
+    'merkle_tree_proof': merkle_tree_proof_hex,
+    'output_index': output_index
+  })
+
   const mintRedeemer = Data.to(
-    new Constr(1, [])
+    new Constr(1, [new Constr(0, [paymentCredentialHash]), Data.from(merkle_tree_proof_hex), output_index])
   ); 
   const spendRedeemer = Data.to(
     new Constr(1, [new Constr(0, [])])
   ); 
-  const scriptDatum = Data.to(
-    new Constr(0, ["0000000000000000000000000000000000000000000000000000000000000000", policyId_Merkle_Minter])      
+  console.log('Mint Redeemer:', mintRedeemer)
+  console.log('Spend Redeemer:', spendRedeemer)
+
+
+  // const scriptDatum_Mint = Data.to(
+  //   new Constr(0, [toHex(merkle_tree_hash), policyId_Merkle_Minter])
+  // ); 
+  const scriptDatum_SpendRoot = Data.to(
+    new Constr(0, [toHex(merkle_tree_hash), policyId_Merkle_Minter])
   ); 
   /* REF: 
     pub type State {
@@ -276,20 +330,25 @@ export const create_account = async (API, Validator_Merkle_Minter) => {
     }
   */
 
-  // Token 2 - Token with scriptDataHash as the asset name
-  const quantity_token = 1 
-  const asset_token = `${policyId_Merkle_Minter}${""}`
+  const asset_token_account = `${policyId_Merkle_Minter}${accountHashed}`
+  const quantity_token_account = 1
 
   // Build the Second TX -------------------------------------------------------
   if (VERBOSE) { console.log("INFO: Building the TX"); }
   const tx = await API.newTx()
     .payToContract(
       Address_Contract_Merkle_Minter, 
-      {inline: scriptDatum},
-      {[asset_token]: BigInt(quantity_token)},
-    ) 
-    .mintAssets({[asset_token]: BigInt(quantity_token)}, mintRedeemer)
+      {inline: scriptDatum_SpendRoot},
+      {[asset_token_root]: BigInt(quantity_token_root)},
+    )
+    .payToContract(
+      Address_Contract_Merkle_Minter, 
+      {inline: account},
+      {[asset_token_account]: BigInt(quantity_token_account)},
+    )
+    .mintAssets({[asset_token_account]: BigInt(quantity_token_account)}, mintRedeemer)
     .attachMintingPolicy(Validator_Merkle_Minter)
+    .collectFrom(assetCollateralTokenUTXO, spendRedeemer)
     .attachSpendingValidator(Validator_Merkle_Minter)
     .addSigner(userAddress)
     .complete();
