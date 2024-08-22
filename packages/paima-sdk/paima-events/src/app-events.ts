@@ -65,17 +65,20 @@ export const generateAppEvents = <T extends ReadonlyArray<LogEvent<LogEventField
   return result as any;
 };
 
-// create payload for the stf from an object.  using this allows statically
-// checking `fields` with the type from `T`.
-export const encodeEventForStf = <T extends ReturnType<typeof genEvent>>(
-  address: `0x${string}`,
-  event: T,
-  fields: KeypairToObj<T['fields']>
-): {
+// Create payload for the stf from an object.  Using this allows statically
+// checking `data` with the type from `T`.
+export const encodeEventForStf = <T extends ReturnType<typeof genEvent>>(args: {
+  from: `0x${string}`;
+  topic: T;
+  data: KeypairToObj<T['fields']>;
+}): {
   address: `0x${string}`;
   data: { name: T['name']; fields: KeypairToObj<T['fields']>; topic: string };
 } => {
-  return { address, data: { name: event.name, fields, topic: toSignatureHash(event) } };
+  return {
+    address: args.from,
+    data: { name: args.topic.name, fields: args.data, topic: toSignatureHash(args.topic) },
+  };
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
