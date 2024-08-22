@@ -30,9 +30,13 @@ use inverse_whirlpool/validation.{
   InitMerkle, Merkle, MintActions, SpendMerkleRoot, State, ValidateActions,
   init_merkle,
 }
+use aiken/string.{concat, from_int}
 
 validator(init_ref: OutputReference) {
   fn merkle_minter(rdmr: MintActions, ctx: ScriptContext) -> Bool {
+
+    trace "Running Merkle Mint Validatator"
+
     expect ScriptContext { transaction: tx, purpose: Mint(own_policy) } = ctx
 
     let expected_address = Address(ScriptCredential(own_policy), None)
@@ -40,11 +44,16 @@ validator(init_ref: OutputReference) {
     // Use empty asset name as the master token
     let expected_value = value.from_asset(own_policy, "", 1)
 
+    trace "Preamble Complete"
+
     when rdmr is {
-      InitMerkle ->
+      InitMerkle -> {
+        trace "InitMerkle"
         init_merkle(init_ref, tx, own_policy, expected_address, expected_value)
+      }
 
       CreateAccount { account, merkle_proof_block, output_index } -> {
+        trace "CreateAccount"
         let account_hash = account |> builtin.serialise_data |> hash.blake2b_256
 
         expect Some(merkle_input) =
@@ -87,29 +96,45 @@ validator(init_ref: OutputReference) {
             |> value.tokens(own_policy)
             |> dict.to_pairs
 
+        trace concat(@"Account Hash: ", account_hash |> bytearray.to_hex())
+        trace concat(@"Minted Token: ", minted_token |> bytearray.to_hex())
+
+        // trace concat(@"Own output_address: ", output_address)
+        // trace concat(@"Own expected_address: ", expected_address |> bytearray.to_hex())
+
+        trace concat(@"Own Hash: ", own_hash |> bytearray.to_hex() )
+        trace concat(@"Own Policy: ", own_policy |> bytearray.to_hex() )
+
+        trace concat(@"input_root: ", input_root |> bytearray.to_hex() )
+        trace concat(@"account_hash: ", account_hash |> bytearray.to_hex() )
+        trace concat(@"Outputroot: ", output_root |> bytearray.to_hex() )
+
+
         and {
           // Verify new and old merkle roots
           insert(
             input_root |> from_root,
-            account_hash |> blake2b_256,
+            account_hash,
             account_hash,
             merkle_proof_block,
           ) == from_root(output_root),
           // Verify utxo is preserved
           value.without_lovelace(input_value) == expected_value,
-          output_address == expected_address,
+          output_address == expected_address, // Fairly Positive this is GOOD
           value.without_lovelace(output_value) == expected_value,
-          own_hash == own_policy,
+          own_hash == own_policy,            // GOOD
           // Verify account token is created
-          minted_token == account_hash,
+          minted_token == account_hash,      // GOOD
           // Verify account utxo is created
-          account_address.payment_credential == ScriptCredential(own_policy),
+          account_address.payment_credential == ScriptCredential(own_policy), // Fairly Positive this is GOOD
           value.without_lovelace(account_value) == expected_account_value,
-          account_data == InlineDatum(Account(account, 1)),
+          account_data == InlineDatum(Account(account, 1)), // Fairly Positive this is GOOD
         }
       }
 
       BurnAccount -> {
+        trace "BurnAccount"
+
         expect [Pair(_, amount)] =
           tx.mint
             |> value.from_minted_value
@@ -123,8 +148,11 @@ validator(init_ref: OutputReference) {
   fn validate(datum: State, rdmr: ValidateActions, ctx: ScriptContext) -> Bool {
     when rdmr is {
       SpendMerkleRoot -> {
+        trace "SpendMerkleRoot"
         // Depend on the execution of the mint contract to ensure spend validation
-        expect Merkle(policy_id, _) = datum
+        expect Merkle(_, policy_id) = datum
+
+        trace concat(@"Policy ID: ", policy_id  |> bytearray.to_hex())
 
         expect [Pair(_, amount)] =
           ctx.transaction.mint
@@ -135,6 +163,7 @@ validator(init_ref: OutputReference) {
         amount == 1
       }
       IncrementAccount(output_index) -> {
+        trace "IncrementAccount"
         expect Spend(own_ref) = ctx.purpose
 
         expect Account(credential, current_amount) = datum
@@ -172,6 +201,7 @@ validator(init_ref: OutputReference) {
       }
 
       DestroyAccount -> {
+        trace "DestroyAcc"
         // Depend on the execution of the mint contract to ensure spend validation
         expect Account(credential, _) = datum
 
