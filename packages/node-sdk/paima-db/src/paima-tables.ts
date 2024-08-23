@@ -13,7 +13,10 @@ CREATE TABLE paima_blocks (
 `;
 
 const QUERY_CREATE_INDEX_PAIMA_BLOCK_HASH = `
-CREATE INDEX PAIMA_BLOCK_HASH_INDEX ON "paima_blocks" (paima_block_hash);
+CREATE INDEX PAIMA_BLOCKS_L2_HASH_INDEX ON "paima_blocks" (paima_block_hash);
+`;
+const QUERY_CREATE_INDEX_MAIN_BLOCK_HASH = `
+CREATE INDEX PAIMA_BLOCKS_L1_HASH_INDEX ON "paima_blocks" (main_chain_block_hash);
 `;
 
 const TABLE_DATA_PAIMA_BLOCKS: TableData = {
@@ -24,15 +27,21 @@ const TABLE_DATA_PAIMA_BLOCKS: TableData = {
     ['ver', 'integer', 'NO', ''],
     ['main_chain_block_hash', 'bytea', 'NO', ''],
     ['seed', 'text', 'NO', ''],
-    ['ms_timestamp', 'TIMESTAMP without time zone', 'NO', ''],
+    ['ms_timestamp', 'timestamp without time zone', 'NO', ''],
     ['paima_block_hash', 'bytea', 'YES', ''],
   ]),
   serialColumns: [],
   creationQuery: QUERY_CREATE_TABLE_BLOCKHEIGHTS,
-  index: {
-    name: 'PAIMA_BLOCK_HASH_INDEX',
-    creationQuery: QUERY_CREATE_INDEX_PAIMA_BLOCK_HASH,
-  },
+  index: [
+    {
+      name: 'PAIMA_BLOCKS_L2_HASH_INDEX',
+      creationQuery: QUERY_CREATE_INDEX_PAIMA_BLOCK_HASH,
+    },
+    {
+      name: 'PAIMA_BLOCKS_L1_HASH_INDEX',
+      creationQuery: QUERY_CREATE_INDEX_MAIN_BLOCK_HASH,
+    },
+  ],
   // TODO: we could also create a constraint
   //       that paima_block_hash is non-null after each db query
   //       CONSTRAINT hash_not_null CHECK (paima_block_hash IS NOT NULL) DEFERRABLE INITIALLY DEFERRED

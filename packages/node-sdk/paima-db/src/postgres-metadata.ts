@@ -56,16 +56,17 @@ export async function createTable(pool: PoolClient, table: TableData): Promise<b
     return false;
   }
 
-  if (table.index) {
+  const indices = table.index ? (Array.isArray(table.index) ? table.index : [table.index]) : [];
+  for (const index of indices) {
     try {
-      await pool.query(`DROP INDEX IF EXISTS ${table.index.name}`);
+      await pool.query(`DROP INDEX IF EXISTS ${index.name}`);
     } catch (err) {
       doLog(`[database-validation] Error while dropping index: ${err}`);
       return false;
     }
 
     try {
-      await pool.query(table.index.creationQuery);
+      await pool.query(index.creationQuery);
     } catch (err) {
       doLog(`[database-validation] Error while creating index: ${err}`);
       return false;
@@ -129,8 +130,22 @@ async function checkTableColumn(
   const row = res.rows[0];
 
   const flagDefault = !column.defaultValue || row.column_default === column.defaultValue;
+  if (!flagDefault) {
+    console.error(
+      `flagDefault mismatch on ${tableName}`,
+      !column.defaultValue,
+      row.column_default,
+      column.defaultValue
+    );
+  }
   const flagType = row.data_type === column.columnType;
+  if (!flagType) {
+    console.error(`flagType mismatch on ${tableName}`, row.data_type, column.columnType);
+  }
   const flagNullable = row.is_nullable === column.columnNullable;
+  if (!flagNullable) {
+    console.error(`flagNullable mismatch on ${tableName}`, row.is_nullable, column.columnNullable);
+  }
 
   const result = flagDefault && flagType && flagNullable;
   return result;
