@@ -1,7 +1,13 @@
-CREATE TABLE block_heights ( 
+CREATE TABLE paima_blocks ( 
   block_height INTEGER PRIMARY KEY,
+  ver INTEGER NOT NULL,
+  main_chain_block_hash BYTEA NOT NULL,
   seed TEXT NOT NULL,
-  done BOOLEAN NOT NULL DEFAULT false
+  ms_timestamp TIMESTAMP without time zone NOT NULL,
+
+  -- note: slightly awkward, but this field is nullable
+  --       this helps other SQL queries refer to the block before the block is done being processed 
+  paima_block_hash BYTEA
 );
 
 CREATE TABLE scheduled_data (

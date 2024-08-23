@@ -21,7 +21,7 @@ import {
   AvailMainConfig,
   AvailConfig,
 } from './config/loading.js';
-import { ErrorCode, ErrorMessageFxn, ErrorMessageMapping } from './types/index.js';
+import type { ErrorCode, ErrorMessageFxn, ErrorMessageMapping } from './types/index.js';
 
 export * from './config.js';
 export type * from './types/index.js';
@@ -68,6 +68,13 @@ export function buildErrorCodeTranslator(obj: ErrorMessageMapping): ErrorMessage
       return obj[errorCode];
     }
   };
+}
+
+export function strip0x(str: string): string {
+  if (str.startsWith('0x')) {
+    return str.substring(2);
+  }
+  return str;
 }
 
 // Timeout function for promises

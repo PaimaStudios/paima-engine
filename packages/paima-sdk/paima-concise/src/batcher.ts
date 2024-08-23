@@ -1,4 +1,5 @@
-import type { AddressType, WalletAddress, UserSignature, InputDataString } from '@paima/utils';
+import type { AddressType, UserSignature } from '@paima/utils';
+import type { WalletAddress, InputDataString } from '@paima/chain-types';
 import { keccak_256 } from 'js-sha3';
 
 export const OUTER_BATCH_DIVIDER: string = '\x02';

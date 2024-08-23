@@ -1,4 +1,5 @@
-import type { ContractAddress, Deployment, URI, VersionString, Web3 } from '@paima/utils';
+import type { URI, VersionString, Web3 } from '@paima/utils';
+import type { ContractAddress } from '@paima/chain-types';
 import { ENV, GlobalConfig } from '@paima/utils';
 import { initWeb3 } from '@paima/utils';
 
@@ -18,8 +19,6 @@ let backendUri: URI = ENV.BACKEND_URI;
 const batcherUri: URI = ENV.BATCHER_URI;
 
 const storageAddress: ContractAddress = ENV.CONTRACT_ADDRESS;
-
-const deployment: Deployment = ENV.DEPLOYMENT as Deployment;
 
 let emulatedBlocksActive: undefined | boolean = undefined;
 
@@ -50,8 +49,6 @@ export const setGameName = (newGameName: string): string => (gameName = newGameN
 export const getGameName = (): string => gameName;
 
 export const getStorageAddress = (): ContractAddress => storageAddress;
-
-export const getDeployment = (): Deployment => deployment;
 
 let defaultProvider: IProvider<unknown> | undefined;
 export const getDefaultProvider = (): IProvider<unknown> | undefined => defaultProvider;

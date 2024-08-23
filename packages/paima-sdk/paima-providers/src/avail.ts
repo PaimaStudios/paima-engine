@@ -8,7 +8,7 @@ import type {
 import { ProviderNotInitialized } from './errors.js';
 import { utf8ToHex } from 'web3-utils';
 import { AddressType } from '@paima/utils';
-import type { PolkadotAddress } from '@paima/utils';
+import type { PolkadotAddress } from '@paima/chain-types';
 import type { ApiPromise, Keyring } from 'avail-js-sdk';
 import { u8aToHex } from '@polkadot/util';
 

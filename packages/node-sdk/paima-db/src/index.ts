@@ -11,8 +11,26 @@ export type { Json } from './sql/cde-generic.queries.js';
 
 export * from './sql/achievements.queries.js';
 export type * from './sql/achievements.queries.js';
-export * from './sql/block-heights.queries.js';
-export type * from './sql/block-heights.queries.js';
+// https://github.com/adelsz/pgtyped/issues/565
+export {
+  getLatestProcessedBlockHeight,
+  getBlockSeeds,
+  getBlockHeights,
+  saveLastBlock,
+  blockHeightDone,
+} from './sql/block-heights.queries.js';
+export type {
+  IGetLatestProcessedBlockHeightParams,
+  IGetLatestProcessedBlockHeightResult,
+  IGetBlockSeedsParams,
+  IGetBlockSeedsResult,
+  IGetBlockHeightsParams,
+  IGetBlockHeightsResult,
+  ISaveLastBlockParams,
+  ISaveLastBlockResult,
+  IBlockHeightDoneParams,
+  IBlockHeightDoneResult,
+} from './sql/block-heights.queries.js';
 export * from './sql/scheduled.queries.js';
 export type * from './sql/scheduled.queries.js';
 export * from './sql/statistics.queries.js';
@@ -59,6 +77,7 @@ export * from './sql/cde-cursor-tracking-pagination.queries.js';
 export type * from './sql/cde-cursor-tracking-pagination.queries.js';
 export * from './sql/cde-cardano-transfer.queries.js';
 export type * from './sql/cde-cardano-transfer.queries.js';
+// https://github.com/adelsz/pgtyped/issues/565
 export { cdeCardanoMintBurnInsert } from './sql/cde-cardano-mint-burn.queries.js';
 export type * from './sql/mina-checkpoints.queries.js';
 export * from './sql/mina-checkpoints.queries.js';

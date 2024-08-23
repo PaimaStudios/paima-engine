@@ -1,4 +1,5 @@
-import type { ChainData, SubmittedData } from '@paima/sm';
+import type { ChainData } from '@paima/sm';
+import type { SubmittedData } from '@paima/chain-types';
 import type { FunnelCacheEntry } from '../FunnelCache.js';
 
 export type AvailFunnelCacheEntryState = {
