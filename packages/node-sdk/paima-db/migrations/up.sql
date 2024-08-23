@@ -288,7 +288,7 @@ CREATE TABLE event (
   data JSONB NOT NULL,
   block_height INTEGER NOT NULL,
   tx INTEGER NOT NULL,
-  idx INTEGER NOT NULL
+  log_index INTEGER NOT NULL
 );
 
 CREATE TABLE registered_event (

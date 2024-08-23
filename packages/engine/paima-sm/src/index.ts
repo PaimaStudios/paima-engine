@@ -749,8 +749,8 @@ function handleEvents<Event extends EventPathAndDef>(
   eventDefinitions: ReturnType<typeof generateAppEvents>,
   eventsToEmit: EventsToEmit<Event>
 ): void {
-  for (let idx = 0; idx < events.length; idx++) {
-    const event = events[idx];
+  for (let log_index = 0; log_index < events.length; log_index++) {
+    const event = events[log_index];
     sqlQueries.push([
       insertEvent,
       {
@@ -758,7 +758,7 @@ function handleEvents<Event extends EventPathAndDef>(
         address: event.address,
         data: event.data.fields,
         tx: txIndexInBlock,
-        idx,
+        log_index,
         block_height: latestChainData.blockNumber,
       },
     ]);

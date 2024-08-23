@@ -12,14 +12,14 @@ INSERT INTO event (
   data,
   block_height,
   tx,
-  idx
+  log_index
 ) VALUES (
   :topic!,
   :address!,
   :data!,
   :block_height!,
   :tx!,
-  :idx!
+  :log_index!
 );
 
 /* @name registerEventType */

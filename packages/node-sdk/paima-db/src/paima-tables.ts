@@ -761,7 +761,7 @@ CREATE TABLE event (
   data JSONB NOT NULL,
   block_height INTEGER NOT NULL,
   tx INTEGER NOT NULL,
-  idx INTEGER NOT NULL
+  log_index INTEGER NOT NULL
 );
 `;
 
@@ -779,7 +779,7 @@ const TABLE_DATA_EVENT: TableData = {
     ['data', 'jsonb', 'NO', ''],
     ['block_height', 'integer', 'NO', ''],
     ['tx', 'integer', 'NO', ''],
-    ['idx', 'integer', 'NO', ''],
+    ['log_index', 'integer', 'NO', ''],
   ]),
   serialColumns: [],
   creationQuery: QUERY_CREATE_TABLE_EVENT,

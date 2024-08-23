@@ -307,7 +307,7 @@
 					}
 				]
 			},
-			"SuccessfulResult__topic-string--address-string--blockNumber-number--data_58___91_fieldName-string_93__58_any_--tx-number--idx-number_-Array_": {
+			"SuccessfulResult__topic-string--address-string--blockNumber-number--data_58___91_fieldName-string_93__58_any_--tx-number--logIndex-number_-Array_": {
 				"properties": {
 					"success": {
 						"type": "boolean",
@@ -319,7 +319,7 @@
 					"result": {
 						"items": {
 							"properties": {
-								"idx": {
+								"logIndex": {
 									"type": "number",
 									"format": "double"
 								},
@@ -344,7 +344,7 @@
 								}
 							},
 							"required": [
-								"idx",
+								"logIndex",
 								"tx",
 								"data",
 								"blockNumber",
@@ -363,10 +363,10 @@
 				"type": "object",
 				"additionalProperties": false
 			},
-			"Result__topic-string--address-string--blockNumber-number--data_58___91_fieldName-string_93__58_any_--tx-number--idx-number_-Array_": {
+			"Result__topic-string--address-string--blockNumber-number--data_58___91_fieldName-string_93__58_any_--tx-number--logIndex-number_-Array_": {
 				"anyOf": [
 					{
-						"$ref": "#/components/schemas/SuccessfulResult__topic-string--address-string--blockNumber-number--data_58___91_fieldName-string_93__58_any_--tx-number--idx-number_-Array_"
+						"$ref": "#/components/schemas/SuccessfulResult__topic-string--address-string--blockNumber-number--data_58___91_fieldName-string_93__58_any_--tx-number--logIndex-number_-Array_"
 					},
 					{
 						"$ref": "#/components/schemas/FailedResult"
@@ -374,7 +374,7 @@
 				]
 			},
 			"GetLogsResponse": {
-				"$ref": "#/components/schemas/Result__topic-string--address-string--blockNumber-number--data_58___91_fieldName-string_93__58_any_--tx-number--idx-number_-Array_"
+				"$ref": "#/components/schemas/Result__topic-string--address-string--blockNumber-number--data_58___91_fieldName-string_93__58_any_--tx-number--logIndex-number_-Array_"
 			},
 			"GetLogsParams": {
 				"properties": {

@@ -407,7 +407,7 @@ type GetLogsResponse = Result<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     data: { [fieldName: string]: any };
     tx: number;
-    idx: number;
+    logIndex: number;
   }[]
 >;
 type GetLogsParams = {
@@ -509,7 +509,8 @@ export class GetLogsController extends Controller {
           COALESCE(block_height <= $2, 1=1) AND
           COALESCE(address = $3, 1=1) AND
           ${dynamicPart}
-          topic = $4;
+          topic = $4
+        ORDER BY id;
       `;
 
       // casting to IGetEventsResult is sound, since both are a select from the
@@ -534,7 +535,7 @@ export class GetLogsController extends Controller {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           data: row.data as { [fieldName: string]: any },
           tx: row.tx,
-          idx: row.idx,
+          logIndex: row.log_index,
         })),
       };
     } catch (err) {
