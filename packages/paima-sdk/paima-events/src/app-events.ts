@@ -11,14 +11,13 @@ type Data<T extends LogEvent<LogEventFields<TSchema>[]>> = {
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AllEventsUnion<T extends ReadonlyArray<any>> = {
+type AllEventsUnion<T extends Record<string, LogEvent<LogEventFields<TSchema>[]>>> = {
   [K in keyof T]: Data<T[K]>;
-}[number];
+};
 
-type ValueArray<T> = T extends { [K in keyof T]: infer U } ? U[] : never;
 export type EventQueue<T extends Record<string, LogEvent<LogEventFields<TSchema>[]>>> = {
   address: `0x${string}`;
-  data: AllEventsUnion<ValueArray<T>>;
+  data: AllEventsUnion<T>[keyof T];
 }[];
 
 export const toSignature = <T extends LogEvent<LogEventFields<TSchema>[]>>(event: T): string => {
