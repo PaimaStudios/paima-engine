@@ -307,6 +307,106 @@
 					}
 				]
 			},
+			"SuccessfulResult__topic-string--address-string--blockNumber-number--data_58___91_fieldName-string_93__58_any_--tx-number--logIndex-number_-Array_": {
+				"properties": {
+					"success": {
+						"type": "boolean",
+						"enum": [
+							true
+						],
+						"nullable": false
+					},
+					"result": {
+						"items": {
+							"properties": {
+								"logIndex": {
+									"type": "number",
+									"format": "double"
+								},
+								"tx": {
+									"type": "number",
+									"format": "double"
+								},
+								"data": {
+									"properties": {},
+									"additionalProperties": {},
+									"type": "object"
+								},
+								"blockNumber": {
+									"type": "number",
+									"format": "double"
+								},
+								"address": {
+									"type": "string"
+								},
+								"topic": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"logIndex",
+								"tx",
+								"data",
+								"blockNumber",
+								"address",
+								"topic"
+							],
+							"type": "object"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"success",
+					"result"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"Result__topic-string--address-string--blockNumber-number--data_58___91_fieldName-string_93__58_any_--tx-number--logIndex-number_-Array_": {
+				"anyOf": [
+					{
+						"$ref": "#/components/schemas/SuccessfulResult__topic-string--address-string--blockNumber-number--data_58___91_fieldName-string_93__58_any_--tx-number--logIndex-number_-Array_"
+					},
+					{
+						"$ref": "#/components/schemas/FailedResult"
+					}
+				]
+			},
+			"GetLogsResponse": {
+				"$ref": "#/components/schemas/Result__topic-string--address-string--blockNumber-number--data_58___91_fieldName-string_93__58_any_--tx-number--logIndex-number_-Array_"
+			},
+			"GetLogsParams": {
+				"properties": {
+					"topic": {
+						"type": "string"
+					},
+					"filters": {
+						"properties": {},
+						"additionalProperties": {
+							"type": "string"
+						},
+						"type": "object"
+					},
+					"address": {
+						"type": "string"
+					},
+					"toBlock": {
+						"type": "number",
+						"format": "double"
+					},
+					"fromBlock": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"topic",
+					"address",
+					"fromBlock"
+				],
+				"type": "object"
+			},
 			"Achievement": {
 				"properties": {
 					"name": {
@@ -1081,6 +1181,74 @@
 						}
 					}
 				]
+			}
+		},
+		"/get_logs": {
+			"post": {
+				"operationId": "GetLogsPost",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/GetLogsResponse"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/FailedResult"
+								},
+								"examples": {
+									"Example 1": {}
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/FailedResult"
+								},
+								"examples": {
+									"Example 1": {}
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/InternalServerErrorResult"
+								},
+								"examples": {
+									"Example 1": {}
+								}
+							}
+						}
+					}
+				},
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/GetLogsParams"
+							}
+						}
+					}
+				}
 			}
 		},
 		"/achievements/public/list": {

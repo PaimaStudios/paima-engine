@@ -7,6 +7,7 @@ import fs from 'fs';
 import type { GameStateTransitionFunctionRouter } from '@paima/sm';
 import type { TsoaFunction } from '@paima/runtime';
 import type { AchievementMetadata } from '@paima/utils-backend';
+import type { generateAppEvents } from '@paima/events';
 
 /**
  * Checks that the user packed their game code and it is available for Paima Engine to use to run
@@ -24,13 +25,13 @@ function importFile<T>(path: string): T {
 }
 
 export interface GameCodeImport {
-  default: GameStateTransitionFunctionRouter;
+  default: GameStateTransitionFunctionRouter<any>;
 }
 const ROUTER_FILENAME = 'packaged/gameCode.cjs';
 /**
  * Reads repackaged user's code placed next to the executable in `gameCode.cjs` file
  */
-export function importGameStateTransitionRouter(): GameStateTransitionFunctionRouter {
+export function importGameStateTransitionRouter(): GameStateTransitionFunctionRouter<any> {
   return importFile<GameCodeImport>(ROUTER_FILENAME).default;
 }
 
@@ -65,5 +66,23 @@ const PRECOMPILES_FILENAME = 'packaged/precompiles.cjs';
  * Reads repackaged user's code placed next to the executable in `precompiles.cjs` file
  */
 export function importPrecompiles(): PreCompilesImport {
-  return importFile<PreCompilesImport>(PRECOMPILES_FILENAME);
+  try {
+    return importFile<PreCompilesImport>(PRECOMPILES_FILENAME);
+  } catch (error) {
+    return { precompiles: {} };
+  }
+}
+
+const EVENTS_FILENAME = 'packaged/events.cjs';
+export type AppEventsImport = { events: ReturnType<typeof generateAppEvents> };
+
+/**
+ * Reads repackaged user's code placed next to the executable in `events.cjs` file
+ */
+export function importEvents(): AppEventsImport {
+  try {
+    return importFile<AppEventsImport>(EVENTS_FILENAME);
+  } catch (error) {
+    return { events: {} };
+  }
 }

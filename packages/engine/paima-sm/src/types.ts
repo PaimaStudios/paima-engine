@@ -21,6 +21,7 @@ import type {
 import { Type } from '@sinclair/typebox';
 import type { Static } from '@sinclair/typebox';
 import type { ProjectedNftStatus } from '@dcspark/carp-client';
+import type { AppEvents, generateAppEvents, ResolvedPath } from '@paima/events';
 
 export { SubmittedChainData, SubmittedData };
 
@@ -645,16 +646,26 @@ export type ChainDataExtension = (
   | ChainDataExtensionDynamicEvmPrimitive
 ) & { network: string };
 
-export type GameStateTransitionFunctionRouter = (
+export type GameStateTransitionFunctionRouter<Events extends AppEvents> = (
   blockHeight: number
-) => GameStateTransitionFunction;
+) => GameStateTransitionFunction<Events>;
 
-export type GameStateTransitionFunction = (
+export type GameStateTransitionFunction<Events extends AppEvents> = (
   inputData: STFSubmittedData,
   blockHeader: BlockHeader,
   randomnessGenerator: any,
   DBConn: PoolClient
-) => Promise<SQLUpdate[]>;
+) => Promise<{
+  stateTransitions: SQLUpdate[];
+  events: {
+    address: `0x${string}`;
+    data: {
+      name: string;
+      fields: ResolvedPath<Events[string][number]['path']> & Events[string][number]['type'];
+      topic: string;
+    };
+  }[];
+}>;
 
 export type Precompiles = { precompiles: { [name: string]: `0x${string}` } };
 
@@ -662,14 +673,17 @@ export interface GameStateMachineInitializer {
   initialize: (
     databaseInfo: PoolConfig,
     randomnessProtocolEnum: number,
-    gameStateTransitionRouter: GameStateTransitionFunctionRouter,
+    gameStateTransitionRouter: GameStateTransitionFunctionRouter<any>,
     startBlockHeight: number,
-    precompiles: Precompiles
+    precompiles: Precompiles,
+    events: ReturnType<typeof generateAppEvents>
   ) => GameStateMachine;
 }
 
 export interface GameStateMachine {
   initializeDatabase: (force: boolean) => Promise<boolean>;
+  initializeAndValidateRegisteredEvents: () => Promise<boolean>;
+  initializeEventIndexes: () => Promise<boolean>;
   presyncStarted: (network: string) => Promise<boolean>;
   syncStarted: () => Promise<boolean>;
   latestProcessedBlockHeight: (dbTx?: PoolClient | Pool) => Promise<number>;
@@ -681,4 +695,5 @@ export interface GameStateMachine {
   presyncProcess: (dbTx: PoolClient, latestCdeData: PresyncChainData) => Promise<void>;
   markPresyncMilestone: (blockHeight: number, network: string) => Promise<void>;
   dryRun: (gameInput: string, userAddress: string) => Promise<boolean>;
+  getAppEvents: () => ReturnType<typeof generateAppEvents>;
 }

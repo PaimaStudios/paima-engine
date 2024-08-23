@@ -753,6 +753,61 @@ const TABLE_DATA_CDE_DYNAMIC_PRIMITIVE_CONFIG: TableData = {
   creationQuery: QUERY_CREATE_TABLE_CDE_DYNAMIC_PRIMITIVE_CONFIG,
 };
 
+const QUERY_CREATE_TABLE_EVENT = `
+CREATE TABLE event (
+  id SERIAL PRIMARY KEY,
+  topic TEXT NOT NULL,
+  address TEXT NOT NULL,
+  data JSONB NOT NULL,
+  block_height INTEGER NOT NULL,
+  tx INTEGER NOT NULL,
+  log_index INTEGER NOT NULL
+);
+`;
+
+const QUERY_CREATE_INDEX_EVENT_TOPIC = `
+CREATE INDEX EVENT_TOPIC_INDEX ON "event" (topic);
+`;
+
+const TABLE_DATA_EVENT: TableData = {
+  tableName: 'event',
+  primaryKeyColumns: ['id'],
+  columnData: packTuples([
+    ['id', 'integer', 'NO', ''],
+    ['topic', 'text', 'NO', ''],
+    ['address', 'text', 'NO', ''],
+    ['data', 'jsonb', 'NO', ''],
+    ['block_height', 'integer', 'NO', ''],
+    ['tx', 'integer', 'NO', ''],
+    ['log_index', 'integer', 'NO', ''],
+  ]),
+  serialColumns: [],
+  creationQuery: QUERY_CREATE_TABLE_EVENT,
+  index: {
+    name: 'EVENT_TOPIC_INDEX',
+    creationQuery: QUERY_CREATE_INDEX_EVENT_TOPIC,
+  },
+};
+
+const QUERY_CREATE_TABLE_REGISTERED_EVENT = `
+CREATE TABLE registered_event (
+  name TEXT NOT NULL,
+  topic TEXT NOT NULL,
+  PRIMARY KEY(name, topic)
+);
+`;
+
+const TABLE_DATA_REGISTERED_EVENT: TableData = {
+  tableName: 'registered_event',
+  primaryKeyColumns: ['name', 'topic'],
+  columnData: packTuples([
+    ['name', 'text', 'NO', ''],
+    ['topic', 'text', 'NO', ''],
+  ]),
+  serialColumns: [],
+  creationQuery: QUERY_CREATE_TABLE_REGISTERED_EVENT,
+};
+
 export const FUNCTIONS: string[] = [
   FUNCTION_NOTIFY_WALLET_CONNECT,
   FUNCTION_TRIGGER_ADDRESSES,
@@ -790,4 +845,6 @@ export const TABLES: TableData[] = [
   TABLE_DATA_MINA_CHECKPOINT,
   TABLE_DATA_ACHIEVEMENT_PROGRESS,
   TABLE_DATA_CDE_DYNAMIC_PRIMITIVE_CONFIG,
+  TABLE_DATA_EVENT,
+  TABLE_DATA_REGISTERED_EVENT,
 ];

@@ -1,6 +1,5 @@
 import { Pool } from 'pg';
 import type { PoolClient, Client } from 'pg';
-
 import type { STFSubmittedData } from '@paima/utils';
 import {
   caip2PrefixFor,
@@ -32,10 +31,12 @@ import {
   updateCardanoEpoch,
   updatePaginationCursor,
   updateMinaCheckpoint,
+  insertEvent,
+  createIndexesForEvents,
+  registerEventTypes,
 } from '@paima/db';
 import type { SQLUpdate } from '@paima/db';
 import Prando from '@paima/prando';
-
 import { randomnessRouter } from './randomness.js';
 import { cdeTransitionFunction } from './cde-processing.js';
 import { DelegateWallet } from './delegate-wallet.js';
@@ -51,9 +52,14 @@ import type {
 import { ConfigNetworkType } from '@paima/utils';
 import assertNever from 'assert-never';
 import { keccak_256 } from 'js-sha3';
+import type { AppEvents, EventPathAndDef, generateAppEvents, ResolvedPath } from '@paima/events';
+import { PaimaEventManager } from '@paima/events';
+import { PaimaEventBroker } from '@paima/broker';
 
 export * from './types.js';
 export type * from './types.js';
+
+type ValueOf<T> = T[keyof T];
 
 const SM: GameStateMachineInitializer = {
   initialize: (
@@ -61,11 +67,16 @@ const SM: GameStateMachineInitializer = {
     randomnessProtocolEnum,
     gameStateTransitionRouter,
     startBlockHeight,
-    precompiles
+    precompiles,
+    events
   ) => {
     const DBConn: Pool = getConnection(databaseInfo);
     const persistentReadonlyDBConn: Client = getPersistentConnection(databaseInfo);
     const readonlyDBConn: Pool = getConnection(databaseInfo, true);
+
+    if (ENV.MQTT_BROKER) {
+      new PaimaEventBroker('Paima-Engine').getServer();
+    }
 
     return {
       latestProcessedBlockHeight: async (
@@ -97,6 +108,35 @@ const SM: GameStateMachineInitializer = {
       },
       initializeDatabase: async (force: boolean = false): Promise<boolean> => {
         return await tx<boolean>(DBConn, dbTx => initializePaimaTables(dbTx, force));
+      },
+      initializeEventIndexes: async (): Promise<boolean> => {
+        return await tx<boolean>(DBConn, dbTx =>
+          createIndexesForEvents(
+            dbTx,
+            Object.values(events).flatMap(eventsByName =>
+              eventsByName.flatMap(event =>
+                event.definition.fields.map(f => ({
+                  topic: event.topicHash,
+                  fieldName: f.name,
+                  indexed: f.indexed,
+                }))
+              )
+            )
+          )
+        );
+      },
+      initializeAndValidateRegisteredEvents: async (): Promise<boolean> => {
+        return await tx<boolean>(DBConn, dbTx =>
+          registerEventTypes(
+            dbTx,
+            Object.values(events).flatMap(eventByName =>
+              eventByName.flatMap(event => ({
+                name: event.definition.name,
+                topic: event.topicHash,
+              }))
+            )
+          )
+        );
       },
       getReadonlyDbConn: (): Pool => {
         return readonlyDBConn;
@@ -186,7 +226,7 @@ const SM: GameStateMachineInitializer = {
             new Prando('1234567890'),
             dbTx
           );
-          return data && data.length > 0;
+          return data && data.stateTransitions.length > 0;
         };
         if (dbTxOrPool instanceof Pool) {
           return await tx<boolean>(dbTxOrPool, dbTx => internal(dbTx));
@@ -259,7 +299,8 @@ const SM: GameStateMachineInitializer = {
           gameStateTransition,
           randomnessGenerator,
           precompiles.precompiles,
-          indexForEventByTx
+          indexForEventByTx,
+          events
         );
 
         // Execute user submitted input data
@@ -268,7 +309,9 @@ const SM: GameStateMachineInitializer = {
           dbTx,
           gameStateTransition,
           randomnessGenerator,
-          indexForEventByTx
+          indexForEventByTx,
+          scheduledInputsLength,
+          events
         );
 
         const processedCount = cdeDataLength + userInputsLength + scheduledInputsLength;
@@ -281,6 +324,9 @@ const SM: GameStateMachineInitializer = {
         // Commit finishing of processing to DB
         await blockHeightDone.run({ block_height: latestChainData.blockNumber }, dbTx);
         return processedCount;
+      },
+      getAppEvents(): ReturnType<typeof generateAppEvents> {
+        return events;
       },
     };
   },
@@ -387,13 +433,14 @@ async function processPaginatedCdeData(
 // Process all of the scheduled data inputs by running each of them through the game STF,
 // saving the results to the DB, and deleting the schedule data all together in one postgres tx.
 // Function returns number of scheduled inputs that were processed.
-async function processScheduledData(
+async function processScheduledData<Events extends AppEvents>(
   latestChainData: ChainData,
   DBConn: PoolClient,
-  gameStateTransition: GameStateTransitionFunction,
+  gameStateTransition: GameStateTransitionFunction<Events>,
   randomnessGenerator: Prando,
   precompiles: Precompiles['precompiles'],
-  indexForEvent: (txHash: string) => number
+  indexForEvent: (txHash: string) => number,
+  eventDefinitions: ReturnType<typeof generateAppEvents>
 ): Promise<number> {
   const scheduledData = await getScheduledDataByBlockHeight.run(
     { block_height: latestChainData.blockNumber },
@@ -404,6 +451,12 @@ async function processScheduledData(
   let timerIndexRelativeToBlock = -1;
 
   const networks = await GlobalConfig.getInstance();
+
+  // Note: this is not related to `indexForEvent`, since that one is used to
+  // keep a counter of the original tx that scheduled the input. This is just a
+  // global counter for the current block, so we can just increase it by one
+  // with each event.
+  let txIndexInBlock = 0;
 
   for (const data of scheduledData) {
     try {
@@ -462,12 +515,24 @@ async function processScheduledData(
 
       // Trigger STF
       let sqlQueries: SQLUpdate[] = [];
+      let eventsToEmit: EventsToEmit<Events[string][number]> = [];
       try {
-        sqlQueries = await gameStateTransition(
+        const { stateTransitions, events } = await gameStateTransition(
           inputData,
           { blockHeight: data.block_height, timestamp: latestChainData.timestamp },
           randomnessGenerator,
           DBConn
+        );
+
+        sqlQueries = stateTransitions;
+
+        handleEvents<Events[string][number]>(
+          events,
+          sqlQueries,
+          txIndexInBlock,
+          latestChainData,
+          eventDefinitions,
+          eventsToEmit
         );
       } catch (err) {
         // skip scheduled data where the STF fails
@@ -475,11 +540,17 @@ async function processScheduledData(
         continue;
       }
       if (sqlQueries.length !== 0) {
-        await tryOrRollback(DBConn, async () => {
+        const success = await tryOrRollback(DBConn, async () => {
           for (const [query, params] of sqlQueries) {
             await query.run(params, DBConn);
           }
+
+          return true;
         });
+
+        if (success) {
+          await sendEventsToBroker<Events[string][number]>(eventsToEmit);
+        }
       }
     } catch (e) {
       logError(e);
@@ -487,6 +558,7 @@ async function processScheduledData(
     } finally {
       // guarantee we run this no matter if there is an error or a continue
       await deleteScheduled.run({ id: data.id }, DBConn);
+      txIndexInBlock += 1;
     }
   }
   return scheduledData.length;
@@ -495,12 +567,14 @@ async function processScheduledData(
 // Process all of the user inputs data inputs by running each of them through the game STF,
 // saving the results to the DB with the nonces, all together in one postgres tx.
 // Function returns number of user inputs that were processed.
-async function processUserInputs(
+async function processUserInputs<Events extends AppEvents>(
   latestChainData: ChainData,
   DBConn: PoolClient,
-  gameStateTransition: GameStateTransitionFunction,
+  gameStateTransition: GameStateTransitionFunction<Events>,
   randomnessGenerator: Prando,
-  indexForEvent: (txHash: string) => number
+  indexForEvent: (txHash: string) => number,
+  txIndexInBlock: number,
+  eventDefinitions: ReturnType<typeof generateAppEvents>
 ): Promise<number> {
   for (const submittedData of latestChainData.submittedData) {
     // Check nonce is valid
@@ -548,12 +622,24 @@ async function processUserInputs(
 
       // Trigger STF
       let sqlQueries: SQLUpdate[] = [];
+      let eventsToEmit: EventsToEmit<Events[string][number]> = [];
       try {
-        sqlQueries = await gameStateTransition(
+        const { stateTransitions, events } = await gameStateTransition(
           inputData,
           { blockHeight: latestChainData.blockNumber, timestamp: latestChainData.timestamp },
           randomnessGenerator,
           DBConn
+        );
+
+        sqlQueries = stateTransitions;
+
+        handleEvents<Events[string][number]>(
+          events,
+          sqlQueries,
+          txIndexInBlock,
+          latestChainData,
+          eventDefinitions,
+          eventsToEmit
         );
       } catch (err) {
         // skip inputs where the STF fails
@@ -561,13 +647,20 @@ async function processUserInputs(
         continue;
       }
       if (sqlQueries.length !== 0) {
-        await tryOrRollback(DBConn, async () => {
+        const success = await tryOrRollback(DBConn, async () => {
           for (const [query, params] of sqlQueries) {
             await query.run(params, DBConn);
           }
+
+          return true;
         });
+
+        if (success) {
+          await sendEventsToBroker<Events[string][number]>(eventsToEmit);
+        }
       }
     } finally {
+      txIndexInBlock += 1;
       // guarantee we run this no matter if there is an error or a continue
       await insertNonce.run(
         {
@@ -589,6 +682,17 @@ async function processUserInputs(
     }
   }
   return latestChainData.submittedData.length;
+}
+
+async function sendEventsToBroker<Event extends EventPathAndDef>(
+  eventsToEmit: EventsToEmit<Event>
+): Promise<void> {
+  if (ENV.MQTT_BROKER) {
+    // we probably don't want to use Promise.all since it will change the order.
+    for (const [eventDefinition, fields] of eventsToEmit) {
+      await PaimaEventManager.Instance.sendMessage(eventDefinition, fields);
+    }
+  }
 }
 
 async function processInternalEvents(
@@ -626,6 +730,48 @@ async function processInternalEvents(
       default:
         assertNever(event);
     }
+  }
+}
+
+type EventsToEmit<Event extends EventPathAndDef> = [
+  ValueOf<ReturnType<typeof generateAppEvents>>[0],
+  ResolvedPath<Event['path']> & Event['type'],
+][];
+
+function handleEvents<Event extends EventPathAndDef>(
+  events: {
+    address: `0x${string}`;
+    data: { name: string; fields: ResolvedPath<Event['path']> & Event['type']; topic: string };
+  }[],
+  sqlQueries: SQLUpdate[],
+  txIndexInBlock: number,
+  latestChainData: ChainData,
+  eventDefinitions: ReturnType<typeof generateAppEvents>,
+  eventsToEmit: EventsToEmit<Event>
+): void {
+  for (let log_index = 0; log_index < events.length; log_index++) {
+    const event = events[log_index];
+    sqlQueries.push([
+      insertEvent,
+      {
+        topic: event.data.topic,
+        address: event.address,
+        data: event.data.fields,
+        tx: txIndexInBlock,
+        log_index,
+        block_height: latestChainData.blockNumber,
+      },
+    ]);
+
+    const eventDefinition = eventDefinitions[event.data.name].find(
+      eventDefinition => eventDefinition.topicHash === event.data.topic
+    );
+
+    if (!eventDefinition) {
+      throw new Error('Event definition not found');
+    }
+
+    eventsToEmit.push([eventDefinition, event.data.fields]);
   }
 }
 

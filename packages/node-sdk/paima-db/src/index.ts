@@ -64,6 +64,10 @@ export type * from './sql/mina-checkpoints.queries.js';
 export * from './sql/mina-checkpoints.queries.js';
 export type * from './sql/dynamic-primitives.queries.js';
 export * from './sql/dynamic-primitives.queries.js';
+export type * from './sql/events.queries.js';
+export * from './sql/events.queries.js';
+export * from './event-indexing.js';
+export * from './register-events.js';
 
 export {
   tx,
