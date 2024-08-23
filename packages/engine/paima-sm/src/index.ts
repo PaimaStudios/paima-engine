@@ -60,7 +60,7 @@ import type {
 import { ConfigNetworkType } from '@paima/utils';
 import assertNever from 'assert-never';
 import { keccak_256 } from 'js-sha3';
-import type { AppEvents, EventPathAndDef, generateAppEvents, ResolvedPath } from '@paima/events';
+import type { AppEvents, EventPathAndDef, ResolvedPath } from '@paima/events';
 import { PaimaEventManager } from '@paima/events';
 import { PaimaEventBroker } from '@paima/broker';
 
@@ -360,7 +360,6 @@ const SM: GameStateMachineInitializer = {
           );
 
         // Commit finishing of processing to DB
-
         const blockHeader = genV1BlockHeader(
           {
             blockHash: strip0x(latestChainData.blockHash),
@@ -379,7 +378,7 @@ const SM: GameStateMachineInitializer = {
         );
         return processedCount;
       },
-      getAppEvents(): ReturnType<typeof generateAppEvents> {
+      getAppEvents(): AppEvents {
         return events;
       },
     };
@@ -494,7 +493,7 @@ async function processScheduledData<Events extends AppEvents>(
   randomnessGenerator: Prando,
   precompiles: Precompiles['precompiles'],
   indexForEvent: (txHash: string) => number,
-  eventDefinitions: ReturnType<typeof generateAppEvents>,
+  eventDefinitions: AppEvents,
   prevBlockHash: null | Buffer
 ): Promise<TxHashes> {
   const scheduledData = await getScheduledDataByBlockHeight.run(
@@ -646,7 +645,7 @@ async function processUserInputs<Events extends AppEvents>(
   randomnessGenerator: Prando,
   indexForEvent: (txHash: string) => number,
   txIndexInBlock: number,
-  eventDefinitions: ReturnType<typeof generateAppEvents>,
+  eventDefinitions: AppEvents,
   prevBlockHash: null | Buffer
 ): Promise<TxHashes> {
   const resultingHashes: TxHashes = {
@@ -825,7 +824,7 @@ async function processInternalEvents(
 }
 
 type EventsToEmit<Event extends EventPathAndDef> = [
-  ValueOf<ReturnType<typeof generateAppEvents>>[0],
+  ValueOf<AppEvents>[0],
   ResolvedPath<Event['path']> & Event['type'],
 ][];
 
@@ -837,7 +836,7 @@ function handleEvents<Event extends EventPathAndDef>(
   sqlQueries: SQLUpdate[],
   txIndexInBlock: number,
   latestChainData: ChainData,
-  eventDefinitions: ReturnType<typeof generateAppEvents>,
+  eventDefinitions: AppEvents,
   eventsToEmit: EventsToEmit<Event>
 ): void {
   for (let log_index = 0; log_index < events.length; log_index++) {

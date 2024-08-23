@@ -18,7 +18,7 @@ import type { SubmittedData, STFSubmittedData, PreExecutionBlockHeader } from '@
 import { Type } from '@sinclair/typebox';
 import type { Static } from '@sinclair/typebox';
 import type { ProjectedNftStatus } from '@dcspark/carp-client';
-import type { AppEvents, generateAppEvents, ResolvedPath } from '@paima/events';
+import type { AppEvents, ResolvedPath } from '@paima/events';
 
 export interface ChainData {
   /** in seconds */
@@ -672,7 +672,7 @@ export interface GameStateMachineInitializer {
     gameStateTransitionRouter: GameStateTransitionFunctionRouter<any>,
     startBlockHeight: number,
     precompiles: Precompiles,
-    events: ReturnType<typeof generateAppEvents>
+    events: AppEvents
   ) => GameStateMachine;
 }
 
@@ -691,5 +691,5 @@ export interface GameStateMachine {
   presyncProcess: (dbTx: PoolClient, latestCdeData: PresyncChainData) => Promise<void>;
   markPresyncMilestone: (blockHeight: number, network: string) => Promise<void>;
   dryRun: (gameInput: string, userAddress: string) => Promise<boolean>;
-  getAppEvents: () => ReturnType<typeof generateAppEvents>;
+  getAppEvents: () => AppEvents;
 }
