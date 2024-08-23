@@ -7,7 +7,7 @@ import fs from 'fs';
 import type { GameStateTransitionFunctionRouter } from '@paima/sm';
 import type { TsoaFunction } from '@paima/runtime';
 import type { AchievementMetadata } from '@paima/utils-backend';
-import type { generateAppEvents } from '@paima/events';
+import type { groupEvents, registerEvents } from '@paima/events';
 
 /**
  * Checks that the user packed their game code and it is available for Paima Engine to use to run
@@ -74,7 +74,7 @@ export function importPrecompiles(): PreCompilesImport {
 }
 
 const EVENTS_FILENAME = 'packaged/events.cjs';
-export type AppEventsImport = { events: ReturnType<typeof generateAppEvents> };
+export type AppEventsImport = { events: ReturnType<typeof registerEvents> };
 
 /**
  * Reads repackaged user's code placed next to the executable in `events.cjs` file
