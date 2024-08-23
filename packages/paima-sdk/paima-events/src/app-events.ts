@@ -96,17 +96,27 @@ export const groupEvents = <
 
 // Create payload for the stf from an object.  Using this allows statically
 // checking `data` with the type from `T`.
-export const encodeEventForStf = <T extends ReturnType<typeof genEvent>>(args: {
+export const encodeEventForStf = <
+  T extends Omit<RegisteredEvent<LogEvent<LogEventFields<TSchema>[]>>, 'path'>,
+>(args: {
   from: `0x${string}`;
   topic: T;
-  data: KeypairToObj<T['fields']>;
+  data: KeypairToObj<T['definition']['fields']>;
 }): {
   address: `0x${string}`;
-  data: { name: T['name']; fields: KeypairToObj<T['fields']>; topic: string };
+  data: {
+    name: T['definition']['name'];
+    fields: KeypairToObj<T['definition']['fields']>;
+    topic: string;
+  };
 } => {
   return {
     address: args.from,
-    data: { name: args.topic.name, fields: args.data, topic: toSignatureHash(args.topic) },
+    data: {
+      name: args.topic.definition.name,
+      fields: args.data,
+      topic: toSignatureHash(args.topic.definition),
+    },
   };
 };
 
