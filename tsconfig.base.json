@@ -37,6 +37,7 @@
       "@paima/batcher-webserver/*": ["./packages/batcher/webserver/*"],
       "@paima/broker/*": ["./packagers/node-sdk/paima-broker/*"],
       "@paima/build-utils/*": ["./packages/build-utils/paima-build-utils/*"],
+      "@paima/chain-types/*": ["./packages/paima-sdk/paima-chain-types/*"],
       "@paima/concise/*": ["./packages/paima-sdk/paima-concise/*"],
       "@paima/crypto/*": ["./packages/paima-sdk/paima-crypto/*"],
       "@paima/db/*": ["./packages/node-sdk/paima-db/*"],

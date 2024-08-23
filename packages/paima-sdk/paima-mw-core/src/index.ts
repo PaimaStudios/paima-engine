@@ -27,7 +27,6 @@ import {
   getDefaultActiveAddress,
   getActiveAddress,
   getStorageAddress,
-  getDeployment,
 } from './state.js';
 import {
   EndpointErrorFxn,
@@ -60,7 +59,6 @@ export {
   getBlockNumber,
   getBackendUri,
   getBatcherUri,
-  getDeployment,
   getDefaultActiveAddress,
   getActiveAddress,
   getStorageAddress,

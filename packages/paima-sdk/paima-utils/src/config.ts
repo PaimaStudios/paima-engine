@@ -52,9 +52,6 @@ export class ENV {
   static get POLLING_RATE(): number {
     return parseFloat(process.env.POLLING_RATE || `${ENV.BLOCK_TIME - 0.1}`);
   }
-  static get DEPLOYMENT(): string {
-    return process.env.DEPLOYMENT || '';
-  }
   static get EMULATED_BLOCKS(): boolean {
     return ENV.isTrue(process.env.EMULATED_BLOCKS);
   }

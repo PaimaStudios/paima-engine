@@ -1,4 +1,5 @@
-import type { AvailConfig, SubmittedData } from '@paima/utils';
+import type { AvailConfig } from '@paima/utils';
+import type { SubmittedData } from '@paima/chain-types';
 import { doLog, logError, delay, InternalEventType, timeout, caip2PrefixFor } from '@paima/utils';
 import type { ChainFunnel, FunnelJson, ReadPresyncDataFrom } from '@paima/runtime';
 import { type ChainData, type PresyncChainData } from '@paima/sm';

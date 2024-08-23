@@ -1,5 +1,6 @@
 import Prando from '@paima/prando';
-import type { ChainData, SubmittedData } from './types.js';
+import type { ChainData } from './types.js';
+import type { SubmittedData } from '@paima/chain-types';
 import type pg from 'pg';
 import { consumer } from '@paima/concise';
 import { getBlockSeeds } from '@paima/db';

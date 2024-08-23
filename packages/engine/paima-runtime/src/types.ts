@@ -1,11 +1,7 @@
 import type { PoolClient } from 'pg';
 import type { Express, RequestHandler } from 'express';
-import type {
-  VersionString,
-  SubmittedChainData,
-  SubmittedData,
-  FUNNEL_PRESYNC_FINISHED,
-} from '@paima/utils';
+import type { VersionString, FUNNEL_PRESYNC_FINISHED } from '@paima/utils';
+import type { SubmittedChainData, SubmittedData } from '@paima/chain-types';
 import type { ChainData, PresyncChainData, ChainDataExtension, GameStateMachine } from '@paima/sm';
 
 export { SubmittedChainData, SubmittedData };

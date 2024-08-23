@@ -1,7 +1,13 @@
 import { Pool } from 'pg';
 import type { PoolClient, Client } from 'pg';
 
-import type { PostExecutionBlockHeader, STFSubmittedData } from '@paima/utils';
+import {
+  genV1BlockHeader,
+  hashBlock,
+  hashSubmittedData,
+  hashTimerData,
+  type STFSubmittedData,
+} from '@paima/chain-types';
 import {
   caip2PrefixFor,
   doLog,
@@ -57,36 +63,11 @@ import { keccak_256 } from 'js-sha3';
 import type { AppEvents, EventPathAndDef, generateAppEvents, ResolvedPath } from '@paima/events';
 import { PaimaEventManager } from '@paima/events';
 import { PaimaEventBroker } from '@paima/broker';
-import stableStringify from 'json-stable-stringify';
 
 export * from './types.js';
 export type * from './types.js';
 
 type ValueOf<T> = T[keyof T];
-
-function blockHash(
-  chainData: ChainData,
-  prevBlockHash: null | string,
-  successfulTxs: string[],
-  failedTxs: string[]
-): {
-  header: PostExecutionBlockHeader;
-  hash: string;
-} {
-  const header = {
-    version: 1 as const,
-    prevBlockHash,
-    mainChainBlochHash: strip0x(chainData.blockHash),
-    blockHeight: chainData.blockNumber,
-    msTimestamp: chainData.timestamp * 1000,
-    successTxsHash: keccak_256(successfulTxs.join('|')),
-    failedTxsHash: keccak_256(failedTxs.join('|')),
-  };
-  return {
-    header,
-    hash: keccak_256(stableStringify(header)),
-  };
-}
 
 type TxHashes = {
   successTxHashes: string[];
@@ -364,7 +345,8 @@ const SM: GameStateMachineInitializer = {
           gameStateTransition,
           randomnessGenerator,
           indexForEventByTx,
-          scheduledInputsLength,
+          scheduledDataTxHashes.successTxHashes.length +
+            scheduledDataTxHashes.failedTxHashes.length,
           events,
           prevBlock?.paima_block_hash
         );
@@ -379,15 +361,20 @@ const SM: GameStateMachineInitializer = {
 
         // Commit finishing of processing to DB
 
-        const hash = blockHash(
-          latestChainData,
+        const blockHeader = genV1BlockHeader(
+          {
+            blockHash: strip0x(latestChainData.blockHash),
+            blockHeight: latestChainData.blockNumber,
+            msTimestamp: latestChainData.timestamp * 1000,
+          },
           prevBlock?.paima_block_hash == null ? null : prevBlock.paima_block_hash.toString('hex'),
           // recall: scheduled data always executes before user data, so tx hashes are in the same order
           [...scheduledDataTxHashes.successTxHashes, ...userInputsTxHashes.successTxHashes],
           [...scheduledDataTxHashes.failedTxHashes, ...userInputsTxHashes.failedTxHashes]
         );
+        const blockHash = hashBlock.hash(blockHeader);
         await blockHeightDone.run(
-          { block_height: latestChainData.blockNumber, block_hash: Buffer.from(hash.hash, 'hex') },
+          { block_height: latestChainData.blockNumber, block_hash: Buffer.from(blockHash, 'hex') },
           dbTx
         );
         return processedCount;
@@ -545,16 +532,23 @@ async function processScheduledData<Events extends AppEvents>(
 
         return {
           caip2: caip2PrefixFor(networks[data.network!]),
-          txHash: keccak_256(`${caip2Prefix}}|${data.tx_hash}|${indexForEvent(data.tx_hash)}`),
+          txHash: hashSubmittedData.hash({
+            caip2Prefix,
+            txHash: data.tx_hash,
+            indexInBlock: indexForEvent(data.tx_hash),
+          }),
         };
       } else {
         // it has to be an scheduled timer if we don't have a cde_name
         timerIndexRelativeToBlock += 1;
 
         return {
-          txHash: keccak_256(
-            `${userAddress}|${keccak_256(data.input_data)}|${latestChainData.blockNumber}|${timerIndexRelativeToBlock}`
-          ),
+          txHash: hashTimerData.hash({
+            address: userAddress,
+            dataHash: keccak_256(data.input_data),
+            blockHeight: latestChainData.blockNumber,
+            indexInBlock: timerIndexRelativeToBlock,
+          }),
           // if there is a timer, there is not really a way to associate it with a particular network
           caip2: null,
         };
@@ -624,9 +618,11 @@ async function processScheduledData<Events extends AppEvents>(
 
         if (success) {
           await sendEventsToBroker<Events[string][number]>(eventsToEmit);
+          resultingHashes.successTxHashes.push(txHash);
+        } else {
+          resultingHashes.failedTxHashes.push(txHash);
         }
       }
-      resultingHashes.successTxHashes.push(txHash);
     } catch (e) {
       resultingHashes.failedTxHashes.push(txHash);
       logError(e);
@@ -671,9 +667,11 @@ async function processUserInputs<Events extends AppEvents>(
     }
     const address = await getMainAddress(submittedData.realAddress, DBConn);
 
-    const txHash = keccak_256(
-      `${submittedData.caip2}|${submittedData.txHash}|${indexForEvent(submittedData.txHash)}`
-    );
+    const txHash = hashSubmittedData.hash({
+      caip2Prefix: submittedData.caip2!,
+      txHash: submittedData.txHash,
+      indexInBlock: indexForEvent(submittedData.txHash),
+    });
     const inputData: STFSubmittedData = {
       ...submittedData,
       userAddress: address.address,
@@ -744,9 +742,11 @@ async function processUserInputs<Events extends AppEvents>(
 
         if (success) {
           await sendEventsToBroker<Events[string][number]>(eventsToEmit);
+          resultingHashes.successTxHashes.push(txHash);
+        } else {
+          resultingHashes.failedTxHashes.push(txHash);
         }
       }
-      resultingHashes.successTxHashes.push(txHash);
     } catch (e) {
       resultingHashes.failedTxHashes.push(txHash);
       throw e;

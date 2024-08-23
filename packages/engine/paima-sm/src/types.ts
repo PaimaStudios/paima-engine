@@ -7,23 +7,18 @@ import type {
   Contract,
   ERC20Contract,
   ERC721Contract,
-  SubmittedChainData,
-  SubmittedData,
   PaimaERC721Contract,
   OldERC6551RegistryContract,
   ERC6551RegistryContract,
   InternalEventType,
   ConfigNetworkType,
-  STFSubmittedData,
   IERC1155Contract,
-  PreExecutionBlockHeader,
 } from '@paima/utils';
+import type { SubmittedData, STFSubmittedData, PreExecutionBlockHeader } from '@paima/chain-types';
 import { Type } from '@sinclair/typebox';
 import type { Static } from '@sinclair/typebox';
 import type { ProjectedNftStatus } from '@dcspark/carp-client';
 import type { AppEvents, generateAppEvents, ResolvedPath } from '@paima/events';
-
-export { SubmittedChainData, SubmittedData };
 
 export interface ChainData {
   /** in seconds */
@@ -653,7 +648,7 @@ export type GameStateTransitionFunctionRouter<Events extends AppEvents> = (
 
 export type GameStateTransitionFunction<Events extends AppEvents> = (
   inputData: STFSubmittedData,
-  blockHeader: PreExecutionBlockHeader,
+  blockHeader: PreExecutionBlockHeader<1>,
   randomnessGenerator: any,
   DBConn: PoolClient
 ) => Promise<{
