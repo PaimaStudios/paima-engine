@@ -327,7 +327,7 @@ const SM: GameStateMachineInitializer = {
         const [prevBlock] = await getLatestProcessedBlockHeight.run(undefined, dbTx);
 
         // Fetch and execute scheduled input data
-        const scheduledDataTxHashes = await processScheduledData(
+        const { scheduledDataTxHashes, emittedLogsCount } = await processScheduledData(
           latestChainData,
           dbTx,
           gameStateTransition,
@@ -348,7 +348,8 @@ const SM: GameStateMachineInitializer = {
           scheduledDataTxHashes.successTxHashes.length +
             scheduledDataTxHashes.failedTxHashes.length,
           events,
-          prevBlock?.paima_block_hash
+          prevBlock?.paima_block_hash,
+          emittedLogsCount
         );
 
         const processedCount =
@@ -495,7 +496,12 @@ async function processScheduledData<Events extends AppEvents>(
   indexForEvent: (txHash: string) => number,
   eventDefinitions: AppEvents,
   prevBlockHash: null | Buffer
-): Promise<TxHashes> {
+): Promise<{
+  scheduledDataTxHashes: TxHashes;
+  // we need to keep track of this so that we don't overlap the log
+  // indexes when we process user inputs.
+  emittedLogsCount: number;
+}> {
   const scheduledData = await getScheduledDataByBlockHeight.run(
     { block_height: latestChainData.blockNumber },
     DBConn
@@ -516,6 +522,9 @@ async function processScheduledData<Events extends AppEvents>(
     successTxHashes: [],
     failedTxHashes: [],
   };
+
+  let emittedLogsCount = 0;
+
   for (const data of scheduledData) {
     const userAddress = data.precompile ? precompiles[data.precompile] : SCHEDULED_DATA_ADDRESS;
 
@@ -599,7 +608,8 @@ async function processScheduledData<Events extends AppEvents>(
           txIndexInBlock,
           latestChainData,
           eventDefinitions,
-          eventsToEmit
+          eventsToEmit,
+          emittedLogsCount
         );
       } catch (err) {
         // skip scheduled data where the STF fails
@@ -618,6 +628,7 @@ async function processScheduledData<Events extends AppEvents>(
         if (success) {
           await sendEventsToBroker<Events[string][number]>(eventsToEmit);
           resultingHashes.successTxHashes.push(txHash);
+          emittedLogsCount = eventsToEmit.length;
         } else {
           resultingHashes.failedTxHashes.push(txHash);
         }
@@ -632,7 +643,7 @@ async function processScheduledData<Events extends AppEvents>(
       txIndexInBlock += 1;
     }
   }
-  return resultingHashes;
+  return { scheduledDataTxHashes: resultingHashes, emittedLogsCount };
 }
 
 // Process all of the user inputs data inputs by running each of them through the game STF,
@@ -646,7 +657,8 @@ async function processUserInputs<Events extends AppEvents>(
   indexForEvent: (txHash: string) => number,
   txIndexInBlock: number,
   eventDefinitions: AppEvents,
-  prevBlockHash: null | Buffer
+  prevBlockHash: null | Buffer,
+  logsCountInScheduledData: number
 ): Promise<TxHashes> {
   const resultingHashes: TxHashes = {
     successTxHashes: [],
@@ -723,7 +735,8 @@ async function processUserInputs<Events extends AppEvents>(
           txIndexInBlock,
           latestChainData,
           eventDefinitions,
-          eventsToEmit
+          eventsToEmit,
+          logsCountInScheduledData
         );
       } catch (err) {
         // skip inputs where the STF fails
@@ -837,7 +850,10 @@ function handleEvents<Event extends EventPathAndDef>(
   txIndexInBlock: number,
   latestChainData: ChainData,
   eventDefinitions: AppEvents,
-  eventsToEmit: EventsToEmit<Event>
+  eventsToEmit: EventsToEmit<Event>,
+  // this function is called twice for a single block, so we need this for the
+  // second call.
+  logIndexOffset: number
 ): void {
   for (let log_index = 0; log_index < events.length; log_index++) {
     const event = events[log_index];
@@ -848,7 +864,7 @@ function handleEvents<Event extends EventPathAndDef>(
         address: event.address,
         data: event.data.fields,
         tx: txIndexInBlock,
-        log_index,
+        log_index: logIndexOffset + log_index,
         block_height: latestChainData.blockNumber,
       },
     ]);
