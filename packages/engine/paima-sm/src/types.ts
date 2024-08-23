@@ -648,7 +648,7 @@ export type GameStateTransitionFunctionRouter<Events extends AppEvents> = (
 
 export type GameStateTransitionFunction<Events extends AppEvents> = (
   inputData: STFSubmittedData,
-  blockHeader: PreExecutionBlockHeader<1>,
+  blockHeader: PreExecutionBlockHeader,
   randomnessGenerator: any,
   DBConn: PoolClient
 ) => Promise<{

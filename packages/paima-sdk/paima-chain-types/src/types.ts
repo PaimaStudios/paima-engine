@@ -18,36 +18,6 @@ export type WalletAddress =
 
 export type ContractAddress = ETHAddress;
 
-/**
- * Block header (see: ChainData for the full block)
- */
-export type PreExecutionBlockHeader<Version extends number> = {
-  version: Version;
-} & (Version extends 1
-  ? {
-      mainChainBlochHash: string;
-      blockHeight: number;
-      /**
-       * If there is no previous block, this is null
-       */
-      prevBlockHash: string | null;
-      /** in milliseconds */
-      msTimestamp: number;
-    }
-  : never);
-
-/**
- * Careful: update version number if this struct changes
- */
-export type PostExecutionBlockHeader<Version extends number> = PreExecutionBlockHeader<Version> & {
-  successTxsHash: string;
-  /**
-   * note: this may not contain all failed txs
-   *       notably, it excludes any tx that failed before it got to the STF call
-   */
-  failedTxsHash: string;
-};
-
 export type InputDataString = string;
 export type NonceString = string;
 
@@ -88,3 +58,45 @@ export interface STFSubmittedData extends SubmittedData {
 }
 
 export type SubmittedChainData = SubmittedData;
+
+export type PreExecutionBlockHeaderV1 = {
+  mainChainBlochHash: string;
+  blockHeight: number;
+  /**
+   * If there is no previous block, this is null
+   */
+  prevBlockHash: string | null;
+  /** in milliseconds */
+  msTimestamp: number;
+};
+
+type BlockVersions = 1;
+
+type Max<N extends number, A extends any[] = []> = [N] extends [Partial<A>['length']]
+  ? A['length']
+  : Max<N, [0, ...A]>;
+
+/**
+ * Block header (see: ChainData for the full block)
+ */
+export type PerVersionPreExecutionBlockHeader<Version extends BlockVersions> = {
+  version: Version;
+} & (Version extends 1 ? PreExecutionBlockHeaderV1 : never);
+
+/**
+ * Modify the version number here when needed
+ */
+export type PreExecutionBlockHeader = PerVersionPreExecutionBlockHeader<Max<BlockVersions>>;
+
+/**
+ * Careful: update version number if this struct changes
+ */
+export type PostExecutionBlockHeader<Version extends BlockVersions> =
+  PerVersionPreExecutionBlockHeader<Version> & {
+    successTxsHash: string;
+    /**
+     * note: this may not contain all failed txs
+     *       notably, it excludes any tx that failed before it got to the STF call
+     */
+    failedTxsHash: string;
+  };

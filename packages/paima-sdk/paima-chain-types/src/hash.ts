@@ -31,10 +31,10 @@ export const hashTransactions: HashInfo<string[]> = {
   hash: txs => keccak_256(hashTransactions.preHash(txs)),
 };
 
-export const hashBlock: HashInfo<PostExecutionBlockHeader<1>> = {
+export const hashBlockV1: HashInfo<PostExecutionBlockHeader<1>> = {
   preHash: header =>
     `${header.version}|${header.prevBlockHash}|${header.mainChainBlochHash}|${header.blockHeight}|${header.msTimestamp}|${header.successTxsHash}|${header.failedTxsHash}`,
-  hash: header => keccak_256(hashBlock.preHash(header)),
+  hash: header => keccak_256(hashBlockV1.preHash(header)),
 };
 
 export type ScheduledDataHashInfo = {

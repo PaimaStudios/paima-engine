@@ -3,7 +3,7 @@ import type { PoolClient, Client } from 'pg';
 
 import {
   genV1BlockHeader,
-  hashBlock,
+  hashBlockV1,
   hashSubmittedData,
   hashTimerData,
   type STFSubmittedData,
@@ -372,7 +372,7 @@ const SM: GameStateMachineInitializer = {
           [...scheduledDataTxHashes.successTxHashes, ...userInputsTxHashes.successTxHashes],
           [...scheduledDataTxHashes.failedTxHashes, ...userInputsTxHashes.failedTxHashes]
         );
-        const blockHash = hashBlock.hash(blockHeader);
+        const blockHash = hashBlockV1.hash(blockHeader);
         await blockHeightDone.run(
           { block_height: latestChainData.blockNumber, block_hash: Buffer.from(blockHash, 'hex') },
           dbTx
