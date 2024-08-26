@@ -121,15 +121,6 @@ function registerDocsPrecompiles(precompiles: { [name: string]: `0x${string}` })
 }
 
 function registerDocsOpenAPI(userStateMachineApi: object | undefined): void {
-  const swaggerUiPath = path.resolve(__dirname) + '/swagger-ui';
-  const swaggerServer = [
-    swaggerUi.serve[0],
-    // the default swaggerUi.serve points to the root of the `pkg` build from standalone
-    // there is no way to override the path, so we instead just add a new path
-    // that we manually added in the standalone build that contains the swagger-ui
-    // this isn't ideal as it bloats the executable by 10MB
-    express.static(swaggerUiPath, {}),
-  ];
   const openApi = getOpenApiJson(userStateMachineApi);
 
   server.get(`/${DocPaths.Root}/${DocPaths.Rest.Root}/${DocPaths.Rest.Spec}`, (_, res) => {
@@ -137,7 +128,7 @@ function registerDocsOpenAPI(userStateMachineApi: object | undefined): void {
   });
   server.use(
     `/${DocPaths.Root}/${DocPaths.Rest.Root}/${DocPaths.Rest.Ui}`,
-    swaggerServer,
+    swaggerUi.serve,
     swaggerUi.setup(openApi, { explorer: false })
   );
 }
