@@ -1,6 +1,12 @@
 import type { PoolClient } from 'pg';
 import { ENV, GlobalConfig, getPaimaL2Contract, initWeb3 } from '@paima/utils';
-import type { CardanoConfig, MinaConfig, OtherEvmConfig, AvailConfig } from '@paima/utils';
+import type {
+  CardanoConfig,
+  MinaConfig,
+  OtherEvmConfig,
+  AvailConfig,
+  MidnightConfig,
+} from '@paima/utils';
 import { loadChainDataExtensions } from '@paima/runtime';
 import type { ChainFunnel, IFunnelFactory } from '@paima/runtime';
 import type { ChainDataExtension } from '@paima/sm';
@@ -17,6 +23,7 @@ import { wrapToMinaFunnel } from './funnels/mina/funnel.js';
 import { AvailBlockFunnel } from './funnels/avail/baseFunnel.js';
 import { AvailSharedApi } from './funnels/avail/utils.js';
 import assertNever from 'assert-never';
+import { wrapToMidnightFunnel } from './funnels/midnight/funnel.js';
 
 export class Web3SharedApi extends BaseFunnelSharedApi {
   public constructor(protected web3: Web3) {
@@ -176,6 +183,15 @@ export class FunnelFactory implements IFunnelFactory {
             dbTx,
             chainName,
             config as AvailConfig
+          );
+          break;
+        case ConfigNetworkType.MIDNIGHT:
+          chainFunnel = await wrapToMidnightFunnel(
+            chainFunnel,
+            this.sharedData,
+            dbTx,
+            chainName,
+            config as MidnightConfig
           );
           break;
         case ConfigNetworkType.EVM:

@@ -135,6 +135,7 @@ export type AvailConfig = Static<typeof AvailConfigSchema>;
 
 export const MidnightConfigSchema = Type.Object({
   pubsubIndexerUrl: Type.String(),
+  genesisHash: Type.String(),
 });
 
 export type MidnightConfig = Static<typeof MidnightConfigSchema>;
@@ -191,6 +192,13 @@ export const TaggedAvailOtherConfig = <T extends boolean>(T: T) =>
     Type.Object({ type: Type.Literal(ConfigNetworkType.AVAIL_OTHER) }),
   ]);
 
+export const TaggedMidnightConfig = <T extends boolean>(T: T) =>
+  Type.Intersect([
+    MidnightConfigSchema,
+    //T ? MidnightOptionalProperties : Type.Partial(AvailOptionalProperties),
+    Type.Object({ type: Type.Literal(ConfigNetworkType.MIDNIGHT) }),
+  ]);
+
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const TaggedConfig = <T extends boolean>(T: T) =>
   Type.Union([
@@ -200,6 +208,7 @@ export const TaggedConfig = <T extends boolean>(T: T) =>
     TaggedMinaConfig(T),
     TaggedAvailMainConfig(T),
     TaggedAvailOtherConfig(T),
+    TaggedMidnightConfig(T),
   ]);
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
@@ -450,6 +459,8 @@ export function caip2PrefixFor(config: Static<typeof InstantiatedConfigsUnion>):
     case ConfigNetworkType.AVAIL_MAIN:
     case ConfigNetworkType.AVAIL_OTHER:
       return `polkadot:${config.genesisHash.slice(2, 32 + 2)}`;
+    case ConfigNetworkType.MIDNIGHT:
+      return `midnight:${config.genesisHash}`;
     default:
       assertNever(type);
   }
