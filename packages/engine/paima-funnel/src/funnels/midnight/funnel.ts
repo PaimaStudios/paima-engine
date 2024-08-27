@@ -1,8 +1,10 @@
 import { ChainFunnel, ReadPresyncDataFrom } from '@paima/runtime/src/types';
 import { ChainData, PresyncChainData } from '@paima/sm';
+import { doLog, logError } from '@paima/utils';
+import { FUNNEL_PRESYNC_FINISHED } from '@paima/utils';
 import { PoolClient } from 'pg';
 import { BaseFunnel, FunnelSharedData } from '../BaseFunnel.js';
-import { FUNNEL_PRESYNC_FINISHED } from '@paima/utils/src/constants.js';
+import { MidnightConfig } from '@paima/utils';
 
 // ----------------------------------------------------------------------------
 
@@ -95,9 +97,7 @@ async function gqlQuery(url: string, query: string): Promise<unknown> {
 
 type CachedBlock = Pick<Block, 'height' | 'hash' | 'timestamp'>;
 
-export class MidnightFunnel extends BaseFunnel implements ChainFunnel {
-  pubsubIndexerUrl = 'https://indexer.devnet.midnight.network';
-
+class MidnightFunnel extends BaseFunnel implements ChainFunnel {
   // Linear queue of blocks.
   private cachedBlocks: CachedBlock[] = [];
   private nextBlockHeight: number = 588881;
@@ -106,18 +106,19 @@ export class MidnightFunnel extends BaseFunnel implements ChainFunnel {
     sharedData: FunnelSharedData,
     dbTx: PoolClient,
     public chainName: string,
-    private readonly baseFunnel: ChainFunnel
+    private readonly baseFunnel: ChainFunnel,
+    private config: MidnightConfig
   ) {
     super(sharedData, dbTx);
   }
 
-  private async query(query: string): Promise<unknown> {
-    return await gqlQuery(`${this.pubsubIndexerUrl}/api/v1/graphql`, query);
+  private async indexerQuery(query: string): Promise<unknown> {
+    return await gqlQuery(`${this.config.pubsubIndexerUrl}/api/v1/graphql`, query);
   }
 
   async derp() {
     const topBlock = (
-      (await this.query('block { hash, height, timestamp }')) as {
+      (await this.indexerQuery('block { hash, height, timestamp }')) as {
         block: Pick<Block, 'hash' | 'height' | 'timestamp'>;
       }
     ).block;
@@ -126,7 +127,7 @@ export class MidnightFunnel extends BaseFunnel implements ChainFunnel {
   async getTimestampForBlock(at: number): Promise<number> {
     return midnightTimestampToSeconds(
       (
-        (await this.query(`block(offset: { height: ${at} }) { timestamp }`)) as {
+        (await this.indexerQuery(`block(offset: { height: ${at} }) { timestamp }`)) as {
           block: Pick<Block, 'timestamp'>;
         }
       ).block.timestamp
@@ -172,7 +173,7 @@ export class MidnightFunnel extends BaseFunnel implements ChainFunnel {
 
       // Fill the cache.
       console.log('Midnight requesting block', this.nextBlockHeight);
-      const { block } = (await this.query(
+      const { block } = (await this.indexerQuery(
         `block(offset: { height: ${this.nextBlockHeight} }) { height hash timestamp }`
       )) as {
         block: CachedBlock | null;
@@ -190,5 +191,24 @@ export class MidnightFunnel extends BaseFunnel implements ChainFunnel {
     this.cachedBlocks.splice(0, cacheIdx);
 
     return result;
+  }
+}
+
+export async function wrapToMidnightFunnel(
+  chainFunnel: ChainFunnel,
+  sharedData: FunnelSharedData,
+  dbTx: PoolClient,
+  chainName: string,
+  config: MidnightConfig
+): Promise<ChainFunnel> {
+  try {
+    // TODO: Recover the cache state...
+    // Hooray!
+    return new MidnightFunnel(sharedData, dbTx, chainName, chainFunnel, config);
+  } catch (err) {
+    // Log then rethrow???
+    doLog('[paima-funnel] Unable to initialize Midnight cde events processor:');
+    logError(err);
+    throw new Error('[paima-funnel] Unable to initialize Midnight cde events processor');
   }
 }

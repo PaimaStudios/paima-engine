@@ -13,6 +13,7 @@ export enum ConfigNetworkType {
   MINA = 'mina',
   AVAIL_MAIN = 'avail-main',
   AVAIL_OTHER = 'avail-other',
+  MIDNIGHT = 'midnight',
 }
 
 export type ConfigMapping = {
@@ -22,6 +23,7 @@ export type ConfigMapping = {
   [ConfigNetworkType.MINA]: MinaConfig;
   [ConfigNetworkType.AVAIL_MAIN]: AvailMainConfig;
   [ConfigNetworkType.AVAIL_OTHER]: AvailConfig;
+  [ConfigNetworkType.MIDNIGHT]: MidnightConfig;
 };
 
 export type TypeToConfig<T extends ConfigNetworkType> = ConfigMapping[T];
@@ -130,6 +132,12 @@ export const AvailConfigSchema = Type.Intersect([AvailRequiredProperties, AvailO
 
 export type AvailMainConfig = AvailConfig & { type: ConfigNetworkType.AVAIL_MAIN };
 export type AvailConfig = Static<typeof AvailConfigSchema>;
+
+export const MidnightConfigSchema = Type.Object({
+  pubsubIndexerUrl: Type.String(),
+});
+
+export type MidnightConfig = Static<typeof MidnightConfigSchema>;
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const TaggedEvmConfig = <T extends boolean, U extends boolean>(T: T, MAIN_CONFIG: U) =>

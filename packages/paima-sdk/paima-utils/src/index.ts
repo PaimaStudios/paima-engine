@@ -20,6 +20,7 @@ import {
   caip2PrefixFor,
   AvailMainConfig,
   AvailConfig,
+  MidnightConfig,
 } from './config/loading.js';
 import { ErrorCode, ErrorMessageFxn, ErrorMessageMapping } from './types/index.js';
 
@@ -47,6 +48,7 @@ export {
   MinaConfig,
   AvailConfig,
   AvailMainConfig,
+  MidnightConfig,
   ConfigNetworkType,
   defaultEvmMainNetworkName,
   defaultCardanoNetworkName,
