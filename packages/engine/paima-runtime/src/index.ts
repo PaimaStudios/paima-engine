@@ -19,6 +19,7 @@ export {
   registerDocsPrecompiles,
   registerDocsOpenAPI,
   registerValidationErrorHandler,
+  registerDocsAppEvents,
 } from './server.js';
 export { TimeoutError } from './utils.js';
 
@@ -94,6 +95,18 @@ async function runInitializationProcedures(
   );
   if (!initResult) {
     doLog('[paima-runtime] Unable to initialize DB! Shutting down...');
+    return false;
+  }
+
+  const eventValidationResult = await gameStateMachine.initializeAndValidateRegisteredEvents();
+  if (!eventValidationResult) {
+    doLog('[paima-runtime] Failed to validate pre-existing events! Shutting down...');
+    return false;
+  }
+
+  const eventIndexesResult = await gameStateMachine.initializeEventIndexes();
+  if (!eventIndexesResult) {
+    doLog('[paima-runtime] Unable to initialize indexes for events! Shutting down...');
     return false;
   }
 

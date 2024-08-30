@@ -7,26 +7,23 @@ import type {
   Contract,
   ERC20Contract,
   ERC721Contract,
-  SubmittedChainData,
-  SubmittedData,
   PaimaERC721Contract,
   OldERC6551RegistryContract,
   ERC6551RegistryContract,
   InternalEventType,
   ConfigNetworkType,
-  STFSubmittedData,
   IERC1155Contract,
-  BlockHeader,
 } from '@paima/utils';
+import type { SubmittedData, STFSubmittedData, PreExecutionBlockHeader } from '@paima/chain-types';
 import { Type } from '@sinclair/typebox';
 import type { Static } from '@sinclair/typebox';
 import type { ProjectedNftStatus } from '@dcspark/carp-client';
-
-export { SubmittedChainData, SubmittedData };
+import type { AppEvents, ResolvedPath } from '@paima/events';
 
 export interface ChainData {
   /** in seconds */
   timestamp: number;
+  /** block hash of the underlying main chain */
   blockHash: string;
   blockNumber: number;
   submittedData: SubmittedData[];
@@ -645,16 +642,26 @@ export type ChainDataExtension = (
   | ChainDataExtensionDynamicEvmPrimitive
 ) & { network: string };
 
-export type GameStateTransitionFunctionRouter = (
+export type GameStateTransitionFunctionRouter<Events extends AppEvents> = (
   blockHeight: number
-) => GameStateTransitionFunction;
+) => GameStateTransitionFunction<Events>;
 
-export type GameStateTransitionFunction = (
+export type GameStateTransitionFunction<Events extends AppEvents> = (
   inputData: STFSubmittedData,
-  blockHeader: BlockHeader,
+  blockHeader: PreExecutionBlockHeader,
   randomnessGenerator: any,
   DBConn: PoolClient
-) => Promise<SQLUpdate[]>;
+) => Promise<{
+  stateTransitions: SQLUpdate[];
+  events: {
+    address: `0x${string}`;
+    data: {
+      name: string;
+      fields: ResolvedPath<Events[string][number]['path']> & Events[string][number]['type'];
+      topic: string;
+    };
+  }[];
+}>;
 
 export type Precompiles = { precompiles: { [name: string]: `0x${string}` } };
 
@@ -662,14 +669,17 @@ export interface GameStateMachineInitializer {
   initialize: (
     databaseInfo: PoolConfig,
     randomnessProtocolEnum: number,
-    gameStateTransitionRouter: GameStateTransitionFunctionRouter,
+    gameStateTransitionRouter: GameStateTransitionFunctionRouter<any>,
     startBlockHeight: number,
-    precompiles: Precompiles
+    precompiles: Precompiles,
+    events: AppEvents
   ) => GameStateMachine;
 }
 
 export interface GameStateMachine {
   initializeDatabase: (force: boolean) => Promise<boolean>;
+  initializeAndValidateRegisteredEvents: () => Promise<boolean>;
+  initializeEventIndexes: () => Promise<boolean>;
   presyncStarted: (network: string) => Promise<boolean>;
   syncStarted: () => Promise<boolean>;
   latestProcessedBlockHeight: (dbTx?: PoolClient | Pool) => Promise<number>;
@@ -681,4 +691,5 @@ export interface GameStateMachine {
   presyncProcess: (dbTx: PoolClient, latestCdeData: PresyncChainData) => Promise<void>;
   markPresyncMilestone: (blockHeight: number, network: string) => Promise<void>;
   dryRun: (gameInput: string, userAddress: string) => Promise<boolean>;
+  getAppEvents: () => AppEvents;
 }

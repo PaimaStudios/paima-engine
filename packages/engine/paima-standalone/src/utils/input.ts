@@ -1,5 +1,6 @@
 import { FunnelFactory } from '@paima/funnel';
 import paimaRuntime, {
+  registerDocsAppEvents,
   registerDocsOpenAPI,
   registerDocsPrecompiles,
   registerValidationErrorHandler,
@@ -28,10 +29,12 @@ import {
   importOpenApiJson,
   importPrecompiles,
   importEndpoints,
+  importEvents,
 } from './import.js';
 import type { Template } from './types.js';
 import RegisterRoutes, { EngineService } from '@paima/rest';
 import { poolConfig } from './index.js';
+import { groupEvents } from '@paima/events';
 
 // Prompt user for input in the CLI
 export const userPrompt = (query: string): Promise<string> => {
@@ -141,7 +144,9 @@ export const runPaimaEngine = async (): Promise<void> => {
 
     // Import & initialize state machine
     const precompilesImport = importPrecompiles();
-    const stateMachine = gameSM(precompilesImport);
+    const eventsImport = importEvents();
+    const groupedEvents = groupEvents(eventsImport.events);
+    const stateMachine = gameSM(precompilesImport, groupedEvents);
     console.log(`Connecting to database at ${poolConfig.host}:${poolConfig.port}`);
     const dbConn = await stateMachine.getReadonlyDbConn().connect();
     const funnelFactory = await FunnelFactory.initialize(dbConn);
@@ -170,6 +175,7 @@ export const runPaimaEngine = async (): Promise<void> => {
     registerDocsOpenAPI(importOpenApiJson());
     registerDocsPrecompiles(precompilesImport.precompiles);
     registerValidationErrorHandler();
+    registerDocsAppEvents(groupedEvents);
 
     void engine.run(ENV.STOP_BLOCKHEIGHT, ENV.SERVER_ONLY_MODE);
   } else {

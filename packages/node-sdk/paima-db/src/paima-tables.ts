@@ -2,23 +2,49 @@ import type { TableData } from './table-types.js';
 import { packTuples } from './table-types.js';
 
 const QUERY_CREATE_TABLE_BLOCKHEIGHTS = `
-CREATE TABLE block_heights ( 
+CREATE TABLE paima_blocks ( 
   block_height INTEGER PRIMARY KEY,
+  ver INTEGER NOT NULL,
+  main_chain_block_hash BYTEA NOT NULL,
   seed TEXT NOT NULL,
-  done BOOLEAN NOT NULL DEFAULT false
+  ms_timestamp TIMESTAMP without time zone NOT NULL,
+  paima_block_hash BYTEA
 );
 `;
 
-const TABLE_DATA_BLOCKHEIGHTS: TableData = {
-  tableName: 'block_heights',
+const QUERY_CREATE_INDEX_PAIMA_BLOCK_HASH = `
+CREATE INDEX PAIMA_BLOCKS_L2_HASH_INDEX ON "paima_blocks" (paima_block_hash);
+`;
+const QUERY_CREATE_INDEX_MAIN_BLOCK_HASH = `
+CREATE INDEX PAIMA_BLOCKS_L1_HASH_INDEX ON "paima_blocks" (main_chain_block_hash);
+`;
+
+const TABLE_DATA_PAIMA_BLOCKS: TableData = {
+  tableName: 'paima_blocks',
   primaryKeyColumns: ['block_height'],
   columnData: packTuples([
     ['block_height', 'integer', 'NO', ''],
+    ['ver', 'integer', 'NO', ''],
+    ['main_chain_block_hash', 'bytea', 'NO', ''],
     ['seed', 'text', 'NO', ''],
-    ['done', 'boolean', 'NO', 'false'],
+    ['ms_timestamp', 'timestamp without time zone', 'NO', ''],
+    ['paima_block_hash', 'bytea', 'YES', ''],
   ]),
   serialColumns: [],
   creationQuery: QUERY_CREATE_TABLE_BLOCKHEIGHTS,
+  index: [
+    {
+      name: 'PAIMA_BLOCKS_L2_HASH_INDEX',
+      creationQuery: QUERY_CREATE_INDEX_PAIMA_BLOCK_HASH,
+    },
+    {
+      name: 'PAIMA_BLOCKS_L1_HASH_INDEX',
+      creationQuery: QUERY_CREATE_INDEX_MAIN_BLOCK_HASH,
+    },
+  ],
+  // TODO: we could also create a constraint
+  //       that paima_block_hash is non-null after each db query
+  //       CONSTRAINT hash_not_null CHECK (paima_block_hash IS NOT NULL) DEFERRABLE INITIALLY DEFERRED
 };
 
 const QUERY_CREATE_TABLE_NONCES = `
@@ -753,13 +779,68 @@ const TABLE_DATA_CDE_DYNAMIC_PRIMITIVE_CONFIG: TableData = {
   creationQuery: QUERY_CREATE_TABLE_CDE_DYNAMIC_PRIMITIVE_CONFIG,
 };
 
+const QUERY_CREATE_TABLE_EVENT = `
+CREATE TABLE event (
+  id SERIAL PRIMARY KEY,
+  topic TEXT NOT NULL,
+  address TEXT NOT NULL,
+  data JSONB NOT NULL,
+  block_height INTEGER NOT NULL,
+  tx INTEGER NOT NULL,
+  log_index INTEGER NOT NULL
+);
+`;
+
+const QUERY_CREATE_INDEX_EVENT_TOPIC = `
+CREATE INDEX EVENT_TOPIC_INDEX ON "event" (topic);
+`;
+
+const TABLE_DATA_EVENT: TableData = {
+  tableName: 'event',
+  primaryKeyColumns: ['id'],
+  columnData: packTuples([
+    ['id', 'integer', 'NO', ''],
+    ['topic', 'text', 'NO', ''],
+    ['address', 'text', 'NO', ''],
+    ['data', 'jsonb', 'NO', ''],
+    ['block_height', 'integer', 'NO', ''],
+    ['tx', 'integer', 'NO', ''],
+    ['log_index', 'integer', 'NO', ''],
+  ]),
+  serialColumns: [],
+  creationQuery: QUERY_CREATE_TABLE_EVENT,
+  index: {
+    name: 'EVENT_TOPIC_INDEX',
+    creationQuery: QUERY_CREATE_INDEX_EVENT_TOPIC,
+  },
+};
+
+const QUERY_CREATE_TABLE_REGISTERED_EVENT = `
+CREATE TABLE registered_event (
+  name TEXT NOT NULL,
+  topic TEXT NOT NULL,
+  PRIMARY KEY(name, topic)
+);
+`;
+
+const TABLE_DATA_REGISTERED_EVENT: TableData = {
+  tableName: 'registered_event',
+  primaryKeyColumns: ['name', 'topic'],
+  columnData: packTuples([
+    ['name', 'text', 'NO', ''],
+    ['topic', 'text', 'NO', ''],
+  ]),
+  serialColumns: [],
+  creationQuery: QUERY_CREATE_TABLE_REGISTERED_EVENT,
+};
+
 export const FUNCTIONS: string[] = [
   FUNCTION_NOTIFY_WALLET_CONNECT,
   FUNCTION_TRIGGER_ADDRESSES,
   FUNCTION_TRIGGER_DELEGATIONS,
 ];
 export const TABLES: TableData[] = [
-  TABLE_DATA_BLOCKHEIGHTS,
+  TABLE_DATA_PAIMA_BLOCKS,
   TABLE_DATA_NONCES,
   TABLE_DATA_SCHEDULED_DATA,
   TABLE_DATA_SCHEDULED_DATA_TX_HASH,
@@ -790,4 +871,6 @@ export const TABLES: TableData[] = [
   TABLE_DATA_MINA_CHECKPOINT,
   TABLE_DATA_ACHIEVEMENT_PROGRESS,
   TABLE_DATA_CDE_DYNAMIC_PRIMITIVE_CONFIG,
+  TABLE_DATA_EVENT,
+  TABLE_DATA_REGISTERED_EVENT,
 ];

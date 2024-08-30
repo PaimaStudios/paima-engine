@@ -4,7 +4,8 @@ import type {
   EvmPresyncChainData,
   InternalEvent,
 } from '@paima/sm';
-import type { InternalEventType, SubmittedData } from '@paima/utils';
+import type { InternalEventType } from '@paima/utils';
+import type { SubmittedData } from '@paima/chain-types';
 import { ConfigNetworkType, doLog } from '@paima/utils';
 
 export function groupCdeData(

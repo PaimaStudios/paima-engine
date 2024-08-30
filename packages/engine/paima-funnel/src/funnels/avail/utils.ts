@@ -3,7 +3,7 @@ import type { Header as PolkadotHeader } from '@polkadot/types/interfaces/types'
 import { base64Decode } from '@polkadot/util-crypto';
 import { BaseFunnelSharedApi } from '../BaseFunnel.js';
 import { createApi } from './createApi.js';
-import type { NonTimerSubmittedData } from '@paima/utils';
+import type { NonTimerSubmittedData } from '@paima/chain-types';
 
 export const GET_DATA_TIMEOUT = 10000;
 

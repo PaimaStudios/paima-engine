@@ -1,7 +1,6 @@
 import { Type } from '@sinclair/typebox';
 import type {
   TString,
-  TNumber,
   TInteger,
   TExtends,
   Kind,
@@ -236,7 +235,8 @@ type IndexedFields<T extends LogEventFields<TSchema>[]> = ExcludeFromTuple<
 
 export function toPath<T extends LogEvent<LogEventFields<TSchema>[]>, Prefix extends TopicPrefix>(
   prefix: Prefix,
-  event: T
+  event: T,
+  signatureHash?: string
 ): {
   path: AddStringPath<IndexedFields<T['fields']>>;
   broker: BrokerName<Prefix>;
@@ -249,6 +249,7 @@ export function toPath<T extends LogEvent<LogEventFields<TSchema>[]>, Prefix ext
   return {
     path: [
       prefix,
+      ...[signatureHash].filter(x => x),
       ...event.fields
         .filter(input => input.indexed)
         .flatMap(input => [

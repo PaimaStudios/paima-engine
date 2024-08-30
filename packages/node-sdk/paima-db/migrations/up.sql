@@ -1,7 +1,13 @@
-CREATE TABLE block_heights ( 
+CREATE TABLE paima_blocks ( 
   block_height INTEGER PRIMARY KEY,
+  ver INTEGER NOT NULL,
+  main_chain_block_hash BYTEA NOT NULL,
   seed TEXT NOT NULL,
-  done BOOLEAN NOT NULL DEFAULT false
+  ms_timestamp TIMESTAMP without time zone NOT NULL,
+
+  -- note: slightly awkward, but this field is nullable
+  --       this helps other SQL queries refer to the block before the block is done being processed 
+  paima_block_hash BYTEA
 );
 
 CREATE TABLE scheduled_data (
@@ -279,4 +285,20 @@ CREATE TABLE cde_dynamic_primitive_config (
   parent TEXT NOT NULL,
   config JSONB NOT NULL,
   PRIMARY KEY(cde_name)
+);
+
+CREATE TABLE event (
+  id SERIAL PRIMARY KEY,
+  topic TEXT NOT NULL,
+  address TEXT NOT NULL,
+  data JSONB NOT NULL,
+  block_height INTEGER NOT NULL,
+  tx INTEGER NOT NULL,
+  log_index INTEGER NOT NULL
+);
+
+CREATE TABLE registered_event (
+  name TEXT NOT NULL,
+  topic TEXT  NOT NULL,
+  PRIMARY KEY(name, topic)
 );

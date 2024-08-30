@@ -148,6 +148,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/get_logs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["GetLogsPost"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/achievements/public/list": {
         parameters: {
             query?: never;
@@ -281,6 +297,36 @@ export interface components {
             result: components["schemas"]["TransactionContentResponse"];
         };
         Result_TransactionContentResponse_: components["schemas"]["SuccessfulResult_TransactionContentResponse_"] | components["schemas"]["FailedResult"];
+        "SuccessfulResult__topic-string--address-string--blockNumber-number--data_58___91_fieldName-string_93__58_any_--tx-number--logIndex-number_-Array_": {
+            /** @enum {boolean} */
+            success: true;
+            result: {
+                /** Format: double */
+                logIndex: number;
+                /** Format: double */
+                tx: number;
+                data: {
+                    [key: string]: unknown;
+                };
+                /** Format: double */
+                blockNumber: number;
+                address: string;
+                topic: string;
+            }[];
+        };
+        "Result__topic-string--address-string--blockNumber-number--data_58___91_fieldName-string_93__58_any_--tx-number--logIndex-number_-Array_": components["schemas"]["SuccessfulResult__topic-string--address-string--blockNumber-number--data_58___91_fieldName-string_93__58_any_--tx-number--logIndex-number_-Array_"] | components["schemas"]["FailedResult"];
+        GetLogsResponse: components["schemas"]["Result__topic-string--address-string--blockNumber-number--data_58___91_fieldName-string_93__58_any_--tx-number--logIndex-number_-Array_"];
+        GetLogsParams: {
+            topic: string;
+            filters?: {
+                [key: string]: string;
+            };
+            address: string;
+            /** Format: double */
+            toBlock?: number;
+            /** Format: double */
+            fromBlock: number;
+        };
         Achievement: {
             /** @description Unique Achievement String */
             name: string;
@@ -765,6 +811,54 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["FailedResult"];
+                };
+            };
+        };
+    };
+    GetLogsPost: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GetLogsParams"];
+            };
+        };
+        responses: {
+            /** @description Ok */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GetLogsResponse"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FailedResult"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FailedResult"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternalServerErrorResult"];
                 };
             };
         };

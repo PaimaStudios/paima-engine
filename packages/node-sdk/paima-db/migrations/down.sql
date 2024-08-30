@@ -9,7 +9,7 @@ DROP TABLE cde_tracking;
 DROP TABLE historical_game_inputs;
 DROP TABLE nonces;
 DROP TABLE scheduled_data;
-DROP TABLE block_heights;
+DROP TABLE paima_blocks;
 DROP TABLE delegations;
 DROP TABLE addresses;
 DROP TABLE cde_cardano_pool_delegation;

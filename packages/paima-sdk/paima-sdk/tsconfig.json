@@ -20,5 +20,6 @@
     { "path": "../paima-mw-core" },
     { "path": "../paima-events/tsconfig.build.json" },
     { "path": "../paima-precompiles/tsconfig.build.json" },
+    { "path": "../paima-chain-types/tsconfig.build.json" },
   ]
 }

@@ -5,6 +5,7 @@ const isNode: boolean =
   typeof process !== 'undefined' && process.versions != null && process.versions.node != null;
 if (isNode) {
   // dynamic import to avoid requiring a polyfill for this in browsers
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const { config } = require('dotenv');
   // for browser builds, we can't actually loads things from disk like this
   // instead, for browsers we rely on bundlers like Vite or Webpack to fill these
@@ -50,9 +51,6 @@ export class ENV {
   }
   static get POLLING_RATE(): number {
     return parseFloat(process.env.POLLING_RATE || `${ENV.BLOCK_TIME - 0.1}`);
-  }
-  static get DEPLOYMENT(): string {
-    return process.env.DEPLOYMENT || '';
   }
   static get EMULATED_BLOCKS(): boolean {
     return ENV.isTrue(process.env.EMULATED_BLOCKS);
@@ -155,6 +153,10 @@ export class ENV {
   }
   static get MQTT_BATCHER_BROKER_URL(): string {
     return process.env.MQTT_BATCHER_BROKER_URL || 'ws://127.0.0.1:' + ENV.MQTT_BATCHER_BROKER_PORT;
+  }
+
+  static get GET_LOGS_MAX_BLOCK_RANGE(): number {
+    return parseFloat(process.env.GET_LOGS_MAX_BLOCK_RANGE || '5000');
   }
 
   // Utils

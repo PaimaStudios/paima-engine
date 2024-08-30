@@ -1,4 +1,4 @@
-import { Controller, Response, Query, Get, Route } from 'tsoa';
+import { Controller, Response, Query, Get, Route, Body, Post } from 'tsoa';
 import { doLog, logError, ENV } from '@paima/utils';
 import type {
   InternalServerErrorResult,
@@ -7,6 +7,7 @@ import type {
   ValidateErrorResult,
 } from '@paima/utils';
 import { EngineService } from '../EngineService.js';
+import type { IGetEventsResult } from '@paima/db';
 import {
   deploymentChainBlockheightToEmulated,
   emulatedSelectLatestPrior,
@@ -393,6 +394,157 @@ export class TransactionContentController extends Controller {
           // value: string,
           // nonce: string,
         },
+      };
+    }
+  }
+}
+
+type GetLogsResponse = Result<
+  {
+    topic: string;
+    address: string;
+    blockNumber: number;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    data: { [fieldName: string]: any };
+    tx: number;
+    logIndex: number;
+  }[]
+>;
+type GetLogsParams = {
+  fromBlock: number;
+  toBlock?: number;
+  address: string;
+  filters?: { [fieldName: string]: string };
+  topic: string;
+};
+
+@Route('get_logs')
+export class GetLogsController extends Controller {
+  @Response<FailedResult>(StatusCodes.NOT_FOUND)
+  @Response<FailedResult>(StatusCodes.BAD_REQUEST)
+  @Response<InternalServerErrorResult>(StatusCodes.INTERNAL_SERVER_ERROR)
+  @Post()
+  public async post(@Body() params: GetLogsParams): Promise<GetLogsResponse> {
+    const gameStateMachine = EngineService.INSTANCE.getSM();
+
+    params.toBlock = params.toBlock ?? (await gameStateMachine.latestProcessedBlockHeight());
+
+    if (
+      params.toBlock < params.fromBlock ||
+      params.toBlock - params.fromBlock > ENV.GET_LOGS_MAX_BLOCK_RANGE
+    ) {
+      this.setStatus(StatusCodes.BAD_REQUEST);
+      return {
+        success: false,
+        errorMessage: 'Invalid block range',
+      };
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const eventDefinition = ((): any => {
+      const appEvents = gameStateMachine.getAppEvents();
+
+      for (const defs of Object.values(appEvents)) {
+        for (const def of defs) {
+          if (def.topicHash === params.topic) {
+            return def;
+          }
+        }
+      }
+
+      return undefined;
+    })();
+
+    if (!eventDefinition) {
+      this.setStatus(StatusCodes.NOT_FOUND);
+      return {
+        success: false,
+        errorMessage: 'Topic not found',
+      };
+    }
+
+    if (params.filters) {
+      const indexedFields = new Set();
+      for (const field of eventDefinition.definition.fields) {
+        if (field.indexed) {
+          indexedFields.add(field.name);
+        }
+      }
+
+      for (const fieldName of Object.keys(params.filters)) {
+        if (!indexedFields.has(fieldName)) {
+          this.setStatus(StatusCodes.NOT_FOUND);
+          return {
+            success: false,
+            errorMessage: `Field is not indexed: ${fieldName}`,
+          };
+        }
+      }
+    }
+
+    try {
+      const DBConn = gameStateMachine.getReadonlyDbConn();
+
+      let dynamicPart = '';
+      const dynamicFilters = [];
+
+      // it does not seem to be possible to build this dynamic filter with
+      // pgtyped, so we instead build a dynamic parametrized query.
+      if (params.filters) {
+        const keys = Object.keys(params.filters);
+
+        for (let i = 0; i < keys.length; i++) {
+          dynamicPart = dynamicPart.concat(
+            `COALESCE(data->>$${5 + i * 2} = $${5 + i * 2 + 1}, 1=1) AND\n`
+          );
+
+          dynamicFilters.push(keys[i]);
+          dynamicFilters.push(params.filters[keys[i]]);
+        }
+      }
+
+      const query = `
+        SELECT * FROM event WHERE
+          COALESCE(block_height >= $1, 1=1) AND
+          COALESCE(block_height <= $2, 1=1) AND
+          COALESCE(address = $3, 1=1) AND
+          ${dynamicPart}
+          topic = $4
+        ORDER BY id;
+      `;
+
+      // casting to IGetEventsResult is sound, since both are a select from the
+      // same table with the same rows, and at least if the table changes there
+      // is a chance that this will not typecheck anymore.
+      const rows = (
+        await DBConn.query(query, [
+          params.fromBlock,
+          params.toBlock,
+          params.address,
+          params.topic,
+          ...dynamicFilters,
+        ])
+      ).rows as IGetEventsResult[];
+
+      return {
+        success: true,
+        result: rows.map(row => ({
+          topic: row.topic,
+          blockNumber: row.block_height,
+          address: row.address,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          data: row.data as { [fieldName: string]: any },
+          tx: row.tx,
+          logIndex: row.log_index,
+        })),
+      };
+    } catch (err) {
+      doLog(`Unexpected webserver error:`);
+      logError(err);
+      this.setStatus(StatusCodes.INTERNAL_SERVER_ERROR);
+      return {
+        success: false,
+        errorMessage: 'Unknown error, please contact game node operator',
       };
     }
   }

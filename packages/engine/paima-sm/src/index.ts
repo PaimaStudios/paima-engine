@@ -1,7 +1,13 @@
 import { Pool } from 'pg';
 import type { PoolClient, Client } from 'pg';
 
-import type { STFSubmittedData } from '@paima/utils';
+import {
+  genV1BlockHeader,
+  hashBlockV1,
+  hashSubmittedData,
+  hashTimerData,
+  type STFSubmittedData,
+} from '@paima/chain-types';
 import {
   caip2PrefixFor,
   doLog,
@@ -11,6 +17,7 @@ import {
   logError,
   SCHEDULED_DATA_ADDRESS,
   SCHEDULED_DATA_ID,
+  strip0x,
 } from '@paima/utils';
 import {
   tx,
@@ -24,7 +31,7 @@ import {
   insertNonce,
   getLatestProcessedBlockHeight,
   getScheduledDataByBlockHeight,
-  saveLastBlockHeight,
+  saveLastBlock,
   markCdeBlockheightProcessed,
   getLatestProcessedCdeBlockheight,
   getMainAddress,
@@ -32,10 +39,12 @@ import {
   updateCardanoEpoch,
   updatePaginationCursor,
   updateMinaCheckpoint,
+  insertEvent,
+  createIndexesForEvents,
+  registerEventTypes,
 } from '@paima/db';
 import type { SQLUpdate } from '@paima/db';
 import Prando from '@paima/prando';
-
 import { randomnessRouter } from './randomness.js';
 import { cdeTransitionFunction } from './cde-processing.js';
 import { DelegateWallet } from './delegate-wallet.js';
@@ -51,21 +60,35 @@ import type {
 import { ConfigNetworkType } from '@paima/utils';
 import assertNever from 'assert-never';
 import { keccak_256 } from 'js-sha3';
+import type { AppEvents, EventPathAndDef, ResolvedPath } from '@paima/events';
+import { PaimaEventManager } from '@paima/events';
+import { PaimaEventBroker } from '@paima/broker';
 
 export * from './types.js';
 export type * from './types.js';
 
+type ValueOf<T> = T[keyof T];
+
+type TxHashes = {
+  successTxHashes: string[];
+  failedTxHashes: string[];
+};
 const SM: GameStateMachineInitializer = {
   initialize: (
     databaseInfo,
     randomnessProtocolEnum,
     gameStateTransitionRouter,
     startBlockHeight,
-    precompiles
+    precompiles,
+    events
   ) => {
     const DBConn: Pool = getConnection(databaseInfo);
     const persistentReadonlyDBConn: Client = getPersistentConnection(databaseInfo);
     const readonlyDBConn: Pool = getConnection(databaseInfo, true);
+
+    if (ENV.MQTT_BROKER) {
+      new PaimaEventBroker('Paima-Engine').getServer();
+    }
 
     return {
       latestProcessedBlockHeight: async (
@@ -97,6 +120,35 @@ const SM: GameStateMachineInitializer = {
       },
       initializeDatabase: async (force: boolean = false): Promise<boolean> => {
         return await tx<boolean>(DBConn, dbTx => initializePaimaTables(dbTx, force));
+      },
+      initializeEventIndexes: async (): Promise<boolean> => {
+        return await tx<boolean>(DBConn, dbTx =>
+          createIndexesForEvents(
+            dbTx,
+            Object.values(events).flatMap(eventsByName =>
+              eventsByName.flatMap(event =>
+                event.definition.fields.map(f => ({
+                  topic: event.topicHash,
+                  fieldName: f.name,
+                  indexed: f.indexed,
+                }))
+              )
+            )
+          )
+        );
+      },
+      initializeAndValidateRegisteredEvents: async (): Promise<boolean> => {
+        return await tx<boolean>(DBConn, dbTx =>
+          registerEventTypes(
+            dbTx,
+            Object.values(events).flatMap(eventByName =>
+              eventByName.flatMap(event => ({
+                name: event.definition.name,
+                topic: event.topicHash,
+              }))
+            )
+          )
+        );
       },
       getReadonlyDbConn: (): Pool => {
         return readonlyDBConn;
@@ -182,11 +234,18 @@ const SM: GameStateMachineInitializer = {
               txHash: '',
             },
             // TODO: fill this once we have the timestamp stored in the database
-            { blockHeight, timestamp: 0 },
+            {
+              blockHeight,
+              msTimestamp: b.ms_timestamp.getTime(),
+              version: 1,
+              mainChainBlochHash: b.main_chain_block_hash.toString('hex'),
+              prevBlockHash:
+                b?.paima_block_hash == null ? null : b.paima_block_hash.toString('hex'),
+            },
             new Prando('1234567890'),
             dbTx
           );
-          return data && data.length > 0;
+          return data && data.stateTransitions.length > 0;
         };
         if (dbTxOrPool instanceof Pool) {
           return await tx<boolean>(dbTxOrPool, dbTx => internal(dbTx));
@@ -201,8 +260,15 @@ const SM: GameStateMachineInitializer = {
         // Save blockHeight and randomness seed
         const getSeed = randomnessRouter(randomnessProtocolEnum);
         const seed = await getSeed(latestChainData, dbTx);
-        await saveLastBlockHeight.run(
-          { block_height: latestChainData.blockNumber, seed: seed },
+
+        await saveLastBlock.run(
+          {
+            block_height: latestChainData.blockNumber,
+            main_chain_block_hash: Buffer.from(strip0x(latestChainData.blockHash), 'hex'),
+            ms_timestamp: new Date(latestChainData.timestamp * 1000),
+            ver: 1,
+            seed: seed,
+          },
           dbTx
         );
         // Generate Prando object
@@ -221,6 +287,11 @@ const SM: GameStateMachineInitializer = {
         let cdeDataLength = 0;
 
         for (const network of Object.keys(extensionsPerNetwork)) {
+          // recall: there are two types of primitives
+          //         1. Those that explicitly trigger an STF call
+          //         2. Those that modify DB (ledger) state directly
+          // primitives that only modify ledger state do not affect the block hash (industry standard)
+          // and those that trigger STF calls are taken into account later
           cdeDataLength += await processCdeData(
             latestChainData.blockNumber,
             network,
@@ -252,35 +323,64 @@ const SM: GameStateMachineInitializer = {
           return index;
         };
 
+        // TODO: as a pref improvement, we should probably track this in-memory and only query the DB when needed
+        const [prevBlock] = await getLatestProcessedBlockHeight.run(undefined, dbTx);
+
         // Fetch and execute scheduled input data
-        const scheduledInputsLength = await processScheduledData(
+        const { scheduledDataTxHashes, emittedLogsCount } = await processScheduledData(
           latestChainData,
           dbTx,
           gameStateTransition,
           randomnessGenerator,
           precompiles.precompiles,
-          indexForEventByTx
+          indexForEventByTx,
+          events,
+          prevBlock?.paima_block_hash
         );
 
         // Execute user submitted input data
-        const userInputsLength = await processUserInputs(
+        const userInputsTxHashes = await processUserInputs(
           latestChainData,
           dbTx,
           gameStateTransition,
           randomnessGenerator,
-          indexForEventByTx
+          indexForEventByTx,
+          scheduledDataTxHashes.successTxHashes.length +
+            scheduledDataTxHashes.failedTxHashes.length,
+          events,
+          prevBlock?.paima_block_hash,
+          emittedLogsCount
         );
 
-        const processedCount = cdeDataLength + userInputsLength + scheduledInputsLength;
+        const processedCount =
+          userInputsTxHashes.successTxHashes.length + scheduledDataTxHashes.successTxHashes.length;
         // Extra logging
         if (processedCount > 0)
           doLog(
-            `Processed ${userInputsLength} user inputs, ${scheduledInputsLength} scheduled inputs and ${cdeDataLength} CDE events in block #${latestChainData.blockNumber}`
+            `Processed ${userInputsTxHashes.successTxHashes.length} user inputs, ${scheduledDataTxHashes.successTxHashes.length} scheduled inputs and ${cdeDataLength} CDE events in block #${latestChainData.blockNumber}`
           );
 
         // Commit finishing of processing to DB
-        await blockHeightDone.run({ block_height: latestChainData.blockNumber }, dbTx);
+        const blockHeader = genV1BlockHeader(
+          {
+            blockHash: strip0x(latestChainData.blockHash),
+            blockHeight: latestChainData.blockNumber,
+            msTimestamp: latestChainData.timestamp * 1000,
+          },
+          prevBlock?.paima_block_hash == null ? null : prevBlock.paima_block_hash.toString('hex'),
+          // recall: scheduled data always executes before user data, so tx hashes are in the same order
+          [...scheduledDataTxHashes.successTxHashes, ...userInputsTxHashes.successTxHashes],
+          [...scheduledDataTxHashes.failedTxHashes, ...userInputsTxHashes.failedTxHashes]
+        );
+        const blockHash = hashBlockV1.hash(blockHeader);
+        await blockHeightDone.run(
+          { block_height: latestChainData.blockNumber, block_hash: Buffer.from(blockHash, 'hex') },
+          dbTx
+        );
         return processedCount;
+      },
+      getAppEvents(): AppEvents {
+        return events;
       },
     };
   },
@@ -387,14 +487,21 @@ async function processPaginatedCdeData(
 // Process all of the scheduled data inputs by running each of them through the game STF,
 // saving the results to the DB, and deleting the schedule data all together in one postgres tx.
 // Function returns number of scheduled inputs that were processed.
-async function processScheduledData(
+async function processScheduledData<Events extends AppEvents>(
   latestChainData: ChainData,
   DBConn: PoolClient,
-  gameStateTransition: GameStateTransitionFunction,
+  gameStateTransition: GameStateTransitionFunction<Events>,
   randomnessGenerator: Prando,
   precompiles: Precompiles['precompiles'],
-  indexForEvent: (txHash: string) => number
-): Promise<number> {
+  indexForEvent: (txHash: string) => number,
+  eventDefinitions: AppEvents,
+  prevBlockHash: null | Buffer
+): Promise<{
+  scheduledDataTxHashes: TxHashes;
+  // we need to keep track of this so that we don't overlap the log
+  // indexes when we process user inputs.
+  emittedLogsCount: number;
+}> {
   const scheduledData = await getScheduledDataByBlockHeight.run(
     { block_height: latestChainData.blockNumber },
     DBConn
@@ -405,51 +512,67 @@ async function processScheduledData(
 
   const networks = await GlobalConfig.getInstance();
 
+  // Note: this is not related to `indexForEvent`, since that one is used to
+  // keep a counter of the original tx that scheduled the input. This is just a
+  // global counter for the current block, so we can just increase it by one
+  // with each event.
+  let txIndexInBlock = 0;
+
+  const resultingHashes: TxHashes = {
+    successTxHashes: [],
+    failedTxHashes: [],
+  };
+
+  let emittedLogsCount = 0;
+
   for (const data of scheduledData) {
-    try {
-      const userAddress = data.precompile ? precompiles[data.precompile] : SCHEDULED_DATA_ADDRESS;
+    const userAddress = data.precompile ? precompiles[data.precompile] : SCHEDULED_DATA_ADDRESS;
 
-      if (data.precompile && !precompiles[data.precompile]) {
-        doLog(`[paima-sm] Precompile for scheduled event not found ${data.precompile}. Skipping.`);
-        continue;
+    if (data.precompile && !precompiles[data.precompile]) {
+      doLog(`[paima-sm] Precompile for scheduled event not found ${data.precompile}. Skipping.`);
+      continue;
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-loop-func -- incorrect error fixed when @typescript-eslint v8 comes out
+    const { txHash, caip2 } = ((): { txHash: string; caip2: null | string } => {
+      if (data.cde_name && data.tx_hash) {
+        const caip2Prefix = caip2PrefixFor(networks[data.network!]);
+
+        return {
+          caip2: caip2PrefixFor(networks[data.network!]),
+          txHash: hashSubmittedData.hash({
+            caip2Prefix,
+            txHash: data.tx_hash,
+            indexInBlock: indexForEvent(data.tx_hash),
+          }),
+        };
+      } else {
+        // it has to be an scheduled timer if we don't have a cde_name
+        timerIndexRelativeToBlock += 1;
+
+        return {
+          txHash: hashTimerData.hash({
+            address: userAddress,
+            dataHash: keccak_256(data.input_data),
+            blockHeight: latestChainData.blockNumber,
+            indexInBlock: timerIndexRelativeToBlock,
+          }),
+          // if there is a timer, there is not really a way to associate it with a particular network
+          caip2: null,
+        };
       }
-
-      // eslint-disable-next-line @typescript-eslint/no-loop-func -- incorrect error fixed when @typescript-eslint v8 comes out
-      const { txHash, caip2 } = ((): { txHash: string; caip2: null | string } => {
-        if (data.cde_name && data.tx_hash) {
-          const caip2Prefix = caip2PrefixFor(networks[data.network!]);
-
-          return {
-            caip2: caip2PrefixFor(networks[data.network!]),
-            txHash:
-              '0x' + keccak_256(`${caip2Prefix}}|${data.tx_hash}|${indexForEvent(data.tx_hash)}`),
-          };
-        } else {
-          // it has to be an scheduled timer if we don't have a cde_name
-          timerIndexRelativeToBlock += 1;
-
-          return {
-            txHash:
-              '0x' +
-              keccak_256(
-                `${userAddress}|${keccak_256(data.input_data)}|${latestChainData.blockNumber}|${timerIndexRelativeToBlock}`
-              ),
-            // if there is a timer, there is not really a way to associate it with a particular network
-            caip2: null,
-          };
-        }
-      })();
-
+    })();
+    try {
       const inputData: STFSubmittedData = {
         userId: SCHEDULED_DATA_ID,
         realAddress: SCHEDULED_DATA_ADDRESS,
-        userAddress,
+        userAddress: userAddress,
         inputData: data.input_data,
         inputNonce: '',
         suppliedValue: '0',
         scheduled: true,
         txHash,
-        caip2,
+        caip2: caip2,
       };
 
       if (data.tx_hash) {
@@ -462,12 +585,31 @@ async function processScheduledData(
 
       // Trigger STF
       let sqlQueries: SQLUpdate[] = [];
+      let eventsToEmit: EventsToEmit<Events[string][number]> = [];
       try {
-        sqlQueries = await gameStateTransition(
+        const { stateTransitions, events } = await gameStateTransition(
           inputData,
-          { blockHeight: data.block_height, timestamp: latestChainData.timestamp },
+          {
+            version: 1,
+            mainChainBlochHash: strip0x(latestChainData.blockHash),
+            blockHeight: data.block_height,
+            prevBlockHash: prevBlockHash == null ? null : prevBlockHash.toString('hex'),
+            msTimestamp: latestChainData.timestamp * 1000,
+          },
           randomnessGenerator,
           DBConn
+        );
+
+        sqlQueries = stateTransitions;
+
+        handleEvents<Events[string][number]>(
+          events,
+          sqlQueries,
+          txIndexInBlock,
+          latestChainData,
+          eventDefinitions,
+          eventsToEmit,
+          emittedLogsCount
         );
       } catch (err) {
         // skip scheduled data where the STF fails
@@ -475,33 +617,54 @@ async function processScheduledData(
         continue;
       }
       if (sqlQueries.length !== 0) {
-        await tryOrRollback(DBConn, async () => {
+        const success = await tryOrRollback(DBConn, async () => {
           for (const [query, params] of sqlQueries) {
             await query.run(params, DBConn);
           }
+
+          return true;
         });
+
+        if (success) {
+          await sendEventsToBroker<Events[string][number]>(eventsToEmit);
+          resultingHashes.successTxHashes.push(txHash);
+          emittedLogsCount = eventsToEmit.length;
+        } else {
+          resultingHashes.failedTxHashes.push(txHash);
+        }
       }
     } catch (e) {
+      resultingHashes.failedTxHashes.push(txHash);
       logError(e);
       throw e;
     } finally {
       // guarantee we run this no matter if there is an error or a continue
       await deleteScheduled.run({ id: data.id }, DBConn);
+      txIndexInBlock += 1;
     }
   }
-  return scheduledData.length;
+  return { scheduledDataTxHashes: resultingHashes, emittedLogsCount };
 }
 
 // Process all of the user inputs data inputs by running each of them through the game STF,
 // saving the results to the DB with the nonces, all together in one postgres tx.
 // Function returns number of user inputs that were processed.
-async function processUserInputs(
+async function processUserInputs<Events extends AppEvents>(
   latestChainData: ChainData,
   DBConn: PoolClient,
-  gameStateTransition: GameStateTransitionFunction,
+  gameStateTransition: GameStateTransitionFunction<Events>,
   randomnessGenerator: Prando,
-  indexForEvent: (txHash: string) => number
-): Promise<number> {
+  indexForEvent: (txHash: string) => number,
+  txIndexInBlock: number,
+  eventDefinitions: AppEvents,
+  prevBlockHash: null | Buffer,
+  logsCountInScheduledData: number
+): Promise<TxHashes> {
+  const resultingHashes: TxHashes = {
+    successTxHashes: [],
+    failedTxHashes: [],
+  };
+
   for (const submittedData of latestChainData.submittedData) {
     // Check nonce is valid
     if (submittedData.inputNonce === '') {
@@ -515,15 +678,16 @@ async function processUserInputs(
     }
     const address = await getMainAddress(submittedData.realAddress, DBConn);
 
+    const txHash = hashSubmittedData.hash({
+      caip2Prefix: submittedData.caip2!,
+      txHash: submittedData.txHash,
+      indexInBlock: indexForEvent(submittedData.txHash),
+    });
     const inputData: STFSubmittedData = {
       ...submittedData,
       userAddress: address.address,
       userId: address.id,
-      txHash:
-        '0x' +
-        keccak_256(
-          `${submittedData.caip2}|${submittedData.txHash}|${indexForEvent(submittedData.txHash)}`
-        ),
+      txHash,
     };
     try {
       // Check if internal Concise Command
@@ -548,12 +712,31 @@ async function processUserInputs(
 
       // Trigger STF
       let sqlQueries: SQLUpdate[] = [];
+      let eventsToEmit: EventsToEmit<Events[string][number]> = [];
       try {
-        sqlQueries = await gameStateTransition(
+        const { stateTransitions, events } = await gameStateTransition(
           inputData,
-          { blockHeight: latestChainData.blockNumber, timestamp: latestChainData.timestamp },
+          {
+            version: 1,
+            mainChainBlochHash: strip0x(latestChainData.blockHash),
+            prevBlockHash: prevBlockHash == null ? null : prevBlockHash.toString('hex'),
+            blockHeight: latestChainData.blockNumber,
+            msTimestamp: latestChainData.timestamp * 1000,
+          },
           randomnessGenerator,
           DBConn
+        );
+
+        sqlQueries = stateTransitions;
+
+        handleEvents<Events[string][number]>(
+          events,
+          sqlQueries,
+          txIndexInBlock,
+          latestChainData,
+          eventDefinitions,
+          eventsToEmit,
+          logsCountInScheduledData
         );
       } catch (err) {
         // skip inputs where the STF fails
@@ -561,13 +744,26 @@ async function processUserInputs(
         continue;
       }
       if (sqlQueries.length !== 0) {
-        await tryOrRollback(DBConn, async () => {
+        const success = await tryOrRollback(DBConn, async () => {
           for (const [query, params] of sqlQueries) {
             await query.run(params, DBConn);
           }
+
+          return true;
         });
+
+        if (success) {
+          await sendEventsToBroker<Events[string][number]>(eventsToEmit);
+          resultingHashes.successTxHashes.push(txHash);
+        } else {
+          resultingHashes.failedTxHashes.push(txHash);
+        }
       }
+    } catch (e) {
+      resultingHashes.failedTxHashes.push(txHash);
+      throw e;
     } finally {
+      txIndexInBlock += 1;
       // guarantee we run this no matter if there is an error or a continue
       await insertNonce.run(
         {
@@ -588,7 +784,18 @@ async function processUserInputs(
       }
     }
   }
-  return latestChainData.submittedData.length;
+  return resultingHashes;
+}
+
+async function sendEventsToBroker<Event extends EventPathAndDef>(
+  eventsToEmit: EventsToEmit<Event>
+): Promise<void> {
+  if (ENV.MQTT_BROKER) {
+    // we probably don't want to use Promise.all since it will change the order.
+    for (const [eventDefinition, fields] of eventsToEmit) {
+      await PaimaEventManager.Instance.sendMessage(eventDefinition, fields);
+    }
+  }
 }
 
 async function processInternalEvents(
@@ -626,6 +833,51 @@ async function processInternalEvents(
       default:
         assertNever(event);
     }
+  }
+}
+
+type EventsToEmit<Event extends EventPathAndDef> = [
+  ValueOf<AppEvents>[0],
+  ResolvedPath<Event['path']> & Event['type'],
+][];
+
+function handleEvents<Event extends EventPathAndDef>(
+  events: {
+    address: `0x${string}`;
+    data: { name: string; fields: ResolvedPath<Event['path']> & Event['type']; topic: string };
+  }[],
+  sqlQueries: SQLUpdate[],
+  txIndexInBlock: number,
+  latestChainData: ChainData,
+  eventDefinitions: AppEvents,
+  eventsToEmit: EventsToEmit<Event>,
+  // this function is called twice for a single block, so we need this for the
+  // second call.
+  logIndexOffset: number
+): void {
+  for (let log_index = 0; log_index < events.length; log_index++) {
+    const event = events[log_index];
+    sqlQueries.push([
+      insertEvent,
+      {
+        topic: event.data.topic,
+        address: event.address,
+        data: event.data.fields,
+        tx: txIndexInBlock,
+        log_index: logIndexOffset + log_index,
+        block_height: latestChainData.blockNumber,
+      },
+    ]);
+
+    const eventDefinition = eventDefinitions[event.data.name].find(
+      eventDefinition => eventDefinition.topicHash === event.data.topic
+    );
+
+    if (!eventDefinition) {
+      throw new Error('Event definition not found');
+    }
+
+    eventsToEmit.push([eventDefinition, event.data.fields]);
   }
 }
 
