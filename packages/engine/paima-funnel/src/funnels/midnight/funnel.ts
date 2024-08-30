@@ -129,8 +129,8 @@ class MidnightFunnel extends BaseFunnel implements ChainFunnel {
   ) {
     super(sharedData, dbTx);
 
-    setNetworkId(1); // TODO: 1 = DevNet probably shouldn't be hardcoded
-    // Also, it's unfortunate that it's global state.
+    // Unfortunately this is global state so we can only connect to one network at a time.
+    setNetworkId(config.networkId);
   }
 
   private async indexerQuery(query: string): Promise<unknown> {

@@ -135,6 +135,7 @@ export type AvailConfig = Static<typeof AvailConfigSchema>;
 
 export const MidnightConfigSchema = Type.Object({
   // Midnight network connection info.
+  networkId: Type.Number(),
   indexer: Type.String(),
   indexerWS: Type.String(),
   // node?
