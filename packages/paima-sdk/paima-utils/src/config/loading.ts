@@ -134,7 +134,12 @@ export type AvailMainConfig = AvailConfig & { type: ConfigNetworkType.AVAIL_MAIN
 export type AvailConfig = Static<typeof AvailConfigSchema>;
 
 export const MidnightConfigSchema = Type.Object({
-  pubsubIndexerUrl: Type.String(),
+  // Midnight network connection info.
+  indexer: Type.String(),
+  indexerWS: Type.String(),
+  // node?
+  // proof server?
+  // Used in lieu of chain ID.
   genesisHash: Type.String(),
 });
 

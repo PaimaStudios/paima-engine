@@ -1,10 +1,11 @@
 import { ChainFunnel, ReadPresyncDataFrom } from '@paima/runtime/src/types';
 import { ChainData, PresyncChainData } from '@paima/sm';
-import { doLog, logError } from '@paima/utils';
+import { doLog, hexStringToUint8Array, logError } from '@paima/utils';
 import { FUNNEL_PRESYNC_FINISHED } from '@paima/utils';
 import { PoolClient } from 'pg';
 import { BaseFunnel, FunnelSharedData } from '../BaseFunnel.js';
 import { MidnightConfig } from '@paima/utils';
+import { ContractState, setNetworkId } from '@midnight-ntwrk/compact-runtime';
 
 // ----------------------------------------------------------------------------
 
@@ -95,12 +96,18 @@ async function gqlQuery(url: string, query: string): Promise<unknown> {
 // Mina has a "confirmation depth" where only blocks N below the head are
 // really confirmed. It seems like we don't have to handle that on Midnight.
 
-type CachedBlock = Pick<Block, 'height' | 'hash' | 'timestamp'>;
+type CachedBlock = Pick<Block, 'height' | 'hash' | 'timestamp'> & {
+  transactions: (Pick<Transaction, 'hash'> & {
+    contractCalls: Pick<ContractCall, 'address' | 'state'>[];
+  })[];
+};
 
 class MidnightFunnel extends BaseFunnel implements ChainFunnel {
   // Linear queue of blocks.
   private cachedBlocks: CachedBlock[] = [];
   private nextBlockHeight: number = 588881;
+
+  //private pdp: PublicDataProvider;
 
   constructor(
     sharedData: FunnelSharedData,
@@ -110,10 +117,12 @@ class MidnightFunnel extends BaseFunnel implements ChainFunnel {
     private config: MidnightConfig
   ) {
     super(sharedData, dbTx);
+
+    setNetworkId(1); // TODO: 1 = DevNet probably shouldn't be hardcoded
   }
 
   private async indexerQuery(query: string): Promise<unknown> {
-    return await gqlQuery(`${this.config.pubsubIndexerUrl}/api/v1/graphql`, query);
+    return await gqlQuery(`${this.config.indexer}/api/v1/graphql`, query);
   }
 
   async derp() {
@@ -168,13 +177,30 @@ class MidnightFunnel extends BaseFunnel implements ChainFunnel {
         ++cacheIdx;
 
         // The meat: process this one.
-        console.log('Midnight accepted block', block);
+        console.log('Midnight accepted block', block.transactions.length, block);
+        for (let tx of block.transactions) {
+          for (let contractCall of tx.contractCalls) {
+            let state = ContractState.deserialize(hexStringToUint8Array(contractCall.state));
+            console.log('-- addr =', contractCall.address, ', state = ', state);
+          }
+        }
       }
 
       // Fill the cache.
       console.log('Midnight requesting block', this.nextBlockHeight);
       const { block } = (await this.indexerQuery(
-        `block(offset: { height: ${this.nextBlockHeight} }) { height hash timestamp }`
+        `block(offset: { height: ${this.nextBlockHeight} }) {
+          height
+          hash
+          timestamp
+          transactions {
+            hash
+            contractCalls {
+              address
+              state
+            }
+          }
+        }`
       )) as {
         block: CachedBlock | null;
       };

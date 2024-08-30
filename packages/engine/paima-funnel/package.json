@@ -18,12 +18,13 @@
   },
   "dependencies": {
     "@dcspark/cardano-multiplatform-lib-nodejs": "5.2.0",
-    "avail-js-sdk": "^0.2.12",
-    "@polkadot/util-crypto": "^12.6.2",
     "@dcspark/carp-client": "^3.1.0",
+    "@midnight-ntwrk/compact-runtime": "^0.6.13",
+    "@polkadot/util-crypto": "^12.6.2",
     "aedes": "^0.51.2",
     "aedes-server-factory": "^0.2.1",
     "assert-never": "^1.2.1",
+    "avail-js-sdk": "^0.2.12",
     "mqtt": "^5.7.3",
     "pg": "^8.11.3"
   }
