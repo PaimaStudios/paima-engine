@@ -46,8 +46,14 @@ interface Block {
 }
 
 function midnightTimestampToSeconds(timestamp: string): number {
+  if (timestamp == '-1000000000-01-01T00:00:00Z') {
+    // This is Midnight's block-zero timestamp.
+    return 0;
+  }
+
   if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(timestamp))
     throw new Error('Bad timestamp format');
+
   return Date.parse(timestamp) / 1000;
 }
 
@@ -78,13 +84,20 @@ async function gqlQuery(url: string, query: string): Promise<unknown> {
     body: JSON.stringify({
       query,
     }),
+    headers: {
+      'Content-Type': 'application/json',
+    },
   });
-  const body = await response.json();
-  if ('errors' in response) {
-    throw new GraphQLError('Server returned errors', response.errors as GraphQLErrorDetail[]);
+  if (!response.ok) {
+    // GraphQL syntax errors etc. are 200s, this could be a 503 or similar
+    throw new GraphQLError(`Server returned ${response.status} ${response.statusText}`);
   }
-  if ('data' in response) {
-    return response.data;
+  const body = await response.json();
+  if ('errors' in body) {
+    throw new GraphQLError('Server returned errors', body.errors as GraphQLErrorDetail[]);
+  }
+  if ('data' in body) {
+    return body.data;
   }
   throw new GraphQLError('Server returned nothing');
 }
@@ -105,7 +118,7 @@ type CachedBlock = Pick<Block, 'height' | 'hash' | 'timestamp'> & {
 class MidnightFunnel extends BaseFunnel implements ChainFunnel {
   // Linear queue of blocks.
   private cachedBlocks: CachedBlock[] = [];
-  private nextBlockHeight: number = 588881;
+  private nextBlockHeight: number = 0;
 
   //private pdp: PublicDataProvider;
 
@@ -127,7 +140,7 @@ class MidnightFunnel extends BaseFunnel implements ChainFunnel {
 
   async derp() {
     const topBlock = (
-      (await this.indexerQuery('block { hash, height, timestamp }')) as {
+      (await this.indexerQuery('query { block { hash, height, timestamp } }')) as {
         block: Pick<Block, 'hash' | 'height' | 'timestamp'>;
       }
     ).block;
@@ -136,7 +149,7 @@ class MidnightFunnel extends BaseFunnel implements ChainFunnel {
   async getTimestampForBlock(at: number): Promise<number> {
     return midnightTimestampToSeconds(
       (
-        (await this.indexerQuery(`block(offset: { height: ${at} }) { timestamp }`)) as {
+        (await this.indexerQuery(`query { block(offset: { height: ${at} }) { timestamp } }`)) as {
           block: Pick<Block, 'timestamp'>;
         }
       ).block.timestamp
@@ -189,15 +202,17 @@ class MidnightFunnel extends BaseFunnel implements ChainFunnel {
       // Fill the cache.
       console.log('Midnight requesting block', this.nextBlockHeight);
       const { block } = (await this.indexerQuery(
-        `block(offset: { height: ${this.nextBlockHeight} }) {
-          height
-          hash
-          timestamp
-          transactions {
+        `query {
+          block(offset: { height: ${this.nextBlockHeight} }) {
+            height
             hash
-            contractCalls {
-              address
-              state
+            timestamp
+            transactions {
+              hash
+              contractCalls {
+                address
+                state
+              }
             }
           }
         }`
