@@ -17,6 +17,7 @@ export type CacheMapType = {
   [EvmFunnelCacheEntry.SYMBOL]?: EvmFunnelCacheEntry;
   [MinaFunnelCacheEntry.SYMBOL]?: MinaFunnelCacheEntry;
   [AvailFunnelCacheEntry.SYMBOL]?: AvailFunnelCacheEntry;
+  [MidnightFunnelCacheEntry.SYMBOL]?: MidnightFunnelCacheEntry;
 };
 export class FunnelCacheManager {
   public cacheEntries: CacheMapType = {};
@@ -237,4 +238,14 @@ export class MinaFunnelCacheEntry implements FunnelCacheEntry {
   clear: FunnelCacheEntry['clear'] = () => {
     this.state = null;
   };
+}
+
+export class MidnightFunnelCacheEntry implements FunnelCacheEntry {
+  static readonly SYMBOL = Symbol('MidnightFunnelCacheEntry');
+
+  nextBlockHeight: number = 0;
+
+  clear() {
+    this.nextBlockHeight = 0;
+  }
 }

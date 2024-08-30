@@ -6,6 +6,8 @@ import { PoolClient } from 'pg';
 import { BaseFunnel, FunnelSharedData } from '../BaseFunnel.js';
 import { MidnightConfig } from '@paima/utils';
 import { ContractState, setNetworkId } from '@midnight-ntwrk/compact-runtime';
+import { FunnelCacheEntry, MidnightFunnelCacheEntry } from '../FunnelCache.js';
+import { composeChainData } from '../../utils.js';
 
 // ----------------------------------------------------------------------------
 
@@ -51,10 +53,11 @@ function midnightTimestampToSeconds(timestamp: string): number {
     return 0;
   }
 
-  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(timestamp))
+  // Perhaps attempting to constrain the timestamp format is not worth the effort?
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$/.test(timestamp))
     throw new Error('Bad timestamp format');
 
-  return Date.parse(timestamp) / 1000;
+  return Math.floor(Date.parse(timestamp) / 1000);
 }
 
 // ----------------------------------------------------------------------------
@@ -116,22 +119,18 @@ type CachedBlock = Pick<Block, 'height' | 'hash' | 'timestamp'> & {
 };
 
 class MidnightFunnel extends BaseFunnel implements ChainFunnel {
-  // Linear queue of blocks.
-  private cachedBlocks: CachedBlock[] = [];
-  private nextBlockHeight: number = 0;
-
-  //private pdp: PublicDataProvider;
-
   constructor(
     sharedData: FunnelSharedData,
     dbTx: PoolClient,
     public chainName: string,
     private readonly baseFunnel: ChainFunnel,
-    private config: MidnightConfig
+    private config: MidnightConfig,
+    private cache: MidnightFunnelCacheEntry
   ) {
     super(sharedData, dbTx);
 
     setNetworkId(1); // TODO: 1 = DevNet probably shouldn't be hardcoded
+    // Also, it's unfortunate that it's global state.
   }
 
   private async indexerQuery(query: string): Promise<unknown> {
@@ -166,44 +165,11 @@ class MidnightFunnel extends BaseFunnel implements ChainFunnel {
     return baseData;
   }
 
-  public override async readData(blockHeight: number): Promise<ChainData[]> {
-    const baseData = await this.baseFunnel.readData(blockHeight);
-
-    if (baseData.length === 0) {
-      return baseData;
-    }
-
-    const targetTimestamp = baseData[0].timestamp;
-    const result: ChainData[] = [];
-
-    let cacheIdx = 0;
+  private async waitForBlock(height: number): Promise<CachedBlock> {
     while (true) {
-      // Drain the cache.
-      if (cacheIdx < this.cachedBlocks.length) {
-        const block = this.cachedBlocks[cacheIdx];
-        const blockTimestamp = midnightTimestampToSeconds(block.timestamp);
-        if (blockTimestamp >= targetTimestamp) {
-          // We've seen a block in the future from our target timestamp.
-          // The relative past is now known, so break out.
-          break;
-        }
-        ++cacheIdx;
-
-        // The meat: process this one.
-        console.log('Midnight accepted block', block.transactions.length, block);
-        for (let tx of block.transactions) {
-          for (let contractCall of tx.contractCalls) {
-            let state = ContractState.deserialize(hexStringToUint8Array(contractCall.state));
-            console.log('-- addr =', contractCall.address, ', state = ', state);
-          }
-        }
-      }
-
-      // Fill the cache.
-      console.log('Midnight requesting block', this.nextBlockHeight);
       const { block } = (await this.indexerQuery(
         `query {
-          block(offset: { height: ${this.nextBlockHeight} }) {
+          block(offset: { height: ${height} }) {
             height
             hash
             timestamp
@@ -220,18 +186,58 @@ class MidnightFunnel extends BaseFunnel implements ChainFunnel {
         block: CachedBlock | null;
       };
       if (block) {
-        this.cachedBlocks.push(block);
-        this.nextBlockHeight = block.height + 1;
+        return block;
       } else {
-        // The next block doesn't exist yet, give it three seconds to come around.
+        // The next block doesn't exist yet, give it some time to appear.
         await new Promise(resolve => setTimeout(resolve, 3_000));
       }
     }
+  }
 
-    // Lop off everything we processed already.
-    this.cachedBlocks.splice(0, cacheIdx);
+  public override async readData(blockHeight: number): Promise<ChainData[]> {
+    const baseData = await this.baseFunnel.readData(blockHeight);
 
-    return result;
+    if (baseData.length === 0) {
+      return baseData;
+    }
+
+    const targetTimestamp = baseData[0].timestamp;
+    const result: ChainData[] = [];
+
+    // TODO: this might be more GraphQL traffic than strictly necessary.
+    // We could cache the "next" block better.
+    // Even better, slurp an indexer's DB directly (but public indexers don't expose this).
+
+    while (true) {
+      // Fetch 'next' block.
+      const block = await this.waitForBlock(this.cache.nextBlockHeight);
+      const blockTimestamp = midnightTimestampToSeconds(block.timestamp);
+      if (blockTimestamp >= targetTimestamp) {
+        // We've seen a block in the future from our target timestamp.
+        // The relative past is now known, so break out.
+        break;
+      }
+
+      // The meat: process this one.
+      console.log(
+        'Midnight accepted block',
+        '#',
+        block.height,
+        'txns',
+        block.transactions.length,
+        block
+      );
+      for (let tx of block.transactions) {
+        for (let contractCall of tx.contractCalls) {
+          let state = ContractState.deserialize(hexStringToUint8Array(contractCall.state));
+          console.log('-- addr =', contractCall.address, ', state = ', state);
+        }
+      }
+
+      this.cache.nextBlockHeight = block.height + 1;
+    }
+
+    return composeChainData(baseData, result);
   }
 }
 
@@ -243,9 +249,10 @@ export async function wrapToMidnightFunnel(
   config: MidnightConfig
 ): Promise<ChainFunnel> {
   try {
-    // TODO: Recover the cache state...
-    // Hooray!
-    return new MidnightFunnel(sharedData, dbTx, chainName, chainFunnel, config);
+    // Connect to the cache.
+    const cache = (sharedData.cacheManager.cacheEntries[MidnightFunnelCacheEntry.SYMBOL] ??=
+      new MidnightFunnelCacheEntry());
+    return new MidnightFunnel(sharedData, dbTx, chainName, chainFunnel, config, cache);
   } catch (err) {
     // Log then rethrow???
     doLog('[paima-funnel] Unable to initialize Midnight cde events processor:');
