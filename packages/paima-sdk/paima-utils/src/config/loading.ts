@@ -239,6 +239,8 @@ const minaConfigDefaults = {
   delay: 30 * 40,
 };
 
+const midnightConfigDefaults = {};
+
 const availConfigDefaults = {
   funnelBlockGroupSize: 100,
   delay: 3 * 20,
@@ -318,14 +320,17 @@ export async function loadConfig(): Promise<Static<typeof BaseConfigWithDefaults
           config[network] = Object.assign(evmConfigDefaults(), networkConfig);
           break;
         case ConfigNetworkType.CARDANO:
-          config[network] = Object.assign(cardanoConfigDefaults, networkConfig);
+          config[network] = Object.assign({}, cardanoConfigDefaults, networkConfig);
           break;
         case ConfigNetworkType.MINA:
-          config[network] = Object.assign(minaConfigDefaults, networkConfig);
+          config[network] = Object.assign({}, minaConfigDefaults, networkConfig);
           break;
         case ConfigNetworkType.AVAIL_MAIN:
         case ConfigNetworkType.AVAIL_OTHER:
-          config[network] = Object.assign(availConfigDefaults, networkConfig);
+          config[network] = Object.assign({}, availConfigDefaults, networkConfig);
+          break;
+        case ConfigNetworkType.MIDNIGHT:
+          config[network] = Object.assign({}, midnightConfigDefaults, networkConfig);
           break;
         default:
           throw new Error('unknown network type');
@@ -395,6 +400,13 @@ export function parseConfigFile(configFileData: string): Static<typeof BaseConfi
         baseConfig[network] = checkOrError(
           'avail other config entry',
           TaggedAvailOtherConfig(false),
+          baseStructure[network]
+        );
+        break;
+      case ConfigNetworkType.MIDNIGHT:
+        baseConfig[network] = checkOrError(
+          'midnight config entry',
+          TaggedMidnightConfig(false),
           baseStructure[network]
         );
         break;

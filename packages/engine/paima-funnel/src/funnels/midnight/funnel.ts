@@ -122,7 +122,7 @@ class MidnightFunnel extends BaseFunnel implements ChainFunnel {
   }
 
   private async indexerQuery(query: string): Promise<unknown> {
-    return await gqlQuery(`${this.config.indexer}/api/v1/graphql`, query);
+    return await gqlQuery(this.config.indexer, query);
   }
 
   async derp() {
