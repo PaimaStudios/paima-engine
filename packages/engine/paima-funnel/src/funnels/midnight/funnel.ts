@@ -137,15 +137,15 @@ class MidnightFunnel extends BaseFunnel implements ChainFunnel {
     return await gqlQuery(this.config.indexer, query);
   }
 
-  async derp() {
-    const topBlock = (
+  private async getTopBlock() {
+    return (
       (await this.indexerQuery('query { block { hash, height, timestamp } }')) as {
         block: Pick<Block, 'hash' | 'height' | 'timestamp'>;
       }
     ).block;
   }
 
-  async getTimestampForBlock(at: number): Promise<number> {
+  private async getTimestampForBlock(at: number): Promise<number> {
     return midnightTimestampToSeconds(
       (
         (await this.indexerQuery(`query { block(offset: { height: ${at} }) { timestamp } }`)) as {
@@ -153,16 +153,6 @@ class MidnightFunnel extends BaseFunnel implements ChainFunnel {
         }
       ).block.timestamp
     );
-  }
-
-  public override async readPresyncData(
-    args: ReadPresyncDataFrom
-  ): Promise<{ [network: number]: PresyncChainData[] | typeof FUNNEL_PRESYNC_FINISHED }> {
-    const baseData = await this.baseFunnel.readPresyncData(args);
-
-    baseData[this.chainName] = FUNNEL_PRESYNC_FINISHED;
-
-    return baseData;
   }
 
   private async waitForBlock(height: number): Promise<CachedBlock> {
@@ -194,6 +184,16 @@ class MidnightFunnel extends BaseFunnel implements ChainFunnel {
     }
   }
 
+  public override async readPresyncData(
+    args: ReadPresyncDataFrom
+  ): Promise<{ [network: number]: PresyncChainData[] | typeof FUNNEL_PRESYNC_FINISHED }> {
+    const baseData = await this.baseFunnel.readPresyncData(args);
+
+    baseData[this.chainName] = FUNNEL_PRESYNC_FINISHED;
+
+    return baseData;
+  }
+
   public override async readData(blockHeight: number): Promise<ChainData[]> {
     const baseData = await this.baseFunnel.readData(blockHeight);
 
@@ -210,6 +210,7 @@ class MidnightFunnel extends BaseFunnel implements ChainFunnel {
 
     while (true) {
       // Fetch 'next' block.
+      // TODO: Use WebSocket API (npm graphql-ws).
       const block = await this.waitForBlock(this.cache.nextBlockHeight);
       const blockTimestamp = midnightTimestampToSeconds(block.timestamp);
       if (blockTimestamp >= targetTimestamp) {
@@ -219,18 +220,14 @@ class MidnightFunnel extends BaseFunnel implements ChainFunnel {
       }
 
       // The meat: process this one.
-      console.log(
-        'Midnight accepted block',
-        '#',
-        block.height,
-        'txns',
-        block.transactions.length,
-        block
-      );
+      console.log('Midnight funnel ' + this.config.networkId + ': #' + block.height);
       for (let tx of block.transactions) {
         for (let contractCall of tx.contractCalls) {
-          let state = ContractState.deserialize(hexStringToUint8Array(contractCall.state));
-          console.log('-- addr =', contractCall.address, ', state = ', state);
+          const state = ContractState.deserialize(hexStringToUint8Array(contractCall.state));
+          // We could downcast contractCall to see if operations() contains something useful.
+          // For now let's report on the ledger variable contents.
+          const jsState = state.data.encode();
+          console.log('-- contract @', contractCall.address, 'has state', JSON.stringify(jsState));
         }
       }
 
