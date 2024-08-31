@@ -1,6 +1,19 @@
-import { ChainFunnel, ReadPresyncDataFrom } from '@paima/runtime/src/types';
-import { ChainData, PresyncChainData } from '@paima/sm';
-import { doLog, hexStringToUint8Array, logError } from '@paima/utils';
+import { ChainFunnel, ReadPresyncDataFrom, SubmittedData } from '@paima/runtime/src/types';
+import {
+  CdeMidnightContractStateDatum,
+  ChainData,
+  ChainDataExtensionDatum,
+  InternalEvent,
+  PresyncChainData,
+} from '@paima/sm';
+import {
+  ChainDataExtensionDatumType,
+  ConfigNetworkType,
+  doLog,
+  ENV,
+  hexStringToUint8Array,
+  logError,
+} from '@paima/utils';
 import { FUNNEL_PRESYNC_FINISHED } from '@paima/utils';
 import { PoolClient } from 'pg';
 import { BaseFunnel, FunnelSharedData } from '../BaseFunnel.js';
@@ -155,26 +168,32 @@ class MidnightFunnel extends BaseFunnel implements ChainFunnel {
     );
   }
 
-  private async waitForBlock(height: number): Promise<CachedBlock> {
-    while (true) {
-      const { block } = (await this.indexerQuery(
+  private async fetchBlock(height: number): Promise<CachedBlock | null> {
+    return (
+      (await this.indexerQuery(
         `query {
-          block(offset: { height: ${height} }) {
-            height
+        block(offset: { height: ${height} }) {
+          height
+          hash
+          timestamp
+          transactions {
             hash
-            timestamp
-            transactions {
-              hash
-              contractCalls {
-                address
-                state
-              }
+            contractCalls {
+              address
+              state
             }
           }
-        }`
+        }
+      }`
       )) as {
         block: CachedBlock | null;
-      };
+      }
+    ).block;
+  }
+
+  private async waitForBlock(height: number): Promise<CachedBlock> {
+    while (true) {
+      const block = await this.fetchBlock(height);
       if (block) {
         return block;
       } else {
@@ -184,13 +203,74 @@ class MidnightFunnel extends BaseFunnel implements ChainFunnel {
     }
   }
 
+  private extensionsFromBlock(
+    baseBlockNumber: number,
+    block: CachedBlock
+  ): ChainDataExtensionDatum[] {
+    const result = [];
+
+    for (let tx of block.transactions) {
+      for (let contractCall of tx.contractCalls) {
+        const state = ContractState.deserialize(hexStringToUint8Array(contractCall.state));
+        // We could downcast contractCall to see if operations() contains something useful.
+        // For now let's report on the ledger variable contents.
+        const jsState = state.data.encode();
+        console.log('-- contract @', contractCall.address, 'has state', JSON.stringify(jsState));
+        result.push({
+          blockNumber: baseBlockNumber,
+          transactionHash: tx.hash,
+
+          cdeDatumType: ChainDataExtensionDatumType.MidnightContractState,
+          cdeName: 'TODO', // TODO: filter on contract address being something we care about, thus learning CDE name
+          network: `midnight:${this.config.networkId}`,
+
+          // TODO: just combine contractState into payload?
+          contractState: JSON.stringify(jsState),
+          payload: null,
+        } satisfies CdeMidnightContractStateDatum);
+      }
+    }
+
+    return result;
+  }
+
   public override async readPresyncData(
     args: ReadPresyncDataFrom
   ): Promise<{ [network: number]: PresyncChainData[] | typeof FUNNEL_PRESYNC_FINISHED }> {
-    const baseData = await this.baseFunnel.readPresyncData(args);
+    const baseDataPromise = this.baseFunnel.readPresyncData(args);
 
-    baseData[this.chainName] = FUNNEL_PRESYNC_FINISHED;
+    const start = this.cache.nextBlockHeight;
+    let block = await this.fetchBlock(this.cache.nextBlockHeight);
+    if (!block) {
+      // We're caught up. Return that we've finished.
+      const baseData = await baseDataPromise;
+      baseData[this.chainName] = FUNNEL_PRESYNC_FINISHED;
+      return baseData;
+    }
 
+    const result: PresyncChainData[] = [];
+
+    while (block) {
+      this.cache.nextBlockHeight = block.height + 1;
+
+      const extensionDatums = this.extensionsFromBlock(ENV.SM_START_BLOCKHEIGHT, block);
+      if (extensionDatums.length) {
+        result.push({
+          network: `midnight:${this.config.networkId}`,
+          networkType: ConfigNetworkType.MIDNIGHT,
+          extensionDatums,
+        });
+      }
+
+      block = await this.fetchBlock(this.cache.nextBlockHeight);
+    }
+
+    console.log(
+      `Midnight funnel ${this.config.networkId}: presync #${start}-${this.cache.nextBlockHeight - 1}`
+    );
+
+    const baseData = await baseDataPromise;
+    baseData[this.chainName] = result;
     return baseData;
   }
 
@@ -201,38 +281,38 @@ class MidnightFunnel extends BaseFunnel implements ChainFunnel {
       return baseData;
     }
 
-    const targetTimestamp = baseData[0].timestamp;
-    const result: ChainData[] = [];
+    const result: {
+      blockNumber: number;
+      extensionDatums?: ChainDataExtensionDatum[];
+      internalEvents?: InternalEvent[];
+      submittedData?: SubmittedData[];
+    }[] = [];
+    let block = await this.waitForBlock(this.cache.nextBlockHeight);
 
-    // TODO: this might be more GraphQL traffic than strictly necessary.
-    // We could cache the "next" block better.
-    // Even better, slurp an indexer's DB directly (but public indexers don't expose this).
+    for (const baseBlock of baseData) {
+      // Process all Midnight blocks that precede the base block.
+      // Break when we've seen a block in the relative future.
+      while (midnightTimestampToSeconds(block.timestamp) < baseBlock.timestamp) {
+        // The meat: process this one.
+        console.log(`Midnight funnel ${this.config.networkId}: #${block.height}`);
 
-    while (true) {
-      // Fetch 'next' block.
-      // TODO: Use WebSocket API (npm graphql-ws).
-      const block = await this.waitForBlock(this.cache.nextBlockHeight);
-      const blockTimestamp = midnightTimestampToSeconds(block.timestamp);
-      if (blockTimestamp >= targetTimestamp) {
-        // We've seen a block in the future from our target timestamp.
-        // The relative past is now known, so break out.
-        break;
-      }
-
-      // The meat: process this one.
-      console.log('Midnight funnel ' + this.config.networkId + ': #' + block.height);
-      for (let tx of block.transactions) {
-        for (let contractCall of tx.contractCalls) {
-          const state = ContractState.deserialize(hexStringToUint8Array(contractCall.state));
-          // We could downcast contractCall to see if operations() contains something useful.
-          // For now let's report on the ledger variable contents.
-          const jsState = state.data.encode();
-          console.log('-- contract @', contractCall.address, 'has state', JSON.stringify(jsState));
+        const extensionDatums = this.extensionsFromBlock(baseBlock.blockNumber, block);
+        if (extensionDatums.length) {
+          result.push({
+            blockNumber: baseBlock.blockNumber,
+            extensionDatums,
+          });
         }
-      }
 
-      this.cache.nextBlockHeight = block.height + 1;
+        // Fetch next block.
+        // TODO: Use WebSocket API (npm graphql-ws).
+        // Even better, slurp an indexer's DB directly (but public indexers don't expose this).
+        this.cache.nextBlockHeight = block.height + 1;
+        block = await this.waitForBlock(this.cache.nextBlockHeight);
+      }
     }
+
+    // TODO: We could cache `block` instead of refetching it next time we're called.
 
     return composeChainData(baseData, result);
   }

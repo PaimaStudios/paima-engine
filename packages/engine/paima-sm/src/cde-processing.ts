@@ -55,6 +55,8 @@ export async function cdeTransitionFunction(
       return await processGenericDatum(cdeDatum, inPresync);
     case ChainDataExtensionDatumType.DynamicEvmPrimitive:
       return await processDynamicEvmPrimitive(cdeDatum, inPresync);
+    case ChainDataExtensionDatumType.MidnightContractState:
+      throw new Error('TODO');
     default:
       assertNever(cdeDatum);
   }

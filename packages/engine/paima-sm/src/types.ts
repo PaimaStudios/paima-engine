@@ -77,7 +77,17 @@ export interface MinaPresyncChainData {
   extensionDatums: ChainDataExtensionDatum[];
 }
 
-export type PresyncChainData = EvmPresyncChainData | CardanoPresyncChainData | MinaPresyncChainData;
+export interface MidnightPresyncChainData {
+  network: string;
+  networkType: ConfigNetworkType.MIDNIGHT;
+  extensionDatums: ChainDataExtensionDatum[];
+}
+
+export type PresyncChainData =
+  | EvmPresyncChainData
+  | CardanoPresyncChainData
+  | MinaPresyncChainData
+  | MidnightPresyncChainData;
 
 interface CdeDatumErc20TransferPayload {
   from: string;
@@ -297,6 +307,12 @@ export interface CdeMinaActionGenericDatum extends CdeDatumBase {
   paginationCursor: PaginationCursor;
   scheduledPrefix: string;
 }
+
+export interface CdeMidnightContractStateDatum extends CdeDatumBase {
+  cdeDatumType: ChainDataExtensionDatumType.MidnightContractState;
+  contractState: string;
+}
+
 export interface CdeDynamicEvmPrimitiveDatum extends CdeDatumBase {
   cdeDatumType: ChainDataExtensionDatumType.DynamicEvmPrimitive;
   payload: CdeDatumDynamicEvmPrimitivePayload;
@@ -317,6 +333,7 @@ export type ChainDataExtensionDatum =
   | CdeCardanoMintBurnDatum
   | CdeMinaEventGenericDatum
   | CdeMinaActionGenericDatum
+  | CdeMidnightContractStateDatum
   | CdeDynamicEvmPrimitiveDatum;
 
 export enum CdeEntryTypeName {
