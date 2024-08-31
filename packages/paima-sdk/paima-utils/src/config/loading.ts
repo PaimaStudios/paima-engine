@@ -138,10 +138,7 @@ export const MidnightConfigSchema = Type.Object({
   networkId: Type.Number(),
   indexer: Type.String(),
   indexerWS: Type.String(),
-  // node?
-  // proof server?
-  // Used in lieu of chain ID.
-  genesisHash: Type.String(),
+  // node URL and proof server are not needed for our read-only use
 });
 
 export type MidnightConfig = Static<typeof MidnightConfigSchema>;
@@ -478,7 +475,7 @@ export function caip2PrefixFor(config: Static<typeof InstantiatedConfigsUnion>):
     case ConfigNetworkType.AVAIL_OTHER:
       return `polkadot:${config.genesisHash.slice(2, 32 + 2)}`;
     case ConfigNetworkType.MIDNIGHT:
-      return `midnight:${config.genesisHash}`;
+      return `midnight:${config.networkId}`;
     default:
       assertNever(type);
   }
