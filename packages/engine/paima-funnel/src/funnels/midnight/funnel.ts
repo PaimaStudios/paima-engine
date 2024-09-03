@@ -250,7 +250,19 @@ class MidnightFunnel extends BaseFunnel implements ChainFunnel {
 
     const result: PresyncChainData[] = [];
 
+    let lastLogTime = Date.now(),
+      lastLogBlock = start;
     while (block) {
+      const now = lastLogTime;
+      if (lastLogTime - now > 5000) {
+        console.log(
+          `Midnight funnel ${this.config.networkId}: presync #${lastLogBlock}-${block.height}`
+        );
+
+        lastLogTime = now;
+        lastLogBlock = block.height + 1;
+      }
+
       this.cache.nextBlockHeight = block.height + 1;
 
       const extensionDatums = this.extensionsFromBlock(ENV.SM_START_BLOCKHEIGHT, block);
@@ -266,7 +278,7 @@ class MidnightFunnel extends BaseFunnel implements ChainFunnel {
     }
 
     console.log(
-      `Midnight funnel ${this.config.networkId}: presync #${start}-${this.cache.nextBlockHeight - 1}`
+      `Midnight funnel ${this.config.networkId}: finished presync #${start}-${this.cache.nextBlockHeight - 1}`
     );
 
     const baseData = await baseDataPromise;
@@ -294,7 +306,9 @@ class MidnightFunnel extends BaseFunnel implements ChainFunnel {
       // Break when we've seen a block in the relative future.
       while (midnightTimestampToSeconds(block.timestamp) < baseBlock.timestamp) {
         // The meat: process this one.
-        console.log(`Midnight funnel ${this.config.networkId}: #${block.height}`);
+        console.log(
+          `Midnight funnel ${this.config.networkId}: base #${baseBlock.blockNumber} / Midnight #${block.height}`
+        );
 
         const extensionDatums = this.extensionsFromBlock(baseBlock.blockNumber, block);
         if (extensionDatums.length) {
