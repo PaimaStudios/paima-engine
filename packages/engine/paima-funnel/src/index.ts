@@ -191,7 +191,7 @@ export class FunnelFactory implements IFunnelFactory {
             this.sharedData,
             dbTx,
             chainName,
-            config as MidnightConfig
+            config
           );
           break;
         case ConfigNetworkType.EVM:

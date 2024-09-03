@@ -19,8 +19,10 @@ import { PoolClient } from 'pg';
 import { BaseFunnel, FunnelSharedData } from '../BaseFunnel.js';
 import { MidnightConfig } from '@paima/utils';
 import { ContractState, setNetworkId } from '@midnight-ntwrk/compact-runtime';
-import { FunnelCacheEntry, MidnightFunnelCacheEntry } from '../FunnelCache.js';
+import { FunnelCacheEntry } from '../FunnelCache.js';
 import { composeChainData } from '../../utils.js';
+import { Client, createClient, ExecutionResult } from 'graphql-ws';
+import { WebSocket } from 'ws';
 
 // ----------------------------------------------------------------------------
 
@@ -75,9 +77,6 @@ function midnightTimestampToSeconds(timestamp: string): number {
 
 // ----------------------------------------------------------------------------
 
-// Future improvement: find out if the indexer supports any
-// GraphQL-over-websocket transport and subscribe to new block events that way.
-
 interface GraphQLErrorDetail {
   message: string;
   locations?: { line: number; column: number }[];
@@ -118,6 +117,13 @@ async function gqlQuery(url: string, query: string): Promise<unknown> {
   throw new GraphQLError('Server returned nothing');
 }
 
+function handleGqlWsError<T>(ex: IteratorResult<ExecutionResult<T, unknown>, unknown>): T {
+  if (ex.done) throw new GraphQLError('Subscription ended');
+  if (ex.value.errors) throw ex.value.errors;
+  if (!ex.value.data) throw new GraphQLError('Server returned nothing');
+  return ex.value.data;
+}
+
 // ----------------------------------------------------------------------------
 
 // Blocks are produced on devnet about every 6 seconds.
@@ -125,11 +131,30 @@ async function gqlQuery(url: string, query: string): Promise<unknown> {
 // Mina has a "confirmation depth" where only blocks N below the head are
 // really confirmed. It seems like we don't have to handle that on Midnight.
 
+function defaultIndexerWs(indexer: string): string {
+  const url = new URL(indexer);
+  url.protocol = url.protocol === 'http:' ? 'ws:' : 'wss:';
+  url.pathname += '/ws';
+  return url.toString();
+}
+
 type CachedBlock = Pick<Block, 'height' | 'hash' | 'timestamp'> & {
   transactions: (Pick<Transaction, 'hash'> & {
     contractCalls: Pick<ContractCall, 'address' | 'state'>[];
   })[];
 };
+const cachedBlockQuery = `
+  height
+  hash
+  timestamp
+  transactions {
+    hash
+    contractCalls {
+      address
+      state
+    }
+  }
+`;
 
 class MidnightFunnel extends BaseFunnel implements ChainFunnel {
   constructor(
@@ -173,16 +198,7 @@ class MidnightFunnel extends BaseFunnel implements ChainFunnel {
       (await this.indexerQuery(
         `query {
         block(offset: { height: ${height} }) {
-          height
-          hash
-          timestamp
-          transactions {
-            hash
-            contractCalls {
-              address
-              state
-            }
-          }
+          ${cachedBlockQuery}
         }
       }`
       )) as {
@@ -193,12 +209,26 @@ class MidnightFunnel extends BaseFunnel implements ChainFunnel {
 
   private async waitForBlock(height: number): Promise<CachedBlock> {
     while (true) {
-      const block = await this.fetchBlock(height);
-      if (block) {
-        return block;
+      while (this.cache.wsBlocks.length < 1) {
+        // ^ The above 1 could be changed to some other number of blocks that
+        // must be buffered before we process them.
+        this.cache.wsBlocks.push(handleGqlWsError(await this.cache.iter.next()).blocks);
+        // ^ Hovers around 5.4ish to 6.6ish second wait per block. Nominal block time is 6s.
+      }
+
+      const nextBlock = this.cache.wsBlocks[0];
+
+      if (height < nextBlock.height) {
+        const oldBlock = await this.fetchBlock(height);
+        if (!oldBlock) {
+          throw new Error(`Saw block ${nextBlock.height}, but old block ${height} doesn't exist!`);
+        }
+        return oldBlock;
+      } else if (height == nextBlock.height) {
+        this.cache.wsBlocks.splice(0, 1);
+        return nextBlock;
       } else {
-        // The next block doesn't exist yet, give it some time to appear.
-        await new Promise(resolve => setTimeout(resolve, 3_000));
+        this.cache.wsBlocks.splice(0, 1);
       }
     }
   }
@@ -253,8 +283,8 @@ class MidnightFunnel extends BaseFunnel implements ChainFunnel {
     let lastLogTime = Date.now(),
       lastLogBlock = start;
     while (block) {
-      const now = lastLogTime;
-      if (lastLogTime - now > 5000) {
+      const now = Date.now();
+      if (now - lastLogTime > 5000) {
         console.log(
           `Midnight funnel ${this.config.networkId}: presync #${lastLogBlock}-${block.height}`
         );
@@ -332,6 +362,34 @@ class MidnightFunnel extends BaseFunnel implements ChainFunnel {
   }
 }
 
+export class MidnightFunnelCacheEntry implements FunnelCacheEntry {
+  static readonly SYMBOL = Symbol('MidnightFunnelCacheEntry');
+
+  /** Lowest Midnight block height that has not been processed by the funnel. */
+  nextBlockHeight: number = 0;
+
+  // WebSocket connection for being notified of new blocks.
+  wsClient: Client;
+  iter: AsyncIterableIterator<ExecutionResult<{ blocks: CachedBlock }, unknown>>;
+  wsBlocks: CachedBlock[];
+
+  constructor(config: MidnightConfig) {
+    this.wsClient = createClient({
+      url: config.indexerWS ?? defaultIndexerWs(config.indexer),
+      webSocketImpl: WebSocket,
+    });
+
+    this.iter = this.wsClient.iterate<{ blocks: CachedBlock }>({
+      query: `subscription { blocks { ${cachedBlockQuery} } }`,
+    });
+    this.wsBlocks = [];
+  }
+
+  clear() {
+    this.nextBlockHeight = 0;
+  }
+}
+
 export async function wrapToMidnightFunnel(
   chainFunnel: ChainFunnel,
   sharedData: FunnelSharedData,
@@ -342,7 +400,7 @@ export async function wrapToMidnightFunnel(
   try {
     // Connect to the cache.
     const cache = (sharedData.cacheManager.cacheEntries[MidnightFunnelCacheEntry.SYMBOL] ??=
-      new MidnightFunnelCacheEntry());
+      new MidnightFunnelCacheEntry(config));
     return new MidnightFunnel(sharedData, dbTx, chainName, chainFunnel, config, cache);
   } catch (err) {
     // Log then rethrow???

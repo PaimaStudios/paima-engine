@@ -1,6 +1,7 @@
 import type { ChainData } from '@paima/sm';
 import type pg from 'pg';
 import type { AvailFunnelCacheEntry } from './avail/cache.js';
+import type { MidnightFunnelCacheEntry } from './midnight/funnel.js';
 
 export interface FunnelCacheEntry {
   /**
@@ -238,14 +239,4 @@ export class MinaFunnelCacheEntry implements FunnelCacheEntry {
   clear: FunnelCacheEntry['clear'] = () => {
     this.state = null;
   };
-}
-
-export class MidnightFunnelCacheEntry implements FunnelCacheEntry {
-  static readonly SYMBOL = Symbol('MidnightFunnelCacheEntry');
-
-  nextBlockHeight: number = 0;
-
-  clear() {
-    this.nextBlockHeight = 0;
-  }
 }

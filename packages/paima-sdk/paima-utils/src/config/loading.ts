@@ -137,7 +137,7 @@ export const MidnightConfigSchema = Type.Object({
   // Midnight network connection info.
   networkId: Type.Number(),
   indexer: Type.String(),
-  indexerWS: Type.String(),
+  indexerWS: Type.Optional(Type.String()),
   // node URL and proof server are not needed for our read-only use
 });
 
