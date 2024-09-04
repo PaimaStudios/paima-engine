@@ -1,5 +1,5 @@
-import type { Kind, TArray, TNumber, TSchema, TTuple } from '@sinclair/typebox';
-import { Type } from '@sinclair/typebox';
+import type { TArray, TNumber, TSchema, TTuple } from '@sinclair/typebox';
+import { Kind, Type } from '@sinclair/typebox';
 import type { LogEvent, LogEventFields } from './types.js';
 import type { AbiParameter } from 'abitype';
 
