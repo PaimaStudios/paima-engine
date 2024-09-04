@@ -1,13 +1,13 @@
 /* @name updateMinaCheckpoint */
 INSERT INTO mina_checkpoint(
     timestamp,
-    network
+    caip2
 ) VALUES (
     :timestamp!,
-    :network!
+    :caip2!
 ) 
-ON CONFLICT (network) DO
+ON CONFLICT (caip2) DO
 UPDATE SET timestamp = :timestamp!;
 
 /* @name getMinaCheckpoint */
-SELECT timestamp FROM mina_checkpoint WHERE network = :network! LIMIT 1;
+SELECT timestamp FROM mina_checkpoint WHERE caip2 = :caip2! LIMIT 1;

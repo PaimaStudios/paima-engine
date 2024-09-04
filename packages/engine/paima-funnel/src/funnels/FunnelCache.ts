@@ -55,19 +55,19 @@ export type RpcRequestResult<T> =
   | { state: RpcRequestState.HasResult; result: T };
 
 export class RpcCacheEntry implements FunnelCacheEntry {
-  private rpcResult: Record<number | string, RpcRequestResult<number>> = {};
+  private rpcResult: Record<string, RpcRequestResult<number>> = {};
   public static readonly SYMBOL = Symbol('RpcCacheEntry');
 
-  public updateState = (chainId: number | string, height: number): void => {
-    this.rpcResult[chainId] = {
+  public updateState = (caip2: string, height: number): void => {
+    this.rpcResult[caip2] = {
       state: RpcRequestState.HasResult,
       result: height,
     };
   };
 
-  public getState(chainId: number | string): Readonly<RpcRequestResult<number>> {
+  public getState(caip2: string): Readonly<RpcRequestResult<number>> {
     return (
-      this.rpcResult[chainId] ?? {
+      this.rpcResult[caip2] ?? {
         state: RpcRequestState.NotRequested,
       }
     );
@@ -149,16 +149,16 @@ export type EvmFunnelCacheEntryState = {
 };
 
 export class EvmFunnelCacheEntry implements FunnelCacheEntry {
-  private cachedData: Record<number, RpcRequestResult<EvmFunnelCacheEntryState>> = {};
+  private cachedData: Record<string, RpcRequestResult<EvmFunnelCacheEntryState>> = {};
   public static readonly SYMBOL = Symbol('EvmFunnelCacheEntry');
 
   public updateState = (
-    chainId: number,
+    caip2: string,
     bufferedChainData: ChainData[],
     timestampToBlockNumber: [number, number][],
     startBlockHeight: number
   ): void => {
-    this.cachedData[chainId] = {
+    this.cachedData[caip2] = {
       state: RpcRequestState.HasResult,
       result: {
         bufferedChainData,
@@ -170,9 +170,9 @@ export class EvmFunnelCacheEntry implements FunnelCacheEntry {
     };
   };
 
-  public getState(chainId: number): Readonly<RpcRequestResult<EvmFunnelCacheEntryState>> {
+  public getState(caip2: string): Readonly<RpcRequestResult<EvmFunnelCacheEntryState>> {
     return (
-      this.cachedData[chainId] ?? {
+      this.cachedData[caip2] ?? {
         state: RpcRequestState.NotRequested,
       }
     );

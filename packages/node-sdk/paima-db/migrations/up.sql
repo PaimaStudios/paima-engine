@@ -10,45 +10,47 @@ CREATE TABLE paima_blocks (
   paima_block_hash BYTEA
 );
 
-CREATE TABLE scheduled_data (
-  id SERIAL PRIMARY KEY,
-  block_height INTEGER NOT NULL,
-  input_data TEXT NOT NULL
-);
-
-CREATE TABLE scheduled_data_tx_hash (
-  id INTEGER PRIMARY KEY REFERENCES scheduled_data(id) ON DELETE CASCADE,
-  tx_hash TEXT NOT NULL
-);
-
-CREATE TABLE scheduled_data_extension (
-  id INTEGER PRIMARY KEY REFERENCES scheduled_data(id) ON DELETE CASCADE,
-  cde_name TEXT NOT NULL,
-  network TEXT NOT NULL
-);
-
-CREATE TABLE scheduled_data_precompile (
-  id INTEGER PRIMARY KEY REFERENCES scheduled_data(id) ON DELETE CASCADE,
-  precompile TEXT NOT NULL
-);
-
 CREATE TABLE nonces (
   nonce TEXT PRIMARY KEY,
   block_height INTEGER NOT NULL
 );
 
-CREATE TABLE historical_game_inputs (
+CREATE TABLE rollup_inputs (
   id SERIAL PRIMARY KEY,
-  block_height INTEGER NOT NULL,
-  user_address TEXT NOT NULL,
+  from_address TEXT NOT NULL,
   input_data TEXT NOT NULL
+);
+
+CREATE TABLE rollup_input_future_block (
+  id INTEGER PRIMARY KEY REFERENCES rollup_inputs(id) ON DELETE CASCADE,
+  future_block_height INTEGER NOT NULL
+);
+CREATE TABLE rollup_input_future_timestamp (
+  id INTEGER PRIMARY KEY REFERENCES rollup_inputs(id) ON DELETE CASCADE,
+  future_ms_timestamp TIMESTAMP without time zone NOT NULL
+);
+
+CREATE TABLE rollup_input_result (
+  id INTEGER PRIMARY KEY REFERENCES rollup_inputs(id) ON DELETE CASCADE,
+  success BOOLEAN NOT NULL,
+  paima_tx_hash BYTEA NOT NULL,
+  block_height INTEGER NOT NULL REFERENCES paima_blocks(block_height),
+  index_in_block INTEGER NOT NULL
+);
+
+CREATE TABLE rollup_input_origin (
+  id INTEGER PRIMARY KEY REFERENCES rollup_inputs(id) ON DELETE CASCADE,
+  primitive_name TEXT,
+  caip2 TEXT,
+  tx_hash BYTEA,
+  contract_address TEXT
 );
 
 -- tracks the processed blocks for a given network to help with syncing
 CREATE TABLE cde_tracking (
   block_height INTEGER NOT NULL,
-  network TEXT NOT NULL,
-  PRIMARY KEY (block_height, network)
+  caip2 TEXT NOT NULL,
+  PRIMARY KEY (block_height, caip2)
 );
 
 CREATE TABLE cde_tracking_cardano (
@@ -267,8 +269,8 @@ CREATE TABLE cde_cardano_mint_burn(
 
 CREATE TABLE mina_checkpoint (
   timestamp TEXT NOT NULL,
-  network TEXT NOT NULL,
-  PRIMARY KEY (network)
+  caip2 TEXT NOT NULL,
+  PRIMARY KEY (caip2)
 );
 
 CREATE TABLE achievement_progress(
@@ -293,12 +295,12 @@ CREATE TABLE event (
   address TEXT NOT NULL,
   data JSONB NOT NULL,
   block_height INTEGER NOT NULL,
-  tx INTEGER NOT NULL,
+  tx_index INTEGER NOT NULL,
   log_index INTEGER NOT NULL
 );
 
 CREATE TABLE registered_event (
   name TEXT NOT NULL,
-  topic TEXT  NOT NULL,
+  topic TEXT NOT NULL,
   PRIMARY KEY(name, topic)
 );

@@ -130,8 +130,12 @@ export async function getDAData(
             // block producer.
             suppliedValue: '0',
             scheduled: false,
-            caip2,
-            txHash: decoded.hash.toHex(),
+            origin: {
+              caip2,
+              txHash: decoded.hash.toHex(),
+              contractAddress: null,
+              primitiveName: null,
+            },
           };
         }),
       });

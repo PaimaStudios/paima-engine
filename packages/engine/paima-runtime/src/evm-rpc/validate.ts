@@ -7,7 +7,7 @@ import {
 } from 'viem';
 import type { BlockTag, RpcBlockNumber, RpcBlockIdentifier } from 'viem';
 import { getPaimaNodeRestClient } from '@paima/mw-core';
-import { ENV } from '@paima/utils';
+import { ENV, strip0x } from '@paima/utils';
 
 /**
  * Most of the block tags aren't relevant for Paima, so we simplify them
@@ -38,15 +38,35 @@ export async function toBlockNumber(
     return data.block_height;
   }
   if (typeof blockParam === 'string') {
-    if (!isValidHexadecimal(blockParam)) {
-      throw createInvalidParamsError(
-        { block: rpcBlock },
-        'Block parameter is not a hex-encoded string (0x...)'
-      );
-    }
-    const val = Number.parseInt(blockParam, 16);
-    if (isNaN(val)) {
-      throw createInvalidParamsError({ block: rpcBlock }, 'Block parameter is not a number');
+    if (
+      blockParam.length ===
+      '0x0000000000000000000000000000000000000000000000000000000000000000'.length
+    ) {
+      const { data, error } = await getPaimaNodeRestClient().GET('/block_content/blockHash', {
+        params: { query: { blockHash: strip0x(blockParam), txDetails: 'none' } },
+      });
+      if (error != null) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument -- seems like an eslint bug?
+        throw createInternalRpcError({ block: rpcBlock }, error?.errorMessage);
+      }
+      if (data.success === false) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument -- seems like an eslint bug?
+        throw createInternalRpcError({}, data.errorMessage);
+      }
+      return data.result.blockHeight;
+    } else {
+      const hex = strip0x(blockParam);
+      if (!isValidHexadecimal(hex)) {
+        throw createInvalidParamsError(
+          { block: rpcBlock },
+          'Block parameter is not a hex-encoded string (0x...)'
+        );
+      }
+      const val = Number.parseInt(hex, 16);
+      if (isNaN(val)) {
+        throw createInvalidParamsError({ block: rpcBlock }, 'Block parameter is not a number');
+      }
+      return val;
     }
   }
   if (!(typeof blockParam === 'object')) {
@@ -55,10 +75,21 @@ export async function toBlockNumber(
       'Block parameter should be one of: RpcBlockNumber | BlockTag | RpcBlockIdentifier'
     );
   }
-  if ('blockNumber' in blockParam) return Number.parseInt(blockParam.blockNumber, 16);
-  if ('blockHash' in blockParam)
-    // TODO: block hash support. See `mockBlockHash`
-    throw new MethodNotSupportedRpcError(new Error(`Block hash RPC currently unsupported`));
+  if ('blockNumber' in blockParam) return Number.parseInt(strip0x(blockParam.blockNumber), 16);
+  if ('blockHash' in blockParam) {
+    const { data, error } = await getPaimaNodeRestClient().GET('/block_content/blockHash', {
+      params: { query: { blockHash: strip0x(blockParam.blockHash), txDetails: 'none' } },
+    });
+    if (error != null) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument -- seems like an eslint bug?
+      throw createInternalRpcError({ block: rpcBlock }, error?.errorMessage);
+    }
+    if (data.success === false) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument -- seems like an eslint bug?
+      throw createInternalRpcError({}, data.errorMessage);
+    }
+    return data.result.blockHeight;
+  }
   throw createInvalidParamsError(
     { block: rpcBlock },
     'Block parameter should be one of: RpcBlockNumber | BlockTag | RpcBlockIdentifier'

@@ -2,7 +2,8 @@ import type { PoolClient } from 'pg';
 import Prando from '@paima/prando';
 import type { ChainFunnel, FunnelJson, ReadPresyncDataFrom } from '@paima/runtime';
 import type { ChainData, EvmPresyncChainData, PresyncChainData } from '@paima/sm';
-import { ENV, GlobalConfig, doLog } from '@paima/utils';
+import { FUNNEL_PRESYNC_FINISHED, ENV, GlobalConfig, doLog, caip2PrefixFor } from '@paima/utils';
+import type { AvailMainConfig, MainEvmConfig } from '@paima/utils';
 import {
   emulatedSelectLatestPrior,
   upsertEmulatedBlockheight,
@@ -16,7 +17,7 @@ import { calculateBoundaryTimestamp, emulateCde, timestampToBlockNumber } from '
 import { BaseFunnel } from '../BaseFunnel.js';
 import type { FunnelSharedData } from '../BaseFunnel.js';
 import { QueuedBlockCacheEntry, RpcCacheEntry, RpcRequestState } from '../FunnelCache.js';
-import { FUNNEL_PRESYNC_FINISHED } from '@paima/utils';
+import type { ChainInfo } from '../../utils.js';
 
 /**
  * For hash calculation of empty blocks to work,
@@ -58,7 +59,12 @@ export class EmulatedBlocksFunnel extends BaseFunnel {
     },
     /** Blocks queued to be added into the current batch */
     private readonly processingQueue: ChainData[],
-    private readonly chainName: string
+
+    /**
+     * TODO: This is bad. This should NOT be passed to the emulated funnel
+     *       It should work with an arbitrary chain
+     */
+    private readonly chainInfo: ChainInfo<MainEvmConfig | AvailMainConfig>
   ) {
     super(sharedData, dbTx);
     // TODO: replace once TS5 decorators are better supported
@@ -99,7 +105,7 @@ export class EmulatedBlocksFunnel extends BaseFunnel {
 
         const latestAvailableBlockNumber = this.sharedData.cacheManager.cacheEntries[
           RpcCacheEntry.SYMBOL
-        ]?.getState(ENV.CHAIN_ID);
+        ]?.getState(caip2PrefixFor(this.chainInfo.config));
         if (latestAvailableBlockNumber?.state !== RpcRequestState.HasResult)
           throw new Error(`latestAvailableBlockNumber missing from cache for ${ENV.CHAIN_ID}`);
 
@@ -160,17 +166,17 @@ export class EmulatedBlocksFunnel extends BaseFunnel {
 
   public override async readPresyncData(
     args: ReadPresyncDataFrom
-  ): Promise<{ [network: string]: PresyncChainData[] | typeof FUNNEL_PRESYNC_FINISHED }> {
+  ): Promise<{ [caip2: string]: PresyncChainData[] | typeof FUNNEL_PRESYNC_FINISHED }> {
     // map base funnel data to the right timestamp range
     const baseData = await this.ctorData.baseFunnel.readPresyncData(args);
 
-    const baseDataMainEvm = baseData[this.chainName];
+    const baseDataMainEvm = baseData[this.chainInfo.name];
 
     if (!baseDataMainEvm || baseDataMainEvm === FUNNEL_PRESYNC_FINISHED) {
       return baseData;
     }
 
-    baseData[this.chainName] = baseDataMainEvm.map(data => {
+    baseData[this.chainInfo.name] = baseDataMainEvm.map(data => {
       const timestamp = calculateBoundaryTimestamp(
         this.ctorData.startTimestamp,
         ENV.BLOCK_TIME,
@@ -252,7 +258,8 @@ export class EmulatedBlocksFunnel extends BaseFunnel {
       return newEntry.processingQueue;
     })();
 
-    const [chainName] = await GlobalConfig.mainConfig();
+    // TODO: we should be using the config of the funnel we wrap, not the main config
+    const [chainName, config] = await GlobalConfig.mainConfig();
 
     const [b] = await getLatestProcessedBlockHeight.run(undefined, dbTx);
     if (!b) {
@@ -263,7 +270,7 @@ export class EmulatedBlocksFunnel extends BaseFunnel {
         dcState,
         emulatedState,
         processingQueue,
-        chainName
+        { name: chainName, config }
       );
     }
 
@@ -296,7 +303,7 @@ export class EmulatedBlocksFunnel extends BaseFunnel {
       dcState,
       emulatedState,
       processingQueue,
-      chainName
+      { name: chainName, config }
     );
   }
 
@@ -471,7 +478,7 @@ export class EmulatedBlocksFunnel extends BaseFunnel {
   public override configPrint(): FunnelJson {
     return {
       type: 'BlockFunnel',
-      chainName: this.chainName,
+      chainName: this.chainInfo.name,
       child: this.ctorData.baseFunnel.configPrint(),
     };
   }

@@ -2,6 +2,7 @@ import {
   ChainDataExtensionDatumType,
   DEFAULT_FUNNEL_TIMEOUT,
   mergeSortedArrays,
+  SCHEDULED_DATA_ADDRESS,
   timeout,
 } from '@paima/utils';
 import type {
@@ -16,7 +17,7 @@ export default async function getCdeData(
   extension: ChainDataExtensionPaimaErc721,
   fromBlock: number,
   toBlock: number,
-  network: string
+  caip2: string
 ): Promise<ChainDataExtensionDatum[]> {
   // TOOD: typechain is missing the proper type generation for getPastEvents
   // https://github.com/dethcrypto/TypeChain/issues/767
@@ -25,9 +26,9 @@ export default async function getCdeData(
     fetchMintedEvents(extension, fromBlock, toBlock),
   ]);
   const transferData = transferEvents.map((e: Transfer) =>
-    transferToTransferDatum(e, extension, network)
+    transferToTransferDatum(e, extension, caip2)
   );
-  const mintData = mintedEvents.map((e: Minted) => mintedToMintDatum(e, extension, network));
+  const mintData = mintedEvents.map((e: Minted) => mintedToMintDatum(e, extension, caip2));
   return mergeSortedArrays<ChainDataExtensionDatum>(
     mintData,
     transferData,
@@ -66,7 +67,7 @@ async function fetchMintedEvents(
 function transferToTransferDatum(
   event: Transfer,
   extension: ChainDataExtensionPaimaErc721,
-  network: string
+  caip2: string
 ): CdeErc721TransferDatum {
   return {
     cdeName: extension.cdeName,
@@ -78,14 +79,15 @@ function transferToTransferDatum(
       to: event.returnValues.to.toLowerCase(),
       tokenId: event.returnValues.tokenId,
     },
-    network,
+    contractAddress: event.address,
+    caip2,
   };
 }
 
 function mintedToMintDatum(
   event: Minted,
   extension: ChainDataExtensionPaimaErc721,
-  network: string
+  caip2: string
 ): CdeErc721MintDatum {
   return {
     cdeName: extension.cdeName,
@@ -95,9 +97,13 @@ function mintedToMintDatum(
     payload: {
       tokenId: event.returnValues.tokenId,
       mintData: event.returnValues.initialData,
+      // TODO: not sure what to do about this
+      //       the "from"/"to" addresses are not included in this event
+      //       and only included in the companion Transfer event
+      from: SCHEDULED_DATA_ADDRESS,
     },
-    contractAddress: extension.contractAddress,
+    contractAddress: event.address,
     scheduledPrefix: extension.scheduledPrefix,
-    network,
+    caip2,
   };
 }

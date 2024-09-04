@@ -11,7 +11,7 @@ export default async function getCdeData(
   extension: ChainDataExtensionErc20,
   fromBlock: number,
   toBlock: number,
-  network: string
+  caip2: string
 ): Promise<ChainDataExtensionDatum[]> {
   // TOOD: typechain is missing the proper type generation for getPastEvents
   // https://github.com/dethcrypto/TypeChain/issues/767
@@ -22,13 +22,16 @@ export default async function getCdeData(
     }),
     DEFAULT_FUNNEL_TIMEOUT
   )) as unknown as ERC20Transfer[];
-  return events.map((e: ERC20Transfer) => transferToCdeDatum(e, extension.cdeName, network));
+  return events.map((e: ERC20Transfer) =>
+    transferToCdeDatum(e, extension.cdeName, caip2, e.address)
+  );
 }
 
 function transferToCdeDatum(
   event: ERC20Transfer,
   cdeName: string,
-  network: string
+  caip2: string,
+  contractAddress: string
 ): CdeErc20TransferDatum {
   return {
     cdeName: cdeName,
@@ -40,6 +43,7 @@ function transferToCdeDatum(
       to: event.returnValues.to.toLowerCase(),
       value: event.returnValues.value,
     },
-    network,
+    contractAddress,
+    caip2,
   };
 }

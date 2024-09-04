@@ -98,6 +98,42 @@ const getBlockHeightsIR: any = {"usedParamSet":{"block_heights":true},"params":[
 export const getBlockHeights = new PreparedQuery<IGetBlockHeightsParams,IGetBlockHeightsResult>(getBlockHeightsIR);
 
 
+/** 'GetBlockByHash' parameters type */
+export interface IGetBlockByHashParams {
+  block_hash: Buffer;
+}
+
+/** 'GetBlockByHash' return type */
+export interface IGetBlockByHashResult {
+  block_height: number;
+  main_chain_block_hash: Buffer;
+  ms_timestamp: Date;
+  paima_block_hash: Buffer | null;
+  prev_block: Buffer | null;
+  seed: string;
+  ver: number;
+}
+
+/** 'GetBlockByHash' query type */
+export interface IGetBlockByHashQuery {
+  params: IGetBlockByHashParams;
+  result: IGetBlockByHashResult;
+}
+
+const getBlockByHashIR: any = {"usedParamSet":{"block_hash":true},"params":[{"name":"block_hash","required":true,"transform":{"type":"scalar"},"locs":[{"a":179,"b":190},{"a":224,"b":235}]}],"statement":"SELECT curr.*, prev.paima_block_hash as \"prev_block\"\nFROM paima_blocks curr\nLEFT JOIN paima_blocks prev ON prev.block_height = curr.block_height - 1\nWHERE curr.paima_block_hash = :block_hash! OR curr.main_chain_block_hash = :block_hash!"};
+
+/**
+ * Query generated from SQL:
+ * ```
+ * SELECT curr.*, prev.paima_block_hash as "prev_block"
+ * FROM paima_blocks curr
+ * LEFT JOIN paima_blocks prev ON prev.block_height = curr.block_height - 1
+ * WHERE curr.paima_block_hash = :block_hash! OR curr.main_chain_block_hash = :block_hash!
+ * ```
+ */
+export const getBlockByHash = new PreparedQuery<IGetBlockByHashParams,IGetBlockByHashResult>(getBlockByHashIR);
+
+
 /** 'SaveLastBlock' parameters type */
 export interface ISaveLastBlockParams {
   block_height: number;

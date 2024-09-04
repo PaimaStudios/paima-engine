@@ -1,5 +1,5 @@
 import type { EvmConfig, MainEvmConfig, PaimaL2Contract, Web3 } from '@paima/utils';
-import { ChainDataExtensionType, ENV, doLog, timeout } from '@paima/utils';
+import { ChainDataExtensionType, ENV, caip2PrefixFor, doLog, timeout } from '@paima/utils';
 import type { ChainFunnel, FunnelJson, ReadPresyncDataFrom } from '@paima/runtime';
 import { type ChainData, type PresyncChainData } from '@paima/sm';
 import {
@@ -9,6 +9,7 @@ import {
 } from '../../reading.js';
 import { getUngroupedCdeData } from '../../cde/reading.js';
 import { composeChainData, groupCdeData } from '../../utils.js';
+import type { ChainInfo } from '../../utils.js';
 import { BaseFunnel } from '../BaseFunnel.js';
 import type { FunnelSharedData } from '../BaseFunnel.js';
 import { RpcCacheEntry, RpcRequestState } from '../FunnelCache.js';
@@ -18,14 +19,12 @@ import { FUNNEL_PRESYNC_FINISHED } from '@paima/utils';
 const GET_BLOCK_NUMBER_TIMEOUT = 5000;
 
 export class BlockFunnel extends BaseFunnel implements ChainFunnel {
-  config: EvmConfig;
-  chainName: string;
+  chainInfo: ChainInfo<EvmConfig>;
 
   protected constructor(
     sharedData: FunnelSharedData,
     dbTx: PoolClient,
-    config: EvmConfig,
-    chainName: string,
+    chainInfo: ChainInfo<EvmConfig>,
     readonly web3: Web3,
     readonly paimaL2Contract: PaimaL2Contract
   ) {
@@ -35,14 +34,13 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
     this.readPresyncData.bind(this);
     this.getDbTx.bind(this);
     this.configPrint.bind(this);
-    this.config = config;
-    this.chainName = chainName;
+    this.chainInfo = chainInfo;
   }
 
   public override async readData(blockHeight: number): Promise<ChainData[]> {
     const [fromBlock, toBlock] = await this.adjustBlockHeightRange(
       blockHeight,
-      this.config.funnelBlockGroupSize
+      this.chainInfo.config.funnelBlockGroupSize
     );
 
     if (fromBlock < 0 || toBlock < fromBlock) {
@@ -50,10 +48,10 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
     }
 
     if (toBlock === fromBlock) {
-      doLog(`Block funnel ${this.config.chainId}: #${toBlock}`);
+      doLog(`Block funnel ${this.chainInfo.config.chainId}: #${toBlock}`);
       return await this.internalReadDataSingle(fromBlock);
     } else {
-      doLog(`Block funnel ${this.config.chainId}: #${fromBlock}-${toBlock}`);
+      doLog(`Block funnel ${this.chainInfo.config.chainId}: #${fromBlock}-${toBlock}`);
       return await this.internalReadDataMulti(fromBlock, toBlock);
     }
   }
@@ -69,9 +67,9 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
   ): Promise<[number, number]> => {
     const ERR_RESULT: [number, number] = [-1, -2];
 
-    const latestBlockQueryState = this.sharedData.cacheManager.cacheEntries[
-      RpcCacheEntry.SYMBOL
-    ]?.getState(this.config.chainId);
+    const caip2 = caip2PrefixFor(this.chainInfo.config);
+    const latestBlockQueryState =
+      this.sharedData.cacheManager.cacheEntries[RpcCacheEntry.SYMBOL]?.getState(caip2);
     if (latestBlockQueryState?.state !== RpcRequestState.HasResult) {
       throw new Error(`[funnel] latest block cache entry not found`);
     }
@@ -90,34 +88,29 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
     if (blockNumber < 0) {
       return [];
     }
+    const caip2 = caip2PrefixFor(this.chainInfo.config);
     try {
       const dynamicDatums = await fetchDynamicEvmPrimitives(
         blockNumber,
         blockNumber,
         this.web3,
         this.sharedData,
-        this.chainName
+        this.chainInfo
       );
 
       const [baseChainData, cdeData] = await Promise.all([
-        getBaseChainDataSingle(
-          this.web3,
-          this.paimaL2Contract,
-          blockNumber,
-          this.dbTx,
-          this.caip2Prefix()
-        ),
+        getBaseChainDataSingle(this.web3, this.paimaL2Contract, blockNumber, this.dbTx, caip2),
         getUngroupedCdeData(
           this.web3,
           this.sharedData.extensions.filter(
             extension =>
-              extension.network === this.chainName &&
+              extension.network === this.chainInfo.name &&
               // these are fetched above
               extension.cdeType !== ChainDataExtensionType.DynamicEvmPrimitive
           ),
           blockNumber,
           blockNumber,
-          this.chainName
+          caip2
         ),
       ]);
 
@@ -140,13 +133,14 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
     if (toBlock < fromBlock || fromBlock < 0) {
       return [];
     }
+    const caip2 = caip2PrefixFor(this.chainInfo.config);
     try {
       const dynamicDatums = await fetchDynamicEvmPrimitives(
         fromBlock,
         toBlock,
         this.web3,
         this.sharedData,
-        this.chainName
+        this.chainInfo
       );
 
       const [baseChainData, ungroupedCdeData] = await Promise.all([
@@ -156,25 +150,25 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
           fromBlock,
           toBlock,
           this.dbTx,
-          this.caip2Prefix()
+          caip2
         ),
         getUngroupedCdeData(
           this.web3,
           this.sharedData.extensions.filter(
             extension =>
-              extension.network === this.chainName &&
+              extension.network === this.chainInfo.name &&
               // these are fetched above
               extension.cdeType !== ChainDataExtensionType.DynamicEvmPrimitive
           ),
           fromBlock,
           toBlock,
-          this.chainName
+          caip2
         ),
       ]);
 
       ungroupedCdeData.push(...dynamicDatums);
 
-      const cdeData = groupCdeData(this.chainName, fromBlock, toBlock, ungroupedCdeData);
+      const cdeData = groupCdeData(caip2, fromBlock, toBlock, ungroupedCdeData);
       return composeChainData(baseChainData, cdeData);
     } catch (err) {
       doLog(`[funnel] at ${fromBlock}-${toBlock} caught ${err}`);
@@ -182,15 +176,11 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
     }
   };
 
-  private caip2Prefix(): string {
-    // TODO: we may want to actually validate this against eth_chainId ?
-    return `eip155:${this.config.chainId}`;
-  }
-
   public override async readPresyncData(
     args: ReadPresyncDataFrom
-  ): Promise<{ [network: string]: PresyncChainData[] | typeof FUNNEL_PRESYNC_FINISHED }> {
-    let arg = args.find(arg => arg.network == this.chainName);
+  ): Promise<{ [caip2: string]: PresyncChainData[] | typeof FUNNEL_PRESYNC_FINISHED }> {
+    const caip2 = caip2PrefixFor(this.chainInfo.config);
+    let arg = args.find(arg => arg.caip2 == caip2);
 
     if (!arg) {
       return {};
@@ -200,7 +190,7 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
     let toBlock = arg.to;
 
     if (fromBlock >= ENV.START_BLOCKHEIGHT) {
-      return { [this.chainName]: FUNNEL_PRESYNC_FINISHED };
+      return { [caip2]: FUNNEL_PRESYNC_FINISHED };
     }
 
     try {
@@ -215,7 +205,7 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
         toBlock,
         this.web3,
         this.sharedData,
-        this.chainName
+        this.chainInfo
       );
 
       const ungroupedCdeData = (
@@ -223,18 +213,18 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
           this.web3,
           this.sharedData.extensions.filter(
             extension =>
-              extension.network === this.chainName &&
+              extension.network === this.chainInfo.name &&
               // these are fetched above
               extension.cdeType !== ChainDataExtensionType.DynamicEvmPrimitive
           ),
           fromBlock,
           toBlock,
-          this.chainName
+          caip2
         )
       ).concat(dynamicDatums);
 
       return {
-        [this.chainName]: groupCdeData(this.chainName, fromBlock, toBlock, ungroupedCdeData),
+        [caip2]: groupCdeData(caip2, fromBlock, toBlock, ungroupedCdeData),
       };
     } catch (err) {
       doLog(`[paima-funnel::readPresyncData] Exception occurred while reading blocks: ${err}`);
@@ -245,8 +235,7 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
   public static async recoverState(
     sharedData: FunnelSharedData,
     dbTx: PoolClient,
-    chainName: string,
-    config: MainEvmConfig,
+    chainInfo: ChainInfo<MainEvmConfig>,
     web3: Web3,
     paimaL2Contract: PaimaL2Contract
   ): Promise<BlockFunnel> {
@@ -263,15 +252,16 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
       return newEntry;
     })();
 
-    cacheEntry.updateState(config.chainId, latestBlock);
+    const caip2 = caip2PrefixFor(chainInfo.config);
+    cacheEntry.updateState(caip2, latestBlock);
 
-    return new BlockFunnel(sharedData, dbTx, config, chainName, web3, paimaL2Contract);
+    return new BlockFunnel(sharedData, dbTx, chainInfo, web3, paimaL2Contract);
   }
 
   public override configPrint(): FunnelJson {
     return {
       type: 'BlockFunnel',
-      chainName: this.chainName,
+      chainName: this.chainInfo.name,
     };
   }
 }

@@ -18,6 +18,14 @@ SELECT * FROM paima_blocks
 WHERE block_height IN :block_heights!
 ORDER BY block_height ASC;
 
+/*
+ @name getBlockByHash
+*/
+SELECT curr.*, prev.paima_block_hash as "prev_block"
+FROM paima_blocks curr
+LEFT JOIN paima_blocks prev ON prev.block_height = curr.block_height - 1
+WHERE curr.paima_block_hash = :block_hash! OR curr.main_chain_block_hash = :block_hash!;
+
 /*  @name saveLastBlock */
 INSERT INTO paima_blocks(block_height, ver, main_chain_block_hash, seed, ms_timestamp, paima_block_hash)
 VALUES (:block_height!, :ver!, :main_chain_block_hash!, :seed!, :ms_timestamp!, NULL)

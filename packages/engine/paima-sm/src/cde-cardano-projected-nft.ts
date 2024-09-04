@@ -33,7 +33,9 @@ export default async function processDatum(
       createScheduledData(scheduledInputData, scheduledBlockHeight, {
         cdeName: cdeDatum.cdeName,
         txHash: cdeDatum.transactionHash,
-        network: cdeDatum.network,
+        caip2: cdeDatum.caip2,
+        fromAddress: ownerAddress,
+        contractAddress: undefined, // TODO: we should be able to know this
       }),
       [
         cdeCardanoProjectedNftInsertData,
@@ -57,7 +59,9 @@ export default async function processDatum(
     createScheduledData(scheduledInputData, scheduledBlockHeight, {
       cdeName: cdeDatum.cdeName,
       txHash: cdeDatum.transactionHash,
-      network: cdeDatum.network,
+      caip2: cdeDatum.caip2,
+      fromAddress: ownerAddress,
+      contractAddress: undefined, // TODO: we should be able to know this
     }),
     [
       cdeCardanoProjectedNftUpdateData,

@@ -1,14 +1,15 @@
 import type { SQLUpdate } from './types.js';
 import {
-  newScheduledData,
+  newScheduledHeightData,
   removeAllScheduledDataByInputData,
-  removeScheduledData,
-} from './sql/scheduled.queries.js';
+  removeScheduledBlockData,
+} from './sql/rollup_inputs.queries.js';
 import type {
-  INewScheduledDataParams,
-  IRemoveScheduledDataParams,
+  INewScheduledHeightDataParams,
   IRemoveAllScheduledDataByInputDataParams,
-} from './sql/scheduled.queries.js';
+  IRemoveScheduledBlockDataParams,
+} from './sql/rollup_inputs.queries.js';
+import { strip0x } from '@paima/utils';
 
 /**
  * Create an SQL update which schedules a piece of data to be run through
@@ -23,17 +24,40 @@ import type {
 export function createScheduledData(
   inputData: string,
   blockHeight: number,
-  source: { cdeName: string; txHash: string; network: string } | string
+  source:
+    | {
+        cdeName: string;
+        txHash: string;
+        caip2: string;
+        fromAddress: string;
+        contractAddress: undefined | string;
+      }
+    | {
+        precompile: string;
+      }
 ): SQLUpdate {
-  const nsdParams: INewScheduledDataParams = {
-    block_height: blockHeight,
+  const sourceParams =
+    'precompile' in source
+      ? {
+          from_address: source.precompile,
+          primitive_name: null,
+          origin_tx_hash: null,
+          caip2: null,
+          origin_contract_address: null,
+        }
+      : {
+          from_address: source.fromAddress,
+          primitive_name: source.cdeName,
+          origin_tx_hash: Buffer.from(strip0x(source.txHash), 'hex'),
+          caip2: source.caip2,
+          origin_contract_address: source.contractAddress,
+        };
+  const nsdParams: INewScheduledHeightDataParams = {
+    future_block_height: blockHeight,
     input_data: inputData,
-    tx_hash: typeof source !== 'string' ? source.txHash : null,
-    cde_name: typeof source !== 'string' ? source.cdeName : null,
-    network: typeof source !== 'string' ? source.network : null,
-    precompile: typeof source === 'string' ? source : null,
+    ...sourceParams,
   };
-  const newScheduledDataTuple: SQLUpdate = [newScheduledData, nsdParams];
+  const newScheduledDataTuple: SQLUpdate = [newScheduledHeightData, nsdParams];
   return newScheduledDataTuple;
 }
 
@@ -48,9 +72,9 @@ export function deleteScheduledData(inputData: string, blockHeight: number | nul
   }
 
   // Delete exact schedule by command and height
-  const dsdParams: IRemoveScheduledDataParams = {
+  const dsdParams: IRemoveScheduledBlockDataParams = {
     block_height: blockHeight,
     input_data: inputData,
   };
-  return [removeScheduledData, dsdParams];
+  return [removeScheduledBlockData, dsdParams];
 }

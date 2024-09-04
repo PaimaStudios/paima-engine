@@ -36,7 +36,9 @@ export default async function processErc20Datum(
       createScheduledData(scheduledInputData, scheduledBlockHeight, {
         cdeName: cdeDatum.cdeName,
         txHash: cdeDatum.transactionHash,
-        network: cdeDatum.network,
+        caip2: cdeDatum.caip2,
+        fromAddress: fromAddr,
+        contractAddress: cdeDatum.contractAddress,
       })
     );
 

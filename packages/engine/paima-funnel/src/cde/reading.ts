@@ -18,7 +18,7 @@ export async function getUngroupedCdeData(
   extensions: ChainDataExtension[],
   fromBlock: number,
   toBlock: number,
-  network: string
+  caip2: string
 ): Promise<ChainDataExtensionDatum[][]> {
   if (fromBlock > toBlock) {
     return extensions.map(_ => []);
@@ -26,7 +26,7 @@ export async function getUngroupedCdeData(
   const allData = await Promise.all(
     extensions.map(extension =>
       'startBlockHeight' in extension
-        ? getSpecificCdeData(extension, fromBlock, toBlock, network)
+        ? getSpecificCdeData(extension, fromBlock, toBlock, caip2)
         : []
     )
   );
@@ -37,7 +37,7 @@ async function getSpecificCdeData(
   extension: ChainDataExtension & { startBlockHeight: number },
   fromBlock: number,
   toBlock: number,
-  network: string
+  caip2: string
 ): Promise<ChainDataExtensionDatum[]> {
   if (fromBlock > toBlock || toBlock < extension.startBlockHeight) {
     return [];
@@ -46,21 +46,21 @@ async function getSpecificCdeData(
   }
   switch (extension.cdeType) {
     case ChainDataExtensionType.Generic:
-      return await getCdeGenericData(extension, fromBlock, toBlock, network);
+      return await getCdeGenericData(extension, fromBlock, toBlock, caip2);
     case ChainDataExtensionType.ERC20:
-      return await getCdeErc20Data(extension, fromBlock, toBlock, network);
+      return await getCdeErc20Data(extension, fromBlock, toBlock, caip2);
     case ChainDataExtensionType.ERC20Deposit:
-      return await getCdeErc20DepositData(extension, fromBlock, toBlock, network);
+      return await getCdeErc20DepositData(extension, fromBlock, toBlock, caip2);
     case ChainDataExtensionType.ERC721:
-      return await getCdeErc721Data(extension, fromBlock, toBlock, network);
+      return await getCdeErc721Data(extension, fromBlock, toBlock, caip2);
     case ChainDataExtensionType.PaimaERC721:
-      return await getCdePaimaErc721Data(extension, fromBlock, toBlock, network);
+      return await getCdePaimaErc721Data(extension, fromBlock, toBlock, caip2);
     case ChainDataExtensionType.ERC1155:
-      return await getCdeErc1155Data(extension, fromBlock, toBlock, network);
+      return await getCdeErc1155Data(extension, fromBlock, toBlock, caip2);
     case ChainDataExtensionType.ERC6551Registry:
-      return await getCdeErc6551RegistryData(extension, fromBlock, toBlock, network);
+      return await getCdeErc6551RegistryData(extension, fromBlock, toBlock, caip2);
     case ChainDataExtensionType.DynamicEvmPrimitive:
-      return await getCdeDynamicEvmPrimitive(extension, fromBlock, toBlock, network);
+      return await getCdeDynamicEvmPrimitive(extension, fromBlock, toBlock, caip2);
     // these are not used by the block funnel
     case ChainDataExtensionType.CardanoPool:
     case ChainDataExtensionType.CardanoProjectedNFT:

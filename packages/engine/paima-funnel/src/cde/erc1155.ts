@@ -13,7 +13,7 @@ export default async function getCdeErc1155Data(
   extension: ChainDataExtensionErc1155,
   fromBlock: number,
   toBlock: number,
-  network: string
+  caip2: string
 ): Promise<ChainDataExtensionDatum[]> {
   // TODO: typechain is missing the proper type generation for getPastEvents
   // https://github.com/dethcrypto/TypeChain/issues/767
@@ -33,15 +33,15 @@ export default async function getCdeErc1155Data(
   )) as unknown as TransferBatch[];
 
   return [
-    ...transferSingleEvents.map(e => transferSingleToDatum(e, extension, network)),
-    ...transferBatchEvents.map(e => transferBatchToDatum(e, extension, network)),
+    ...transferSingleEvents.map(e => transferSingleToDatum(e, extension, caip2)),
+    ...transferBatchEvents.map(e => transferBatchToDatum(e, extension, caip2)),
   ];
 }
 
 function transferSingleToDatum(
   event: TransferSingle,
   extension: ChainDataExtensionErc1155,
-  network: string
+  caip2: string
 ): CdeErc1155TransferDatum {
   return {
     cdeName: extension.cdeName,
@@ -56,17 +56,17 @@ function transferSingleToDatum(
       ids: [event.returnValues.id],
       values: [event.returnValues.value],
     },
-    contractAddress: extension.contractAddress,
+    contractAddress: event.address,
     scheduledPrefix: extension.scheduledPrefix,
     burnScheduledPrefix: extension.burnScheduledPrefix,
-    network,
+    caip2,
   };
 }
 
 function transferBatchToDatum(
   event: TransferBatch,
   extension: ChainDataExtensionErc1155,
-  network: string
+  caip2: string
 ): CdeErc1155TransferDatum {
   return {
     cdeName: extension.cdeName,
@@ -80,9 +80,9 @@ function transferBatchToDatum(
       ids: event.returnValues.ids,
       values: event.returnValues.values,
     },
-    contractAddress: extension.contractAddress,
+    contractAddress: event.address,
     scheduledPrefix: extension.scheduledPrefix,
     burnScheduledPrefix: extension.burnScheduledPrefix,
-    network,
+    caip2,
   };
 }

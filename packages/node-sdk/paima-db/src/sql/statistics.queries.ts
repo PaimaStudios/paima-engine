@@ -6,8 +6,8 @@ export type IGetInputsTotalParams = void;
 
 /** 'GetInputsTotal' return type */
 export interface IGetInputsTotalResult {
-  game_inputs: string;
   scheduled_data: string;
+  submitted_inputs: string;
 }
 
 /** 'GetInputsTotal' query type */
@@ -16,14 +16,20 @@ export interface IGetInputsTotalQuery {
   result: IGetInputsTotalResult;
 }
 
-const getInputsTotalIR: any = {"usedParamSet":{},"params":[],"statement":"SELECT\n    (SELECT COUNT(*) FROM historical_game_inputs) AS \"game_inputs!\",\n    (SELECT COUNT(*) FROM scheduled_data) AS \"scheduled_data!\""};
+const getInputsTotalIR: any = {"usedParamSet":{},"params":[],"statement":"WITH scheduled_split AS (\n  SELECT CASE WHEN primitive_name IS NULL AND caip2 IS NOT NULL THEN 1 ELSE 0 END as submitted_input\n  FROM rollup_inputs\n  JOIN rollup_input_origin ON rollup_inputs.id = rollup_input_origin.id\n)\nSELECT\n    COUNT(CASE WHEN submitted_input = 1 THEN 1 END) AS \"submitted_inputs!\",\n    COUNT(CASE WHEN submitted_input = 0 THEN 1 END) AS \"scheduled_data!\"\nFROM scheduled_split"};
 
 /**
  * Query generated from SQL:
  * ```
+ * WITH scheduled_split AS (
+ *   SELECT CASE WHEN primitive_name IS NULL AND caip2 IS NOT NULL THEN 1 ELSE 0 END as submitted_input
+ *   FROM rollup_inputs
+ *   JOIN rollup_input_origin ON rollup_inputs.id = rollup_input_origin.id
+ * )
  * SELECT
- *     (SELECT COUNT(*) FROM historical_game_inputs) AS "game_inputs!",
- *     (SELECT COUNT(*) FROM scheduled_data) AS "scheduled_data!"
+ *     COUNT(CASE WHEN submitted_input = 1 THEN 1 END) AS "submitted_inputs!",
+ *     COUNT(CASE WHEN submitted_input = 0 THEN 1 END) AS "scheduled_data!"
+ * FROM scheduled_split
  * ```
  */
 export const getInputsTotal = new PreparedQuery<IGetInputsTotalParams,IGetInputsTotalResult>(getInputsTotalIR);
@@ -36,8 +42,8 @@ export interface IGetInputsForBlockParams {
 
 /** 'GetInputsForBlock' return type */
 export interface IGetInputsForBlockResult {
-  game_inputs: string;
   scheduled_data: string;
+  submitted_inputs: string;
 }
 
 /** 'GetInputsForBlock' query type */
@@ -46,25 +52,64 @@ export interface IGetInputsForBlockQuery {
   result: IGetInputsForBlockResult;
 }
 
-const getInputsForBlockIR: any = {"usedParamSet":{"block_height":true},"params":[{"name":"block_height","required":true,"transform":{"type":"scalar"},"locs":[{"a":96,"b":109},{"a":217,"b":230}]}],"statement":"SELECT\n    (\n      SELECT COUNT(*)\n      FROM historical_game_inputs\n      WHERE block_height = :block_height!\n    ) AS \"game_inputs!\",\n    (\n      SELECT COUNT(*)\n      FROM scheduled_data\n      WHERE block_height = :block_height!\n    ) AS \"scheduled_data!\""};
+const getInputsForBlockIR: any = {"usedParamSet":{"block_height":true},"params":[{"name":"block_height","required":true,"transform":{"type":"scalar"},"locs":[{"a":315,"b":328}]}],"statement":"WITH scheduled_split AS (\n  SELECT CASE WHEN primitive_name IS NULL AND caip2 IS NOT NULL THEN 1 ELSE 0 END as submitted_input\n  FROM rollup_inputs\n  JOIN rollup_input_origin ON rollup_inputs.id = rollup_input_origin.id\n  JOIN rollup_input_result ON rollup_inputs.id = rollup_input_result.id\n  WHERE block_height = :block_height!\n)\nSELECT\n    COUNT(CASE WHEN submitted_input = 1 THEN 1 END) AS \"submitted_inputs!\",\n    COUNT(CASE WHEN submitted_input = 0 THEN 1 END) AS \"scheduled_data!\"\nFROM scheduled_split"};
 
 /**
  * Query generated from SQL:
  * ```
+ * WITH scheduled_split AS (
+ *   SELECT CASE WHEN primitive_name IS NULL AND caip2 IS NOT NULL THEN 1 ELSE 0 END as submitted_input
+ *   FROM rollup_inputs
+ *   JOIN rollup_input_origin ON rollup_inputs.id = rollup_input_origin.id
+ *   JOIN rollup_input_result ON rollup_inputs.id = rollup_input_result.id
+ *   WHERE block_height = :block_height!
+ * )
  * SELECT
- *     (
- *       SELECT COUNT(*)
- *       FROM historical_game_inputs
- *       WHERE block_height = :block_height!
- *     ) AS "game_inputs!",
- *     (
- *       SELECT COUNT(*)
- *       FROM scheduled_data
- *       WHERE block_height = :block_height!
- *     ) AS "scheduled_data!"
+ *     COUNT(CASE WHEN submitted_input = 1 THEN 1 END) AS "submitted_inputs!",
+ *     COUNT(CASE WHEN submitted_input = 0 THEN 1 END) AS "scheduled_data!"
+ * FROM scheduled_split
  * ```
  */
 export const getInputsForBlock = new PreparedQuery<IGetInputsForBlockParams,IGetInputsForBlockResult>(getInputsForBlockIR);
+
+
+/** 'GetInputsForBlockHash' parameters type */
+export interface IGetInputsForBlockHashParams {
+  block_hash: Buffer;
+}
+
+/** 'GetInputsForBlockHash' return type */
+export interface IGetInputsForBlockHashResult {
+  scheduled_data: string;
+  submitted_inputs: string;
+}
+
+/** 'GetInputsForBlockHash' query type */
+export interface IGetInputsForBlockHashQuery {
+  params: IGetInputsForBlockHashParams;
+  result: IGetInputsForBlockHashResult;
+}
+
+const getInputsForBlockHashIR: any = {"usedParamSet":{"block_hash":true},"params":[{"name":"block_hash","required":true,"transform":{"type":"scalar"},"locs":[{"a":409,"b":420},{"a":444,"b":455}]}],"statement":"WITH scheduled_split AS (\n  SELECT CASE WHEN primitive_name IS NULL AND caip2 IS NOT NULL THEN 1 ELSE 0 END as submitted_input\n  FROM rollup_inputs\n  JOIN rollup_input_origin ON rollup_inputs.id = rollup_input_origin.id\n  JOIN rollup_input_result ON rollup_inputs.id = rollup_input_result.id\n  JOIN paima_blocks ON paima_blocks.block_height = rollup_input_result.block_height\n  WHERE (main_chain_block_hash = :block_hash! OR paima_block_hash = :block_hash!)\n)\nSELECT\n    COUNT(CASE WHEN submitted_input = 1 THEN 1 END) AS \"submitted_inputs!\",\n    COUNT(CASE WHEN submitted_input = 0 THEN 1 END) AS \"scheduled_data!\"\nFROM scheduled_split"};
+
+/**
+ * Query generated from SQL:
+ * ```
+ * WITH scheduled_split AS (
+ *   SELECT CASE WHEN primitive_name IS NULL AND caip2 IS NOT NULL THEN 1 ELSE 0 END as submitted_input
+ *   FROM rollup_inputs
+ *   JOIN rollup_input_origin ON rollup_inputs.id = rollup_input_origin.id
+ *   JOIN rollup_input_result ON rollup_inputs.id = rollup_input_result.id
+ *   JOIN paima_blocks ON paima_blocks.block_height = rollup_input_result.block_height
+ *   WHERE (main_chain_block_hash = :block_hash! OR paima_block_hash = :block_hash!)
+ * )
+ * SELECT
+ *     COUNT(CASE WHEN submitted_input = 1 THEN 1 END) AS "submitted_inputs!",
+ *     COUNT(CASE WHEN submitted_input = 0 THEN 1 END) AS "scheduled_data!"
+ * FROM scheduled_split
+ * ```
+ */
+export const getInputsForBlockHash = new PreparedQuery<IGetInputsForBlockHashParams,IGetInputsForBlockHashResult>(getInputsForBlockHashIR);
 
 
 /** 'GetInputsForAddress' parameters type */
@@ -75,8 +120,8 @@ export interface IGetInputsForAddressParams {
 
 /** 'GetInputsForAddress' return type */
 export interface IGetInputsForAddressResult {
-  game_inputs: string;
   scheduled_data: string;
+  submitted_inputs: string;
 }
 
 /** 'GetInputsForAddress' query type */
@@ -85,27 +130,27 @@ export interface IGetInputsForAddressQuery {
   result: IGetInputsForAddressResult;
 }
 
-const getInputsForAddressIR: any = {"usedParamSet":{"addr":true,"block_height":true},"params":[{"name":"addr","required":true,"transform":{"type":"scalar"},"locs":[{"a":104,"b":109},{"a":359,"b":364}]},{"name":"block_height","required":true,"transform":{"type":"scalar"},"locs":[{"a":138,"b":151},{"a":393,"b":406}]}],"statement":"SELECT\n    (\n      SELECT COUNT(*)\n      FROM historical_game_inputs\n      WHERE\n        user_address = :addr! AND\n        block_height = :block_height!\n    ) AS \"game_inputs!\",\n    (\n      SELECT COUNT(*)\n      FROM scheduled_data\n      LEFT JOIN scheduled_data_precompile ON scheduled_data.id = scheduled_data_precompile.id\n      WHERE\n        precompile = :addr! AND\n        block_height = :block_height!\n    ) AS \"scheduled_data!\""};
+const getInputsForAddressIR: any = {"usedParamSet":{"addr":true,"block_height":true},"params":[{"name":"addr","required":true,"transform":{"type":"scalar"},"locs":[{"a":348,"b":353},{"a":421,"b":426}]},{"name":"block_height","required":true,"transform":{"type":"scalar"},"locs":[{"a":466,"b":479}]}],"statement":"WITH scheduled_split AS (\n  SELECT CASE WHEN primitive_name IS NULL AND caip2 IS NOT NULL THEN 1 ELSE 0 END as submitted_input\n  FROM rollup_inputs\n  JOIN rollup_input_origin ON rollup_inputs.id = rollup_input_origin.id\n  JOIN rollup_input_result ON rollup_inputs.id = rollup_input_result.id\n  WHERE\n        (\n          lower(from_address) = lower(:addr!) OR\n          lower(rollup_input_origin.contract_address) = lower(:addr!)\n        ) AND\n        block_height = :block_height!\n)\nSELECT\n    COUNT(CASE WHEN submitted_input = 1 THEN 1 END) AS \"submitted_inputs!\",\n    COUNT(CASE WHEN submitted_input = 0 THEN 1 END) AS \"scheduled_data!\"\nFROM scheduled_split"};
 
 /**
  * Query generated from SQL:
  * ```
+ * WITH scheduled_split AS (
+ *   SELECT CASE WHEN primitive_name IS NULL AND caip2 IS NOT NULL THEN 1 ELSE 0 END as submitted_input
+ *   FROM rollup_inputs
+ *   JOIN rollup_input_origin ON rollup_inputs.id = rollup_input_origin.id
+ *   JOIN rollup_input_result ON rollup_inputs.id = rollup_input_result.id
+ *   WHERE
+ *         (
+ *           lower(from_address) = lower(:addr!) OR
+ *           lower(rollup_input_origin.contract_address) = lower(:addr!)
+ *         ) AND
+ *         block_height = :block_height!
+ * )
  * SELECT
- *     (
- *       SELECT COUNT(*)
- *       FROM historical_game_inputs
- *       WHERE
- *         user_address = :addr! AND
- *         block_height = :block_height!
- *     ) AS "game_inputs!",
- *     (
- *       SELECT COUNT(*)
- *       FROM scheduled_data
- *       LEFT JOIN scheduled_data_precompile ON scheduled_data.id = scheduled_data_precompile.id
- *       WHERE
- *         precompile = :addr! AND
- *         block_height = :block_height!
- *     ) AS "scheduled_data!"
+ *     COUNT(CASE WHEN submitted_input = 1 THEN 1 END) AS "submitted_inputs!",
+ *     COUNT(CASE WHEN submitted_input = 0 THEN 1 END) AS "scheduled_data!"
+ * FROM scheduled_split
  * ```
  */
 export const getInputsForAddress = new PreparedQuery<IGetInputsForAddressParams,IGetInputsForAddressResult>(getInputsForAddressIR);

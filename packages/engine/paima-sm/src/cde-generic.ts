@@ -1,4 +1,4 @@
-import { ENV } from '@paima/utils';
+import { ENV, SCHEDULED_DATA_ADDRESS } from '@paima/utils';
 import type {
   CdeGenericDatum,
   CdeMinaActionGenericDatum,
@@ -25,7 +25,13 @@ export default async function processDatum(
     createScheduledData(scheduledInputData, scheduledBlockHeight, {
       cdeName: cdeDatum.cdeName,
       txHash: cdeDatum.transactionHash,
-      network: cdeDatum.network,
+      caip2: cdeDatum.caip2,
+      // TODO: what to set this to?
+      //       - sender address (requires a eth_getTransactionByHash call)
+      //       - some standard (ex: some way to specify which field in the ABI is the from address)
+      //       - contract address
+      fromAddress: SCHEDULED_DATA_ADDRESS,
+      contractAddress: 'contractAddress' in cdeDatum ? cdeDatum.contractAddress : undefined,
     }),
   ];
 

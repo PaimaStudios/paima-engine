@@ -207,7 +207,7 @@
 			},
 			"TransactionCountResponse": {
 				"properties": {
-					"gameInputs": {
+					"submittedInputs": {
 						"type": "number",
 						"format": "double"
 					},
@@ -217,7 +217,7 @@
 					}
 				},
 				"required": [
-					"gameInputs",
+					"submittedInputs",
 					"scheduledData"
 				],
 				"type": "object"
@@ -254,6 +254,9 @@
 			},
 			"TransactionContentResponse": {
 				"properties": {
+					"success": {
+						"type": "boolean"
+					},
 					"from": {
 						"type": "string"
 					},
@@ -264,16 +267,25 @@
 						"type": "number",
 						"format": "double"
 					},
+					"txHash": {
+						"type": "string"
+					},
 					"blockNumber": {
 						"type": "number",
 						"format": "double"
+					},
+					"blockHash": {
+						"type": "string"
 					}
 				},
 				"required": [
+					"success",
 					"from",
 					"inputData",
 					"txIndex",
-					"blockNumber"
+					"txHash",
+					"blockNumber",
+					"blockHash"
 				],
 				"type": "object"
 			},
@@ -307,7 +319,80 @@
 					}
 				]
 			},
-			"SuccessfulResult__topic-string--address-string--blockNumber-number--data_58___91_fieldName-string_93__58_any_--tx-number--logIndex-number_-Array_": {
+			"BlockContentResponse": {
+				"properties": {
+					"txs": {
+						"anyOf": [
+							{
+								"items": {
+									"type": "string"
+								},
+								"type": "array"
+							},
+							{
+								"items": {
+									"$ref": "#/components/schemas/TransactionContentResponse"
+								},
+								"type": "array"
+							}
+						]
+					},
+					"blockHeight": {
+						"type": "number",
+						"format": "double"
+					},
+					"msTimestamp": {
+						"type": "number",
+						"format": "double"
+					},
+					"prevBlockHash": {
+						"type": "string",
+						"nullable": true
+					},
+					"blockHash": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"txs",
+					"blockHeight",
+					"msTimestamp",
+					"prevBlockHash",
+					"blockHash"
+				],
+				"type": "object"
+			},
+			"SuccessfulResult_BlockContentResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean",
+						"enum": [
+							true
+						],
+						"nullable": false
+					},
+					"result": {
+						"$ref": "#/components/schemas/BlockContentResponse"
+					}
+				},
+				"required": [
+					"success",
+					"result"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"Result_BlockContentResponse_": {
+				"anyOf": [
+					{
+						"$ref": "#/components/schemas/SuccessfulResult_BlockContentResponse_"
+					},
+					{
+						"$ref": "#/components/schemas/FailedResult"
+					}
+				]
+			},
+			"SuccessfulResult__topic-string--address-string--blockHash-string--blockNumber-number--data_58___91_fieldName-string_93__58_any_--transactionHash-string--txIndex-number--logIndex-number_-Array_": {
 				"properties": {
 					"success": {
 						"type": "boolean",
@@ -323,9 +408,12 @@
 									"type": "number",
 									"format": "double"
 								},
-								"tx": {
+								"txIndex": {
 									"type": "number",
 									"format": "double"
+								},
+								"transactionHash": {
+									"type": "string"
 								},
 								"data": {
 									"properties": {},
@@ -336,6 +424,9 @@
 									"type": "number",
 									"format": "double"
 								},
+								"blockHash": {
+									"type": "string"
+								},
 								"address": {
 									"type": "string"
 								},
@@ -345,9 +436,11 @@
 							},
 							"required": [
 								"logIndex",
-								"tx",
+								"txIndex",
+								"transactionHash",
 								"data",
 								"blockNumber",
+								"blockHash",
 								"address",
 								"topic"
 							],
@@ -363,10 +456,10 @@
 				"type": "object",
 				"additionalProperties": false
 			},
-			"Result__topic-string--address-string--blockNumber-number--data_58___91_fieldName-string_93__58_any_--tx-number--logIndex-number_-Array_": {
+			"Result__topic-string--address-string--blockHash-string--blockNumber-number--data_58___91_fieldName-string_93__58_any_--transactionHash-string--txIndex-number--logIndex-number_-Array_": {
 				"anyOf": [
 					{
-						"$ref": "#/components/schemas/SuccessfulResult__topic-string--address-string--blockNumber-number--data_58___91_fieldName-string_93__58_any_--tx-number--logIndex-number_-Array_"
+						"$ref": "#/components/schemas/SuccessfulResult__topic-string--address-string--blockHash-string--blockNumber-number--data_58___91_fieldName-string_93__58_any_--transactionHash-string--txIndex-number--logIndex-number_-Array_"
 					},
 					{
 						"$ref": "#/components/schemas/FailedResult"
@@ -374,7 +467,7 @@
 				]
 			},
 			"GetLogsResponse": {
-				"$ref": "#/components/schemas/Result__topic-string--address-string--blockNumber-number--data_58___91_fieldName-string_93__58_any_--tx-number--logIndex-number_-Array_"
+				"$ref": "#/components/schemas/Result__topic-string--address-string--blockHash-string--blockNumber-number--data_58___91_fieldName-string_93__58_any_--transactionHash-string--txIndex-number--logIndex-number_-Array_"
 			},
 			"GetLogsParams": {
 				"properties": {
@@ -389,7 +482,17 @@
 						"type": "object"
 					},
 					"address": {
-						"type": "string"
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"items": {
+									"type": "string"
+								},
+								"type": "array"
+							}
+						]
 					},
 					"toBlock": {
 						"type": "number",
@@ -401,8 +504,6 @@
 					}
 				},
 				"required": [
-					"topic",
-					"address",
 					"fromBlock"
 				],
 				"type": "object"
@@ -1017,6 +1118,73 @@
 				]
 			}
 		},
+		"/transaction_count/blockHash": {
+			"get": {
+				"operationId": "TransactionCountHash",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Result_TransactionCountResponse_"
+								}
+							}
+						}
+					},
+					"422": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ValidateErrorResult"
+								},
+								"examples": {
+									"Example 1": {}
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/InternalServerErrorResult"
+								},
+								"examples": {
+									"Example 1": {}
+								}
+							}
+						}
+					},
+					"501": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/FailedResult"
+								},
+								"examples": {
+									"Example 1": {}
+								}
+							}
+						}
+					}
+				},
+				"security": [],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "blockHash",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
 		"/transaction_count/address": {
 			"get": {
 				"operationId": "TransactionCountGet",
@@ -1084,6 +1252,175 @@
 					{
 						"in": "query",
 						"name": "blockHeight",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
+			}
+		},
+		"/transaction_content/txHash": {
+			"get": {
+				"operationId": "TransactionContentTxHash",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Result_TransactionContentResponse_"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/FailedResult"
+								},
+								"examples": {
+									"Example 1": {}
+								}
+							}
+						}
+					},
+					"422": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ValidateErrorResult"
+								},
+								"examples": {
+									"Example 1": {}
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/InternalServerErrorResult"
+								},
+								"examples": {
+									"Example 1": {}
+								}
+							}
+						}
+					},
+					"501": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/FailedResult"
+								},
+								"examples": {
+									"Example 1": {}
+								}
+							}
+						}
+					}
+				},
+				"security": [],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "txHash",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/transaction_content/blockHashAndIndex": {
+			"get": {
+				"operationId": "TransactionContentBlockHash",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Result_TransactionContentResponse_"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/FailedResult"
+								},
+								"examples": {
+									"Example 1": {}
+								}
+							}
+						}
+					},
+					"422": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ValidateErrorResult"
+								},
+								"examples": {
+									"Example 1": {}
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/InternalServerErrorResult"
+								},
+								"examples": {
+									"Example 1": {}
+								}
+							}
+						}
+					},
+					"501": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/FailedResult"
+								},
+								"examples": {
+									"Example 1": {}
+								}
+							}
+						}
+					}
+				},
+				"security": [],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "blockHash",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "txIndex",
 						"required": true,
 						"schema": {
 							"format": "double",
@@ -1178,6 +1515,193 @@
 						"schema": {
 							"format": "double",
 							"type": "number"
+						}
+					}
+				]
+			}
+		},
+		"/block_content/blockHash": {
+			"get": {
+				"operationId": "BlockContentBlockHash",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Result_BlockContentResponse_"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/FailedResult"
+								},
+								"examples": {
+									"Example 1": {}
+								}
+							}
+						}
+					},
+					"422": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ValidateErrorResult"
+								},
+								"examples": {
+									"Example 1": {}
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/InternalServerErrorResult"
+								},
+								"examples": {
+									"Example 1": {}
+								}
+							}
+						}
+					},
+					"501": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/FailedResult"
+								},
+								"examples": {
+									"Example 1": {}
+								}
+							}
+						}
+					}
+				},
+				"security": [],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "blockHash",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "txDetails",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"none",
+								"hash",
+								"full"
+							]
+						}
+					}
+				]
+			}
+		},
+		"/block_content/blockHeight": {
+			"get": {
+				"operationId": "BlockContentBlockHeight",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Result_BlockContentResponse_"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/FailedResult"
+								},
+								"examples": {
+									"Example 1": {}
+								}
+							}
+						}
+					},
+					"422": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ValidateErrorResult"
+								},
+								"examples": {
+									"Example 1": {}
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/InternalServerErrorResult"
+								},
+								"examples": {
+									"Example 1": {}
+								}
+							}
+						}
+					},
+					"501": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/FailedResult"
+								},
+								"examples": {
+									"Example 1": {}
+								}
+							}
+						}
+					}
+				},
+				"security": [],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "blockHeight",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "txDetails",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"none",
+								"hash",
+								"full"
+							]
 						}
 					}
 				]

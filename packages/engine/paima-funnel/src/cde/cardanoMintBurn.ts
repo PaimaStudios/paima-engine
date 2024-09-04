@@ -19,7 +19,7 @@ export default async function getCdeData(
   // previous point
   fromTx: BlockTxPair | undefined,
   paginationLimit: number,
-  network: string
+  caip2: string
 ): Promise<CdeCardanoMintBurnDatum[]> {
   let result = [] as CdeCardanoMintBurnDatum[];
 
@@ -48,7 +48,7 @@ export default async function getCdeData(
     }
 
     events
-      .map(e => eventToCdeDatum(e, extension, getBlockNumber(e.actionSlot), network))
+      .map(e => eventToCdeDatum(e, extension, getBlockNumber(e.actionSlot), caip2))
       .forEach(element => {
         result.push(element);
       });
@@ -65,7 +65,7 @@ function eventToCdeDatum(
   event: MintBurnHistoryResponse[0],
   extension: ChainDataExtensionCardanoMintBurn,
   blockNumber: number,
-  network: string
+  caip2: string
 ): CdeCardanoMintBurnDatum {
   const cursor: BlockTxPair = {
     block: event.block,
@@ -86,6 +86,6 @@ function eventToCdeDatum(
     },
     scheduledPrefix: extension.scheduledPrefix,
     paginationCursor: { cursor: JSON.stringify(cursor), finished: false },
-    network,
+    caip2,
   };
 }

@@ -27,6 +27,12 @@ export const mockTxGasPre = {
   gasPrice: '0x0',
   // TODO: some other gas fields needed if we ever use type != 0x0
 } as const;
+
+export const mockEip1559Gas = {
+  baseFeePerGas: '0x0',
+  maxFeePerGas: '0x0',
+} as const;
+
 /**
  * Gas specified after tx lands onchain (after calculating how much gas is consumed in reality)
  * Note: no concept of gas on Paima
@@ -43,6 +49,14 @@ export const mockTxGasPost = {
 export const mockBlockGas = {
   gasLimit: '0x0',
   gasUsed: '0x0',
+} as const;
+
+/**
+ * Mock info about blobs (doesn't exist in Paima)
+ */
+export const mockBlob = {
+  blobGasUsed: '0x0',
+  excessBlobGas: '0x0',
 } as const;
 
 /**
@@ -112,9 +126,9 @@ export const mockMiner = {
  * No concept of uncles in Paima as we only consider finalized blocks
  */
 export const mockUncles = {
-  sha3Uncles: '0x0',
-  uncles: [],
-} as const;
+  sha3Uncles: '0x0' as const,
+  uncles: [] as `0x${string}`[],
+};
 
 /**
  * Paima, similar to other chains like Solana, does not Merklize state for performance reasons
@@ -134,4 +148,9 @@ export const mockExtraData = {
   extraData: '0x0',
 } as const;
 
-export const mockBlockHash = '0x0'; // TODO: do not mock this once we have block hashes in Paima
+/**
+ * used for Pow, but not used anymore
+ */
+export const mockSealFields = {
+  sealFields: ['0x0' as const],
+};

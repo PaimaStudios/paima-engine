@@ -19,7 +19,9 @@ export default async function processDatum(
     createScheduledData(scheduledInputData, scheduledBlockHeight, {
       cdeName: cdeDatum.cdeName,
       txHash: cdeDatum.transactionHash,
-      network: cdeDatum.network,
+      caip2: cdeDatum.caip2,
+      fromAddress: address,
+      contractAddress: undefined,
     }),
     [
       cdeCardanoPoolInsertData,

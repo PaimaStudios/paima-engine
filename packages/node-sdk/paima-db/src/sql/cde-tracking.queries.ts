@@ -4,7 +4,7 @@ import { PreparedQuery } from '@pgtyped/runtime';
 /** 'MarkCdeBlockheightProcessed' parameters type */
 export interface IMarkCdeBlockheightProcessedParams {
   block_height: number;
-  network: string;
+  caip2: string;
 }
 
 /** 'MarkCdeBlockheightProcessed' return type */
@@ -16,13 +16,13 @@ export interface IMarkCdeBlockheightProcessedQuery {
   result: IMarkCdeBlockheightProcessedResult;
 }
 
-const markCdeBlockheightProcessedIR: any = {"usedParamSet":{"block_height":true,"network":true},"params":[{"name":"block_height","required":true,"transform":{"type":"scalar"},"locs":[{"a":56,"b":69}]},{"name":"network","required":true,"transform":{"type":"scalar"},"locs":[{"a":72,"b":80}]}],"statement":"INSERT INTO cde_tracking(block_height, network)\nVALUES (:block_height!, :network!)"};
+const markCdeBlockheightProcessedIR: any = {"usedParamSet":{"block_height":true,"caip2":true},"params":[{"name":"block_height","required":true,"transform":{"type":"scalar"},"locs":[{"a":54,"b":67}]},{"name":"caip2","required":true,"transform":{"type":"scalar"},"locs":[{"a":70,"b":76}]}],"statement":"INSERT INTO cde_tracking(block_height, caip2)\nVALUES (:block_height!, :caip2!)"};
 
 /**
  * Query generated from SQL:
  * ```
- * INSERT INTO cde_tracking(block_height, network)
- * VALUES (:block_height!, :network!)
+ * INSERT INTO cde_tracking(block_height, caip2)
+ * VALUES (:block_height!, :caip2!)
  * ```
  */
 export const markCdeBlockheightProcessed = new PreparedQuery<IMarkCdeBlockheightProcessedParams,IMarkCdeBlockheightProcessedResult>(markCdeBlockheightProcessedIR);
@@ -30,7 +30,7 @@ export const markCdeBlockheightProcessed = new PreparedQuery<IMarkCdeBlockheight
 
 /** 'GetLatestProcessedCdeBlockheight' parameters type */
 export interface IGetLatestProcessedCdeBlockheightParams {
-  network: string;
+  caip2: string;
 }
 
 /** 'GetLatestProcessedCdeBlockheight' return type */
@@ -44,13 +44,13 @@ export interface IGetLatestProcessedCdeBlockheightQuery {
   result: IGetLatestProcessedCdeBlockheightResult;
 }
 
-const getLatestProcessedCdeBlockheightIR: any = {"usedParamSet":{"network":true},"params":[{"name":"network","required":true,"transform":{"type":"scalar"},"locs":[{"a":54,"b":62}]}],"statement":"SELECT block_height FROM cde_tracking\nWHERE network = :network!\nORDER BY block_height DESC\nLIMIT 1"};
+const getLatestProcessedCdeBlockheightIR: any = {"usedParamSet":{"caip2":true},"params":[{"name":"caip2","required":true,"transform":{"type":"scalar"},"locs":[{"a":52,"b":58}]}],"statement":"SELECT block_height FROM cde_tracking\nWHERE caip2 = :caip2!\nORDER BY block_height DESC\nLIMIT 1"};
 
 /**
  * Query generated from SQL:
  * ```
  * SELECT block_height FROM cde_tracking
- * WHERE network = :network!
+ * WHERE caip2 = :caip2!
  * ORDER BY block_height DESC
  * LIMIT 1
  * ```
