@@ -1,11 +1,6 @@
-import { Kind, TArray, TNumber, TSchema, TTuple, Type } from '@sinclair/typebox';
-import {
-  LogEvent,
-  LogEventFields,
-  MaybeIndexedLogEvent,
-  MaybeIndexedLogEventFields,
-  ToLog,
-} from './types';
+import type { Kind, TArray, TNumber, TSchema, TTuple } from '@sinclair/typebox';
+import { Type } from '@sinclair/typebox';
+import type { LogEvent, LogEventFields } from './types.js';
 import type { AbiParameter } from 'abitype';
 
 export function fieldToAbi<Type extends TSchema>(type: Type): AbiParameter | undefined {

@@ -684,9 +684,9 @@ async function processUserInputs<Events extends AppEvents>(
     const address = await getMainAddress(submittedData.realAddress, DBConn);
 
     const txHash = hashRollupInput.hash({
-      caip2Prefix: submittedData.origin!.caip2!,
-      txHash: submittedData.origin?.txHash!,
-      indexInBlock: indexForEvent(submittedData.origin?.txHash!),
+      caip2Prefix: submittedData.origin.caip2!,
+      txHash: submittedData.origin.txHash!,
+      indexInBlock: indexForEvent(submittedData.origin.txHash!),
     });
     const inputData: STFSubmittedData = {
       ...submittedData,
@@ -787,10 +787,10 @@ async function processUserInputs<Events extends AppEvents>(
             success: success ?? false,
             paima_tx_hash: Buffer.from(txHash, 'hex'),
             index_in_block: txIndexInBlock,
-            origin_tx_hash: Buffer.from(strip0x(inputData.origin!.txHash!), 'hex'),
-            caip2: inputData.origin!.caip2!,
-            primitive_name: inputData.origin?.primitiveName ?? '',
-            origin_contract_address: inputData.origin?.contractAddress,
+            origin_tx_hash: Buffer.from(strip0x(inputData.origin.txHash!), 'hex'),
+            caip2: inputData.origin.caip2!,
+            primitive_name: inputData.origin.primitiveName ?? '',
+            origin_contract_address: inputData.origin.contractAddress,
           },
           DBConn
         );

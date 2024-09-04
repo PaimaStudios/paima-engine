@@ -804,7 +804,12 @@ function toRpcBlock(
   };
 }
 
-function toRpcLog(log: PaimaNodeRestComponents['schemas']['GetLogsResponse']): RpcLog {
+function toRpcLog(
+  log: Extract<
+    PaimaNodeRestComponents['schemas']['GetLogsResponse'],
+    { success: true }
+  >['result'][number]
+): RpcLog {
   return {
     address: log.address as any, // can't guarantee address format matches
     topics: [], // TODO: this should be all topics, not just the ones passed in
