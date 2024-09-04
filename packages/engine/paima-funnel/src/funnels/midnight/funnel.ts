@@ -2,12 +2,15 @@ import { ChainFunnel, ReadPresyncDataFrom, SubmittedData } from '@paima/runtime/
 import {
   CdeMidnightContractStateDatum,
   ChainData,
+  ChainDataExtension,
   ChainDataExtensionDatum,
+  ChainDataExtensionMidnightContractState,
   InternalEvent,
   PresyncChainData,
 } from '@paima/sm';
 import {
   ChainDataExtensionDatumType,
+  ChainDataExtensionType,
   ConfigNetworkType,
   doLog,
   ENV,
@@ -239,25 +242,48 @@ class MidnightFunnel extends BaseFunnel implements ChainFunnel {
   ): ChainDataExtensionDatum[] {
     const result = [];
 
+    const contractAddressToCdeName = new Map(
+      this.sharedData.extensions.flatMap(ext =>
+        ext.network === this.chainName &&
+        ext.cdeType === ChainDataExtensionType.MidnightContractState
+          ? [[ext.contractAddress, ext.cdeName]]
+          : []
+      )
+    );
+
     for (let tx of block.transactions) {
       for (let contractCall of tx.contractCalls) {
-        const state = ContractState.deserialize(hexStringToUint8Array(contractCall.state));
-        // We could downcast contractCall to see if operations() contains something useful.
-        // For now let's report on the ledger variable contents.
-        const jsState = state.data.encode();
-        console.log('-- contract @', contractCall.address, 'has state', JSON.stringify(jsState));
-        result.push({
-          blockNumber: baseBlockNumber,
-          transactionHash: tx.hash,
+        const cdeName = contractAddressToCdeName.get(contractCall.address);
+        if (cdeName) {
+          // Only deserialize if we actually care.
+          const state = ContractState.deserialize(hexStringToUint8Array(contractCall.state));
+          // We could downcast contractCall to see if operations() contains something useful.
+          // For now let's report on the ledger variable contents.
+          const jsState = state.data.encode();
+          console.log(
+            '-- cde',
+            cdeName,
+            'contract @',
+            contractCall.address,
+            'has state',
+            JSON.stringify(jsState)
+          );
 
-          cdeDatumType: ChainDataExtensionDatumType.MidnightContractState,
-          cdeName: 'TODO', // TODO: filter on contract address being something we care about, thus learning CDE name
-          network: `midnight:${this.config.networkId}`,
+          result.push({
+            blockNumber: baseBlockNumber,
+            transactionHash: tx.hash,
 
-          // TODO: just combine contractState into payload?
-          contractState: JSON.stringify(jsState),
-          payload: null,
-        } satisfies CdeMidnightContractStateDatum);
+            cdeDatumType: ChainDataExtensionDatumType.MidnightContractState,
+            cdeName,
+            network: this.chainName,
+
+            // TODO: just combine contractState into payload?
+            contractState: JSON.stringify(jsState),
+            payload: null,
+          } satisfies CdeMidnightContractStateDatum);
+        } else {
+          console.log('discarding contract @', contractCall.address);
+        }
       }
     }
 
@@ -292,6 +318,8 @@ class MidnightFunnel extends BaseFunnel implements ChainFunnel {
         lastLogTime = now;
         lastLogBlock = block.height + 1;
       }
+
+      // TODO: break if this timestamp exceeds main chain START_BLOCKHEIGHT timestamp minus confirmation depth
 
       this.cache.nextBlockHeight = block.height + 1;
 

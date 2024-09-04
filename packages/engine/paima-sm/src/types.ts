@@ -351,6 +351,7 @@ export enum CdeEntryTypeName {
   MinaEventGeneric = 'mina-event-generic',
   MinaActionGeneric = 'mina-action-generic',
   DynamicEvmPrimitive = 'dynamic-evm-primitive',
+  MidnightContractState = 'midnight-contract-state',
 }
 
 const EvmAddress = Type.Transform(Type.RegExp('0x[0-9a-fA-F]{40}'))
@@ -604,6 +605,15 @@ export type ChainDataExtensionDynamicEvmPrimitive = ChainDataExtensionBase &
     eventName: string;
   };
 
+export const ChainDataExtensionMidnightContractStateConfig = Type.Object({
+  type: Type.Literal(CdeEntryTypeName.MidnightContractState),
+  contractAddress: Type.String(),
+});
+export type ChainDataExtensionMidnightContractState = ChainDataExtensionBase &
+  Static<typeof ChainDataExtensionMidnightContractStateConfig> & {
+    cdeType: ChainDataExtensionType.MidnightContractState;
+  };
+
 export const CdeConfig = Type.Object({
   extensions: Type.Array(
     Type.Intersect([
@@ -622,6 +632,7 @@ export const CdeConfig = Type.Object({
         ChainDataExtensionMinaEventGenericConfig,
         ChainDataExtensionMinaActionGenericConfig,
         ChainDataExtensionDynamicEvmPrimitiveConfig,
+        ChainDataExtensionMidnightContractStateConfig,
       ]),
       Type.Partial(Type.Object({ network: Type.String() })),
     ])
@@ -657,6 +668,7 @@ export type ChainDataExtension = (
   | ChainDataExtensionMinaEventGeneric
   | ChainDataExtensionMinaActionGeneric
   | ChainDataExtensionDynamicEvmPrimitive
+  | ChainDataExtensionMidnightContractState
 ) & { network: string };
 
 export type GameStateTransitionFunctionRouter<Events extends AppEvents> = (
