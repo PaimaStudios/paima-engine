@@ -195,6 +195,7 @@ export const TaggedAvailOtherConfig = <T extends boolean>(T: T) =>
     Type.Object({ type: Type.Literal(ConfigNetworkType.AVAIL_OTHER) }),
   ]);
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const TaggedMidnightConfig = <T extends boolean>(T: T) =>
   Type.Intersect([
     MidnightConfigSchema,

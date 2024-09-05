@@ -1,10 +1,8 @@
-import { ChainFunnel, ReadPresyncDataFrom, SubmittedData } from '@paima/runtime/src/types';
-import {
+import type { ChainFunnel, ReadPresyncDataFrom, SubmittedData } from '@paima/runtime';
+import type {
   CdeMidnightContractStateDatum,
   ChainData,
-  ChainDataExtension,
   ChainDataExtensionDatum,
-  ChainDataExtensionMidnightContractState,
   InternalEvent,
   PresyncChainData,
 } from '@paima/sm';
@@ -19,8 +17,8 @@ import {
 } from '@paima/utils';
 import { FUNNEL_PRESYNC_FINISHED } from '@paima/utils';
 import { PoolClient } from 'pg';
-import { BaseFunnel, FunnelSharedData } from '../BaseFunnel.js';
-import { MidnightConfig } from '@paima/utils';
+import { BaseFunnel, type FunnelSharedData } from '../BaseFunnel.js';
+import type { MidnightConfig } from '@paima/utils';
 import { ContractState, setNetworkId } from '@midnight-ntwrk/compact-runtime';
 import { FunnelCacheEntry } from '../FunnelCache.js';
 import { composeChainData } from '../../utils.js';
@@ -82,15 +80,15 @@ function midnightTimestampToSeconds(timestamp: string): number {
 
 interface GraphQLErrorDetail {
   message: string;
-  locations?: { line: number; column: number }[];
-  path?: string[];
+  locations?: readonly { line: number; column: number }[];
+  path?: readonly (string | number)[];
   extensions?: object;
 }
 
 class GraphQLError extends Error {
-  errors?: GraphQLErrorDetail[];
+  errors?: readonly GraphQLErrorDetail[];
 
-  constructor(message: string, errors?: GraphQLErrorDetail[]) {
+  constructor(message: string, errors?: readonly GraphQLErrorDetail[]) {
     super(message);
     this.errors = errors;
   }
@@ -122,7 +120,7 @@ async function gqlQuery(url: string, query: string): Promise<unknown> {
 
 function handleGqlWsError<T>(ex: IteratorResult<ExecutionResult<T, unknown>, unknown>): T {
   if (ex.done) throw new GraphQLError('Subscription ended');
-  if (ex.value.errors) throw ex.value.errors;
+  if (ex.value.errors) throw new GraphQLError('Subscription errored', ex.value.errors);
   if (!ex.value.data) throw new GraphQLError('Server returned nothing');
   return ex.value.data;
 }
@@ -176,14 +174,6 @@ class MidnightFunnel extends BaseFunnel implements ChainFunnel {
 
   private async indexerQuery(query: string): Promise<unknown> {
     return await gqlQuery(this.config.indexer, query);
-  }
-
-  private async getTopBlock() {
-    return (
-      (await this.indexerQuery('query { block { hash, height, timestamp } }')) as {
-        block: Pick<Block, 'hash' | 'height' | 'timestamp'>;
-      }
-    ).block;
   }
 
   private async getTimestampForBlock(at: number): Promise<number> {
@@ -412,7 +402,7 @@ export class MidnightFunnelCacheEntry implements FunnelCacheEntry {
     this.wsBlocks = [];
   }
 
-  clear() {
+  clear(): void {
     this.nextBlockHeight = 0;
   }
 }
