@@ -171,9 +171,6 @@ class MidnightFunnel extends BaseFunnel implements ChainFunnel {
     super(sharedData, dbTx);
 
     this.caip2 = caip2PrefixFor(chainInfo.config);
-
-    // Unfortunately this is global state so we can only connect to one network at a time.
-    setNetworkId(chainInfo.config.networkId);
   }
 
   private async indexerQuery(query: string): Promise<unknown> {
@@ -250,6 +247,7 @@ class MidnightFunnel extends BaseFunnel implements ChainFunnel {
         const extension = contractAddressToExtension.get(contractCall.address);
         if (extension) {
           // Only deserialize if we actually care.
+          setNetworkId(this.chainInfo.config.networkId);
           const state = ContractState.deserialize(hexStringToUint8Array(contractCall.state));
           // We could downcast contractCall to see if operations() contains something useful.
           // For now let's report on the ledger variable contents.
