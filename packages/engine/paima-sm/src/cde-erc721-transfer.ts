@@ -45,7 +45,7 @@ export default async function processErc721Datum(
               txHash: cdeDatum.transactionHash,
               caip2: cdeDatum.caip2,
               fromAddress: from.toLowerCase(),
-              contractAddress: cdeDatum.contractAddress,
+              contractAddress: cdeDatum.contractAddress.toLowerCase(),
             })
           );
         }

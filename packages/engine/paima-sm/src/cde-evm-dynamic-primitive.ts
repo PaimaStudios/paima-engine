@@ -33,7 +33,7 @@ export default async function processDatum(
 
       const erc721Config: StoredConfig<TChainDataExtensionErc721Config> = {
         ...cdeDatum.payload.targetConfig,
-        contractAddress: cdeDatum.payload.contractAddress,
+        contractAddress: cdeDatum.payload.contractAddress.toLowerCase(),
         startBlockHeight: cdeDatum.blockNumber,
         network: networkConfig[0],
       };
@@ -46,7 +46,7 @@ export default async function processDatum(
 
       const genericConfig: StoredConfig<TChainDataExtensionGenericConfig> = {
         ...cdeDatum.payload.targetConfig,
-        contractAddress: cdeDatum.payload.contractAddress,
+        contractAddress: cdeDatum.payload.contractAddress.toLowerCase(),
         startBlockHeight: cdeDatum.blockNumber,
         network: networkConfig[0],
       };

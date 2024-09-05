@@ -79,7 +79,7 @@ function transferToTransferDatum(
       to: event.returnValues.to.toLowerCase(),
       tokenId: event.returnValues.tokenId,
     },
-    contractAddress: event.address,
+    contractAddress: event.address.toLowerCase(),
     caip2,
   };
 }
@@ -102,7 +102,7 @@ function mintedToMintDatum(
       //       and only included in the companion Transfer event
       from: SCHEDULED_DATA_ADDRESS,
     },
-    contractAddress: event.address,
+    contractAddress: event.address.toLowerCase(),
     scheduledPrefix: extension.scheduledPrefix,
     caip2,
   };

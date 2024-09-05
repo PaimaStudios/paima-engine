@@ -41,7 +41,7 @@ export default async function processErc1155TransferDatum(
         txHash: cdeDatum.transactionHash,
         caip2: cdeDatum.caip2,
         fromAddress: from.toLowerCase(),
-        contractAddress: cdeDatum.contractAddress,
+        contractAddress: cdeDatum.contractAddress.toLowerCase(),
       })
     );
   }
@@ -61,7 +61,7 @@ export default async function processErc1155TransferDatum(
         txHash: cdeDatum.transactionHash,
         caip2: cdeDatum.caip2,
         fromAddress: from.toLowerCase(),
-        contractAddress: cdeDatum.contractAddress,
+        contractAddress: cdeDatum.contractAddress.toLowerCase(),
       })
     );
   }

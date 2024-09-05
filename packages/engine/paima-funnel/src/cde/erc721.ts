@@ -40,7 +40,7 @@ function transferToTransferDatum(
       to: event.returnValues.to.toLowerCase(),
       tokenId: event.returnValues.tokenId,
     },
-    contractAddress: event.address,
+    contractAddress: event.address.toLowerCase(),
     burnScheduledPrefix: extension.burnScheduledPrefix,
     caip2,
   };
@@ -61,7 +61,7 @@ function transferToMintDatum(
       mintData: '',
       from: event.returnValues.from,
     },
-    contractAddress: event.address,
+    contractAddress: event.address.toLowerCase(),
     scheduledPrefix: extension.scheduledPrefix,
     caip2,
   };

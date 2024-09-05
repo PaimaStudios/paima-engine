@@ -38,7 +38,7 @@ export default async function processErc20Datum(
         txHash: cdeDatum.transactionHash,
         caip2: cdeDatum.caip2,
         fromAddress: fromAddr,
-        contractAddress: cdeDatum.contractAddress,
+        contractAddress: cdeDatum.contractAddress.toLowerCase(),
       })
     );
 

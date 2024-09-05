@@ -211,7 +211,7 @@ export async function fetchDynamicEvmPrimitives(
             name: cdeName,
             startBlockHeight: ext.blockNumber,
             type: ext.payload.targetConfig.type,
-            contractAddress: ext.payload.contractAddress,
+            contractAddress: ext.payload.contractAddress.toLowerCase(),
             scheduledPrefix: ext.payload.targetConfig.scheduledPrefix,
             burnScheduledPrefix: ext.payload.targetConfig.burnScheduledPrefix,
             // not relevant
@@ -225,7 +225,7 @@ export async function fetchDynamicEvmPrimitives(
           const config: TChainDataExtensionGenericConfig = {
             startBlockHeight: ext.blockNumber,
             name: cdeName,
-            contractAddress: ext.payload.contractAddress,
+            contractAddress: ext.payload.contractAddress.toLowerCase(),
             ...ext.payload.targetConfig,
           };
 

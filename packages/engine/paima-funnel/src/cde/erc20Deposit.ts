@@ -45,7 +45,7 @@ function transferToCdeDatum(
         value: event.returnValues.value,
       },
       scheduledPrefix: extension.scheduledPrefix,
-      contractAddress: event.address,
+      contractAddress: event.address.toLowerCase(),
       caip2,
     },
   ];

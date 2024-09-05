@@ -39,7 +39,7 @@ function eventToCdeDatum(
     transactionHash: event.transactionHash,
     scheduledPrefix: extension.scheduledPrefix,
     payload: event.returnValues,
-    contractAddress: event.address,
+    contractAddress: event.address.toLowerCase(),
     caip2,
   };
 }

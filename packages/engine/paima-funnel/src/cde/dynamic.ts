@@ -48,7 +48,7 @@ export default async function getCdeDynamicEvmPrimitive(
     cdeDatumType: ChainDataExtensionDatumType.DynamicEvmPrimitive,
     blockNumber: event.blockNumber,
     payload: {
-      contractAddress: event.returnValues[extension.dynamicFields.contractAddress],
+      contractAddress: event.returnValues[extension.dynamicFields.contractAddress.toLowerCase()].toLowerCase(),
       targetConfig: targetConfig,
     },
     caip2,
