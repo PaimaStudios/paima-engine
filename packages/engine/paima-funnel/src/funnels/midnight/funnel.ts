@@ -64,7 +64,7 @@ interface Block {
 }
 
 function midnightTimestampToSeconds(timestamp: string): number {
-  if (timestamp == '-1000000000-01-01T00:00:00Z') {
+  if (timestamp === '-1000000000-01-01T00:00:00Z') {
     // This is Midnight's block-zero timestamp.
     return 0;
   }
@@ -284,9 +284,15 @@ class MidnightFunnel extends BaseFunnel implements ChainFunnel {
   ): Promise<{ [network: number]: PresyncChainData[] | typeof FUNNEL_PRESYNC_FINISHED }> {
     const baseDataPromise = this.baseFunnel.readPresyncData(args);
 
+    const startingBlock = await this.sharedData.mainNetworkApi.getStartingBlock();
+    if (!startingBlock) {
+      throw new Error("Couldn't get main's network staring block timestamp");
+    }
+    const startingTimestamp = startingBlock.timestamp as number; // TODO: if Mina and Midnight both assert this, perhaps we should upstream it to the API itself
+
     const start = this.cache.nextBlockHeight;
     let block = await this.fetchBlock(this.cache.nextBlockHeight);
-    if (!block) {
+    if (!(block && midnightTimestampToSeconds(block.timestamp) < startingTimestamp)) {
       // We're caught up. Return that we've finished.
       const baseData = await baseDataPromise;
       baseData[this.chainName] = FUNNEL_PRESYNC_FINISHED;
@@ -297,7 +303,8 @@ class MidnightFunnel extends BaseFunnel implements ChainFunnel {
 
     let lastLogTime = Date.now(),
       lastLogBlock = start;
-    while (block) {
+    // TOOD: apply confirmation depth here
+    while (block && midnightTimestampToSeconds(block.timestamp) < startingTimestamp) {
       const now = Date.now();
       if (now - lastLogTime > 5000) {
         console.log(
@@ -307,8 +314,6 @@ class MidnightFunnel extends BaseFunnel implements ChainFunnel {
         lastLogTime = now;
         lastLogBlock = block.height + 1;
       }
-
-      // TODO: break if this timestamp exceeds main chain START_BLOCKHEIGHT timestamp minus confirmation depth
 
       this.cache.nextBlockHeight = block.height + 1;
 
@@ -351,6 +356,7 @@ class MidnightFunnel extends BaseFunnel implements ChainFunnel {
     for (const baseBlock of baseData) {
       // Process all Midnight blocks that precede the base block.
       // Break when we've seen a block in the relative future.
+      // TODO: apply confirmation depth here.
       while (midnightTimestampToSeconds(block.timestamp) < baseBlock.timestamp) {
         // The meat: process this one.
         console.log(
@@ -366,8 +372,6 @@ class MidnightFunnel extends BaseFunnel implements ChainFunnel {
         }
 
         // Fetch next block.
-        // TODO: Use WebSocket API (npm graphql-ws).
-        // Even better, slurp an indexer's DB directly (but public indexers don't expose this).
         this.cache.nextBlockHeight = block.height + 1;
         block = await this.waitForBlock(this.cache.nextBlockHeight);
       }
