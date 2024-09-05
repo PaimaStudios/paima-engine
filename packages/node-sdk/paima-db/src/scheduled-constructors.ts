@@ -23,7 +23,7 @@ import { strip0x } from '@paima/utils';
  */
 export function createScheduledData(
   inputData: string,
-  blockHeight: number,
+  trigger: { blockHeight: number },
   source:
     | {
         cdeName: string;
@@ -53,7 +53,7 @@ export function createScheduledData(
           origin_contract_address: source.contractAddress,
         };
   const nsdParams: INewScheduledHeightDataParams = {
-    future_block_height: blockHeight,
+    future_block_height: trigger.blockHeight,
     input_data: inputData,
     ...sourceParams,
   };

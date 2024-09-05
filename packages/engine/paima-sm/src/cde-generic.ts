@@ -22,17 +22,21 @@ export default async function processDatum(
   const scheduledInputData = `${prefix}|${stringifiedPayload}`;
 
   const updateList: SQLUpdate[] = [
-    createScheduledData(scheduledInputData, scheduledBlockHeight, {
-      cdeName: cdeDatum.cdeName,
-      txHash: cdeDatum.transactionHash,
-      caip2: cdeDatum.caip2,
-      // TODO: what to set this to?
-      //       - sender address (requires a eth_getTransactionByHash call)
-      //       - some standard (ex: some way to specify which field in the ABI is the from address)
-      //       - contract address
-      fromAddress: SCHEDULED_DATA_ADDRESS,
-      contractAddress: 'contractAddress' in cdeDatum ? cdeDatum.contractAddress : undefined,
-    }),
+    createScheduledData(
+      scheduledInputData,
+      { blockHeight: scheduledBlockHeight },
+      {
+        cdeName: cdeDatum.cdeName,
+        txHash: cdeDatum.transactionHash,
+        caip2: cdeDatum.caip2,
+        // TODO: what to set this to?
+        //       - sender address (requires a eth_getTransactionByHash call)
+        //       - some standard (ex: some way to specify which field in the ABI is the from address)
+        //       - contract address
+        fromAddress: SCHEDULED_DATA_ADDRESS,
+        contractAddress: 'contractAddress' in cdeDatum ? cdeDatum.contractAddress : undefined,
+      }
+    ),
   ];
 
   updateList.push([

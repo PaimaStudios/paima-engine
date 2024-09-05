@@ -36,13 +36,17 @@ export default async function processErc1155TransferDatum(
       JSON.stringify(values),
     ].join('|');
     updateList.push(
-      createScheduledData(scheduledInputData, scheduledBlockHeight, {
-        cdeName: cdeDatum.cdeName,
-        txHash: cdeDatum.transactionHash,
-        caip2: cdeDatum.caip2,
-        fromAddress: from.toLowerCase(),
-        contractAddress: cdeDatum.contractAddress.toLowerCase(),
-      })
+      createScheduledData(
+        scheduledInputData,
+        { blockHeight: scheduledBlockHeight },
+        {
+          cdeName: cdeDatum.cdeName,
+          txHash: cdeDatum.transactionHash,
+          caip2: cdeDatum.caip2,
+          fromAddress: from.toLowerCase(),
+          contractAddress: cdeDatum.contractAddress.toLowerCase(),
+        }
+      )
     );
   }
 
@@ -56,13 +60,17 @@ export default async function processErc1155TransferDatum(
       JSON.stringify(values),
     ].join('|');
     updateList.push(
-      createScheduledData(burnData, scheduledBlockHeight, {
-        cdeName: cdeDatum.cdeName,
-        txHash: cdeDatum.transactionHash,
-        caip2: cdeDatum.caip2,
-        fromAddress: from.toLowerCase(),
-        contractAddress: cdeDatum.contractAddress.toLowerCase(),
-      })
+      createScheduledData(
+        burnData,
+        { blockHeight: scheduledBlockHeight },
+        {
+          cdeName: cdeDatum.cdeName,
+          txHash: cdeDatum.transactionHash,
+          caip2: cdeDatum.caip2,
+          fromAddress: from.toLowerCase(),
+          contractAddress: cdeDatum.contractAddress.toLowerCase(),
+        }
+      )
     );
   }
 

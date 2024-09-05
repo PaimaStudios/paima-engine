@@ -40,13 +40,17 @@ export default async function processErc721Datum(
             : cdeDatum.blockNumber;
 
           updateList.push(
-            createScheduledData(scheduledInputData, scheduledBlockHeight, {
-              cdeName: cdeDatum.cdeName,
-              txHash: cdeDatum.transactionHash,
-              caip2: cdeDatum.caip2,
-              fromAddress: from.toLowerCase(),
-              contractAddress: cdeDatum.contractAddress.toLowerCase(),
-            })
+            createScheduledData(
+              scheduledInputData,
+              { blockHeight: scheduledBlockHeight },
+              {
+                cdeName: cdeDatum.cdeName,
+                txHash: cdeDatum.transactionHash,
+                caip2: cdeDatum.caip2,
+                fromAddress: from.toLowerCase(),
+                contractAddress: cdeDatum.contractAddress.toLowerCase(),
+              }
+            )
           );
         }
 
