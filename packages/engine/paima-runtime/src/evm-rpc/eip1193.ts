@@ -59,6 +59,8 @@ import {
 import type { TNumber, TSchema } from '@sinclair/typebox';
 import { Type } from '@sinclair/typebox';
 
+/* eslint-disable @typescript-eslint/no-unsafe-argument -- seems like an eslint bug? */
+
 export const evmRpcEngine = new JsonRpcEngine();
 registerCacheMiddleware(evmRpcEngine);
 
@@ -100,7 +102,6 @@ evmRpcEngine.push(
       case 'eth_blockNumber': {
         const { data, error } = await getPaimaNodeRestClient().GET('/latest_processed_blockheight');
         if (error != null) {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument -- seems like an eslint bug?
           res.error = createInternalRpcError({}, error?.errorMessage);
           return;
         }
@@ -160,12 +161,10 @@ evmRpcEngine.push(
           params: { query: { blockHeight, address } },
         });
         if (error != null) {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument -- seems like an eslint bug?
           res.error = createInternalRpcError({}, error?.errorMessage);
           return;
         }
         if (data.success === false) {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument -- seems like an eslint bug?
           res.error = createInternalRpcError({}, data.errorMessage);
           return;
         }
@@ -215,12 +214,10 @@ evmRpcEngine.push(
           params: { query: { blockHash: blockHash } },
         });
         if (error != null) {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument -- seems like an eslint bug?
           res.error = createInternalRpcError({}, error?.errorMessage);
           return;
         }
         if (data.success === false) {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument -- seems like an eslint bug?
           res.error = createInternalRpcError({}, data.errorMessage);
           return;
         }
@@ -244,12 +241,10 @@ evmRpcEngine.push(
           }
         );
         if (error != null) {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument -- seems like an eslint bug?
           res.error = createInternalRpcError({}, error?.errorMessage);
           return;
         }
         if (data.success === false) {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument -- seems like an eslint bug?
           res.error = createInternalRpcError({}, data.errorMessage);
           return;
         }
@@ -287,12 +282,10 @@ evmRpcEngine.push(
           params: { query: { blockHash, txDetails: transactionDetails ? 'full' : 'hash' } },
         });
         if (error != null) {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument -- seems like an eslint bug?
           res.error = createInternalRpcError({}, error?.errorMessage);
           return;
         }
         if (data.success === false) {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument -- seems like an eslint bug?
           res.error = createInternalRpcError({}, data.errorMessage);
           return;
         }
@@ -321,12 +314,10 @@ evmRpcEngine.push(
           params: { query: { blockHeight, txDetails: transactionDetails ? 'full' : 'hash' } },
         });
         if (error != null) {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument -- seems like an eslint bug?
           res.error = createInternalRpcError({}, error?.errorMessage);
           return;
         }
         if (data.success === false) {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument -- seems like an eslint bug?
           res.error = createInternalRpcError({}, data.errorMessage);
           return;
         }
@@ -349,12 +340,10 @@ evmRpcEngine.push(
           params: { query: { txHash } },
         });
         if (error != null) {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument -- seems like an eslint bug?
           res.error = createInternalRpcError({}, error?.errorMessage);
           return;
         }
         if (data.success === false) {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument -- seems like an eslint bug?
           res.error = createInternalRpcError({}, data.errorMessage);
           return;
         }
@@ -385,12 +374,10 @@ evmRpcEngine.push(
           { params: { query: { blockHash, txIndex } } }
         );
         if (error != null) {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument -- seems like an eslint bug?
           res.error = createInternalRpcError({}, error?.errorMessage);
           return;
         }
         if (data.success === false) {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument -- seems like an eslint bug?
           res.error = createInternalRpcError({}, data.errorMessage);
           return;
         }
@@ -421,12 +408,10 @@ evmRpcEngine.push(
           { params: { query: { blockHeight, txIndex } } }
         );
         if (error != null) {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument -- seems like an eslint bug?
           res.error = createInternalRpcError({}, error?.errorMessage);
           return;
         }
         if (data.success === false) {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument -- seems like an eslint bug?
           res.error = createInternalRpcError({}, data.errorMessage);
           return;
         }
@@ -452,12 +437,10 @@ evmRpcEngine.push(
             params: { query: { blockHash: request.blockHash, txDetails: 'none' } },
           });
           if (error != null) {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument -- seems like an eslint bug?
             res.error = createInternalRpcError({}, error?.errorMessage);
             return;
           }
           if (data.success === false) {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument -- seems like an eslint bug?
             res.error = createInternalRpcError({}, data.errorMessage);
             return;
           }
@@ -516,7 +499,6 @@ evmRpcEngine.push(
             const eventPaths = eventDefinition.path as EventPath;
             const evmAbi = toEvmAbi(eventDefinition.definition);
             if (evmAbi == null) {
-              // eslint-disable-next-line @typescript-eslint/no-unsafe-argument -- seems like an eslint bug?
               res.error = createInternalRpcError(
                 {},
                 `EVM ABI conversion for this event type is not supported`
@@ -563,12 +545,10 @@ evmRpcEngine.push(
           body: { fromBlock, toBlock, ...filterFields, address: request.address },
         });
         if (error != null) {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument -- seems like an eslint bug?
           res.error = createInternalRpcError({}, error?.errorMessage);
           return;
         }
         if (data.success === false) {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument -- seems like an eslint bug?
           res.error = createInternalRpcError({}, data.errorMessage);
           return;
         }
@@ -593,33 +573,15 @@ evmRpcEngine.push(
           }
         );
         if (txError != null) {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument -- seems like an eslint bug?
           res.error = createInternalRpcError({}, txError?.errorMessage);
           return;
         }
         if (txData.success === false) {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument -- seems like an eslint bug?
           res.error = createInternalRpcError({}, txData.errorMessage);
           return;
         }
 
-        // TODO
-        // const { data: logData, error: logError } = await getPaimaNodeRestClient().POST(
-        //   '/get_logs',
-        //   {
-        //     params: { query: { txHash } },
-        //   }
-        // );
-        // if (logError != null) {
-        //   // eslint-disable-next-line @typescript-eslint/no-unsafe-argument -- seems like an eslint bug?
-        //   res.error = createInternalRpcError({}, logError?.errorMessage);
-        //   return;
-        // }
-        // if (logData.success === false) {
-        //   // eslint-disable-next-line @typescript-eslint/no-unsafe-argument -- seems like an eslint bug?
-        //   res.error = createInternalRpcError({}, txData.errorMessage);
-        //   return;
-        // }
+        // TODO: create a version of get_logs for specific transactions
 
         const mock: RpcTransactionReceipt = {
           transactionHash: add0x(txData.result.txHash),
@@ -656,7 +618,7 @@ evmRpcEngine.push(
 
       case 'web3_clientVersion': {
         // TODO: should include the following
-        // 1: commit hash commit hash somehow
+        // 1: commit hash somehow
         // 2: platform
         // 3: node version
         // example of Geth: Geth/v1.9.15-stable-0f77f34b/linux-amd64/go1.14.4"
@@ -717,7 +679,6 @@ evmRpcEngine.push(
         }
         const { data, error } = await getPaimaNodeRestClient().GET('/latest_processed_blockheight');
         if (error != null) {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument -- seems like an eslint bug?
           res.error = createInternalRpcError({}, error?.errorMessage);
           return;
         }
@@ -738,7 +699,6 @@ evmRpcEngine.push(
 function toRpcTransaction(
   data: PaimaNodeRestComponents['schemas']['TransactionContentResponse']
 ): RpcTransaction {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument -- seems like an eslint bug?
   const hexMsg = stringToHex(data.inputData);
   /**
    * Paima is not EVM so it doesn't have the same encoding of "inputData" in the EVM sense
