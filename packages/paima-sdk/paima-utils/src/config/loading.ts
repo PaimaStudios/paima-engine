@@ -1,5 +1,5 @@
 import YAML from 'yaml';
-import type { Static, TSchema } from '@sinclair/typebox';
+import type { Static, TIntersect, TLiteral, TObject, TSchema } from '@sinclair/typebox';
 import { Value, ValueErrorType } from '@sinclair/typebox/value';
 import { Type } from '@sinclair/typebox';
 import { ENV, doLog } from '../index.js';
@@ -29,7 +29,7 @@ export type ConfigMapping = {
 export type TypeToConfig<T extends ConfigNetworkType> = ConfigMapping[T];
 export type TypesToConfigs<T extends ConfigNetworkType[]> = TypeToConfig<T[number]>;
 
-export type EvmConfig = Static<typeof EvmConfigSchema>;
+export type EvmConfig = Static<typeof BaseEvmConfigSchema>;
 
 export type MainEvmConfig = Static<typeof MainEvmConfigSchema>;
 export type OtherEvmConfig = Static<typeof OtherEvmConfigSchema>;
@@ -62,21 +62,14 @@ const MainNetworkDiscrimination = Type.Union([
   }),
 ]);
 
-export const EvmConfigSchema = Type.Intersect([
+export const BaseEvmConfigSchema = Type.Intersect([
   EvmConfigSchemaRequiredProperties,
   EvmConfigSchemaOptionalProperties,
   MainNetworkDiscrimination,
 ]);
 
-const MainEvmConfigSchema = Type.Intersect([
-  EvmConfigSchema,
-  Type.Object({ type: Type.Literal(ConfigNetworkType.EVM) }),
-]);
-
-const OtherEvmConfigSchema = Type.Intersect([
-  EvmConfigSchema,
-  Type.Object({ type: Type.Literal(ConfigNetworkType.EVM_OTHER) }),
-]);
+export const MainEvmConfigSchema = addType(BaseEvmConfigSchema, ConfigNetworkType.EVM);
+export const OtherEvmConfigSchema = addType(BaseEvmConfigSchema, ConfigNetworkType.EVM_OTHER);
 
 export const CardanoNetwork = Type.Union([
   Type.Literal('preview'),
@@ -95,14 +88,16 @@ export const CardanoOptionalProperties = Type.Object({
   paginationLimit: Type.Number({ default: 50 }),
 });
 
-export const CardanoConfigSchema = Type.Intersect([
+export const BaseCardanoConfigSchema = Type.Intersect([
   CardanoRequiredProperties,
   CardanoOptionalProperties,
+  Type.Object({ type: Type.Literal(ConfigNetworkType.CARDANO) }),
 ]);
+export const CardanoConfigSchema = addType(BaseCardanoConfigSchema, ConfigNetworkType.CARDANO);
 
 export type CardanoConfig = Static<typeof CardanoConfigSchema>;
 
-export const MinaConfigSchema = Type.Object({
+export const BaseMinaConfigSchema = Type.Object({
   archiveConnectionString: Type.String(),
   delay: Type.Number(),
   paginationLimit: Type.Number({ default: 50 }),
@@ -110,6 +105,7 @@ export const MinaConfigSchema = Type.Object({
   networkId: Type.String(),
 });
 
+export const MinaConfigSchema = addType(BaseMinaConfigSchema, ConfigNetworkType.MINA);
 export type MinaConfig = Static<typeof MinaConfigSchema>;
 
 export const AvailRequiredProperties = Type.Object({
@@ -128,10 +124,16 @@ export const AvailOptionalProperties = Type.Object({
   presyncStepSize: Type.Number({ default: 1000 }),
 });
 
-export const AvailConfigSchema = Type.Intersect([AvailRequiredProperties, AvailOptionalProperties]);
+export const BaseAvailConfigSchema = Type.Intersect([
+  AvailRequiredProperties,
+  AvailOptionalProperties,
+]);
 
-export type AvailMainConfig = AvailConfig & { type: ConfigNetworkType.AVAIL_MAIN };
-export type AvailConfig = Static<typeof AvailConfigSchema>;
+export const AvailMainConfigSchema = addType(BaseAvailConfigSchema, ConfigNetworkType.AVAIL_MAIN);
+export const AvailOtherConfigSchema = addType(BaseAvailConfigSchema, ConfigNetworkType.AVAIL_OTHER);
+
+export type AvailMainConfig = Static<typeof AvailMainConfigSchema>;
+export type AvailConfig = Static<typeof AvailOtherConfigSchema>;
 
 export const MidnightConfigSchema = Type.Object({
   // Midnight network connection info.
@@ -503,4 +505,11 @@ function networkToCip34(
     default:
       assertNever(config.network);
   }
+}
+
+function addType<BaseSchema extends TSchema, Type extends ConfigNetworkType>(
+  schema: BaseSchema,
+  type: Type
+): TIntersect<[BaseSchema, TObject<{ type: TLiteral<Type> }>]> {
+  return Type.Intersect([schema, Type.Object({ type: Type.Literal(type) })]);
 }

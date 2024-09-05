@@ -14,6 +14,7 @@ import {
   postConciseDataAsync,
 } from './helpers/posting.js';
 export * from './helpers/clients.js';
+export type * from './helpers/clients.js';
 import { buildQuery } from './helpers/query-constructors.js';
 import { pushLog } from './helpers/logging.js';
 

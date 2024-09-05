@@ -11,7 +11,7 @@ export default async function getCdeData(
   extension: ChainDataExtensionErc721,
   fromBlock: number,
   toBlock: number,
-  network: string
+  caip2: string
 ): Promise<ChainDataExtensionDatum[]> {
   // TOOD: typechain is missing the proper type generation for getPastEvents
   // https://github.com/dethcrypto/TypeChain/issues/767
@@ -22,13 +22,13 @@ export default async function getCdeData(
     }),
     DEFAULT_FUNNEL_TIMEOUT
   )) as unknown as Transfer[];
-  return events.map((e: Transfer) => transferToCdeData(e, extension, network)).flat();
+  return events.map((e: Transfer) => transferToCdeData(e, extension, caip2)).flat();
 }
 
 function transferToTransferDatum(
   event: Transfer,
   extension: ChainDataExtensionErc721,
-  network: string
+  caip2: string
 ): CdeErc721TransferDatum {
   return {
     cdeName: extension.cdeName,
@@ -40,15 +40,16 @@ function transferToTransferDatum(
       to: event.returnValues.to.toLowerCase(),
       tokenId: event.returnValues.tokenId,
     },
+    contractAddress: event.address.toLowerCase(),
     burnScheduledPrefix: extension.burnScheduledPrefix,
-    network,
+    caip2,
   };
 }
 
 function transferToMintDatum(
   event: Transfer,
   extension: ChainDataExtensionErc721,
-  network: string
+  caip2: string
 ): CdeErc721MintDatum {
   return {
     cdeName: extension.cdeName,
@@ -58,22 +59,23 @@ function transferToMintDatum(
     payload: {
       tokenId: event.returnValues.tokenId,
       mintData: '',
+      from: event.returnValues.from,
     },
-    contractAddress: extension.contractAddress,
+    contractAddress: event.address.toLowerCase(),
     scheduledPrefix: extension.scheduledPrefix,
-    network,
+    caip2,
   };
 }
 
 function transferToCdeData(
   event: Transfer,
   extension: ChainDataExtensionErc721,
-  network: string
-): ChainDataExtensionDatum[] {
-  const transferDatum = transferToTransferDatum(event, extension, network);
+  caip2: string
+): (CdeErc721TransferDatum | CdeErc721MintDatum)[] {
+  const transferDatum = transferToTransferDatum(event, extension, caip2);
   const fromAddr = event.returnValues.from;
   if (fromAddr.match(/^0x0+$/g)) {
-    const mintDatum = transferToMintDatum(event, extension, network);
+    const mintDatum = transferToMintDatum(event, extension, caip2);
     return [mintDatum, transferDatum];
   } else {
     return [transferDatum];

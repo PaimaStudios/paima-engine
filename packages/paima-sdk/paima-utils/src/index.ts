@@ -10,6 +10,7 @@ import {
   EvmConfig,
   CardanoConfig,
   MinaConfig,
+  ConfigMapping,
   ConfigNetworkType,
   OtherEvmConfig,
   MainEvmConfig,
@@ -49,6 +50,7 @@ export {
   AvailConfig,
   AvailMainConfig,
   MidnightConfig,
+  ConfigMapping,
   ConfigNetworkType,
   defaultEvmMainNetworkName,
   defaultCardanoNetworkName,
@@ -77,6 +79,12 @@ export function strip0x(str: string): string {
     return str.substring(2);
   }
   return str;
+}
+export function add0x(str: string): `0x${string}` {
+  if (str.startsWith('0x')) {
+    return str as `0x{string}`;
+  }
+  return `0x${str}`;
 }
 
 // Timeout function for promises

@@ -5,7 +5,7 @@ import type {
   MinaConfig,
   OtherEvmConfig,
   AvailConfig,
-  MidnightConfig,
+  AvailMainConfig,
 } from '@paima/utils';
 import { loadChainDataExtensions } from '@paima/runtime';
 import type { ChainFunnel, IFunnelFactory } from '@paima/runtime';
@@ -75,7 +75,7 @@ export class FunnelFactory implements IFunnelFactory {
 
           return result;
         },
-        [] as Promise<[string, Web3]>[]
+        [] as Promise<[network: string, Web3]>[]
       )
     );
 
@@ -124,15 +124,17 @@ export class FunnelFactory implements IFunnelFactory {
       chainFunnel = await BlockFunnel.recoverState(
         this.sharedData,
         dbTx,
-        chainName,
-        config,
+        { config, name: chainName },
         web3,
         paimaL2Contract
       );
     }
 
     if (config.type === ConfigNetworkType.AVAIL_MAIN) {
-      chainFunnel = await AvailBlockFunnel.recoverState(this.sharedData, dbTx, chainName, config);
+      chainFunnel = await AvailBlockFunnel.recoverState(this.sharedData, dbTx, {
+        config: config as AvailMainConfig,
+        name: chainName,
+      });
     }
 
     if (!chainFunnel) {
@@ -147,22 +149,16 @@ export class FunnelFactory implements IFunnelFactory {
 
       switch (type) {
         case ConfigNetworkType.EVM_OTHER:
-          chainFunnel = await wrapToParallelEvmFunnel(
-            chainFunnel,
-            this.sharedData,
-            dbTx,
-            chainName,
-            config as OtherEvmConfig
-          );
+          chainFunnel = await wrapToParallelEvmFunnel(chainFunnel, this.sharedData, dbTx, {
+            config: config as OtherEvmConfig,
+            name: chainName,
+          });
           break;
         case ConfigNetworkType.MINA:
-          chainFunnel = await wrapToMinaFunnel(
-            chainFunnel,
-            this.sharedData,
-            dbTx,
-            chainName,
-            config as MinaConfig
-          );
+          chainFunnel = await wrapToMinaFunnel(chainFunnel, this.sharedData, dbTx, {
+            config: config as MinaConfig,
+            name: chainName,
+          });
           break;
         case ConfigNetworkType.CARDANO:
           chainFunnel = await wrapToCarpFunnel(
@@ -170,18 +166,14 @@ export class FunnelFactory implements IFunnelFactory {
             this.sharedData,
             dbTx,
             ENV.START_BLOCKHEIGHT,
-            chainName,
-            config as CardanoConfig
+            { config: config as CardanoConfig, name: chainName }
           );
           break;
         case ConfigNetworkType.AVAIL_OTHER:
-          chainFunnel = await wrapToAvailParallelFunnel(
-            chainFunnel,
-            this.sharedData,
-            dbTx,
-            chainName,
-            config as AvailConfig
-          );
+          chainFunnel = await wrapToAvailParallelFunnel(chainFunnel, this.sharedData, dbTx, {
+            config: config as AvailConfig,
+            name: chainName,
+          });
           break;
         case ConfigNetworkType.MIDNIGHT:
           chainFunnel = await wrapToMidnightFunnel(

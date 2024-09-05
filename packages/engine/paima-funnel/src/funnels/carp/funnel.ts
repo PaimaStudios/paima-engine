@@ -4,10 +4,10 @@ import {
   DEFAULT_FUNNEL_TIMEOUT,
   delay,
   doLog,
-  GlobalConfig,
   logError,
   timeout,
   ConfigNetworkType,
+  caip2PrefixFor,
 } from '@paima/utils';
 import type {
   CardanoPresyncChainData,
@@ -21,6 +21,7 @@ import {
   type ChainDataExtensionDatum,
   type PresyncChainData,
 } from '@paima/sm';
+import type { ChainInfo } from '../../utils.js';
 import { composeChainData, groupCdeData } from '../../utils.js';
 import type { FunnelSharedData } from '../BaseFunnel.js';
 import { BaseFunnel } from '../BaseFunnel.js';
@@ -118,8 +119,7 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
     private readonly baseFunnel: ChainFunnel,
     private readonly carpUrl: string,
     private cache: CarpFunnelCacheEntry,
-    private readonly config: CardanoConfig,
-    private readonly chainName: string
+    private readonly chainInfo: ChainInfo<CardanoConfig>
   ) {
     super(sharedData, dbTx);
     // TODO: replace once TS5 decorators are better supported
@@ -128,8 +128,8 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
     this.getDbTx.bind(this);
     this.configPrint.bind(this);
     this.bufferedData = null;
-    this.era = shelleyEra(config);
-    this.config = config;
+    this.era = shelleyEra(chainInfo.config);
+    this.chainInfo = chainInfo;
   }
 
   private bufferedData: ChainData[] | null;
@@ -170,16 +170,17 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
       lastTimestamp = lastTimestamp.timestamp as number;
     }
 
+    const caip2 = caip2PrefixFor(this.chainInfo.config);
     let grouped = await readDataInternal(
       this.bufferedData,
       this.carpUrl,
       this.sharedData.extensions,
       lastTimestamp,
       this.cache,
-      this.config.confirmationDepth,
+      this.chainInfo.config.confirmationDepth,
       this.era,
-      this.chainName,
-      this.config.paginationLimit
+      caip2,
+      this.chainInfo.config.paginationLimit
     );
 
     const composed = composeChainData(this.bufferedData, grouped);
@@ -190,7 +191,7 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
 
         const epoch = absoluteSlotToEpoch(
           this.era,
-          timestampToAbsoluteSlot(this.era, data.timestamp, this.config.confirmationDepth)
+          timestampToAbsoluteSlot(this.era, data.timestamp, this.chainInfo.config.confirmationDepth)
         );
 
         const prevEpoch = this.cache.getState().epoch;
@@ -216,12 +217,14 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
 
   public override async readPresyncData(
     args: ReadPresyncDataFrom
-  ): Promise<{ [network: number]: PresyncChainData[] | typeof FUNNEL_PRESYNC_FINISHED }> {
+  ): Promise<{ [caip2: number]: PresyncChainData[] | typeof FUNNEL_PRESYNC_FINISHED }> {
     let basePromise = this.baseFunnel.readPresyncData(args);
+
+    const caip2 = caip2PrefixFor(this.chainInfo.config);
 
     const stableBlock = await timeout(
       query(this.carpUrl, Routes.blockLatest, {
-        offset: Number(this.config.confirmationDepth),
+        offset: Number(this.chainInfo.config.confirmationDepth),
       }),
       DEFAULT_FUNNEL_TIMEOUT
     );
@@ -230,7 +233,7 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
 
     if (cursors && Object.values(cursors).every(x => x.finished)) {
       const data = await basePromise;
-      data[this.chainName] = FUNNEL_PRESYNC_FINISHED;
+      data[caip2] = FUNNEL_PRESYNC_FINISHED;
 
       return data;
     }
@@ -242,7 +245,8 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
         // we are providing the entire indexed range, so if carp
         // returns nothing we know the presync is finished for this
         // CDE.
-        const finished = datums.length === 0 || datums.length < this.config.paginationLimit;
+        const finished =
+          datums.length === 0 || datums.length < this.chainInfo.config.paginationLimit;
 
         cache.updateCursor(cdeName, {
           cursor: datums[datums.length - 1]
@@ -262,7 +266,7 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
       Promise.all(
         this.sharedData.extensions
           .filter(extension => {
-            if (extension.network !== this.chainName) {
+            if (extension.network !== this.chainInfo.name) {
               return false;
             }
 
@@ -296,8 +300,8 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
                   true,
                   stableBlock.block.hash,
                   cursor ? (JSON.parse(cursor.cursor) as BlockTxPair) : undefined,
-                  this.config.paginationLimit,
-                  this.chainName
+                  this.chainInfo.config.paginationLimit,
+                  caip2
                 ).then(mapCursorPaginatedData(extension.cdeName));
 
                 return data.then(data => ({
@@ -322,8 +326,8 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
                   true,
                   stableBlock.block.hash,
                   cursor ? (JSON.parse(cursor.cursor) as BlockTxPair) : undefined,
-                  this.config.paginationLimit,
-                  this.chainName
+                  this.chainInfo.config.paginationLimit,
+                  caip2
                 ).then(mapCursorPaginatedData(extension.cdeName));
 
                 return data.then(data => ({
@@ -347,8 +351,8 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
                   true,
                   stableBlock.block.hash,
                   cursor ? (JSON.parse(cursor.cursor) as BlockTxPair) : undefined,
-                  this.config.paginationLimit,
-                  this.chainName
+                  this.chainInfo.config.paginationLimit,
+                  caip2
                 ).then(mapCursorPaginatedData(extension.cdeName));
 
                 return data.then(data => ({
@@ -372,8 +376,8 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
                   true,
                   stableBlock.block.hash,
                   cursor ? (JSON.parse(cursor.cursor) as BlockTxPair) : undefined,
-                  this.config.paginationLimit,
-                  this.chainName
+                  this.chainInfo.config.paginationLimit,
+                  caip2
                 ).then(mapCursorPaginatedData(extension.cdeName));
 
                 return data.then(data => ({
@@ -397,8 +401,8 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
                   true,
                   stableBlock.block.hash,
                   cursor ? (JSON.parse(cursor.cursor) as BlockTxPair) : undefined,
-                  this.config.paginationLimit,
-                  this.chainName
+                  this.chainInfo.config.paginationLimit,
+                  caip2
                 ).then(mapCursorPaginatedData(extension.cdeName));
 
                 return data.then(data => ({
@@ -421,7 +425,7 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
       for (const event of events.data || []) {
         list.push({
           extensionDatums: [event],
-          network: this.chainName,
+          caip2,
           networkType: ConfigNetworkType.CARDANO,
           carpCursor: {
             cdeName: event.cdeName,
@@ -432,7 +436,7 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
       }
     }
 
-    data[this.chainName] = list;
+    data[caip2] = list;
 
     return data;
   }
@@ -441,11 +445,10 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
     sharedData: FunnelSharedData,
     dbTx: PoolClient,
     baseFunnel: ChainFunnel,
-    config: CardanoConfig,
-    startingBlockHeight: number,
-    chainName: string
+    chainInfo: ChainInfo<CardanoConfig>,
+    startingBlockHeight: number
   ): Promise<CarpFunnel> {
-    const confirmationDepth = config.confirmationDepth;
+    const confirmationDepth = chainInfo.config.confirmationDepth;
 
     const cacheEntry = (async (): Promise<CarpFunnelCacheEntry> => {
       const entry = sharedData.cacheManager.cacheEntries[CarpFunnelCacheEntry.SYMBOL];
@@ -456,7 +459,7 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
 
       newEntry.updateStartingSlot(
         timestampToAbsoluteSlot(
-          shelleyEra(config),
+          shelleyEra(chainInfo.config),
           (await sharedData.mainNetworkApi.getBlock(startingBlockHeight))!.timestamp as number,
           confirmationDepth
         )
@@ -471,7 +474,7 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
       const cursors = await getPaginationCursors.run(undefined, dbTx);
 
       const extensions = sharedData.extensions
-        .filter(extensions => extensions.network === chainName)
+        .filter(extensions => extensions.network === chainInfo.name)
         .map(extension => extension.cdeName)
         .reduce((set, cdeName) => {
           set.add(cdeName);
@@ -494,17 +497,16 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
       sharedData,
       dbTx,
       baseFunnel,
-      config.carpUrl,
+      chainInfo.config.carpUrl,
       await cacheEntry,
-      config,
-      chainName
+      chainInfo
     );
   }
 
   public override configPrint(): FunnelJson {
     return {
       type: 'CarpFunnel',
-      chainName: this.chainName,
+      chainName: this.chainInfo.name,
     };
   }
 }
@@ -517,7 +519,7 @@ async function readDataInternal(
   cache: CarpFunnelCacheEntry,
   confirmationDepth: number,
   era: Era,
-  chainName: string,
+  caip2: string,
   paginationLimit: number
 ): Promise<EvmPresyncChainData[]> {
   // the lower range is exclusive
@@ -590,7 +592,7 @@ async function readDataInternal(
             stableBlockId,
             undefined, // we want everything in the range, so no starting point for the pagination
             paginationLimit,
-            chainName
+            caip2
           );
           return poolData;
         case ChainDataExtensionType.CardanoProjectedNFT:
@@ -604,7 +606,7 @@ async function readDataInternal(
             stableBlockId,
             undefined, // we want everything in the range, so no starting point for the pagination
             paginationLimit,
-            chainName
+            caip2
           );
           return projectedNFTData;
         case ChainDataExtensionType.CardanoAssetUtxo:
@@ -618,7 +620,7 @@ async function readDataInternal(
             stableBlockId,
             undefined, // we want everything in the range, so no starting point for the pagination
             paginationLimit,
-            chainName
+            caip2
           );
 
           return delayedAssetData;
@@ -633,7 +635,7 @@ async function readDataInternal(
             stableBlockId,
             undefined, // we want everything in the range, so no starting point for the pagination
             paginationLimit,
-            chainName
+            caip2
           );
 
           return transferData;
@@ -648,7 +650,7 @@ async function readDataInternal(
             stableBlockId,
             undefined, // we want everything in the range, so no starting point for the pagination
             paginationLimit,
-            chainName
+            caip2
           );
 
           return mintBurnData;
@@ -659,7 +661,7 @@ async function readDataInternal(
   );
 
   let grouped = groupCdeData(
-    chainName,
+    caip2,
     data[0].blockNumber,
     data[data.length - 1].blockNumber,
     poolEvents.filter(data => data.length > 0)
@@ -673,17 +675,15 @@ export async function wrapToCarpFunnel(
   sharedData: FunnelSharedData,
   dbTx: PoolClient,
   startingBlockHeight: number,
-  chainName: string,
-  cardanoConfig: CardanoConfig
+  chainInfo: ChainInfo<CardanoConfig>
 ): Promise<ChainFunnel> {
   try {
     const ebp = await CarpFunnel.recoverState(
       sharedData,
       dbTx,
       chainFunnel,
-      cardanoConfig,
-      startingBlockHeight,
-      chainName
+      chainInfo,
+      startingBlockHeight
     );
     return ebp;
   } catch (err) {

@@ -116,6 +116,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/transaction_count/blockHash": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["TransactionCountHash"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/transaction_count/address": {
         parameters: {
             query?: never;
@@ -132,6 +148,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/transaction_content/txHash": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["TransactionContentTxHash"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/transaction_content/blockHashAndIndex": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["TransactionContentBlockHash"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/transaction_content/blockNumberAndIndex": {
         parameters: {
             query?: never;
@@ -140,6 +188,38 @@ export interface paths {
             cookie?: never;
         };
         get: operations["TransactionContentBlockHeight"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/block_content/blockHash": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["BlockContentBlockHash"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/block_content/blockHeight": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["BlockContentBlockHeight"];
         put?: never;
         post?: never;
         delete?: never;
@@ -273,7 +353,7 @@ export interface components {
         ConfirmInputAcceptanceResponse: components["schemas"]["Result_boolean_"];
         TransactionCountResponse: {
             /** Format: double */
-            gameInputs: number;
+            submittedInputs: number;
             /** Format: double */
             scheduledData: number;
         };
@@ -284,12 +364,15 @@ export interface components {
         };
         Result_TransactionCountResponse_: components["schemas"]["SuccessfulResult_TransactionCountResponse_"] | components["schemas"]["FailedResult"];
         TransactionContentResponse: {
+            success: boolean;
             from: string;
             inputData: string;
             /** Format: double */
             txIndex: number;
+            txHash: string;
             /** Format: double */
             blockNumber: number;
+            blockHash: string;
         };
         SuccessfulResult_TransactionContentResponse_: {
             /** @enum {boolean} */
@@ -297,31 +380,48 @@ export interface components {
             result: components["schemas"]["TransactionContentResponse"];
         };
         Result_TransactionContentResponse_: components["schemas"]["SuccessfulResult_TransactionContentResponse_"] | components["schemas"]["FailedResult"];
-        "SuccessfulResult__topic-string--address-string--blockNumber-number--data_58___91_fieldName-string_93__58_any_--tx-number--logIndex-number_-Array_": {
+        BlockContentResponse: {
+            txs: string[] | components["schemas"]["TransactionContentResponse"][];
+            /** Format: double */
+            blockHeight: number;
+            /** Format: double */
+            msTimestamp: number;
+            prevBlockHash: string | null;
+            blockHash: string;
+        };
+        SuccessfulResult_BlockContentResponse_: {
+            /** @enum {boolean} */
+            success: true;
+            result: components["schemas"]["BlockContentResponse"];
+        };
+        Result_BlockContentResponse_: components["schemas"]["SuccessfulResult_BlockContentResponse_"] | components["schemas"]["FailedResult"];
+        "SuccessfulResult__topic-string--address-string--blockHash-string--blockNumber-number--data_58___91_fieldName-string_93__58_any_--transactionHash-string--txIndex-number--logIndex-number_-Array_": {
             /** @enum {boolean} */
             success: true;
             result: {
                 /** Format: double */
                 logIndex: number;
                 /** Format: double */
-                tx: number;
+                txIndex: number;
+                transactionHash: string;
                 data: {
                     [key: string]: unknown;
                 };
                 /** Format: double */
                 blockNumber: number;
+                blockHash: string;
                 address: string;
                 topic: string;
             }[];
         };
-        "Result__topic-string--address-string--blockNumber-number--data_58___91_fieldName-string_93__58_any_--tx-number--logIndex-number_-Array_": components["schemas"]["SuccessfulResult__topic-string--address-string--blockNumber-number--data_58___91_fieldName-string_93__58_any_--tx-number--logIndex-number_-Array_"] | components["schemas"]["FailedResult"];
-        GetLogsResponse: components["schemas"]["Result__topic-string--address-string--blockNumber-number--data_58___91_fieldName-string_93__58_any_--tx-number--logIndex-number_-Array_"];
+        "Result__topic-string--address-string--blockHash-string--blockNumber-number--data_58___91_fieldName-string_93__58_any_--transactionHash-string--txIndex-number--logIndex-number_-Array_": components["schemas"]["SuccessfulResult__topic-string--address-string--blockHash-string--blockNumber-number--data_58___91_fieldName-string_93__58_any_--transactionHash-string--txIndex-number--logIndex-number_-Array_"] | components["schemas"]["FailedResult"];
+        GetLogsResponse: components["schemas"]["Result__topic-string--address-string--blockHash-string--blockNumber-number--data_58___91_fieldName-string_93__58_any_--transactionHash-string--txIndex-number--logIndex-number_-Array_"];
         GetLogsParams: {
-            topic: string;
+            topic?: string;
             filters?: {
                 [key: string]: string;
             };
-            address: string;
+            address?: string | string[];
             /** Format: double */
             toBlock?: number;
             /** Format: double */
@@ -713,6 +813,52 @@ export interface operations {
             };
         };
     };
+    TransactionCountHash: {
+        parameters: {
+            query: {
+                blockHash: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Ok */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_TransactionCountResponse_"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidateErrorResult"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternalServerErrorResult"];
+                };
+            };
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FailedResult"];
+                };
+            };
+        };
+    };
     TransactionCountGet: {
         parameters: {
             query: {
@@ -760,6 +906,115 @@ export interface operations {
             };
         };
     };
+    TransactionContentTxHash: {
+        parameters: {
+            query: {
+                txHash: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Ok */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_TransactionContentResponse_"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FailedResult"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidateErrorResult"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternalServerErrorResult"];
+                };
+            };
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FailedResult"];
+                };
+            };
+        };
+    };
+    TransactionContentBlockHash: {
+        parameters: {
+            query: {
+                blockHash: string;
+                txIndex: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Ok */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_TransactionContentResponse_"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FailedResult"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidateErrorResult"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternalServerErrorResult"];
+                };
+            };
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FailedResult"];
+                };
+            };
+        };
+    };
     TransactionContentBlockHeight: {
         parameters: {
             query: {
@@ -779,6 +1034,116 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Result_TransactionContentResponse_"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FailedResult"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidateErrorResult"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternalServerErrorResult"];
+                };
+            };
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FailedResult"];
+                };
+            };
+        };
+    };
+    BlockContentBlockHash: {
+        parameters: {
+            query: {
+                blockHash: string;
+                txDetails: "none" | "hash" | "full";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Ok */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_BlockContentResponse_"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FailedResult"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidateErrorResult"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternalServerErrorResult"];
+                };
+            };
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FailedResult"];
+                };
+            };
+        };
+    };
+    BlockContentBlockHeight: {
+        parameters: {
+            query: {
+                blockHeight: number;
+                txDetails: "none" | "hash" | "full";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Ok */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_BlockContentResponse_"];
                 };
             };
             404: {

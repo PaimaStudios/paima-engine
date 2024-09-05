@@ -1,5 +1,5 @@
 import { Controller, Response, Query, Get, Route, Body, Post } from 'tsoa';
-import { doLog, logError, ENV } from '@paima/utils';
+import { doLog, logError, ENV, strip0x } from '@paima/utils';
 import type {
   InternalServerErrorResult,
   FailedResult,
@@ -7,15 +7,23 @@ import type {
   ValidateErrorResult,
 } from '@paima/utils';
 import { EngineService } from '../EngineService.js';
-import type { IGetEventsResult } from '@paima/db';
+import type {
+  IGetEventsResult,
+  IGetGameInputResultByTxHashResult,
+  IGetLatestProcessedBlockHeightResult,
+  IInsertGameInputResultParams,
+} from '@paima/db';
 import {
   deploymentChainBlockheightToEmulated,
   emulatedSelectLatestPrior,
-  getGameInput,
-  getGameInputForBlock,
+  getBlockByHash,
+  getBlockHeights,
+  getGameInputResultByAddress,
+  getGameInputResultByBlockHeight,
+  getGameInputResultByTxHash,
   getInputsForAddress,
   getInputsForBlock,
-  getScheduledDataByBlockHeight,
+  getInputsForBlockHash,
 } from '@paima/db';
 import type { Pool } from 'pg';
 import { StatusCodes } from 'http-status-codes';
@@ -184,9 +192,9 @@ export class ConfirmInputAcceptanceController extends Controller {
         };
       }
       const DBConn = gameStateMachine.getReadonlyDbConn();
-      const results = await getGameInput.run(
+      const results = await getGameInputResultByAddress.run(
         {
-          user_address: userAddress,
+          from_address: userAddress,
           block_height: blockHeight,
         },
         DBConn
@@ -217,7 +225,7 @@ export class ConfirmInputAcceptanceController extends Controller {
 
 type TransactionCountResponse = {
   scheduledData: number;
-  gameInputs: number;
+  submittedInputs: number;
 };
 
 @Route('transaction_count')
@@ -225,7 +233,7 @@ export class TransactionCountController extends Controller {
   async fetchTxCount(
     fetch: (db: Pool) => Promise<
       {
-        game_inputs: string;
+        submitted_inputs: string;
         scheduled_data: string;
       }[]
     >
@@ -244,10 +252,10 @@ export class TransactionCountController extends Controller {
 
       const result =
         total == null
-          ? { scheduledData: 0, gameInputs: 0 }
+          ? { scheduledData: 0, submittedInputs: 0 }
           : {
               scheduledData: Number.parseInt(total.scheduled_data),
-              gameInputs: Number.parseInt(total.game_inputs),
+              submittedInputs: Number.parseInt(total.submitted_inputs),
             };
       return {
         success: true,
@@ -283,6 +291,21 @@ export class TransactionCountController extends Controller {
   @Response<FailedResult>(StatusCodes.NOT_IMPLEMENTED)
   @Response<InternalServerErrorResult>(StatusCodes.INTERNAL_SERVER_ERROR)
   @Response<ValidateErrorResult>(StatusCodes.UNPROCESSABLE_ENTITY)
+  @Get('/blockHash')
+  public async hash(@Query() blockHash: string): Promise<Result<TransactionCountResponse>> {
+    return await this.fetchTxCount(db =>
+      getInputsForBlockHash.run(
+        {
+          block_hash: Buffer.from(strip0x(blockHash), 'hex'),
+        },
+        db
+      )
+    );
+  }
+
+  @Response<FailedResult>(StatusCodes.NOT_IMPLEMENTED)
+  @Response<InternalServerErrorResult>(StatusCodes.INTERNAL_SERVER_ERROR)
+  @Response<ValidateErrorResult>(StatusCodes.UNPROCESSABLE_ENTITY)
   @Get('/address')
   public async get(
     @Query() address: string,
@@ -301,18 +324,89 @@ export class TransactionCountController extends Controller {
 }
 
 type TransactionContentResponse = {
-  // blockHash: string;
+  blockHash: string;
   blockNumber: number;
-  // txHash: string;
+  txHash: string;
   txIndex: number;
   inputData: string;
   from: string;
+  success: boolean;
   // value: string;
   // nonce: string;
 };
 
 @Route('transaction_content')
 export class TransactionContentController extends Controller {
+  @Response<FailedResult>(StatusCodes.NOT_IMPLEMENTED)
+  @Response<FailedResult>(StatusCodes.NOT_FOUND)
+  @Response<InternalServerErrorResult>(StatusCodes.INTERNAL_SERVER_ERROR)
+  @Response<ValidateErrorResult>(StatusCodes.UNPROCESSABLE_ENTITY)
+  @Get('/txHash')
+  public async txHash(@Query() txHash: string): Promise<Result<TransactionContentResponse>> {
+    if (!ENV.STORE_HISTORICAL_GAME_INPUTS) {
+      this.setStatus(StatusCodes.NOT_IMPLEMENTED);
+      return {
+        success: false,
+        errorMessage: 'Game input storing turned off in the game node',
+      };
+    }
+    const gameStateMachine = EngineService.INSTANCE.getSM();
+    const DBConn = gameStateMachine.getReadonlyDbConn();
+
+    const gameInputs = (
+      await getGameInputResultByTxHash.run({ tx_hash: Buffer.from(strip0x(txHash), 'hex') }, DBConn)
+    ).at(0);
+
+    if (gameInputs != null) {
+      return {
+        success: true,
+        result: parseRollupInput(gameInputs),
+      };
+    }
+
+    this.setStatus(StatusCodes.NOT_FOUND);
+    return {
+      success: false,
+      errorMessage: `No transaction found for hash ${txHash}`,
+    };
+  }
+
+  @Response<FailedResult>(StatusCodes.NOT_IMPLEMENTED)
+  @Response<FailedResult>(StatusCodes.NOT_FOUND)
+  @Response<InternalServerErrorResult>(StatusCodes.INTERNAL_SERVER_ERROR)
+  @Response<ValidateErrorResult>(StatusCodes.UNPROCESSABLE_ENTITY)
+  @Get('/blockHashAndIndex')
+  public async blockHash(
+    @Query() blockHash: string,
+    @Query() txIndex: number
+  ): Promise<Result<TransactionContentResponse>> {
+    if (!ENV.STORE_HISTORICAL_GAME_INPUTS) {
+      this.setStatus(StatusCodes.NOT_IMPLEMENTED);
+      return {
+        success: false,
+        errorMessage: 'Game input storing turned off in the game node',
+      };
+    }
+    const gameStateMachine = EngineService.INSTANCE.getSM();
+    const DBConn = gameStateMachine.getReadonlyDbConn();
+
+    const [block] = await getBlockByHash.run(
+      {
+        block_hash: Buffer.from(strip0x(blockHash), 'hex'),
+      },
+      DBConn
+    );
+    if (block == null) {
+      this.setStatus(StatusCodes.NOT_FOUND);
+      return {
+        success: false,
+        errorMessage: `Block not found for hash: ${blockHash}`,
+      };
+    }
+
+    return await this.blockHeight(block.block_height, txIndex);
+  }
+
   @Response<FailedResult>(StatusCodes.NOT_IMPLEMENTED)
   @Response<FailedResult>(StatusCodes.NOT_FOUND)
   @Response<InternalServerErrorResult>(StatusCodes.INTERNAL_SERVER_ERROR)
@@ -331,71 +425,161 @@ export class TransactionContentController extends Controller {
     }
     const gameStateMachine = EngineService.INSTANCE.getSM();
     const DBConn = gameStateMachine.getReadonlyDbConn();
-    const scheduledData = await getScheduledDataByBlockHeight.run(
-      {
-        block_height: blockHeight,
-      },
-      DBConn
-    );
-    // note: scheduled data always comes before submitted input in STF processing
-    if (txIndex < scheduledData.length) {
-      const finalTx = scheduledData[txIndex];
-
-      // Primitives from the underlying chain don't have a clear "from" address
-      // but precompiles do
-      const from = finalTx.precompile == null ? '0x0' : finalTx.precompile;
-      return {
-        success: true,
-        result: {
-          // blockHash: string,
-          blockNumber: finalTx.block_height,
-          // txHash: string,
-          txIndex: txIndex,
-          inputData: finalTx.input_data,
-          from,
-          // value: string,
-          // nonce: string,
-        },
-      };
-    }
-    const submittedInputs = await getGameInputForBlock.run(
-      {
-        block_height: blockHeight,
-      },
-      DBConn
-    );
-
-    const totalInputsInBlock = submittedInputs.length + scheduledData.length;
-    if (txIndex >= totalInputsInBlock) {
-      this.setStatus(StatusCodes.NOT_FOUND);
-      let errorMsg = `Query for index ${txIndex}, but there were only ${totalInputsInBlock} inputs total for this block`;
-      if (totalInputsInBlock === 0) {
-        // ideally we would for-sure know if this block exists or not
-        // but that would slow down the endpoint
-        errorMsg += `. Are you sure block number ${blockHeight} exists?`;
-      }
-      return {
-        success: false,
-        errorMessage: errorMsg,
-      };
-    }
 
     {
-      const finalTx = submittedInputs[txIndex - scheduledData.length];
+      const gameInput = await getGameInputResultByBlockHeight.run(
+        {
+          block_height: blockHeight,
+        },
+        DBConn
+      );
+
+      // note: scheduled data always comes before submitted input in STF processing
+      const finalTx = gameInput.find(tx => tx.index_in_block === txIndex);
+      if (finalTx == null) {
+        this.setStatus(StatusCodes.NOT_FOUND);
+        let errorMsg = `Query for index ${txIndex}, but there were ${gameInput.length} inputs total for this block`;
+        if (gameInput.length === 0) {
+          // ideally we would for-sure know if this block exists or not
+          // but that would slow down the endpoint
+          errorMsg += `. Are you sure block number ${blockHeight} exists?`;
+        }
+        return {
+          success: false,
+          errorMessage: errorMsg,
+        };
+      }
+
       return {
         success: true,
-        result: {
-          // blockHash: string,
-          blockNumber: finalTx.block_height,
-          // txHash: string,
-          txIndex: txIndex,
-          inputData: finalTx.input_data,
-          from: finalTx.user_address,
-          // value: string,
-          // nonce: string,
-        },
+        result: parseRollupInput(finalTx),
       };
     }
+  }
+}
+
+type BlockContentResponse = {
+  blockHash: string;
+  prevBlockHash: null | string;
+  msTimestamp: number;
+  blockHeight: number;
+  txs: string[] | TransactionContentResponse[];
+};
+
+@Route('block_content')
+export class BlockContentController extends Controller {
+  @Response<FailedResult>(StatusCodes.NOT_IMPLEMENTED)
+  @Response<FailedResult>(StatusCodes.NOT_FOUND)
+  @Response<InternalServerErrorResult>(StatusCodes.INTERNAL_SERVER_ERROR)
+  @Response<ValidateErrorResult>(StatusCodes.UNPROCESSABLE_ENTITY)
+  @Get('/blockHash')
+  public async blockHash(
+    @Query() blockHash: string,
+    @Query() txDetails: 'none' | 'hash' | 'full'
+  ): Promise<Result<BlockContentResponse>> {
+    if (!ENV.STORE_HISTORICAL_GAME_INPUTS) {
+      this.setStatus(StatusCodes.NOT_IMPLEMENTED);
+      return {
+        success: false,
+        errorMessage: 'Game input storing turned off in the game node',
+      };
+    }
+    const gameStateMachine = EngineService.INSTANCE.getSM();
+    const DBConn = gameStateMachine.getReadonlyDbConn();
+
+    const [block] = await getBlockByHash.run(
+      {
+        block_hash: Buffer.from(strip0x(blockHash), 'hex'),
+      },
+      DBConn
+    );
+    if (block == null) {
+      this.setStatus(StatusCodes.NOT_FOUND);
+      return {
+        success: false,
+        errorMessage: `Block not found for hash: ${blockHash}`,
+      };
+    }
+
+    const gameInputs = await getGameInputResultByBlockHeight.run(
+      {
+        block_height: block.block_height,
+      },
+      DBConn
+    );
+    const txs = ((): [] | string[] | ReturnType<typeof parseRollupInput>[] => {
+      if (txDetails === 'none') return [];
+      if (txDetails === 'hash') {
+        return gameInputs.map(tx => tx.paima_tx_hash.toString('hex'));
+      }
+      return gameInputs.map(tx => parseRollupInput(tx));
+    })();
+    return {
+      success: true,
+      result: {
+        blockHeight: block.block_height,
+        txs,
+        blockHash: block.paima_block_hash!.toString('hex'),
+        prevBlockHash: block.prev_block == null ? null : block.prev_block.toString('hex'),
+        msTimestamp: block.ms_timestamp.getTime(),
+      },
+    };
+  }
+
+  @Response<FailedResult>(StatusCodes.NOT_IMPLEMENTED)
+  @Response<FailedResult>(StatusCodes.NOT_FOUND)
+  @Response<InternalServerErrorResult>(StatusCodes.INTERNAL_SERVER_ERROR)
+  @Response<ValidateErrorResult>(StatusCodes.UNPROCESSABLE_ENTITY)
+  @Get('/blockHeight')
+  public async blockHeight(
+    @Query() blockHeight: number,
+    @Query() txDetails: 'none' | 'hash' | 'full'
+  ): Promise<Result<BlockContentResponse>> {
+    if (!ENV.STORE_HISTORICAL_GAME_INPUTS) {
+      this.setStatus(StatusCodes.NOT_IMPLEMENTED);
+      return {
+        success: false,
+        errorMessage: 'Game input storing turned off in the game node',
+      };
+    }
+    const gameStateMachine = EngineService.INSTANCE.getSM();
+    const DBConn = gameStateMachine.getReadonlyDbConn();
+
+    const [targetBlock, prevBlock] = await getBlockHeights.run(
+      {
+        block_heights: [blockHeight, blockHeight - 1],
+      },
+      DBConn
+    );
+    if (targetBlock == null || targetBlock.paima_block_hash == null) {
+      this.setStatus(StatusCodes.NOT_FOUND);
+      return {
+        success: false,
+        errorMessage: `Block not found at height: ${blockHeight}`,
+      };
+    }
+    const rollupInputs = await getGameInputResultByBlockHeight.run(
+      {
+        block_height: blockHeight,
+      },
+      DBConn
+    );
+    const txs = ((): [] | string[] | ReturnType<typeof parseRollupInput>[] => {
+      if (txDetails === 'none') return [];
+      if (txDetails === 'hash') return rollupInputs.map(tx => tx.paima_tx_hash.toString('hex'));
+      return rollupInputs.map(tx => parseRollupInput(tx));
+    })();
+    return {
+      success: true,
+      result: {
+        blockHeight,
+        txs,
+        blockHash: targetBlock.paima_block_hash.toString('hex'),
+        prevBlockHash:
+          prevBlock.paima_block_hash == null ? null : prevBlock.paima_block_hash.toString('hex'),
+        msTimestamp: targetBlock.ms_timestamp.getTime(),
+      },
+    };
   }
 }
 
@@ -403,19 +587,21 @@ type GetLogsResponse = Result<
   {
     topic: string;
     address: string;
+    blockHash: string;
     blockNumber: number;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     data: { [fieldName: string]: any };
-    tx: number;
+    transactionHash: string;
+    txIndex: number;
     logIndex: number;
   }[]
 >;
 type GetLogsParams = {
   fromBlock: number;
   toBlock?: number;
-  address: string;
+  address?: string | string[];
   filters?: { [fieldName: string]: string };
-  topic: string;
+  topic?: string;
 };
 
 @Route('get_logs')
@@ -427,12 +613,9 @@ export class GetLogsController extends Controller {
   public async post(@Body() params: GetLogsParams): Promise<GetLogsResponse> {
     const gameStateMachine = EngineService.INSTANCE.getSM();
 
-    params.toBlock = params.toBlock ?? (await gameStateMachine.latestProcessedBlockHeight());
+    const toBlock = params.toBlock ?? (await gameStateMachine.latestProcessedBlockHeight());
 
-    if (
-      params.toBlock < params.fromBlock ||
-      params.toBlock - params.fromBlock > ENV.GET_LOGS_MAX_BLOCK_RANGE
-    ) {
+    if (toBlock < params.fromBlock || toBlock - params.fromBlock > ENV.GET_LOGS_MAX_BLOCK_RANGE) {
       this.setStatus(StatusCodes.BAD_REQUEST);
       return {
         success: false,
@@ -485,56 +668,67 @@ export class GetLogsController extends Controller {
     try {
       const DBConn = gameStateMachine.getReadonlyDbConn();
 
-      let dynamicPart = '';
-      const dynamicFilters = [];
+      const conditions: string[] = [];
+      // note: these aren't SQL injections since they're guaranteed to be numbers
+      conditions.push(`COALESCE(e.block_height >= ${params.fromBlock}, 1=1)`);
+      conditions.push(`COALESCE(e.block_height <= ${toBlock}, 1=1)`);
 
+      let queryArgs: any[] = [];
+      if (params.address != null) {
+        queryArgs.push(typeof params.address === 'string' ? [params.address] : params.address);
+        conditions.push(`COALESCE(e.address = ANY($${queryArgs.length}::text[]), 1=1)`);
+      }
+      if (params.topic != null) {
+        queryArgs.push(params.topic);
+        conditions.push(`e.topic = $${queryArgs.length}`);
+      }
       // it does not seem to be possible to build this dynamic filter with
       // pgtyped, so we instead build a dynamic parametrized query.
       if (params.filters) {
         const keys = Object.keys(params.filters);
 
         for (let i = 0; i < keys.length; i++) {
-          dynamicPart = dynamicPart.concat(
-            `COALESCE(data->>$${5 + i * 2} = $${5 + i * 2 + 1}, 1=1) AND\n`
+          conditions.push(
+            `COALESCE(e.data->>$${queryArgs.length + 1} = $${queryArgs.length + 2}, 1=1)`
           );
-
-          dynamicFilters.push(keys[i]);
-          dynamicFilters.push(params.filters[keys[i]]);
+          queryArgs.push(keys[i]);
+          queryArgs.push(params.filters[keys[i]]);
         }
       }
-
       const query = `
-        SELECT * FROM event WHERE
-          COALESCE(block_height >= $1, 1=1) AND
-          COALESCE(block_height <= $2, 1=1) AND
-          COALESCE(address = $3, 1=1) AND
-          ${dynamicPart}
-          topic = $4
+        SELECT
+          e.*,
+          paima_blocks.main_chain_block_hash,
+          res.paima_tx_hash
+        FROM event e
+        JOIN paima_blocks ON paima_blocks.block_height = e.block_height
+        JOIN (
+          SELECT rollup_input_result.*
+          FROM rollup_input_result
+          JOIN rollup_inputs ON rollup_inputs.id = rollup_input_result.id
+        ) res ON res.block_height = e.block_height AND res.index_in_block = e.tx_index
+        ${conditions.length > 0 ? `WHERE ${conditions.join(' AND\n')}` : ''}
         ORDER BY id;
       `;
 
       // casting to IGetEventsResult is sound, since both are a select from the
       // same table with the same rows, and at least if the table changes there
       // is a chance that this will not typecheck anymore.
-      const rows = (
-        await DBConn.query(query, [
-          params.fromBlock,
-          params.toBlock,
-          params.address,
-          params.topic,
-          ...dynamicFilters,
-        ])
-      ).rows as IGetEventsResult[];
+      const rows = (await DBConn.query(query, queryArgs)).rows as (IGetEventsResult &
+        Pick<IGetLatestProcessedBlockHeightResult, 'main_chain_block_hash'> &
+        Pick<IInsertGameInputResultParams, 'paima_tx_hash'>)[];
 
       return {
         success: true,
         result: rows.map(row => ({
           topic: row.topic,
+          blockHash: row.main_chain_block_hash.toString('hex'),
           blockNumber: row.block_height,
           address: row.address,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           data: row.data as { [fieldName: string]: any },
-          tx: row.tx,
+          txIndex: row.tx_index,
+          transactionHash: row.paima_tx_hash.toString('hex'),
           logIndex: row.log_index,
         })),
       };
@@ -548,4 +742,18 @@ export class GetLogsController extends Controller {
       };
     }
   }
+}
+
+function parseRollupInput(finalTx: IGetGameInputResultByTxHashResult): TransactionContentResponse {
+  return {
+    blockHash: finalTx.paima_block_hash!.toString('hex'),
+    blockNumber: finalTx.block_height,
+    txHash: finalTx.paima_tx_hash.toString('hex'),
+    txIndex: finalTx.index_in_block,
+    inputData: finalTx.input_data,
+    from: finalTx.from_address,
+    success: finalTx.success,
+    // value: string,
+    // nonce: string,
+  };
 }

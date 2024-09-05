@@ -8,8 +8,9 @@ import {
   doLog,
   ChainDataExtensionType,
   getErc721Contract,
+  caip2PrefixFor,
 } from '@paima/utils';
-import type { PaimaL2Contract } from '@paima/utils';
+import type { MainEvmConfig, OtherEvmConfig, PaimaL2Contract } from '@paima/utils';
 import { TimeoutError, instantiateCdeGeneric } from '@paima/runtime';
 import type { ChainDataExtension, TChainDataExtensionGenericConfig } from '@paima/sm';
 import {
@@ -24,6 +25,7 @@ import { extractSubmittedData } from './paima-l2-processing.js';
 import type { FunnelSharedData } from './funnels/BaseFunnel.js';
 import { getUngroupedCdeData } from './cde/reading.js';
 import { generateDynamicPrimitiveName } from '@paima/utils-backend';
+import type { ChainInfo } from './utils.js';
 
 export async function getBaseChainDataMulti(
   web3: Web3,
@@ -171,20 +173,21 @@ export async function fetchDynamicEvmPrimitives(
   toBlock: number,
   web3: Web3,
   sharedData: FunnelSharedData,
-  network: string
+  chainInfo: ChainInfo<MainEvmConfig | OtherEvmConfig>
 ): Promise<ChainDataExtensionDatum[][]> {
   const filteredExtensions = sharedData.extensions.filter(
     extension =>
-      extension.network === network &&
+      extension.network === chainInfo.name &&
       extension.cdeType === ChainDataExtensionType.DynamicEvmPrimitive
   );
 
+  const caip2 = caip2PrefixFor(chainInfo.config);
   const DynamicEvmPrimitives = await getUngroupedCdeData(
     web3,
     filteredExtensions,
     fromBlock,
     toBlock,
-    network
+    caip2
   );
 
   for (const exts of DynamicEvmPrimitives) {
@@ -208,27 +211,27 @@ export async function fetchDynamicEvmPrimitives(
             name: cdeName,
             startBlockHeight: ext.blockNumber,
             type: ext.payload.targetConfig.type,
-            contractAddress: ext.payload.contractAddress,
+            contractAddress: ext.payload.contractAddress.toLowerCase(),
             scheduledPrefix: ext.payload.targetConfig.scheduledPrefix,
             burnScheduledPrefix: ext.payload.targetConfig.burnScheduledPrefix,
             // not relevant
             hash: 0,
             cdeType: ChainDataExtensionType.ERC721,
             contract: getErc721Contract(ext.payload.contractAddress, web3),
-            network: ext.network,
+            network: chainInfo.name,
           });
           break;
         case CdeEntryTypeName.Generic:
           const config: TChainDataExtensionGenericConfig = {
             startBlockHeight: ext.blockNumber,
             name: cdeName,
-            contractAddress: ext.payload.contractAddress,
+            contractAddress: ext.payload.contractAddress.toLowerCase(),
             ...ext.payload.targetConfig,
           };
 
           const instantiatedGenericExtension: ChainDataExtension = {
             ...(await instantiateCdeGeneric(config, web3)),
-            network,
+            network: chainInfo.name,
           };
 
           sharedData.extensions.push(instantiatedGenericExtension);

@@ -13,7 +13,7 @@ export async function getEventCdeData(args: {
   fromTimestamp: number;
   toTimestamp: number;
   getBlockNumber: (minaTimestamp: number) => number;
-  network: string;
+  caip2: string;
   isPresync: boolean;
   cursor?: string;
   limit?: number;
@@ -27,7 +27,7 @@ export async function getEventCdeData(args: {
     args.fromTimestamp,
     args.toTimestamp,
     args.getBlockNumber,
-    args.network,
+    args.caip2,
     args.isPresync,
     args.cursor,
     args.limit,
@@ -41,7 +41,7 @@ export async function getActionCdeData(args: {
   fromTimestamp: number;
   toTimestamp: number;
   getBlockNumber: (minaTimestamp: number) => number;
-  network: string;
+  caip2: string;
   isPresync: boolean;
   cursor?: string;
   limit?: number;
@@ -55,7 +55,7 @@ export async function getActionCdeData(args: {
     args.fromTimestamp,
     args.toTimestamp,
     args.getBlockNumber,
-    args.network,
+    args.caip2,
     args.isPresync,
     args.cursor,
     args.limit,
@@ -73,7 +73,7 @@ export async function getCdeData(
   fromTimestamp: number,
   toTimestamp: number,
   getBlockNumber: (minaTimestamp: number) => number,
-  network: string,
+  caip2: string,
   isPresync: boolean,
   cursor?: string,
   limit?: number,
@@ -101,7 +101,7 @@ export async function getCdeData(
         blockNumber: getBlockNumber(Number.parseInt(perBlock.blockInfo.timestamp, 10)),
         transactionHash: txEvent.txHash,
         payload: txEvent,
-        network,
+        caip2,
         scheduledPrefix: extension.scheduledPrefix,
         paginationCursor: { cursor: txEvent.txHash, finished: false },
       }))

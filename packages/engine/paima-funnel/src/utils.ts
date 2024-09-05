@@ -4,12 +4,17 @@ import type {
   EvmPresyncChainData,
   InternalEvent,
 } from '@paima/sm';
-import type { InternalEventType } from '@paima/utils';
+import type { ConfigMapping, InternalEventType } from '@paima/utils';
 import type { SubmittedData } from '@paima/chain-types';
 import { ConfigNetworkType, doLog } from '@paima/utils';
 
+export type ChainInfo<T extends ConfigMapping[ConfigNetworkType]> = {
+  config: T;
+  name: string;
+};
+
 export function groupCdeData(
-  network: string,
+  caip2: string,
   fromBlock: number,
   toBlock: number,
   data: ChainDataExtensionDatum[][]
@@ -28,7 +33,7 @@ export function groupCdeData(
     result.push({
       blockNumber,
       extensionDatums,
-      network,
+      caip2,
       networkType: ConfigNetworkType.EVM,
     });
   }
@@ -90,7 +95,7 @@ export async function findBlockByTimestamp(
   low: number,
   high: number,
   targetTimestamp: number,
-  chainName: string,
+  humanFriendlyName: string,
   getTimestampForBlock: (at: number) => Promise<number>
 ): Promise<number> {
   let requests = 0;
@@ -111,7 +116,7 @@ export async function findBlockByTimestamp(
     }
   }
 
-  doLog(`Found block #${low} on ${chainName} by binary search with ${requests} requests`);
+  doLog(`Found block #${low} on ${humanFriendlyName} by binary search with ${requests} requests`);
 
   return low;
 }
@@ -160,7 +165,7 @@ export function buildParallelBlockMappings(
 export function addInternalCheckpointingEvent(
   chainData: ChainData[],
   mapBlockNumber: (mainchainNumber: number) => number,
-  chainName: string,
+  caip2: string,
   // FIXME: not really clear why this ignore is needed
   // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
   eventType: InternalEventType.EvmLastBlock | InternalEventType.AvailLastBlock
@@ -192,7 +197,7 @@ export function addInternalCheckpointingEvent(
       // information doesn't matter because there is a transaction per main
       // chain block, so the result would be the same.
       block: originalBlockNumber,
-      network: chainName,
+      caip2,
     });
   }
 }

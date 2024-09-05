@@ -9,7 +9,7 @@ export { SubmittedChainData, SubmittedData };
 export type TsoaFunction = (s: Express) => void;
 
 export type ReadPresyncDataFrom = {
-  network: string;
+  caip2: string;
   from: number;
   to: number;
 }[];
@@ -22,7 +22,7 @@ export interface ChainFunnel {
   readData: (blockHeight: number) => Promise<ChainData[]>;
   readPresyncData: (
     args: ReadPresyncDataFrom
-  ) => Promise<{ [network: string]: PresyncChainData[] | typeof FUNNEL_PRESYNC_FINISHED }>;
+  ) => Promise<{ [caip2: string]: PresyncChainData[] | typeof FUNNEL_PRESYNC_FINISHED }>;
   getDbTx(): PoolClient;
   configPrint(): FunnelJson;
 }

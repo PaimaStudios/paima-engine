@@ -19,7 +19,7 @@ export interface IGetEventsResult {
   id: number;
   log_index: number;
   topic: string;
-  tx: number;
+  tx_index: number;
 }
 
 /** 'GetEvents' query type */
@@ -50,7 +50,7 @@ export interface IInsertEventParams {
   data: Json;
   log_index: number;
   topic: string;
-  tx: number;
+  tx_index: number;
 }
 
 /** 'InsertEvent' return type */
@@ -62,7 +62,7 @@ export interface IInsertEventQuery {
   result: IInsertEventResult;
 }
 
-const insertEventIR: any = {"usedParamSet":{"topic":true,"address":true,"data":true,"block_height":true,"tx":true,"log_index":true},"params":[{"name":"topic","required":true,"transform":{"type":"scalar"},"locs":[{"a":95,"b":101}]},{"name":"address","required":true,"transform":{"type":"scalar"},"locs":[{"a":106,"b":114}]},{"name":"data","required":true,"transform":{"type":"scalar"},"locs":[{"a":119,"b":124}]},{"name":"block_height","required":true,"transform":{"type":"scalar"},"locs":[{"a":129,"b":142}]},{"name":"tx","required":true,"transform":{"type":"scalar"},"locs":[{"a":147,"b":150}]},{"name":"log_index","required":true,"transform":{"type":"scalar"},"locs":[{"a":155,"b":165}]}],"statement":"INSERT INTO event (\n  topic,\n  address,\n  data,\n  block_height,\n  tx,\n  log_index\n) VALUES (\n  :topic!,\n  :address!,\n  :data!,\n  :block_height!,\n  :tx!,\n  :log_index!\n)"};
+const insertEventIR: any = {"usedParamSet":{"topic":true,"address":true,"data":true,"block_height":true,"tx_index":true,"log_index":true},"params":[{"name":"topic","required":true,"transform":{"type":"scalar"},"locs":[{"a":101,"b":107}]},{"name":"address","required":true,"transform":{"type":"scalar"},"locs":[{"a":112,"b":120}]},{"name":"data","required":true,"transform":{"type":"scalar"},"locs":[{"a":125,"b":130}]},{"name":"block_height","required":true,"transform":{"type":"scalar"},"locs":[{"a":135,"b":148}]},{"name":"tx_index","required":true,"transform":{"type":"scalar"},"locs":[{"a":153,"b":162}]},{"name":"log_index","required":true,"transform":{"type":"scalar"},"locs":[{"a":167,"b":177}]}],"statement":"INSERT INTO event (\n  topic,\n  address,\n  data,\n  block_height,\n  tx_index,\n  log_index\n) VALUES (\n  :topic!,\n  :address!,\n  :data!,\n  :block_height!,\n  :tx_index!,\n  :log_index!\n)"};
 
 /**
  * Query generated from SQL:
@@ -72,14 +72,14 @@ const insertEventIR: any = {"usedParamSet":{"topic":true,"address":true,"data":t
  *   address,
  *   data,
  *   block_height,
- *   tx,
+ *   tx_index,
  *   log_index
  * ) VALUES (
  *   :topic!,
  *   :address!,
  *   :data!,
  *   :block_height!,
- *   :tx!,
+ *   :tx_index!,
  *   :log_index!
  * )
  * ```

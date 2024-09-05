@@ -43,35 +43,35 @@ export type CardanoEpochEvent = { type: InternalEventType.CardanoBestEpoch; epoc
 export type EvmLastBlockEvent = {
   type: InternalEventType.EvmLastBlock;
   block: number;
-  network: string;
+  caip2: string;
 };
 export type MinaLastTimestampEvent = {
   type: InternalEventType.MinaLastTimestamp;
   timestamp: string;
-  network: string;
+  caip2: string;
 };
 export type AvailLastBlockEvent = {
   type: InternalEventType.AvailLastBlock;
   block: number;
-  network: string;
+  caip2: string;
 };
 
 export interface EvmPresyncChainData {
-  network: string;
+  caip2: string;
   networkType: ConfigNetworkType.EVM | ConfigNetworkType.EVM_OTHER;
   blockNumber: number;
   extensionDatums: ChainDataExtensionDatum[];
   internalEvents?: InternalEvent[];
 }
 export interface CardanoPresyncChainData {
-  network: string;
+  caip2: string;
   networkType: ConfigNetworkType.CARDANO;
   carpCursor: { cdeName: string; cursor: string; finished: boolean };
   extensionDatums: ChainDataExtensionDatum[];
 }
 
 export interface MinaPresyncChainData {
-  network: string;
+  caip2: string;
   networkType: ConfigNetworkType.MINA;
   minaCursor: { cdeName: string; cursor: string; finished: boolean };
   extensionDatums: ChainDataExtensionDatum[];
@@ -104,6 +104,7 @@ interface CdeDatumErc721TransferPayload {
 interface CdeDatumErc721MintPayload {
   tokenId: string;
   mintData: string;
+  from: string;
 }
 
 interface CdeDatumErc20DepositPayload {
@@ -215,17 +216,19 @@ interface CdeDatumBase {
   blockNumber: number;
   transactionHash: string;
   payload: ChainDataExtensionPayload;
-  network: string;
+  caip2: string;
 }
 
 export interface CdeErc20TransferDatum extends CdeDatumBase {
   cdeDatumType: ChainDataExtensionDatumType.ERC20Transfer;
   payload: CdeDatumErc20TransferPayload;
+  contractAddress: string;
 }
 
 export interface CdeErc721TransferDatum extends CdeDatumBase {
   cdeDatumType: ChainDataExtensionDatumType.ERC721Transfer;
   payload: CdeDatumErc721TransferPayload;
+  contractAddress: string;
   burnScheduledPrefix?: string | undefined;
 }
 
@@ -239,6 +242,7 @@ export interface CdeErc721MintDatum extends CdeDatumBase {
 export interface CdeErc20DepositDatum extends CdeDatumBase {
   cdeDatumType: ChainDataExtensionDatumType.ERC20Deposit;
   payload: CdeDatumErc20DepositPayload;
+  contractAddress: string;
   scheduledPrefix: string;
 }
 
@@ -254,6 +258,7 @@ export interface CdeGenericDatum extends CdeDatumBase {
   cdeDatumType: ChainDataExtensionDatumType.Generic;
   payload: CdeDatumGenericPayload;
   scheduledPrefix: string;
+  contractAddress: string;
 }
 
 export interface CdeErc6551RegistryDatum extends CdeDatumBase {
@@ -714,16 +719,16 @@ export interface GameStateMachine {
   initializeDatabase: (force: boolean) => Promise<boolean>;
   initializeAndValidateRegisteredEvents: () => Promise<boolean>;
   initializeEventIndexes: () => Promise<boolean>;
-  presyncStarted: (network: string) => Promise<boolean>;
+  presyncStarted: (caip2: string) => Promise<boolean>;
   syncStarted: () => Promise<boolean>;
   latestProcessedBlockHeight: (dbTx?: PoolClient | Pool) => Promise<number>;
-  getPresyncBlockHeight: (network: string, dbTx?: PoolClient | Pool) => Promise<number>;
+  getPresyncBlockHeight: (caip2: string, dbTx?: PoolClient | Pool) => Promise<number>;
   getReadonlyDbConn: () => Pool;
   getPersistentReadonlyDbConn: () => Client;
   getReadWriteDbConn: () => Pool;
   process: (dbTx: PoolClient, chainData: ChainData) => Promise<number>;
   presyncProcess: (dbTx: PoolClient, latestCdeData: PresyncChainData) => Promise<void>;
-  markPresyncMilestone: (blockHeight: number, network: string) => Promise<void>;
+  markPresyncMilestone: (blockHeight: number, caip2: string) => Promise<void>;
   dryRun: (gameInput: string, userAddress: string) => Promise<boolean>;
   getAppEvents: () => AppEvents;
 }

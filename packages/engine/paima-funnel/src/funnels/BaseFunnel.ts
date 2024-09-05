@@ -44,7 +44,7 @@ export class BaseFunnel implements ChainFunnel {
 
   public async readPresyncData(
     _args: ReadPresyncDataFrom
-  ): Promise<{ [network: number]: PresyncChainData[] | typeof FUNNEL_PRESYNC_FINISHED }> {
+  ): Promise<{ [caip2: number]: PresyncChainData[] | typeof FUNNEL_PRESYNC_FINISHED }> {
     return {};
   }
 

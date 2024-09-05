@@ -21,7 +21,7 @@ export default async function getCdeData(
   // previous point
   fromTx: BlockTxPair | undefined,
   paginationLimit: number,
-  network: string
+  caip2: string
 ): Promise<CdeCardanoTransferDatum[]> {
   let result = [] as CdeCardanoTransferDatum[];
 
@@ -56,7 +56,7 @@ export default async function getCdeData(
     }
 
     transactions
-      .map(e => eventToCdeDatum(e, extension, getBlockNumber(e.block.slot), network))
+      .map(e => eventToCdeDatum(e, extension, getBlockNumber(e.block.slot), caip2))
       .forEach(element => {
         result.push(element);
       });
@@ -73,7 +73,7 @@ function eventToCdeDatum(
   event: TxAndBlockInfo,
   extension: ChainDataExtensionCardanoTransfer,
   blockNumber: number,
-  network: string
+  caip2: string
 ): CdeCardanoTransferDatum {
   const cursor: BlockTxPair = {
     block: event.block.hash,
@@ -96,7 +96,7 @@ function eventToCdeDatum(
     },
     scheduledPrefix: extension.scheduledPrefix,
     paginationCursor: { cursor: JSON.stringify(cursor), finished: false },
-    network,
+    caip2,
   };
 }
 

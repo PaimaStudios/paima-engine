@@ -305,7 +305,7 @@ type ToDefinitelyIndexedObject<T extends MaybeIndexedLogEventFields<any>[]> = {
     type: T[P]['type'];
   };
 };
-type ToLog<T extends MaybeIndexedLogEvent<MaybeIndexedLogEventFields<TSchema>[]>> = {
+export type ToLog<T extends MaybeIndexedLogEvent<MaybeIndexedLogEventFields<TSchema>[]>> = {
   name: T['name'];
   fields: ToDefinitelyIndexedObject<T['fields']>;
 };
@@ -315,7 +315,7 @@ type Ensure<T extends MaybeIndexedLogEvent<MaybeIndexedLogEventFields<TSchema>[]
   MaybeIndexedLogEvent<MaybeIndexedLogEventFields<TSchema>[]> extends U ? T : never;
 export function genEvent<
   const T extends MaybeIndexedLogEvent<MaybeIndexedLogEventFields<TSchema>[]>,
->(event: Ensure<T, MaybeIndexedLogEvent<any>>): ToLog<T> {
+>(event: DisallowComplexEventFields<T> & Ensure<T, MaybeIndexedLogEvent<any>>): ToLog<T> {
   for (const { name } of event.fields) {
     const invalidCharacters = ['$', '/', '+', '#'];
     for (const invalid of invalidCharacters) {
@@ -394,9 +394,9 @@ export function addHashes<T extends LogEvent<LogEventFields<TSchema>[]>>(
 }
 
 /**
- * ================================
- * Unused (but may be useful later)
- * ================================
+ * ===================================================
+ * Disable complex fields until we support these later
+ * ===================================================
  */
 
 // Disallows fields that aren't strings statically

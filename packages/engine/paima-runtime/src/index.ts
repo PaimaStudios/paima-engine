@@ -1,6 +1,6 @@
 import process from 'process';
 
-import { doLog, logError, ENV, GlobalConfig } from '@paima/utils';
+import { doLog, logError, ENV, GlobalConfig, caip2PrefixFor } from '@paima/utils';
 import { DataMigrations } from '@paima/db';
 import { validatePersistentCdeConfig } from './cde-config/validation.js';
 import type { IFunnelFactory, PaimaRuntimeInitializer } from './types.js';
@@ -118,10 +118,11 @@ async function runInitializationProcedures(
     return false;
   }
 
-  const [chainName] = await GlobalConfig.mainConfig();
+  const [_, config] = await GlobalConfig.mainConfig();
+  const caip2 = caip2PrefixFor(config);
 
   const smStarted =
-    (await gameStateMachine.presyncStarted(chainName)) || (await gameStateMachine.syncStarted());
+    (await gameStateMachine.presyncStarted(caip2)) || (await gameStateMachine.syncStarted());
   const cdeResult = await validatePersistentCdeConfig(
     funnelFactory.getExtensions(),
     gameStateMachine.getReadWriteDbConn(),

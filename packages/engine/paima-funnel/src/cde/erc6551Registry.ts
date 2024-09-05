@@ -15,7 +15,7 @@ export default async function getCdeData(
   extension: ChainDataExtensionErc6551Registry,
   fromBlock: number,
   toBlock: number,
-  network: string
+  caip2: string
 ): Promise<ChainDataExtensionDatum[]> {
   const { implementation, tokenContract, tokenId } = extension;
 
@@ -62,14 +62,14 @@ export default async function getCdeData(
         : withFilter.filter(e => e.returnValues.tokenId === extension.tokenId);
     return withFilter;
   })();
-  const result = filteredEvents.map((e: AccountCreated) => toDatum(e, extension, network)).flat();
+  const result = filteredEvents.map((e: AccountCreated) => toDatum(e, extension, caip2)).flat();
   return result;
 }
 
 function toDatum(
   event: AccountCreated,
   extension: ChainDataExtensionErc6551Registry,
-  network: string
+  caip2: string
 ): CdeErc6551RegistryDatum {
   return {
     cdeName: extension.cdeName,
@@ -84,6 +84,6 @@ function toDatum(
       tokenId: event.returnValues.tokenId,
       salt: event.returnValues.salt,
     },
-    network,
+    caip2,
   };
 }
