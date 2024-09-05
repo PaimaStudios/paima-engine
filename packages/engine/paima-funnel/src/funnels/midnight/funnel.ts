@@ -242,19 +242,19 @@ class MidnightFunnel extends BaseFunnel implements ChainFunnel {
   ): ChainDataExtensionDatum[] {
     const result = [];
 
-    const contractAddressToCdeName = new Map(
+    const contractAddressToExtension = new Map(
       this.sharedData.extensions.flatMap(ext =>
         ext.network === this.chainName &&
         ext.cdeType === ChainDataExtensionType.MidnightContractState
-          ? [[ext.contractAddress, ext.cdeName]]
+          ? [[ext.contractAddress, ext]]
           : []
       )
     );
 
     for (let tx of block.transactions) {
       for (let contractCall of tx.contractCalls) {
-        const cdeName = contractAddressToCdeName.get(contractCall.address);
-        if (cdeName) {
+        const extension = contractAddressToExtension.get(contractCall.address);
+        if (extension) {
           // Only deserialize if we actually care.
           const state = ContractState.deserialize(hexStringToUint8Array(contractCall.state));
           // We could downcast contractCall to see if operations() contains something useful.
@@ -262,7 +262,7 @@ class MidnightFunnel extends BaseFunnel implements ChainFunnel {
           const jsState = state.data.encode();
           console.log(
             '-- cde',
-            cdeName,
+            extension,
             'contract @',
             contractCall.address,
             'has state',
@@ -274,12 +274,11 @@ class MidnightFunnel extends BaseFunnel implements ChainFunnel {
             transactionHash: tx.hash,
 
             cdeDatumType: ChainDataExtensionDatumType.MidnightContractState,
-            cdeName,
+            cdeName: extension.cdeName,
             network: this.chainName,
 
-            // TODO: just combine contractState into payload?
-            contractState: JSON.stringify(jsState),
-            payload: null,
+            scheduledPrefix: extension.scheduledPrefix,
+            payload: JSON.stringify(jsState),
           } satisfies CdeMidnightContractStateDatum);
         } else {
           console.log('discarding contract @', contractCall.address);

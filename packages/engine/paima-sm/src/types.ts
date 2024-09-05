@@ -310,7 +310,8 @@ export interface CdeMinaActionGenericDatum extends CdeDatumBase {
 
 export interface CdeMidnightContractStateDatum extends CdeDatumBase {
   cdeDatumType: ChainDataExtensionDatumType.MidnightContractState;
-  contractState: string;
+  scheduledPrefix: string;
+  payload: string;
 }
 
 export interface CdeDynamicEvmPrimitiveDatum extends CdeDatumBase {
@@ -607,7 +608,11 @@ export type ChainDataExtensionDynamicEvmPrimitive = ChainDataExtensionBase &
 
 export const ChainDataExtensionMidnightContractStateConfig = Type.Object({
   type: Type.Literal(CdeEntryTypeName.MidnightContractState),
+  name: Type.String(),
+
+  startBlockHeight: Type.Number(),
   contractAddress: Type.String(),
+  scheduledPrefix: Type.String(),
 });
 export type ChainDataExtensionMidnightContractState = ChainDataExtensionBase &
   Static<typeof ChainDataExtensionMidnightContractStateConfig> & {
