@@ -1,5 +1,5 @@
 import process from 'process';
-import { doLog, logError, delay, GlobalConfig, ENV, wait } from '@paima/utils';
+import { doLog, logError, delay, GlobalConfig, ENV, wait, caip2PrefixFor } from '@paima/utils';
 import {
   tx,
   DataMigrations,
@@ -78,26 +78,34 @@ async function runPresync(
   }
   while (run && Object.keys(presyncBlockHeight).length !== 0) {
     const upper = Object.fromEntries(
-      Object.entries(presyncBlockHeight)
-        .filter(([_network, h]) => h >= 0)
-        .map(([network, h]) => [
-          network,
-          h + (networks[network] as EvmConfig | CardanoConfig).presyncStepSize - 1,
-        ])
+      await Promise.all<Promise<[caip2: string, number]>[]>(
+        Object.entries(presyncBlockHeight)
+          .filter(([_caip2, h]) => h >= 0)
+          .map(
+            async ([caip2, h]): Promise<[caip2: string, number]> => [
+              caip2,
+              h +
+                ((await GlobalConfig.networkForCaip2(caip2))![1] as EvmConfig | CardanoConfig)
+                  .presyncStepSize -
+                1,
+            ]
+          )
+      )
     );
 
     for (const network of Object.keys(networks)) {
-      if (presyncBlockHeight[network] === Number.MAX_SAFE_INTEGER) {
+      const caip2 = caip2PrefixFor(networks[network]);
+      if (presyncBlockHeight[caip2] === Number.MAX_SAFE_INTEGER) {
         continue;
       }
 
-      if (upper[network] > presyncBlockHeight[network]) {
+      if (upper[caip2] > presyncBlockHeight[caip2]) {
         doLog(
-          `[paima-runtime] Fetching data from ${network} in range: ${presyncBlockHeight[network]}-${upper[network]}`
+          `[paima-runtime] Fetching data from ${network} in range: ${presyncBlockHeight[caip2]}-${upper[caip2]}`
         );
       } else if (presyncBlockHeight[network]) {
         doLog(
-          `[paima-runtime] Fetching data from ${network} in block: ${presyncBlockHeight[network]}`
+          `[paima-runtime] Fetching data from ${network} in block: ${presyncBlockHeight[caip2]}`
         );
       }
     }
@@ -109,10 +117,10 @@ async function runPresync(
         gameStateMachine,
         chainFunnel,
         pollingPeriod,
-        Object.entries(presyncBlockHeight).map(([network, height]) => ({
-          network: network,
+        Object.entries(presyncBlockHeight).map(([caip2, height]) => ({
+          caip2,
           from: height,
-          to: upper[network],
+          to: upper[caip2],
         }))
       );
     });
@@ -125,9 +133,10 @@ async function runPresync(
   }
 
   for (const network of Object.keys(networks)) {
-    await loopIfStopBlockReached(presyncBlockHeight[network], stopBlockHeight);
+    const caip2 = caip2PrefixFor(networks[network]);
+    await loopIfStopBlockReached(presyncBlockHeight[caip2], stopBlockHeight);
 
-    const latestPresyncBlockheight = await gameStateMachine.getPresyncBlockHeight(network);
+    const latestPresyncBlockheight = await gameStateMachine.getPresyncBlockHeight(caip2);
     doLog(`[paima-runtime] Presync for ${network} finished at ${latestPresyncBlockheight}`);
   }
 }
@@ -136,7 +145,7 @@ async function getPresyncStartBlockheight(
   gameStateMachine: GameStateMachine,
   CDEs: ChainDataExtension[],
   maximumPresyncBlockheight: number
-): Promise<{ [network: string]: number }> {
+): Promise<{ [caip2: string]: number }> {
   const config = await GlobalConfig.getInstance();
 
   const result: { [network: string]: number } = {};
@@ -157,12 +166,13 @@ async function getPresyncStartBlockheight(
 
     const freshPresyncStart = earliestCdeSbh >= 0 ? earliestCdeSbh : maximumPresyncBlockheight + 1;
 
-    result[network] = freshPresyncStart;
+    const caip2 = caip2PrefixFor(config[network]);
+    result[caip2] = freshPresyncStart;
 
     const latestPresyncBlockheight = await gameStateMachine.getPresyncBlockHeight(network);
 
     if (latestPresyncBlockheight > 0) {
-      result[network] = latestPresyncBlockheight + 1;
+      result[caip2] = latestPresyncBlockheight + 1;
     }
   }
 
@@ -174,12 +184,12 @@ async function runPresyncRound(
   chainFunnel: ChainFunnel,
   pollingPeriod: number,
   from: ReadPresyncDataFrom
-): Promise<{ [network: string]: number }> {
+): Promise<{ [caip2: string]: number }> {
   const latestPresyncDataList = await chainFunnel.readPresyncData(from);
 
   if (!latestPresyncDataList || Object.values(latestPresyncDataList).every(l => l.length === 0)) {
     await delay(pollingPeriod);
-    return Object.fromEntries(from.map(({ network, from }) => [network, from])) as Record<
+    return Object.fromEntries(from.map(({ caip2, from }) => [caip2, from])) as Record<
       string,
       number
     >;
@@ -208,15 +218,15 @@ async function runPresyncRound(
   if (!finished) {
     return Object.fromEntries(
       from.map(from => {
-        if (latestPresyncDataList[from.network] === FUNNEL_PRESYNC_FINISHED) {
+        if (latestPresyncDataList[from.caip2] === FUNNEL_PRESYNC_FINISHED) {
           // we need to keep calling the presync function, but the carp funnel
           // is not using the parameter anymore,since it handles pagination per
           // cde, instead of a global pace. This is set as placeholder, since
           // the block funnel will just keep returning that the presync is
           // finished.
-          return [from.network, Number.MAX_SAFE_INTEGER];
+          return [from.caip2, Number.MAX_SAFE_INTEGER];
         } else {
-          return [from.network, from.to + 1];
+          return [from.caip2, from.to + 1];
         }
       })
     );

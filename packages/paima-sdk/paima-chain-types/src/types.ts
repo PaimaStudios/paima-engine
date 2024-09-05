@@ -32,29 +32,31 @@ export interface SubmittedData {
   /** whether or not this came from an primitive/timer or a direct user transaction */
   scheduled: boolean;
   dryRun?: boolean;
-  /**
-   * multichain identifier: https://github.com/ChainAgnostic/CAIPs/blob/main/CAIPs/caip-2.md
-   * note: `null` when this is a timer (since timers do not inherently have a chain of origin)
-   */
-  caip2: null | string;
-  /** See docs for how this is calculated */
-  txHash: string;
+  origin: {
+    /** Transaction hash on the underlying triggered the STF (note: doesn't exist for timers) */
+    txHash: null | string;
+    /**
+     * multichain identifier: https://github.com/ChainAgnostic/CAIPs/blob/main/CAIPs/caip-2.md
+     * note: `null` when this is a timer (since timers do not inherently have a chain of origin)
+     */
+    caip2: null | string;
+    contractAddress: null | string;
+    /** Name/id of the primitive that triggered this event, if known */
+    primitiveName: null | string;
+  };
 }
 
-/**
- * When it's not a timer, the caip2 field is required
- */
-export type NonTimerSubmittedData = SubmittedData & { caip2: NonNullable<SubmittedData['caip2']> };
+export type NonTimerSubmittedData = SubmittedData & {
+  origin: NonNullable<SubmittedData['origin']>;
+};
 
 export interface STFSubmittedData extends SubmittedData {
   /** Mapped address to main wallet. */
   userAddress: WalletAddress;
   /** Fixed User ID (starting with 1 for real users, and 0 in the case of a primitive) */
   userId: number;
-  /** Transaction hash of Primitive that triggered this scheduled data, if known. */
-  scheduledTxHash?: string;
-  /** Name/id of the extension that triggered this event, if known */
-  extensionName?: string;
+  /** Paima L2 specific tx hash */
+  paimaTxHash: string;
 }
 
 export type SubmittedChainData = SubmittedData;

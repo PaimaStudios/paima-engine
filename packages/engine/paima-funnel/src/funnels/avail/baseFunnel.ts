@@ -1,4 +1,4 @@
-import type { AvailConfig } from '@paima/utils';
+import type { AvailMainConfig } from '@paima/utils';
 import { caip2PrefixFor, doLog, timeout } from '@paima/utils';
 import type { ChainFunnel, FunnelJson, ReadPresyncDataFrom } from '@paima/runtime';
 import { type ChainData, type PresyncChainData } from '@paima/sm';
@@ -17,17 +17,16 @@ import {
   slotToTimestamp,
 } from './utils.js';
 import { processDataUnit } from '../../paima-l2-processing.js';
+import type { ChainInfo } from '../../utils.js';
 
 export class AvailBlockFunnel extends BaseFunnel implements ChainFunnel {
-  config: AvailConfig;
-  chainName: string;
+  chainInfo: ChainInfo<AvailMainConfig>;
   api: ApiPromise;
 
   protected constructor(
     sharedData: FunnelSharedData,
     dbTx: PoolClient,
-    config: AvailConfig,
-    chainName: string,
+    chainInfo: ChainInfo<AvailMainConfig>,
     api: ApiPromise
   ) {
     super(sharedData, dbTx);
@@ -36,15 +35,14 @@ export class AvailBlockFunnel extends BaseFunnel implements ChainFunnel {
     this.readPresyncData.bind(this);
     this.getDbTx.bind(this);
     this.configPrint.bind(this);
-    this.config = config;
-    this.chainName = chainName;
+    this.chainInfo = chainInfo;
     this.api = api;
   }
 
   public override async readData(blockHeight: number): Promise<ChainData[]> {
     const [fromBlock, toBlock] = await this.adjustBlockHeightRange(
       blockHeight,
-      this.config.funnelBlockGroupSize
+      this.chainInfo.config.funnelBlockGroupSize
     );
 
     if (fromBlock < 0 || toBlock < fromBlock) {
@@ -52,9 +50,9 @@ export class AvailBlockFunnel extends BaseFunnel implements ChainFunnel {
     }
 
     if (toBlock === fromBlock) {
-      doLog(`Avail block funnel ${this.chainName}: #${toBlock}`);
+      doLog(`Avail block funnel ${this.chainInfo.name}: #${toBlock}`);
     } else {
-      doLog(`Avail block funnel ${this.chainName}: #${fromBlock}-${toBlock}`);
+      doLog(`Avail block funnel ${this.chainInfo.name}: #${fromBlock}-${toBlock}`);
     }
 
     return await this.internalReadData(fromBlock, toBlock);
@@ -73,7 +71,7 @@ export class AvailBlockFunnel extends BaseFunnel implements ChainFunnel {
 
     const latestBlockQueryState = this.sharedData.cacheManager.cacheEntries[
       RpcCacheEntry.SYMBOL
-    ]?.getState(this.chainName);
+    ]?.getState(caip2PrefixFor(this.chainInfo.config));
     if (latestBlockQueryState?.state !== RpcRequestState.HasResult) {
       throw new Error(`[funnel] latest block cache entry not found`);
     }
@@ -105,7 +103,13 @@ export class AvailBlockFunnel extends BaseFunnel implements ChainFunnel {
 
     const data = [];
     const submittedData = await timeout(
-      getDAData(this.api, this.config.lightClient, fromBlock, toBlock, caip2PrefixFor(this.config)),
+      getDAData(
+        this.api,
+        this.chainInfo.config.lightClient,
+        fromBlock,
+        toBlock,
+        caip2PrefixFor(this.chainInfo.config)
+      ),
       GET_DATA_TIMEOUT
     );
 
@@ -145,27 +149,27 @@ export class AvailBlockFunnel extends BaseFunnel implements ChainFunnel {
 
   public override async readPresyncData(
     args: ReadPresyncDataFrom
-  ): Promise<{ [network: string]: PresyncChainData[] | typeof FUNNEL_PRESYNC_FINISHED }> {
-    let arg = args.find(arg => arg.network == this.chainName);
-
-    const chainName = this.chainName;
+  ): Promise<{ [caip2: string]: PresyncChainData[] | typeof FUNNEL_PRESYNC_FINISHED }> {
+    const caip2 = caip2PrefixFor(this.chainInfo.config);
+    let arg = args.find(arg => arg.caip2 == caip2);
 
     if (!arg) {
       return {};
     } else {
-      return { [chainName]: FUNNEL_PRESYNC_FINISHED };
+      return { [caip2]: FUNNEL_PRESYNC_FINISHED };
     }
   }
 
   public static async recoverState(
     sharedData: FunnelSharedData,
     dbTx: PoolClient,
-    chainName: string,
-    config: AvailConfig
+    chainInfo: ChainInfo<AvailMainConfig>
   ): Promise<AvailBlockFunnel> {
-    const api = await createApi(config.rpc);
+    const api = await createApi(chainInfo.config.rpc);
 
-    const latestBlock = await getLatestAvailableBlockNumberFromLightClient(config.lightClient);
+    const latestBlock = await getLatestAvailableBlockNumberFromLightClient(
+      chainInfo.config.lightClient
+    );
 
     const cacheEntry = ((): RpcCacheEntry => {
       const entry = sharedData.cacheManager.cacheEntries[RpcCacheEntry.SYMBOL];
@@ -176,15 +180,15 @@ export class AvailBlockFunnel extends BaseFunnel implements ChainFunnel {
       return newEntry;
     })();
 
-    cacheEntry.updateState(chainName, latestBlock);
+    cacheEntry.updateState(caip2PrefixFor(chainInfo.config), latestBlock);
 
-    return new AvailBlockFunnel(sharedData, dbTx, config, chainName, api);
+    return new AvailBlockFunnel(sharedData, dbTx, chainInfo, api);
   }
 
   public override configPrint(): FunnelJson {
     return {
       type: 'AvailBlockFunnel',
-      chainName: this.chainName,
+      chainName: this.chainInfo.name,
     };
   }
 }

@@ -1,7 +1,7 @@
 import { AddressType, doLog, getReadNamespaces } from '@paima/utils';
 import type { SubmittedData } from '@paima/runtime';
 import type { PaimaGameInteraction } from '@paima/utils';
-import type { NonTimerSubmittedData, STFSubmittedData } from '@paima/chain-types';
+import type { NonTimerSubmittedData } from '@paima/chain-types';
 import { CryptoManager } from '@paima/crypto';
 import {
   INNER_BATCH_DIVIDER,
@@ -11,10 +11,9 @@ import {
 } from '@paima/concise';
 import { toBN, hexToUtf8 } from 'web3-utils';
 import type { PoolClient } from 'pg';
-import { getMainAddress } from '@paima/db';
 import { keccak_256 } from 'js-sha3';
 
-interface ValidatedSubmittedData extends STFSubmittedData {
+interface ValidatedSubmittedData extends SubmittedData {
   validated: boolean;
 }
 
@@ -27,7 +26,7 @@ export async function extractSubmittedData(
   caip2: string
 ): Promise<SubmittedData[]> {
   const unflattenedList = await Promise.all(
-    events.map(e => eventMapper(e, blockTimestamp, DBConn, caip2))
+    events.map(e => eventMapper(e, blockTimestamp, DBConn, caip2, e.address))
   );
   return unflattenedList.flat();
 }
@@ -36,7 +35,8 @@ async function eventMapper(
   e: PaimaGameInteraction,
   blockTimestamp: number,
   DBConn: PoolClient,
-  caip2: string
+  caip2: string,
+  contractAddress: string
 ): Promise<SubmittedData[]> {
   const decodedData = decodeEventData(e.returnValues.data);
   return await processDataUnit(
@@ -46,8 +46,12 @@ async function eventMapper(
       inputNonce: '', // placeholder that will be filled later
       suppliedValue: e.returnValues.value,
       scheduled: false,
-      caip2,
-      txHash: e.transactionHash,
+      origin: {
+        txHash: e.transactionHash,
+        caip2,
+        contractAddress,
+        primitiveName: null, // TODO
+      },
     },
     e.blockNumber,
     blockTimestamp,
@@ -92,15 +96,7 @@ export async function processDataUnit(
     const subunitValue = toBN(unit.suppliedValue).div(toBN(subunits.length)).toString(10);
     const validatedSubUnits = await Promise.all(
       subunits.map(elem =>
-        processBatchedSubunit(
-          elem,
-          subunitValue,
-          blockHeight,
-          blockTimestamp,
-          DBConn,
-          unit.caip2,
-          unit.txHash
-        )
+        processBatchedSubunit(elem, subunitValue, blockHeight, blockTimestamp, DBConn, unit.origin)
       )
     );
     return validatedSubUnits.filter(item => item.validated).map(unpackValidatedData);
@@ -116,20 +112,16 @@ async function processBatchedSubunit(
   blockHeight: number,
   blockTimestamp: number,
   DBConn: PoolClient,
-  caip2: string,
-  txHash: string
+  origin: NonTimerSubmittedData['origin']
 ): Promise<ValidatedSubmittedData> {
   const INVALID_INPUT: ValidatedSubmittedData = {
     inputData: '',
     realAddress: '',
-    userId: -1,
-    userAddress: '',
     inputNonce: '',
     suppliedValue: '0',
     scheduled: false,
     validated: false,
-    caip2: '',
-    txHash: '',
+    origin,
   };
 
   const elems = input.split(INNER_BATCH_DIVIDER);
@@ -158,18 +150,14 @@ async function processBatchedSubunit(
 
   const inputNonce = createBatchNonce(millisecondTimestamp, userAddress, inputData);
 
-  const address = await getMainAddress(userAddress, DBConn);
   return {
     inputData,
     realAddress: userAddress,
-    userAddress: address.address,
-    userId: address.id,
     inputNonce,
     suppliedValue,
     scheduled: false,
     validated,
-    caip2,
-    txHash,
+    origin,
   };
 }
 

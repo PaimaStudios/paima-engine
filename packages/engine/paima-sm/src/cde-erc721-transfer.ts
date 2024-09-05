@@ -18,7 +18,7 @@ export default async function processErc721Datum(
   inPresync: boolean
 ): Promise<SQLUpdate[]> {
   const cdeName = cdeDatum.cdeName;
-  const { to, tokenId } = cdeDatum.payload;
+  const { to, tokenId, from } = cdeDatum.payload;
   const toAddr = to.toLowerCase();
 
   const isBurn = Boolean(toAddr.toLocaleLowerCase().match(/^0x0+(dead)?$/g));
@@ -40,11 +40,17 @@ export default async function processErc721Datum(
             : cdeDatum.blockNumber;
 
           updateList.push(
-            createScheduledData(scheduledInputData, scheduledBlockHeight, {
-              cdeName: cdeDatum.cdeName,
-              txHash: cdeDatum.transactionHash,
-              network: cdeDatum.network,
-            })
+            createScheduledData(
+              scheduledInputData,
+              { blockHeight: scheduledBlockHeight },
+              {
+                cdeName: cdeDatum.cdeName,
+                txHash: cdeDatum.transactionHash,
+                caip2: cdeDatum.caip2,
+                fromAddress: from.toLowerCase(),
+                contractAddress: cdeDatum.contractAddress.toLowerCase(),
+              }
+            )
           );
         }
 

@@ -3,7 +3,7 @@ import { PreparedQuery } from '@pgtyped/runtime';
 
 /** 'UpdateMinaCheckpoint' parameters type */
 export interface IUpdateMinaCheckpointParams {
-  network: string;
+  caip2: string;
   timestamp: string;
 }
 
@@ -16,19 +16,19 @@ export interface IUpdateMinaCheckpointQuery {
   result: IUpdateMinaCheckpointResult;
 }
 
-const updateMinaCheckpointIR: any = {"usedParamSet":{"timestamp":true,"network":true},"params":[{"name":"timestamp","required":true,"transform":{"type":"scalar"},"locs":[{"a":71,"b":81},{"a":149,"b":159}]},{"name":"network","required":true,"transform":{"type":"scalar"},"locs":[{"a":88,"b":96}]}],"statement":"INSERT INTO mina_checkpoint(\n    timestamp,\n    network\n) VALUES (\n    :timestamp!,\n    :network!\n) \nON CONFLICT (network) DO\nUPDATE SET timestamp = :timestamp!"};
+const updateMinaCheckpointIR: any = {"usedParamSet":{"timestamp":true,"caip2":true},"params":[{"name":"timestamp","required":true,"transform":{"type":"scalar"},"locs":[{"a":69,"b":79},{"a":143,"b":153}]},{"name":"caip2","required":true,"transform":{"type":"scalar"},"locs":[{"a":86,"b":92}]}],"statement":"INSERT INTO mina_checkpoint(\n    timestamp,\n    caip2\n) VALUES (\n    :timestamp!,\n    :caip2!\n) \nON CONFLICT (caip2) DO\nUPDATE SET timestamp = :timestamp!"};
 
 /**
  * Query generated from SQL:
  * ```
  * INSERT INTO mina_checkpoint(
  *     timestamp,
- *     network
+ *     caip2
  * ) VALUES (
  *     :timestamp!,
- *     :network!
+ *     :caip2!
  * ) 
- * ON CONFLICT (network) DO
+ * ON CONFLICT (caip2) DO
  * UPDATE SET timestamp = :timestamp!
  * ```
  */
@@ -37,7 +37,7 @@ export const updateMinaCheckpoint = new PreparedQuery<IUpdateMinaCheckpointParam
 
 /** 'GetMinaCheckpoint' parameters type */
 export interface IGetMinaCheckpointParams {
-  network: string;
+  caip2: string;
 }
 
 /** 'GetMinaCheckpoint' return type */
@@ -51,12 +51,12 @@ export interface IGetMinaCheckpointQuery {
   result: IGetMinaCheckpointResult;
 }
 
-const getMinaCheckpointIR: any = {"usedParamSet":{"network":true},"params":[{"name":"network","required":true,"transform":{"type":"scalar"},"locs":[{"a":54,"b":62}]}],"statement":"SELECT timestamp FROM mina_checkpoint WHERE network = :network! LIMIT 1"};
+const getMinaCheckpointIR: any = {"usedParamSet":{"caip2":true},"params":[{"name":"caip2","required":true,"transform":{"type":"scalar"},"locs":[{"a":52,"b":58}]}],"statement":"SELECT timestamp FROM mina_checkpoint WHERE caip2 = :caip2! LIMIT 1"};
 
 /**
  * Query generated from SQL:
  * ```
- * SELECT timestamp FROM mina_checkpoint WHERE network = :network! LIMIT 1
+ * SELECT timestamp FROM mina_checkpoint WHERE caip2 = :caip2! LIMIT 1
  * ```
  */
 export const getMinaCheckpoint = new PreparedQuery<IGetMinaCheckpointParams,IGetMinaCheckpointResult>(getMinaCheckpointIR);

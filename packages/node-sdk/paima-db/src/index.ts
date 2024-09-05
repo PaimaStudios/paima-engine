@@ -9,8 +9,13 @@ export * from './delegate-wallet.js';
 // https://github.com/adelsz/pgtyped/issues/565
 export type { Json } from './sql/cde-generic.queries.js';
 
-export * from './sql/achievements.queries.js';
-export type * from './sql/achievements.queries.js';
+export { getAchievementProgress, setAchievementProgress } from './sql/achievements.queries.js';
+export type {
+  IGetAchievementProgressParams,
+  IGetAchievementProgressResult,
+  ISetAchievementProgressParams,
+  ISetAchievementProgressResult,
+} from './sql/achievements.queries.js';
 // https://github.com/adelsz/pgtyped/issues/565
 export {
   getLatestProcessedBlockHeight,
@@ -18,6 +23,7 @@ export {
   getBlockHeights,
   saveLastBlock,
   blockHeightDone,
+  getBlockByHash,
 } from './sql/block-heights.queries.js';
 export type {
   IGetLatestProcessedBlockHeightParams,
@@ -30,15 +36,15 @@ export type {
   ISaveLastBlockResult,
   IBlockHeightDoneParams,
   IBlockHeightDoneResult,
+  IGetBlockByHashParams,
+  IGetBlockByHashResult,
 } from './sql/block-heights.queries.js';
-export * from './sql/scheduled.queries.js';
-export type * from './sql/scheduled.queries.js';
 export * from './sql/statistics.queries.js';
 export type * from './sql/statistics.queries.js';
 export * from './sql/nonces.queries.js';
 export type * from './sql/nonces.queries.js';
-export * from './sql/historical.queries.js';
-export type * from './sql/historical.queries.js';
+export * from './sql/rollup_inputs.queries.js';
+export type * from './sql/rollup_inputs.queries.js';
 export * from './sql/cde-tracking.queries.js';
 export type * from './sql/cde-tracking.queries.js';
 export * from './sql/extensions.queries.js';

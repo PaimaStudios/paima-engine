@@ -1,7 +1,7 @@
 import {
   type ChainDataExtensionDynamicEvmPrimitive,
-  type ChainDataExtensionDatum,
   CdeEntryTypeName,
+  type CdeDynamicEvmPrimitiveDatum,
 } from '@paima/sm';
 import { ChainDataExtensionDatumType, DEFAULT_FUNNEL_TIMEOUT, timeout } from '@paima/utils';
 
@@ -9,8 +9,8 @@ export default async function getCdeDynamicEvmPrimitive(
   extension: ChainDataExtensionDynamicEvmPrimitive,
   fromBlock: number,
   toBlock: number,
-  network: string
-): Promise<ChainDataExtensionDatum[]> {
+  caip2: string
+): Promise<CdeDynamicEvmPrimitiveDatum[]> {
   // TODO: typechain is missing the proper type generation for getPastEvents
   // https://github.com/dethcrypto/TypeChain/issues/767
   const events = await timeout(
@@ -48,10 +48,10 @@ export default async function getCdeDynamicEvmPrimitive(
     cdeDatumType: ChainDataExtensionDatumType.DynamicEvmPrimitive,
     blockNumber: event.blockNumber,
     payload: {
-      contractAddress: event.returnValues[extension.dynamicFields.contractAddress],
+      contractAddress: event.returnValues[extension.dynamicFields.contractAddress.toLowerCase()].toLowerCase(),
       targetConfig: targetConfig,
     },
-    network,
+    caip2,
     transactionHash: event.transactionHash,
   }));
 }

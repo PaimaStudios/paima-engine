@@ -7,8 +7,9 @@ import type {
   OtherEvmConfig,
   AvailConfig,
   AvailMainConfig,
+  ConfigMapping,
 } from './loading.js';
-import { loadConfig, ConfigNetworkType } from './loading.js';
+import { loadConfig, ConfigNetworkType, caip2PrefixFor } from './loading.js';
 import type { TypeToConfig, TypesToConfigs } from './loading.js';
 
 export type Config = Static<typeof BaseConfigWithDefaults>;
@@ -34,6 +35,20 @@ export class GlobalConfig {
 
     await GlobalConfig.promise;
     return GlobalConfig.instance;
+  }
+
+  public static async networkForCaip2(
+    targetCaip2: string
+  ): Promise<undefined | [string, ConfigMapping[ConfigNetworkType]]> {
+    const instance = await GlobalConfig.getInstance();
+
+    for (const key of Object.keys(instance)) {
+      const caip2 = caip2PrefixFor(instance[key]);
+      if (caip2 === targetCaip2) {
+        return [key, instance[key] as any];
+      }
+    }
+    return undefined;
   }
 
   private static async getConfigs<T extends ConfigNetworkType[]>(

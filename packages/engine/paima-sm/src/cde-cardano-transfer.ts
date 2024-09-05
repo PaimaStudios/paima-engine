@@ -1,4 +1,4 @@
-import { ENV } from '@paima/utils';
+import { ENV, SCHEDULED_DATA_ADDRESS } from '@paima/utils';
 import { createScheduledData, cdeCardanoTransferInsert } from '@paima/db';
 import type { SQLUpdate } from '@paima/db';
 import type { CdeCardanoTransferDatum } from './types.js';
@@ -19,11 +19,18 @@ export default async function processDatum(
   const scheduledInputData = `${prefix}|${txId}|${metadata}|${inputCredentials}|${outputs}`;
 
   const updateList: SQLUpdate[] = [
-    createScheduledData(scheduledInputData, scheduledBlockHeight, {
-      cdeName: cdeDatum.cdeName,
-      txHash: cdeDatum.transactionHash,
-      network: cdeDatum.network,
-    }),
+    createScheduledData(
+      scheduledInputData,
+      { blockHeight: scheduledBlockHeight },
+      {
+        cdeName: cdeDatum.cdeName,
+        txHash: cdeDatum.transactionHash,
+        caip2: cdeDatum.caip2,
+        // TODO: this could either be inputCredentials.join(), a built-in precompile or a metadata standard
+        fromAddress: SCHEDULED_DATA_ADDRESS,
+        contractAddress: undefined,
+      }
+    ),
     [
       cdeCardanoTransferInsert,
       {

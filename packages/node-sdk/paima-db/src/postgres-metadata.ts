@@ -140,11 +140,11 @@ async function checkTableColumn(
   }
   const flagType = row.data_type === column.columnType;
   if (!flagType) {
-    console.error(`flagType mismatch on ${tableName}`, row.data_type, column.columnType);
+    console.error(`type mismatch on ${tableName}`, row.data_type, column.columnType);
   }
   const flagNullable = row.is_nullable === column.columnNullable;
   if (!flagNullable) {
-    console.error(`flagNullable mismatch on ${tableName}`, row.is_nullable, column.columnNullable);
+    console.error(`nullable mismatch on ${tableName}`, row.is_nullable, column.columnNullable);
   }
 
   const result = flagDefault && flagType && flagNullable;

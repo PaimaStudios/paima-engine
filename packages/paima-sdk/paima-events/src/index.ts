@@ -6,3 +6,4 @@ export * from './utils.js';
 export * from './event-connect.js';
 export * from './builtin-event-utils.js';
 export * from './types.js';
+export * from './evm.js';

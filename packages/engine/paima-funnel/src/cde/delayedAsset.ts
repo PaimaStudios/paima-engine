@@ -1,8 +1,4 @@
-import type {
-  CdeCardanoAssetUtxoDatum,
-  ChainDataExtensionCardanoDelayedAsset,
-  ChainDataExtensionDatum,
-} from '@paima/sm';
+import type { CdeCardanoAssetUtxoDatum, ChainDataExtensionCardanoDelayedAsset } from '@paima/sm';
 import { ChainDataExtensionDatumType, DEFAULT_FUNNEL_TIMEOUT, timeout } from '@paima/utils';
 import { Routes, query } from '@dcspark/carp-client';
 import type { AssetUtxosResponse } from '@dcspark/carp-client';
@@ -18,7 +14,7 @@ export default async function getCdeData(
   untilBlock: string,
   fromTx: BlockTxPair | undefined,
   paginationLimit: number,
-  network: string
+  caip2: string
 ): Promise<CdeCardanoAssetUtxoDatum[]> {
   let result = [] as CdeCardanoAssetUtxoDatum[];
 
@@ -51,7 +47,7 @@ export default async function getCdeData(
       .flatMap(event =>
         event.payload.map(payload => ({ txId: event.txId, block: event.block, ...payload }))
       )
-      .map(e => eventToCdeDatum(e, extension, getBlockNumber(e.slot), network))
+      .map(e => eventToCdeDatum(e, extension, getBlockNumber(e.slot), caip2))
       .forEach(element => {
         result.push(element);
       });
@@ -68,7 +64,7 @@ function eventToCdeDatum(
   event: { txId: string; block: string } & AssetUtxosResponse[0]['payload'][0],
   extension: ChainDataExtensionCardanoDelayedAsset,
   blockNumber: number,
-  network: string
+  caip2: string
 ): CdeCardanoAssetUtxoDatum {
   const cursor: BlockTxPair = {
     block: event.block,
@@ -89,7 +85,7 @@ function eventToCdeDatum(
       policyId: event.policyId,
       assetName: event.assetName,
     },
-    network,
+    caip2,
     paginationCursor: { cursor: JSON.stringify(cursor), finished: false },
   };
 }

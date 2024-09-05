@@ -32,7 +32,7 @@ export const toSignatureHash = <T extends LogEvent<LogEventFields<TSchema>[]>>(
 
 export type AppEvents = ReturnType<typeof groupEvents>;
 
-type RegisteredEvent<T extends LogEvent<LogEventFields<TSchema>[]>> = ReturnType<
+export type RegisteredEvent<T extends LogEvent<LogEventFields<TSchema>[]>> = ReturnType<
   typeof toPath<T, typeof TopicPrefix.App>
 > & {
   /**

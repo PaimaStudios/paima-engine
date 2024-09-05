@@ -37,20 +37,14 @@ export const hashBlockV1: HashInfo<PostExecutionBlockHeader<1>> = {
   hash: header => keccak_256(hashBlockV1.preHash(header)),
 };
 
-export type ScheduledDataHashInfo = {
+export type RollupInputHashInfo = {
   caip2Prefix: string;
   txHash: string;
   indexInBlock: number;
 };
-export const hashScheduledData: HashInfo<ScheduledDataHashInfo> = {
+export const hashRollupInput: HashInfo<RollupInputHashInfo> = {
   preHash: info => `${info.caip2Prefix}}|${info.txHash}|${info.indexInBlock}`,
-  hash: info => keccak_256(hashScheduledData.preHash(info)),
-};
-
-type SubmittedDataHashInfo = ScheduledDataHashInfo;
-export const hashSubmittedData: HashInfo<SubmittedDataHashInfo> = {
-  preHash: info => `${info.caip2Prefix}}|${info.txHash}|${info.indexInBlock}`,
-  hash: info => keccak_256(hashScheduledData.preHash(info)),
+  hash: info => keccak_256(hashRollupInput.preHash(info)),
 };
 
 export type TimerHashInfo = {

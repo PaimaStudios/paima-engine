@@ -28,6 +28,7 @@ import {
   findBlockByTimestamp,
   getUpperBoundBlock,
 } from '../../utils.js';
+import type { ChainInfo } from '../../utils.js';
 import { processDataUnit } from '../../paima-l2-processing.js';
 import type { ApiPromise } from 'avail-js-sdk';
 import type { AvailFunnelCacheEntryState } from './cache.js';
@@ -48,14 +49,12 @@ function applyDelay(config: AvailConfig, baseTimestamp: number): number {
 }
 
 export class AvailParallelFunnel extends BaseFunnel implements ChainFunnel {
-  config: AvailConfig;
-  chainName: string;
+  chainInfo: ChainInfo<AvailConfig>;
 
   protected constructor(
     sharedData: FunnelSharedData,
     dbTx: PoolClient,
-    config: AvailConfig,
-    chainName: string,
+    chainInfo: ChainInfo<AvailConfig>,
     private readonly baseFunnel: ChainFunnel,
     private readonly api: ApiPromise
   ) {
@@ -64,12 +63,13 @@ export class AvailParallelFunnel extends BaseFunnel implements ChainFunnel {
     this.readPresyncData.bind(this);
     this.getDbTx.bind(this);
     this.configPrint.bind(this);
-    this.config = config;
-    this.chainName = chainName;
+    this.chainInfo = chainInfo;
   }
 
   public override async readData(blockHeight: number): Promise<ChainData[]> {
     const cachedState = this.getState();
+
+    const caip2 = caip2PrefixFor(this.chainInfo.config);
 
     const chainData: ChainData[] = await readFromWrappedFunnel(
       blockHeight,
@@ -82,7 +82,7 @@ export class AvailParallelFunnel extends BaseFunnel implements ChainFunnel {
 
         return latestHeaderTimestamp;
       },
-      (ts: number) => applyDelay(this.config, ts)
+      (ts: number) => applyDelay(this.chainInfo.config, ts)
     );
 
     if (chainData.length === 0) {
@@ -93,13 +93,13 @@ export class AvailParallelFunnel extends BaseFunnel implements ChainFunnel {
       await restoreLastPointCheckpointFromDb(
         this.getCacheEntry(),
         this.dbTx,
-        this.chainName,
+        caip2PrefixFor(this.chainInfo.config),
         cachedState.startingBlockHeight
       );
     }
 
     const maxSlot = timestampToSlot(
-      applyDelay(this.config, chainData[chainData.length - 1].timestamp),
+      applyDelay(this.chainInfo.config, chainData[chainData.length - 1].timestamp),
       this.api
     );
 
@@ -109,7 +109,7 @@ export class AvailParallelFunnel extends BaseFunnel implements ChainFunnel {
       const latestBlock = this.latestBlock();
       const to = Math.min(
         latestBlock.number,
-        cachedState.lastBlock + this.config.funnelBlockGroupSize
+        cachedState.lastBlock + this.chainInfo.config.funnelBlockGroupSize
       );
 
       doLog(`Avail funnel #${cachedState.lastBlock + 1}-${to}`);
@@ -117,10 +117,10 @@ export class AvailParallelFunnel extends BaseFunnel implements ChainFunnel {
       const roundParallelData = await timeout(
         getDAData(
           this.api,
-          this.config.lightClient,
+          this.chainInfo.config.lightClient,
           cachedState.lastBlock + 1,
           to,
-          caip2PrefixFor(this.config)
+          caip2
         ),
         GET_DATA_TIMEOUT
       );
@@ -204,7 +204,7 @@ export class AvailParallelFunnel extends BaseFunnel implements ChainFunnel {
 
     const { parallelToMainchainBlockHeightMapping, mainchainToParallelBlockHeightMapping } =
       buildParallelBlockMappings(
-        (ts: number) => applyDelay(this.config, ts),
+        (ts: number) => applyDelay(this.chainInfo.config, ts),
         chainData,
         cachedState.timestampToBlock
       );
@@ -233,7 +233,7 @@ export class AvailParallelFunnel extends BaseFunnel implements ChainFunnel {
     addInternalCheckpointingEvent(
       chainData,
       n => mainchainToParallelBlockHeightMapping[n],
-      this.chainName,
+      caip2,
       InternalEventType.AvailLastBlock
     );
 
@@ -248,17 +248,16 @@ export class AvailParallelFunnel extends BaseFunnel implements ChainFunnel {
 
   public override async readPresyncData(
     args: ReadPresyncDataFrom
-  ): Promise<{ [network: string]: PresyncChainData[] | typeof FUNNEL_PRESYNC_FINISHED }> {
+  ): Promise<{ [caip2: string]: PresyncChainData[] | typeof FUNNEL_PRESYNC_FINISHED }> {
     const baseDataPromise = this.baseFunnel.readPresyncData(args);
 
-    let arg = args.find(arg => arg.network == this.chainName);
-
-    const chainName = this.chainName;
+    const caip2 = caip2PrefixFor(this.chainInfo.config);
+    let arg = args.find(arg => arg.caip2 == caip2);
 
     if (!arg) {
       return await baseDataPromise;
     } else {
-      return { ...(await baseDataPromise), [chainName]: FUNNEL_PRESYNC_FINISHED };
+      return { ...(await baseDataPromise), [caip2]: FUNNEL_PRESYNC_FINISHED };
     }
   }
 
@@ -266,8 +265,7 @@ export class AvailParallelFunnel extends BaseFunnel implements ChainFunnel {
     sharedData: FunnelSharedData,
     dbTx: PoolClient,
     baseFunnel: ChainFunnel,
-    chainName: string,
-    config: AvailConfig
+    chainInfo: ChainInfo<AvailConfig>
   ): Promise<AvailParallelFunnel> {
     const availFunnelCacheEntry = ((): AvailFunnelCacheEntry => {
       const entry = sharedData.cacheManager.cacheEntries[AvailFunnelCacheEntry.SYMBOL];
@@ -279,7 +277,7 @@ export class AvailParallelFunnel extends BaseFunnel implements ChainFunnel {
       return newEntry;
     })();
 
-    const api = await createApi(config.rpc);
+    const api = await createApi(chainInfo.config.rpc);
 
     if (!availFunnelCacheEntry.initialized()) {
       const startingBlock = await sharedData.mainNetworkApi.getStartingBlock();
@@ -292,15 +290,15 @@ export class AvailParallelFunnel extends BaseFunnel implements ChainFunnel {
         // the genesis doesn't have a slot to extract a timestamp from
         1,
         await getLatestBlockNumber(api),
-        applyDelay(config, Number(startingBlock.timestamp)),
-        chainName,
+        applyDelay(chainInfo.config, Number(startingBlock.timestamp)),
+        chainInfo.name,
         async (blockNumber: number) => await getTimestampForBlockAt(api, blockNumber)
       );
 
       availFunnelCacheEntry.initialize(mappedStartingBlockHeight);
     }
 
-    const funnel = new AvailParallelFunnel(sharedData, dbTx, config, chainName, baseFunnel, api);
+    const funnel = new AvailParallelFunnel(sharedData, dbTx, chainInfo, baseFunnel, api);
 
     await funnel.updateLatestBlock();
 
@@ -322,7 +320,7 @@ export class AvailParallelFunnel extends BaseFunnel implements ChainFunnel {
   }
 
   private async updateLatestBlock(): Promise<number> {
-    const config = this.config;
+    const config = this.chainInfo.config;
 
     const latestHeader = await timeout(
       (async (): Promise<Header> => {
@@ -367,7 +365,7 @@ export class AvailParallelFunnel extends BaseFunnel implements ChainFunnel {
   public override configPrint(): FunnelJson {
     return {
       type: 'AvailParallelFunnel',
-      chainName: this.chainName,
+      chainName: this.chainInfo.name,
       child: this.baseFunnel.configPrint(),
     };
   }
@@ -387,10 +385,10 @@ function mapBlockNumbersToMainChain(
 async function restoreLastPointCheckpointFromDb(
   cacheEntry: AvailFunnelCacheEntry,
   dbTx: PoolClient,
-  chainName: string,
+  caip2: string,
   startingBlockHeight: number
 ): Promise<void> {
-  const queryResults = await getLatestProcessedCdeBlockheight.run({ network: chainName }, dbTx);
+  const queryResults = await getLatestProcessedCdeBlockheight.run({ caip2 }, dbTx);
 
   if (queryResults[0]) {
     // If we are in `readData`, we know that the presync stage finished.
@@ -407,17 +405,10 @@ export async function wrapToAvailParallelFunnel(
   chainFunnel: ChainFunnel,
   sharedData: FunnelSharedData,
   dbTx: PoolClient,
-  chainName: string,
-  config: AvailConfig
+  chainInfo: ChainInfo<AvailConfig>
 ): Promise<ChainFunnel> {
   try {
-    const ebp = await AvailParallelFunnel.recoverState(
-      sharedData,
-      dbTx,
-      chainFunnel,
-      chainName,
-      config
-    );
+    const ebp = await AvailParallelFunnel.recoverState(sharedData, dbTx, chainFunnel, chainInfo);
     return ebp;
   } catch (err) {
     doLog('[paima-funnel] Unable to initialize avail events processor:');
