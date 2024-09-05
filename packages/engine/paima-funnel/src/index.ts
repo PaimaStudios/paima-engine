@@ -31,12 +31,10 @@ export class Web3SharedApi extends BaseFunnelSharedApi {
     this.getBlock.bind(this);
   }
 
-  public override async getBlock(
-    height: number
-  ): Promise<{ timestamp: number | string } | undefined> {
+  public override async getBlock(height: number): Promise<{ timestamp: number } | undefined> {
     const block = await this.web3.eth.getBlock(height);
 
-    return block;
+    return { timestamp: Number(block.timestamp) };
   }
 }
 

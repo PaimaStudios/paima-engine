@@ -12,17 +12,13 @@ export type FunnelSharedData = {
 };
 
 export class BaseFunnelSharedApi {
-  private startingBlockTimestamp: Promise<{ timestamp: number | string } | undefined> | undefined;
+  private startingBlockTimestamp: Promise<{ timestamp: number } | undefined> | undefined;
 
-  public async getStartingBlock(): Promise<{ timestamp: number | string } | undefined> {
-    if (!this.startingBlockTimestamp) {
-      this.startingBlockTimestamp = this.getBlock(ENV.START_BLOCKHEIGHT);
-    }
-
-    return await this.startingBlockTimestamp;
+  public async getStartingBlock(): Promise<{ timestamp: number } | undefined> {
+    return await (this.startingBlockTimestamp ??= this.getBlock(ENV.START_BLOCKHEIGHT));
   }
 
-  public async getBlock(_height: number): Promise<{ timestamp: number | string } | undefined> {
+  public async getBlock(_height: number): Promise<{ timestamp: number } | undefined> {
     return undefined;
   }
 }

@@ -292,7 +292,7 @@ export class AvailParallelFunnel extends BaseFunnel implements ChainFunnel {
         // the genesis doesn't have a slot to extract a timestamp from
         1,
         await getLatestBlockNumber(api),
-        applyDelay(config, Number(startingBlock.timestamp)),
+        applyDelay(config, startingBlock.timestamp),
         chainName,
         async (blockNumber: number) => await getTimestampForBlockAt(api, blockNumber)
       );

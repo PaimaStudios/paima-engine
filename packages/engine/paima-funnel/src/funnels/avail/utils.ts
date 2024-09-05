@@ -162,9 +162,7 @@ export class AvailSharedApi extends BaseFunnelSharedApi {
     this.getBlock.bind(this);
   }
 
-  public override async getBlock(
-    height: number
-  ): Promise<{ timestamp: number | string } | undefined> {
+  public override async getBlock(height: number): Promise<{ timestamp: number } | undefined> {
     const api = await createApi(this.rpc);
 
     const headerData = await getMultipleHeaderData(api, [height]);

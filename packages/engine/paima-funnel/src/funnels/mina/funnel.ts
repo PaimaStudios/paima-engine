@@ -367,9 +367,7 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
         throw new Error("Couldn't get main's network staring block timestamp");
       }
 
-      const startingBlockTimestamp = startingBlock.timestamp as number;
-
-      const minaTimestamp = baseChainTimestampToMina(startingBlockTimestamp, config.delay);
+      const minaTimestamp = baseChainTimestampToMina(startingBlock.timestamp, config.delay);
 
       newEntry.updateStartingTimestamp(minaTimestamp, pg);
 

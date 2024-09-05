@@ -484,7 +484,7 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
       const mappedStartingBlockHeight = await findBlockByTimestamp(
         0,
         high,
-        applyDelay(config, Number(startingBlock.timestamp)),
+        applyDelay(config, startingBlock.timestamp),
         chainName,
         async block => Number((await web3.eth.getBlock(block)).timestamp)
       );

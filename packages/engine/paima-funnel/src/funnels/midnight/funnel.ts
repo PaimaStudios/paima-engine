@@ -288,11 +288,10 @@ class MidnightFunnel extends BaseFunnel implements ChainFunnel {
     if (!startingBlock) {
       throw new Error("Couldn't get main's network staring block timestamp");
     }
-    const startingTimestamp = startingBlock.timestamp as number; // TODO: if Mina and Midnight both assert this, perhaps we should upstream it to the API itself
 
     const start = this.cache.nextBlockHeight;
     let block = await this.fetchBlock(this.cache.nextBlockHeight);
-    if (!(block && midnightTimestampToSeconds(block.timestamp) < startingTimestamp)) {
+    if (!(block && midnightTimestampToSeconds(block.timestamp) < startingBlock.timestamp)) {
       // We're caught up. Return that we've finished.
       const baseData = await baseDataPromise;
       baseData[this.chainName] = FUNNEL_PRESYNC_FINISHED;
@@ -304,7 +303,7 @@ class MidnightFunnel extends BaseFunnel implements ChainFunnel {
     let lastLogTime = Date.now(),
       lastLogBlock = start;
     // TOOD: apply confirmation depth here
-    while (block && midnightTimestampToSeconds(block.timestamp) < startingTimestamp) {
+    while (block && midnightTimestampToSeconds(block.timestamp) < startingBlock.timestamp) {
       const now = Date.now();
       if (now - lastLogTime > 5000) {
         console.log(
