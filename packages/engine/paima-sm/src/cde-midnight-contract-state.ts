@@ -13,11 +13,17 @@ export default async function processMidnightContractStateDatum(
   const scheduledBlockHeight = inPresync ? ENV.SM_START_BLOCKHEIGHT + 1 : blockNumber;
   const scheduledInputData = [scheduledPrefix, payload].join('|');
   updateList.push(
-    createScheduledData(scheduledInputData, scheduledBlockHeight, {
-      cdeName: cdeDatum.cdeName,
-      txHash: cdeDatum.transactionHash,
-      network: cdeDatum.network,
-    })
+    createScheduledData(
+      scheduledInputData,
+      { blockHeight: scheduledBlockHeight },
+      {
+        cdeName: cdeDatum.cdeName,
+        txHash: cdeDatum.transactionHash,
+        caip2: cdeDatum.caip2,
+        fromAddress: '', // TODO: ?
+        contractAddress: cdeDatum.contractAddress,
+      }
+    )
   );
 
   return updateList;

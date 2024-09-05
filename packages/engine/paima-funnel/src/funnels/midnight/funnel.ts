@@ -7,6 +7,7 @@ import type {
   PresyncChainData,
 } from '@paima/sm';
 import {
+  caip2PrefixFor,
   ChainDataExtensionDatumType,
   ChainDataExtensionType,
   ConfigNetworkType,
@@ -21,7 +22,7 @@ import { BaseFunnel, type FunnelSharedData } from '../BaseFunnel.js';
 import type { MidnightConfig } from '@paima/utils';
 import { ContractState, setNetworkId } from '@midnight-ntwrk/compact-runtime';
 import { FunnelCacheEntry } from '../FunnelCache.js';
-import { composeChainData } from '../../utils.js';
+import { ChainInfo, composeChainData } from '../../utils.js';
 import { Client, createClient, ExecutionResult } from 'graphql-ws';
 import { WebSocket } from 'ws';
 
@@ -158,22 +159,25 @@ const cachedBlockQuery = `
 `;
 
 class MidnightFunnel extends BaseFunnel implements ChainFunnel {
+  private readonly caip2: string;
+
   constructor(
     sharedData: FunnelSharedData,
     dbTx: PoolClient,
-    public chainName: string,
+    public chainInfo: ChainInfo<MidnightConfig>,
     private readonly baseFunnel: ChainFunnel,
-    private config: MidnightConfig,
     private cache: MidnightFunnelCacheEntry
   ) {
     super(sharedData, dbTx);
 
+    this.caip2 = caip2PrefixFor(chainInfo.config);
+
     // Unfortunately this is global state so we can only connect to one network at a time.
-    setNetworkId(config.networkId);
+    setNetworkId(chainInfo.config.networkId);
   }
 
   private async indexerQuery(query: string): Promise<unknown> {
-    return await gqlQuery(this.config.indexer, query);
+    return await gqlQuery(this.chainInfo.config.indexer, query);
   }
 
   private async getTimestampForBlock(at: number): Promise<number> {
@@ -234,7 +238,7 @@ class MidnightFunnel extends BaseFunnel implements ChainFunnel {
 
     const contractAddressToExtension = new Map(
       this.sharedData.extensions.flatMap(ext =>
-        ext.network === this.chainName &&
+        ext.network === this.chainInfo.name &&
         ext.cdeType === ChainDataExtensionType.MidnightContractState
           ? [[ext.contractAddress, ext]]
           : []
@@ -265,7 +269,8 @@ class MidnightFunnel extends BaseFunnel implements ChainFunnel {
 
             cdeDatumType: ChainDataExtensionDatumType.MidnightContractState,
             cdeName: extension.cdeName,
-            network: this.chainName,
+            contractAddress: contractCall.address,
+            caip2: this.caip2,
 
             scheduledPrefix: extension.scheduledPrefix,
             payload: JSON.stringify(jsState),
@@ -281,7 +286,7 @@ class MidnightFunnel extends BaseFunnel implements ChainFunnel {
 
   public override async readPresyncData(
     args: ReadPresyncDataFrom
-  ): Promise<{ [network: number]: PresyncChainData[] | typeof FUNNEL_PRESYNC_FINISHED }> {
+  ): Promise<{ [caip2: string]: PresyncChainData[] | typeof FUNNEL_PRESYNC_FINISHED }> {
     const baseDataPromise = this.baseFunnel.readPresyncData(args);
 
     const startingBlock = await this.sharedData.mainNetworkApi.getStartingBlock();
@@ -294,7 +299,7 @@ class MidnightFunnel extends BaseFunnel implements ChainFunnel {
     if (!(block && midnightTimestampToSeconds(block.timestamp) < startingBlock.timestamp)) {
       // We're caught up. Return that we've finished.
       const baseData = await baseDataPromise;
-      baseData[this.chainName] = FUNNEL_PRESYNC_FINISHED;
+      baseData[this.caip2] = FUNNEL_PRESYNC_FINISHED;
       return baseData;
     }
 
@@ -307,7 +312,7 @@ class MidnightFunnel extends BaseFunnel implements ChainFunnel {
       const now = Date.now();
       if (now - lastLogTime > 5000) {
         console.log(
-          `Midnight funnel ${this.config.networkId}: presync #${lastLogBlock}-${block.height}`
+          `Midnight funnel ${this.chainInfo.config.networkId}: presync #${lastLogBlock}-${block.height}`
         );
 
         lastLogTime = now;
@@ -319,7 +324,7 @@ class MidnightFunnel extends BaseFunnel implements ChainFunnel {
       const extensionDatums = this.extensionsFromBlock(ENV.SM_START_BLOCKHEIGHT, block);
       if (extensionDatums.length) {
         result.push({
-          network: `midnight:${this.config.networkId}`,
+          network: `midnight:${this.chainInfo.config.networkId}`,
           networkType: ConfigNetworkType.MIDNIGHT,
           extensionDatums,
         });
@@ -329,11 +334,11 @@ class MidnightFunnel extends BaseFunnel implements ChainFunnel {
     }
 
     console.log(
-      `Midnight funnel ${this.config.networkId}: finished presync #${start}-${this.cache.nextBlockHeight - 1}`
+      `Midnight funnel ${this.chainInfo.config.networkId}: finished presync #${start}-${this.cache.nextBlockHeight - 1}`
     );
 
     const baseData = await baseDataPromise;
-    baseData[this.chainName] = result;
+    baseData[this.caip2] = result;
     return baseData;
   }
 
@@ -359,7 +364,7 @@ class MidnightFunnel extends BaseFunnel implements ChainFunnel {
       while (midnightTimestampToSeconds(block.timestamp) < baseBlock.timestamp) {
         // The meat: process this one.
         console.log(
-          `Midnight funnel ${this.config.networkId}: base #${baseBlock.blockNumber} / Midnight #${block.height}`
+          `Midnight funnel ${this.chainInfo.config.networkId}: base #${baseBlock.blockNumber} / Midnight #${block.height}`
         );
 
         const extensionDatums = this.extensionsFromBlock(baseBlock.blockNumber, block);
@@ -411,17 +416,16 @@ export class MidnightFunnelCacheEntry implements FunnelCacheEntry {
 }
 
 export async function wrapToMidnightFunnel(
-  chainFunnel: ChainFunnel,
+  baseFunnel: ChainFunnel,
   sharedData: FunnelSharedData,
   dbTx: PoolClient,
-  chainName: string,
-  config: MidnightConfig
+  chainInfo: ChainInfo<MidnightConfig>
 ): Promise<ChainFunnel> {
   try {
     // Connect to the cache.
     const cache = (sharedData.cacheManager.cacheEntries[MidnightFunnelCacheEntry.SYMBOL] ??=
-      new MidnightFunnelCacheEntry(config));
-    return new MidnightFunnel(sharedData, dbTx, chainName, chainFunnel, config, cache);
+      new MidnightFunnelCacheEntry(chainInfo.config));
+    return new MidnightFunnel(sharedData, dbTx, chainInfo, baseFunnel, cache);
   } catch (err) {
     // Log then rethrow???
     doLog('[paima-funnel] Unable to initialize Midnight cde events processor:');

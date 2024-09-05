@@ -176,13 +176,10 @@ export class FunnelFactory implements IFunnelFactory {
           });
           break;
         case ConfigNetworkType.MIDNIGHT:
-          chainFunnel = await wrapToMidnightFunnel(
-            chainFunnel,
-            this.sharedData,
-            dbTx,
-            chainName,
-            config
-          );
+          chainFunnel = await wrapToMidnightFunnel(chainFunnel, this.sharedData, dbTx, {
+            config,
+            name: chainName,
+          });
           break;
         case ConfigNetworkType.EVM:
         case ConfigNetworkType.AVAIL_MAIN:

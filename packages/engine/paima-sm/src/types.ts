@@ -315,6 +315,7 @@ export interface CdeMinaActionGenericDatum extends CdeDatumBase {
 
 export interface CdeMidnightContractStateDatum extends CdeDatumBase {
   cdeDatumType: ChainDataExtensionDatumType.MidnightContractState;
+  contractAddress: string;
   scheduledPrefix: string;
   payload: string;
 }

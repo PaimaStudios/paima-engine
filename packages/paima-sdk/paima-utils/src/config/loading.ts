@@ -135,13 +135,15 @@ export const AvailOtherConfigSchema = addType(BaseAvailConfigSchema, ConfigNetwo
 export type AvailMainConfig = Static<typeof AvailMainConfigSchema>;
 export type AvailConfig = Static<typeof AvailOtherConfigSchema>;
 
-export const MidnightConfigSchema = Type.Object({
+export const BaseMidnightConfigSchema = Type.Object({
   // Midnight network connection info.
   networkId: Type.Number(),
   indexer: Type.String(),
   indexerWS: Type.Optional(Type.String()),
   // node URL and proof server are not needed for our read-only use
 });
+
+export const MidnightConfigSchema = addType(BaseMidnightConfigSchema, ConfigNetworkType.MIDNIGHT);
 
 export type MidnightConfig = Static<typeof MidnightConfigSchema>;
 
