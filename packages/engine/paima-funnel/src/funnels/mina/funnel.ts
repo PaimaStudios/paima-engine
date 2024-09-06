@@ -415,7 +415,7 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
 
   public override configPrint(): FunnelJson {
     return {
-      type: 'BlockFunnel',
+      type: 'MinaFunnel',
       chainName: this.chainInfo.name,
       child: this.baseFunnel.configPrint(),
     };

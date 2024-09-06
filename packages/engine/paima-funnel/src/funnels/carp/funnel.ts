@@ -507,6 +507,7 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
     return {
       type: 'CarpFunnel',
       chainName: this.chainInfo.name,
+      child: this.baseFunnel.configPrint(),
     };
   }
 }

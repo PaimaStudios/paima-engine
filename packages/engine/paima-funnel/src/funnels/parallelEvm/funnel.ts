@@ -546,7 +546,7 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
 
   public override configPrint(): FunnelJson {
     return {
-      type: 'BlockFunnel',
+      type: 'ParallelEvmFunnel',
       chainName: this.chainInfo.name,
       child: this.baseFunnel.configPrint(),
     };

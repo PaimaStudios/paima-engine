@@ -1,6 +1,6 @@
 import { ContractState, setNetworkId } from '@midnight-ntwrk/compact-runtime';
 import { getMidnightCheckpoint } from '@paima/db';
-import type { ChainFunnel, ReadPresyncDataFrom, SubmittedData } from '@paima/runtime';
+import type { ChainFunnel, FunnelJson, ReadPresyncDataFrom, SubmittedData } from '@paima/runtime';
 import type {
   CdeMidnightContractStateDatum,
   ChainData,
@@ -130,11 +130,6 @@ function handleGqlWsError<T>(ex: IteratorResult<ExecutionResult<T, unknown>, unk
 
 // ----------------------------------------------------------------------------
 
-// Blocks are produced on devnet about every 6 seconds.
-
-// Mina has a "confirmation depth" where only blocks N below the head are
-// really confirmed. It seems like we don't have to handle that on Midnight.
-
 function defaultIndexerWs(indexer: string): string {
   const url = new URL(indexer);
   url.protocol = url.protocol === 'http:' ? 'ws:' : 'wss:';
@@ -233,7 +228,7 @@ class MidnightFunnel extends BaseFunnel implements ChainFunnel {
     baseBlockNumber: number,
     block: CachedBlock
   ): ChainDataExtensionDatum[] {
-    const result = [];
+    const result: CdeMidnightContractStateDatum[] = [];
 
     const contractAddressToExtension = new Map(
       this.sharedData.extensions.flatMap(ext =>
@@ -254,14 +249,6 @@ class MidnightFunnel extends BaseFunnel implements ChainFunnel {
           // We could downcast contractCall to see if operations() contains something useful.
           // For now let's report on the ledger variable contents.
           const jsState = state.data.encode();
-          console.log(
-            '-- cde',
-            extension,
-            'contract @',
-            contractCall.address,
-            'has state',
-            JSON.stringify(jsState)
-          );
 
           result.push({
             blockNumber: baseBlockNumber,
@@ -274,9 +261,7 @@ class MidnightFunnel extends BaseFunnel implements ChainFunnel {
 
             scheduledPrefix: extension.scheduledPrefix,
             payload: JSON.stringify(jsState),
-          } satisfies CdeMidnightContractStateDatum);
-        } else {
-          console.log('discarding contract @', contractCall.address);
+          });
         }
       }
     }
@@ -391,6 +376,14 @@ class MidnightFunnel extends BaseFunnel implements ChainFunnel {
       });
     }
     return composed;
+  }
+
+  public override configPrint(): FunnelJson {
+    return {
+      type: 'MidnightFunnel',
+      chainName: this.chainInfo.name,
+      child: this.baseFunnel.configPrint(),
+    };
   }
 }
 
