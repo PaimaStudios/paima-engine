@@ -1,4 +1,4 @@
-use aiken/transaction.{OutputReference}
+use cardano/transaction.{OutputReference}
 
 pub type MintActionType {
   MintToken(OutputReference, TransactionBodyPieces, Metadata)

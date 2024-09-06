@@ -1,13 +1,11 @@
 use aiken/builtin
-use aiken/bytearray
-use aiken/list
-use aiken/transaction.{
+use aiken/collection/list
+use aiken/primitive/bytearray
+use cardano/address.{Address, Inline, Script, VerificationKey}
+use cardano/assets.{Lovelace, Value}
+use cardano/transaction.{
   Datum, DatumHash, InlineDatum, Input, NoDatum, Output, OutputReference,
 }
-use aiken/transaction/credential.{
-  Address, Inline, ScriptCredential, VerificationKeyCredential,
-}
-use aiken/transaction/value.{Value}
 
 pub fn convert_inputs(inputs: List<Input>) -> ByteArray {
   let (length, bytes) =
@@ -19,7 +17,7 @@ pub fn convert_inputs(inputs: List<Input>) -> ByteArray {
 
         (
           acc.1st + 1,
-          bytearray.concat(#"82", builtin.serialise_data(hash.hash))
+          bytearray.concat(#"82", builtin.serialise_data(hash))
             |> bytearray.concat(builtin.serialise_data(index))
             |> bytearray.concat(acc.2nd),
         )
@@ -63,8 +61,8 @@ pub fn convert_outputs(outputs: List<Output>) -> ByteArray {
   }
 }
 
-pub fn convert_fee(fee: Value) -> ByteArray {
-  value.lovelace_of(fee) |> builtin.serialise_data
+pub fn convert_fee(fee: Lovelace) -> ByteArray {
+  fee |> builtin.serialise_data
 }
 
 pub fn convert_extra_signatories(signatures: List<ByteArray>) -> ByteArray {
@@ -95,8 +93,8 @@ fn convert_datum(datum: Datum) -> (Int, ByteArray) {
 }
 
 fn convert_value(assets: Value) -> ByteArray {
-  let lovelace = value.lovelace_of(assets) |> builtin.serialise_data
-  let multi_asset = value.without_lovelace(assets) |> builtin.serialise_data
+  let lovelace = assets.lovelace_of(assets) |> builtin.serialise_data
+  let multi_asset = assets.without_lovelace(assets) |> builtin.serialise_data
 
   if multi_asset == #"a0" {
     lovelace
@@ -109,14 +107,14 @@ fn convert_address(address: Address) -> ByteArray {
   //; bit 4: payment cred is keyhash/scripthash
   let (header_byte_pc, credential_p) =
     when address.payment_credential is {
-      ScriptCredential(cred) -> (16, cred)
-      VerificationKeyCredential(cred) -> (0, cred)
+      Script(cred) -> (16, cred)
+      VerificationKey(cred) -> (0, cred)
     }
   let (header_byte_sc, credential_s) =
     when address.stake_credential is {
       None -> (96, "")
-      Some(Inline(VerificationKeyCredential(cred))) -> (0, cred)
-      Some(Inline(ScriptCredential(cred))) -> (32, cred)
+      Some(Inline(VerificationKey(cred))) -> (0, cred)
+      Some(Inline(Script(cred))) -> (32, cred)
       _ -> fail @"no way"
     }
   builtin.cons_bytearray(

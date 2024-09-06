@@ -1,11 +1,10 @@
-use aiken/dict
-use aiken/list
+use aiken/collection/dict
+use aiken/collection/list
 use aiken/merkle_patricia_forestry.{Proof}
 use aiken/merkle_patricia_forestry/merkling.{null_hash}
-use aiken/transaction.{InlineDatum, Output, OutputReference, Transaction}
-use aiken/transaction/credential.{Address, Credential}
-use aiken/transaction/value.{PolicyId, Value}
-use inverse_whirlpool/types/data.{RootHash}
+use cardano/address.{Address, Credential}
+use cardano/assets.{PolicyId, Value}
+use cardano/transaction.{InlineDatum, Output, OutputReference, Transaction}
 
 pub type MintActions {
   InitMerkle
@@ -24,7 +23,7 @@ pub type ValidateActions {
 }
 
 pub type State {
-  Merkle { root: RootHash, own_hash: PolicyId }
+  Merkle { root: ByteArray, own_hash: PolicyId }
   Account(Credential, Int)
 }
 
@@ -48,8 +47,7 @@ pub fn init_merkle(
   // Control mint value
   expect [Pair(_, 1)] =
     tx.mint
-      |> value.from_minted_value
-      |> value.tokens(own_policy)
+      |> assets.tokens(own_policy)
       |> dict.to_pairs
 
   let Output {
@@ -61,7 +59,7 @@ pub fn init_merkle(
 
   and {
     actual_address == expected_address,
-    value.without_lovelace(actual_value) == expected_value,
+    assets.without_lovelace(actual_value) == expected_value,
     actual_data == expected_data,
   }
 }

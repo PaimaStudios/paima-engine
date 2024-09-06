@@ -1,5 +1,5 @@
 use aiken/builtin
-use aiken/transaction.{Datum, InlineDatum}
+use cardano/transaction.{Datum, InlineDatum}
 
 pub fn get_inline_datum(datum: Datum) -> Data {
   expect InlineDatum(datum) = datum

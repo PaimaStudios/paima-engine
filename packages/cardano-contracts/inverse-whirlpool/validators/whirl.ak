@@ -1,20 +1,16 @@
 use aiken/builtin
-use aiken/bytearray
-use aiken/cbor
-use aiken/dict
-use aiken/hash.{blake2b_256}
-use aiken/list
+use aiken/collection/dict
+use aiken/collection/list
+use aiken/collection/pairs
+use aiken/crypto.{blake2b_256}
 use aiken/merkle_patricia_forestry.{from_root, insert}
-use aiken/option
-use aiken/pairs
-use aiken/transaction.{
-  InlineDatum, Input, Mint, Output, OutputReference, ScriptContext, Spend,
-  Transaction,
+use aiken/option.{map}
+use aiken/primitive/bytearray
+use cardano/address.{Address, Script, VerificationKey}
+use cardano/assets.{PolicyId}
+use cardano/transaction.{
+  InlineDatum, Input, Output, OutputReference, Transaction,
 }
-use aiken/transaction/credential.{
-  Address, Inline, ScriptCredential, VerificationKeyCredential,
-}
-use aiken/transaction/value
 use inverse_whirlpool/conversion.{
   convert_extra_signatories, convert_fee, convert_inputs, convert_mint,
   convert_outputs,
@@ -22,39 +18,34 @@ use inverse_whirlpool/conversion.{
 use inverse_whirlpool/types/actions.{
   BurnToken, MintActionType, MintToken, TransactionBodyPieces,
 }
-use inverse_whirlpool/utils.{
-  get_inline_datum, integer_to_bytes, list_at, skip_to,
-}
+use inverse_whirlpool/utils.{get_inline_datum, list_at, skip_to}
 use inverse_whirlpool/validation.{
   Account, BurnAccount, CreateAccount, DestroyAccount, IncrementAccount,
   InitMerkle, Merkle, MintActions, SpendMerkleRoot, State, ValidateActions,
   init_merkle,
 }
-use aiken/string.{concat, from_int}
 
-validator(init_ref: OutputReference) {
-  fn merkle_minter(rdmr: MintActions, ctx: ScriptContext) -> Bool {
+validator merkle(init_ref: OutputReference) {
+  mint(rdmr: MintActions, own_policy: PolicyId, tx: Transaction) {
+    trace @"Running Merkle Mint Validatator"
 
-    trace "Running Merkle Mint Validatator"
-
-    expect ScriptContext { transaction: tx, purpose: Mint(own_policy) } = ctx
-
-    let expected_address = Address(ScriptCredential(own_policy), None)
+    let expected_address = Address(Script(own_policy), None)
 
     // Use empty asset name as the master token
-    let expected_value = value.from_asset(own_policy, "", 1)
+    let expected_value = assets.from_asset(own_policy, "", 1)
 
-    trace "Preamble Complete"
+    trace @"Preamble Complete"
 
     when rdmr is {
       InitMerkle -> {
-        trace "InitMerkle"
+        trace @"InitMerkle"
         init_merkle(init_ref, tx, own_policy, expected_address, expected_value)
       }
 
       CreateAccount { account, merkle_proof_block, output_index } -> {
-        trace "CreateAccount"
-        let account_hash = account |> builtin.serialise_data |> hash.blake2b_256
+        trace @"CreateAccount"
+        let account_hash =
+          account |> builtin.serialise_data |> crypto.blake2b_256
 
         expect Some(merkle_input) =
           tx.inputs
@@ -66,8 +57,8 @@ validator(init_ref: OutputReference) {
         expect Merkle { root: input_root, .. }: State =
           get_inline_datum(input_data)
 
-        expect [merkle_output, user_account_output, ..] =
-          skip_to(tx.outputs, output_index)
+        expect [merkle_output,
+          user_account_output, ..] = skip_to(tx.outputs, output_index)
 
         let Output {
           address: output_address,
@@ -87,13 +78,12 @@ validator(init_ref: OutputReference) {
         } = user_account_output
 
         let expected_account_value =
-          value.from_asset(own_policy, account_hash, 1)
+          assets.from_asset(own_policy, account_hash, 1)
 
         // Control mint value
         expect [Pair(minted_token, 1)] =
           tx.mint
-            |> value.from_minted_value
-            |> value.tokens(own_policy)
+            |> assets.tokens(own_policy)
             |> dict.to_pairs
 
         trace concat(@"Account Hash: ", account_hash |> bytearray.to_hex())
@@ -101,79 +91,84 @@ validator(init_ref: OutputReference) {
 
         // trace concat(@"Own output_address: ", output_address)
         // trace concat(@"Own expected_address: ", expected_address |> bytearray.to_hex())
+        trace concat(@"Own Hash: ", own_hash |> bytearray.to_hex())
+        trace concat(@"Own Policy: ", own_policy |> bytearray.to_hex())
 
-        trace concat(@"Own Hash: ", own_hash |> bytearray.to_hex() )
-        trace concat(@"Own Policy: ", own_policy |> bytearray.to_hex() )
-
-        trace concat(@"input_root: ", input_root |> bytearray.to_hex() )
-        trace concat(@"account_hash: ", account_hash |> bytearray.to_hex() )
-        trace concat(@"Outputroot: ", output_root |> bytearray.to_hex() )
-
+        trace concat(@"input_root: ", input_root |> bytearray.to_hex())
+        trace concat(@"account_hash: ", account_hash |> bytearray.to_hex())
+        trace concat(@"Outputroot: ", output_root |> bytearray.to_hex())
 
         and {
           // Verify new and old merkle roots
           insert(
             input_root |> from_root,
-            account_hash,
+            account_hash |> crypto.blake2b_256,
             account_hash,
             merkle_proof_block,
           ) == from_root(output_root),
           // Verify utxo is preserved
-          value.without_lovelace(input_value) == expected_value,
-          output_address == expected_address, // Fairly Positive this is GOOD
-          value.without_lovelace(output_value) == expected_value,
-          own_hash == own_policy,            // GOOD
+          assets.without_lovelace(input_value) == expected_value,
+          output_address == expected_address,
+          // Fairly Positive this is GOOD
+          assets.without_lovelace(output_value) == expected_value,
+          own_hash == own_policy,
+          // GOOD
           // Verify account token is created
-          minted_token == account_hash,      // GOOD
+          minted_token == account_hash,
+          // GOOD
           // Verify account utxo is created
-          account_address.payment_credential == ScriptCredential(own_policy), // Fairly Positive this is GOOD
-          value.without_lovelace(account_value) == expected_account_value,
-          account_data == InlineDatum(Account(account, 1)), // Fairly Positive this is GOOD
+          account_address.payment_credential == Script(own_policy),
+          // Fairly Positive this is GOOD
+          assets.without_lovelace(account_value) == expected_account_value,
+          account_data == InlineDatum(Account(account, 1)),
         }
       }
 
+      // Fairly Positive this is GOOD
       BurnAccount -> {
-        trace "BurnAccount"
+        trace @"BurnAccount"
 
         expect [Pair(_, amount)] =
           tx.mint
-            |> value.from_minted_value
-            |> value.tokens(own_policy)
+            |> assets.tokens(own_policy)
             |> dict.to_pairs
         amount == -1
       }
     }
   }
 
-  fn validate(datum: State, rdmr: ValidateActions, ctx: ScriptContext) -> Bool {
+  spend(
+    datum: Option<State>,
+    rdmr: ValidateActions,
+    own_ref: OutputReference,
+    transaction: Transaction,
+  ) {
     when rdmr is {
       SpendMerkleRoot -> {
-        trace "SpendMerkleRoot"
+        trace @"SpendMerkleRoot"
         // Depend on the execution of the mint contract to ensure spend validation
-        expect Merkle(_, policy_id) = datum
+        expect Some(Merkle(_, policy_id)) = datum
 
-        trace concat(@"Policy ID: ", policy_id  |> bytearray.to_hex())
+        trace concat(@"Policy ID: ", policy_id |> bytearray.to_hex())
 
         expect [Pair(_, amount)] =
-          ctx.transaction.mint
-            |> value.from_minted_value
-            |> value.tokens(policy_id)
+          transaction.mint
+            |> assets.tokens(policy_id)
             |> dict.to_pairs
 
         amount == 1
       }
       IncrementAccount(output_index) -> {
-        trace "IncrementAccount"
-        expect Spend(own_ref) = ctx.purpose
+        trace @"IncrementAccount"
 
-        expect Account(credential, current_amount) = datum
+        expect Some(Account(credential, current_amount)) = datum
 
         expect Some(own_input) =
           list.find(
-            ctx.transaction.inputs,
+            transaction.inputs,
             fn(input) { input.output_reference == own_ref },
           )
-            |> option.map(fn(input) { input.output })
+            |> map(fn(input) { input.output })
 
         let Output { address: input_address, value: input_value, .. } =
           own_input
@@ -183,17 +178,16 @@ validator(init_ref: OutputReference) {
           value: output_value,
           datum: output_data,
           ..
-        } = list_at(ctx.transaction.outputs, output_index)
+        } = list_at(transaction.outputs, output_index)
 
         and {
           when credential is {
-            VerificationKeyCredential(vk) ->
-              list.has(ctx.transaction.extra_signatories, vk)
+            VerificationKey(vk) -> list.has(transaction.extra_signatories, vk)
 
-            sh -> pairs.has_key(ctx.transaction.withdrawals, Inline(sh))
+            sh -> pairs.has_key(transaction.withdrawals, sh)
           },
           input_address == output_address,
-          value.without_lovelace(input_value) == value.without_lovelace(
+          assets.without_lovelace(input_value) == assets.without_lovelace(
             output_value,
           ),
           output_data == InlineDatum(Account(credential, current_amount + 1)),
@@ -201,28 +195,25 @@ validator(init_ref: OutputReference) {
       }
 
       DestroyAccount -> {
-        trace "DestroyAcc"
+        trace @"DestroyAcc"
         // Depend on the execution of the mint contract to ensure spend validation
-        expect Account(credential, _) = datum
-
-        expect Spend(own_ref) = ctx.purpose
+        expect Some(Account(credential, _)) = datum
 
         expect Some(own_script_hash) =
-          ctx.transaction.inputs
+          transaction.inputs
             |> list.find(fn(input) { input.output_reference == own_ref })
             |> option.map(
                 fn(input) {
                   when input.output.address.payment_credential is {
-                    ScriptCredential(own_script_hash) -> own_script_hash
+                    Script(own_script_hash) -> own_script_hash
                     _ -> fail @"Impossible"
                   }
                 },
               )
 
         expect [Pair(token_name, amount)] =
-          ctx.transaction.mint
-            |> value.from_minted_value
-            |> value.tokens(own_script_hash)
+          transaction.mint
+            |> assets.tokens(own_script_hash)
             |> dict.to_pairs
 
         and {
@@ -230,33 +221,30 @@ validator(init_ref: OutputReference) {
           token_name == (
             credential
               |> builtin.serialise_data
-              |> hash.blake2b_256
+              |> crypto.blake2b_256
           ),
           when credential is {
-            VerificationKeyCredential(vk) ->
-              list.has(ctx.transaction.extra_signatories, vk)
+            VerificationKey(vk) -> list.has(transaction.extra_signatories, vk)
 
-            sh -> pairs.has_key(ctx.transaction.withdrawals, Inline(sh))
+            sh -> pairs.has_key(transaction.withdrawals, sh)
           },
         }
       }
     }
   }
+
+  else(_) {
+    fail
+  }
 }
 
-validator(merkle_policy: ByteArray, validate_match: Bool) {
-  fn mint(action: Data, context: ScriptContext) -> Bool {
-    let ScriptContext { transaction, purpose } = context
+validator paima_mint(merkle_policy: ByteArray, validate_match: Bool) {
+  mint(action: Data, script_policy_id: PolicyId, transaction: Transaction) {
     let Transaction { inputs, outputs, extra_signatories, mint, fee, id, .. } =
       transaction
 
-    // Expect that the tx is minting
-    expect Mint(script_policy_id) = purpose
-
     // Deconstruct the transaction into its base components:
     // Inputs, Outputs, Inline Datum, and a list of Minted Tokens
-    let mint = value.from_minted_value(mint)
-
     trace @"Mint Preamble Complete"
 
     trace cbor.diagnostic(action)
@@ -266,7 +254,7 @@ validator(merkle_policy: ByteArray, validate_match: Bool) {
     when action is {
       BurnToken ->
         list.all(
-          mint |> value.tokens(script_policy_id) |> dict.to_pairs,
+          mint |> assets.tokens(script_policy_id) |> dict.to_pairs,
           fn(amount_map) {
             let Pair(_, amount) = amount_map
             amount == -1
@@ -284,7 +272,7 @@ validator(merkle_policy: ByteArray, validate_match: Bool) {
           mint // this is the script hash of true.mint
             // WARNING: this has to be updated if the true.mint compiled code changes
             
-          |> value.tokens(
+          |> assets.tokens(
                 #"9fc33a6ffaa8d1f600c161aa383739d5af37807ed83347cc133521c9",
               )
             |> dict.to_pairs
@@ -326,7 +314,7 @@ validator(merkle_policy: ByteArray, validate_match: Bool) {
 
         trace tx_cbor |> builtin.blake2b_256 |> bytearray.to_hex
 
-        trace bytearray.to_hex(id.hash)
+        trace bytearray.to_hex(id)
 
         expect Some(input) =
           list.find(inputs, fn(input) { input_ref == input.output_reference })
@@ -336,28 +324,28 @@ validator(merkle_policy: ByteArray, validate_match: Bool) {
         expect Account(credential, amount): State = get_inline_datum(datum)
 
         let expected_value =
-          value.from_asset(
+          assets.from_asset(
             merkle_policy,
-            credential |> builtin.serialise_data |> hash.blake2b_256,
+            credential |> builtin.serialise_data |> crypto.blake2b_256,
             1,
           )
         expect [Pair(token_name, 1)] =
-          mint |> value.tokens(script_policy_id) |> dict.to_pairs
+          mint |> assets.tokens(script_policy_id) |> dict.to_pairs
 
         // let expected_metadata =
         //   "const format" |> bytearray.concat(url) |> bytearray.concat("ending")
         and {
           if validate_match {
-            id.hash == ( tx_cbor |> builtin.blake2b_256 )
+            id == ( tx_cbor |> builtin.blake2b_256 )
           } else {
-            id.hash != ( tx_cbor |> builtin.blake2b_256 )
+            id != ( tx_cbor |> builtin.blake2b_256 )
           }?,
-          (value.without_lovelace(value) == expected_value)?,
+          (assets.without_lovelace(value) == expected_value)?,
           (token_name == (
             credential
               |> builtin.serialise_data
               |> bytearray.concat(amount |> builtin.serialise_data)
-              |> hash.blake2b_256
+              |> crypto.blake2b_256
           ))?,
           (blake2b_256(metadata) == metadata_hash)?,
           // Metadata validation here
@@ -366,13 +354,17 @@ validator(merkle_policy: ByteArray, validate_match: Bool) {
       }
     }
     // and {
-    //   expected_value == value.without_lovelace(value),
+    //   expected_value == assets.without_lovelace(value),
     //   token_name == (
     //     credential
     //       |> builtin.serialise_data
     //       |> bytearray.concat(amount |> builtin.serialise_data)
-    //       |> hash.blake2b_256
+    //       |> crypto.blake2b_256
     //   ),
     // }
+  }
+
+  else(_) {
+    fail
   }
 }
