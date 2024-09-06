@@ -1,4 +1,4 @@
-CREATE TABLE paima_blocks ( 
+CREATE TABLE paima_blocks (
   block_height INTEGER PRIMARY KEY,
   ver INTEGER NOT NULL,
   main_chain_block_hash BYTEA NOT NULL,
@@ -6,7 +6,7 @@ CREATE TABLE paima_blocks (
   ms_timestamp TIMESTAMP without time zone NOT NULL,
 
   -- note: slightly awkward, but this field is nullable
-  --       this helps other SQL queries refer to the block before the block is done being processed 
+  --       this helps other SQL queries refer to the block before the block is done being processed
   paima_block_hash BYTEA
 );
 
@@ -152,7 +152,7 @@ CREATE TABLE delegations (
 create or replace function public.notify_wallet_connect()
   returns trigger
   language plpgsql
-as $function$ 
+as $function$
 DECLARE
   rec RECORD;
   payload TEXT;
@@ -168,7 +168,7 @@ begin
     ELSE
       RAISE EXCEPTION 'Unknown TG_OP: "%". Should not occur!', TG_OP;
   END CASE;
- 
+
    -- Get required fields
   FOREACH column_name IN ARRAY TG_ARGV LOOP
     EXECUTE format('SELECT $1.%I::TEXT', column_name)
@@ -185,7 +185,7 @@ begin
               || '"table":"'     || TG_TABLE_NAME                        || '",'
               || '"data":{'      || array_to_string(payload_items, ',')  || '}'
               || '}';
-             
+
 	perform pg_notify('wallet_connect_change', payload);
  	return null;
 end;
@@ -270,6 +270,12 @@ CREATE TABLE cde_cardano_mint_burn(
 CREATE TABLE mina_checkpoint (
   timestamp TEXT NOT NULL,
   caip2 TEXT NOT NULL,
+  PRIMARY KEY (caip2)
+);
+
+CREATE TABLE midnight_checkpoint (
+  caip2 TEXT NOT NULL,
+  timestamp TEXT NOT NULL,
   PRIMARY KEY (caip2)
 );
 
