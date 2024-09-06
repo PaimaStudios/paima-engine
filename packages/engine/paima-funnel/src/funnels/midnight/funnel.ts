@@ -14,6 +14,7 @@ import {
   doLog,
   ENV,
   hexStringToUint8Array,
+  InternalEventType,
   logError,
 } from '@paima/utils';
 import { FUNNEL_PRESYNC_FINISHED } from '@paima/utils';
@@ -25,6 +26,7 @@ import { FunnelCacheEntry } from '../FunnelCache.js';
 import { ChainInfo, composeChainData } from '../../utils.js';
 import { Client, createClient, ExecutionResult } from 'graphql-ws';
 import { WebSocket } from 'ws';
+import { getMidnightCheckpoint } from '@paima/db';
 
 // ----------------------------------------------------------------------------
 
@@ -379,14 +381,23 @@ class MidnightFunnel extends BaseFunnel implements ChainFunnel {
       }
     }
 
-    // TODO: We could cache `block` instead of refetching it next time we're called.
-
-    return composeChainData(baseData, result);
+    // Insert the internal MidnightLastBlock event into each ChainData.
+    const composed = composeChainData(baseData, result);
+    for (const chainData of composed) {
+      (chainData.internalEvents ??= []).push({
+        type: InternalEventType.MidnightLastBlock,
+        caip2: this.caip2,
+        block: this.cache.nextBlockHeight - 1,
+      });
+    }
+    return composed;
   }
 }
 
 export class MidnightFunnelCacheEntry implements FunnelCacheEntry {
   static readonly SYMBOL = Symbol('MidnightFunnelCacheEntry');
+
+  caip2: string;
 
   /** Lowest Midnight block height that has not been processed by the funnel. */
   nextBlockHeight: number = 0;
@@ -397,15 +408,26 @@ export class MidnightFunnelCacheEntry implements FunnelCacheEntry {
   wsBlocks: CachedBlock[];
 
   constructor(config: MidnightConfig) {
+    this.caip2 = caip2PrefixFor(config);
+
     this.wsClient = createClient({
       url: config.indexerWS ?? defaultIndexerWs(config.indexer),
       webSocketImpl: WebSocket,
     });
-
     this.iter = this.wsClient.iterate<{ blocks: CachedBlock }>({
       query: `subscription { blocks { ${cachedBlockQuery} } }`,
     });
     this.wsBlocks = [];
+  }
+
+  async load(dbTx: PoolClient): Promise<MidnightFunnelCacheEntry> {
+    const checkpoint = await getMidnightCheckpoint.run({ caip2: this.caip2 }, dbTx);
+    console.log(checkpoint);
+    if (checkpoint.length > 0) {
+      this.nextBlockHeight = Number(checkpoint[0].block_height) + 1;
+    }
+
+    return this;
   }
 
   clear(): void {
@@ -422,7 +444,7 @@ export async function wrapToMidnightFunnel(
   try {
     // Connect to the cache.
     const cache = (sharedData.cacheManager.cacheEntries[MidnightFunnelCacheEntry.SYMBOL] ??=
-      new MidnightFunnelCacheEntry(chainInfo.config));
+      await new MidnightFunnelCacheEntry(chainInfo.config).load(dbTx));
     return new MidnightFunnel(sharedData, dbTx, chainInfo, baseFunnel, cache);
   } catch (err) {
     // Log then rethrow???

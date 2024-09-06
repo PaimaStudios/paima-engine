@@ -275,7 +275,7 @@ CREATE TABLE mina_checkpoint (
 
 CREATE TABLE midnight_checkpoint (
   caip2 TEXT NOT NULL,
-  timestamp TEXT NOT NULL,
+  block_height INTEGER NOT NULL,
   PRIMARY KEY (caip2)
 );
 

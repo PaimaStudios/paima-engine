@@ -3,8 +3,8 @@ import { PreparedQuery } from '@pgtyped/runtime';
 
 /** 'UpdateMidnightCheckpoint' parameters type */
 export interface IUpdateMidnightCheckpointParams {
+  block_height: number;
   caip2: string;
-  timestamp: string;
 }
 
 /** 'UpdateMidnightCheckpoint' return type */
@@ -16,20 +16,20 @@ export interface IUpdateMidnightCheckpointQuery {
   result: IUpdateMidnightCheckpointResult;
 }
 
-const updateMidnightCheckpointIR: any = {"usedParamSet":{"caip2":true,"timestamp":true},"params":[{"name":"caip2","required":true,"transform":{"type":"scalar"},"locs":[{"a":73,"b":79}]},{"name":"timestamp","required":true,"transform":{"type":"scalar"},"locs":[{"a":86,"b":96},{"a":146,"b":156}]}],"statement":"INSERT INTO midnight_checkpoint(\n    caip2,\n    timestamp\n) VALUES (\n    :caip2!,\n    :timestamp!\n)\nON CONFLICT (caip2) DO\nUPDATE SET timestamp = :timestamp!"};
+const updateMidnightCheckpointIR: any = {"usedParamSet":{"caip2":true,"block_height":true},"params":[{"name":"caip2","required":true,"transform":{"type":"scalar"},"locs":[{"a":76,"b":82}]},{"name":"block_height","required":true,"transform":{"type":"scalar"},"locs":[{"a":89,"b":102},{"a":155,"b":168}]}],"statement":"INSERT INTO midnight_checkpoint(\n    caip2,\n    block_height\n) VALUES (\n    :caip2!,\n    :block_height!\n)\nON CONFLICT (caip2) DO\nUPDATE SET block_height = :block_height!"};
 
 /**
  * Query generated from SQL:
  * ```
  * INSERT INTO midnight_checkpoint(
  *     caip2,
- *     timestamp
+ *     block_height
  * ) VALUES (
  *     :caip2!,
- *     :timestamp!
+ *     :block_height!
  * )
  * ON CONFLICT (caip2) DO
- * UPDATE SET timestamp = :timestamp!
+ * UPDATE SET block_height = :block_height!
  * ```
  */
 export const updateMidnightCheckpoint = new PreparedQuery<IUpdateMidnightCheckpointParams,IUpdateMidnightCheckpointResult>(updateMidnightCheckpointIR);
@@ -42,7 +42,7 @@ export interface IGetMidnightCheckpointParams {
 
 /** 'GetMidnightCheckpoint' return type */
 export interface IGetMidnightCheckpointResult {
-  timestamp: string;
+  block_height: number;
 }
 
 /** 'GetMidnightCheckpoint' query type */
@@ -51,12 +51,12 @@ export interface IGetMidnightCheckpointQuery {
   result: IGetMidnightCheckpointResult;
 }
 
-const getMidnightCheckpointIR: any = {"usedParamSet":{"caip2":true},"params":[{"name":"caip2","required":true,"transform":{"type":"scalar"},"locs":[{"a":56,"b":62}]}],"statement":"SELECT timestamp FROM midnight_checkpoint WHERE caip2 = :caip2! LIMIT 1"};
+const getMidnightCheckpointIR: any = {"usedParamSet":{"caip2":true},"params":[{"name":"caip2","required":true,"transform":{"type":"scalar"},"locs":[{"a":59,"b":65}]}],"statement":"SELECT block_height FROM midnight_checkpoint WHERE caip2 = :caip2! LIMIT 1"};
 
 /**
  * Query generated from SQL:
  * ```
- * SELECT timestamp FROM midnight_checkpoint WHERE caip2 = :caip2! LIMIT 1
+ * SELECT block_height FROM midnight_checkpoint WHERE caip2 = :caip2! LIMIT 1
  * ```
  */
 export const getMidnightCheckpoint = new PreparedQuery<IGetMidnightCheckpointParams,IGetMidnightCheckpointResult>(getMidnightCheckpointIR);

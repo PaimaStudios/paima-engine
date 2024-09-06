@@ -38,7 +38,8 @@ export type InternalEvent =
   | CardanoEpochEvent
   | EvmLastBlockEvent
   | MinaLastTimestampEvent
-  | AvailLastBlockEvent;
+  | AvailLastBlockEvent
+  | MidnightLastBlockEvent;
 export type CardanoEpochEvent = { type: InternalEventType.CardanoBestEpoch; epoch: number };
 export type EvmLastBlockEvent = {
   type: InternalEventType.EvmLastBlock;
@@ -52,6 +53,11 @@ export type MinaLastTimestampEvent = {
 };
 export type AvailLastBlockEvent = {
   type: InternalEventType.AvailLastBlock;
+  block: number;
+  caip2: string;
+};
+export type MidnightLastBlockEvent = {
+  type: InternalEventType.MidnightLastBlock;
   block: number;
   caip2: string;
 };

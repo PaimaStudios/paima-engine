@@ -1,13 +1,13 @@
 /* @name updateMidnightCheckpoint */
 INSERT INTO midnight_checkpoint(
     caip2,
-    timestamp
+    block_height
 ) VALUES (
     :caip2!,
-    :timestamp!
+    :block_height!
 )
 ON CONFLICT (caip2) DO
-UPDATE SET timestamp = :timestamp!;
+UPDATE SET block_height = :block_height!;
 
 /* @name getMidnightCheckpoint */
-SELECT timestamp FROM midnight_checkpoint WHERE caip2 = :caip2! LIMIT 1;
+SELECT block_height FROM midnight_checkpoint WHERE caip2 = :caip2! LIMIT 1;

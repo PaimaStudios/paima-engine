@@ -742,7 +742,7 @@ const TABLE_DATA_MINA_CHECKPOINT: TableData = {
 const QUERY_CREATE_TABLE_MIDNIGHT_CHECKPOINT = `
 CREATE TABLE midnight_checkpoint (
   caip2 TEXT NOT NULL,
-  timestamp TEXT NOT NULL,
+  block_height INTEGER NOT NULL,
   PRIMARY KEY (caip2)
 );
 `;
@@ -752,7 +752,7 @@ const TABLE_DATA_MIDNIGHT_CHECKPOINT: TableData = {
   primaryKeyColumns: ['caip2'],
   columnData: packTuples([
     ['caip2', 'text', 'NO', ''],
-    ['timestamp', 'text', 'NO', ''],
+    ['block_height', 'integer', 'NO', ''],
   ]),
   serialColumns: [],
   creationQuery: QUERY_CREATE_TABLE_MIDNIGHT_CHECKPOINT,
