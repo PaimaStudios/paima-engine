@@ -1,3 +1,5 @@
+import { ContractState, setNetworkId } from '@midnight-ntwrk/compact-runtime';
+import { getMidnightCheckpoint } from '@paima/db';
 import type { ChainFunnel, ReadPresyncDataFrom, SubmittedData } from '@paima/runtime';
 import type {
   CdeMidnightContractStateDatum,
@@ -6,6 +8,7 @@ import type {
   InternalEvent,
   PresyncChainData,
 } from '@paima/sm';
+import type { MidnightConfig } from '@paima/utils';
 import {
   caip2PrefixFor,
   ChainDataExtensionDatumType,
@@ -13,20 +16,17 @@ import {
   ConfigNetworkType,
   doLog,
   ENV,
+  FUNNEL_PRESYNC_FINISHED,
   hexStringToUint8Array,
   InternalEventType,
   logError,
 } from '@paima/utils';
-import { FUNNEL_PRESYNC_FINISHED } from '@paima/utils';
-import { PoolClient } from 'pg';
-import { BaseFunnel, type FunnelSharedData } from '../BaseFunnel.js';
-import type { MidnightConfig } from '@paima/utils';
-import { ContractState, setNetworkId } from '@midnight-ntwrk/compact-runtime';
-import { FunnelCacheEntry } from '../FunnelCache.js';
-import { ChainInfo, composeChainData } from '../../utils.js';
 import { Client, createClient, ExecutionResult } from 'graphql-ws';
+import { PoolClient } from 'pg';
 import { WebSocket } from 'ws';
-import { getMidnightCheckpoint } from '@paima/db';
+import { ChainInfo, composeChainData } from '../../utils.js';
+import { BaseFunnel, type FunnelSharedData } from '../BaseFunnel.js';
+import { FunnelCacheEntry } from '../FunnelCache.js';
 
 // ----------------------------------------------------------------------------
 
