@@ -23,7 +23,12 @@ const contracts = [
   },
 ];
 
-// Config: Option Flags --------------------------------------------------------
+// Config: Flags ---------------------------------------------------------------
+
+// Network
+const previewOption = new Option('-p, --preview', 'Use testnet').default(true);
+
+// Provider
 const kupoUrlOption = new Option('-k, --kupo-url <string>', 'Kupo URL')
   .env('KUPO_URL')
   .makeOptionMandatory(false);
@@ -33,7 +38,11 @@ const ogmiosUrlOption = new Option('-o, --ogmios-url <string>', 'Ogmios URL')
 const blockfrostUrlOption = new Option('-b, --blockfrost-url <string>', 'Blockfrost URL')
   .env('BLOCKFROST_URL')
   .makeOptionMandatory(false);
-const previewOption = new Option('-p, --preview', 'Use testnet').default(true);
+
+// Extra
+const txHash = new Option('-tx, --tx-hash', 'Transaction Hash')
+  .env('tx_hash')
+  .makeOptionMandatory(false);
 
 // App -------------------------------------------------------------------------
 const app = new Command();
@@ -114,17 +123,35 @@ app
   .addOption(ogmiosUrlOption)          // Provider Option
   .action(async ({ preview }) => {
 
+    // Try to the the built contract code
+    let Validators;
+    try {
+      const contract = JSON.parse(fs.readFileSync('../plutus.json',{ encoding: 'utf-8' }));
+      Validators = getValidators(contracts, contract);
+    } catch (e) {
+      console.log(e);
+      console.log("No contract script found, ensure you've compiled the aiken code.");
+      return
+    }
+    // Try to the parameterized contract code
+    let parameterized_validator;
+    try {
+      parameterized_validator = await JSON.parse(fs.readFileSync('./data/param_script.json',{ encoding: 'utf-8' }));
+    } catch (e) {
+      console.log(e);
+      console.log("No parameterized script in src/data found. Make sure to initialize the contract with init_contract first");
+    }
+
     // Set up wallet API and provider API to broadcast the built TX
     // const provider = new Kupmios(kupoUrl, ogmiosUrl);
     const lucid = await api_blockfrost(preview ? 'Preview' : 'Mainnet' )
     await lucid.selectWalletFromSeed(fs.readFileSync('seed.txt', { encoding: 'utf-8' }));
    
-    console.log(lucid)
     // Initialize Lucid ----------------------------------------------------------
 
     // Try to execute the TX
     try {
-      const tx_info = await mint_token(lucid)
+      const tx_info = await mint_token(lucid, Validators, parameterized_validator)
     } catch (e) {
       console.log(e);
     }
@@ -175,6 +202,27 @@ app
     } catch (e) {
       console.log(e);
     }
+  });
+
+// App Command: Watches for TX Settlement ----------------------------------------------
+app
+  .command('checkTX')
+  .addOption(previewOption)            // Network
+  .addOption(blockfrostUrlOption)      // Provider Option
+  .addOption(kupoUrlOption)            // Provider Option
+  .addOption(ogmiosUrlOption)          // Provider Option
+  .addOption(txHash)                   // Transaction Hash
+  .description('Waits for a TX to settle on the blockchain')
+  .action(async ({ options, preview }) => {
+    
+    // Set up wallet API and provider API to broadcast the built TX
+    // const provider = new Kupmios(kupoUrl, ogmiosUrl);
+    console.log('Option info: ', txHash)
+
+    console.log('Awaiting transaction settlement for hash: ', options)
+    const lucid = await api_blockfrost(preview ? 'Preview' : 'Mainnet' )
+    //const txSuccess = await lucid.awaitTx(txHash)
+
   });
 
 // App Command: Initialize Wallet ----------------------------------------------

@@ -35,11 +35,20 @@ To run only tests matching the string `foo`, do:
 aiken check -m foo
 ```
 
+
 ## Executing
 
 To execute on-chain, some `nodejs` based off-chain code is provided in the `src` directory for a CLI based interaction. The `node` version used in developing this application was: `v20.2.0`
 
-### Initializing
+The set of actions:
+
+* init_contract
+* create_account
+* mint
+* burn
+* update
+
+### Set Up
 
 First, run `npm install` to install the required `node` packages for the CLI application. Next, set up a `.env` file with API keys for a provider. Not all variables must be defined, only at minimum the provider you choose to work with. The default provider Blockfrost. Your `.env` may look like so:
 ```
@@ -58,6 +67,41 @@ Additionally, the off-chain code expects a `seed.txt` file in the `src` director
 npm run execute init
 ```
 And if on the testnet, you may fund it with this [faucet](https://docs.cardano.org/cardano-testnets/tools/faucet/).
+
+
+### Initialization
+
+To instantiate the contract, execute the following command:
+
+```
+npm run execute init_contract
+```
+
+This mints a null assetname token into the contract with the policy ID of the merkle minter validator.
+
+Contract uniqueness is enforced through using the spent eUTXO as a parameter input for the contract. The contract parameters are saved in `data/param_script.json` for convenience and the merkle tree is stored in `data/merkle_forest_db`
+
+### Creating an Account
+
+An account tracks tokens in circulation and tracks metadata changes.
+
+A record is inserted 
+
+
+```
+npm run execute create_account
+```
+
+
+### Minting
+To mint an initial token, you can define metadata in the `metadata.json` file, and execute the following command. A sample `metadata.json` file is provided.
+```
+npm run execute mint
+```
+You can append a `-p` or `--preview` flag to the command to execute on the test network.
+```
+npm run execute mint -p
+```
 
 
 ### Minting

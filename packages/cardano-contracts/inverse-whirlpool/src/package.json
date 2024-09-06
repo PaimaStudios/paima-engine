@@ -10,7 +10,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@aiken-lang/merkle-patricia-forestry": "^1.0.1",
     "@commander-js/extra-typings": "^12.1.0",
+    "cbor-x": "^1.6.0",
     "dotenv": "^16.4.5",
     "lucid-cardano": "^0.10.7",
     "vue": "^3.4.21"

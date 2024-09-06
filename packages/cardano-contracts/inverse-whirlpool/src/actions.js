@@ -18,105 +18,6 @@ import { Encoder, decode } from 'cbor-x';
 const VERBOSE = true;
 
 // #############################################################################
-// ## MINT TOKEN
-// #############################################################################
-export const mint_token = async (API) => {
-
-  // Contract Initialization ---------------------------------------------------
-  if (VERBOSE) { console.log("INFO: Parameterizing Contracts"); }
-
-  // User Address
-  const userAddress = await API.wallet.address()
-  if (VERBOSE) { 
-    console.log({
-      "User Address": userAddress,
-      "Network": API.network
-    })
-  }
-
-  // Mint Validators
-  const Validator_AlwaysTrue = {type: "PlutusV2", script: Validators.AlwaysTrue.script };
-  const Validator_Metadata_Minter = {type: "PlutusV2", script: Validators.Metadata_Minter.script };
-
-  // Contract Addresses
-  const Address_Contract_Metadata_Minter = API.utils.validatorToAddress(Validator_Metadata_Minter);
-
-  // Policy IDs
-  const policyId_Metadata_Minter = API.utils.validatorToScriptHash(Validator_Metadata_Minter)
-  
-  // Define Sacrificial Token Information --------------------------------------
-  if (VERBOSE) { console.log("INFO: Defining Sacrificial and Primary Asset") };
-
-  // Configure Script Datum and Redeemer ----------------------------------------
-  if (VERBOSE) { console.log("INFO: Configuring Datum"); }
-
-  // Mint Action: InitMerkle (ref: validation.ak)
-  const mintRedeemer = Data.to(
-    new Constr(0, [])
-  );
-  const scriptDatumStructure = Data.Object({
-    credential: Data.Bytes,
-    amnt: Data.Integer(),
-  })
-  const scriptDatum = Data.to({credential: BigInt(1), amnt: BigInt(1)}, scriptDatumStructure)
-
-  // Build the First TX --------------------------------------------------------
-  // build a tx just to be able to compute what the script data hash will be
-  const script_data_hash = await buildPseudoTX(API, Validator_AlwaysTrue, metadata, scriptDatum)
-
-  // Define Primary Token Information ------------------------------------------
-  if (VERBOSE) { console.log("INFO: Defining Sacrificial and Primary Asset") };
-
-  // Token 2 - Token with scriptDataHash as the asset name
-  const quantity_token = 1 
-  const asset_token = `${policyId_Metadata_Minter}${(script_data_hash)}`
-  
-  if (VERBOSE) { console.log("INFO: scriptDataHash (to be used as assetName):", script_data_hash); }
-
-  // Build the Second TX -------------------------------------------------------
-  if (VERBOSE) { console.log("INFO: Building the Secondary TX"); }
-  const tx = await API.newTx()
-    .payToAddressWithData(
-      Address_Contract_Metadata_Minter, 
-      {inline: scriptDatum},
-      {},
-    ) 
-    .payToAddress(
-      userAddress, 
-      {[asset_token]: BigInt(quantity_token)},
-    ) 
-    .mintAssets({[asset_token]: BigInt(quantity_token)}, mintRedeemer)
-    .attachMintingPolicy(Validator_Metadata_Minter)
-    .attachMetadata(721n, metadata)
-    .addSigner(userAddress)
-    .complete();
-  if (VERBOSE) { console.log("INFO: Raw TX", tx.toString()); }
-
-  // Request User Signature ----------------------------------------------------
-  console.log("INFO: Requesting TX signature");
-  const signedTx = await tx.sign().complete();
-
-  // Submit the TX -------------------------------------------------------------
-  console.log("INFO: Attempting to submit the transaction");
-  const txHash = await signedTx.submit();
-
-  if (!txHash) {
-    console.log("There was a change to the script's metadata")
-  }
-   else {
-    console.log(`TX Hash Submitted: ${txHash}`);
-  }
-
-  // Return with TX hash -------------------------------------------------------
-  return {
-    tx_id: txHash,
-    address: Address_Contract_Metadata_Minter,
-    policy_id: policyId_Metadata_Minter,
-  };
-}
-
-
-// #############################################################################
 // ## MINT MERKLE INIT
 // #############################################################################
 export const init_merkle = async (API, Validators) => {
@@ -367,6 +268,10 @@ export const create_account = async (API, Validator_Merkle_Minter) => {
   }
    else {
     console.log(`TX Hash Submitted: ${txHash}`);
+    const txSuccess = await lucid.awaitTx(txHash)
+    if (txSuccess) {
+      console.log(`TX Settled on Chain`);
+    }
   }
 
   // Return with TX hash -------------------------------------------------------
@@ -377,6 +282,168 @@ export const create_account = async (API, Validator_Merkle_Minter) => {
   };
 }
 
+// #############################################################################
+// ## MINT TOKEN
+// #############################################################################
+export const mint_token = async (API, Validators, Validator_Merkle_Minter) => {
+
+  // Contract Initialization ---------------------------------------------------
+  if (VERBOSE) { console.log("INFO: Parameterizing Contracts"); }
+
+  // User Address
+  const userAddress = await API.wallet.address()
+  if (VERBOSE) { 
+    console.log({
+      "User Address": userAddress,
+      "Network": API.network
+    })
+  }
+
+  // Mint Validators
+  const Validator_AlwaysTrue = {type: "PlutusV2", script: Validators.AlwaysTrue.script };
+  const Validator_Metadata_Minter = {type: "PlutusV2", script: Validators.Metadata_Minter.script };
+
+  // Contract Addresses
+  const Address_Contract_Merkle_Minter = API.utils.validatorToAddress(Validator_Merkle_Minter);
+  const Address_Contract_Metadata_Minter = API.utils.validatorToAddress(Validator_Metadata_Minter);
+
+  // Policy IDs
+  const policyId_Always_True = API.utils.validatorToScriptHash(Validator_AlwaysTrue)
+  const policyId_Merkle_Minter = API.utils.validatorToScriptHash(Validator_Merkle_Minter)
+  const policyId_Metadata_Minter = API.utils.validatorToScriptHash(Validator_Metadata_Minter)
+  
+  if (VERBOSE) { 
+    console.log({
+      "Contract Address - Merkle-Minter:": Address_Contract_Merkle_Minter,
+      "Contract Address - Metadata-Minter:": Address_Contract_Metadata_Minter,
+      "Policy ID - Always True:": policyId_Always_True,
+      "Policy ID - Merkle-Minter:": policyId_Merkle_Minter,
+      "Policy ID - Metadata-Minter:": policyId_Metadata_Minter,
+    })
+  }
+
+  // Configure Script Datum and Redeemer ----------------------------------------
+  if (VERBOSE) { console.log("INFO: Configuring Datum"); }
+
+  // Mint Action: AlwaysTrue (ref: validation.ak)
+  const mintRedeemer1 = Data.to(
+    new Constr(0, [])
+  );
+  const scriptDatumStructure = Data.Object({
+    credential: Data.Bytes,
+    amnt: Data.Integer(),
+  })
+  const scriptDatum = Data.to({credential: BigInt(1), amnt: BigInt(1)}, scriptDatumStructure)
+
+  if (VERBOSE) { 
+    console.log('Pseudo Transaction:', {
+      "Script Datum": scriptDatum,
+      "Redeemer": mintRedeemer1,
+    })
+  }
+
+  // Build the First TX --------------------------------------------------------
+  // build a tx just to be able to compute what the script data hash will be
+  if (VERBOSE) { console.log("INFO: Building psuedo transaction") };
+  const script_data_hash = await buildPseudoTX(API, Validator_AlwaysTrue, metadata, scriptDatum)
+
+  // Define Primary Token Information ------------------------------------------
+  if (VERBOSE) { console.log("INFO: Defining Asset from Script Data Hash of Pseudo TX") };
+
+  // Token 2 - Token with scriptDataHash as the asset name
+  const quantity_token = 1 
+  const asset_token = `${policyId_Metadata_Minter}${(script_data_hash)}`
+
+  if (VERBOSE) { 
+    console.log('Minting Token:', {
+      "Asset": asset_token,
+      "Quantity": quantity_token,
+    })
+  }
+
+  // Set up redeemer
+  const utxos_contract = await API.utxosAt(Address_Contract_Merkle_Minter)
+  // const utxos_base_asset = utxos_user.filter((object) => {
+  //   return Object.keys(object.assets).includes(asset_baseToken);
+  // });
+  //console.log('INFO: UTXOs to select from:',utxos_user)
+  const utxo = utxos_contract[0];
+  const outputReference = {
+    txHash: utxo.txHash,
+    outputIndex: utxo.outputIndex,
+  };
+
+  if (VERBOSE) { console.log("UTXO Reference:", outputReference) };
+  const input_ref = new Constr(0, [
+    new Constr(0, [outputReference.txHash]),
+    BigInt(outputReference.outputIndex),
+  ]);
+
+  const metadata_obj = Data.fromJson(metadata)
+  if (VERBOSE) { console.log("Metadata:", metadata) };
+  if (VERBOSE) { console.log("Metadata:", metadata_obj) };
+  //const metadata_string = JSON.parse(metadata)
+  //if (VERBOSE) { console.log("Metadata:", metadata.toString().getBytes("UTF-8")) };
+  
+//const ListingSchema = Data.Object();
+  console.log('Metadata bytes:', Buffer.from(metadata_obj))
+  if (VERBOSE) { console.log("Metadata:", Data.castTo(metadata_obj, Data.Bytes)) };
+  let metadata_hash = blake2b(32).update(Buffer.from(metadata_obj)).digest('hex')
+  console.log('Metadata hash:', metadata_hash)
+  const tx_body =  new Constr(0, [metadata_hash, collateral_inputs, collateral_output, collateral_fee])
+
+  const mintRedeemer2 = Data.to(
+    new Constr(0, [input_ref, tx_body, metadata_bytes])
+  );
+
+  if (VERBOSE) { console.log("INFO: scriptDataHash (to be used as assetName):", script_data_hash); }
+
+  // Build the Second TX -------------------------------------------------------
+  if (VERBOSE) { console.log("INFO: Building the Secondary TX"); }
+  const tx = await API.newTx()
+    .payToAddressWithData(
+      Address_Contract_Metadata_Minter, 
+      {inline: scriptDatum},
+      {},
+    ) 
+    .payToAddress(
+      userAddress, 
+      {[asset_token]: BigInt(quantity_token)},
+    ) 
+    .mintAssets({[asset_token]: BigInt(quantity_token)}, mintRedeemer2)
+    .attachMintingPolicy(Validator_Metadata_Minter)
+    .attachMetadata(721n, metadata)
+    .addSigner(userAddress)
+    .complete();
+  if (VERBOSE) { console.log("INFO: Raw TX", tx.toString()); }
+
+  // Request User Signature ----------------------------------------------------
+  console.log("INFO: Requesting TX signature");
+  const signedTx = await tx.sign().complete();
+
+  // Submit the TX -------------------------------------------------------------
+  console.log("INFO: Attempting to submit the transaction");
+  const txHash = await signedTx.submit();
+
+  if (!txHash) {
+    console.log("There was a change to the script's metadata")
+  }
+   else {
+    console.log(`TX Hash Submitted: ${txHash}`);
+    const txSuccess = await lucid.awaitTx(txHash)
+    if (txSuccess) {
+      console.log(`TX Settled on Chain`);
+    }
+
+  }
+
+  // Return with TX hash -------------------------------------------------------
+  return {
+    tx_id: txHash,
+    address: Address_Contract_Metadata_Minter,
+    policy_id: policyId_Metadata_Minter,
+  };
+}
 
 // #############################################################################
 // ## Burn TOKEN
@@ -413,7 +480,7 @@ export const burn_token = async (API) => {
 
   // Mint Action: BurnAccount (ref: validation.ak)
   const mintRedeemer = Data.to(
-    new Constr(2, [])
+    new Constr(1, [])
   ); 
 
   const scriptDatumStructure = Data.Object({
@@ -457,6 +524,10 @@ export const burn_token = async (API) => {
   }
    else {
     console.log(`TX Hash Submitted: ${txHash}`);
+    const txSuccess = await lucid.awaitTx(txHash)
+    if (txSuccess) {
+      console.log(`TX Settled on Chain`);
+    }
   }
 
   // Return with TX hash -------------------------------------------------------
@@ -556,6 +627,10 @@ export const update_token = async (API) => {
   }
    else {
     console.log(`TX Hash Submitted: ${txHash}`);
+    const txSuccess = await lucid.awaitTx(txHash)
+    if (txSuccess) {
+      console.log(`TX Settled on Chain`);
+    }
   }
 
   // Return with TX hash -------------------------------------------------------
