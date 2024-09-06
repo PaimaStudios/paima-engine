@@ -7,7 +7,11 @@ import {
   InternalEventType,
   caip2PrefixFor,
 } from '@paima/utils';
-import type { ChainFunnel, FunnelJson, ReadPresyncDataFrom } from '@paima/runtime';
+import type {
+  ChainFunnel,
+  FunnelJson,
+  ReadPresyncDataFrom,
+} from 'packages/node-sdk/paima-runtime/build/index.js';
 import type {
   ChainData,
   ChainDataExtensionDatum,

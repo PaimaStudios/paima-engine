@@ -1,6 +1,10 @@
 import type { AvailMainConfig } from '@paima/utils';
 import { caip2PrefixFor, doLog, timeout } from '@paima/utils';
-import type { ChainFunnel, FunnelJson, ReadPresyncDataFrom } from '@paima/runtime';
+import type {
+  ChainFunnel,
+  FunnelJson,
+  ReadPresyncDataFrom,
+} from 'packages/node-sdk/paima-runtime/build/index.js';
 import { type ChainData, type PresyncChainData } from '@paima/sm';
 import { BaseFunnel } from '../BaseFunnel.js';
 import type { FunnelSharedData } from '../BaseFunnel.js';

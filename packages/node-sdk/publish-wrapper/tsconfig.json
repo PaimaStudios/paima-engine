@@ -13,6 +13,7 @@
   "references": [
     { "path": "../paima-db" },
     { "path": "../paima-utils-backend" },
-    { "path": "../paima-broker/tsconfig.build.json" }
+    { "path": "../paima-broker/tsconfig.build.json" },
+    { "path": "../paima-engine" }
   ]
 }

@@ -8,13 +8,13 @@
     "src/**/*",
   ],
   "references": [
-    { "path": "../../engine/paima-sm" },
     { "path": "../../paima-sdk/paima-events/tsconfig.build.json" },
-    { "path": "../../engine/paima-funnel" },
-    { "path": "../../engine/paima-runtime/tsconfig.build.json" },
-    { "path": "../../engine/paima-rest/tsconfig.build.json" },
     { "path": "../paima-utils-backend" },
     { "path": "../../paima-sdk/paima-chain-types/tsconfig.build.json" },
     { "path": "../../paima-sdk/paima-utils/tsconfig.build.json" },
+    { "path": "../paima-funnel" },
+    { "path": "../paima-runtime/tsconfig.build.json" },
+    { "path": "../paima-sm" },
+    { "path": "../paima-rest/tsconfig.build.json" }
   ]
 }
