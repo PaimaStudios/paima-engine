@@ -322,7 +322,7 @@ class MidnightFunnel extends BaseFunnel implements ChainFunnel {
       const extensionDatums = this.extensionsFromBlock(ENV.SM_START_BLOCKHEIGHT, block);
       if (extensionDatums.length) {
         result.push({
-          network: `midnight:${this.chainInfo.config.networkId}`,
+          caip2: this.caip2,
           networkType: ConfigNetworkType.MIDNIGHT,
           extensionDatums,
         });

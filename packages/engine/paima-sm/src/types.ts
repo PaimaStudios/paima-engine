@@ -78,7 +78,7 @@ export interface MinaPresyncChainData {
 }
 
 export interface MidnightPresyncChainData {
-  network: string;
+  caip2: string;
   networkType: ConfigNetworkType.MIDNIGHT;
   extensionDatums: ChainDataExtensionDatum[];
 }

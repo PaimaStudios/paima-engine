@@ -20,7 +20,7 @@ export default async function processMidnightContractStateDatum(
         cdeName: cdeDatum.cdeName,
         txHash: cdeDatum.transactionHash,
         caip2: cdeDatum.caip2,
-        fromAddress: '', // TODO: ?
+        fromAddress: '', // TODO: Midnight indexer doesn't serve this.
         contractAddress: cdeDatum.contractAddress,
       }
     )
