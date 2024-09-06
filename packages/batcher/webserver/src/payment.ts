@@ -101,10 +101,10 @@ export class BatcherPayment {
     await PaimaEventManager.Instance.subscribe(
       { topic: BuiltinEvents.BatcherPayment, filter: { batcherAddress } },
       data => {
-        const { userAddress, operation, wei } = data;
+        const { userAddress, operation, value } = data;
         switch (operation) {
           case 'payGas':
-            BatcherPayment.chargeGasFee(userAddress as string, BigInt(wei as string));
+            BatcherPayment.chargeGasFee(userAddress, BigInt(value as string));
             break;
           case 'addFunds':
             // Do nothing, as current balance is fetched from game-node

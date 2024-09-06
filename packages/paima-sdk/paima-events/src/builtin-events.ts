@@ -74,7 +74,7 @@ const BatcherPayment = genEvent({
     { name: 'batcherAddress', type: Type.String(), indexed: true },
     { name: 'userAddress', type: Type.String(), indexed: true },
     { name: 'operation', type: Type.Union([Type.Literal('payGas'), Type.Literal('addFunds')]) },
-    { name: 'wei', type: Type.String() },
+    { name: 'value', type: Type.String() },
   ],
 });
 

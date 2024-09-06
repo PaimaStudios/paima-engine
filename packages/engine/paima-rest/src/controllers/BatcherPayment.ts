@@ -1,13 +1,8 @@
-import {
-  ENV,
-  type InternalServerErrorResult,
-  type Result,
-  type ValidateErrorResult,
-} from '@paima/utils';
+import type { InternalServerErrorResult, Result, ValidateErrorResult } from '@paima/utils';
 import { StatusCodes } from 'http-status-codes';
 import { Controller, Response, Query, Get, Route } from 'tsoa';
 import { EngineService } from '../EngineService.js';
-import { cdeBatcherPaymentByAddress } from '@paima/db';
+import { batcherBalanceByAddress } from '@paima/db';
 
 @Route('batcher_payment')
 export class BatcherPaymentController extends Controller {
@@ -20,7 +15,7 @@ export class BatcherPaymentController extends Controller {
   ): Promise<Result<{ balance: string }>> {
     const gameStateMachine = EngineService.INSTANCE.getSM();
     const DBConn = gameStateMachine.getReadonlyDbConn();
-    const [balance] = await cdeBatcherPaymentByAddress.run(
+    const [balance] = await batcherBalanceByAddress.run(
       {
         batcher_address: batcher_address.toLocaleLowerCase(),
         user_address: user_address.toLocaleLowerCase(),

@@ -44,7 +44,6 @@ async function eventMapper(
   const decodedData = decodeEventData(e.returnValues.data);
   return await processDataUnit(
     {
-      senderAddress: e.address,
       realAddress: e.returnValues.userAddress,
       inputData: decodedData,
       inputNonce: '', // placeholder that will be filled later
@@ -73,7 +72,7 @@ function decodeEventData(eventData: string): string {
 }
 
 export async function processDataUnit(
-  unit: NonTimerSubmittedData & { senderAddress?: string },
+  unit: NonTimerSubmittedData,
   blockHeight: number,
   blockTimestamp: number,
   DBConn: PoolClient

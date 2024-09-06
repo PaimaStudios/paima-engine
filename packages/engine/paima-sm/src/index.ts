@@ -272,13 +272,21 @@ const SM: GameStateMachineInitializer = {
         );
 
         const batcherPaymentEvents = await processBatcherPayments(latestChainData, dbTx);
+
         const processedCount =
           cdeDataLength + userInputsLength + scheduledInputsLength + batcherPaymentEvents;
         // Extra logging
-        if (processedCount > 0)
-          doLog(
-            `Processed ${userInputsLength} user inputs, ${scheduledInputsLength} scheduled inputs and ${cdeDataLength} CDE events in block #${latestChainData.blockNumber}`
-          );
+        if (processedCount > 0) {
+          const message = [
+            userInputsLength > 0 ? ` ${userInputsLength} user inputs` : '',
+            scheduledInputsLength > 0 ? `${scheduledInputsLength} scheduled inputs` : '',
+            cdeDataLength > 0 ? `${cdeDataLength} CDE events` : '',
+            batcherPaymentEvents > 0 ? `${batcherPaymentEvents} batcher payments` : '',
+          ]
+            .filter(m => !!m)
+            .join(', ');
+          doLog(`[Processed] ${message}`);
+        }
 
         // Commit finishing of processing to DB
         await blockHeightDone.run({ block_height: latestChainData.blockNumber }, dbTx);
@@ -404,7 +412,7 @@ async function processBatcherPayments(
       userAddress: e.userAddress,
       batcherAddress: e.batcherAddress,
       operation: e.operation,
-      wei: e.wei,
+      value: e.value,
     });
   }
   return count;

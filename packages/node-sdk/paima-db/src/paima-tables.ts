@@ -576,7 +576,7 @@ const TABLE_DATA_CDE_CARDANO_MINT_BURN: TableData = {
 };
 
 const QUERY_CREATE_TABLE_CDE_BATCHER_PAYMENT = `
-CREATE TABLE cde_batcher_payment_data (
+CREATE TABLE batcher_balance_data (
   batcher_address TEXT NOT NULL,
   user_address TEXT NOT NULL,
   balance BIGINT NOT NULL DEFAULT 0,
@@ -585,7 +585,7 @@ CREATE TABLE cde_batcher_payment_data (
 `;
 
 const TABLE_DATA_CDE_CDE_BATCHER_PAYMENT: TableData = {
-  tableName: 'cde_batcher_payment_data',
+  tableName: 'batcher_balance_data',
   primaryKeyColumns: ['batcher_address', 'user_address'],
   columnData: packTuples([
     ['batcher_address', 'text', 'NO', ''],

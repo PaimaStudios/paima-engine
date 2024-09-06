@@ -44,7 +44,7 @@ type BatcherPaymentChainData = {
     userAddress: string;
     batcherAddress: string;
     operation: 'payGas' | 'addFunds';
-    wei: string;
+    value: string;
   }[];
 };
 

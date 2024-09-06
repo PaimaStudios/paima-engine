@@ -1,9 +1,8 @@
 import type Web3 from 'web3';
 
-import type { ICdeBatcherPaymentUpdateBalanceParams } from '@paima/db';
-import { cdeBatcherPaymentUpdateBalance, type SQLUpdate } from '@paima/db';
+import type { IBatcherBalanceUpdateParams } from '@paima/db';
+import { batcherBalanceUpdate, type SQLUpdate } from '@paima/db';
 import type { BatcherPaymentEvent, PaimaGameInteraction, SubmittedData } from '@paima/utils';
-import { doLog, ENV } from '@paima/utils';
 
 type BatcherPaymentEventExtracted = {
   blockNumber: number;
@@ -15,7 +14,7 @@ export type BatcherPaymentEventPayload = {
   userAddress: string;
   batcherAddress: string;
   operation: 'payGas' | 'addFunds';
-  wei: string;
+  value: string;
 };
 
 /**
@@ -51,26 +50,22 @@ export class BatcherPaymentEventProcessor {
   }
 
   private getBatcherPaymentFees(event: BatcherPaymentEventExtracted): BatcherPaymentEventPayload {
-    const { batcherAddress, userAddress, value } = event.payload;
     return {
-      userAddress: userAddress,
-      batcherAddress: batcherAddress,
+      ...event.payload,
       operation: 'addFunds',
-      wei: value,
     };
   }
 
   private storeBatcherPaymentFees(event: BatcherPaymentEventExtracted): SQLUpdate[] {
     const { batcherAddress, userAddress, value } = event.payload;
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     return [
       [
-        cdeBatcherPaymentUpdateBalance,
+        batcherBalanceUpdate,
         {
           batcher_address: batcherAddress,
           user_address: userAddress,
           balance: value,
-        },
+        } as IBatcherBalanceUpdateParams,
       ],
     ];
   }
@@ -94,12 +89,12 @@ export class BatcherPaymentsFeeProcessor {
     const batcherSubmittedData = this.submittedData.filter(s => s.fromBatcher);
     const operations = this.splitGasCost(await this.getTotalGas(), batcherSubmittedData);
     return {
-      sqlUpdates: operations.map(o => [cdeBatcherPaymentUpdateBalance, o]),
+      sqlUpdates: operations.map(o => [batcherBalanceUpdate, o]),
       events: operations.map(o => ({
         userAddress: o.user_address,
         batcherAddress: o.batcher_address,
         operation: 'payGas',
-        wei: String(-1 * (o.balance as number)),
+        value: String(-1 * (o.balance as number)),
       })),
     };
   }
@@ -122,8 +117,8 @@ export class BatcherPaymentsFeeProcessor {
   private splitGasCost(
     totalGasUsed: { gasUsed: number; txHash: string; batcherAddress: string }[],
     batchedSubmittedData: SubmittedData[]
-  ): ICdeBatcherPaymentUpdateBalanceParams[] {
-    const operations: ICdeBatcherPaymentUpdateBalanceParams[] = [];
+  ): IBatcherBalanceUpdateParams[] {
+    const operations: IBatcherBalanceUpdateParams[] = [];
     totalGasUsed.forEach(g => {
       const submissions = batchedSubmittedData.filter(b => b.txHash === g.txHash);
       const weight = 1 / submissions.length;
