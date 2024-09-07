@@ -200,9 +200,12 @@ class MidnightFunnel extends BaseFunnel implements ChainFunnel {
 
   private async waitForBlock(height: number): Promise<CachedBlock> {
     while (true) {
-      while (this.cache.wsBlocks.length < 1) {
-        // ^ The above 1 could be changed to some other number of blocks that
-        // must be buffered before we process them.
+      while (
+        this.cache.wsBlocks.length < 1 ||
+        height >
+          this.cache.wsBlocks[this.cache.wsBlocks.length - 1].height -
+            this.chainInfo.config.confirmationDepth
+      ) {
         this.cache.wsBlocks.push(handleGqlWsError(await this.cache.iter.next()).blocks);
         // ^ Hovers around 5.4ish to 6.6ish second wait per block. Nominal block time is 6s.
       }

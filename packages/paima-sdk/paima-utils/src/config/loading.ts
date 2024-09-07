@@ -141,6 +141,10 @@ export const BaseMidnightConfigSchema = Type.Object({
   indexer: Type.String(),
   indexerWS: Type.Optional(Type.String()),
   // node URL and proof server are not needed for our read-only use
+
+  // Wait until we have both 1 upstream block AND this many future Midnight blocks before processing a Midnight block.
+  // Can reduce latency because we will have 1+ earlier than we will have 0
+  confirmationDepth: Type.Number(),
 });
 
 export const MidnightConfigSchema = addType(BaseMidnightConfigSchema, ConfigNetworkType.MIDNIGHT);
