@@ -13,6 +13,7 @@ import YAML from 'yaml';
 import { evmRpcEngine } from './evm-rpc/eip1193.js';
 import { StatusCodes } from 'http-status-codes';
 import type { ValidateErrorResult, InternalServerErrorResult } from '@paima/utils';
+import fs from 'fs';
 
 const server: Express = express();
 const bodyParser = express.json();
@@ -121,6 +122,21 @@ function registerDocsPrecompiles(precompiles: { [name: string]: `0x${string}` })
 }
 
 function registerDocsOpenAPI(userStateMachineApi: object | undefined): void {
+  const swaggerUiPath = path.resolve(__dirname) + '/swagger-ui';
+
+  const swaggerServer = (() => {
+    // if the gamecode is bundled with this code, __dirname will point to the
+    // bundle's path.  Bundling is not really a requirement, since it's possible
+    // to just use the dependencies from node_modules (or when using esbuild,
+    // marking swagger-ui-dist as external), but we can provide this anyway to
+    // make it easier to make a packaged bundle.
+    if (fs.existsSync(swaggerUiPath)) {
+      return [swaggerUi.serve[0], express.static(swaggerUiPath, {})];
+    } else {
+      return swaggerUi.serve;
+    }
+  })();
+
   const openApi = getOpenApiJson(userStateMachineApi);
 
   server.get(`/${DocPaths.Root}/${DocPaths.Rest.Root}/${DocPaths.Rest.Spec}`, (_, res) => {
@@ -128,7 +144,7 @@ function registerDocsOpenAPI(userStateMachineApi: object | undefined): void {
   });
   server.use(
     `/${DocPaths.Root}/${DocPaths.Rest.Root}/${DocPaths.Rest.Ui}`,
-    swaggerUi.serve,
+    swaggerServer,
     swaggerUi.setup(openApi, { explorer: false })
   );
 }
