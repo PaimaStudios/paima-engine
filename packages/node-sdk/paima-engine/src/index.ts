@@ -16,9 +16,9 @@ import paimaRuntime, {
 import RegisterRoutes, { EngineService } from '@paima/rest';
 import type { AchievementMetadata } from '@paima/utils-backend';
 import type { TSchema } from '@sinclair/typebox';
-import type { SubmittedChainData as SubmittedChainDataType } from '@paima/chain-types';
+import type { STFSubmittedData } from '@paima/chain-types';
 
-export type SubmittedChainData = SubmittedChainDataType;
+export type SubmittedChainData = STFSubmittedData;
 export type PreCompiles = { [name: string]: `0x${string}` };
 export type OpenApi = object;
 export type GameCode = GameStateTransitionFunctionRouter<any>;
