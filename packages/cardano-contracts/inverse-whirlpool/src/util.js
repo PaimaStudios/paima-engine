@@ -37,7 +37,7 @@ export function getValidators(endpoints, contract)  {
 
   endpoints.forEach(function (endpoint) {
     Validators[endpoint.alias] =  {
-      type: "PlutusV2",
+      type: "PlutusV3",
       script: contract.validators.find((v) => v.title === endpoint.validator).compiledCode,
     }
   });
