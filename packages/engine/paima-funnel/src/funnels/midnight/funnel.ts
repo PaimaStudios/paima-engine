@@ -345,6 +345,8 @@ class MidnightFunnel extends BaseFunnel implements ChainFunnel {
     }[] = [];
     let block = await this.waitForBlock(this.cache.nextBlockHeight);
 
+    const baseBlockToMidnightBlock = new Map<number, number>();
+
     for (const baseBlock of baseData) {
       // Process all Midnight blocks that precede the base block.
       // Break when we've seen a block in the relative future.
@@ -363,6 +365,8 @@ class MidnightFunnel extends BaseFunnel implements ChainFunnel {
           });
         }
 
+        baseBlockToMidnightBlock.set(baseBlock.blockNumber, block.height);
+
         // Fetch next block.
         this.cache.nextBlockHeight = block.height + 1;
         block = await this.waitForBlock(this.cache.nextBlockHeight);
@@ -372,11 +376,14 @@ class MidnightFunnel extends BaseFunnel implements ChainFunnel {
     // Insert the internal MidnightLastBlock event into each ChainData.
     const composed = composeChainData(baseData, result);
     for (const chainData of composed) {
-      (chainData.internalEvents ??= []).push({
-        type: InternalEventType.MidnightLastBlock,
-        caip2: this.caip2,
-        block: this.cache.nextBlockHeight - 1,
-      });
+      const midnightBlock = baseBlockToMidnightBlock.get(chainData.blockNumber);
+      if (midnightBlock) {
+        (chainData.internalEvents ??= []).push({
+          type: InternalEventType.MidnightLastBlock,
+          caip2: this.caip2,
+          block: midnightBlock,
+        });
+      }
     }
     return composed;
   }
