@@ -295,7 +295,7 @@ class MidnightFunnel extends BaseFunnel implements ChainFunnel {
 
     let lastLogTime = Date.now(),
       lastLogBlock = start;
-    // TOOD: apply confirmation depth here
+    // TODO: apply confirmation depth here
     while (block && midnightTimestampToSeconds(block.timestamp) < startingBlock.timestamp) {
       const now = Date.now();
       if (now - lastLogTime > 5000) {
@@ -309,7 +309,9 @@ class MidnightFunnel extends BaseFunnel implements ChainFunnel {
 
       this.cache.nextBlockHeight = block.height + 1;
 
-      const extensionDatums = this.extensionsFromBlock(ENV.SM_START_BLOCKHEIGHT, block);
+      // Note: ENV.START_BLOCKHEIGHT here is eventually ignored by the `inPresync?` check
+      // in `processMidnightContractStateDatum` that actually creates scheduled inputs.
+      const extensionDatums = this.extensionsFromBlock(ENV.START_BLOCKHEIGHT, block);
       if (extensionDatums.length) {
         result.push({
           caip2: this.caip2,
@@ -425,7 +427,6 @@ export class MidnightFunnelCacheEntry implements FunnelCacheEntry {
 
   async load(dbTx: PoolClient): Promise<MidnightFunnelCacheEntry> {
     const checkpoint = await getMidnightCheckpoint.run({ caip2: this.caip2 }, dbTx);
-    console.log(checkpoint);
     if (checkpoint.length > 0) {
       this.nextBlockHeight = Number(checkpoint[0].block_height) + 1;
     }
