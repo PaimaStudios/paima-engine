@@ -394,7 +394,9 @@ async function processPaginatedCdeData(
   });
 }
 
-// Process Batcher Payments
+// Process Batcher Payments.
+// Batcher SQL updates and Events are always generated, independent of any errors in the STF loop.
+// This is because the batcher gas fees must be paid even if the payload is invalid.
 async function processBatcherPayments(
   latestChainData: ChainData,
   DBConn: PoolClient
