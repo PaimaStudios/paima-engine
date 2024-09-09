@@ -425,7 +425,7 @@ async function initializeServer(
         let weiUsed = BigInt(0);
         if (ENV.BATCHER_PAYMENT_ENABLED) {
           try {
-            weiUsed = await BatcherPayment.estimateGasFeeInWei(JSON.stringify(payload));
+            weiUsed = await BatcherPayment.estimateGasFee(JSON.stringify(payload));
             await BatcherPayment.hasEnoughBalance(userAddress, weiUsed);
             BatcherPayment.addTemporalGasFee(userAddress, weiUsed);
           } catch (err) {

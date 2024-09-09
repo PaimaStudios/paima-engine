@@ -4,6 +4,7 @@ import Web3 from 'web3';
 import {
   EvmBatchedTransactionPoster,
   BatchedTransactionPosterStore,
+  AvailBatchedTransactionPoster,
 } from '@paima/batcher-transaction-poster';
 import { BuiltinEvents, PaimaEventManager } from '@paima/events';
 export class BatcherPaymentError extends Error {}
@@ -55,13 +56,16 @@ export class BatcherPayment {
   }
 
   /** Get estimation of gas used for message */
-  public static async estimateGasFeeInWei(message: string): Promise<bigint> {
+  public static async estimateGasFee(message: string): Promise<bigint> {
     if (BatchedTransactionPosterStore.reference instanceof EvmBatchedTransactionPoster) {
       const gasUsed = await BatchedTransactionPosterStore.reference.estimateGasLimit(message);
       const weiUsed = 1000000000n * gasUsed;
       return weiUsed;
+    } else if (BatchedTransactionPosterStore.reference instanceof AvailBatchedTransactionPoster) {
+      console.log('NYI: estimateGasLimit is not implemented for AvailBatchedTransactionPoster');
+      throw new BatcherPaymentError();
     } else {
-      console.log('estimateGasLimit only available on EVM networks');
+      console.log('NYI: estimateGaLimit is not implemented for BatchedTransactionPoster');
       throw new BatcherPaymentError();
     }
   }
