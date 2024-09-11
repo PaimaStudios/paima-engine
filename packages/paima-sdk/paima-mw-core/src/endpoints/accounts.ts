@@ -57,7 +57,9 @@ async function userWalletLogin(
 
   if (getEmulatedBlocksActive() == null) {
     try {
-      if (await emulatedBlocksActiveOnBackend()) {
+      const activeOnBackend = await emulatedBlocksActiveOnBackend();
+
+      if (activeOnBackend.success && activeOnBackend.result) {
         setEmulatedBlocksActive();
       } else {
         setEmulatedBlocksInactive();
