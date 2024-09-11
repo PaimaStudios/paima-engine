@@ -15,7 +15,7 @@ import { StatusCodes } from 'http-status-codes';
 import type { ValidateErrorResult, InternalServerErrorResult } from '@paima/utils';
 
 const server: Express = express();
-const bodyParser = express.json();
+const bodyParser = express.json({ limit: '50mb' });
 
 server.use(express.static(path.join(__dirname, 'public')));
 server.use(cors());
