@@ -26,11 +26,7 @@ import { composeChainData, groupCdeData } from '../../utils.js';
 import type { FunnelSharedData } from '../BaseFunnel.js';
 import { BaseFunnel } from '../BaseFunnel.js';
 import type { PoolClient } from 'pg';
-import type {
-  ChainFunnel,
-  FunnelJson,
-  ReadPresyncDataFrom,
-} from 'packages/node-sdk/paima-runtime/build/index.js';
+import type { ChainFunnel, FunnelJson, ReadPresyncDataFrom } from '@paima/runtime';
 import getCdePoolData from '../../cde/cardanoPool.js';
 import getCdeProjectedNFTData from '../../cde/cardanoProjectedNFT.js';
 import getCdeDelayedAsset from '../../cde/delayedAsset.js';

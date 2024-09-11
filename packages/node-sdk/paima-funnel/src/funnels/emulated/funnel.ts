@@ -1,10 +1,6 @@
 import type { PoolClient } from 'pg';
 import Prando from '@paima/prando';
-import type {
-  ChainFunnel,
-  FunnelJson,
-  ReadPresyncDataFrom,
-} from 'packages/node-sdk/paima-runtime/build/index.js';
+import type { ChainFunnel, FunnelJson, ReadPresyncDataFrom } from '@paima/runtime';
 import type { ChainData, EvmPresyncChainData, PresyncChainData } from '@paima/sm';
 import { FUNNEL_PRESYNC_FINISHED, ENV, GlobalConfig, doLog, caip2PrefixFor } from '@paima/utils';
 import type { AvailMainConfig, MainEvmConfig } from '@paima/utils';

@@ -1,8 +1,4 @@
-import type {
-  ChainFunnel,
-  FunnelJson,
-  ReadPresyncDataFrom,
-} from 'packages/node-sdk/paima-runtime/build/index.js';
+import type { ChainFunnel, FunnelJson, ReadPresyncDataFrom } from '@paima/runtime';
 import type { ChainData, ChainDataExtension, PresyncChainData } from '@paima/sm';
 import type { PoolClient } from 'pg';
 import { ENV, type FUNNEL_PRESYNC_FINISHED } from '@paima/utils';
