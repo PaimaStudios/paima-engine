@@ -1,6 +1,7 @@
 import type {
   ChainData,
   ChainDataExtensionDatum,
+  EvmChainDataExtensionDatum,
   EvmPresyncChainData,
   InternalEvent,
 } from '@paima/sm';
@@ -13,15 +14,27 @@ export type ChainInfo<T extends ConfigMapping[ConfigNetworkType]> = {
   name: string;
 };
 
-export function groupCdeData(
+export function groupEvmCdeData(
   caip2: string,
   fromBlock: number,
   toBlock: number,
-  data: ChainDataExtensionDatum[][]
+  data: EvmChainDataExtensionDatum[][]
+): EvmPresyncChainData[] {
+  return groupCdeData(caip2, fromBlock, toBlock, data, ext => {
+    ext.sort((a, b) => a.logIndex - b.logIndex);
+  });
+}
+
+export function groupCdeData<T extends ChainDataExtensionDatum>(
+  caip2: string,
+  fromBlock: number,
+  toBlock: number,
+  data: T[][],
+  blockPostProcess?: (ext: T[]) => void
 ): EvmPresyncChainData[] {
   const result: EvmPresyncChainData[] = [];
   for (let blockNumber = fromBlock; blockNumber <= toBlock; blockNumber++) {
-    const extensionDatums: ChainDataExtensionDatum[] = [];
+    const extensionDatums: T[] = [];
     for (const dataStream of data) {
       while (dataStream.length > 0 && dataStream[0].blockNumber === blockNumber) {
         const datum = dataStream.shift();
@@ -30,6 +43,11 @@ export function groupCdeData(
         }
       }
     }
+
+    if (blockPostProcess) {
+      blockPostProcess(extensionDatums);
+    }
+
     result.push({
       blockNumber,
       extensionDatums,

@@ -2,8 +2,8 @@ import { ChainDataExtensionDatumType, DEFAULT_FUNNEL_TIMEOUT, timeout } from '@p
 import type {
   CdeErc721MintDatum,
   CdeErc721TransferDatum,
-  ChainDataExtensionDatum,
   ChainDataExtensionErc721,
+  EvmChainDataExtensionDatum,
 } from '@paima/sm';
 import type { ERC721Transfer as Transfer } from '@paima/utils';
 
@@ -12,7 +12,7 @@ export default async function getCdeData(
   fromBlock: number,
   toBlock: number,
   caip2: string
-): Promise<ChainDataExtensionDatum[]> {
+): Promise<EvmChainDataExtensionDatum[]> {
   // TOOD: typechain is missing the proper type generation for getPastEvents
   // https://github.com/dethcrypto/TypeChain/issues/767
   const events = (await timeout(
@@ -43,6 +43,7 @@ function transferToTransferDatum(
     contractAddress: event.address.toLowerCase(),
     burnScheduledPrefix: extension.burnScheduledPrefix,
     caip2,
+    logIndex: event.logIndex,
   };
 }
 
@@ -64,6 +65,7 @@ function transferToMintDatum(
     contractAddress: event.address.toLowerCase(),
     scheduledPrefix: extension.scheduledPrefix,
     caip2,
+    logIndex: event.logIndex,
   };
 }
 

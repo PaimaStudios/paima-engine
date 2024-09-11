@@ -18,6 +18,7 @@ import {
   composeChainData,
   findBlockByTimestamp,
   groupCdeData,
+  groupEvmCdeData,
 } from '../../utils.js';
 import type { ChainInfo } from '../../utils.js';
 import { BaseFunnel } from '../BaseFunnel.js';
@@ -377,7 +378,7 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
       let cdeData: EvmPresyncChainData[] = [];
 
       if (mappedFrom && mappedTo) {
-        cdeData = groupCdeData(caip2, mappedFrom, mappedTo, ungroupedCdeData);
+        cdeData = groupEvmCdeData(caip2, mappedFrom, mappedTo, ungroupedCdeData);
       }
 
       return composeChainData(baseChainData, cdeData);
@@ -441,7 +442,7 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
 
       return {
         ...baseData,
-        [caip2]: groupCdeData(caip2, fromBlock, toBlock, ungroupedCdeData),
+        [caip2]: groupEvmCdeData(caip2, fromBlock, toBlock, ungroupedCdeData),
       };
     } catch (err) {
       doLog(`[paima-funnel::readPresyncData] Exception occurred while reading blocks: ${err}`);

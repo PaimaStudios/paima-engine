@@ -6,8 +6,8 @@ import {
 } from '@paima/utils';
 import type {
   CdeErc6551RegistryDatum,
-  ChainDataExtensionDatum,
   ChainDataExtensionErc6551Registry,
+  EvmChainDataExtensionDatum,
 } from '@paima/sm';
 import type { AccountCreated } from '@paima/utils';
 
@@ -16,7 +16,7 @@ export default async function getCdeData(
   fromBlock: number,
   toBlock: number,
   caip2: string
-): Promise<ChainDataExtensionDatum[]> {
+): Promise<EvmChainDataExtensionDatum[]> {
   const { implementation, tokenContract, tokenId } = extension;
 
   // old ERC6551 did not have any indexed fields
@@ -85,5 +85,6 @@ function toDatum(
       salt: event.returnValues.salt,
     },
     caip2,
+    logIndex: event.logIndex,
   };
 }
