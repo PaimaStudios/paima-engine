@@ -25,7 +25,7 @@
   "homepage": "https://docs.paimastudios.com",
   "scripts": {
     "lint:eslint": "eslint .",
-    "gen:node": "openapi-typescript ../../engine/paima-rest/src/tsoa/swagger.json -o ./src/helpers/paima-node-rest-schema.d.ts",
+    "gen:node": "openapi-typescript ../../node-sdk/paima-rest/src/tsoa/swagger.json -o ./src/helpers/paima-node-rest-schema.d.ts",
     "gen:batcher": "",
     "gen:api": "npm run gen:node && npm run gen:batcher",
     "build": "npm run gen:api && tsc",

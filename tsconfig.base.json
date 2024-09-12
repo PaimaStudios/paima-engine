@@ -57,7 +57,7 @@
       "@paima/utils-backend/*": ["./packages/node-sdk/paima-utils-backend/*"],
       "@paima/utils/*": ["./packages/paima-sdk/paima-utils/*"],
       "@standalone/paima-batcher/*": ["./packages/batcher/batcher-standalone/*"],
-      "@standalone/paima-engine/*": ["./packages/engine/paima-standalone/*"]
+      "@paima/engine/*": ["./packages/node-sdk/paima-engine/*"]
     }
   },
   "exclude": ["node_modules"]

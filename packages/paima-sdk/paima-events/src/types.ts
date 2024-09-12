@@ -186,13 +186,13 @@ type TransformEventInput<T> = T extends {
 }
   ? { hashed?: Hashed; name: N; type: U }
   : never;
-type TransformAllEventInput<T extends LogEventFields<TSchema>[]> = {
+export type TransformAllEventInput<T extends LogEventFields<TSchema>[]> = {
   [P in keyof T]: TransformEventInput<T[P]>;
 };
 
 // 3) Exclude tuple values. This is useful to remove `never` types created by object mapping
 // ex: T extends { indexed: true } ? T : never;
-type ExcludeFromTuple<T extends readonly any[], E> = T extends [infer F, ...infer R]
+export type ExcludeFromTuple<T extends readonly any[], E> = T extends [infer F, ...infer R]
   ? [F] extends [E]
     ? ExcludeFromTuple<R, E>
     : [F, ...ExcludeFromTuple<R, E>]
@@ -213,18 +213,18 @@ type AddStringPath<T extends any[]> = T extends [
 
 // 5) Filter by entries that are not "indexed" as they need to go in the output
 type FilterNonIndexed<T> = T extends { indexed: false } ? T : never;
-type RemoveAllIndexed<T extends LogEventFields<TSchema>[]> = {
+export type RemoveAllIndexed<T extends LogEventFields<TSchema>[]> = {
   [P in keyof T]: FilterNonIndexed<T[P]>;
 };
 // 6) Merge the type together into a single object
-type OutputKeypairToObj<T> = T extends { name: string; type: any }[]
+export type OutputKeypairToObj<T> = T extends { name: string; type: any }[]
   ? {
       [K in T[number] as K['name']]: K['type'];
     }
   : never; // not sure why this never is needed. Maybe ExcludeFromTuple isn't perfect
 
 // 7) Map the prefix to the broker type
-type BrokerName<T extends TopicPrefix> = T extends TopicPrefix.Batcher
+export type BrokerName<T extends TopicPrefix> = T extends TopicPrefix.Batcher
   ? PaimaEventBrokerNames.Batcher
   : PaimaEventBrokerNames.PaimaEngine;
 
