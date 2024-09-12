@@ -16,6 +16,7 @@ import type { Pool } from 'pg';
 import {
   AvailBatchedTransactionPoster,
   EvmBatchedTransactionPoster,
+  BatchedTransactionPosterStore,
 } from '@paima/batcher-transaction-poster';
 import type { BatchedTransactionPoster } from '@paima/batcher-transaction-poster';
 import { server, startServer } from '@paima/batcher-webserver';
@@ -43,8 +44,6 @@ setLogger(s => {
 });
 
 const MINIMUM_INTER_CATCH_PERIOD = 1000;
-// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
-let batchedTransactionPosterReference: BatchedTransactionPoster | null = null;
 let lastCatchDate = Date.now();
 let reinitializingWeb3 = false;
 
@@ -68,11 +67,11 @@ process.on('uncaughtException', async err => {
   }
   lastCatchDate = Date.now();
   console.error(err);
-  if (!reinitializingWeb3 && batchedTransactionPosterReference) {
+  if (!reinitializingWeb3 && BatchedTransactionPosterStore.reference) {
     reinitializingWeb3 = true;
     const walletWeb3 = await getAndConfirmWeb3(ENV.CHAIN_URI, ENV.BATCHER_PRIVATE_KEY, 1000);
     reinitializingWeb3 = false;
-    batchedTransactionPosterReference.updateProvider(walletWeb3);
+    BatchedTransactionPosterStore.reference.updateProvider(walletWeb3);
   }
 });
 
@@ -248,7 +247,7 @@ async function main(): Promise<void> {
 
   const gameInputValidatorCore = await getValidatorCore(ENV.GAME_INPUT_VALIDATION_TYPE);
   const gameInputValidator = new GameInputValidator(gameInputValidatorCore, pool);
-  batchedTransactionPosterReference = batchedTransactionPoster;
+  BatchedTransactionPosterStore.reference = batchedTransactionPoster;
   await batchedTransactionPoster.initialize();
 
   const runtime = BatcherRuntime.initialize(pool);

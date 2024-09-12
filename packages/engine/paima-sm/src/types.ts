@@ -35,7 +35,18 @@ export interface ChainData {
    * Internal events are events related to this block, but that do not contribute to the block hash
    */
   internalEvents?: InternalEvent[];
+  batcher?: BatcherPaymentChainData;
 }
+
+type BatcherPaymentChainData = {
+  sqlUpdates: SQLUpdate[];
+  events: {
+    userAddress: string;
+    batcherAddress: string;
+    operation: 'payGas' | 'addFunds';
+    value: string;
+  }[];
+};
 
 export type InternalEvent =
   | CardanoEpochEvent

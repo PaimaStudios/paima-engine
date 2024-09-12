@@ -96,4 +96,8 @@ export class EthersEvmProvider implements IProvider<EthersApi> {
       extra: result,
     };
   };
+  estimateGasLimit = async (tx: TransactionRequest): Promise<bigint> => {
+    // GasPrice defined in GWei (1.000.000.000)
+    return await this.conn.api.estimateGas(tx);
+  };
 }

@@ -291,6 +291,10 @@ function getNetworkName(
   );
 }
 
+// Batcher Payment Contract initialized
+// There can be only zero or one instance of Batcher Payment Contract
+let batcherPaymentContractInit = false;
+
 // Do type-specific initialization and construct contract objects
 async function instantiateExtension(
   config: Static<typeof CdeConfig>['extensions'][0],

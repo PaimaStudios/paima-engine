@@ -7,18 +7,7 @@
 		"requestBodies": {},
 		"responses": {},
 		"schemas": {
-			"DryRunResponse": {
-				"properties": {
-					"valid": {
-						"type": "boolean"
-					}
-				},
-				"required": [
-					"valid"
-				],
-				"type": "object"
-			},
-			"SuccessfulResult_DryRunResponse_": {
+			"SuccessfulResult__balance-string__": {
 				"properties": {
 					"success": {
 						"type": "boolean",
@@ -28,7 +17,15 @@
 						"nullable": false
 					},
 					"result": {
-						"$ref": "#/components/schemas/DryRunResponse"
+						"properties": {
+							"balance": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"balance"
+						],
+						"type": "object"
 					}
 				},
 				"required": [
@@ -62,10 +59,10 @@
 				"type": "object",
 				"additionalProperties": false
 			},
-			"Result_DryRunResponse_": {
+			"Result__balance-string__": {
 				"anyOf": [
 					{
-						"$ref": "#/components/schemas/SuccessfulResult_DryRunResponse_"
+						"$ref": "#/components/schemas/SuccessfulResult__balance-string__"
 					},
 					{
 						"$ref": "#/components/schemas/FailedResult"
@@ -110,6 +107,47 @@
 				],
 				"type": "object",
 				"additionalProperties": false
+			},
+			"DryRunResponse": {
+				"properties": {
+					"valid": {
+						"type": "boolean"
+					}
+				},
+				"required": [
+					"valid"
+				],
+				"type": "object"
+			},
+			"SuccessfulResult_DryRunResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean",
+						"enum": [
+							true
+						],
+						"nullable": false
+					},
+					"result": {
+						"$ref": "#/components/schemas/DryRunResponse"
+					}
+				},
+				"required": [
+					"success",
+					"result"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"Result_DryRunResponse_": {
+				"anyOf": [
+					{
+						"$ref": "#/components/schemas/SuccessfulResult_DryRunResponse_"
+					},
+					{
+						"$ref": "#/components/schemas/FailedResult"
+					}
+				]
 			},
 			"VersionString": {
 				"type": "string",
@@ -526,6 +564,68 @@
 		}
 	},
 	"paths": {
+		"/batcher_payment": {
+			"get": {
+				"operationId": "BatcherPaymentGet",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Result__balance-string__"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/InternalServerErrorResult"
+								},
+								"examples": {
+									"Example 1": {}
+								}
+							}
+						}
+					},
+					"422": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ValidateErrorResult"
+								},
+								"examples": {
+									"Example 1": {}
+								}
+							}
+						}
+					}
+				},
+				"security": [],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "batcher_address",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "user_address",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
 		"/dry_run": {
 			"get": {
 				"operationId": "DryRunGet",

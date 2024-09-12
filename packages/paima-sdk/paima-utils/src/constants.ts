@@ -28,6 +28,7 @@ export const enum ChainDataExtensionType {
   MinaEventGeneric = 13,
   MinaActionGeneric = 14,
   DynamicEvmPrimitive = 15,
+  BatcherPayment = 16,
 }
 
 export const enum ChainDataExtensionDatumType {
@@ -46,6 +47,7 @@ export const enum ChainDataExtensionDatumType {
   MinaEventGeneric,
   MinaActionGeneric,
   DynamicEvmPrimitive,
+  BatcherPayment,
 }
 
 export const FUNNEL_PRESYNC_FINISHED = 'finished';

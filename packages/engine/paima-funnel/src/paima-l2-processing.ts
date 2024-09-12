@@ -13,6 +13,10 @@ import type { PoolClient } from 'pg';
 import { getMainAddress } from '@paima/db';
 import { keccak_256 } from 'js-sha3';
 
+interface SubmittedDataExt extends SubmittedData {
+  fromBatcher?: boolean;
+}
+
 interface ValidatedSubmittedData extends STFSubmittedData {
   validated: boolean;
 }
@@ -24,7 +28,7 @@ export async function extractSubmittedData(
   blockTimestamp: number,
   DBConn: PoolClient,
   caip2: string
-): Promise<SubmittedData[]> {
+): Promise<SubmittedDataExt[]> {
   const unflattenedList = await Promise.all(
     events.map(e => eventMapper(e, blockTimestamp, DBConn, caip2))
   );
@@ -36,7 +40,7 @@ async function eventMapper(
   blockTimestamp: number,
   DBConn: PoolClient,
   caip2: string
-): Promise<SubmittedData[]> {
+): Promise<SubmittedDataExt[]> {
   const decodedData = decodeEventData(e.returnValues.data);
   return await processDataUnit(
     {
@@ -72,7 +76,7 @@ export async function processDataUnit(
   blockHeight: number,
   blockTimestamp: number,
   DBConn: PoolClient
-): Promise<SubmittedData[]> {
+): Promise<SubmittedDataExt[]> {
   try {
     if (!unit.inputData.includes(OUTER_BATCH_DIVIDER)) {
       // Directly submitted input, prepare nonce and return:
@@ -102,7 +106,7 @@ export async function processDataUnit(
         )
       )
     );
-    return validatedSubUnits.filter(item => item.validated).map(unpackValidatedData);
+    return validatedSubUnits.filter(item => item.validated).map(v => unpackValidatedData(v));
   } catch (err) {
     doLog(`[funnel::processDataUnit] error: ${err}`);
     return [];
@@ -211,11 +215,12 @@ async function validateSubunitSignature(
   return false;
 }
 
-function unpackValidatedData(validatedData: ValidatedSubmittedData): SubmittedData {
+function unpackValidatedData(validatedData: ValidatedSubmittedData): SubmittedDataExt {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const o = validatedData as any;
   delete o.validated;
-  return o as SubmittedData;
+  o.fromBatcher = true;
+  return o as SubmittedDataExt;
 }
 
 export function createBatchNonce(
