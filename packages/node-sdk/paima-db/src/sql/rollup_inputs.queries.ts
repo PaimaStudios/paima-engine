@@ -228,7 +228,7 @@ export interface IGetFutureGameInputByMaxTimestampQuery {
   result: IGetFutureGameInputByMaxTimestampResult;
 }
 
-const getFutureGameInputByMaxTimestampIR: any = {"usedParamSet":{"max_timestamp":true},"params":[{"name":"max_timestamp","required":true,"transform":{"type":"scalar"},"locs":[{"a":533,"b":547}]}],"statement":"SELECT\n  rollup_inputs.id,\n  rollup_input_future_timestamp.future_ms_timestamp,\n  rollup_inputs.input_data,\n  rollup_inputs.from_address,\n  rollup_input_origin.primitive_name,\n  rollup_input_origin.contract_address,\n  rollup_input_origin.caip2,\n  rollup_input_origin.tx_hash as \"origin_tx_hash\"\nFROM rollup_inputs\nJOIN rollup_input_origin ON rollup_inputs.id = rollup_input_origin.id\nJOIN rollup_input_future_timestamp ON rollup_inputs.id = rollup_input_future_timestamp.id\nWHERE rollup_input_future_timestamp.future_ms_timestamp <= :max_timestamp!\nORDER BY rollup_input_future_timestamp.future_ms_timestamp ASC"};
+const getFutureGameInputByMaxTimestampIR: any = {"usedParamSet":{"max_timestamp":true},"params":[{"name":"max_timestamp","required":true,"transform":{"type":"scalar"},"locs":[{"a":618,"b":632}]}],"statement":"SELECT\n  rollup_inputs.id,\n  rollup_input_future_timestamp.future_ms_timestamp,\n  rollup_inputs.input_data,\n  rollup_inputs.from_address,\n  rollup_input_origin.primitive_name,\n  rollup_input_origin.contract_address,\n  rollup_input_origin.caip2,\n  rollup_input_origin.tx_hash as \"origin_tx_hash\"\nFROM rollup_inputs\nJOIN rollup_input_origin ON rollup_inputs.id = rollup_input_origin.id\nJOIN rollup_input_future_timestamp ON rollup_inputs.id = rollup_input_future_timestamp.id\nLEFT OUTER JOIN rollup_input_result\n  ON (rollup_input_result.id = rollup_inputs.id)\nWHERE rollup_input_future_timestamp.future_ms_timestamp <= :max_timestamp! AND\n      rollup_input_result.id IS NULL\nORDER BY rollup_input_future_timestamp.future_ms_timestamp ASC"};
 
 /**
  * Query generated from SQL:
@@ -245,7 +245,10 @@ const getFutureGameInputByMaxTimestampIR: any = {"usedParamSet":{"max_timestamp"
  * FROM rollup_inputs
  * JOIN rollup_input_origin ON rollup_inputs.id = rollup_input_origin.id
  * JOIN rollup_input_future_timestamp ON rollup_inputs.id = rollup_input_future_timestamp.id
- * WHERE rollup_input_future_timestamp.future_ms_timestamp <= :max_timestamp!
+ * LEFT OUTER JOIN rollup_input_result
+ *   ON (rollup_input_result.id = rollup_inputs.id)
+ * WHERE rollup_input_future_timestamp.future_ms_timestamp <= :max_timestamp! AND
+ *       rollup_input_result.id IS NULL
  * ORDER BY rollup_input_future_timestamp.future_ms_timestamp ASC
  * ```
  */

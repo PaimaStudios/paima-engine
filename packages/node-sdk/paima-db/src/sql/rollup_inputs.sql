@@ -73,7 +73,10 @@ SELECT
 FROM rollup_inputs
 JOIN rollup_input_origin ON rollup_inputs.id = rollup_input_origin.id
 JOIN rollup_input_future_timestamp ON rollup_inputs.id = rollup_input_future_timestamp.id
-WHERE rollup_input_future_timestamp.future_ms_timestamp <= :max_timestamp!
+LEFT OUTER JOIN rollup_input_result
+  ON (rollup_input_result.id = rollup_inputs.id)
+WHERE rollup_input_future_timestamp.future_ms_timestamp <= :max_timestamp! AND
+      rollup_input_result.id IS NULL
 ORDER BY rollup_input_future_timestamp.future_ms_timestamp ASC;
 
 /* @name getGameInputResultByBlockHeight */
