@@ -43,6 +43,11 @@ export interface SubmittedData {
     contractAddress: null | string;
     /** Name/id of the primitive that triggered this event, if known */
     primitiveName: null | string;
+
+    /* Timestamp if this is a timer scheduled with a date instead of a block
+     * number. This will be always lower or equal than the underlying block's
+     * timestamp */
+    scheduledAt: null | Date;
   };
 }
 

@@ -242,6 +242,7 @@ const SM: GameStateMachineInitializer = {
                 contractAddress: null,
                 primitiveName: null,
                 caip2: '',
+                scheduledAt: null,
               },
               paimaTxHash: '',
             },
@@ -591,6 +592,7 @@ async function processScheduledData<Events extends AppEvents>(
           caip2: caip2,
           primitiveName: data.primitive_name ?? null,
           contractAddress: data.contract_address,
+          scheduledAt: 'future_ms_timestamp' in data ? data.future_ms_timestamp : null,
         },
       };
 
@@ -605,7 +607,6 @@ async function processScheduledData<Events extends AppEvents>(
             mainChainBlochHash: strip0x(latestChainData.blockHash),
             blockHeight: latestChainData.blockNumber,
             prevBlockHash: prevBlockHash == null ? null : prevBlockHash.toString('hex'),
-            // TODO: should this be the actual timestamp for events scheduled by timestamp?
             msTimestamp: latestChainData.timestamp * 1000,
           },
           randomnessGenerator,
