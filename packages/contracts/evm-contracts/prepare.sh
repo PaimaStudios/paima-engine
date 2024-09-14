@@ -25,5 +25,9 @@ find ./publish/abi/ -type d -name '*.sol' -exec sh -c '
 mkdir -p ./publish/plugin
 cp ./build/plugin/* ./publish/plugin/
 
+# include our hardhat configuration
+mkdir -p ./publish/plugin
+cp ./build/plugin/* ./publish/plugin/
+
 cp ./README.md ./publish
 cp ./package.json ./publish
