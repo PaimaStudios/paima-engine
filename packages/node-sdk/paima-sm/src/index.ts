@@ -44,8 +44,13 @@ import {
   insertGameInputResult,
   newGameInput,
   updateMidnightCheckpoint,
+  getFutureGameInputByMaxTimestamp,
 } from '@paima/db';
-import type { SQLUpdate } from '@paima/db';
+import type {
+  IGetFutureGameInputByBlockHeightResult,
+  IGetFutureGameInputByMaxTimestampResult,
+  SQLUpdate,
+} from '@paima/db';
 import Prando from '@paima/prando';
 import { randomnessRouter } from './randomness.js';
 import { cdeTransitionFunction } from './cde-processing.js';
@@ -509,10 +514,22 @@ async function processScheduledData<Events extends AppEvents>(
   // indexes when we process user inputs.
   emittedLogsCount: number;
 }> {
+  const timestampBasedTimers: (
+    | IGetFutureGameInputByBlockHeightResult
+    | IGetFutureGameInputByMaxTimestampResult
+  )[] = await getFutureGameInputByMaxTimestamp.run(
+    {
+      max_timestamp: new Date(latestChainData.timestamp * 1000),
+    },
+    DBConn
+  );
+
   const scheduledData = await getFutureGameInputByBlockHeight.run(
     { block_height: latestChainData.blockNumber },
     DBConn
   );
+
+  timestampBasedTimers.push(...scheduledData);
 
   // just in case there are two timers in the same block with the same exact contents.
   let timerIndexRelativeToBlock = -1;
@@ -586,8 +603,9 @@ async function processScheduledData<Events extends AppEvents>(
           {
             version: 1,
             mainChainBlochHash: strip0x(latestChainData.blockHash),
-            blockHeight: data.future_block_height,
+            blockHeight: latestChainData.blockNumber,
             prevBlockHash: prevBlockHash == null ? null : prevBlockHash.toString('hex'),
+            // TODO: should this be the actual timestamp for events scheduled by timestamp?
             msTimestamp: latestChainData.timestamp * 1000,
           },
           randomnessGenerator,

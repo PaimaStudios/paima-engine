@@ -21,7 +21,7 @@ WITH
   ),
   insert_origin AS (
     INSERT INTO rollup_input_origin(id, primitive_name, caip2, tx_hash, contract_address)
-    SELECT (SELECT id FROM new_row), :primitive_name!, :caip2!, :origin_tx_hash!::BYTEA, :origin_contract_address
+    SELECT (SELECT id FROM new_row),null,null,null,null
   )
 INSERT INTO rollup_input_future_timestamp(id, future_ms_timestamp)
 SELECT (SELECT id FROM new_row), :future_ms_timestamp!;
@@ -59,6 +59,22 @@ JOIN rollup_input_origin ON rollup_inputs.id = rollup_input_origin.id
 JOIN rollup_input_future_block ON rollup_input_future_block.id = rollup_inputs.id
 WHERE rollup_input_future_block.future_block_height = :block_height!
 ORDER BY rollup_inputs.id ASC;
+
+/* @name getFutureGameInputByMaxTimestamp */
+SELECT
+  rollup_inputs.id,
+  rollup_input_future_timestamp.future_ms_timestamp,
+  rollup_inputs.input_data,
+  rollup_inputs.from_address,
+  rollup_input_origin.primitive_name,
+  rollup_input_origin.contract_address,
+  rollup_input_origin.caip2,
+  rollup_input_origin.tx_hash as "origin_tx_hash"
+FROM rollup_inputs
+JOIN rollup_input_origin ON rollup_inputs.id = rollup_input_origin.id
+JOIN rollup_input_future_timestamp ON rollup_inputs.id = rollup_input_future_timestamp.id
+WHERE rollup_input_future_timestamp.future_ms_timestamp <= :max_timestamp!
+ORDER BY rollup_input_future_timestamp.future_ms_timestamp ASC;
 
 /* @name getGameInputResultByBlockHeight */
 SELECT

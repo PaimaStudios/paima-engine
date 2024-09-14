@@ -47,13 +47,9 @@ export const newScheduledHeightData = new PreparedQuery<INewScheduledHeightDataP
 
 /** 'NewScheduledTimestampData' parameters type */
 export interface INewScheduledTimestampDataParams {
-  caip2: string;
   from_address: string;
   future_ms_timestamp: DateOrString;
   input_data: string;
-  origin_contract_address?: string | null | void;
-  origin_tx_hash: Buffer;
-  primitive_name: string;
 }
 
 /** 'NewScheduledTimestampData' return type */
@@ -65,7 +61,7 @@ export interface INewScheduledTimestampDataQuery {
   result: INewScheduledTimestampDataResult;
 }
 
-const newScheduledTimestampDataIR: any = {"usedParamSet":{"from_address":true,"input_data":true,"primitive_name":true,"caip2":true,"origin_tx_hash":true,"origin_contract_address":true,"future_ms_timestamp":true},"params":[{"name":"from_address","required":true,"transform":{"type":"scalar"},"locs":[{"a":88,"b":101}]},{"name":"input_data","required":true,"transform":{"type":"scalar"},"locs":[{"a":104,"b":115}]},{"name":"primitive_name","required":true,"transform":{"type":"scalar"},"locs":[{"a":288,"b":303}]},{"name":"caip2","required":true,"transform":{"type":"scalar"},"locs":[{"a":306,"b":312}]},{"name":"origin_tx_hash","required":true,"transform":{"type":"scalar"},"locs":[{"a":315,"b":330}]},{"name":"origin_contract_address","required":false,"transform":{"type":"scalar"},"locs":[{"a":340,"b":363}]},{"name":"future_ms_timestamp","required":true,"transform":{"type":"scalar"},"locs":[{"a":469,"b":489}]}],"statement":"WITH\n  new_row AS (\n    INSERT INTO rollup_inputs(from_address, input_data)\n    VALUES (:from_address!, :input_data!)\n    RETURNING id\n  ),\n  insert_origin AS (\n    INSERT INTO rollup_input_origin(id, primitive_name, caip2, tx_hash, contract_address)\n    SELECT (SELECT id FROM new_row), :primitive_name!, :caip2!, :origin_tx_hash!::BYTEA, :origin_contract_address\n  )\nINSERT INTO rollup_input_future_timestamp(id, future_ms_timestamp)\nSELECT (SELECT id FROM new_row), :future_ms_timestamp!"};
+const newScheduledTimestampDataIR: any = {"usedParamSet":{"from_address":true,"input_data":true,"future_ms_timestamp":true},"params":[{"name":"from_address","required":true,"transform":{"type":"scalar"},"locs":[{"a":88,"b":101}]},{"name":"input_data","required":true,"transform":{"type":"scalar"},"locs":[{"a":104,"b":115}]},{"name":"future_ms_timestamp","required":true,"transform":{"type":"scalar"},"locs":[{"a":411,"b":431}]}],"statement":"WITH\n  new_row AS (\n    INSERT INTO rollup_inputs(from_address, input_data)\n    VALUES (:from_address!, :input_data!)\n    RETURNING id\n  ),\n  insert_origin AS (\n    INSERT INTO rollup_input_origin(id, primitive_name, caip2, tx_hash, contract_address)\n    SELECT (SELECT id FROM new_row),null,null,null,null\n  )\nINSERT INTO rollup_input_future_timestamp(id, future_ms_timestamp)\nSELECT (SELECT id FROM new_row), :future_ms_timestamp!"};
 
 /**
  * Query generated from SQL:
@@ -78,7 +74,7 @@ const newScheduledTimestampDataIR: any = {"usedParamSet":{"from_address":true,"i
  *   ),
  *   insert_origin AS (
  *     INSERT INTO rollup_input_origin(id, primitive_name, caip2, tx_hash, contract_address)
- *     SELECT (SELECT id FROM new_row), :primitive_name!, :caip2!, :origin_tx_hash!::BYTEA, :origin_contract_address
+ *     SELECT (SELECT id FROM new_row),null,null,null,null
  *   )
  * INSERT INTO rollup_input_future_timestamp(id, future_ms_timestamp)
  * SELECT (SELECT id FROM new_row), :future_ms_timestamp!
@@ -207,6 +203,53 @@ const getFutureGameInputByBlockHeightIR: any = {"usedParamSet":{"block_height":t
  * ```
  */
 export const getFutureGameInputByBlockHeight = new PreparedQuery<IGetFutureGameInputByBlockHeightParams,IGetFutureGameInputByBlockHeightResult>(getFutureGameInputByBlockHeightIR);
+
+
+/** 'GetFutureGameInputByMaxTimestamp' parameters type */
+export interface IGetFutureGameInputByMaxTimestampParams {
+  max_timestamp: DateOrString;
+}
+
+/** 'GetFutureGameInputByMaxTimestamp' return type */
+export interface IGetFutureGameInputByMaxTimestampResult {
+  caip2: string | null;
+  contract_address: string | null;
+  from_address: string;
+  future_ms_timestamp: Date;
+  id: number;
+  input_data: string;
+  origin_tx_hash: Buffer | null;
+  primitive_name: string | null;
+}
+
+/** 'GetFutureGameInputByMaxTimestamp' query type */
+export interface IGetFutureGameInputByMaxTimestampQuery {
+  params: IGetFutureGameInputByMaxTimestampParams;
+  result: IGetFutureGameInputByMaxTimestampResult;
+}
+
+const getFutureGameInputByMaxTimestampIR: any = {"usedParamSet":{"max_timestamp":true},"params":[{"name":"max_timestamp","required":true,"transform":{"type":"scalar"},"locs":[{"a":533,"b":547}]}],"statement":"SELECT\n  rollup_inputs.id,\n  rollup_input_future_timestamp.future_ms_timestamp,\n  rollup_inputs.input_data,\n  rollup_inputs.from_address,\n  rollup_input_origin.primitive_name,\n  rollup_input_origin.contract_address,\n  rollup_input_origin.caip2,\n  rollup_input_origin.tx_hash as \"origin_tx_hash\"\nFROM rollup_inputs\nJOIN rollup_input_origin ON rollup_inputs.id = rollup_input_origin.id\nJOIN rollup_input_future_timestamp ON rollup_inputs.id = rollup_input_future_timestamp.id\nWHERE rollup_input_future_timestamp.future_ms_timestamp <= :max_timestamp!\nORDER BY rollup_input_future_timestamp.future_ms_timestamp ASC"};
+
+/**
+ * Query generated from SQL:
+ * ```
+ * SELECT
+ *   rollup_inputs.id,
+ *   rollup_input_future_timestamp.future_ms_timestamp,
+ *   rollup_inputs.input_data,
+ *   rollup_inputs.from_address,
+ *   rollup_input_origin.primitive_name,
+ *   rollup_input_origin.contract_address,
+ *   rollup_input_origin.caip2,
+ *   rollup_input_origin.tx_hash as "origin_tx_hash"
+ * FROM rollup_inputs
+ * JOIN rollup_input_origin ON rollup_inputs.id = rollup_input_origin.id
+ * JOIN rollup_input_future_timestamp ON rollup_inputs.id = rollup_input_future_timestamp.id
+ * WHERE rollup_input_future_timestamp.future_ms_timestamp <= :max_timestamp!
+ * ORDER BY rollup_input_future_timestamp.future_ms_timestamp ASC
+ * ```
+ */
+export const getFutureGameInputByMaxTimestamp = new PreparedQuery<IGetFutureGameInputByMaxTimestampParams,IGetFutureGameInputByMaxTimestampResult>(getFutureGameInputByMaxTimestampIR);
 
 
 /** 'GetGameInputResultByBlockHeight' parameters type */
