@@ -514,7 +514,7 @@ async function processScheduledData<Events extends AppEvents>(
   // indexes when we process user inputs.
   emittedLogsCount: number;
 }> {
-  const timestampBasedTimers: (
+  const scheduledData: (
     | IGetFutureGameInputByBlockHeightResult
     | IGetFutureGameInputByMaxTimestampResult
   )[] = await getFutureGameInputByMaxTimestamp.run(
@@ -524,12 +524,12 @@ async function processScheduledData<Events extends AppEvents>(
     DBConn
   );
 
-  const scheduledData = await getFutureGameInputByBlockHeight.run(
+  const scheduledDataByBlock = await getFutureGameInputByBlockHeight.run(
     { block_height: latestChainData.blockNumber },
     DBConn
   );
 
-  timestampBasedTimers.push(...scheduledData);
+  scheduledData.push(...scheduledDataByBlock);
 
   // just in case there are two timers in the same block with the same exact contents.
   let timerIndexRelativeToBlock = -1;
