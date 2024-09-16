@@ -41,6 +41,11 @@ export class ENV {
     return process.env.MAX_GAS_PER_BYTE ? parseInt(process.env.MAX_GAS_PER_BYTE, 10) : 32;
   }
 
+  // Batcher Payment Contract
+  static get BATCHER_PAYMENT_ENABLED(): boolean {
+    return ENV.isTrue(process.env.BATCHER_PAYMENT_ENABLED);
+  }
+
   // Webserver:
   static get BATCHER_PORT(): number {
     return parseInt(process.env.BATCHER_PORT || '0', 10);

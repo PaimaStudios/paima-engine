@@ -4,6 +4,22 @@
  */
 
 export interface paths {
+    "/batcher_payment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["BatcherPaymentGet"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/dry_run": {
         parameters: {
             query?: never;
@@ -296,13 +312,12 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        DryRunResponse: {
-            valid: boolean;
-        };
-        SuccessfulResult_DryRunResponse_: {
+        "SuccessfulResult__balance-string__": {
             /** @enum {boolean} */
             success: true;
-            result: components["schemas"]["DryRunResponse"];
+            result: {
+                balance: string;
+            };
         };
         FailedResult: {
             /** @enum {boolean} */
@@ -311,7 +326,7 @@ export interface components {
             /** Format: double */
             errorCode?: number;
         };
-        Result_DryRunResponse_: components["schemas"]["SuccessfulResult_DryRunResponse_"] | components["schemas"]["FailedResult"];
+        "Result__balance-string__": components["schemas"]["SuccessfulResult__balance-string__"] | components["schemas"]["FailedResult"];
         InternalServerErrorResult: components["schemas"]["FailedResult"];
         /** @description comes from the `tsoa` package, but we don't want it as a dependency just for this type */
         FieldErrors: {
@@ -325,6 +340,15 @@ export interface components {
             message: "Validation Failed";
             details?: components["schemas"]["FieldErrors"];
         };
+        DryRunResponse: {
+            valid: boolean;
+        };
+        SuccessfulResult_DryRunResponse_: {
+            /** @enum {boolean} */
+            success: true;
+            result: components["schemas"]["DryRunResponse"];
+        };
+        Result_DryRunResponse_: components["schemas"]["SuccessfulResult_DryRunResponse_"] | components["schemas"]["FailedResult"];
         /** @description tsoa doesn't support string interpolation in type names like `${number}`
          *     But the real type of this is `${number}.${number}.${number}`
          *     https://github.com/lukeautry/tsoa/pull/1469 */
@@ -542,6 +566,45 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    BatcherPaymentGet: {
+        parameters: {
+            query: {
+                batcher_address: string;
+                user_address: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Ok */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result__balance-string__"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternalServerErrorResult"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidateErrorResult"];
+                };
+            };
+        };
+    };
     DryRunGet: {
         parameters: {
             query: {

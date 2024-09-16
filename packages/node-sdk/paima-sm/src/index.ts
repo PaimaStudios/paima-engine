@@ -46,6 +46,7 @@ import {
 } from '@paima/db';
 import type { SQLUpdate } from '@paima/db';
 import Prando from '@paima/prando';
+import { BuiltinEvents } from '@paima/events';
 import { randomnessRouter } from './randomness.js';
 import { cdeTransitionFunction } from './cde-processing.js';
 import { DelegateWallet } from './delegate-wallet.js';
@@ -126,6 +127,7 @@ const SM: GameStateMachineInitializer = {
         return await tx<boolean>(DBConn, dbTx =>
           createIndexesForEvents(
             dbTx,
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
             Object.values(events).flatMap(eventsByName =>
               eventsByName.flatMap(event =>
                 event.definition.fields.map(f => ({
@@ -142,6 +144,7 @@ const SM: GameStateMachineInitializer = {
         return await tx<boolean>(DBConn, dbTx =>
           registerEventTypes(
             dbTx,
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
             Object.values(events).flatMap(eventByName =>
               eventByName.flatMap(event => ({
                 name: event.definition.name,
@@ -179,6 +182,7 @@ const SM: GameStateMachineInitializer = {
           }
         } else if (latestCdeData.networkType === ConfigNetworkType.CARDANO) {
           const cdeDataLength = await processPaginatedCdeData(
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
             latestCdeData.carpCursor,
             latestCdeData.extensionDatums,
             dbTx,
@@ -191,6 +195,7 @@ const SM: GameStateMachineInitializer = {
           }
         } else if (latestCdeData.networkType === ConfigNetworkType.MINA) {
           const cdeDataLength = await processPaginatedCdeData(
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
             latestCdeData.minaCursor,
             latestCdeData.extensionDatums,
             dbTx,
@@ -269,6 +274,7 @@ const SM: GameStateMachineInitializer = {
         await saveLastBlock.run(
           {
             block_height: latestChainData.blockNumber,
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
             main_chain_block_hash: Buffer.from(strip0x(latestChainData.blockHash), 'hex'),
             ms_timestamp: new Date(latestChainData.timestamp * 1000),
             ver: 1,
@@ -340,7 +346,7 @@ const SM: GameStateMachineInitializer = {
           precompiles.precompiles,
           indexForEventByTx,
           events,
-          prevBlock?.paima_block_hash
+          prevBlock?.paima_block_hash as Buffer
         );
 
         // Execute user submitted input data
@@ -353,17 +359,33 @@ const SM: GameStateMachineInitializer = {
           scheduledDataTxHashes.successTxHashes.length +
             scheduledDataTxHashes.failedTxHashes.length,
           events,
-          prevBlock?.paima_block_hash,
+          prevBlock?.paima_block_hash as Buffer,
           emittedLogsCount
         );
 
+        const batcherPaymentEvents = await processBatcherPayments(latestChainData, dbTx);
+
         const processedCount =
-          userInputsTxHashes.successTxHashes.length + scheduledDataTxHashes.successTxHashes.length;
+          cdeDataLength +
+          userInputsTxHashes.successTxHashes.length +
+          scheduledDataTxHashes.successTxHashes.length +
+          batcherPaymentEvents;
         // Extra logging
-        if (processedCount > 0)
-          doLog(
-            `Processed ${userInputsTxHashes.successTxHashes.length} user inputs, ${scheduledDataTxHashes.successTxHashes.length} scheduled inputs and ${cdeDataLength} CDE events in block #${latestChainData.blockNumber}`
-          );
+        if (processedCount > 0) {
+          const message = [
+            userInputsTxHashes.successTxHashes.length > 0
+              ? ` ${userInputsTxHashes.successTxHashes.length} user inputs`
+              : '',
+            scheduledDataTxHashes.successTxHashes.length > 0
+              ? `${scheduledDataTxHashes.successTxHashes.length} scheduled inputs`
+              : '',
+            cdeDataLength > 0 ? `${cdeDataLength} CDE events` : '',
+            batcherPaymentEvents > 0 ? `${batcherPaymentEvents} batcher payments` : '',
+          ]
+            .filter(m => !!m)
+            .join(', ');
+          doLog(`[Processed] ${message}`);
+        }
 
         // Commit finishing of processing to DB
         const blockHeader = genV1BlockHeader(
@@ -379,6 +401,7 @@ const SM: GameStateMachineInitializer = {
         );
         const blockHash = hashBlockV1.hash(blockHeader);
         await blockHeightDone.run(
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
           { block_height: latestChainData.blockNumber, block_hash: Buffer.from(blockHash, 'hex') },
           dbTx
         );
@@ -490,6 +513,32 @@ async function processPaginatedCdeData(
   });
 }
 
+// Process Batcher Payments.
+// Batcher SQL updates and Events are always generated, independent of any errors in the STF loop.
+// This is because the batcher gas fees must be paid even if the payload is invalid.
+async function processBatcherPayments(
+  latestChainData: ChainData,
+  DBConn: PoolClient
+): Promise<number> {
+  let count = 0;
+
+  // Update batcher payments and fees.
+  for (const [query, params] of latestChainData.batcher?.sqlUpdates ?? []) {
+    count += 1;
+    await query.run(params, DBConn);
+  }
+
+  for (const e of latestChainData.batcher?.events ?? []) {
+    await PaimaEventManager.Instance.sendMessage(BuiltinEvents.BatcherPayment, {
+      userAddress: e.userAddress,
+      batcherAddress: e.batcherAddress,
+      operation: e.operation,
+      value: e.value,
+    });
+  }
+  return count;
+}
+
 // Process all of the scheduled data inputs by running each of them through the game STF,
 // saving the results to the DB, and deleting the schedule data all together in one postgres tx.
 // Function returns number of scheduled inputs that were processed.
@@ -548,6 +597,7 @@ async function processScheduledData<Events extends AppEvents>(
         return {
           txHash: hashTimerData.hash({
             address: data.from_address,
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
             dataHash: keccak_256(data.input_data),
             blockHeight: latestChainData.blockNumber,
             indexInBlock: timerIndexRelativeToBlock,
@@ -852,12 +902,14 @@ async function processInternalEvents(
 
 type EventsToEmit<Event extends EventPathAndDef> = [
   ValueOf<AppEvents>[0],
+  // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
   ResolvedPath<Event['path']> & Event['type'],
 ][];
 
 function handleEvents<Event extends EventPathAndDef>(
   events: {
     address: `0x${string}`;
+    // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
     data: { name: string; fields: ResolvedPath<Event['path']> & Event['type']; topic: string };
   }[],
   sqlQueries: SQLUpdate[],

@@ -1,7 +1,5 @@
 import { AddressType, doLog, getReadNamespaces } from '@paima/utils';
-import type { SubmittedData } from '@paima/runtime';
 import type { PaimaGameInteraction } from '@paima/utils';
-import type { NonTimerSubmittedData } from '@paima/chain-types';
 import { CryptoManager } from '@paima/crypto';
 import {
   INNER_BATCH_DIVIDER,
@@ -12,6 +10,11 @@ import {
 import { toBN, hexToUtf8 } from 'web3-utils';
 import type { PoolClient } from 'pg';
 import { keccak_256 } from 'js-sha3';
+import type { NonTimerSubmittedData, SubmittedData } from '@paima/chain-types';
+
+interface SubmittedDataExt extends SubmittedData {
+  fromBatcher?: boolean;
+}
 
 interface ValidatedSubmittedData extends SubmittedData {
   validated: boolean;
@@ -24,7 +27,7 @@ export async function extractSubmittedData(
   blockTimestamp: number,
   DBConn: PoolClient,
   caip2: string
-): Promise<SubmittedData[]> {
+): Promise<SubmittedDataExt[]> {
   const unflattenedList = await Promise.all(
     events.map(e => eventMapper(e, blockTimestamp, DBConn, caip2, e.address))
   );
@@ -37,7 +40,7 @@ async function eventMapper(
   DBConn: PoolClient,
   caip2: string,
   contractAddress: string
-): Promise<SubmittedData[]> {
+): Promise<SubmittedDataExt[]> {
   const decodedData = decodeEventData(e.returnValues.data);
   return await processDataUnit(
     {
@@ -77,7 +80,7 @@ export async function processDataUnit(
   blockHeight: number,
   blockTimestamp: number,
   DBConn: PoolClient
-): Promise<SubmittedData[]> {
+): Promise<SubmittedDataExt[]> {
   try {
     if (!unit.inputData.includes(OUTER_BATCH_DIVIDER)) {
       // Directly submitted input, prepare nonce and return:
@@ -99,7 +102,7 @@ export async function processDataUnit(
         processBatchedSubunit(elem, subunitValue, blockHeight, blockTimestamp, DBConn, unit.origin)
       )
     );
-    return validatedSubUnits.filter(item => item.validated).map(unpackValidatedData);
+    return validatedSubUnits.filter(item => item.validated).map(v => unpackValidatedData(v));
   } catch (err) {
     doLog(`[funnel::processDataUnit] error: ${err}`);
     return [];
@@ -149,7 +152,6 @@ async function processBatchedSubunit(
   const validated = signatureValidated && timestampValidated;
 
   const inputNonce = createBatchNonce(millisecondTimestamp, userAddress, inputData);
-
   return {
     inputData,
     realAddress: userAddress,
@@ -200,11 +202,12 @@ async function validateSubunitSignature(
   return false;
 }
 
-function unpackValidatedData(validatedData: ValidatedSubmittedData): SubmittedData {
+function unpackValidatedData(validatedData: ValidatedSubmittedData): SubmittedDataExt {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const o = validatedData as any;
   delete o.validated;
-  return o as SubmittedData;
+  o.fromBatcher = true;
+  return o as SubmittedDataExt;
 }
 
 export function createBatchNonce(

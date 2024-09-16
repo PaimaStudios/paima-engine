@@ -126,6 +126,9 @@ export class ENV {
     }
     return '';
   }
+  static get BATCHER_PAYMENT_ADDRESS(): string {
+    return process.env.BATCHER_PAYMENT_ADDRESS || '';
+  }
 
   static get CARP_URL(): string | undefined {
     return process.env.CARP_URL;

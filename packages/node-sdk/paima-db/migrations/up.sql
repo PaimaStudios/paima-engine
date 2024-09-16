@@ -267,6 +267,13 @@ CREATE TABLE cde_cardano_mint_burn(
   PRIMARY KEY (cde_name, tx_id)
 );
 
+CREATE TABLE batcher_balance_data (
+  batcher_address TEXT NOT NULL,
+  user_address TEXT NOT NULL,
+  balance BIGINT NOT NULL DEFAULT 0,
+  PRIMARY KEY (batcher_address, user_address)
+);
+
 CREATE TABLE mina_checkpoint (
   timestamp TEXT NOT NULL,
   caip2 TEXT NOT NULL,

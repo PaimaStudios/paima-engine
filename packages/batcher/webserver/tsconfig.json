@@ -9,8 +9,10 @@
     { "path": "../address-validator/" },
     { "path": "../db/" },
     { "path": "../utils" },
+    { "path": "../batcher-transaction-poster" },
     { "path": "../../paima-sdk/paima-providers/tsconfig.build.json" },
     { "path": "../../paima-sdk/paima-concise/tsconfig.build.json" },
     { "path": "../../paima-sdk/paima-utils/tsconfig.build.json" },
+    { "path": "../../paima-sdk/paima-events/tsconfig.build.json" },
   ]
 }

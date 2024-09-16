@@ -68,9 +68,20 @@ const RollupBlock = genEvent({
   ],
 });
 
+const BatcherPayment = genEvent({
+  name: 'BatcherPayment',
+  fields: [
+    { name: 'batcherAddress', type: Type.String(), indexed: true },
+    { name: 'userAddress', type: Type.String(), indexed: true },
+    { name: 'operation', type: Type.Union([Type.Literal('payGas'), Type.Literal('addFunds')]) },
+    { name: 'value', type: Type.String() },
+  ],
+});
+
 const Events = [
   [TopicPrefix.Batcher, BatcherHash],
   [TopicPrefix.Node, RollupBlock],
+  [TopicPrefix.Node, BatcherPayment],
 ] as const;
 
 export const toPathFromEntries = <

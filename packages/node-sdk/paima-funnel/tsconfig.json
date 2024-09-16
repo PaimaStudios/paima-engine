@@ -14,6 +14,7 @@
     { "path": "../../node-sdk/paima-sm" },
     { "path": "../../paima-sdk/paima-crypto/tsconfig.build.json" },
     { "path": "../../paima-sdk/paima-concise/tsconfig.build.json" },
+    { "path": "../../paima-sdk/paima-events/tsconfig.build.json" },
     { "path": "../../paima-sdk/paima-chain-types/tsconfig.build.json" }
   ]
 }

@@ -70,6 +70,8 @@ export * from './sql/cde-cardano-pool-delegation.queries.js';
 export type * from './sql/cde-cardano-pool-delegation.queries.js';
 export * from './sql/cde-cardano-projected-nft.queries.js';
 export type * from './sql/cde-cardano-projected-nft.queries.js';
+export * from './sql/batcher-balance.queries.js';
+export type * from './sql/batcher-balance.queries.js';
 export * from './sql/cardano-last-epoch.queries.js';
 export type * from './sql/cardano-last-epoch.queries.js';
 // https://github.com/adelsz/pgtyped/issues/565
@@ -89,6 +91,8 @@ export type * from './sql/mina-checkpoints.queries.js';
 export * from './sql/mina-checkpoints.queries.js';
 export type * from './sql/dynamic-primitives.queries.js';
 export * from './sql/dynamic-primitives.queries.js';
+// https://github.com/adelsz/pgtyped/issues/565
+export { NumberOrString } from './sql/batcher-balance.queries.js';
 export type * from './sql/events.queries.js';
 export * from './sql/events.queries.js';
 export * from './event-indexing.js';

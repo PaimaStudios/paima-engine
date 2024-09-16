@@ -41,6 +41,7 @@ export type {
   TransferBatch as Erc1155TransferBatch,
 } from './contract-types/IERC1155Contract.js';
 export type { AccountCreated } from './contract-types/ERC6551RegistryContract.js';
+export type { Payment as BatcherPaymentEvent } from './contract-types/PaimaL2Contract.js';
 
 export type { Web3, Contract, AbiItem, EventData };
 export { AddressType, ChainDataExtensionType, ChainDataExtensionDatumType };

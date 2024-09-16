@@ -17,6 +17,7 @@ State-annotated contracts
 </ul>
 Facilitating monetization
 <ul>
+  <li>[BatcherPayment](#BatcherPayment): Facilitates paying batchers for gasless transactions.</li>
   <li>[NativeNftSale](#NativeNftSale): Facilitates selling NFTs that accepts extra data when buying for any initialization data needed in a Paima dApp.</li>
   <li>[GenericPayment](#GenericPayment): Facilitates accepting payment that accepts extra data to know what the payment was for inside a Paima dApp.</li>
   <li>[Erc20NftSale](#Erc20NftSale): Facilitates selling NFTs for specific ERC20s that accepts extra data when buying for any initialization data needed in a Paima dApp.</li>
@@ -46,6 +47,8 @@ Facilitating monetization
 {{InverseAppProjected1155}}
 
 ## Facilitating monetization
+
+{{BatcherPayment}}
 
 {{NativeNftSale}}
 

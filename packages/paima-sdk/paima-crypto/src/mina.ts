@@ -2,6 +2,7 @@ import { doLog } from '@paima/utils';
 import type { IVerify } from './IVerify.js';
 import bs58check from 'bs58check';
 import type { NetworkId } from 'mina-signer';
+import Client from 'mina-signer';
 
 export class MinaCrypto implements IVerify {
   verifyAddress = async (address: string): Promise<boolean> => {
@@ -23,8 +24,6 @@ export class MinaCrypto implements IVerify {
       if (!field || !scalar || !network || remainder.length > 0) {
         return false;
       }
-
-      const Client = (await import('mina-signer'));
 
       const signerClient = new Client({ network: network as NetworkId });
 

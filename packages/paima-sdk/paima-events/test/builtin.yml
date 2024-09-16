@@ -55,6 +55,30 @@ channels:
       block: {}
     servers:
       - $ref: '#/servers/paima-engine'
+  onBatcherPayment:
+    address: node/batcherAddress/{batcherAddress}/userAddress/{userAddress}
+    messages:
+      content:
+        payload:
+          type: object
+          properties:
+            operation:
+              anyOf:
+                - const: payGas
+                  type: string
+                - const: addFunds
+                  type: string
+            value:
+              type: string
+          required:
+            - operation
+            - value
+        contentType: application/json
+    parameters:
+      batcherAddress: {}
+      userAddress: {}
+    servers:
+      - $ref: '#/servers/paima-engine'
 operations:
   receiveBatcherHash:
     action: receive
@@ -66,6 +90,12 @@ operations:
     action: receive
     channel:
       $ref: '#/channels/onRollupBlock'
+    traits:
+      - $ref: '#/components/operationTraits/mqtt'
+  receiveBatcherPayment:
+    action: receive
+    channel:
+      $ref: '#/channels/onBatcherPayment'
     traits:
       - $ref: '#/components/operationTraits/mqtt'
 components:
