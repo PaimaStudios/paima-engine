@@ -108,7 +108,7 @@ export class BatcherPayment {
         const { userAddress, operation, value } = data;
         switch (operation) {
           case 'payGas':
-            BatcherPayment.chargeGasFee(userAddress, BigInt(value as string));
+            BatcherPayment.chargeGasFee(userAddress, BigInt(value));
             break;
           case 'addFunds':
             // Do nothing, as current balance is fetched from game-node

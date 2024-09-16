@@ -124,7 +124,7 @@ function registerDocsPrecompiles(precompiles: { [name: string]: `0x${string}` })
 function registerDocsOpenAPI(userStateMachineApi: object | undefined): void {
   const swaggerUiPath = path.resolve(__dirname) + '/swagger-ui';
 
-  const swaggerServer = (() => {
+  const swaggerServer = ((): any[] => {
     // if the gamecode is bundled with this code, __dirname will point to the
     // bundle's path.  Bundling is not really a requirement, since it's possible
     // to just use the dependencies from node_modules (or when using esbuild,
