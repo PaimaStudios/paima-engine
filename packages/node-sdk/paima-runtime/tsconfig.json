@@ -4,11 +4,12 @@
     "rootDir": ".",
     "noEmit": true
   },
-  "include": ["src/**/*", "test/**/*", "src/**/*.json"],
+  "include": ["src/**/*", "test/**/*"],
   "references": [
+    { "path": "../../paima-sdk/paima-events/tsconfig.build.json" },
+    { "path": "../../paima-sdk/paima-chain-types/tsconfig.build.json" },
     { "path": "../../paima-sdk/paima-utils/tsconfig.build.json" },
     { "path": "../../node-sdk/paima-db" },
-    { "path": "../../node-sdk/paima-utils-backend" },
-    { "path": "../paima-sm" },
+    { "path": "../../paima-sdk/paima-mw-core" }
   ]
 }

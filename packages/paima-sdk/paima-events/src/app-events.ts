@@ -1,7 +1,15 @@
-import type { LogEvent, LogEventFields } from './types.js';
-import type { genEvent } from './types.js';
+import type {
+  ArgPath,
+  BrokerName,
+  ExcludeFromTuple,
+  LogEvent,
+  LogEventFields,
+  OutputKeypairToObj,
+  RemoveAllIndexed,
+  TransformAllEventInput,
+} from './types.js';
 import { toPath, TopicPrefix } from './types.js';
-import type { TSchema, Static } from '@sinclair/typebox';
+import type { TSchema, Static, TObject } from '@sinclair/typebox';
 import { keccak_256 } from 'js-sha3';
 
 type Data<T extends LogEvent<LogEventFields<TSchema>[]>> = {
@@ -32,9 +40,19 @@ export const toSignatureHash = <T extends LogEvent<LogEventFields<TSchema>[]>>(
 
 export type AppEvents = ReturnType<typeof groupEvents>;
 
-export type RegisteredEvent<T extends LogEvent<LogEventFields<TSchema>[]>> = ReturnType<
-  typeof toPath<T, typeof TopicPrefix.App>
-> & {
+export type RegisteredEvent<T extends LogEvent<LogEventFields<TSchema>[]>> = {
+  /**
+   * the next three properties are basically the return type of toPath, but
+   * using ReturnType for some reason binds path to never[], which makes any
+   * assignment fail to typecheck.
+   */
+  path: (string | ArgPath)[];
+  broker: BrokerName<TopicPrefix.App>;
+  type: TObject<
+    OutputKeypairToObj<
+      ExcludeFromTuple<TransformAllEventInput<RemoveAllIndexed<T['fields']>>, never>
+    >
+  >;
   /**
    * keep the original definition around since it's nicer to work with, it
    * also has the advantage that it allows recovering the initial order in

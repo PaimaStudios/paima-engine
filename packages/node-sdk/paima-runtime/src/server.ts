@@ -13,6 +13,7 @@ import YAML from 'yaml';
 import { evmRpcEngine } from './evm-rpc/eip1193.js';
 import { StatusCodes } from 'http-status-codes';
 import type { ValidateErrorResult, InternalServerErrorResult } from '@paima/utils';
+import fs from 'fs';
 
 const server: Express = express();
 const bodyParser = express.json();
@@ -122,14 +123,20 @@ function registerDocsPrecompiles(precompiles: { [name: string]: `0x${string}` })
 
 function registerDocsOpenAPI(userStateMachineApi: object | undefined): void {
   const swaggerUiPath = path.resolve(__dirname) + '/swagger-ui';
-  const swaggerServer = [
-    swaggerUi.serve[0],
-    // the default swaggerUi.serve points to the root of the `pkg` build from standalone
-    // there is no way to override the path, so we instead just add a new path
-    // that we manually added in the standalone build that contains the swagger-ui
-    // this isn't ideal as it bloats the executable by 10MB
-    express.static(swaggerUiPath, {}),
-  ];
+
+  const swaggerServer = (() => {
+    // if the gamecode is bundled with this code, __dirname will point to the
+    // bundle's path.  Bundling is not really a requirement, since it's possible
+    // to just use the dependencies from node_modules (or when using esbuild,
+    // marking swagger-ui-dist as external), but we can provide this anyway to
+    // make it easier to make a packaged bundle.
+    if (fs.existsSync(swaggerUiPath)) {
+      return [swaggerUi.serve[0], express.static(swaggerUiPath, {})];
+    } else {
+      return swaggerUi.serve;
+    }
+  })();
+
   const openApi = getOpenApiJson(userStateMachineApi);
 
   server.get(`/${DocPaths.Root}/${DocPaths.Rest.Root}/${DocPaths.Rest.Spec}`, (_, res) => {
