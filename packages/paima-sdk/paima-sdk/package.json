@@ -25,6 +25,7 @@
   },
   "devDependencies": {},
   "dependencies": {
+    "@paima/chain-types": "5.0.0",
     "@paima/concise": "5.0.0",
     "@paima/crypto": "5.0.0",
     "@paima/executors": "5.0.0",

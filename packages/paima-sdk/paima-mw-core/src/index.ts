@@ -14,6 +14,7 @@ import {
   postConciseDataAsync,
 } from './helpers/posting.js';
 export * from './helpers/clients.js';
+export type * from './helpers/clients.js';
 import { buildQuery } from './helpers/query-constructors.js';
 import { pushLog } from './helpers/logging.js';
 
@@ -27,7 +28,6 @@ import {
   getDefaultActiveAddress,
   getActiveAddress,
   getStorageAddress,
-  getDeployment,
 } from './state.js';
 import {
   EndpointErrorFxn,
@@ -60,7 +60,6 @@ export {
   getBlockNumber,
   getBackendUri,
   getBatcherUri,
-  getDeployment,
   getDefaultActiveAddress,
   getActiveAddress,
   getStorageAddress,

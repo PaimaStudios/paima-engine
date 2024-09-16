@@ -119,10 +119,7 @@ type HostInfo = {
   backendUri: string;
   batcherUri?: string;
 };
-export function toAsyncApi(
-  info: HostInfo,
-  events: Record<string, EventPathAndDef>
-): AsyncAPI300Schema {
+export function toAsyncApi(info: HostInfo, events: [string, EventPathAndDef][]): AsyncAPI300Schema {
   const parsedUrl = new URL(info.backendUri);
   const servers: NonNullable<AsyncAPI300Schema['servers']> = {
     [PaimaEventBrokerNames.PaimaEngine]: {
@@ -143,7 +140,7 @@ export function toAsyncApi(
   }
 
   const channels: Channels = {};
-  for (const [k, v] of Object.entries(events)) {
+  for (const [k, v] of events) {
     if (v.broker === PaimaEventBrokerNames.Batcher && info.batcherUri == null) {
       continue;
     }
@@ -180,7 +177,7 @@ export function toAsyncApi(
   }
 
   const operations: Operations = {};
-  for (const [k, v] of Object.entries(events)) {
+  for (const [k, v] of events) {
     if (v.broker === PaimaEventBrokerNames.Batcher && info.batcherUri == null) {
       continue;
     }

@@ -213,7 +213,12 @@ export async function postConciselyEncodedData(
 }
 
 async function getAdjustedHeight(deploymentChainBlockHeight: number): Promise<number> {
-  const emulatedActive = getEmulatedBlocksActive() ?? (await emulatedBlocksActiveOnBackend());
+  const emulatedActive =
+    getEmulatedBlocksActive() ??
+    (await emulatedBlocksActiveOnBackend().then(
+      activeOnBackend => activeOnBackend.success && activeOnBackend.result
+    ));
+
   if (emulatedActive) {
     const BLOCK_DELAY = 1000;
 

@@ -10,6 +10,7 @@ import {
   EvmConfig,
   CardanoConfig,
   MinaConfig,
+  ConfigMapping,
   ConfigNetworkType,
   OtherEvmConfig,
   MainEvmConfig,
@@ -21,7 +22,7 @@ import {
   AvailMainConfig,
   AvailConfig,
 } from './config/loading.js';
-import { ErrorCode, ErrorMessageFxn, ErrorMessageMapping } from './types/index.js';
+import type { ErrorCode, ErrorMessageFxn, ErrorMessageMapping } from './types/index.js';
 
 export * from './config.js';
 export type * from './types/index.js';
@@ -47,6 +48,7 @@ export {
   MinaConfig,
   AvailConfig,
   AvailMainConfig,
+  ConfigMapping,
   ConfigNetworkType,
   defaultEvmMainNetworkName,
   defaultCardanoNetworkName,
@@ -68,6 +70,19 @@ export function buildErrorCodeTranslator(obj: ErrorMessageMapping): ErrorMessage
       return obj[errorCode];
     }
   };
+}
+
+export function strip0x(str: string): string {
+  if (str.startsWith('0x')) {
+    return str.substring(2);
+  }
+  return str;
+}
+export function add0x(str: string): `0x${string}` {
+  if (str.startsWith('0x')) {
+    return str as `0x{string}`;
+  }
+  return `0x${str}`;
 }
 
 // Timeout function for promises

@@ -1,7 +1,6 @@
 import { Type } from '@sinclair/typebox';
 import type {
   TString,
-  TNumber,
   TInteger,
   TExtends,
   Kind,
@@ -187,13 +186,13 @@ type TransformEventInput<T> = T extends {
 }
   ? { hashed?: Hashed; name: N; type: U }
   : never;
-type TransformAllEventInput<T extends LogEventFields<TSchema>[]> = {
+export type TransformAllEventInput<T extends LogEventFields<TSchema>[]> = {
   [P in keyof T]: TransformEventInput<T[P]>;
 };
 
 // 3) Exclude tuple values. This is useful to remove `never` types created by object mapping
 // ex: T extends { indexed: true } ? T : never;
-type ExcludeFromTuple<T extends readonly any[], E> = T extends [infer F, ...infer R]
+export type ExcludeFromTuple<T extends readonly any[], E> = T extends [infer F, ...infer R]
   ? [F] extends [E]
     ? ExcludeFromTuple<R, E>
     : [F, ...ExcludeFromTuple<R, E>]
@@ -214,18 +213,18 @@ type AddStringPath<T extends any[]> = T extends [
 
 // 5) Filter by entries that are not "indexed" as they need to go in the output
 type FilterNonIndexed<T> = T extends { indexed: false } ? T : never;
-type RemoveAllIndexed<T extends LogEventFields<TSchema>[]> = {
+export type RemoveAllIndexed<T extends LogEventFields<TSchema>[]> = {
   [P in keyof T]: FilterNonIndexed<T[P]>;
 };
 // 6) Merge the type together into a single object
-type OutputKeypairToObj<T> = T extends { name: string; type: any }[]
+export type OutputKeypairToObj<T> = T extends { name: string; type: any }[]
   ? {
       [K in T[number] as K['name']]: K['type'];
     }
   : never; // not sure why this never is needed. Maybe ExcludeFromTuple isn't perfect
 
 // 7) Map the prefix to the broker type
-type BrokerName<T extends TopicPrefix> = T extends TopicPrefix.Batcher
+export type BrokerName<T extends TopicPrefix> = T extends TopicPrefix.Batcher
   ? PaimaEventBrokerNames.Batcher
   : PaimaEventBrokerNames.PaimaEngine;
 
@@ -236,7 +235,8 @@ type IndexedFields<T extends LogEventFields<TSchema>[]> = ExcludeFromTuple<
 
 export function toPath<T extends LogEvent<LogEventFields<TSchema>[]>, Prefix extends TopicPrefix>(
   prefix: Prefix,
-  event: T
+  event: T,
+  signatureHash?: string
 ): {
   path: AddStringPath<IndexedFields<T['fields']>>;
   broker: BrokerName<Prefix>;
@@ -249,6 +249,7 @@ export function toPath<T extends LogEvent<LogEventFields<TSchema>[]>, Prefix ext
   return {
     path: [
       prefix,
+      ...[signatureHash].filter(x => x),
       ...event.fields
         .filter(input => input.indexed)
         .flatMap(input => [
@@ -304,7 +305,7 @@ type ToDefinitelyIndexedObject<T extends MaybeIndexedLogEventFields<any>[]> = {
     type: T[P]['type'];
   };
 };
-type ToLog<T extends MaybeIndexedLogEvent<MaybeIndexedLogEventFields<TSchema>[]>> = {
+export type ToLog<T extends MaybeIndexedLogEvent<MaybeIndexedLogEventFields<TSchema>[]>> = {
   name: T['name'];
   fields: ToDefinitelyIndexedObject<T['fields']>;
 };
@@ -314,7 +315,7 @@ type Ensure<T extends MaybeIndexedLogEvent<MaybeIndexedLogEventFields<TSchema>[]
   MaybeIndexedLogEvent<MaybeIndexedLogEventFields<TSchema>[]> extends U ? T : never;
 export function genEvent<
   const T extends MaybeIndexedLogEvent<MaybeIndexedLogEventFields<TSchema>[]>,
->(event: Ensure<T, MaybeIndexedLogEvent<any>>): ToLog<T> {
+>(event: DisallowComplexEventFields<T> & Ensure<T, MaybeIndexedLogEvent<any>>): ToLog<T> {
   for (const { name } of event.fields) {
     const invalidCharacters = ['$', '/', '+', '#'];
     for (const invalid of invalidCharacters) {
@@ -393,9 +394,9 @@ export function addHashes<T extends LogEvent<LogEventFields<TSchema>[]>>(
 }
 
 /**
- * ================================
- * Unused (but may be useful later)
- * ================================
+ * ===================================================
+ * Disable complex fields until we support these later
+ * ===================================================
  */
 
 // Disallows fields that aren't strings statically

@@ -9,18 +9,42 @@ export * from './delegate-wallet.js';
 // https://github.com/adelsz/pgtyped/issues/565
 export type { Json } from './sql/cde-generic.queries.js';
 
-export * from './sql/achievements.queries.js';
-export type * from './sql/achievements.queries.js';
-export * from './sql/block-heights.queries.js';
-export type * from './sql/block-heights.queries.js';
-export * from './sql/scheduled.queries.js';
-export type * from './sql/scheduled.queries.js';
+export { getAchievementProgress, setAchievementProgress } from './sql/achievements.queries.js';
+export type {
+  IGetAchievementProgressParams,
+  IGetAchievementProgressResult,
+  ISetAchievementProgressParams,
+  ISetAchievementProgressResult,
+} from './sql/achievements.queries.js';
+// https://github.com/adelsz/pgtyped/issues/565
+export {
+  getLatestProcessedBlockHeight,
+  getBlockSeeds,
+  getBlockHeights,
+  saveLastBlock,
+  blockHeightDone,
+  getBlockByHash,
+} from './sql/block-heights.queries.js';
+export type {
+  IGetLatestProcessedBlockHeightParams,
+  IGetLatestProcessedBlockHeightResult,
+  IGetBlockSeedsParams,
+  IGetBlockSeedsResult,
+  IGetBlockHeightsParams,
+  IGetBlockHeightsResult,
+  ISaveLastBlockParams,
+  ISaveLastBlockResult,
+  IBlockHeightDoneParams,
+  IBlockHeightDoneResult,
+  IGetBlockByHashParams,
+  IGetBlockByHashResult,
+} from './sql/block-heights.queries.js';
 export * from './sql/statistics.queries.js';
 export type * from './sql/statistics.queries.js';
 export * from './sql/nonces.queries.js';
 export type * from './sql/nonces.queries.js';
-export * from './sql/historical.queries.js';
-export type * from './sql/historical.queries.js';
+export * from './sql/rollup_inputs.queries.js';
+export type * from './sql/rollup_inputs.queries.js';
 export * from './sql/cde-tracking.queries.js';
 export type * from './sql/cde-tracking.queries.js';
 export * from './sql/extensions.queries.js';
@@ -61,6 +85,7 @@ export * from './sql/cde-cursor-tracking-pagination.queries.js';
 export type * from './sql/cde-cursor-tracking-pagination.queries.js';
 export * from './sql/cde-cardano-transfer.queries.js';
 export type * from './sql/cde-cardano-transfer.queries.js';
+// https://github.com/adelsz/pgtyped/issues/565
 export { cdeCardanoMintBurnInsert } from './sql/cde-cardano-mint-burn.queries.js';
 export type * from './sql/mina-checkpoints.queries.js';
 export * from './sql/mina-checkpoints.queries.js';
@@ -68,6 +93,10 @@ export type * from './sql/dynamic-primitives.queries.js';
 export * from './sql/dynamic-primitives.queries.js';
 // https://github.com/adelsz/pgtyped/issues/565
 export { NumberOrString } from './sql/batcher-balance.queries.js';
+export type * from './sql/events.queries.js';
+export * from './sql/events.queries.js';
+export * from './event-indexing.js';
+export * from './register-events.js';
 
 export {
   tx,

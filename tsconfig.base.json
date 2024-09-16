@@ -37,6 +37,7 @@
       "@paima/batcher-webserver/*": ["./packages/batcher/webserver/*"],
       "@paima/broker/*": ["./packagers/node-sdk/paima-broker/*"],
       "@paima/build-utils/*": ["./packages/build-utils/paima-build-utils/*"],
+      "@paima/chain-types/*": ["./packages/paima-sdk/paima-chain-types/*"],
       "@paima/concise/*": ["./packages/paima-sdk/paima-concise/*"],
       "@paima/crypto/*": ["./packages/paima-sdk/paima-crypto/*"],
       "@paima/db/*": ["./packages/node-sdk/paima-db/*"],
@@ -56,7 +57,7 @@
       "@paima/utils-backend/*": ["./packages/node-sdk/paima-utils-backend/*"],
       "@paima/utils/*": ["./packages/paima-sdk/paima-utils/*"],
       "@standalone/paima-batcher/*": ["./packages/batcher/batcher-standalone/*"],
-      "@standalone/paima-engine/*": ["./packages/engine/paima-standalone/*"]
+      "@paima/engine/*": ["./packages/node-sdk/paima-engine/*"]
     }
   },
   "exclude": ["node_modules"]

@@ -34,7 +34,7 @@
     "@polkadot/util-crypto": "^12.6.2",
     "bech32": "^2.0.0",
     "@paima/utils": "5.0.0",
-    "mina-signer": "^2.1.1",
+    "mina-signer": "^3.0.7",
     "bs58check": "^4.0.0"
   }
 }

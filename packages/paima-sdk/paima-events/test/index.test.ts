@@ -20,7 +20,7 @@ describe('Test if asyncapi is generated correctly', () => {
             backendUri: 'http://localhost:3333',
             batcherUri: 'http://localhost:1234',
           },
-          BuiltinHashedEvents
+          Object.entries(BuiltinHashedEvents)
         ),
         null,
         2
@@ -61,7 +61,7 @@ describe('Test if asyncapi is generated correctly', () => {
             backendUri: 'http://localhost:3333',
             batcherUri: 'http://localhost:1234',
           },
-          TestEvents
+          Object.entries(TestEvents)
         ),
         null,
         2

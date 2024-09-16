@@ -2,23 +2,49 @@ import type { TableData } from './table-types.js';
 import { packTuples } from './table-types.js';
 
 const QUERY_CREATE_TABLE_BLOCKHEIGHTS = `
-CREATE TABLE block_heights ( 
+CREATE TABLE paima_blocks ( 
   block_height INTEGER PRIMARY KEY,
+  ver INTEGER NOT NULL,
+  main_chain_block_hash BYTEA NOT NULL,
   seed TEXT NOT NULL,
-  done BOOLEAN NOT NULL DEFAULT false
+  ms_timestamp TIMESTAMP without time zone NOT NULL,
+  paima_block_hash BYTEA
 );
 `;
 
-const TABLE_DATA_BLOCKHEIGHTS: TableData = {
-  tableName: 'block_heights',
+const QUERY_CREATE_INDEX_PAIMA_BLOCK_HASH = `
+CREATE INDEX PAIMA_BLOCKS_L2_HASH_INDEX ON "paima_blocks" (paima_block_hash);
+`;
+const QUERY_CREATE_INDEX_MAIN_BLOCK_HASH = `
+CREATE INDEX PAIMA_BLOCKS_L1_HASH_INDEX ON "paima_blocks" (main_chain_block_hash);
+`;
+
+const TABLE_DATA_PAIMA_BLOCKS: TableData = {
+  tableName: 'paima_blocks',
   primaryKeyColumns: ['block_height'],
   columnData: packTuples([
     ['block_height', 'integer', 'NO', ''],
+    ['ver', 'integer', 'NO', ''],
+    ['main_chain_block_hash', 'bytea', 'NO', ''],
     ['seed', 'text', 'NO', ''],
-    ['done', 'boolean', 'NO', 'false'],
+    ['ms_timestamp', 'timestamp without time zone', 'NO', ''],
+    ['paima_block_hash', 'bytea', 'YES', ''],
   ]),
   serialColumns: [],
   creationQuery: QUERY_CREATE_TABLE_BLOCKHEIGHTS,
+  index: [
+    {
+      name: 'PAIMA_BLOCKS_L2_HASH_INDEX',
+      creationQuery: QUERY_CREATE_INDEX_PAIMA_BLOCK_HASH,
+    },
+    {
+      name: 'PAIMA_BLOCKS_L1_HASH_INDEX',
+      creationQuery: QUERY_CREATE_INDEX_MAIN_BLOCK_HASH,
+    },
+  ],
+  // TODO: we could also create a constraint
+  //       that paima_block_hash is non-null after each db query
+  //       CONSTRAINT hash_not_null CHECK (paima_block_hash IS NOT NULL) DEFERRABLE INITIALLY DEFERRED
 };
 
 const QUERY_CREATE_TABLE_NONCES = `
@@ -39,118 +65,180 @@ const TABLE_DATA_NONCES: TableData = {
   creationQuery: QUERY_CREATE_TABLE_NONCES,
 };
 
-const QUERY_CREATE_TABLE_SCHEDULED_DATA = `
-CREATE TABLE scheduled_data (
+const QUERY_CREATE_INDEX_ROLLUP_INPUT_RESULT_TX_HASH = `
+CREATE INDEX QUERY_CREATE_INDEX_ROLLUP_INPUT_RESULT_TX_HASH ON "rollup_input_result" (paima_tx_hash);
+`;
+const QUERY_CREATE_INDEX_ROLLUP_INPUTS_RESULT_BLOCK_HEIGHT = `
+CREATE INDEX QUERY_CREATE_INDEX_ROLLUP_INPUTS_RESULT_BLOCK_HEIGHT ON "rollup_input_result" (block_height);
+`;
+
+const QUERY_CREATE_TABLE_ROLLUP_INPUT_RESULT = `
+CREATE TABLE rollup_input_result (
+  id INTEGER PRIMARY KEY REFERENCES rollup_inputs(id) ON DELETE CASCADE,
+  success BOOLEAN NOT NULL,
+  paima_tx_hash BYTEA NOT NULL,
+  block_height INTEGER NOT NULL REFERENCES paima_blocks(block_height),
+  index_in_block INTEGER NOT NULL
+);
+`;
+
+const TABLE_DATA_ROLLUP_INPUT_RESULT: TableData = {
+  tableName: 'rollup_input_result',
+  primaryKeyColumns: ['id'],
+  columnData: packTuples([
+    ['id', 'integer', 'NO', ''],
+    ['success', 'boolean', 'NO', ''],
+    ['paima_tx_hash', 'bytea', 'NO', ''],
+    ['index_in_block', 'integer', 'NO', ''],
+  ]),
+  serialColumns: [],
+  creationQuery: QUERY_CREATE_TABLE_ROLLUP_INPUT_RESULT,
+  index: [
+    {
+      name: 'QUERY_CREATE_INDEX_ROLLUP_INPUT_RESULT_TX_HASH',
+      creationQuery: QUERY_CREATE_INDEX_ROLLUP_INPUT_RESULT_TX_HASH,
+    },
+    {
+      name: 'QUERY_CREATE_INDEX_ROLLUP_INPUTS_RESULT_BLOCK_HEIGHT',
+      creationQuery: QUERY_CREATE_INDEX_ROLLUP_INPUTS_RESULT_BLOCK_HEIGHT,
+    },
+  ],
+};
+
+const QUERY_CREATE_INDEX_ROLLUP_INPUT_FUTURE_BLOCK_BLOCK_HEIGHT = `
+CREATE INDEX QUERY_CREATE_INDEX_ROLLUP_INPUT_FUTURE_BLOCK_BLOCK_HEIGHT ON "rollup_input_future_block" (future_block_height);
+`;
+
+const QUERY_CREATE_ROLLUP_INPUT_FUTURE_BLOCK = `
+CREATE TABLE rollup_input_future_block (
+  id INTEGER PRIMARY KEY REFERENCES rollup_inputs(id) ON DELETE CASCADE,
+  future_block_height INTEGER NOT NULL
+);
+`;
+
+const TABLE_DATA_ROLLUP_INPUT_FUTURE_BLOCK: TableData = {
+  tableName: 'rollup_input_future_block',
+  primaryKeyColumns: ['id'],
+  columnData: packTuples([
+    ['id', 'integer', 'NO', ''],
+    ['future_block_height', 'integer', 'NO', ''],
+  ]),
+  serialColumns: [],
+  creationQuery: QUERY_CREATE_ROLLUP_INPUT_FUTURE_BLOCK,
+  index: [
+    {
+      name: 'QUERY_CREATE_INDEX_ROLLUP_INPUT_FUTURE_BLOCK_BLOCK_HEIGHT',
+      creationQuery: QUERY_CREATE_INDEX_ROLLUP_INPUT_FUTURE_BLOCK_BLOCK_HEIGHT,
+    },
+  ],
+};
+
+const QUERY_CREATE_INDEX_ROLLUP_INPUT_FUTURE_TIMESTAMP_BLOCK_HEIGHT = `
+CREATE INDEX QUERY_CREATE_INDEX_ROLLUP_INPUT_FUTURE_TIMESTAMP_BLOCK_HEIGHT ON "rollup_input_future_timestamp" (future_ms_timestamp);
+`;
+
+const QUERY_CREATE_ROLLUP_INPUT_FUTURE_TIMESTAMP = `
+CREATE TABLE rollup_input_future_timestamp (
+  id INTEGER PRIMARY KEY REFERENCES rollup_inputs(id) ON DELETE CASCADE,
+  future_ms_timestamp TIMESTAMP without time zone NOT NULL
+);
+`;
+
+const TABLE_DATA_ROLLUP_INPUT_FUTURE_TIMESTAMP: TableData = {
+  tableName: 'rollup_input_future_timestamp',
+  primaryKeyColumns: ['id'],
+  columnData: packTuples([
+    ['id', 'integer', 'NO', ''],
+    ['future_ms_timestamp', 'timestamp without time zone', 'NO', ''],
+  ]),
+  serialColumns: [],
+  creationQuery: QUERY_CREATE_ROLLUP_INPUT_FUTURE_TIMESTAMP,
+  index: [
+    {
+      name: 'QUERY_CREATE_INDEX_ROLLUP_INPUT_FUTURE_TIMESTAMP_BLOCK_HEIGHT',
+      creationQuery: QUERY_CREATE_INDEX_ROLLUP_INPUT_FUTURE_TIMESTAMP_BLOCK_HEIGHT,
+    },
+  ],
+};
+
+const QUERY_CREATE_INDEX_ROLLUP_INPUT_ORIGIN_CONTRACT_ADDRESS = `
+CREATE INDEX QUERY_CREATE_INDEX_ROLLUP_INPUT_ORIGIN_CONTRACT_ADDRESS ON "rollup_input_origin" (contract_address);
+`;
+
+const QUERY_CREATE_TABLE_ROLLUP_INPUT_ORIGIN = `
+CREATE TABLE rollup_input_origin (
+  id INTEGER PRIMARY KEY REFERENCES rollup_inputs(id) ON DELETE CASCADE,
+  primitive_name TEXT,
+  caip2 TEXT,
+  tx_hash BYTEA,
+  contract_address TEXT
+);
+`;
+
+const TABLE_DATA_ROLLUP_INPUT_ORIGIN: TableData = {
+  tableName: 'rollup_input_origin',
+  primaryKeyColumns: ['id'],
+  columnData: packTuples([
+    ['id', 'integer', 'NO', ''],
+    ['primitive_name', 'text', 'YES', ''],
+    ['caip2', 'text', 'YES', ''],
+    ['tx_hash', 'bytea', 'YES', ''],
+    ['contract_address', 'text', 'YES', ''],
+  ]),
+  serialColumns: [],
+  creationQuery: QUERY_CREATE_TABLE_ROLLUP_INPUT_ORIGIN,
+  index: [
+    {
+      name: 'QUERY_CREATE_INDEX_ROLLUP_INPUT_ORIGIN_CONTRACT_ADDRESS',
+      creationQuery: QUERY_CREATE_INDEX_ROLLUP_INPUT_ORIGIN_CONTRACT_ADDRESS,
+    },
+  ],
+};
+
+const QUERY_CREATE_TABLE_ROLLUP_INPUTS = `
+CREATE TABLE rollup_inputs (
   id SERIAL PRIMARY KEY,
-  block_height INTEGER NOT NULL,
+  from_address TEXT NOT NULL,
   input_data TEXT NOT NULL
 );
 `;
 
-const TABLE_DATA_SCHEDULED_DATA: TableData = {
-  tableName: 'scheduled_data',
+const QUERY_CREATE_INDEX_ROLLUP_INPUTS_FROM_ADDRESS = `
+CREATE INDEX QUERY_CREATE_INDEX_ROLLUP_INPUTS_BLOCK_HEIGHT ON "rollup_inputs" (from_address);
+`;
+
+const TABLE_DATA_ROLLUP_INPUTS: TableData = {
+  tableName: 'rollup_inputs',
   primaryKeyColumns: ['id'],
   columnData: packTuples([
     ['id', 'integer', 'NO', ''],
-    ['block_height', 'integer', 'NO', ''],
+    ['from_address', 'text', 'NO', ''],
     ['input_data', 'text', 'NO', ''],
   ]),
   serialColumns: ['id'],
-  creationQuery: QUERY_CREATE_TABLE_SCHEDULED_DATA,
-};
-
-const QUERY_CREATE_TABLE_SCHEDULED_DATA_TX_HASH = `
-CREATE TABLE scheduled_data_tx_hash (
-  id INTEGER PRIMARY KEY REFERENCES scheduled_data(id) ON DELETE CASCADE,
-  tx_hash TEXT NOT NULL
-);
-`;
-
-const TABLE_DATA_SCHEDULED_DATA_TX_HASH: TableData = {
-  tableName: 'scheduled_data_tx_hash',
-  primaryKeyColumns: ['id'],
-  columnData: packTuples([
-    ['id', 'integer', 'NO', ''],
-    ['tx_hash', 'text', 'NO', ''],
-  ]),
-  serialColumns: [],
-  creationQuery: QUERY_CREATE_TABLE_SCHEDULED_DATA_TX_HASH,
-};
-
-const QUERY_CREATE_TABLE_SCHEDULED_DATA_EXTENSION = `
-CREATE TABLE scheduled_data_extension (
-  id INTEGER PRIMARY KEY REFERENCES scheduled_data(id) ON DELETE CASCADE,
-  cde_name TEXT NOT NULL,
-  network TEXT NOT NULL
-);
-`;
-
-const TABLE_DATA_SCHEDULED_DATA_EXTENSION: TableData = {
-  tableName: 'scheduled_data_extension',
-  primaryKeyColumns: ['id'],
-  columnData: packTuples([
-    ['id', 'integer', 'NO', ''],
-    ['cde_name', 'text', 'NO', ''],
-    ['network', 'text', 'NO', ''],
-  ]),
-  serialColumns: [],
-  creationQuery: QUERY_CREATE_TABLE_SCHEDULED_DATA_EXTENSION,
-};
-
-const QUERY_CREATE_TABLE_SCHEDULED_DATA_PRECOMPILE = `
-CREATE TABLE scheduled_data_precompile (
-  id INTEGER PRIMARY KEY REFERENCES scheduled_data(id) ON DELETE CASCADE,
-  precompile TEXT NOT NULL
-);
-`;
-
-const TABLE_DATA_SCHEDULED_DATA_PRECOMPILE: TableData = {
-  tableName: 'scheduled_data_precompile',
-  primaryKeyColumns: ['id'],
-  columnData: packTuples([
-    ['id', 'integer', 'NO', ''],
-    ['precompile', 'text', 'NO', ''],
-  ]),
-  serialColumns: [],
-  creationQuery: QUERY_CREATE_TABLE_SCHEDULED_DATA_PRECOMPILE,
-};
-
-const QUERY_CREATE_TABLE_HISTORICAL = `
-CREATE TABLE historical_game_inputs (
-  id SERIAL PRIMARY KEY,
-  block_height INTEGER NOT NULL,
-  user_address TEXT NOT NULL,
-  input_data TEXT NOT NULL
-);
-`;
-
-const TABLE_DATA_HISTORICAL: TableData = {
-  tableName: 'historical_game_inputs',
-  primaryKeyColumns: ['id'],
-  columnData: packTuples([
-    ['id', 'integer', 'NO', ''],
-    ['block_height', 'integer', 'NO', ''],
-    ['user_address', 'text', 'NO', ''],
-    ['input_data', 'text', 'NO', ''],
-  ]),
-  serialColumns: ['id'],
-  creationQuery: QUERY_CREATE_TABLE_HISTORICAL,
+  creationQuery: QUERY_CREATE_TABLE_ROLLUP_INPUTS,
+  index: [
+    {
+      name: 'QUERY_CREATE_INDEX_ROLLUP_INPUTS_FROM_ADDRESS',
+      creationQuery: QUERY_CREATE_INDEX_ROLLUP_INPUTS_FROM_ADDRESS,
+    },
+  ],
 };
 
 const QUERY_CREATE_TABLE_CDE_TRACKING = `
 CREATE TABLE cde_tracking (
   block_height INTEGER NOT NULL,
-  network TEXT NOT NULL,
-  PRIMARY KEY (block_height, network)
+  caip2 TEXT NOT NULL,
+  PRIMARY KEY (block_height, caip2)
 );
 `;
 
 const TABLE_DATA_CDE_TRACKING: TableData = {
   tableName: 'cde_tracking',
-  primaryKeyColumns: ['block_height', 'network'],
+  primaryKeyColumns: ['block_height', 'caip2'],
   columnData: packTuples([
     ['block_height', 'integer', 'NO', ''],
-    ['network', 'text', 'NO', ''],
+    ['caip2', 'text', 'NO', ''],
   ]),
   serialColumns: [],
   creationQuery: QUERY_CREATE_TABLE_CDE_TRACKING,
@@ -656,17 +744,17 @@ const TABLE_DATA_DELEGATIONS: TableData = {
 const QUERY_CREATE_TABLE_MINA_CHECKPOINT = `
 CREATE TABLE mina_checkpoint (
   timestamp TEXT NOT NULL,
-  network TEXT NOT NULL,
-  PRIMARY KEY (network)
+  caip2 TEXT NOT NULL,
+  PRIMARY KEY (caip2)
 );
 `;
 
 const TABLE_DATA_MINA_CHECKPOINT: TableData = {
   tableName: 'mina_checkpoint',
-  primaryKeyColumns: ['network'],
+  primaryKeyColumns: ['caip2'],
   columnData: packTuples([
     ['timestamp', 'text', 'NO', ''],
-    ['network', 'text', 'NO', ''],
+    ['caip2', 'text', 'NO', ''],
   ]),
   serialColumns: [],
   creationQuery: QUERY_CREATE_TABLE_MINA_CHECKPOINT,
@@ -774,19 +862,74 @@ const TABLE_DATA_CDE_DYNAMIC_PRIMITIVE_CONFIG: TableData = {
   creationQuery: QUERY_CREATE_TABLE_CDE_DYNAMIC_PRIMITIVE_CONFIG,
 };
 
+const QUERY_CREATE_TABLE_EVENT = `
+CREATE TABLE event (
+  id SERIAL PRIMARY KEY,
+  topic TEXT NOT NULL,
+  address TEXT NOT NULL,
+  data JSONB NOT NULL,
+  block_height INTEGER NOT NULL,
+  tx_index INTEGER NOT NULL,
+  log_index INTEGER NOT NULL
+);
+`;
+
+const QUERY_CREATE_INDEX_EVENT_TOPIC = `
+CREATE INDEX EVENT_TOPIC_INDEX ON "event" (topic);
+`;
+
+const TABLE_DATA_EVENT: TableData = {
+  tableName: 'event',
+  primaryKeyColumns: ['id'],
+  columnData: packTuples([
+    ['id', 'integer', 'NO', ''],
+    ['topic', 'text', 'NO', ''],
+    ['address', 'text', 'NO', ''],
+    ['data', 'jsonb', 'NO', ''],
+    ['block_height', 'integer', 'NO', ''],
+    ['tx_index', 'integer', 'NO', ''],
+    ['log_index', 'integer', 'NO', ''],
+  ]),
+  serialColumns: [],
+  creationQuery: QUERY_CREATE_TABLE_EVENT,
+  index: {
+    name: 'EVENT_TOPIC_INDEX',
+    creationQuery: QUERY_CREATE_INDEX_EVENT_TOPIC,
+  },
+};
+
+const QUERY_CREATE_TABLE_REGISTERED_EVENT = `
+CREATE TABLE registered_event (
+  name TEXT NOT NULL,
+  topic TEXT NOT NULL,
+  PRIMARY KEY(name, topic)
+);
+`;
+
+const TABLE_DATA_REGISTERED_EVENT: TableData = {
+  tableName: 'registered_event',
+  primaryKeyColumns: ['name', 'topic'],
+  columnData: packTuples([
+    ['name', 'text', 'NO', ''],
+    ['topic', 'text', 'NO', ''],
+  ]),
+  serialColumns: [],
+  creationQuery: QUERY_CREATE_TABLE_REGISTERED_EVENT,
+};
+
 export const FUNCTIONS: string[] = [
   FUNCTION_NOTIFY_WALLET_CONNECT,
   FUNCTION_TRIGGER_ADDRESSES,
   FUNCTION_TRIGGER_DELEGATIONS,
 ];
 export const TABLES: TableData[] = [
-  TABLE_DATA_BLOCKHEIGHTS,
+  TABLE_DATA_PAIMA_BLOCKS,
   TABLE_DATA_NONCES,
-  TABLE_DATA_SCHEDULED_DATA,
-  TABLE_DATA_SCHEDULED_DATA_TX_HASH,
-  TABLE_DATA_SCHEDULED_DATA_EXTENSION,
-  TABLE_DATA_SCHEDULED_DATA_PRECOMPILE,
-  TABLE_DATA_HISTORICAL,
+  TABLE_DATA_ROLLUP_INPUTS,
+  TABLE_DATA_ROLLUP_INPUT_RESULT,
+  TABLE_DATA_ROLLUP_INPUT_FUTURE_BLOCK,
+  TABLE_DATA_ROLLUP_INPUT_FUTURE_TIMESTAMP,
+  TABLE_DATA_ROLLUP_INPUT_ORIGIN,
   TABLE_DATA_CDE_TRACKING,
   TABLE_DATA_CDE_TRACKING_CARDANO,
   TABLE_DATA_CDE,
@@ -812,4 +955,6 @@ export const TABLES: TableData[] = [
   TABLE_DATA_MINA_CHECKPOINT,
   TABLE_DATA_ACHIEVEMENT_PROGRESS,
   TABLE_DATA_CDE_DYNAMIC_PRIMITIVE_CONFIG,
+  TABLE_DATA_EVENT,
+  TABLE_DATA_REGISTERED_EVENT,
 ];

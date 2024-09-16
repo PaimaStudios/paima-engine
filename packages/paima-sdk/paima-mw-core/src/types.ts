@@ -1,5 +1,6 @@
 import type { WalletOption } from '@paima/providers';
-import type { Hash, WalletAddress, UserSignature } from '@paima/utils';
+import type { Hash, UserSignature } from '@paima/utils';
+import type { WalletAddress } from '@paima/chain-types';
 export type * from './wallets/wallet-modes.js';
 
 export type SignFunction = (message: string) => Promise<UserSignature>;
