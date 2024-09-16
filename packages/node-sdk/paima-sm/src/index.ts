@@ -242,7 +242,7 @@ const SM: GameStateMachineInitializer = {
                 contractAddress: null,
                 primitiveName: null,
                 caip2: '',
-                scheduledAt: null,
+                scheduledAtMs: null,
               },
               paimaTxHash: '',
             },
@@ -592,7 +592,7 @@ async function processScheduledData<Events extends AppEvents>(
           caip2: caip2,
           primitiveName: data.primitive_name ?? null,
           contractAddress: data.contract_address,
-          scheduledAt: 'future_ms_timestamp' in data ? data.future_ms_timestamp : null,
+          scheduledAtMs: 'future_ms_timestamp' in data ? data.future_ms_timestamp.getTime() : null,
         },
       };
 

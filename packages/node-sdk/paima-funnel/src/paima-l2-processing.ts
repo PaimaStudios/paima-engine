@@ -51,7 +51,7 @@ async function eventMapper(
         caip2,
         contractAddress,
         primitiveName: null, // TODO
-        scheduledAt: null,
+        scheduledAtMs: null,
       },
     },
     e.blockNumber,

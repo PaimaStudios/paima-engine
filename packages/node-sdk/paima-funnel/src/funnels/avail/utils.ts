@@ -135,7 +135,7 @@ export async function getDAData(
               txHash: decoded.hash.toHex(),
               contractAddress: null,
               primitiveName: null,
-              scheduledAt: null,
+              scheduledAtMs: null,
             },
           };
         }),

@@ -47,7 +47,7 @@ export interface SubmittedData {
     /* Timestamp if this is a timer scheduled with a date instead of a block
      * number. This will be always lower or equal than the underlying block's
      * timestamp */
-    scheduledAt: null | Date;
+    scheduledAtMs: null | number;
   };
 }
 
