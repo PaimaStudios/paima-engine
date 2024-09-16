@@ -95,11 +95,7 @@ export async function getBaseChainDataSingle(
     caip2Prefix
   );
 
-  const batcherFees = await new BatcherPaymentsFeeProcessor(
-    web3,
-    events,
-    submittedData
-  ).process();
+  const batcherFees = await new BatcherPaymentsFeeProcessor(web3, events, submittedData).process();
   const batcherAddFunds = new BatcherPaymentEventProcessor(paymentEvents).process();
 
   return {

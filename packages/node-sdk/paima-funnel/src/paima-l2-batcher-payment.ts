@@ -106,9 +106,7 @@ export class BatcherPaymentsFeeProcessor {
     if (this.events.length === 0) return [];
 
     const transactionReceipts = await Promise.all(
-      this.events.map(blockEvent =>
-        this.Web3.eth.getTransactionReceipt(blockEvent.transactionHash)
-      )
+      this.events.map(blockEvent => this.Web3.eth.getTransactionReceipt(blockEvent.transactionHash))
     );
     return transactionReceipts.map(receipt => ({
       gasUsed: receipt.gasUsed * receipt.effectiveGasPrice,

@@ -84,11 +84,7 @@ export async function processDataUnit(
   try {
     if (!unit.inputData.includes(OUTER_BATCH_DIVIDER)) {
       // Directly submitted input, prepare nonce and return:
-      const inputNonce = createUnbatchedNonce(
-        blockHeight,
-        unit.realAddress,
-        unit.inputData
-      );
+      const inputNonce = createUnbatchedNonce(blockHeight, unit.realAddress, unit.inputData);
       return [
         {
           ...unit,
@@ -100,19 +96,10 @@ export async function processDataUnit(
     const subunits = extractBatches(unit.inputData);
     if (subunits.length === 0) return [];
 
-    const subunitValue = toBN(unit.suppliedValue)
-      .div(toBN(subunits.length))
-      .toString(10);
+    const subunitValue = toBN(unit.suppliedValue).div(toBN(subunits.length)).toString(10);
     const validatedSubUnits = await Promise.all(
       subunits.map(elem =>
-        processBatchedSubunit(
-          elem,
-          subunitValue,
-          blockHeight,
-          blockTimestamp,
-          DBConn,
-          unit.origin
-        )
+        processBatchedSubunit(elem, subunitValue, blockHeight, blockTimestamp, DBConn, unit.origin)
       )
     );
     return validatedSubUnits.filter(item => item.validated).map(v => unpackValidatedData(v));
@@ -137,7 +124,7 @@ async function processBatchedSubunit(
     suppliedValue: '0',
     scheduled: false,
     validated: false,
-    origin
+    origin,
   };
 
   const elems = input.split(INNER_BATCH_DIVIDER);
@@ -172,8 +159,8 @@ async function processBatchedSubunit(
     suppliedValue,
     scheduled: false,
     validated,
-    origin
-  }
+    origin,
+  };
 }
 
 function validateSubunitTimestamp(subunitTimestamp: number, blockTimestamp: number): boolean {
