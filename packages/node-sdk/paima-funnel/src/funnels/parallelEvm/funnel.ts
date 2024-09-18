@@ -492,7 +492,7 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
       const mappedStartingBlockHeight = await findBlockByTimestamp(
         0,
         high,
-        applyDelay(chainInfo.config, Number(startingBlock.timestamp)),
+        applyDelay(chainInfo.config, startingBlock.timestamp),
         chainInfo.name,
         async block => Number((await web3.eth.getBlock(block)).timestamp)
       );
@@ -546,7 +546,7 @@ export class ParallelEvmFunnel extends BaseFunnel implements ChainFunnel {
 
   public override configPrint(): FunnelJson {
     return {
-      type: 'BlockFunnel',
+      type: 'ParallelEvmFunnel',
       chainName: this.chainInfo.name,
       child: this.baseFunnel.configPrint(),
     };

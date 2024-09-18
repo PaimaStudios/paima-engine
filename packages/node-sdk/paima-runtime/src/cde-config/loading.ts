@@ -50,6 +50,7 @@ import {
   ChainDataExtensionMinaEventGenericConfig,
   ChainDataExtensionMinaActionGenericConfig,
   ChainDataExtensionDynamicEvmPrimitiveConfig,
+  ChainDataExtensionMidnightContractStateConfig,
 } from '@paima/sm';
 import { loadAbi } from './utils.js';
 import assertNever from 'assert-never';
@@ -222,6 +223,15 @@ export function parseCdeConfigFile(
         return checkOrError(
           entry.name,
           Type.Intersect([ChainDataExtensionMinaActionGenericConfig, networkTagType]),
+          entry
+        );
+      case CdeEntryTypeName.MidnightContractState:
+        return checkOrError(
+          entry.name,
+          Type.Intersect([
+            ChainDataExtensionMidnightContractStateConfig,
+            Type.Object({ network: Type.String() }),
+          ]),
           entry
         );
       default:
@@ -459,6 +469,16 @@ async function instantiateExtension(
         cdeName: config.name,
         hash: hashConfig(config),
         cdeType: ChainDataExtensionType.MinaActionGeneric,
+      };
+    }
+    case CdeEntryTypeName.MidnightContractState: {
+      if (!config.network) throw new Error('Midnight extension config is missing `network` name');
+      return {
+        ...config,
+        network: config.network, // Repeated for TypeScript reasons.
+        cdeName: config.name,
+        hash: hashConfig(config),
+        cdeType: ChainDataExtensionType.MidnightContractState,
       };
     }
     default:

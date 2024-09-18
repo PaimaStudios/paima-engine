@@ -373,10 +373,8 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
         throw new Error("Couldn't get main's network staring block timestamp");
       }
 
-      const startingBlockTimestamp = startingBlock.timestamp as number;
-
       const minaTimestamp = baseChainTimestampToMina(
-        startingBlockTimestamp,
+        startingBlock.timestamp,
         chainInfo.config.delay
       );
 
@@ -417,7 +415,7 @@ export class MinaFunnel extends BaseFunnel implements ChainFunnel {
 
   public override configPrint(): FunnelJson {
     return {
-      type: 'BlockFunnel',
+      type: 'MinaFunnel',
       chainName: this.chainInfo.name,
       child: this.baseFunnel.configPrint(),
     };

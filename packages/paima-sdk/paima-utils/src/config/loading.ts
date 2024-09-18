@@ -13,6 +13,7 @@ export enum ConfigNetworkType {
   MINA = 'mina',
   AVAIL_MAIN = 'avail-main',
   AVAIL_OTHER = 'avail-other',
+  MIDNIGHT = 'midnight',
 }
 
 export type ConfigMapping = {
@@ -22,6 +23,7 @@ export type ConfigMapping = {
   [ConfigNetworkType.MINA]: MinaConfig;
   [ConfigNetworkType.AVAIL_MAIN]: AvailMainConfig;
   [ConfigNetworkType.AVAIL_OTHER]: AvailConfig;
+  [ConfigNetworkType.MIDNIGHT]: MidnightConfig;
 };
 
 export type TypeToConfig<T extends ConfigNetworkType> = ConfigMapping[T];
@@ -133,6 +135,22 @@ export const AvailOtherConfigSchema = addType(BaseAvailConfigSchema, ConfigNetwo
 export type AvailMainConfig = Static<typeof AvailMainConfigSchema>;
 export type AvailConfig = Static<typeof AvailOtherConfigSchema>;
 
+export const BaseMidnightConfigSchema = Type.Object({
+  // Midnight network connection info.
+  networkId: Type.Number(),
+  indexer: Type.String(),
+  indexerWS: Type.Optional(Type.String()),
+  // node URL and proof server are not needed for our read-only use
+
+  // Wait until we have both 1 upstream block AND this many future Midnight blocks before processing a Midnight block.
+  // Can reduce latency because we will have 1+ earlier than we will have 0
+  confirmationDepth: Type.Number(),
+});
+
+export const MidnightConfigSchema = addType(BaseMidnightConfigSchema, ConfigNetworkType.MIDNIGHT);
+
+export type MidnightConfig = Static<typeof MidnightConfigSchema>;
+
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const TaggedEvmConfig = <T extends boolean, U extends boolean>(T: T, MAIN_CONFIG: U) =>
   Type.Union([
@@ -186,6 +204,14 @@ export const TaggedAvailOtherConfig = <T extends boolean>(T: T) =>
   ]);
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+export const TaggedMidnightConfig = <T extends boolean>(T: T) =>
+  Type.Intersect([
+    MidnightConfigSchema,
+    //T ? MidnightOptionalProperties : Type.Partial(AvailOptionalProperties),
+    Type.Object({ type: Type.Literal(ConfigNetworkType.MIDNIGHT) }),
+  ]);
+
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const TaggedConfig = <T extends boolean>(T: T) =>
   Type.Union([
     TaggedEvmMainConfig(T),
@@ -194,6 +220,7 @@ export const TaggedConfig = <T extends boolean>(T: T) =>
     TaggedMinaConfig(T),
     TaggedAvailMainConfig(T),
     TaggedAvailOtherConfig(T),
+    TaggedMidnightConfig(T),
   ]);
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
@@ -218,6 +245,8 @@ const minaConfigDefaults = {
   confirmationDepth: 30,
   delay: 30 * 40,
 };
+
+const midnightConfigDefaults = {};
 
 const availConfigDefaults = {
   funnelBlockGroupSize: 100,
@@ -298,14 +327,17 @@ export async function loadConfig(): Promise<Static<typeof BaseConfigWithDefaults
           config[network] = Object.assign(evmConfigDefaults(), networkConfig);
           break;
         case ConfigNetworkType.CARDANO:
-          config[network] = Object.assign(cardanoConfigDefaults, networkConfig);
+          config[network] = Object.assign({}, cardanoConfigDefaults, networkConfig);
           break;
         case ConfigNetworkType.MINA:
-          config[network] = Object.assign(minaConfigDefaults, networkConfig);
+          config[network] = Object.assign({}, minaConfigDefaults, networkConfig);
           break;
         case ConfigNetworkType.AVAIL_MAIN:
         case ConfigNetworkType.AVAIL_OTHER:
-          config[network] = Object.assign(availConfigDefaults, networkConfig);
+          config[network] = Object.assign({}, availConfigDefaults, networkConfig);
+          break;
+        case ConfigNetworkType.MIDNIGHT:
+          config[network] = Object.assign({}, midnightConfigDefaults, networkConfig);
           break;
         default:
           throw new Error('unknown network type');
@@ -378,6 +410,13 @@ export function parseConfigFile(configFileData: string): Static<typeof BaseConfi
           baseStructure[network]
         );
         break;
+      case ConfigNetworkType.MIDNIGHT:
+        baseConfig[network] = checkOrError(
+          'midnight config entry',
+          TaggedMidnightConfig(false),
+          baseStructure[network]
+        );
+        break;
       default:
         throw new Error('Unknown config network type.');
     }
@@ -444,6 +483,8 @@ export function caip2PrefixFor(config: Static<typeof InstantiatedConfigsUnion>):
     case ConfigNetworkType.AVAIL_MAIN:
     case ConfigNetworkType.AVAIL_OTHER:
       return `polkadot:${config.genesisHash.slice(2, 32 + 2)}`;
+    case ConfigNetworkType.MIDNIGHT:
+      return `midnight:${config.networkId}`;
     default:
       assertNever(type);
   }

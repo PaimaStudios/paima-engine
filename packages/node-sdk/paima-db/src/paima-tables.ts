@@ -2,7 +2,7 @@ import type { TableData } from './table-types.js';
 import { packTuples } from './table-types.js';
 
 const QUERY_CREATE_TABLE_BLOCKHEIGHTS = `
-CREATE TABLE paima_blocks ( 
+CREATE TABLE paima_blocks (
   block_height INTEGER PRIMARY KEY,
   ver INTEGER NOT NULL,
   main_chain_block_hash BYTEA NOT NULL,
@@ -739,6 +739,25 @@ const TABLE_DATA_MINA_CHECKPOINT: TableData = {
   creationQuery: QUERY_CREATE_TABLE_MINA_CHECKPOINT,
 };
 
+const QUERY_CREATE_TABLE_MIDNIGHT_CHECKPOINT = `
+CREATE TABLE midnight_checkpoint (
+  caip2 TEXT NOT NULL,
+  block_height INTEGER NOT NULL,
+  PRIMARY KEY (caip2)
+);
+`;
+
+const TABLE_DATA_MIDNIGHT_CHECKPOINT: TableData = {
+  tableName: 'midnight_checkpoint',
+  primaryKeyColumns: ['caip2'],
+  columnData: packTuples([
+    ['caip2', 'text', 'NO', ''],
+    ['block_height', 'integer', 'NO', ''],
+  ]),
+  serialColumns: [],
+  creationQuery: QUERY_CREATE_TABLE_MIDNIGHT_CHECKPOINT,
+};
+
 const QUERY_CREATE_TABLE_ACHIEVEMENT_PROGRESS = `
 CREATE TABLE achievement_progress(
   wallet INTEGER NOT NULL REFERENCES addresses(id),
@@ -768,7 +787,7 @@ const FUNCTION_NOTIFY_WALLET_CONNECT: string = `
 create or replace function public.notify_wallet_connect()
   returns trigger
   language plpgsql
-as $function$ 
+as $function$
 DECLARE
   rec RECORD;
   payload TEXT;
@@ -784,7 +803,7 @@ begin
     ELSE
       RAISE EXCEPTION 'Unknown TG_OP: "%". Should not occur!', TG_OP;
   END CASE;
- 
+
    -- Get required fields
   FOREACH column_name IN ARRAY TG_ARGV LOOP
     EXECUTE format('SELECT $1.%I::TEXT', column_name)
@@ -801,7 +820,7 @@ begin
               || '"table":"'     || TG_TABLE_NAME                        || '",'
               || '"data":{'      || array_to_string(payload_items, ',')  || '}'
               || '}';
-             
+
 	perform pg_notify('wallet_connect_change', payload);
  	return null;
 end;
@@ -931,6 +950,7 @@ export const TABLES: TableData[] = [
   TABLE_DATA_CDE_CARDANO_TRANSFER,
   TABLE_DATA_CDE_CARDANO_MINT_BURN,
   TABLE_DATA_MINA_CHECKPOINT,
+  TABLE_DATA_MIDNIGHT_CHECKPOINT,
   TABLE_DATA_ACHIEVEMENT_PROGRESS,
   TABLE_DATA_CDE_DYNAMIC_PRIMITIVE_CONFIG,
   TABLE_DATA_EVENT,

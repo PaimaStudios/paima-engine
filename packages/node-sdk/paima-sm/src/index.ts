@@ -43,6 +43,7 @@ import {
   getFutureGameInputByBlockHeight,
   insertGameInputResult,
   newGameInput,
+  updateMidnightCheckpoint,
 } from '@paima/db';
 import type { SQLUpdate } from '@paima/db';
 import Prando from '@paima/prando';
@@ -840,6 +841,15 @@ async function processInternalEvents(
           {
             timestamp: event.timestamp,
             caip2: event.caip2,
+          },
+          dbTx
+        );
+        break;
+      case InternalEventType.MidnightLastBlock:
+        await updateMidnightCheckpoint.run(
+          {
+            caip2: event.caip2,
+            block_height: event.block,
           },
           dbTx
         );

@@ -21,6 +21,7 @@ DROP TABLE cde_tracking_cursor_pagination;
 DROP TABLE cde_cardano_transfer;
 DROP TABLE cde_cardano_mint_burn;
 DROP TABLE mina_checkpoint;
+DROP TABLE midnight_checkpoint;
 DROP TABLE achievement_progress;
 DROP TABLE cde_dynamic_primitive_config;
 DROP TABLE event;

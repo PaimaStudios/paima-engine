@@ -217,7 +217,7 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
 
   public override async readPresyncData(
     args: ReadPresyncDataFrom
-  ): Promise<{ [caip2: number]: PresyncChainData[] | typeof FUNNEL_PRESYNC_FINISHED }> {
+  ): Promise<{ [caip2: string]: PresyncChainData[] | typeof FUNNEL_PRESYNC_FINISHED }> {
     let basePromise = this.baseFunnel.readPresyncData(args);
 
     const caip2 = caip2PrefixFor(this.chainInfo.config);
@@ -507,6 +507,7 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
     return {
       type: 'CarpFunnel',
       chainName: this.chainInfo.name,
+      child: this.baseFunnel.configPrint(),
     };
   }
 }

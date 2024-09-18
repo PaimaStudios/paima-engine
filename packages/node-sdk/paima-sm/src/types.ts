@@ -38,7 +38,8 @@ export type InternalEvent =
   | CardanoEpochEvent
   | EvmLastBlockEvent
   | MinaLastTimestampEvent
-  | AvailLastBlockEvent;
+  | AvailLastBlockEvent
+  | MidnightLastBlockEvent;
 export type CardanoEpochEvent = { type: InternalEventType.CardanoBestEpoch; epoch: number };
 export type EvmLastBlockEvent = {
   type: InternalEventType.EvmLastBlock;
@@ -52,6 +53,11 @@ export type MinaLastTimestampEvent = {
 };
 export type AvailLastBlockEvent = {
   type: InternalEventType.AvailLastBlock;
+  block: number;
+  caip2: string;
+};
+export type MidnightLastBlockEvent = {
+  type: InternalEventType.MidnightLastBlock;
   block: number;
   caip2: string;
 };
@@ -77,7 +83,17 @@ export interface MinaPresyncChainData {
   extensionDatums: ChainDataExtensionDatum[];
 }
 
-export type PresyncChainData = EvmPresyncChainData | CardanoPresyncChainData | MinaPresyncChainData;
+export interface MidnightPresyncChainData {
+  caip2: string;
+  networkType: ConfigNetworkType.MIDNIGHT;
+  extensionDatums: ChainDataExtensionDatum[];
+}
+
+export type PresyncChainData =
+  | EvmPresyncChainData
+  | CardanoPresyncChainData
+  | MinaPresyncChainData
+  | MidnightPresyncChainData;
 
 interface CdeDatumErc20TransferPayload {
   from: string;
@@ -302,6 +318,14 @@ export interface CdeMinaActionGenericDatum extends CdeDatumBase {
   paginationCursor: PaginationCursor;
   scheduledPrefix: string;
 }
+
+export interface CdeMidnightContractStateDatum extends CdeDatumBase {
+  cdeDatumType: ChainDataExtensionDatumType.MidnightContractState;
+  contractAddress: string;
+  scheduledPrefix: string;
+  payload: string;
+}
+
 export interface CdeDynamicEvmPrimitiveDatum extends CdeDatumBase {
   cdeDatumType: ChainDataExtensionDatumType.DynamicEvmPrimitive;
   payload: CdeDatumDynamicEvmPrimitivePayload;
@@ -322,6 +346,7 @@ export type ChainDataExtensionDatum =
   | CdeCardanoMintBurnDatum
   | CdeMinaEventGenericDatum
   | CdeMinaActionGenericDatum
+  | CdeMidnightContractStateDatum
   | CdeDynamicEvmPrimitiveDatum;
 
 export enum CdeEntryTypeName {
@@ -339,6 +364,7 @@ export enum CdeEntryTypeName {
   MinaEventGeneric = 'mina-event-generic',
   MinaActionGeneric = 'mina-action-generic',
   DynamicEvmPrimitive = 'dynamic-evm-primitive',
+  MidnightContractState = 'midnight-contract-state',
 }
 
 const EvmAddress = Type.Transform(Type.RegExp('0x[0-9a-fA-F]{40}'))
@@ -592,6 +618,19 @@ export type ChainDataExtensionDynamicEvmPrimitive = ChainDataExtensionBase &
     eventName: string;
   };
 
+export const ChainDataExtensionMidnightContractStateConfig = Type.Object({
+  type: Type.Literal(CdeEntryTypeName.MidnightContractState),
+  name: Type.String(),
+
+  startBlockHeight: Type.Number(),
+  contractAddress: Type.String(),
+  scheduledPrefix: Type.String(),
+});
+export type ChainDataExtensionMidnightContractState = ChainDataExtensionBase &
+  Static<typeof ChainDataExtensionMidnightContractStateConfig> & {
+    cdeType: ChainDataExtensionType.MidnightContractState;
+  };
+
 export const CdeConfig = Type.Object({
   extensions: Type.Array(
     Type.Intersect([
@@ -610,6 +649,7 @@ export const CdeConfig = Type.Object({
         ChainDataExtensionMinaEventGenericConfig,
         ChainDataExtensionMinaActionGenericConfig,
         ChainDataExtensionDynamicEvmPrimitiveConfig,
+        ChainDataExtensionMidnightContractStateConfig,
       ]),
       Type.Partial(Type.Object({ network: Type.String() })),
     ])
@@ -645,6 +685,7 @@ export type ChainDataExtension = (
   | ChainDataExtensionMinaEventGeneric
   | ChainDataExtensionMinaActionGeneric
   | ChainDataExtensionDynamicEvmPrimitive
+  | ChainDataExtensionMidnightContractState
 ) & { network: string };
 
 export type GameStateTransitionFunctionRouter<Events extends AppEvents> = (

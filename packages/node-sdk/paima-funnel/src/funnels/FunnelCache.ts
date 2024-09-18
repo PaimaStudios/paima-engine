@@ -1,6 +1,7 @@
 import type { ChainData } from '@paima/sm';
 import type pg from 'pg';
 import type { AvailFunnelCacheEntry } from './avail/cache.js';
+import type { MidnightFunnelCacheEntry } from './midnight/funnel.js';
 
 export interface FunnelCacheEntry {
   /**
@@ -17,6 +18,7 @@ export type CacheMapType = {
   [EvmFunnelCacheEntry.SYMBOL]?: EvmFunnelCacheEntry;
   [MinaFunnelCacheEntry.SYMBOL]?: MinaFunnelCacheEntry;
   [AvailFunnelCacheEntry.SYMBOL]?: AvailFunnelCacheEntry;
+  [MidnightFunnelCacheEntry.SYMBOL]?: MidnightFunnelCacheEntry;
 };
 export class FunnelCacheManager {
   public cacheEntries: CacheMapType = {};

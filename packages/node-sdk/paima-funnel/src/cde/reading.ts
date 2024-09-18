@@ -69,6 +69,7 @@ async function getSpecificCdeData(
     case ChainDataExtensionType.CardanoMintBurn:
     case ChainDataExtensionType.MinaEventGeneric:
     case ChainDataExtensionType.MinaActionGeneric:
+    case ChainDataExtensionType.MidnightContractState:
       return [];
     default:
       assertNever(extension);

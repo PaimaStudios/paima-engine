@@ -23,6 +23,7 @@ import { wrapToMinaFunnel } from './funnels/mina/funnel.js';
 import { AvailBlockFunnel } from './funnels/avail/baseFunnel.js';
 import { AvailSharedApi } from './funnels/avail/utils.js';
 import assertNever from 'assert-never';
+import { wrapToMidnightFunnel } from './funnels/midnight/funnel.js';
 
 export class Web3SharedApi extends BaseFunnelSharedApi {
   public constructor(protected web3: Web3) {
@@ -30,12 +31,10 @@ export class Web3SharedApi extends BaseFunnelSharedApi {
     this.getBlock.bind(this);
   }
 
-  public override async getBlock(
-    height: number
-  ): Promise<{ timestamp: number | string } | undefined> {
+  public override async getBlock(height: number): Promise<{ timestamp: number } | undefined> {
     const block = await this.web3.eth.getBlock(height);
 
-    return block;
+    return { timestamp: Number(block.timestamp) };
   }
 }
 
@@ -173,6 +172,12 @@ export class FunnelFactory implements IFunnelFactory {
         case ConfigNetworkType.AVAIL_OTHER:
           chainFunnel = await wrapToAvailParallelFunnel(chainFunnel, this.sharedData, dbTx, {
             config: config as AvailConfig,
+            name: chainName,
+          });
+          break;
+        case ConfigNetworkType.MIDNIGHT:
+          chainFunnel = await wrapToMidnightFunnel(chainFunnel, this.sharedData, dbTx, {
+            config,
             name: chainName,
           });
           break;

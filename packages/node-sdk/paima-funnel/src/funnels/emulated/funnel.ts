@@ -477,7 +477,7 @@ export class EmulatedBlocksFunnel extends BaseFunnel {
 
   public override configPrint(): FunnelJson {
     return {
-      type: 'BlockFunnel',
+      type: 'EmulatedBlocksFunnel',
       chainName: this.chainInfo.name,
       child: this.ctorData.baseFunnel.configPrint(),
     };
