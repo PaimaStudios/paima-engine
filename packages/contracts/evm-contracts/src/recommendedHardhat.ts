@@ -6,8 +6,9 @@ import 'hardhat-dependency-compiler';
 import 'hardhat-interact';
 import 'hardhat-abi-exporter';
 import { TASK_NODE_SERVER_READY } from 'hardhat/builtin-tasks/task-names';
-import path from 'path';
-
+import { listDeployments } from '@nomicfoundation/ignition-core';
+import * as path from 'path';
+import * as fs from 'fs';
 import * as dotenv from 'dotenv';
 
 export function defaultHardhatConfig(config: { envPath: string }): HardhatUserConfig {
@@ -22,7 +23,7 @@ export function defaultHardhatConfig(config: { envPath: string }): HardhatUserCo
       sources: './src/solidity',
       tests: './test',
       cache: './cache',
-      artifacts: './generated/artifacts',
+      artifacts: './build/artifacts',
       ignition: './src/ignition',
     },
     networks: {
@@ -51,7 +52,7 @@ export function defaultHardhatConfig(config: { envPath: string }): HardhatUserCo
       },
     },
     abiExporter: {
-      path: './generated/abi',
+      path: './build/abi',
       runOnCompile: true,
       tsWrapper: true,
       clear: true,
@@ -79,20 +80,35 @@ export function defaultDeployment(config: IgnitionDeployParameters): void {
   subtask(TASK_NODE_SERVER_READY, async (_, hre, runSuper) => {
     const result = await runSuper();
 
-    const originNetwork = hre.network;
-    if (originNetwork.name === 'hardhat') {
-      (hre as any).network = 'localhost';
+    await hre.run(
+      {
+        scope: 'ignition',
+        task: 'deploy',
+      },
+      config
+    );
+
+    return result;
+  });
+}
+
+export function copyDeployments(deploymentDir: string): void {
+  subtask(TASK_NODE_SERVER_READY, async (_, hre, runSuper) => {
+    const result = await runSuper();
+
+    const deployments = await listDeployments(deploymentDir);
+    for (const deployment of deployments) {
+      const deployedAddressesPath = path.join(deploymentDir, deployment, 'deployed_addresses.json');
+      const json = fs.readFileSync(deployedAddressesPath);
+
+      const deploymentsOutput = path.join(__dirname, 'build', 'deployments');
+      if (!fs.existsSync(deploymentsOutput)) {
+        fs.mkdirSync(deploymentsOutput);
+      }
+
+      const outputTs = `export default ${json}\n as const;`;
+      fs.writeFileSync(path.join(deploymentsOutput, `${deployment}.ts`), outputTs, { flag: 'w' });
     }
-    {
-      await hre.run(
-        {
-          scope: 'ignition',
-          task: 'deploy',
-        },
-        config
-      );
-    }
-    (hre as any).network = originNetwork;
 
     return result;
   });
