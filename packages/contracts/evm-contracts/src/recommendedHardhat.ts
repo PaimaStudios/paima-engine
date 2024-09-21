@@ -1,5 +1,5 @@
 import type { HardhatUserConfig } from 'hardhat/config';
-import { subtask } from 'hardhat/config';
+import { scope, subtask } from 'hardhat/config';
 import '@nomicfoundation/hardhat-toolbox-viem';
 import '@nomicfoundation/hardhat-ignition-viem';
 import 'hardhat-dependency-compiler';
@@ -11,7 +11,10 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as dotenv from 'dotenv';
 
-export function defaultHardhatConfig(config: { envPath: string }): HardhatUserConfig {
+export function defaultHardhatConfig(config: {
+  envPath: string;
+  outDir: string;
+}): HardhatUserConfig {
   const testnet: Record<string, string> = {};
   const mainnet: Record<string, string> = {};
   dotenv.config({ path: `${config.envPath}/.env.testnet`, processEnv: testnet });
@@ -23,7 +26,7 @@ export function defaultHardhatConfig(config: { envPath: string }): HardhatUserCo
       sources: './src/solidity',
       tests: './test',
       cache: './cache',
-      artifacts: './build/artifacts',
+      artifacts: `${config.outDir}/artifacts`,
       ignition: './src/ignition',
     },
     networks: {
@@ -52,7 +55,7 @@ export function defaultHardhatConfig(config: { envPath: string }): HardhatUserCo
       },
     },
     abiExporter: {
-      path: './build/abi',
+      path: `${config.outDir}/abi`,
       runOnCompile: true,
       tsWrapper: true,
       clear: true,
@@ -63,6 +66,9 @@ export function defaultHardhatConfig(config: { envPath: string }): HardhatUserCo
   return defaultConfig;
 }
 
+/**
+ * This type comes from hardhat-ignition. It's unfortunately not exported
+ */
 type IgnitionDeployParameters = {
   modulePath: string;
   parameters?: string;
@@ -72,11 +78,18 @@ type IgnitionDeployParameters = {
   verify: boolean;
   strategy: string;
 };
+
 /**
  * TODO: this may be replaced by a built-in feature in the future
  * https://github.com/NomicFoundation/hardhat-ignition/issues/791
  */
-export function defaultDeployment(config: IgnitionDeployParameters): void {
+export function defaultDeployment(
+  rootDir: string,
+  outDir: string,
+  config: IgnitionDeployParameters
+): void {
+  forceToDisk(rootDir, outDir); // note: need to register this listener first
+
   subtask(TASK_NODE_SERVER_READY, async (_, hre, runSuper) => {
     const result = await runSuper();
 
@@ -92,24 +105,41 @@ export function defaultDeployment(config: IgnitionDeployParameters): void {
   });
 }
 
-export function copyDeployments(deploymentDir: string): void {
-  subtask(TASK_NODE_SERVER_READY, async (_, hre, runSuper) => {
-    const result = await runSuper();
-
-    const deployments = await listDeployments(deploymentDir);
-    for (const deployment of deployments) {
-      const deployedAddressesPath = path.join(deploymentDir, deployment, 'deployed_addresses.json');
-      const json = fs.readFileSync(deployedAddressesPath);
-
-      const deploymentsOutput = path.join(__dirname, 'build', 'deployments');
-      if (!fs.existsSync(deploymentsOutput)) {
-        fs.mkdirSync(deploymentsOutput);
+/**
+ * see https://github.com/NomicFoundation/hardhat-ignition/issues/791
+ */
+function forceToDisk(rootDir: string, outDir: string) {
+  scope('ignition').task(
+    'deploy',
+    async (taskArguments: IgnitionDeployParameters, hre, runSuper) => {
+      const network = hre.hardhatArguments.network ?? hre.config.defaultNetwork ?? 'hardhat';
+      // see https://github.com/NomicFoundation/hardhat-ignition/issues/791
+      if (taskArguments.deploymentId == null && network === 'hardhat') {
+        taskArguments.deploymentId = taskArguments.deploymentId ?? 'chain-31337';
       }
+      const result = await runSuper(taskArguments);
 
-      const outputTs = `export default ${json}\n as const;`;
-      fs.writeFileSync(path.join(deploymentsOutput, `${deployment}.ts`), outputTs, { flag: 'w' });
+      copyDeployments(rootDir, outDir);
+      return result;
+    }
+  );
+}
+
+export async function copyDeployments(rootDir: string, outDir: string): Promise<void> {
+  const deploymentDir = path.resolve(rootDir, 'src', 'ignition', 'deployments');
+  const deployments = await listDeployments(deploymentDir);
+  for (const deployment of deployments) {
+    const deployedAddressesPath = path.join(deploymentDir, deployment, 'deployed_addresses.json');
+    const json = fs.readFileSync(deployedAddressesPath, 'utf8');
+
+    const deploymentsOutput = path.join(outDir, 'deployments');
+    if (!fs.existsSync(deploymentsOutput)) {
+      fs.mkdirSync(deploymentsOutput);
     }
 
-    return result;
-  });
+    const fixedJson = json.replace(/[\r\n]+$/, '');
+    const outputTs = `export default ${fixedJson} as const;`;
+    // TODO: maybe also generate cjs and mjs files equivalents?
+    fs.writeFileSync(path.join(deploymentsOutput, `${deployment}.ts`), outputTs, { flag: 'w' });
+  }
 }
