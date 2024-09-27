@@ -11,14 +11,14 @@ for (const variable in process.env) {
 if (process.env.SECURITY_NAMESPACE) {
   const namespace = process.env.SECURITY_NAMESPACE;
   if (namespace.endsWith('.yml') || namespace.endsWith('.yaml')) {
-    const fileContent = fs.readFileSync(`../${namespace}`, 'utf-8');
+    const fileContent = fs.readFileSync(`./${namespace}`, 'utf-8');
     define[`process.env.SECURITY_NAMESPACE_ROUTER`] = JSON.stringify(fileContent);
   }
 }
 
 try {
   const fileContent = fs.readFileSync(
-    `../../config.${process.env.NETWORK || 'localhost'}.yml`,
+    `../config.${process.env.NETWORK || 'localhost'}.yml`,
     'utf8'
   );
   define[`process.env.BUILT_TIME_INJECTED_CONFIGURATION`] = JSON.stringify(fileContent);

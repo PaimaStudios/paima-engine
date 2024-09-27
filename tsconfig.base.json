@@ -39,6 +39,7 @@
       "@paima/build-utils/*": ["./packages/build-utils/paima-build-utils/*"],
       "@paima/chain-types/*": ["./packages/paima-sdk/paima-chain-types/*"],
       "@paima/concise/*": ["./packages/paima-sdk/paima-concise/*"],
+      "@paima/config/*": ["./packages/paima-sdk/paima-config/*"],
       "@paima/crypto/*": ["./packages/paima-sdk/paima-crypto/*"],
       "@paima/db/*": ["./packages/node-sdk/paima-db/*"],
       "@paima/events/*": ["./packages/paima-sdk/paima-events/*"],

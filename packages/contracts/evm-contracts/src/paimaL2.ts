@@ -1,27 +1,29 @@
 import { task, types } from 'hardhat/config';
-import '@nomicfoundation/hardhat-toolbox';
+import '@nomicfoundation/hardhat-toolbox-viem';
 import { getContract, getOrAskString, ownerCheck, paimaScope } from './common.js';
+import { decodeAbiParameters } from 'viem';
+import { stringToBytes } from 'viem';
 
 paimaScope
   .task('PaimaL2Contract:setFee', `Sets the fee of a Paima L2 contract`)
   .addOptionalParam('contract', `The contracts's address`, undefined, types.string)
   .addOptionalParam('fee', `The new fee (wei)`, undefined, types.string)
   .setAction(async (taskArgs, hre) => {
+    const publicClient = await hre.viem.getPublicClient();
     // Connect to the deployed contract
     const { signer, account } = await getContract(hre, taskArgs.contract);
-    const contractFactory = await hre.ethers.getContractFactory('PaimaL2Contract', signer);
-    const contract = contractFactory.attach(account);
+    const contract = await hre.viem.getContractAt('PaimaL2Contract', account);
 
-    ownerCheck(await contract.owner(), await signer.getAddress());
+    ownerCheck((await contract.read.owner()) as string, await signer.account!.address);
 
     const newFee = BigInt(await getOrAskString(taskArgs.fee, 'Fee? '));
-    if ((await contract.fee()) === newFee) {
+    if ((await contract.read.fee()) === newFee) {
       console.log(`Fee matches existing value "${newFee}". Skipping`);
       return;
     }
-    const tx = await contract.setFee(newFee);
-    await tx.wait();
-    const updatedValue = await contract.fee();
+    const hash = await contract.write.setFee([newFee]);
+    await publicClient.waitForTransactionReceipt({ hash });
+    const updatedValue = await contract.read.fee();
     console.log(`The updated value of "fee" is: ${updatedValue}`);
   });
 paimaScope
@@ -29,20 +31,20 @@ paimaScope
   .addOptionalParam('contract', `The contracts's address`, undefined, types.string)
   .addOptionalParam('owner', `The new owner address`, undefined, types.string)
   .setAction(async (taskArgs, hre) => {
+    const publicClient = await hre.viem.getPublicClient();
     // Connect to the deployed contract
     const { signer, account } = await getContract(hre, taskArgs.contract);
-    const contractFactory = await hre.ethers.getContractFactory('PaimaL2Contract', signer);
-    const contract = contractFactory.attach(account);
+    const contract = await hre.viem.getContractAt('PaimaL2Contract', account);
 
-    ownerCheck(await contract.owner(), await signer.getAddress());
+    ownerCheck((await contract.read.owner()) as string, await signer.account!.address);
 
-    if ((await contract.owner()) === taskArgs.owner) {
+    if ((await contract.read.owner()) === taskArgs.owner) {
       console.log(`Owner matches existing value "${taskArgs.owner}". Skipping`);
       return;
     }
-    const tx = await contract.setOwner(taskArgs.owner);
-    await tx.wait();
-    const updatedValue = await contract.owner();
+    const hash = await contract.write.setOwner([taskArgs.owner]);
+    await publicClient.waitForTransactionReceipt({ hash });
+    const updatedValue = await contract.read.owner();
     console.log(`The updated value of "owner" is: ${updatedValue}`);
   });
 
@@ -50,21 +52,23 @@ paimaScope
   .task('PaimaL2Contract:withdrawFunds', `Withdraws funds out of the Paima L2 contract`)
   .addOptionalParam('contract', `The contracts's address`, undefined, types.string)
   .setAction(async (taskArgs, hre) => {
+    const publicClient = await hre.viem.getPublicClient();
     // Connect to the deployed contract
     const { signer, account } = await getContract(hre, taskArgs.contract);
-    const contractFactory = await hre.ethers.getContractFactory('PaimaL2Contract', signer);
-    const contract = contractFactory.attach(account);
+    const contract = await hre.viem.getContractAt('PaimaL2Contract', account);
 
-    ownerCheck(await contract.owner(), await signer.getAddress());
+    ownerCheck((await contract.read.owner()) as string, await signer.account!.address);
 
-    const currentBalance = await hre.ethers.provider.getBalance(account);
+    const currentBalance = await publicClient.getBalance({
+      address: account,
+    });
     if (currentBalance === 0n) {
       console.log(`Current balance is "${0n}". Skipping`);
       return;
     }
-    const tx = await contract.withdrawFunds();
-    await tx.wait();
-    console.log(`Withdrew ${currentBalance} to ${await signer.getAddress()}`);
+    const hash = await contract.write.withdrawFunds();
+    await publicClient.waitForTransactionReceipt({ hash });
+    console.log(`Withdrew ${currentBalance} to ${await signer.account!.address}`);
   });
 
 paimaScope
@@ -77,21 +81,19 @@ paimaScope
     types.string
   )
   .setAction(async (taskArgs, hre) => {
+    const publicClient = await hre.viem.getPublicClient();
     // Connect to the deployed contract
     const { signer, account } = await getContract(hre, taskArgs.contract);
-    const contractFactory = await hre.ethers.getContractFactory('PaimaL2Contract', signer);
-    const contract = contractFactory.attach(account);
+    const contract = await hre.viem.getContractAt('PaimaL2Contract', account);
 
     const providedData = await getOrAskString(taskArgs.data, 'data? ');
-    const data = providedData.startsWith('0x')
-      ? providedData
-      : hre.ethers.toUtf8Bytes(providedData);
+    const data = providedData.startsWith('0x') ? providedData : stringToBytes(providedData);
 
-    const fee = await contract.fee();
+    const fee = await contract.read.fee();
     console.log(fee);
-    const tx = await contract.paimaSubmitGameInput(data, { value: fee });
-    await tx.wait();
-    console.log(`Submitted data to the contract successfully at ${tx.hash}`);
+    const hash = await contract.write.paimaSubmitGameInput([data], { value: fee });
+    await publicClient.waitForTransactionReceipt({ hash });
+    console.log(`Submitted data to the contract successfully at ${hash}`);
   });
 
 paimaScope
@@ -111,21 +113,26 @@ paimaScope
   )
   .setAction(async (taskArgs, hre) => {
     // Connect to the deployed contract
-    const { signer, account } = await getContract(hre, taskArgs.contract);
-    const contractFactory = await hre.ethers.getContractFactory('PaimaL2Contract', signer);
-    const contract = contractFactory.attach(account);
+    const { account } = await getContract(hre, taskArgs.contract);
 
-    const toBlock = await hre.ethers.provider.getBlockNumber();
-    const fromBlock = toBlock - Math.min(taskArgs.range ?? 10000, toBlock);
+    const publicClient = await hre.viem.getPublicClient();
 
-    const eventFilter = contract.filters.PaimaGameInteraction();
-    const events = await contract.queryFilter(eventFilter, fromBlock, toBlock);
+    const contract = await hre.viem.getContractAt('PaimaL2Contract', account);
 
-    const getData = (rawData: string): string => {
-      const tentativeData: string = hre.ethers.AbiCoder.defaultAbiCoder().decode(
-        ['bytes'],
-        rawData
-      )[0];
+    const toBlock = await publicClient.getBlockNumber();
+    const maxRange = taskArgs.range ?? 10000n;
+    const fromBlock = maxRange > toBlock ? 0n : toBlock - maxRange;
+
+    const eventFilter = await contract.createEventFilter.PaimaGameInteraction({
+      fromBlock,
+      toBlock,
+    });
+    const events = await publicClient.getFilterLogs({
+      filter: eventFilter,
+    });
+
+    const getData = (rawData: `0x${string}`): string => {
+      const tentativeData = decodeAbiParameters([{ type: 'bytes' }], rawData)[0] as string;
       const textBuffer = Buffer.from(tentativeData.substring('0x'.length), 'hex');
       try {
         const decoded = new TextDecoder('utf-8', { fatal: true }).decode(textBuffer);
