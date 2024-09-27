@@ -4,12 +4,14 @@ import {
   newScheduledTimestampData,
   removeAllScheduledDataByInputData,
   removeScheduledBlockData,
+  removeScheduledTimestampData,
 } from './sql/rollup_inputs.queries.js';
 import type {
   INewScheduledHeightDataParams,
   INewScheduledTimestampDataParams,
   IRemoveAllScheduledDataByInputDataParams,
   IRemoveScheduledBlockDataParams,
+  IRemoveScheduledTimestampDataParams,
 } from './sql/rollup_inputs.queries.js';
 import { strip0x } from '@paima/utils';
 
@@ -80,19 +82,31 @@ export function createScheduledData(
 }
 
 // Create an SQL update which deletes an upcoming scheduled data
-// NOTE: if blockHeight is null, then delete ALL schedules that match inputData.
-export function deleteScheduledData(inputData: string, blockHeight: number | null): SQLUpdate {
-  if (blockHeight === null) {
+// NOTE: if trigger is null, then delete ALL schedules that match inputData.
+export function deleteScheduledData(
+  inputData: string,
+  trigger: { blockHeight: number } | { timestamp: Date } | null
+): SQLUpdate {
+  if (trigger === null) {
     const dsdParams: IRemoveAllScheduledDataByInputDataParams = {
       input_data: inputData,
     };
     return [removeAllScheduledDataByInputData, dsdParams];
   }
 
-  // Delete exact schedule by command and height
-  const dsdParams: IRemoveScheduledBlockDataParams = {
-    block_height: blockHeight,
-    input_data: inputData,
-  };
-  return [removeScheduledBlockData, dsdParams];
+  if ('blockHeight' in trigger) {
+    // Delete exact schedule by command and height
+    const dsdParams: IRemoveScheduledBlockDataParams = {
+      block_height: trigger.blockHeight,
+      input_data: inputData,
+    };
+    return [removeScheduledBlockData, dsdParams];
+  } else {
+    // Delete exact schedule by command and timestamp
+    const dsdParams: IRemoveScheduledTimestampDataParams = {
+      ms_timestamp: trigger.timestamp,
+      input_data: inputData,
+    };
+    return [removeScheduledTimestampData, dsdParams];
+  }
 }
