@@ -13,4 +13,5 @@ export enum ConfigPrimitiveType {
   MinaEventGeneric = 'mina-event-generic',
   MinaActionGeneric = 'mina-action-generic',
   DynamicEvmPrimitive = 'dynamic-evm-primitive',
+  MidnightContractState = 'midnight-contract-state',
 }

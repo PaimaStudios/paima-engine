@@ -3,4 +3,5 @@ export enum ConfigNetworkType {
   CARDANO = 'cardano',
   MINA = 'mina',
   AVAIL = 'avail',
+  MIDNIGHT = 'midnight',
 }

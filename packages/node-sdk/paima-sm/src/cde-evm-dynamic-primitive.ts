@@ -1,7 +1,11 @@
 import { insertDynamicExtension, registerDynamicChainDataExtension } from '@paima/db';
 import type { SQLUpdate } from '@paima/db';
-import type { TChainDataExtensionErc721Config, TChainDataExtensionGenericConfig } from './types.js';
-import { CdeEntryTypeName, type CdeDynamicEvmPrimitiveDatum } from './types.js';
+import type {
+  TChainDataExtensionErc721Config,
+  TChainDataExtensionGenericConfig,
+} from '@paima/config';
+import { type CdeDynamicEvmPrimitiveDatum } from './types.js';
+import { ConfigPrimitiveType } from '@paima/config';
 import {
   ChainDataExtensionType,
   DYNAMIC_PRIMITIVE_NAME_SEPARATOR,
@@ -11,7 +15,7 @@ import {
 // We omit storing the name from the config because it's dynamically generated
 // on the db insert as the primary key of the row. We can then recover it from
 // the row when needed.
-type StoredConfig<T> = Omit<T, 'name'> & { network: string };
+type StoredConfig<T> = Omit<T, 'displayName'> & { network: string };
 
 export default async function processDatum(
   cdeDatum: CdeDynamicEvmPrimitiveDatum,
@@ -28,7 +32,7 @@ export default async function processDatum(
     throw new Error(`No network found in config for caip2: ${cdeDatum.caip2}`);
   }
   switch (cdeDatum.payload.targetConfig.type) {
-    case CdeEntryTypeName.ERC721:
+    case ConfigPrimitiveType.ERC721:
       type = ChainDataExtensionType.ERC721;
 
       const erc721Config: StoredConfig<TChainDataExtensionErc721Config> = {
@@ -41,7 +45,7 @@ export default async function processDatum(
       config = erc721Config;
       break;
 
-    case CdeEntryTypeName.Generic:
+    case ConfigPrimitiveType.Generic:
       type = ChainDataExtensionType.Generic;
 
       const genericConfig: StoredConfig<TChainDataExtensionGenericConfig> = {

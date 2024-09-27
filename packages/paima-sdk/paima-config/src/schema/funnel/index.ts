@@ -12,6 +12,7 @@ export type ConfigFunnelMapping = {
   // [ConfigFunnelType.MINA_PARALLEL]: ConfigFunnelMinaParallel;
   // [ConfigFunnelType.AVAIL_MAIN]: ConfigFunnelAvailMain;
   // [ConfigFunnelType.AVAIL_PARALLEL]: ConfigFunnelAvailParallel;
+  // [ConfigFunnelType.MIDNIGHT_PARALLEL]: ConfigFunnelMidnightParallel;
 };
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
@@ -22,4 +23,5 @@ export const ConfigFunnelAll = <Bool extends boolean>(requireOptional: Bool) =>
     // ConfigFunnelSchemaCardano.allProperties(requireOptional),
     // ConfigFunnelSchemaMina.allProperties(requireOptional),
     // ConfigFunnelSchemaAvail.allProperties(requireOptional),
+    // ConfigFunnelSchemaMidnight.allProperties(requireOptional),
   ]);

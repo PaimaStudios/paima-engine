@@ -3,11 +3,9 @@ import type { Static } from '@sinclair/typebox';
 import { EvmAddress } from '../utils.js';
 import { ConfigPrimitiveType } from './types.js';
 import { Abi } from 'abitype/zod';
+import { DisplayName, StartStopBlockheight } from './common.js';
 
-const ChainDataExtensionConfigBase = Type.Object({
-  displayName: Type.String(),
-  startBlockHeight: Type.Number(),
-});
+export const ChainDataExtensionConfigBaseEvm = Type.Intersect([DisplayName, StartStopBlockheight]);
 
 const AbiType = Type.Transform(Type.String())
   .Decode(value => Abi.parse(JSON.parse(value)))
@@ -18,7 +16,7 @@ const AbiType = Type.Transform(Type.String())
 // =====
 
 export const ChainDataExtensionErc20Config = Type.Intersect([
-  ChainDataExtensionConfigBase,
+  ChainDataExtensionConfigBaseEvm,
   Type.Object({
     type: Type.Literal(ConfigPrimitiveType.ERC20),
     contractAddress: EvmAddress,
@@ -26,7 +24,7 @@ export const ChainDataExtensionErc20Config = Type.Intersect([
 ]);
 
 export const ChainDataExtensionErc20DepositConfig = Type.Intersect([
-  ChainDataExtensionConfigBase,
+  ChainDataExtensionConfigBaseEvm,
   Type.Object({
     type: Type.Literal(ConfigPrimitiveType.ERC20Deposit),
     contractAddress: EvmAddress,
@@ -40,7 +38,7 @@ export const ChainDataExtensionErc20DepositConfig = Type.Intersect([
 // ======
 
 export const ChainDataExtensionErc721Config = Type.Intersect([
-  ChainDataExtensionConfigBase,
+  ChainDataExtensionConfigBaseEvm,
   Type.Object({
     type: Type.Literal(ConfigPrimitiveType.ERC721),
     contractAddress: EvmAddress,
@@ -55,7 +53,7 @@ export type TChainDataExtensionErc721Config = Static<typeof ChainDataExtensionEr
 // =======
 
 export const ChainDataExtensionErc1155Config = Type.Intersect([
-  ChainDataExtensionConfigBase,
+  ChainDataExtensionConfigBaseEvm,
   Type.Object({
     type: Type.Literal(ConfigPrimitiveType.ERC1155),
     contractAddress: EvmAddress,
@@ -69,7 +67,7 @@ export const ChainDataExtensionErc1155Config = Type.Intersect([
 // =======
 
 export const ChainDataExtensionGenericConfig = Type.Intersect([
-  ChainDataExtensionConfigBase,
+  ChainDataExtensionConfigBaseEvm,
   Type.Object({
     type: Type.Literal(ConfigPrimitiveType.Generic),
     contractAddress: EvmAddress,
@@ -85,7 +83,7 @@ export type TChainDataExtensionGenericConfig = Static<typeof ChainDataExtensionG
 // =======
 
 export const ChainDataExtensionErc6551RegistryConfig = Type.Intersect([
-  ChainDataExtensionConfigBase,
+  ChainDataExtensionConfigBaseEvm,
   Type.Object({
     type: Type.Literal(ConfigPrimitiveType.ERC6551Registry),
     contractAddress: Type.Optional(EvmAddress),
@@ -101,7 +99,7 @@ export const ChainDataExtensionErc6551RegistryConfig = Type.Intersect([
 // =======
 
 export const ChainDataExtensionDynamicEvmPrimitiveConfig = Type.Intersect([
-  ChainDataExtensionConfigBase,
+  ChainDataExtensionConfigBaseEvm,
   Type.Object({
     type: Type.Literal(ConfigPrimitiveType.DynamicEvmPrimitive),
     contractAddress: EvmAddress,

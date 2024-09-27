@@ -38,20 +38,23 @@ export async function loadAbi(abiPath: string): Promise<any[]> {
     return [];
   }
   try {
-    let abiJson = JSON.parse(abiFileData);
-
-    // some tools give the ABI directly
-    if (Array.isArray(abiJson)) {
-      return abiJson;
-    }
-    // but some tools give an object with an `abi` key
-    if (typeof abiJson === 'object' && !!abiJson) {
-      if (Object.hasOwn(abiJson as object, 'abi') && Array.isArray(abiJson.abi)) {
-        return abiJson.abi;
-      }
-    }
+    return extractAbi(JSON.parse(abiFileData));
   } catch (err) {
     doLog(`[cde-config] ABI file at ${abiPath} has invalid structure`, err);
+  }
+  return [];
+}
+
+export function extractAbi(abiJson: any): any {
+  // some tools give the ABI directly
+  if (Array.isArray(abiJson)) {
+    return abiJson;
+  }
+  // but some tools give an object with an `abi` key
+  if (typeof abiJson === 'object' && !!abiJson) {
+    if (Object.hasOwn(abiJson as object, 'abi') && Array.isArray(abiJson.abi)) {
+      return abiJson.abi;
+    }
   }
   return [];
 }

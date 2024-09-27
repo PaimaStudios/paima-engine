@@ -10,6 +10,7 @@ export type ConfigNetworkMapping = {
   // [ConfigNetworkType.CARDANO]: ConfigNetworkCardano;
   // [ConfigNetworkType.MINA]: ConfigNetworkMina;
   // [ConfigNetworkType.AVAIL]: ConfigNetworkAvail;
+  // [ConfigNetworkType.MIDNIGHT]: ConfigNetworkMidnight;
 };
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
@@ -19,4 +20,5 @@ export const ConfigNetworkAll = <Bool extends boolean>(requireOptional: Bool) =>
     // ConfigNetworkSchemaCardano.allProperties(requireOptional),
     // ConfigNetworkSchemaMina.allProperties(requireOptional),
     // ConfigNetworkSchemaAvail.allProperties(requireOptional),
+    // ConfigNetworkSchemaMidnight.allProperties(requireOptional),
   ]);

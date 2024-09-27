@@ -27,32 +27,33 @@ import type {
   ChainDataExtension,
   ChainDataExtensionErc6551Registry,
   ChainDataExtensionGeneric,
-  TChainDataExtensionErc721Config,
-  TChainDataExtensionGenericConfig,
   CdeConfig,
-  TChainDataExtensionDynamicEvmPrimitiveConfig,
   ChainDataExtensionDynamicEvmPrimitive,
 } from '@paima/sm';
+import { CdeBaseConfig } from '@paima/sm';
+import type {
+  TChainDataExtensionDynamicEvmPrimitiveConfig,
+  TChainDataExtensionErc721Config,
+  TChainDataExtensionGenericConfig,
+} from '@paima/config';
 import {
-  CdeBaseConfig,
-  CdeEntryTypeName,
   ChainDataExtensionCardanoDelayedAssetConfig,
   ChainDataExtensionCardanoDelegationConfig,
   ChainDataExtensionCardanoMintBurnConfig,
   ChainDataExtensionCardanoProjectedNFTConfig,
   ChainDataExtensionCardanoTransferConfig,
+  ChainDataExtensionDynamicEvmPrimitiveConfig,
   ChainDataExtensionErc1155Config,
   ChainDataExtensionErc20Config,
   ChainDataExtensionErc20DepositConfig,
   ChainDataExtensionErc6551RegistryConfig,
   ChainDataExtensionErc721Config,
   ChainDataExtensionGenericConfig,
-  ChainDataExtensionMinaEventGenericConfig,
-  ChainDataExtensionMinaActionGenericConfig,
-  ChainDataExtensionDynamicEvmPrimitiveConfig,
   ChainDataExtensionMidnightContractStateConfig,
-} from '@paima/sm';
-import { loadAbi } from './utils.js';
+  ChainDataExtensionMinaActionGenericConfig,
+  ChainDataExtensionMinaEventGenericConfig,
+  ConfigPrimitiveType,
+} from '@paima/config';
 import assertNever from 'assert-never';
 import fnv from 'fnv-plus';
 import stableStringify from 'json-stable-stringify';
@@ -80,7 +81,7 @@ export async function loadChainDataExtensions(
     }
   }
 
-  let dynamicExtensions: { name: string; type: CdeEntryTypeName }[];
+  let dynamicExtensions: { name: string; type: ConfigPrimitiveType }[];
 
   try {
     // note: this fails the first time, as db tables are not initialized yet. That's okay
@@ -91,7 +92,7 @@ export async function loadChainDataExtensions(
         undefined,
         Type.Object({
           name: Type.String(),
-          type: Type.Enum(CdeEntryTypeName),
+          type: Type.Enum(ConfigPrimitiveType),
         }),
         { ...(ext.config as Record<string, unknown>), name: ext.cde_name, includeNameInInput: true }
       )
@@ -118,7 +119,7 @@ const networkTagType = Type.Partial(Type.Object({ network: Type.String() }));
 // Validate the overall structure of the config file and extract the relevant data
 export function parseCdeConfigFile(
   configFileData: string,
-  extraExtensions: { name: string; type: CdeEntryTypeName }[]
+  extraExtensions: { name: string; type: ConfigPrimitiveType }[]
 ): Static<typeof CdeConfig> {
   // Parse the YAML content into an object
   const configObject = YAML.parse(configFileData, { merge: true });
@@ -132,61 +133,61 @@ export function parseCdeConfigFile(
 
   const checkedConfig = baseConfig.extensions.map(entry => {
     switch (entry.type) {
-      case CdeEntryTypeName.ERC20:
+      case ConfigPrimitiveType.ERC20:
         return checkOrError(
           entry.name,
           Type.Intersect([ChainDataExtensionErc20Config, networkTagType]),
           entry
         );
-      case CdeEntryTypeName.ERC721:
+      case ConfigPrimitiveType.ERC721:
         return checkOrError(
           entry.name,
           Type.Intersect([ChainDataExtensionErc721Config, networkTagType]),
           entry
         );
-      case CdeEntryTypeName.ERC20Deposit:
+      case ConfigPrimitiveType.ERC20Deposit:
         return checkOrError(
           entry.name,
           Type.Intersect([ChainDataExtensionErc20DepositConfig, networkTagType]),
           entry
         );
-      case CdeEntryTypeName.Generic:
+      case ConfigPrimitiveType.Generic:
         return checkOrError(
           entry.name,
           Type.Intersect([ChainDataExtensionGenericConfig, networkTagType]),
           entry
         );
-      case CdeEntryTypeName.ERC6551Registry:
+      case ConfigPrimitiveType.ERC6551Registry:
         return checkOrError(
           entry.name,
           Type.Intersect([ChainDataExtensionErc6551RegistryConfig, networkTagType]),
           entry
         );
-      case CdeEntryTypeName.DynamicEvmPrimitive:
+      case ConfigPrimitiveType.DynamicEvmPrimitive:
         return checkOrError(
           entry.name,
           Type.Intersect([ChainDataExtensionDynamicEvmPrimitiveConfig, networkTagType]),
           entry
         );
-      case CdeEntryTypeName.CardanoDelegation:
+      case ConfigPrimitiveType.CardanoDelegation:
         return checkOrError(
           entry.name,
           Type.Intersect([ChainDataExtensionCardanoDelegationConfig, networkTagType]),
           entry
         );
-      case CdeEntryTypeName.CardanoProjectedNFT:
+      case ConfigPrimitiveType.CardanoProjectedNFT:
         return checkOrError(
           entry.name,
           Type.Intersect([ChainDataExtensionCardanoProjectedNFTConfig, networkTagType]),
           entry
         );
-      case CdeEntryTypeName.CardanoDelayedAsset:
+      case ConfigPrimitiveType.CardanoDelayedAsset:
         return checkOrError(
           entry.name,
           Type.Intersect([ChainDataExtensionCardanoDelayedAssetConfig, networkTagType]),
           entry
         );
-      case CdeEntryTypeName.CardanoTransfer:
+      case ConfigPrimitiveType.CardanoTransfer:
         return checkOrError(
           entry.name,
           Type.Intersect([
@@ -195,7 +196,7 @@ export function parseCdeConfigFile(
           ]),
           entry
         );
-      case CdeEntryTypeName.CardanoMintBurn:
+      case ConfigPrimitiveType.CardanoMintBurn:
         return checkOrError(
           entry.name,
           Type.Intersect([
@@ -204,7 +205,7 @@ export function parseCdeConfigFile(
           ]),
           entry
         );
-      case CdeEntryTypeName.ERC1155:
+      case ConfigPrimitiveType.ERC1155:
         return checkOrError(
           entry.name,
           Type.Intersect([
@@ -213,19 +214,19 @@ export function parseCdeConfigFile(
           ]),
           entry
         );
-      case CdeEntryTypeName.MinaEventGeneric:
+      case ConfigPrimitiveType.MinaEventGeneric:
         return checkOrError(
           entry.name,
           Type.Intersect([ChainDataExtensionMinaEventGenericConfig, networkTagType]),
           entry
         );
-      case CdeEntryTypeName.MinaActionGeneric:
+      case ConfigPrimitiveType.MinaActionGeneric:
         return checkOrError(
           entry.name,
           Type.Intersect([ChainDataExtensionMinaActionGenericConfig, networkTagType]),
           entry
         );
-      case CdeEntryTypeName.MidnightContractState:
+      case ConfigPrimitiveType.MidnightContractState:
         return checkOrError(
           entry.name,
           Type.Intersect([
@@ -297,7 +298,7 @@ function getNetworkName(
     }
   }
   throw new Error(
-    `No "network" key specified for ${config.name}, but no network in config.yml matched the default: ${defaultName}`
+    `No "network" key specified for ${config.displayName}, but no network in config.yml matched the default: ${defaultName}`
   );
 }
 
@@ -313,24 +314,24 @@ async function instantiateExtension(
   const getDefaultMinaNetwork = (): string =>
     getNetworkName(config, config.network, defaultMinaNetworkName, web3s);
   switch (config.type) {
-    case CdeEntryTypeName.ERC20: {
+    case ConfigPrimitiveType.ERC20: {
       const network = getDefaultEvmNetwork();
       return {
         ...config,
         network,
-        cdeName: config.name,
+        cdeName: config.displayName,
         hash: hashConfig(config),
         cdeType: ChainDataExtensionType.ERC20,
         contract: getErc20Contract(config.contractAddress, web3s[network]),
       };
     }
-    case CdeEntryTypeName.ERC721: {
+    case ConfigPrimitiveType.ERC721: {
       const network = getDefaultEvmNetwork();
       if (await isPaimaErc721(config, web3s[network])) {
         return {
           ...config,
           network,
-          cdeName: config.name,
+          cdeName: config.displayName,
           hash: hashConfig(config),
           cdeType: ChainDataExtensionType.PaimaERC721,
           contract: getPaimaErc721Contract(config.contractAddress, web3s[network]),
@@ -339,49 +340,49 @@ async function instantiateExtension(
         return {
           ...config,
           network,
-          cdeName: config.name,
+          cdeName: config.displayName,
           hash: hashConfig(config),
           cdeType: ChainDataExtensionType.ERC721,
           contract: getErc721Contract(config.contractAddress, web3s[network]),
         };
       }
     }
-    case CdeEntryTypeName.ERC20Deposit: {
+    case ConfigPrimitiveType.ERC20Deposit: {
       const network = getDefaultEvmNetwork();
       return {
         ...config,
         network,
-        cdeName: config.name,
+        cdeName: config.displayName,
         hash: hashConfig(config),
         cdeType: ChainDataExtensionType.ERC20Deposit,
         contract: getErc20Contract(config.contractAddress, web3s[network]),
       };
     }
-    case CdeEntryTypeName.ERC1155: {
+    case ConfigPrimitiveType.ERC1155: {
       const network = getDefaultEvmNetwork();
       return {
         ...config,
         network,
-        cdeName: config.name,
+        cdeName: config.displayName,
         hash: hashConfig(config),
         cdeType: ChainDataExtensionType.ERC1155,
         contract: getErc1155Contract(config.contractAddress, web3s[network]),
       };
     }
-    case CdeEntryTypeName.Generic: {
+    case ConfigPrimitiveType.Generic: {
       const network = getDefaultEvmNetwork();
       return {
         ...(await instantiateCdeGeneric(config, web3s[network])),
         network,
       };
     }
-    case CdeEntryTypeName.ERC6551Registry: {
+    case ConfigPrimitiveType.ERC6551Registry: {
       const network = getDefaultEvmNetwork();
       const contractAddress = config.contractAddress ?? ERC6551_REGISTRY_DEFAULT.New;
       return {
         ...config,
         network,
-        cdeName: config.name,
+        cdeName: config.displayName,
         hash: hashConfig(config),
         cdeType: ChainDataExtensionType.ERC6551Registry,
         contractAddress,
@@ -394,89 +395,89 @@ async function instantiateExtension(
         })(),
       };
     }
-    case CdeEntryTypeName.DynamicEvmPrimitive: {
+    case ConfigPrimitiveType.DynamicEvmPrimitive: {
       const network = getDefaultEvmNetwork();
       return {
         ...(await instantiateCdeDynamicEvmPrimitive(config, web3s[network])),
         network,
       };
     }
-    case CdeEntryTypeName.CardanoDelegation: {
+    case ConfigPrimitiveType.CardanoDelegation: {
       const network = getDefaultCardanoNetwork();
       return {
         ...config,
         network,
-        cdeName: config.name,
+        cdeName: config.displayName,
         hash: hashConfig(config),
         cdeType: ChainDataExtensionType.CardanoPool,
       };
     }
-    case CdeEntryTypeName.CardanoProjectedNFT: {
+    case ConfigPrimitiveType.CardanoProjectedNFT: {
       const network = getDefaultCardanoNetwork();
       return {
         ...config,
         network,
-        cdeName: config.name,
+        cdeName: config.displayName,
         hash: hashConfig(config),
         cdeType: ChainDataExtensionType.CardanoProjectedNFT,
       };
     }
-    case CdeEntryTypeName.CardanoDelayedAsset: {
+    case ConfigPrimitiveType.CardanoDelayedAsset: {
       const network = getDefaultCardanoNetwork();
       return {
         ...config,
         network,
-        cdeName: config.name,
+        cdeName: config.displayName,
         hash: hashConfig(config),
         cdeType: ChainDataExtensionType.CardanoAssetUtxo,
       };
     }
-    case CdeEntryTypeName.CardanoTransfer: {
+    case ConfigPrimitiveType.CardanoTransfer: {
       const network = getDefaultCardanoNetwork();
       return {
         ...config,
         network,
-        cdeName: config.name,
+        cdeName: config.displayName,
         hash: hashConfig(config),
         cdeType: ChainDataExtensionType.CardanoTransfer,
       };
     }
-    case CdeEntryTypeName.CardanoMintBurn: {
+    case ConfigPrimitiveType.CardanoMintBurn: {
       const network = getDefaultCardanoNetwork();
       return {
         ...config,
         network,
-        cdeName: config.name,
+        cdeName: config.displayName,
         hash: hashConfig(config),
         cdeType: ChainDataExtensionType.CardanoMintBurn,
       };
     }
-    case CdeEntryTypeName.MinaEventGeneric: {
+    case ConfigPrimitiveType.MinaEventGeneric: {
       const network = getDefaultMinaNetwork();
       return {
         ...config,
         network,
-        cdeName: config.name,
+        cdeName: config.displayName,
         hash: hashConfig(config),
         cdeType: ChainDataExtensionType.MinaEventGeneric,
       };
     }
-    case CdeEntryTypeName.MinaActionGeneric: {
+    case ConfigPrimitiveType.MinaActionGeneric: {
       const network = getDefaultMinaNetwork();
       return {
         ...config,
         network,
-        cdeName: config.name,
+        cdeName: config.displayName,
         hash: hashConfig(config),
         cdeType: ChainDataExtensionType.MinaActionGeneric,
       };
     }
-    case CdeEntryTypeName.MidnightContractState: {
+    case ConfigPrimitiveType.MidnightContractState: {
       if (!config.network) throw new Error('Midnight extension config is missing `network` name');
       return {
         ...config,
         network: config.network, // Repeated for TypeScript reasons.
-        cdeName: config.name,
+        cdeName: config.displayName,
         hash: hashConfig(config),
         cdeType: ChainDataExtensionType.MidnightContractState,
       };
@@ -513,16 +514,15 @@ export async function instantiateCdeGeneric(
   const eventName = eventMatch[0];
   const eventSignatureHash = keccak_256(eventSignature);
 
-  const parsedContractAbi = await loadAbi(config.abiPath);
-  if (parsedContractAbi.length === 0) {
-    throw new Error(`[cde-config] Invalid ABI file at ${config.abiPath}`);
-  }
   try {
-    const contract = getAbiContract(config.contractAddress, parsedContractAbi as AbiItem[], web3);
-    const { abiPath: _, ...rest } = config; // want to remove abi path since it's no longer relevant at runtime
+    const contract = getAbiContract(
+      config.contractAddress,
+      JSON.parse(config.abi) as AbiItem[],
+      web3
+    );
     return {
-      ...rest,
-      cdeName: config.name,
+      ...config,
+      cdeName: config.displayName,
       hash: hashConfig(config),
       cdeType: ChainDataExtensionType.Generic,
       contract,
@@ -531,9 +531,7 @@ export async function instantiateCdeGeneric(
       eventSignatureHash,
     };
   } catch (err) {
-    doLog(
-      `[cde-config] Failed to initialize Web3 contract ${config.name} with ABI ${config.abiPath}`
-    );
+    doLog(`[cde-config] Failed to initialize Web3 contract ${config.displayName}`);
     throw err;
   }
 }
@@ -550,16 +548,15 @@ async function instantiateCdeDynamicEvmPrimitive(
   const eventName = eventMatch[0];
   const eventSignatureHash = keccak_256(eventSignature);
 
-  const parsedContractAbi = await loadAbi(config.abiPath);
-  if (parsedContractAbi.length === 0) {
-    throw new Error(`[cde-config] Invalid ABI file at ${config.abiPath}`);
-  }
   try {
-    const contract = getAbiContract(config.contractAddress, parsedContractAbi as AbiItem[], web3);
-    const { abiPath: _, ...rest } = config; // want to remove abi path since it's no longer relevant at runtime
+    const contract = getAbiContract(
+      config.contractAddress,
+      JSON.parse(config.abi) as AbiItem[],
+      web3
+    );
     return {
-      ...rest,
-      cdeName: config.name,
+      ...config,
+      cdeName: config.displayName,
       hash: hashConfig(config),
       cdeType: ChainDataExtensionType.DynamicEvmPrimitive,
       contract,
@@ -568,9 +565,7 @@ async function instantiateCdeDynamicEvmPrimitive(
       eventSignatureHash,
     };
   } catch (err) {
-    doLog(
-      `[cde-config] Failed to initialize Web3 contract ${config.name} with ABI ${config.abiPath}`
-    );
+    doLog(`[cde-config] Failed to initialize Web3 contract ${config.displayName}`);
     throw err;
   }
 }
