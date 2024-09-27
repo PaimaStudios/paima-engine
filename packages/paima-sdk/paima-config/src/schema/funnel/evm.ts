@@ -38,16 +38,15 @@ export type ConfigFunnelEvmMain = Static<
 // Variant 2: parallel config
 // ==========================
 
-export const ConfigFunnelSchemaEvmParallel =
-  ConfigFunnelSchemaEvmBase.cloneMerge({
-    required: Type.Object({
-      type: Type.Literal(ConfigFunnelType.EVM_PARALLEL),
-    }),
-    optional: Type.Object({
-      delay: Type.Number(),
-      confirmationDepth: Type.Number(),
-    }),
-  });
+export const ConfigFunnelSchemaEvmParallel = ConfigFunnelSchemaEvmBase.cloneMerge({
+  required: Type.Object({
+    type: Type.Literal(ConfigFunnelType.EVM_PARALLEL),
+  }),
+  optional: Type.Object({
+    delay: Type.Number(),
+    confirmationDepth: Type.Number(),
+  }),
+});
 export type ConfigFunnelEvmParallel = Static<
   ReturnType<typeof ConfigFunnelSchemaEvmParallel.allProperties<true>>
 >;
