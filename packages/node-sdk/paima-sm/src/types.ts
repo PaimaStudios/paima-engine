@@ -38,6 +38,7 @@ import {
   type ChainDataExtensionErc721Config,
   type ChainDataExtensionGenericConfig,
 } from '@paima/config';
+import type Prando from '@paima/prando';
 
 export interface ChainData {
   /** in seconds */
@@ -515,12 +516,13 @@ export type GameStateTransitionFunctionRouter<Events extends AppEvents> = (
   blockHeight: number
 ) => GameStateTransitionFunction<Events>;
 
-export type GameStateTransitionFunction<Events extends AppEvents> = (
-  inputData: STFSubmittedData,
-  blockHeader: PreExecutionBlockHeader,
-  randomnessGenerator: any,
-  DBConn: PoolClient
-) => Promise<{
+export type BaseStfInput = {
+  rawInput: STFSubmittedData;
+  blockHeader: PreExecutionBlockHeader;
+  randomnessGenerator: Prando;
+  dbConn: PoolClient;
+};
+export type BaseStfOutput<Events extends AppEvents> = {
   stateTransitions: SQLUpdate[];
   events: {
     address: `0x${string}`;
@@ -530,7 +532,14 @@ export type GameStateTransitionFunction<Events extends AppEvents> = (
       topic: string;
     };
   }[];
-}>;
+};
+
+export type GameStateTransitionFunction<Events extends AppEvents> = (
+  inputData: STFSubmittedData,
+  blockHeader: PreExecutionBlockHeader,
+  randomnessGenerator: Prando,
+  DBConn: PoolClient
+) => Promise<BaseStfOutput<Events>>;
 
 export type Precompiles = { precompiles: { [name: string]: `0x${string}` } };
 
