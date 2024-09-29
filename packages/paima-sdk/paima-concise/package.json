@@ -24,6 +24,7 @@
     "build": "tsc --build tsconfig.build.json"
   },
   "dependencies": {
+    "@streamparser/json": "github:paimaStudios/streamparser-bin",
     "ebnf": "^1.9.0",
     "web3-utils": "1.10.0"
   },
