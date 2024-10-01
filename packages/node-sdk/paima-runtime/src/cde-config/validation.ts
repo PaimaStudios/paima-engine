@@ -62,7 +62,7 @@ async function storeCdeConfig(config: ChainDataExtension[], DBConn: PoolClient):
       await registerChainDataExtension.run(
         {
           cde_type: cde.cdeType,
-          cde_name: cde.name,
+          cde_name: cde.displayName,
           cde_hash: cde.hash,
           start_blockheight: 'startBlockHeight' in cde ? cde.startBlockHeight : cde.startSlot,
           cde_caip2: caip2PrefixFor(configs[cde.network]),

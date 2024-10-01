@@ -19,6 +19,25 @@ import { Type } from '@sinclair/typebox';
 import type { Static } from '@sinclair/typebox';
 import type { ProjectedNftStatus } from '@dcspark/carp-client';
 import type { AppEvents, ResolvedPath } from '@paima/events';
+import {
+  type ChainDataExtensionCardanoDelayedAssetConfig,
+  type ChainDataExtensionCardanoDelegationConfig,
+  type ChainDataExtensionCardanoMintBurnConfig,
+  type ChainDataExtensionCardanoProjectedNFTConfig,
+  type ChainDataExtensionCardanoTransferConfig,
+  type ChainDataExtensionMidnightContractStateConfig,
+  type ChainDataExtensionMinaActionGenericConfig,
+  type ChainDataExtensionMinaEventGenericConfig,
+  ConfigPrimitiveAll,
+  ConfigPrimitiveType,
+  type ChainDataExtensionDynamicEvmPrimitiveConfig,
+  type ChainDataExtensionErc1155Config,
+  type ChainDataExtensionErc20Config,
+  type ChainDataExtensionErc20DepositConfig,
+  type ChainDataExtensionErc6551RegistryConfig,
+  type ChainDataExtensionErc721Config,
+  type ChainDataExtensionGenericConfig,
+} from '@paima/config';
 
 export interface ChainData {
   /** in seconds */
@@ -191,13 +210,13 @@ interface CdeDatumDynamicEvmPrimitivePayload {
   contractAddress: string;
   targetConfig:
     | {
-        type: CdeEntryTypeName.ERC721;
+        type: ConfigPrimitiveType.ERC721;
         scheduledPrefix: string;
         burnScheduledPrefix?: string | undefined;
       }
     | {
-        type: CdeEntryTypeName.Generic;
-        abiPath: string;
+        type: ConfigPrimitiveType.Generic;
+        abi: string;
         eventSignature: string;
         scheduledPrefix: string;
       };
@@ -356,60 +375,16 @@ export type ChainDataExtensionDatum =
   | CdeMinaActionGenericDatum
   | CdeMidnightContractStateDatum;
 
-export enum CdeEntryTypeName {
-  Generic = 'generic',
-  ERC20 = 'erc20',
-  ERC20Deposit = 'erc20-deposit',
-  ERC721 = 'erc721',
-  ERC6551Registry = 'erc6551-registry',
-  ERC1155 = 'erc1155',
-  CardanoDelegation = 'cardano-stake-delegation',
-  CardanoProjectedNFT = 'cardano-projected-nft',
-  CardanoDelayedAsset = 'cardano-delayed-asset',
-  CardanoTransfer = 'cardano-transfer',
-  CardanoMintBurn = 'cardano-mint-burn',
-  MinaEventGeneric = 'mina-event-generic',
-  MinaActionGeneric = 'mina-action-generic',
-  DynamicEvmPrimitive = 'dynamic-evm-primitive',
-  MidnightContractState = 'midnight-contract-state',
-}
-
-const EvmAddress = Type.Transform(Type.RegExp('0x[0-9a-fA-F]{40}'))
-  .Decode(value => value.toLowerCase())
-  .Encode(value => value);
-
-const ChainDataExtensionConfigBase = Type.Object({
-  name: Type.String(),
-  startBlockHeight: Type.Number(),
-});
 interface ChainDataExtensionBase {
   cdeName: string;
   hash: number; // hash of the CDE config that created this type
 }
 
-export const ChainDataExtensionErc20Config = Type.Intersect([
-  ChainDataExtensionConfigBase,
-  Type.Object({
-    type: Type.Literal(CdeEntryTypeName.ERC20),
-    contractAddress: EvmAddress,
-  }),
-]);
 export type ChainDataExtensionErc20 = ChainDataExtensionBase &
   Static<typeof ChainDataExtensionErc20Config> & {
     cdeType: ChainDataExtensionType.ERC20;
     contract: ERC20Contract;
   };
-
-export const ChainDataExtensionErc721Config = Type.Intersect([
-  ChainDataExtensionConfigBase,
-  Type.Object({
-    type: Type.Literal(CdeEntryTypeName.ERC721),
-    contractAddress: EvmAddress,
-    scheduledPrefix: Type.String(),
-    burnScheduledPrefix: Type.Optional(Type.String()),
-  }),
-]);
-export type TChainDataExtensionErc721Config = Static<typeof ChainDataExtensionErc721Config>;
 
 export type ChainDataExtensionErc721 = ChainDataExtensionBase &
   Static<typeof ChainDataExtensionErc721Config> & {
@@ -424,47 +399,18 @@ export type ChainDataExtensionPaimaErc721 = ChainDataExtensionBase &
     contract: PaimaERC721Contract;
   };
 
-export const ChainDataExtensionErc20DepositConfig = Type.Intersect([
-  ChainDataExtensionConfigBase,
-  Type.Object({
-    type: Type.Literal(CdeEntryTypeName.ERC20Deposit),
-    contractAddress: EvmAddress,
-    scheduledPrefix: Type.String(),
-    depositAddress: EvmAddress,
-  }),
-]);
 export type ChainDataExtensionErc20Deposit = ChainDataExtensionBase &
   Static<typeof ChainDataExtensionErc20DepositConfig> & {
     cdeType: ChainDataExtensionType.ERC20Deposit;
     contract: ERC20Contract;
   };
 
-export const ChainDataExtensionErc1155Config = Type.Intersect([
-  ChainDataExtensionConfigBase,
-  Type.Object({
-    type: Type.Literal(CdeEntryTypeName.ERC1155),
-    contractAddress: EvmAddress,
-    scheduledPrefix: Type.Optional(Type.String()),
-    burnScheduledPrefix: Type.Optional(Type.String()),
-  }),
-]);
 export type ChainDataExtensionErc1155 = ChainDataExtensionBase &
   Static<typeof ChainDataExtensionErc1155Config> & {
     cdeType: ChainDataExtensionType.ERC1155;
     contract: IERC1155Contract;
   };
 
-export const ChainDataExtensionGenericConfig = Type.Intersect([
-  ChainDataExtensionConfigBase,
-  Type.Object({
-    type: Type.Literal(CdeEntryTypeName.Generic),
-    contractAddress: EvmAddress,
-    abiPath: Type.String(),
-    eventSignature: Type.String(),
-    scheduledPrefix: Type.String(),
-  }),
-]);
-export type TChainDataExtensionGenericConfig = Static<typeof ChainDataExtensionGenericConfig>;
 export type ChainDataExtensionGeneric = ChainDataExtensionBase &
   Omit<Static<typeof ChainDataExtensionGenericConfig>, 'abiPath'> & {
     cdeType: ChainDataExtensionType.Generic;
@@ -473,55 +419,24 @@ export type ChainDataExtensionGeneric = ChainDataExtensionBase &
     contract: Contract;
   };
 
-export const ChainDataExtensionErc6551RegistryConfig = Type.Intersect([
-  ChainDataExtensionConfigBase,
-  Type.Object({
-    type: Type.Literal(CdeEntryTypeName.ERC6551Registry),
-    contractAddress: Type.Optional(EvmAddress),
-    implementation: Type.Optional(EvmAddress),
-    tokenContract: Type.Optional(EvmAddress),
-    tokenId: Type.Optional(Type.String()), // uint256
-    salt: Type.Optional(Type.String()), // uint256
-  }),
-]);
 export type ChainDataExtensionErc6551Registry = ChainDataExtensionBase &
   Static<typeof ChainDataExtensionErc6551RegistryConfig> & {
     cdeType: ChainDataExtensionType.ERC6551Registry;
     contract: ERC6551RegistryContract | OldERC6551RegistryContract;
   };
 
-export const ChainDataExtensionCardanoDelegationConfig = Type.Intersect([
-  Type.Object({
-    type: Type.Literal(CdeEntryTypeName.CardanoDelegation),
-    pools: Type.Array(Type.String()),
-    scheduledPrefix: Type.String(),
-    startSlot: Type.Number(),
-    stopSlot: Type.Optional(Type.Number()),
-    name: Type.String(),
-  }),
-]);
+export type ChainDataExtensionDynamicEvmPrimitive = ChainDataExtensionBase &
+  Omit<Static<typeof ChainDataExtensionDynamicEvmPrimitiveConfig>, 'abiPath'> & {
+    cdeType: ChainDataExtensionType.DynamicEvmPrimitive;
+    contract: Contract;
+    eventSignatureHash: string;
+    eventName: string;
+  };
 
 export type ChainDataExtensionCardanoDelegation = ChainDataExtensionBase &
   Static<typeof ChainDataExtensionCardanoDelegationConfig> & {
     cdeType: ChainDataExtensionType.CardanoPool;
   };
-
-export const ChainDataExtensionCardanoProjectedNFTConfig = Type.Object({
-  type: Type.Literal(CdeEntryTypeName.CardanoProjectedNFT),
-  scheduledPrefix: Type.Optional(Type.String()),
-  startSlot: Type.Number(),
-  stopSlot: Type.Optional(Type.Number()),
-  name: Type.String(),
-});
-
-export const ChainDataExtensionCardanoDelayedAssetConfig = Type.Object({
-  type: Type.Literal(CdeEntryTypeName.CardanoDelayedAsset),
-  fingerprints: Type.Optional(Type.Array(Type.String())),
-  policyIds: Type.Optional(Type.Array(Type.String())),
-  startSlot: Type.Number(),
-  stopSlot: Type.Optional(Type.Number()),
-  name: Type.String(),
-});
 
 export type ChainDataExtensionCardanoProjectedNFT = ChainDataExtensionBase &
   Static<typeof ChainDataExtensionCardanoProjectedNFTConfig> & {
@@ -533,106 +448,26 @@ export type ChainDataExtensionCardanoDelayedAsset = ChainDataExtensionBase &
     cdeType: ChainDataExtensionType.CardanoAssetUtxo;
   };
 
-export const ChainDataExtensionCardanoTransferConfig = Type.Object({
-  type: Type.Literal(CdeEntryTypeName.CardanoTransfer),
-  credential: Type.String(),
-  scheduledPrefix: Type.String(),
-  startSlot: Type.Number(),
-  stopSlot: Type.Optional(Type.Number()),
-  name: Type.String(),
-});
-
 export type ChainDataExtensionCardanoTransfer = ChainDataExtensionBase &
   Static<typeof ChainDataExtensionCardanoTransferConfig> & {
     cdeType: ChainDataExtensionType.CardanoTransfer;
   };
-
-export const ChainDataExtensionCardanoMintBurnConfig = Type.Object({
-  type: Type.Literal(CdeEntryTypeName.CardanoMintBurn),
-  policyIds: Type.Array(Type.String()),
-  scheduledPrefix: Type.String(),
-  startSlot: Type.Number(),
-  stopSlot: Type.Optional(Type.Number()),
-  name: Type.String(),
-});
 
 export type ChainDataExtensionCardanoMintBurn = ChainDataExtensionBase &
   Static<typeof ChainDataExtensionCardanoMintBurnConfig> & {
     cdeType: ChainDataExtensionType.CardanoMintBurn;
   };
 
-export const ChainDataExtensionMinaEventGenericConfig = Type.Object({
-  type: Type.Literal(CdeEntryTypeName.MinaEventGeneric),
-  address: Type.String(),
-  scheduledPrefix: Type.String(),
-  startBlockHeight: Type.Number(),
-  name: Type.String(),
-});
-
-export type TChainDataExtensionMinaEventGenericConfig = Static<
-  typeof ChainDataExtensionGenericConfig
->;
 export type ChainDataExtensionMinaEventGeneric = ChainDataExtensionBase &
   Static<typeof ChainDataExtensionMinaEventGenericConfig> & {
     cdeType: ChainDataExtensionType.MinaEventGeneric;
   };
 
-export const ChainDataExtensionMinaActionGenericConfig = Type.Object({
-  type: Type.Literal(CdeEntryTypeName.MinaActionGeneric),
-  address: Type.String(),
-  scheduledPrefix: Type.String(),
-  startBlockHeight: Type.Number(),
-  name: Type.String(),
-});
-
-export type TChainDataExtensionMinaActionGenericConfig = Static<
-  typeof ChainDataExtensionGenericConfig
->;
 export type ChainDataExtensionMinaActionGeneric = ChainDataExtensionBase &
   Static<typeof ChainDataExtensionMinaActionGenericConfig> & {
     cdeType: ChainDataExtensionType.MinaActionGeneric;
   };
 
-export const ChainDataExtensionDynamicEvmPrimitiveConfig = Type.Intersect([
-  ChainDataExtensionConfigBase,
-  Type.Object({
-    type: Type.Literal(CdeEntryTypeName.DynamicEvmPrimitive),
-    contractAddress: EvmAddress,
-    abiPath: Type.String(),
-    eventSignature: Type.String(),
-    targetConfig: Type.Union([
-      Type.Pick(ChainDataExtensionErc721Config, ['scheduledPrefix', 'burnScheduledPrefix', 'type']),
-      Type.Pick(ChainDataExtensionGenericConfig, [
-        'abiPath',
-        'eventSignature',
-        'scheduledPrefix',
-        'type',
-      ]),
-    ]),
-    dynamicFields: Type.Object({
-      contractAddress: Type.String(),
-    }),
-  }),
-]);
-export type TChainDataExtensionDynamicEvmPrimitiveConfig = Static<
-  typeof ChainDataExtensionDynamicEvmPrimitiveConfig
->;
-export type ChainDataExtensionDynamicEvmPrimitive = ChainDataExtensionBase &
-  Omit<Static<typeof ChainDataExtensionDynamicEvmPrimitiveConfig>, 'abiPath'> & {
-    cdeType: ChainDataExtensionType.DynamicEvmPrimitive;
-    contract: Contract;
-    eventSignatureHash: string;
-    eventName: string;
-  };
-
-export const ChainDataExtensionMidnightContractStateConfig = Type.Object({
-  type: Type.Literal(CdeEntryTypeName.MidnightContractState),
-  name: Type.String(),
-
-  startBlockHeight: Type.Number(),
-  contractAddress: Type.String(),
-  scheduledPrefix: Type.String(),
-});
 export type ChainDataExtensionMidnightContractState = ChainDataExtensionBase &
   Static<typeof ChainDataExtensionMidnightContractStateConfig> & {
     cdeType: ChainDataExtensionType.MidnightContractState;
@@ -640,26 +475,7 @@ export type ChainDataExtensionMidnightContractState = ChainDataExtensionBase &
 
 export const CdeConfig = Type.Object({
   extensions: Type.Array(
-    Type.Intersect([
-      Type.Union([
-        ChainDataExtensionErc20Config,
-        ChainDataExtensionErc20DepositConfig,
-        ChainDataExtensionErc721Config,
-        ChainDataExtensionErc1155Config,
-        ChainDataExtensionErc6551RegistryConfig,
-        ChainDataExtensionGenericConfig,
-        ChainDataExtensionCardanoDelegationConfig,
-        ChainDataExtensionCardanoProjectedNFTConfig,
-        ChainDataExtensionCardanoDelayedAssetConfig,
-        ChainDataExtensionCardanoTransferConfig,
-        ChainDataExtensionCardanoMintBurnConfig,
-        ChainDataExtensionMinaEventGenericConfig,
-        ChainDataExtensionMinaActionGenericConfig,
-        ChainDataExtensionDynamicEvmPrimitiveConfig,
-        ChainDataExtensionMidnightContractStateConfig,
-      ]),
-      Type.Partial(Type.Object({ network: Type.String() })),
-    ])
+    Type.Intersect([ConfigPrimitiveAll, Type.Partial(Type.Object({ network: Type.String() }))])
   ),
 });
 
@@ -672,7 +488,7 @@ export const CdeBaseConfig = Type.Object({
   extensions: Type.Array(
     Type.Object({
       name: Type.String(),
-      type: Type.Enum(CdeEntryTypeName),
+      type: Type.Enum(ConfigPrimitiveType),
     })
   ),
 });

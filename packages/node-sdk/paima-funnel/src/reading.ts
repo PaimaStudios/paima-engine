@@ -12,16 +12,10 @@ import {
 } from '@paima/utils';
 import type { MainEvmConfig, OtherEvmConfig, PaimaL2Contract } from '@paima/utils';
 import { TimeoutError, instantiateCdeGeneric } from '@paima/runtime';
-import type {
-  ChainDataExtension,
-  EvmChainDataExtensionDatum,
-  TChainDataExtensionGenericConfig,
-} from '@paima/sm';
+import type { ChainDataExtension, EvmChainDataExtensionDatum } from '@paima/sm';
 import {
-  CdeEntryTypeName,
   type CdeDynamicEvmPrimitiveDatum,
   type ChainData,
-  type ChainDataExtensionDatum,
 } from '@paima/sm';
 import type { PaimaGameInteraction } from '@paima/utils';
 
@@ -30,6 +24,8 @@ import type { FunnelSharedData } from './funnels/BaseFunnel.js';
 import { getUngroupedCdeData } from './cde/reading.js';
 import { generateDynamicPrimitiveName } from '@paima/utils-backend';
 import type { ChainInfo } from './utils.js';
+import type { TChainDataExtensionGenericConfig } from '@paima/config';
+import { ConfigPrimitiveType } from '@paima/config';
 
 export async function getBaseChainDataMulti(
   web3: Web3,
@@ -209,10 +205,10 @@ export async function fetchDynamicEvmPrimitives(
       // this would propagate the change to further funnels in the pipeline,
       // which is needed to set the proper cdeName.
       switch (ext.payload.targetConfig.type) {
-        case CdeEntryTypeName.ERC721:
+        case ConfigPrimitiveType.ERC721:
           sharedData.extensions.push({
             cdeName: cdeName,
-            name: cdeName,
+            displayName: cdeName,
             startBlockHeight: ext.blockNumber,
             type: ext.payload.targetConfig.type,
             contractAddress: ext.payload.contractAddress.toLowerCase(),
@@ -225,10 +221,10 @@ export async function fetchDynamicEvmPrimitives(
             network: chainInfo.name,
           });
           break;
-        case CdeEntryTypeName.Generic:
+        case ConfigPrimitiveType.Generic:
           const config: TChainDataExtensionGenericConfig = {
             startBlockHeight: ext.blockNumber,
-            name: cdeName,
+            displayName: cdeName,
             contractAddress: ext.payload.contractAddress.toLowerCase(),
             ...ext.payload.targetConfig,
           };

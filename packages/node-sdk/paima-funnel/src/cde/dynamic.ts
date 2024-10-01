@@ -1,9 +1,9 @@
 import {
   type ChainDataExtensionDynamicEvmPrimitive,
-  CdeEntryTypeName,
   type CdeDynamicEvmPrimitiveDatum,
 } from '@paima/sm';
 import { ChainDataExtensionDatumType, DEFAULT_FUNNEL_TIMEOUT, timeout } from '@paima/utils';
+import { ConfigPrimitiveType } from '@paima/config';
 
 export default async function getCdeDynamicEvmPrimitive(
   extension: ChainDataExtensionDynamicEvmPrimitive,
@@ -26,18 +26,18 @@ export default async function getCdeDynamicEvmPrimitive(
 
   let targetConfig;
   switch (extension.targetConfig.type) {
-    case CdeEntryTypeName.ERC721:
+    case ConfigPrimitiveType.ERC721:
       targetConfig = {
         type: extension.targetConfig.type,
         scheduledPrefix: extension.targetConfig.scheduledPrefix,
         burnScheduledPrefix: extension.targetConfig.burnScheduledPrefix,
       };
       break;
-    case CdeEntryTypeName.Generic:
+    case ConfigPrimitiveType.Generic:
       targetConfig = {
         type: extension.targetConfig.type,
         scheduledPrefix: extension.targetConfig.scheduledPrefix,
-        abiPath: extension.targetConfig.abiPath,
+        abi: extension.targetConfig.abi,
         eventSignature: extension.targetConfig.eventSignature,
       };
       break;
