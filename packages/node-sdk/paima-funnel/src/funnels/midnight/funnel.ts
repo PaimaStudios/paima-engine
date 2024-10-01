@@ -23,7 +23,9 @@ import {
 } from '@paima/utils';
 import { Client, createClient, ExecutionResult } from 'graphql-ws';
 import { PoolClient } from 'pg';
-import { WebSocket } from 'ws';
+// https://github.com/microsoft/TypeScript/issues/54018
+import ws from 'ws';
+const { WebSocket } = ws;
 import { ChainInfo, composeChainData } from '../../utils.js';
 import { BaseFunnel, type FunnelSharedData } from '../BaseFunnel.js';
 import { FunnelCacheEntry } from '../FunnelCache.js';

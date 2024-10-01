@@ -1,5 +1,7 @@
 import type { PostExecutionBlockHeader } from './types.js';
-import { keccak_256 } from 'js-sha3';
+// https://github.com/microsoft/TypeScript/issues/54018
+import sha3 from 'js-sha3';
+const { keccak_256 } = sha3;
 
 export function genV1BlockHeader(
   mainChainInfo: {

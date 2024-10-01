@@ -1,5 +1,5 @@
-import { Pool } from 'pg';
-import type { PoolClient, Client } from 'pg';
+import pg from 'pg';
+import type { PoolClient, Client, Pool } from 'pg';
 
 import {
   genV1BlockHeader,
@@ -66,7 +66,9 @@ import type {
 } from './types.js';
 import { ConfigNetworkType } from '@paima/utils';
 import assertNever from 'assert-never';
-import { keccak_256 } from 'js-sha3';
+// https://github.com/microsoft/TypeScript/issues/54018
+import sha3 from 'js-sha3';
+const { keccak_256 } = sha3;
 import type { AppEvents, EventPathAndDef, ResolvedPath } from '@paima/events';
 import { PaimaEventManager } from '@paima/events';
 import { PaimaEventBroker } from '@paima/broker';
@@ -259,7 +261,7 @@ const SM: GameStateMachineInitializer = {
           );
           return data && data.stateTransitions.length > 0;
         };
-        if (dbTxOrPool instanceof Pool) {
+        if (dbTxOrPool instanceof pg.Pool) {
           return await tx<boolean>(dbTxOrPool, dbTx => internal(dbTx));
         } else {
           return await internal(dbTxOrPool);

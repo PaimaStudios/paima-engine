@@ -6,7 +6,9 @@ import type {
   UserSignature,
 } from './IProvider.js';
 import { ProviderNotInitialized } from './errors.js';
-import { utf8ToHex } from 'web3-utils';
+// https://github.com/microsoft/TypeScript/issues/54018
+import web3Utils from 'web3-utils';
+const { utf8ToHex } = web3Utils;
 import { AddressType } from '@paima/utils';
 import type { PolkadotAddress } from '@paima/chain-types';
 import type { ApiPromise, Keyring } from 'avail-js-sdk';

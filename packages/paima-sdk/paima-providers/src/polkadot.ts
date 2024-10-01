@@ -12,7 +12,10 @@ import type {
 import { optionToActive } from './IProvider.js';
 import { ProviderApiError, ProviderNotInitialized, WalletNotFound } from './errors.js';
 import type { InjectedExtension, InjectedWindowProvider } from '@polkadot/extension-inject/types';
-import { utf8ToHex } from 'web3-utils';
+// https://github.com/microsoft/TypeScript/issues/54018
+import web3Utils from 'web3-utils';
+const { utf8ToHex } = web3Utils;
+
 import { getWindow } from './window.js';
 
 export type PolkadotAddress = string;

@@ -7,6 +7,7 @@
   "description": "Paima Event System. Broker, Publisher and Listener",
   "type": "module",
   "main": "build/index.js",
+  "exports": "./build/index.js",
   "types": "build/index.d.ts",
   "files": [
     "/build"

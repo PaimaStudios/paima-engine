@@ -14,6 +14,10 @@ import { evmRpcEngine } from './evm-rpc/eip1193.js';
 import { StatusCodes } from 'http-status-codes';
 import type { ValidateErrorResult, InternalServerErrorResult } from '@paima/utils';
 import fs from 'fs';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const server: Express = express();
 const bodyParser = express.json();

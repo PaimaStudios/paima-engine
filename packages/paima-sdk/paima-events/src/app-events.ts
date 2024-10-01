@@ -10,7 +10,9 @@ import type {
 } from './types.js';
 import { toPath, TopicPrefix } from './types.js';
 import type { TSchema, Static, TObject } from '@sinclair/typebox';
-import { keccak_256 } from 'js-sha3';
+// https://github.com/microsoft/TypeScript/issues/54018
+import sha3 from 'js-sha3';
+const { keccak_256 } = sha3;
 
 type Data<T extends LogEvent<LogEventFields<TSchema>[]>> = {
   name: T['name'];

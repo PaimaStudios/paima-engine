@@ -1,7 +1,9 @@
 import * as fs from 'fs/promises';
 import YAML from 'yaml';
 import type Web3 from 'web3';
-import { keccak_256 } from 'js-sha3';
+// https://github.com/microsoft/TypeScript/issues/54018
+import sha3 from 'js-sha3';
+const { keccak_256 } = sha3;
 import { Type, type Static, type TSchema } from '@sinclair/typebox';
 import { Value, ValueErrorType } from '@sinclair/typebox/value';
 
