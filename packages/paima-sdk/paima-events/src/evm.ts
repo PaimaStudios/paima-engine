@@ -1,5 +1,5 @@
-import type { TArray, TNumber, TSchema, TTuple } from '@sinclair/typebox';
-import { Kind, Type } from '@sinclair/typebox';
+import type { TNumber, TSchema } from '@sinclair/typebox';
+import { Type, TypeGuard } from '@sinclair/typebox';
 import type { LogEvent, LogEventFields } from './types.js';
 import type { AbiParameter } from 'abitype';
 
@@ -26,9 +26,9 @@ export function fieldToAbi<Type extends TSchema>(type: Type): AbiParameter | und
   if (isBoolean) {
     return { type: 'bool' };
   }
-  if (type[Kind] === 'Tuple') {
+  if (TypeGuard.IsTuple(type)) {
     const components: AbiParameter[] = [];
-    for (const subtype of (type as unknown as TTuple).items?.map(t => fieldToAbi(t)) ?? []) {
+    for (const subtype of type.items?.map(t => fieldToAbi(t)) ?? []) {
       if (subtype == null) return undefined;
       components.push(subtype);
     }
@@ -37,8 +37,8 @@ export function fieldToAbi<Type extends TSchema>(type: Type): AbiParameter | und
       components,
     };
   }
-  if (type[Kind] === 'Array') {
-    const innerType = fieldToAbi((type as unknown as TArray).items);
+  if (TypeGuard.IsArray(type)) {
+    const innerType = fieldToAbi(type.items);
     if (innerType == null) return undefined;
     return { type: `${innerType.type}[]` };
   }
