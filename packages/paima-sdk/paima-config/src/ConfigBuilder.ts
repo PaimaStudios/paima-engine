@@ -6,36 +6,27 @@ import type { ConfigPrimitiveAll } from './schema/index.js';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 
-type NetworkConfig = Static<ReturnType<typeof ConfigNetworkAll<false>>>;
-type DeployedAddressConfig = Record<string, string>;
-type FunnelConfig = Static<ReturnType<typeof ConfigFunnelAll<false>>>;
-type FunnelInfo<Networks, Config extends FunnelConfig> = {
+export type NetworkConfig = Static<ReturnType<typeof ConfigNetworkAll<false>>>;
+export type DeployedAddressConfig = Record<string, string>;
+export type FunnelConfig = Static<ReturnType<typeof ConfigFunnelAll<false>>>;
+export type FunnelInfo<Networks, Config extends FunnelConfig> = {
   network: Networks;
   config: Config;
 };
-type PrimitiveConfig = StaticDecode<typeof ConfigPrimitiveAll>;
-type PrimitiveInfo<Funnels, Config extends PrimitiveConfig> = {
+export type PrimitiveConfig = StaticDecode<typeof ConfigPrimitiveAll>;
+export type PrimitiveInfo<Funnels, Config extends PrimitiveConfig> = {
   funnel: Funnels;
   primitive: Config;
 };
 
-type DeployedAddressConfigHolder<Network, Deployments extends DeployedAddressConfig> = {
+export type DeployedAddressConfigHolder<Network, Deployments extends DeployedAddressConfig> = {
   network: Network;
   deployments: Deployments;
 };
-type FunnelConfigHolder<Network, Funnel extends FunnelConfig> = {
+export type FunnelConfigHolder<Network, Funnel extends FunnelConfig> = {
   network: Network;
   // TODO: the valid funnels should depend on the network
   funnel: (network: Network) => Funnel;
-};
-type PrimitiveConfigHolder<
-  Network extends NetworkConfig,
-  Funnel extends FunnelInfo<Network['displayName'], FunnelConfig>,
-  Primitive extends PrimitiveConfig,
-> = {
-  funnel: Funnel;
-  // TODO: the valid primitives should depend on the network
-  primitive: (network: Network, funnel: Funnel['config']) => Primitive;
 };
 
 export class ConfigBuilder<

@@ -9,7 +9,7 @@ import type {
 } from '../IProvider.js';
 import { DEFAULT_GAS_LIMIT, type EvmAddress } from './types.js';
 import { ProviderNotInitialized } from '../errors.js';
-import { utf8ToHex } from 'web3-utils';
+import { stringToHex } from 'viem';
 import { AddressType } from '@paima/utils';
 
 export type EthersApi = Signer;
@@ -72,7 +72,7 @@ export class EthersEvmProvider implements IProvider<EthersApi> {
     };
   };
   signMessage = async (message: string): Promise<UserSignature> => {
-    const hexMessage = utf8ToHex(message);
+    const hexMessage = stringToHex(message);
     const buffer = Buffer.from(hexMessage.slice(2), 'hex');
     const signature = await this.conn.api.signMessage(buffer);
     return signature;

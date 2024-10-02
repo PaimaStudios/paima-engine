@@ -3,7 +3,7 @@ export enum EncodingVersion {
   V1,
 }
 
-export type HexString = string;
+export type HexString = `0x${string}`;
 export type UTF8String = string;
 // eslint-disable-next-line @typescript-eslint/no-duplicate-type-constituents -- the overlapping types is on purpose for readability
 export type InputString = HexString | UTF8String;

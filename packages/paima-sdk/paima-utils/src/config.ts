@@ -1,17 +1,5 @@
 import type { VersionString } from './types/index.js';
 
-// https://github.com/flexdinesh/browser-or-node/blob/master/src/index.ts
-const isNode: boolean =
-  typeof process !== 'undefined' && process.versions != null && process.versions.node != null;
-if (isNode) {
-  // dynamic import to avoid requiring a polyfill for this in browsers
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const { config } = require('dotenv');
-  // for browser builds, we can't actually loads things from disk like this
-  // instead, for browsers we rely on bundlers like Vite or Webpack to fill these
-  config({ path: `${process.cwd()}/.env.${process.env.NETWORK || 'localhost'}` });
-}
-
 /**
  * Careful: this class uses `process.env`
  * which might not be set depending on the framework used for the frontend of an app

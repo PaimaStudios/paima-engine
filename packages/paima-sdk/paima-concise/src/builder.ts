@@ -1,11 +1,10 @@
-import web3 from 'web3-utils';
-
 import type { ConciseBuilderInitializer, ConciseValue } from './types.js';
 import { EncodingVersion } from './types.js';
 import { isHexString } from './utils.js';
 import buildv1 from './v1/builder.js';
 import { separator, FORBIDDEN_CHARACTERS } from './v1/consts.js';
 import { toConciseValue } from './v1/utils.js';
+import { hexToString } from 'viem';
 
 function validateString(s: string): boolean {
   for (const c of FORBIDDEN_CHARACTERS) {
@@ -23,7 +22,7 @@ const initialize: ConciseBuilderInitializer['initialize'] = (input, options) => 
   const version = options?.version ?? EncodingVersion.V1;
 
   if (input && version === EncodingVersion.V1) {
-    initialConciseInput = isHexString(input) ? web3.hexToUtf8(input) : input;
+    initialConciseInput = isHexString(input) ? hexToString(input) : input;
     const [prefix, ...stringValues] = initialConciseInput.split(separator);
 
     for (const s of [prefix, ...stringValues]) {

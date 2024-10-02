@@ -3,7 +3,7 @@ import { ENV } from '@paima/batcher-utils';
 import type { EthersEvmProvider } from '@paima/providers';
 import { estimateGasLimit } from './gas-limit.js';
 import { contractAbis } from '@paima/utils';
-import { utf8ToHex } from 'web3-utils';
+import { stringToHex } from 'viem';
 import { ethers } from 'ethers';
 import BatchedTransactionPosterBase from './transactionPoster.js';
 import { BatcherStatus } from '@paima/events';
@@ -48,7 +48,7 @@ class EvmBatchedTransactionPoster extends BatchedTransactionPosterBase {
     msg: string,
     hashes: string[]
   ): Promise<[number, string]> => {
-    const hexMsg = utf8ToHex(msg);
+    const hexMsg = stringToHex(msg);
     // todo: unify with buildDirectTx
     const iface = new ethers.Interface([
       'function paimaSubmitGameInput(bytes calldata data) payable',

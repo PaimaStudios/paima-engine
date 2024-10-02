@@ -9,7 +9,7 @@ import {
   createMessageForBatcher,
   extractBatches,
 } from '@paima/concise';
-import { toBN, hexToUtf8 } from 'web3-utils';
+import { hexToString } from 'viem';
 import type { PoolClient } from 'pg';
 import { keccak_256 } from 'js-sha3';
 
@@ -38,7 +38,7 @@ async function eventMapper(
   caip2: string,
   contractAddress: string
 ): Promise<SubmittedData[]> {
-  const decodedData = decodeEventData(e.returnValues.data);
+  const decodedData = decodeEventData(e.returnValues.data as `0x${string}`);
   return await processDataUnit(
     {
       realAddress: e.returnValues.userAddress,
@@ -60,10 +60,10 @@ async function eventMapper(
   );
 }
 
-function decodeEventData(eventData: string): string {
+function decodeEventData(eventData: `0x${string}`): string {
   if (eventData.length > 0) {
     try {
-      const decodedData = hexToUtf8(eventData);
+      const decodedData = hexToString(eventData);
       return decodedData;
     } catch (err) {
       return '';
@@ -94,7 +94,7 @@ export async function processDataUnit(
     const subunits = extractBatches(unit.inputData);
     if (subunits.length === 0) return [];
 
-    const subunitValue = toBN(unit.suppliedValue).div(toBN(subunits.length)).toString(10);
+    const subunitValue = (BigInt(unit.suppliedValue) / BigInt(subunits.length)).toString(10);
     const validatedSubUnits = await Promise.all(
       subunits.map(elem =>
         processBatchedSubunit(elem, subunitValue, blockHeight, blockTimestamp, DBConn, unit.origin)

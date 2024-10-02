@@ -1,5 +1,3 @@
-import web3UtilsPkg from 'web3-utils';
-
 import {
   DEFAULT_GAS_PRICE,
   ENV,
@@ -10,7 +8,7 @@ import type { PaimaL2Contract } from '@paima/utils';
 import type { TransactionTemplate } from '@paima/utils';
 import { getFee, getStorageAddress } from '../state.js';
 
-const { numberToHex, utf8ToHex } = web3UtilsPkg;
+import { numberToHex, stringToHex } from 'viem';
 
 function getTxTemplate<T extends keyof PaimaL2Contract['methods']>(
   storageAddress: string,
@@ -24,7 +22,7 @@ function getTxTemplate<T extends keyof PaimaL2Contract['methods']>(
   return {
     data: txData,
     to: storageAddress,
-    gasPrice: numberToHex(DEFAULT_GAS_PRICE),
+    gasPrice: numberToHex(BigInt(DEFAULT_GAS_PRICE)),
   };
 }
 
@@ -50,13 +48,13 @@ export function buildDirectTx(
   methodName: 'paimaSubmitGameInput',
   dataUtf8: string
 ): CommonTransactionRequest {
-  const hexData = utf8ToHex(dataUtf8);
+  const hexData = stringToHex(dataUtf8);
   const txTemplate = getTxTemplate(getStorageAddress(), methodName, hexData);
 
   const tx = {
     ...txTemplate,
     from: userAddress,
-    value: numberToHex(getFee()?.fee ?? ENV.DEFAULT_FEE),
+    value: numberToHex(BigInt(getFee()?.fee ?? ENV.DEFAULT_FEE)),
   };
 
   return tx;

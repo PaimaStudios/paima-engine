@@ -26,7 +26,6 @@
   "devDependencies": {},
   "dependencies": {
     "web3": "1.10.0",
-    "web3-utils": "1.10.0",
     "@cardano-foundation/cardano-verify-datasignature": "^1.0.11",
     "algosdk": "^2.3.0",
     "tweetnacl": "^1.0.3",

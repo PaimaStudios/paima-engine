@@ -1,4 +1,4 @@
-import { numberToHex } from 'web3-utils';
+import { numberToHex } from 'viem'
 
 import {
   DEFAULT_GAS_PRICE,
@@ -20,6 +20,6 @@ export function getTxTemplate<T extends keyof PaimaL2Contract['methods']>(
   return {
     data: txData,
     to: storageAddress,
-    gasPrice: numberToHex(DEFAULT_GAS_PRICE),
+    gasPrice: numberToHex(BigInt(DEFAULT_GAS_PRICE)),
   };
 }

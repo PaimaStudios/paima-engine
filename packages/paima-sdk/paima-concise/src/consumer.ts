@@ -1,4 +1,3 @@
-import web3 from 'web3-utils';
 import type {
   ConciseConsumerInitializer,
   ConciseConsumerInternals,
@@ -8,6 +7,7 @@ import { EncodingVersion } from './types.js';
 import { isHexString } from './utils.js';
 import { separator } from './v1/consts.js';
 import { toConciseValue } from './v1/utils.js';
+import { hexToString } from 'viem';
 
 const initializeSpecific: ConciseConsumerInitializer['initializeSpecific'] = (input, version) => {
   const { conciseValues, concisePrefix, conciseInput } = preParse(input, version);
@@ -55,7 +55,7 @@ const preParse = (input: string, version: EncodingVersion): ConciseConsumerInter
   if (version === EncodingVersion.EMPTY) {
     return getEmptyInternals();
   } else if (version === EncodingVersion.V1) {
-    conciseInput = isHexString(input) ? web3.hexToUtf8(input) : input;
+    conciseInput = isHexString(input) ? hexToString(input as `0x${string}`) : input;
 
     if (!conciseInput.includes(separator)) {
       return getEmptyInternals();

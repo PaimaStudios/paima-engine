@@ -1,7 +1,7 @@
-import { parseInput, toFullJsonGrammar, toKeyedJsonGrammar, type CommandTuples, type FullJsonGrammar, type GrammarDefinition } from "@paima/concise";
+import { parseStmInput, toFullJsonGrammar, toKeyedJsonGrammar, type CommandTuples, type FullJsonGrammar, type GrammarDefinition } from "@paima/concise";
 import { AppEvents } from "@paima/events";
 import type { Static, TSchema } from "@sinclair/typebox";
-import { BaseStfInput, BaseStfOutput } from "./types";
+import { BaseStfInput, BaseStfOutput } from "./types.js";
 
 export type ParamToData<T extends readonly Readonly<[string, TSchema]>[]> = {
   [K in T[number] as K[0]]: Static<K[1]>;
@@ -36,7 +36,7 @@ export class PaimaSTM<Grammar extends GrammarDefinition, Events extends AppEvent
 
   async processInput(input: BaseStfInput): Promise<BaseStfOutput<Events>> {
     try {
-      const { prefix, grammar, data } = parseInput(input.rawInput.inputData, this.grammar, this.keyedJsonGrammar);
+      const { prefix, grammar, data } = parseStmInput(input.rawInput.inputData, this.grammar, this.keyedJsonGrammar);
       console.log({ prefix, grammar, data });
       const listener = this.messageListeners.get(prefix);
       if (listener == null) return { stateTransitions: [], events: [] };
