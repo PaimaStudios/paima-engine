@@ -290,7 +290,7 @@ export class DelegateWallet {
         }
         default:
           throw new Error(
-            `Delegate Wallet Internal Error : ${JSON.stringify({ parsed: (parsedInput as any).data, command })}`
+            `Delegate Wallet Internal Error : ${JSON.stringify({ parsed: parsedInput.data, command })}`
           );
       }
     } catch (e) {

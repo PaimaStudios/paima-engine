@@ -2,6 +2,7 @@ import cors from 'cors';
 import express from 'express';
 import type { Request, Response } from 'express';
 import type { Pool } from 'pg';
+import { Value } from '@sinclair/typebox/value';
 
 import AddressValidator from '@paima/batcher-address-validator';
 import type { IGetInputStateResult } from '@paima/batcher-db';
@@ -16,7 +17,7 @@ import { ENV, keepRunning, setWebserverClosed, unsetWebserverClosed } from '@pai
 import type { ErrorMessageFxn } from '@paima/batcher-utils';
 import type { AvailJsProvider, EthersEvmProvider } from '@paima/providers';
 import type { BatchedSubunit } from '@paima/concise';
-import { createMessageForBatcher } from '@paima/concise';
+import { BatcherInnerGrammar, createMessageForBatcher, generateStmInput, KeyedBuiltinBatcherInnerGrammar } from '@paima/concise';
 import { AddressType, getWriteNamespace, wait } from '@paima/utils';
 import { hashBatchSubunit } from '@paima/concise';
 import { RecaptchaError, reCaptchaValidation } from './recaptcha.js';
@@ -317,15 +318,18 @@ async function initializeServer(
       res: Response<SubmitUserInputResponse>
     ) => {
       try {
-        const expectedProps = [
-          'address_type',
-          'user_address',
-          'game_input',
-          'timestamp',
-          'user_signature',
-        ];
-        const requestValid = expectedProps.every(prop => req.body.hasOwnProperty(prop));
-        if (!requestValid) {
+        // TODO: better route validation than this?
+        const valid = Value.Check(KeyedBuiltinBatcherInnerGrammar[req.body.address_type], generateStmInput(
+          BatcherInnerGrammar,
+          `${req.body.address_type}`,
+          {
+            userAddress: req.body.user_address,
+            userSignature: req.body.user_signature,
+            gameInput: req.body.game_input,
+            millisecondTimestamp: req.body.timestamp
+          }
+        ));
+        if (!valid) {
           res.status(400).json({
             success: false,
             message: 'Invalid request options',
@@ -335,12 +339,12 @@ async function initializeServer(
 
         const [addressType, userAddress, gameInput, millisecondTimestamp, userSignature, captcha] =
           [
-            req.body.address_type || AddressType.UNKNOWN,
-            req.body.user_address || '',
-            req.body.game_input || '',
-            req.body.timestamp || '',
-            req.body.user_signature || '',
-            req.body.captcha || '',
+            req.body.address_type,
+            req.body.user_address,
+            req.body.game_input,
+            req.body.timestamp,
+            req.body.user_signature,
+            req.body.captcha,
           ];
         const input: BatchedSubunit = {
           addressType,

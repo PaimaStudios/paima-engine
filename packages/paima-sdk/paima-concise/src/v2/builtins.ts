@@ -3,6 +3,7 @@ import type { TSchema } from '@sinclair/typebox';
 import { ProjectedNftStatus } from '@dcspark/carp-client';
 import { GrammarDefinition } from './types.js';
 import { toKeyedJsonGrammar } from './grammar.js';
+import { AddressType } from '@paima/utils';
 
 export const TypeboxHelpers = {
   EvmAddress: Type.RegExp(/^0x[a-fA-F0-9]{40}$/),
@@ -111,10 +112,26 @@ export const BuiltinTransitions = {
  */
 export const INTERNAL_COMMAND_PREFIX = '&';
 
+export const BatcherInnerCommon = [
+  ['userAddress', Type.String()],
+  ['userSignature', Type.String()],
+  ['gameInput', Type.String()],
+  ['millisecondTimestamp', Type.String()],
+] as const;
+export const BatcherInnerGrammar = {
+  [`${AddressType.EVM}`]: BatcherInnerCommon,
+  [`${AddressType.CARDANO}`]: BatcherInnerCommon,
+  [`${AddressType.POLKADOT}`]: BatcherInnerCommon,  
+  [`${AddressType.ALGORAND}`]: BatcherInnerCommon,
+  [`${AddressType.MINA}`]: BatcherInnerCommon,
+} as const satisfies GrammarDefinition;
+export const KeyedBuiltinBatcherInnerGrammar = toKeyedJsonGrammar(BatcherInnerGrammar);
+
 export const BuiltinGrammarPrefix = {
   delegateWallet: '&delegate',
   migrateWallet: '&migrate',
   cancelDelegations: '&cancelDelegation',
+  batcherInput: '&B',
 } as const;
 export const BuiltinGrammar = {
   [BuiltinGrammarPrefix.delegateWallet]: [
@@ -131,6 +148,10 @@ export const BuiltinGrammar = {
   ],
   [BuiltinGrammarPrefix.cancelDelegations]: [
     ['to', TypeboxHelpers.Nullable(Type.String())],
+  ],
+  [BuiltinGrammarPrefix.batcherInput]: [
+    // note: we represent inputs in a batcher as string to aovid the entire batch failing if just one input is malformed
+    ['input', Type.Array(Type.String())],
   ],
 } as const satisfies GrammarDefinition;
 export const KeyedBuiltinGrammar = toKeyedJsonGrammar(BuiltinGrammar);

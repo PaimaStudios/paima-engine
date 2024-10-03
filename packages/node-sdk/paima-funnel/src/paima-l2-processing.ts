@@ -4,13 +4,14 @@ import type { PaimaGameInteraction } from '@paima/utils';
 import type { NonTimerSubmittedData } from '@paima/chain-types';
 import { CryptoManager } from '@paima/crypto';
 import {
-  INNER_BATCH_DIVIDER,
-  OUTER_BATCH_DIVIDER,
+  BatchedSubunit,
+  BuiltinGrammarPrefix,
   createMessageForBatcher,
   extractBatches,
+  ExtractedBatchSubunit,
+  usesPrefix,
 } from '@paima/concise';
 import { hexToString } from 'viem';
-import type { PoolClient } from 'pg';
 import { keccak_256 } from 'js-sha3';
 
 interface ValidatedSubmittedData extends SubmittedData {
@@ -22,11 +23,10 @@ const TIMESTAMP_LIMIT = 24 * 3600;
 export async function extractSubmittedData(
   events: PaimaGameInteraction[],
   blockTimestamp: number,
-  DBConn: PoolClient,
   caip2: string
 ): Promise<SubmittedData[]> {
   const unflattenedList = await Promise.all(
-    events.map(e => eventMapper(e, blockTimestamp, DBConn, caip2, e.address))
+    events.map(e => eventMapper(e, blockTimestamp, caip2, e.address))
   );
   return unflattenedList.flat();
 }
@@ -34,7 +34,6 @@ export async function extractSubmittedData(
 async function eventMapper(
   e: PaimaGameInteraction,
   blockTimestamp: number,
-  DBConn: PoolClient,
   caip2: string,
   contractAddress: string
 ): Promise<SubmittedData[]> {
@@ -56,7 +55,6 @@ async function eventMapper(
     },
     e.blockNumber,
     blockTimestamp,
-    DBConn
   );
 }
 
@@ -77,10 +75,9 @@ export async function processDataUnit(
   unit: NonTimerSubmittedData,
   blockHeight: number,
   blockTimestamp: number,
-  DBConn: PoolClient
 ): Promise<SubmittedData[]> {
   try {
-    if (!unit.inputData.includes(OUTER_BATCH_DIVIDER)) {
+    if (!usesPrefix(unit.inputData, BuiltinGrammarPrefix.batcherInput)) {
       // Directly submitted input, prepare nonce and return:
       const inputNonce = createUnbatchedNonce(blockHeight, unit.realAddress, unit.inputData);
       return [
@@ -97,7 +94,7 @@ export async function processDataUnit(
     const subunitValue = (BigInt(unit.suppliedValue) / BigInt(subunits.length)).toString(10);
     const validatedSubUnits = await Promise.all(
       subunits.map(elem =>
-        processBatchedSubunit(elem, subunitValue, blockHeight, blockTimestamp, DBConn, unit.origin)
+        processBatchedSubunit(elem, subunitValue, blockHeight, blockTimestamp, unit.origin)
       )
     );
     return validatedSubUnits.filter(item => item.validated).map(unpackValidatedData);
@@ -108,52 +105,31 @@ export async function processDataUnit(
 }
 
 async function processBatchedSubunit(
-  input: string,
+  input: ExtractedBatchSubunit,
   suppliedValue: string,
   blockHeight: number,
   blockTimestamp: number,
-  DBConn: PoolClient,
   origin: NonTimerSubmittedData['origin']
 ): Promise<ValidatedSubmittedData> {
-  const INVALID_INPUT: ValidatedSubmittedData = {
-    inputData: '',
-    realAddress: '',
-    inputNonce: '',
-    suppliedValue: '0',
-    scheduled: false,
-    validated: false,
-    origin,
-  };
-
-  const elems = input.split(INNER_BATCH_DIVIDER);
-  if (elems.length !== 5) {
-    return INVALID_INPUT;
-  }
-
-  const [addressTypeStr, userAddress, userSignature, inputData, millisecondTimestamp] = elems;
-  if (!/^[0-9]+$/.test(addressTypeStr)) {
-    return INVALID_INPUT;
-  }
-  const addressType = parseInt(addressTypeStr, 10);
   const signatureValidated = await validateSubunitSignature(
-    addressType,
-    userAddress,
-    userSignature,
-    inputData,
-    millisecondTimestamp,
+    input.parsed.addressType,
+    input.parsed.userAddress,
+    input.parsed.userSignature,
+    input.raw,
+    input.parsed.millisecondTimestamp,
     blockHeight
   );
 
-  const secondTimestamp = parseInt(millisecondTimestamp, 10) / 1000;
+  const secondTimestamp = parseInt(input.parsed.millisecondTimestamp, 10) / 1000;
   const timestampValidated = validateSubunitTimestamp(secondTimestamp, blockTimestamp);
 
   const validated = signatureValidated && timestampValidated;
 
-  const inputNonce = createBatchNonce(millisecondTimestamp, userAddress, inputData);
+  const inputNonce = createBatchNonce(input.parsed.millisecondTimestamp, input.parsed.userAddress, input.raw);
 
   return {
-    inputData,
-    realAddress: userAddress,
+    inputData: input.raw,
+    realAddress: input.parsed.userAddress,
     inputNonce,
     suppliedValue,
     scheduled: false,

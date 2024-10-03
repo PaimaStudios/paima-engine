@@ -125,8 +125,7 @@ export class AvailBlockFunnel extends BaseFunnel implements ChainFunnel {
             processDataUnit(
               unit,
               blockData.blockNumber,
-              slotToTimestamp(header.slot, this.api),
-              this.dbTx
+              slotToTimestamp(header.slot, this.api)
             )
           )
         );

@@ -4,9 +4,9 @@ import type { TTuple, TIntersect, TLiteral, StaticDecode, TSchema } from '@sincl
 export type ExtractParameterTypes<T extends readonly Readonly<[string, TSchema]>[]> = {
   [P in keyof T]: T[P] extends Readonly<[string, infer S extends TSchema]> ? S : never;
 };
-export type CommandTuple<T extends readonly Readonly<[string, TSchema]>[]> = TTuple<[TLiteral<T[0] & string>, ...ExtractParameterTypes<T>]>;
+export type CommandTuple<Prefix extends string, T extends readonly Readonly<[string, TSchema]>[]> = TTuple<[TLiteral<Prefix>, ...ExtractParameterTypes<T>]>
 export type CommandTuples<T extends Record<string, readonly Readonly<[string, TSchema]>[]>> = {
-  [K in keyof T]: CommandTuple<T[K]>;
+  [K in keyof T]: CommandTuple<K & string, T[K]>;
 };
 
 export type GrammarDefinition = Record<string, readonly Readonly<[string, TSchema]>[]>;

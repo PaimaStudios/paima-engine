@@ -157,8 +157,6 @@ export class WalletConnectHelper {
       case AddressType.MINA:
         loginInfo = { mode: WalletMode.Mina };
         break;
-      case AddressType.UNKNOWN:
-        throw new Error('AddressTypes cannot be Unknown.');
       default:
         assertNever(walletType);
     }

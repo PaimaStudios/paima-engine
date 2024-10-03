@@ -13,3 +13,10 @@ export function toKeyedJsonGrammar<Grammar extends GrammarDefinition>(grammar: G
   }));
   return keyedTypes as any;
 }
+
+/**
+ * Useful for quickly checking if an input data is of a specific type without parsing the full object
+ */
+export function usesPrefix(inputData: string, prefix: string): boolean {
+  return inputData.startsWith(`["${prefix}`);
+}

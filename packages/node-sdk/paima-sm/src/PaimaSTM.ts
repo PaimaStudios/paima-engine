@@ -37,7 +37,6 @@ export class PaimaSTM<Grammar extends GrammarDefinition, Events extends AppEvent
   async processInput(input: BaseStfInput): Promise<BaseStfOutput<Events>> {
     try {
       const { prefix, grammar, data } = parseStmInput(input.rawInput.inputData, this.grammar, this.keyedJsonGrammar);
-      console.log({ prefix, grammar, data });
       const listener = this.messageListeners.get(prefix);
       if (listener == null) return { stateTransitions: [], events: [] };
       return listener({ ...input, parsedInput: data });

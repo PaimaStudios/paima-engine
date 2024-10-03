@@ -45,7 +45,6 @@ export async function getBaseChainDataMulti(
     const submittedData = await extractSubmittedData(
       blockEvents,
       block.timestamp,
-      DBConn,
       caip2Prefix
     );
     resultList.push({
@@ -70,7 +69,6 @@ export async function getBaseChainDataSingle(
   const submittedData = await extractSubmittedData(
     events,
     blockData.timestamp,
-    DBConn,
     caip2Prefix
   );
   return {

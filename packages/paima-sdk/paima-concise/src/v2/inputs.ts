@@ -7,7 +7,13 @@ export function parseStmInput<Grammar extends GrammarDefinition, Prefix extends 
   grammarDefinition: Grammar,
   keyedJsonGrammar: CommandTuples<Grammar>
 ): ParseInputResult<Grammar, Prefix> {
-  const parsedData = JSON.parse(inputData);
+  return parseRawStmInput(JSON.parse(inputData), grammarDefinition, keyedJsonGrammar);
+}
+export function parseRawStmInput<Grammar extends GrammarDefinition, Prefix extends keyof Grammar & string>(
+  parsedData: any,
+  grammarDefinition: Grammar,
+  keyedJsonGrammar: CommandTuples<Grammar>
+): ParseInputResult<Grammar, Prefix> {
   if (typeof parsedData !== 'object') {
     throw new Error(`Input is not valid JSON`);
   }
@@ -44,11 +50,11 @@ export function generateStmInput<Grammar extends GrammarDefinition, Prefix exten
   return tuple as any;
 }
 
-export function generateRawStmInput<Grammar extends readonly Readonly<[string, TSchema]>[], Prefix extends string>(
-  grammar: Grammar,
+export function generateRawStmInput<GrammarEntry extends readonly Readonly<[string, TSchema]>[], Prefix extends string>(
+  grammar: GrammarEntry,
   prefix: Prefix,
-  data: ParamToData<Grammar>
-): StaticDecode<CommandTuple<Grammar>> {
+  data: ParamToData<GrammarEntry>
+): StaticDecode<CommandTuple<Prefix, GrammarEntry>> {
   const tuple = [prefix, ...grammar.map(x => (data as any)[x[0]])];
   return tuple as any;
 }
