@@ -6,6 +6,7 @@ import {
   cdeCardanoProjectedNftUpdateData,
 } from '@paima/db';
 import type { SQLUpdate } from '@paima/db';
+import { BuiltinTransitions, generateRawStmInput } from '@paima/concise';
 
 export default async function processDatum(
   cdeDatum: CdeCardanoProjectedNFTDatum,
@@ -26,21 +27,35 @@ export default async function processDatum(
   const forHowLong = cdeDatum.payload.forHowLong;
 
   const scheduledBlockHeight = inPresync ? ENV.SM_START_BLOCKHEIGHT + 1 : cdeDatum.blockNumber;
-  const scheduledInputData = `${prefix}|${ownerAddress}|${previousTxHash}|${previousOutputIndex}|${currentTxHash}|${currentOutputIndex}|${policyId}|${assetName}|${status}`;
+
+  const updateList: SQLUpdate[] = [];
+  if (prefix != null) {
+    const scheduledInputData = generateRawStmInput(BuiltinTransitions.ChainDataExtensionCardanoProjectedNFTConfig, prefix, {
+      ownerAddress,
+      previousTxHash,
+      previousOutputIndex,
+      currentTxHash,
+      currentOutputIndex,
+      policyId,
+      assetName,
+      status
+    });
+
+    updateList.push(createScheduledData(
+      JSON.stringify(scheduledInputData),
+      { blockHeight: scheduledBlockHeight },
+      {
+        cdeName: cdeDatum.cdeName,
+        txHash: cdeDatum.transactionHash,
+        caip2: cdeDatum.caip2,
+        fromAddress: ownerAddress,
+        contractAddress: undefined, // TODO: we should be able to know this
+      }
+    ));
+  }
 
   if (previousTxHash === undefined || previousOutputIndex === undefined) {
-    const updateList: SQLUpdate[] = [
-      createScheduledData(
-        scheduledInputData,
-        { blockHeight: scheduledBlockHeight },
-        {
-          cdeName: cdeDatum.cdeName,
-          txHash: cdeDatum.transactionHash,
-          caip2: cdeDatum.caip2,
-          fromAddress: ownerAddress,
-          contractAddress: undefined, // TODO: we should be able to know this
-        }
-      ),
+    updateList.push(
       [
         cdeCardanoProjectedNftInsertData,
         {
@@ -56,21 +71,10 @@ export default async function processDatum(
           for_how_long: forHowLong,
         },
       ],
-    ];
+    );
     return updateList;
   }
-  const updateList: SQLUpdate[] = [
-    createScheduledData(
-      scheduledInputData,
-      { blockHeight: scheduledBlockHeight },
-      {
-        cdeName: cdeDatum.cdeName,
-        txHash: cdeDatum.transactionHash,
-        caip2: cdeDatum.caip2,
-        fromAddress: ownerAddress,
-        contractAddress: undefined, // TODO: we should be able to know this
-      }
-    ),
+  updateList.push(
     [
       cdeCardanoProjectedNftUpdateData,
       {
@@ -88,7 +92,7 @@ export default async function processDatum(
         for_how_long: forHowLong,
       },
     ],
-  ];
+  );
 
   return updateList;
 }

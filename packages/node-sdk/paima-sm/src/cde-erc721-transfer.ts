@@ -11,6 +11,7 @@ import {
   createScheduledData,
 } from '@paima/db';
 import type { SQLUpdate } from '@paima/db';
+import { BuiltinTransitions, generateRawStmInput } from '@paima/concise';
 
 export default async function processErc721Datum(
   readonlyDBConn: PoolClient,
@@ -33,7 +34,10 @@ export default async function processErc721Datum(
     if (ownerRow.length > 0) {
       if (isBurn) {
         if (cdeDatum.burnScheduledPrefix) {
-          const scheduledInputData = `${cdeDatum.burnScheduledPrefix}|${ownerRow[0].nft_owner}|${tokenId}`;
+          const scheduledInputData = generateRawStmInput(BuiltinTransitions.ChainDataExtensionErc721Config.Burn, cdeDatum.burnScheduledPrefix, {
+            owner: ownerRow[0].nft_owner,
+            tokenId,
+          });
 
           const scheduledBlockHeight = inPresync
             ? ENV.SM_START_BLOCKHEIGHT + 1
@@ -41,7 +45,7 @@ export default async function processErc721Datum(
 
           updateList.push(
             createScheduledData(
-              scheduledInputData,
+              JSON.stringify(scheduledInputData),
               { blockHeight: scheduledBlockHeight },
               {
                 cdeName: cdeDatum.cdeName,

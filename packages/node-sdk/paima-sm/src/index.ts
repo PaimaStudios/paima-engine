@@ -70,6 +70,7 @@ import { keccak_256 } from 'js-sha3';
 import type { AppEvents, EventPathAndDef, ResolvedPath } from '@paima/events';
 import { PaimaEventManager } from '@paima/events';
 import { PaimaEventBroker } from '@paima/broker';
+import { INTERNAL_COMMAND_PREFIX } from '@paima/concise';
 
 export * from './PaimaSTM.js';
 export * from './types.js';
@@ -719,12 +720,8 @@ async function processUserInputs<Events extends AppEvents>(
     try {
       // Check if internal Concise Command
       // Internal Concise Commands are prefixed with an ampersand (&)
-      //
-      // delegate       = &wd|from?|to?|from_signature|to_signature
-      // migrate        = &wm|from?|to?|from_signature|to_signature
-      // cancelDelegate = &wc|to?
       const delegateWallet = new DelegateWallet(DBConn);
-      if (inputData.inputData.startsWith(DelegateWallet.INTERNAL_COMMAND_PREFIX)) {
+      if (inputData.inputData.startsWith(INTERNAL_COMMAND_PREFIX)) {
         const status = await delegateWallet.process(
           inputData.realAddress,
           inputData.userAddress,

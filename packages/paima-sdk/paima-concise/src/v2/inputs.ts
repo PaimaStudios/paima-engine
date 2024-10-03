@@ -1,8 +1,12 @@
 import { Value } from '@sinclair/typebox/value';
-import type { Static } from '@sinclair/typebox';
-import { CommandTuples, GrammarDefinition, ParamToData, ParseInputResult } from './types.js';
+import type { StaticDecode, TSchema } from '@sinclair/typebox';
+import { CommandTuple, CommandTuples, GrammarDefinition, ParamToData, ParseInputResult } from './types.js';
 
-export function parseStmInput<Grammar extends GrammarDefinition, Prefix extends keyof Grammar & string>(inputData: string, grammarDefinition: Grammar, keyedJsonGrammar: CommandTuples<Grammar>): ParseInputResult<Grammar, Prefix> {
+export function parseStmInput<Grammar extends GrammarDefinition, Prefix extends keyof Grammar & string>(
+  inputData: string,
+  grammarDefinition: Grammar,
+  keyedJsonGrammar: CommandTuples<Grammar>
+): ParseInputResult<Grammar, Prefix> {
   const parsedData = JSON.parse(inputData);
   if (typeof parsedData !== 'object') {
     throw new Error(`Input is not valid JSON`);
@@ -35,7 +39,16 @@ export function generateStmInput<Grammar extends GrammarDefinition, Prefix exten
   grammar: Grammar,
   prefix: Prefix,
   data: ParamToData<Grammar[Prefix]>
-): Static<CommandTuples<Grammar>[Prefix]> {
+): StaticDecode<CommandTuples<Grammar>[Prefix]> {
   const tuple = [prefix, ...grammar[prefix].map(x => (data as any)[x[0]])];
+  return tuple as any;
+}
+
+export function generateRawStmInput<Grammar extends readonly Readonly<[string, TSchema]>[], Prefix extends string>(
+  grammar: Grammar,
+  prefix: Prefix,
+  data: ParamToData<Grammar>
+): StaticDecode<CommandTuple<Grammar>> {
+  const tuple = [prefix, ...grammar.map(x => (data as any)[x[0]])];
   return tuple as any;
 }

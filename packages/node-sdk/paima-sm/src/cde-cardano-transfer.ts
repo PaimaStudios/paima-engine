@@ -2,6 +2,7 @@ import { ENV, SCHEDULED_DATA_ADDRESS } from '@paima/utils';
 import { createScheduledData, cdeCardanoTransferInsert } from '@paima/db';
 import type { SQLUpdate } from '@paima/db';
 import type { CdeCardanoTransferDatum } from './types.js';
+import { BuiltinTransitions, generateRawStmInput } from '@paima/concise';
 
 export default async function processDatum(
   cdeDatum: CdeCardanoTransferDatum,
@@ -11,16 +12,22 @@ export default async function processDatum(
   const prefix = cdeDatum.scheduledPrefix;
   const txId = cdeDatum.payload.txId;
   const rawTx = cdeDatum.payload.rawTx;
-  const inputCredentials = cdeDatum.payload.inputCredentials.join(',');
-  const outputs = JSON.stringify(cdeDatum.payload.outputs);
-  const metadata = cdeDatum.payload.metadata || undefined;
+  const inputCredentials = cdeDatum.payload.inputCredentials;
+  const outputs = cdeDatum.payload.outputs;
+  const metadata = cdeDatum.payload.metadata;
 
   const scheduledBlockHeight = inPresync ? ENV.SM_START_BLOCKHEIGHT + 1 : cdeDatum.blockNumber;
-  const scheduledInputData = `${prefix}|${txId}|${metadata}|${inputCredentials}|${outputs}`;
 
-  const updateList: SQLUpdate[] = [
-    createScheduledData(
-      scheduledInputData,
+  const updateList: SQLUpdate[] = [];
+  if (prefix != null) {
+    const scheduledInputData = generateRawStmInput(BuiltinTransitions.ChainDataExtensionCardanoTransferConfig, prefix, {
+      txId,
+      metadata,
+      inputCredentials,
+      outputs,
+    });
+    updateList.push(createScheduledData(
+      JSON.stringify(scheduledInputData),
       { blockHeight: scheduledBlockHeight },
       {
         cdeName: cdeDatum.cdeName,
@@ -30,16 +37,17 @@ export default async function processDatum(
         fromAddress: SCHEDULED_DATA_ADDRESS,
         contractAddress: undefined,
       }
-    ),
-    [
-      cdeCardanoTransferInsert,
-      {
-        cde_name: cdeName,
-        tx_id: txId,
-        raw_tx: rawTx,
-        metadata: metadata,
-      },
-    ],
-  ];
+    ));
+  }
+
+  updateList.push([
+    cdeCardanoTransferInsert,
+    {
+      cde_name: cdeName,
+      tx_id: txId,
+      raw_tx: rawTx,
+      metadata: metadata,
+    },
+  ]);
   return updateList;
 }

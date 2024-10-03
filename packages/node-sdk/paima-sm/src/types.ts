@@ -159,7 +159,7 @@ interface CdeDatumErc6551RegistryPayload {
 
 interface CdeDatumCardanoPoolPayload {
   address: string;
-  pool: string | undefined;
+  pool: string | null;
   epoch: number;
 }
 
@@ -167,10 +167,10 @@ interface CdeDatumCardanoProjectedNFTPayload {
   ownerAddress: string;
 
   actionTxId: string;
-  actionOutputIndex: number | undefined;
+  actionOutputIndex: number | null;
 
-  previousTxHash: string | undefined;
-  previousTxOutputIndex: number | undefined;
+  previousTxHash: string | null;
+  previousTxOutputIndex: number | null;
 
   policyId: string;
   assetName: string;

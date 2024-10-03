@@ -2,6 +2,7 @@ import { ENV, SCHEDULED_DATA_ADDRESS } from '@paima/utils';
 import { cdeCardanoMintBurnInsert, createScheduledData } from '@paima/db';
 import type { SQLUpdate } from '@paima/db';
 import type { CdeCardanoMintBurnDatum } from './types.js';
+import { BuiltinTransitions, generateRawStmInput } from '@paima/concise';
 
 export default async function processDatum(
   cdeDatum: CdeCardanoMintBurnDatum,
@@ -10,17 +11,25 @@ export default async function processDatum(
   const cdeName = cdeDatum.cdeName;
   const prefix = cdeDatum.scheduledPrefix;
   const txId = cdeDatum.payload.txId;
-  const assets = JSON.stringify(cdeDatum.payload.assets);
-  const metadata = cdeDatum.payload.metadata || undefined;
+  const assets = cdeDatum.payload.assets;
+  const metadata = cdeDatum.payload.metadata;
   const inputAddresses = cdeDatum.payload.inputAddresses;
   const outputAddresses = cdeDatum.payload.outputAddresses;
 
   const scheduledBlockHeight = inPresync ? ENV.SM_START_BLOCKHEIGHT + 1 : cdeDatum.blockNumber;
-  const scheduledInputData = `${prefix}|${txId}|${metadata}|${assets}|${JSON.stringify(inputAddresses)}|${JSON.stringify(outputAddresses)}`;
 
-  const updateList: SQLUpdate[] = [
-    createScheduledData(
-      scheduledInputData,
+  const updateList: SQLUpdate[] = [];
+  if (prefix != null) {
+    const scheduledInputData = generateRawStmInput(BuiltinTransitions.ChainDataExtensionCardanoMintBurnConfig, prefix, {
+      txId,
+      metadata,
+      assets,
+      inputAddresses,
+      outputAddresses,
+    });
+
+    updateList.push(createScheduledData(
+      JSON.stringify(scheduledInputData),
       { blockHeight: scheduledBlockHeight },
       {
         cdeName: cdeDatum.cdeName,
@@ -30,7 +39,10 @@ export default async function processDatum(
         fromAddress: SCHEDULED_DATA_ADDRESS,
         contractAddress: undefined,
       }
-    ),
+    ));
+  }
+
+  updateList.push(
     [
       cdeCardanoMintBurnInsert,
       {
@@ -42,6 +54,6 @@ export default async function processDatum(
         output_addresses: outputAddresses,
       },
     ],
-  ];
+  );
   return updateList;
 }

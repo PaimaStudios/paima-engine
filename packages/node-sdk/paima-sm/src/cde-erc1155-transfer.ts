@@ -12,6 +12,7 @@ import type {
   ICdeErc1155ModifyBalanceParams,
   SQLUpdate,
 } from '@paima/db';
+import { BuiltinTransitions, generateRawStmInput } from '@paima/concise';
 
 export default async function processErc1155TransferDatum(
   cdeDatum: CdeErc1155TransferDatum,
@@ -27,17 +28,16 @@ export default async function processErc1155TransferDatum(
   // Always schedule the plain old transfer event.
   const scheduledBlockHeight = inPresync ? ENV.SM_START_BLOCKHEIGHT + 1 : blockNumber;
   if (scheduledPrefix) {
-    const scheduledInputData = [
-      scheduledPrefix,
+    const scheduledInputData = generateRawStmInput(BuiltinTransitions.ChainDataExtensionErc1155Config.Transfer, scheduledPrefix, {
       operator,
-      from.toLowerCase(),
-      to.toLowerCase(),
-      JSON.stringify(ids),
-      JSON.stringify(values),
-    ].join('|');
+      from: from.toLowerCase(),
+      to: to.toLowerCase(),
+      ids,
+      values,
+    });
     updateList.push(
       createScheduledData(
-        scheduledInputData,
+        JSON.stringify(scheduledInputData),
         { blockHeight: scheduledBlockHeight },
         {
           cdeName: cdeDatum.cdeName,
@@ -51,17 +51,16 @@ export default async function processErc1155TransferDatum(
   }
 
   if (isBurn && burnScheduledPrefix) {
-    const burnData = [
-      burnScheduledPrefix,
+    const scheduledInputData = generateRawStmInput(BuiltinTransitions.ChainDataExtensionErc1155Config.Burn, burnScheduledPrefix, {
       operator,
-      from.toLowerCase(),
+      from: from.toLowerCase(),
       // to is excluded because it's presumed 0
-      JSON.stringify(ids),
-      JSON.stringify(values),
-    ].join('|');
+      ids,
+      values,
+    });
     updateList.push(
       createScheduledData(
-        burnData,
+        JSON.stringify(scheduledInputData),
         { blockHeight: scheduledBlockHeight },
         {
           cdeName: cdeDatum.cdeName,

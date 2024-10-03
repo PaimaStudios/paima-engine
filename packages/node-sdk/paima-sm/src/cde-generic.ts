@@ -6,6 +6,7 @@ import type {
 } from './types.js';
 import { createScheduledData, cdeGenericInsertData } from '@paima/db';
 import type { SQLUpdate } from '@paima/db';
+import { BuiltinTransitions, generateRawStmInput } from '@paima/concise';
 
 export default async function processDatum(
   cdeDatum: CdeGenericDatum | CdeMinaEventGenericDatum | CdeMinaActionGenericDatum,
@@ -19,11 +20,13 @@ export default async function processDatum(
   const scheduledBlockHeight = inPresync ? ENV.SM_START_BLOCKHEIGHT + 1 : cdeDatum.blockNumber;
 
   const stringifiedPayload = JSON.stringify(payload);
-  const scheduledInputData = `${prefix}|${stringifiedPayload}`;
+  const scheduledInputData = generateRawStmInput(BuiltinTransitions.ChainDataExtensionGenericConfig, prefix, {
+    payload: stringifiedPayload,
+  });
 
   const updateList: SQLUpdate[] = [
     createScheduledData(
-      scheduledInputData,
+      JSON.stringify(scheduledInputData),
       { blockHeight: scheduledBlockHeight },
       {
         cdeName: cdeDatum.cdeName,

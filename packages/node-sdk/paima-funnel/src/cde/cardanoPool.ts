@@ -81,7 +81,7 @@ function eventToCdeDatum(
     transactionHash: event.txId,
     payload: {
       address: event.credential,
-      pool: event.pool || undefined,
+      pool: event.pool,
       epoch,
     },
     scheduledPrefix: extension.scheduledPrefix,

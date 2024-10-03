@@ -2,7 +2,6 @@ import Prando from '@paima/prando';
 import type { ChainData } from './types.js';
 import type { SubmittedData } from '@paima/chain-types';
 import type pg from 'pg';
-import { consumer } from '@paima/concise';
 import { getBlockSeeds } from '@paima/db';
 import { hashTogether } from '@paima/utils-backend';
 
@@ -12,8 +11,7 @@ export function randomnessRouter(n: number): typeof getSeed1 {
 }
 
 function parseInput(encodedInput: string): string[] {
-  const conciseConsumer = consumer.initialize(encodedInput);
-  return conciseConsumer.conciseValues.map(cValue => cValue.value);
+  return (JSON.parse(encodedInput) as any[]).map(value => value.toString());
 }
 
 function chooseData(submittedData: SubmittedData[], seed: string): string[] {
@@ -23,7 +21,7 @@ function chooseData(submittedData: SubmittedData[], seed: string): string[] {
     return randomValue === 1;
   };
 
-  const chosenData = [];
+  const chosenData: string[] = [];
   for (const dataChunk of submittedData) {
     if (randomSelection()) chosenData.push(dataChunk.inputNonce);
     if (randomSelection()) chosenData.push(dataChunk.realAddress);
