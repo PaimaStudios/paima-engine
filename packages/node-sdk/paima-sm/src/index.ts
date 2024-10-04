@@ -257,7 +257,7 @@ const SM: GameStateMachineInitializer = {
                 b?.paima_block_hash == null ? null : b.paima_block_hash.toString('hex'),
             },
             randomnessGenerator: new Prando('1234567890'),
-            dbConn: dbTx
+            dbConn: dbTx,
           });
           return data && data.stateTransitions.length > 0;
         };
@@ -612,7 +612,7 @@ async function processScheduledData<Events extends AppEvents>(
             msTimestamp: latestChainData.timestamp * 1000,
           },
           randomnessGenerator,
-          dbConn: DBConn
+          dbConn: DBConn,
         });
 
         sqlQueries = stateTransitions;
@@ -749,7 +749,7 @@ async function processUserInputs<Events extends AppEvents>(
             msTimestamp: latestChainData.timestamp * 1000,
           },
           randomnessGenerator,
-          dbConn: DBConn
+          dbConn: DBConn,
         });
 
         sqlQueries = stateTransitions;

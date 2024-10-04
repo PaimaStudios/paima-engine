@@ -16,7 +16,13 @@ import {
   newDelegation,
   updateAddress,
 } from '@paima/db';
-import { BuiltinGrammar, BuiltinGrammarPrefix, INTERNAL_COMMAND_PREFIX, KeyedBuiltinGrammar, parseStmInput } from '@paima/concise';
+import {
+  BuiltinGrammar,
+  BuiltinGrammarPrefix,
+  INTERNAL_COMMAND_PREFIX,
+  KeyedBuiltinGrammar,
+  parseStmInput,
+} from '@paima/concise';
 
 type AddressExists = { address: IGetAddressFromAddressResult; exists: true };
 type AddressDoesNotExist = { address: string; exists: false };
@@ -282,7 +288,10 @@ export class DelegateWallet {
         }
         case BuiltinGrammarPrefix.cancelDelegations: {
           const { to } = parsedInput.data;
-          await this.cmdCancelDelegations(userAddress.toLocaleLowerCase(), to?.toLocaleLowerCase() ?? null);
+          await this.cmdCancelDelegations(
+            userAddress.toLocaleLowerCase(),
+            to?.toLocaleLowerCase() ?? null
+          );
           doLog(
             `Cancel Delegate ${userAddress.substring(0, 8)}... -> ${to ? to.substring(0, 8) + '...' : '*'}`
           );

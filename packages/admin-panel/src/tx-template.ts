@@ -1,4 +1,4 @@
-import { numberToHex } from 'viem'
+import { numberToHex } from 'viem';
 
 import {
   DEFAULT_GAS_PRICE,

@@ -1,8 +1,7 @@
 import { Type } from '@sinclair/typebox';
-import { GrammarDefinition } from '../types.js';
+import type { GrammarDefinition } from '../types.js';
 import { toKeyedJsonGrammar } from '../grammar.js';
 import { TypeboxHelpers } from '@paima/utils';
-
 
 export const BuiltinGrammarPrefix = {
   delegateWallet: '&delegate',
@@ -23,9 +22,7 @@ export const BuiltinGrammar = {
     ['from_signature', Type.String()],
     ['to_signature', Type.String()],
   ],
-  [BuiltinGrammarPrefix.cancelDelegations]: [
-    ['to', TypeboxHelpers.Nullable(Type.String())],
-  ],
+  [BuiltinGrammarPrefix.cancelDelegations]: [['to', TypeboxHelpers.Nullable(Type.String())]],
   [BuiltinGrammarPrefix.batcherInput]: [
     // note: we represent inputs in a batcher as string to aovid the entire batch failing if just one input is malformed
     ['input', Type.Array(Type.String())],

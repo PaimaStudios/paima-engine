@@ -13,9 +13,13 @@ export default async function processMidnightContractStateDatum(
   const updateList: SQLUpdate[] = [];
 
   const scheduledBlockHeight = inPresync ? ENV.SM_START_BLOCKHEIGHT + 1 : blockNumber;
-  const scheduledInputData = generateRawStmInput(BuiltinTransitions[ConfigPrimitiveType.MidnightContractState].scheduledPrefix, scheduledPrefix, {
-    payload,
-  });
+  const scheduledInputData = generateRawStmInput(
+    BuiltinTransitions[ConfigPrimitiveType.MidnightContractState].scheduledPrefix,
+    scheduledPrefix,
+    {
+      payload,
+    }
+  );
   updateList.push(
     createScheduledData(
       JSON.stringify(scheduledInputData),

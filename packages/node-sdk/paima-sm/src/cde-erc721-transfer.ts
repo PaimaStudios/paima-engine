@@ -35,10 +35,14 @@ export default async function processErc721Datum(
     if (ownerRow.length > 0) {
       if (isBurn) {
         if (cdeDatum.burnScheduledPrefix) {
-          const scheduledInputData = generateRawStmInput(BuiltinTransitions[ConfigPrimitiveType.ERC721].burnScheduledPrefix, cdeDatum.burnScheduledPrefix, {
-            owner: ownerRow[0].nft_owner,
-            tokenId,
-          });
+          const scheduledInputData = generateRawStmInput(
+            BuiltinTransitions[ConfigPrimitiveType.ERC721].burnScheduledPrefix,
+            cdeDatum.burnScheduledPrefix,
+            {
+              owner: ownerRow[0].nft_owner,
+              tokenId,
+            }
+          );
 
           const scheduledBlockHeight = inPresync
             ? ENV.SM_START_BLOCKHEIGHT + 1

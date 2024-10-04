@@ -15,11 +15,15 @@ export default async function processErc721Datum(
   }
   const { tokenId, mintData } = cdeDatum.payload;
   const scheduledBlockHeight = inPresync ? ENV.SM_START_BLOCKHEIGHT + 1 : cdeDatum.blockNumber;
-  const scheduledInputData = generateRawStmInput(BuiltinTransitions[ConfigPrimitiveType.ERC721].scheduledPrefix, prefix, {
-    address,
-    tokenId,
-    mintData,
-  });
+  const scheduledInputData = generateRawStmInput(
+    BuiltinTransitions[ConfigPrimitiveType.ERC721].scheduledPrefix,
+    prefix,
+    {
+      address,
+      tokenId,
+      mintData,
+    }
+  );
   return [
     createScheduledData(
       JSON.stringify(scheduledInputData),

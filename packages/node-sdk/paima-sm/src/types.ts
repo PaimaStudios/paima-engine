@@ -534,7 +534,9 @@ export type BaseStfOutput<Events extends AppEvents> = {
   }[];
 };
 
-export type GameStateTransitionFunction<Events extends AppEvents> = (input: BaseStfInput) => Promise<BaseStfOutput<Events>>;
+export type GameStateTransitionFunction<Events extends AppEvents> = (
+  input: BaseStfInput
+) => Promise<BaseStfOutput<Events>>;
 
 export type Precompiles = { precompiles: { [name: string]: `0x${string}` } };
 

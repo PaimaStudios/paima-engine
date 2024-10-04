@@ -13,10 +13,7 @@ import {
 import type { MainEvmConfig, OtherEvmConfig, PaimaL2Contract } from '@paima/utils';
 import { TimeoutError, instantiateCdeGeneric } from '@paima/runtime';
 import type { ChainDataExtension, EvmChainDataExtensionDatum } from '@paima/sm';
-import {
-  type CdeDynamicEvmPrimitiveDatum,
-  type ChainData,
-} from '@paima/sm';
+import { type CdeDynamicEvmPrimitiveDatum, type ChainData } from '@paima/sm';
 import type { PaimaGameInteraction } from '@paima/utils';
 
 import { extractSubmittedData } from './paima-l2-processing.js';
@@ -42,11 +39,7 @@ export async function getBaseChainDataMulti(
   const resultList: ChainData[] = [];
   for (const block of blockData) {
     const blockEvents = events.filter(e => e.blockNumber === block.blockNumber);
-    const submittedData = await extractSubmittedData(
-      blockEvents,
-      block.timestamp,
-      caip2Prefix
-    );
+    const submittedData = await extractSubmittedData(blockEvents, block.timestamp, caip2Prefix);
     resultList.push({
       ...block,
       submittedData,
@@ -66,11 +59,7 @@ export async function getBaseChainDataSingle(
     getBlockData(web3, blockNumber),
     getPaimaEvents(paimaL2Contract, blockNumber, blockNumber),
   ]);
-  const submittedData = await extractSubmittedData(
-    events,
-    blockData.timestamp,
-    caip2Prefix
-  );
+  const submittedData = await extractSubmittedData(events, blockData.timestamp, caip2Prefix);
   return {
     ...blockData,
     submittedData, // merge in the data

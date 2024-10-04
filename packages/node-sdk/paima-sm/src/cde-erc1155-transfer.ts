@@ -29,13 +29,17 @@ export default async function processErc1155TransferDatum(
   // Always schedule the plain old transfer event.
   const scheduledBlockHeight = inPresync ? ENV.SM_START_BLOCKHEIGHT + 1 : blockNumber;
   if (scheduledPrefix) {
-    const scheduledInputData = generateRawStmInput(BuiltinTransitions[ConfigPrimitiveType.ERC1155].scheduledPrefix, scheduledPrefix, {
-      operator,
-      from: from.toLowerCase(),
-      to: to.toLowerCase(),
-      ids,
-      values,
-    });
+    const scheduledInputData = generateRawStmInput(
+      BuiltinTransitions[ConfigPrimitiveType.ERC1155].scheduledPrefix,
+      scheduledPrefix,
+      {
+        operator,
+        from: from.toLowerCase(),
+        to: to.toLowerCase(),
+        ids,
+        values,
+      }
+    );
     updateList.push(
       createScheduledData(
         JSON.stringify(scheduledInputData),
@@ -52,13 +56,17 @@ export default async function processErc1155TransferDatum(
   }
 
   if (isBurn && burnScheduledPrefix) {
-    const scheduledInputData = generateRawStmInput(BuiltinTransitions[ConfigPrimitiveType.ERC1155].burnScheduledPrefix, burnScheduledPrefix, {
-      operator,
-      from: from.toLowerCase(),
-      // to is excluded because it's presumed 0
-      ids,
-      values,
-    });
+    const scheduledInputData = generateRawStmInput(
+      BuiltinTransitions[ConfigPrimitiveType.ERC1155].burnScheduledPrefix,
+      burnScheduledPrefix,
+      {
+        operator,
+        from: from.toLowerCase(),
+        // "to" is excluded because it's presumed 0
+        ids,
+        values,
+      }
+    );
     updateList.push(
       createScheduledData(
         JSON.stringify(scheduledInputData),

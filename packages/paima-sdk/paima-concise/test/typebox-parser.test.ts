@@ -1,15 +1,18 @@
 import { describe, expect, test } from 'vitest';
 import { Type } from '@sinclair/typebox';
-import { generateStmInput, parseStmInput, toKeyedJsonGrammar, type GrammarDefinition } from '../src/index.js';
+import {
+  generateStmInput,
+  parseStmInput,
+  toKeyedJsonGrammar,
+  type GrammarDefinition,
+} from '../src/index.js';
 
 const grammar = {
   attack: [
     ['playerId', Type.Integer()],
     ['moveId', Type.Integer()],
   ],
-  switchMap: [
-    ['mapId', Type.String()]
-  ]
+  switchMap: [['mapId', Type.String()]],
 } as const satisfies GrammarDefinition;
 const keyedJsonGrammar = toKeyedJsonGrammar(grammar);
 
@@ -29,4 +32,3 @@ describe('Generate grammar', () => {
     expect(inputData.data).toStrictEqual({ playerId: 1, moveId: 2 });
   });
 });
-

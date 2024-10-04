@@ -74,6 +74,7 @@ export function getAbiContract(address: string, abi: AbiItem[], web3?: Web3): Co
   if (web3 === undefined) {
     web3 = new Web3();
   }
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
   return new web3.eth.Contract(abi as any, address);
 }
 

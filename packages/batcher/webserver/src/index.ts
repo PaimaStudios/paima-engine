@@ -17,8 +17,13 @@ import { ENV, keepRunning, setWebserverClosed, unsetWebserverClosed } from '@pai
 import type { ErrorMessageFxn } from '@paima/batcher-utils';
 import type { AvailJsProvider, EthersEvmProvider } from '@paima/providers';
 import type { BatchedSubunit } from '@paima/concise';
-import { BatcherInnerGrammar, createMessageForBatcher, generateStmInput, KeyedBuiltinBatcherInnerGrammar } from '@paima/concise';
-import { AddressType, getWriteNamespace, wait } from '@paima/utils';
+import {
+  BatcherInnerGrammar,
+  createMessageForBatcher,
+  generateStmInput,
+  KeyedBuiltinBatcherInnerGrammar,
+} from '@paima/concise';
+import { type AddressType, getWriteNamespace, wait } from '@paima/utils';
 import { hashBatchSubunit } from '@paima/concise';
 import { RecaptchaError, reCaptchaValidation } from './recaptcha.js';
 
@@ -319,16 +324,15 @@ async function initializeServer(
     ) => {
       try {
         // TODO: better route validation than this?
-        const valid = Value.Check(KeyedBuiltinBatcherInnerGrammar[req.body.address_type], generateStmInput(
-          BatcherInnerGrammar,
-          `${req.body.address_type}`,
-          {
+        const valid = Value.Check(
+          KeyedBuiltinBatcherInnerGrammar[req.body.address_type],
+          generateStmInput(BatcherInnerGrammar, `${req.body.address_type}`, {
             userAddress: req.body.user_address,
             userSignature: req.body.user_signature,
             gameInput: req.body.game_input,
-            millisecondTimestamp: req.body.timestamp
-          }
-        ));
+            millisecondTimestamp: req.body.timestamp,
+          })
+        );
         if (!valid) {
           res.status(400).json({
             success: false,

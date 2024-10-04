@@ -15,10 +15,14 @@ export default async function processDatum(
   const pool = cdeDatum.payload.pool;
 
   const scheduledBlockHeight = inPresync ? ENV.SM_START_BLOCKHEIGHT + 1 : cdeDatum.blockNumber;
-  const scheduledInputData = generateRawStmInput(BuiltinTransitions[ConfigPrimitiveType.CardanoDelegation].scheduledPrefix, prefix, {
-    address,
-    pool: pool,
-  });
+  const scheduledInputData = generateRawStmInput(
+    BuiltinTransitions[ConfigPrimitiveType.CardanoDelegation].scheduledPrefix,
+    prefix,
+    {
+      address,
+      pool: pool,
+    }
+  );
 
   const updateList: SQLUpdate[] = [
     createScheduledData(

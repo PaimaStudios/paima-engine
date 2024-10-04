@@ -4,11 +4,10 @@ import type { PaimaGameInteraction } from '@paima/utils';
 import type { NonTimerSubmittedData } from '@paima/chain-types';
 import { CryptoManager } from '@paima/crypto';
 import {
-  BatchedSubunit,
   BuiltinGrammarPrefix,
   createMessageForBatcher,
   extractBatches,
-  ExtractedBatchSubunit,
+  type ExtractedBatchSubunit,
   usesPrefix,
 } from '@paima/concise';
 import { hexToString } from 'viem';
@@ -54,7 +53,7 @@ async function eventMapper(
       },
     },
     e.blockNumber,
-    blockTimestamp,
+    blockTimestamp
   );
 }
 
@@ -74,7 +73,7 @@ function decodeEventData(eventData: `0x${string}`): string {
 export async function processDataUnit(
   unit: NonTimerSubmittedData,
   blockHeight: number,
-  blockTimestamp: number,
+  blockTimestamp: number
 ): Promise<SubmittedData[]> {
   try {
     if (!usesPrefix(unit.inputData, BuiltinGrammarPrefix.batcherInput)) {
@@ -125,7 +124,11 @@ async function processBatchedSubunit(
 
   const validated = signatureValidated && timestampValidated;
 
-  const inputNonce = createBatchNonce(input.parsed.millisecondTimestamp, input.parsed.userAddress, input.raw);
+  const inputNonce = createBatchNonce(
+    input.parsed.millisecondTimestamp,
+    input.parsed.userAddress,
+    input.raw
+  );
 
   return {
     inputData: input.raw,

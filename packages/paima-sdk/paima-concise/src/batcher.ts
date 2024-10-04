@@ -1,7 +1,16 @@
 import type { AddressType, UserSignature } from '@paima/utils';
 import type { WalletAddress, InputDataString } from '@paima/chain-types';
 import { keccak_256 } from 'js-sha3';
-import { BatcherInnerGrammar, BuiltinGrammar, BuiltinGrammarPrefix, generateStmInput, KeyedBuiltinBatcherInnerGrammar, KeyedBuiltinGrammar, parseRawStmInput, parseStmInput } from './v2';
+import {
+  BatcherInnerGrammar,
+  BuiltinGrammar,
+  BuiltinGrammarPrefix,
+  generateStmInput,
+  KeyedBuiltinBatcherInnerGrammar,
+  KeyedBuiltinGrammar,
+  parseRawStmInput,
+  parseStmInput,
+} from './v2/index.js';
 
 export interface BatchedSubunit {
   addressType: AddressType;
@@ -55,7 +64,7 @@ export function buildBatchData(
 
     const packedString = JSON.stringify(packed);
     batchedTransaction.push(packedString);
-    remainingSpace -= JSON.stringify(packed).length - '[""]'.length - ','.length
+    remainingSpace -= JSON.stringify(packed).length - '[""]'.length - ','.length;
     selectedInputs.push(input);
   }
 
@@ -64,16 +73,22 @@ export function buildBatchData(
     return { selectedInputs, data: '' };
   }
 
-  const batchedData = generateStmInput(BuiltinGrammar, BuiltinGrammarPrefix.batcherInput, { input: batchedTransaction });
+  const batchedData = generateStmInput(BuiltinGrammar, BuiltinGrammarPrefix.batcherInput, {
+    input: batchedTransaction,
+  });
   return { selectedInputs, data: JSON.stringify(batchedData) };
 }
 
 export type ExtractedBatchSubunit = {
-  parsed: BatchedSubunit,
-  raw: string,
-}
+  parsed: BatchedSubunit;
+  raw: string;
+};
 export function extractBatches(inputData: string): ExtractedBatchSubunit[] {
-  const parsed = parseStmInput<typeof BuiltinGrammar, typeof BuiltinGrammarPrefix.batcherInput>(inputData, BuiltinGrammar, KeyedBuiltinGrammar);
+  const parsed = parseStmInput<typeof BuiltinGrammar, typeof BuiltinGrammarPrefix.batcherInput>(
+    inputData,
+    BuiltinGrammar,
+    KeyedBuiltinGrammar
+  );
   const result: ExtractedBatchSubunit[] = [];
   for (const input of parsed.data.input) {
     try {
@@ -81,7 +96,7 @@ export function extractBatches(inputData: string): ExtractedBatchSubunit[] {
       const parsed = {
         ...subunit.data,
         addressType: Number.parseInt(subunit.prefix),
-      }
+      };
       result.push({ raw: input, parsed });
     } catch (_e) {} // ignore malformed inputs
   }

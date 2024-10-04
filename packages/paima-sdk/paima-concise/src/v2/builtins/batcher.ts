@@ -1,5 +1,5 @@
 import { Type } from '@sinclair/typebox';
-import { GrammarDefinition } from '../types.js';
+import type { GrammarDefinition } from '../types.js';
 import { toKeyedJsonGrammar } from '../grammar.js';
 import { AddressType } from '@paima/utils';
 
@@ -17,7 +17,7 @@ export const BatcherInnerCommon = [
 export const BatcherInnerGrammar = {
   [`${AddressType.EVM}`]: BatcherInnerCommon,
   [`${AddressType.CARDANO}`]: BatcherInnerCommon,
-  [`${AddressType.POLKADOT}`]: BatcherInnerCommon,  
+  [`${AddressType.POLKADOT}`]: BatcherInnerCommon,
   [`${AddressType.ALGORAND}`]: BatcherInnerCommon,
   [`${AddressType.MINA}`]: BatcherInnerCommon,
 } as const satisfies GrammarDefinition;

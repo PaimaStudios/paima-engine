@@ -30,10 +30,12 @@ export type FunnelConfigHolder<Network, Funnel extends FunnelConfig> = {
 };
 
 export class ConfigBuilder<
+  /* eslint-disable @typescript-eslint/ban-types */
   const Networks extends Record<string, NetworkConfig> = {},
   const DeployedAddresses extends Partial<Record<keyof Networks, DeployedAddressConfig>> = {},
   const Funnels extends Record<string, FunnelInfo<keyof Networks, FunnelConfig>> = {},
   const Primitives extends Record<string, PrimitiveInfo<keyof Funnels, PrimitiveConfig>> = {},
+  /* eslint-enable @typescript-eslint/ban-types */
 > {
   networks: Networks = {} as Networks;
   deployedAddresses: DeployedAddresses = {} as DeployedAddresses;

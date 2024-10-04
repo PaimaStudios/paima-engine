@@ -21,24 +21,30 @@ export default async function processDatum(
 
   const updateList: SQLUpdate[] = [];
   if (prefix != null) {
-    const scheduledInputData = generateRawStmInput(BuiltinTransitions[ConfigPrimitiveType.CardanoTransfer].scheduledPrefix, prefix, {
-      txId,
-      metadata,
-      inputCredentials,
-      outputs,
-    });
-    updateList.push(createScheduledData(
-      JSON.stringify(scheduledInputData),
-      { blockHeight: scheduledBlockHeight },
+    const scheduledInputData = generateRawStmInput(
+      BuiltinTransitions[ConfigPrimitiveType.CardanoTransfer].scheduledPrefix,
+      prefix,
       {
-        cdeName: cdeDatum.cdeName,
-        txHash: cdeDatum.transactionHash,
-        caip2: cdeDatum.caip2,
-        // TODO: this could either be inputCredentials.join(), a built-in precompile or a metadata standard
-        fromAddress: SCHEDULED_DATA_ADDRESS,
-        contractAddress: undefined,
+        txId,
+        metadata,
+        inputCredentials,
+        outputs,
       }
-    ));
+    );
+    updateList.push(
+      createScheduledData(
+        JSON.stringify(scheduledInputData),
+        { blockHeight: scheduledBlockHeight },
+        {
+          cdeName: cdeDatum.cdeName,
+          txHash: cdeDatum.transactionHash,
+          caip2: cdeDatum.caip2,
+          // TODO: this could either be inputCredentials.join(), a built-in precompile or a metadata standard
+          fromAddress: SCHEDULED_DATA_ADDRESS,
+          contractAddress: undefined,
+        }
+      )
+    );
   }
 
   updateList.push([

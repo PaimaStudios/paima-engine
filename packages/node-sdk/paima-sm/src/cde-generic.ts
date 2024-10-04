@@ -21,9 +21,13 @@ export default async function processDatum(
   const scheduledBlockHeight = inPresync ? ENV.SM_START_BLOCKHEIGHT + 1 : cdeDatum.blockNumber;
 
   const stringifiedPayload = JSON.stringify(payload);
-  const scheduledInputData = generateRawStmInput(BuiltinTransitions[ConfigPrimitiveType.Generic].scheduledPrefix, prefix, {
-    payload: stringifiedPayload,
-  });
+  const scheduledInputData = generateRawStmInput(
+    BuiltinTransitions[ConfigPrimitiveType.Generic].scheduledPrefix,
+    prefix,
+    {
+      payload: stringifiedPayload,
+    }
+  );
 
   const updateList: SQLUpdate[] = [
     createScheduledData(

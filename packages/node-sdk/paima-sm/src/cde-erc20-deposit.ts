@@ -32,10 +32,14 @@ export default async function processErc20Datum(
 
   const updateList: SQLUpdate[] = [];
   try {
-    const scheduledInputData = generateRawStmInput(BuiltinTransitions[ConfigPrimitiveType.ERC20Deposit].scheduledPrefix, prefix, {
-      fromAddr,
-      value,
-    });
+    const scheduledInputData = generateRawStmInput(
+      BuiltinTransitions[ConfigPrimitiveType.ERC20Deposit].scheduledPrefix,
+      prefix,
+      {
+        fromAddr,
+        value,
+      }
+    );
     const scheduledBlockHeight = inPresync ? ENV.SM_START_BLOCKHEIGHT + 1 : cdeDatum.blockNumber;
     updateList.push(
       createScheduledData(

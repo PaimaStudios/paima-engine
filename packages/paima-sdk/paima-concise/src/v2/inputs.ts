@@ -1,15 +1,27 @@
 import { Value } from '@sinclair/typebox/value';
 import type { StaticDecode, TSchema } from '@sinclair/typebox';
-import { CommandTuple, CommandTuples, GrammarDefinition, ParamToData, ParseInputResult } from './types.js';
+import {
+  CommandTuple,
+  CommandTuples,
+  GrammarDefinition,
+  ParamToData,
+  ParseInputResult,
+} from './types.js';
 
-export function parseStmInput<Grammar extends GrammarDefinition, Prefix extends keyof Grammar & string>(
+export function parseStmInput<
+  Grammar extends GrammarDefinition,
+  Prefix extends keyof Grammar & string,
+>(
   inputData: string,
   grammarDefinition: Grammar,
   keyedJsonGrammar: CommandTuples<Grammar>
 ): ParseInputResult<Grammar, Prefix> {
   return parseRawStmInput(JSON.parse(inputData), grammarDefinition, keyedJsonGrammar);
 }
-export function parseRawStmInput<Grammar extends GrammarDefinition, Prefix extends keyof Grammar & string>(
+export function parseRawStmInput<
+  Grammar extends GrammarDefinition,
+  Prefix extends keyof Grammar & string,
+>(
   parsedData: any,
   grammarDefinition: Grammar,
   keyedJsonGrammar: CommandTuples<Grammar>
@@ -29,19 +41,25 @@ export function parseRawStmInput<Grammar extends GrammarDefinition, Prefix exten
   }
   const parsedInput = Value.Parse(keyedJsonGrammar[prefix], parsedData);
 
-  const parsedInputObj = grammarDefinition[prefix].reduce((acc, [key], idx) => {
-    acc[key] = parsedInput[idx + 1];
-    return acc;
-  }, {} as Record<string, any>);
+  const parsedInputObj = grammarDefinition[prefix].reduce(
+    (acc, [key], idx) => {
+      acc[key] = parsedInput[idx + 1];
+      return acc;
+    },
+    {} as Record<string, any>
+  );
 
   return {
     prefix: prefix,
     grammar: keyedJsonGrammar[prefix],
-    data: parsedInputObj
+    data: parsedInputObj,
   } as any; // typescript can't infer this
 }
 
-export function generateStmInput<Grammar extends GrammarDefinition, Prefix extends keyof Grammar & string>(
+export function generateStmInput<
+  Grammar extends GrammarDefinition,
+  Prefix extends keyof Grammar & string,
+>(
   grammar: Grammar,
   prefix: Prefix,
   data: ParamToData<Grammar[Prefix]>
@@ -50,7 +68,10 @@ export function generateStmInput<Grammar extends GrammarDefinition, Prefix exten
   return tuple as any;
 }
 
-export function generateRawStmInput<GrammarEntry extends readonly Readonly<[string, TSchema]>[], Prefix extends string>(
+export function generateRawStmInput<
+  GrammarEntry extends readonly Readonly<[string, TSchema]>[],
+  Prefix extends string,
+>(
   grammar: GrammarEntry,
   prefix: Prefix,
   data: ParamToData<GrammarEntry>
