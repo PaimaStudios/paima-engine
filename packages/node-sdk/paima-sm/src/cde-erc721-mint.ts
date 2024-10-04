@@ -3,6 +3,7 @@ import type { CdeErc721MintDatum } from './types.js';
 import { createScheduledData } from '@paima/db';
 import type { SQLUpdate } from '@paima/db';
 import { BuiltinTransitions, generateRawStmInput } from '@paima/concise';
+import { ConfigPrimitiveType } from '@paima/config';
 
 export default async function processErc721Datum(
   cdeDatum: CdeErc721MintDatum,
@@ -14,7 +15,7 @@ export default async function processErc721Datum(
   }
   const { tokenId, mintData } = cdeDatum.payload;
   const scheduledBlockHeight = inPresync ? ENV.SM_START_BLOCKHEIGHT + 1 : cdeDatum.blockNumber;
-  const scheduledInputData = generateRawStmInput(BuiltinTransitions.ChainDataExtensionErc721Config.Mint, prefix, {
+  const scheduledInputData = generateRawStmInput(BuiltinTransitions[ConfigPrimitiveType.ERC721].scheduledPrefix, prefix, {
     address,
     tokenId,
     mintData,

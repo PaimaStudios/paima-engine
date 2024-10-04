@@ -7,6 +7,7 @@ import {
 } from '@paima/db';
 import type { SQLUpdate } from '@paima/db';
 import { BuiltinTransitions, generateRawStmInput } from '@paima/concise';
+import { ConfigPrimitiveType } from '@paima/config';
 
 export default async function processDatum(
   cdeDatum: CdeCardanoProjectedNFTDatum,
@@ -30,7 +31,7 @@ export default async function processDatum(
 
   const updateList: SQLUpdate[] = [];
   if (prefix != null) {
-    const scheduledInputData = generateRawStmInput(BuiltinTransitions.ChainDataExtensionCardanoProjectedNFTConfig, prefix, {
+    const scheduledInputData = generateRawStmInput(BuiltinTransitions[ConfigPrimitiveType.CardanoProjectedNFT].scheduledPrefix, prefix, {
       ownerAddress,
       previousTxHash,
       previousOutputIndex,

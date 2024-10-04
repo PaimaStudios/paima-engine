@@ -3,6 +3,7 @@ import { createScheduledData, cdeCardanoTransferInsert } from '@paima/db';
 import type { SQLUpdate } from '@paima/db';
 import type { CdeCardanoTransferDatum } from './types.js';
 import { BuiltinTransitions, generateRawStmInput } from '@paima/concise';
+import { ConfigPrimitiveType } from '@paima/config';
 
 export default async function processDatum(
   cdeDatum: CdeCardanoTransferDatum,
@@ -20,7 +21,7 @@ export default async function processDatum(
 
   const updateList: SQLUpdate[] = [];
   if (prefix != null) {
-    const scheduledInputData = generateRawStmInput(BuiltinTransitions.ChainDataExtensionCardanoTransferConfig, prefix, {
+    const scheduledInputData = generateRawStmInput(BuiltinTransitions[ConfigPrimitiveType.CardanoTransfer].scheduledPrefix, prefix, {
       txId,
       metadata,
       inputCredentials,

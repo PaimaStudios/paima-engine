@@ -12,6 +12,7 @@ import {
 } from '@paima/db';
 import type { SQLUpdate } from '@paima/db';
 import { BuiltinTransitions, generateRawStmInput } from '@paima/concise';
+import { ConfigPrimitiveType } from '@paima/config';
 
 export default async function processErc721Datum(
   readonlyDBConn: PoolClient,
@@ -34,7 +35,7 @@ export default async function processErc721Datum(
     if (ownerRow.length > 0) {
       if (isBurn) {
         if (cdeDatum.burnScheduledPrefix) {
-          const scheduledInputData = generateRawStmInput(BuiltinTransitions.ChainDataExtensionErc721Config.Burn, cdeDatum.burnScheduledPrefix, {
+          const scheduledInputData = generateRawStmInput(BuiltinTransitions[ConfigPrimitiveType.ERC721].burnScheduledPrefix, cdeDatum.burnScheduledPrefix, {
             owner: ownerRow[0].nft_owner,
             tokenId,
           });

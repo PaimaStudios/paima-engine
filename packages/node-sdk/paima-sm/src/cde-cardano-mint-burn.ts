@@ -3,6 +3,7 @@ import { cdeCardanoMintBurnInsert, createScheduledData } from '@paima/db';
 import type { SQLUpdate } from '@paima/db';
 import type { CdeCardanoMintBurnDatum } from './types.js';
 import { BuiltinTransitions, generateRawStmInput } from '@paima/concise';
+import { ConfigPrimitiveType } from '@paima/config';
 
 export default async function processDatum(
   cdeDatum: CdeCardanoMintBurnDatum,
@@ -20,7 +21,7 @@ export default async function processDatum(
 
   const updateList: SQLUpdate[] = [];
   if (prefix != null) {
-    const scheduledInputData = generateRawStmInput(BuiltinTransitions.ChainDataExtensionCardanoMintBurnConfig, prefix, {
+    const scheduledInputData = generateRawStmInput(BuiltinTransitions[ConfigPrimitiveType.CardanoMintBurn].scheduledPrefix, prefix, {
       txId,
       metadata,
       assets,

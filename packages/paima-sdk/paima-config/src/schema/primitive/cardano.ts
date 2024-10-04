@@ -1,5 +1,4 @@
 import { Type } from '@sinclair/typebox';
-import type { Static } from '@sinclair/typebox';
 import { ConfigPrimitiveType } from './types.js';
 import { DisplayName, StartStopSlot } from './common.js';
 

@@ -1,13 +1,13 @@
 import { Type } from '@sinclair/typebox';
 import type { Static } from '@sinclair/typebox';
-import { EvmAddress } from '../utils.js';
 import { ConfigPrimitiveType } from './types.js';
 import { Abi } from 'abitype/zod';
 import { DisplayName, StartStopBlockheight } from './common.js';
+import { TypeboxHelpers } from '@paima/utils';
 
 export const ChainDataExtensionConfigBaseEvm = Type.Intersect([DisplayName, StartStopBlockheight]);
 
-const AbiType = Type.Transform(Type.String())
+export const AbiType = Type.Transform(Type.String())
   .Decode(value => Abi.parse(JSON.parse(value)))
   .Encode(value => JSON.stringify(value));
 
@@ -19,7 +19,7 @@ export const ChainDataExtensionErc20Config = Type.Intersect([
   ChainDataExtensionConfigBaseEvm,
   Type.Object({
     type: Type.Literal(ConfigPrimitiveType.ERC20),
-    contractAddress: EvmAddress,
+    contractAddress: TypeboxHelpers.EvmAddress,
   }),
 ]);
 
@@ -27,9 +27,9 @@ export const ChainDataExtensionErc20DepositConfig = Type.Intersect([
   ChainDataExtensionConfigBaseEvm,
   Type.Object({
     type: Type.Literal(ConfigPrimitiveType.ERC20Deposit),
-    contractAddress: EvmAddress,
+    contractAddress: TypeboxHelpers.EvmAddress,
     scheduledPrefix: Type.String(),
-    depositAddress: EvmAddress,
+    depositAddress: TypeboxHelpers.EvmAddress,
   }),
 ]);
 
@@ -41,7 +41,7 @@ export const ChainDataExtensionErc721Config = Type.Intersect([
   ChainDataExtensionConfigBaseEvm,
   Type.Object({
     type: Type.Literal(ConfigPrimitiveType.ERC721),
-    contractAddress: EvmAddress,
+    contractAddress: TypeboxHelpers.EvmAddress,
     scheduledPrefix: Type.String(),
     burnScheduledPrefix: Type.Optional(Type.String()),
   }),
@@ -56,7 +56,7 @@ export const ChainDataExtensionErc1155Config = Type.Intersect([
   ChainDataExtensionConfigBaseEvm,
   Type.Object({
     type: Type.Literal(ConfigPrimitiveType.ERC1155),
-    contractAddress: EvmAddress,
+    contractAddress: TypeboxHelpers.EvmAddress,
     scheduledPrefix: Type.Optional(Type.String()),
     burnScheduledPrefix: Type.Optional(Type.String()),
   }),
@@ -70,7 +70,7 @@ export const ChainDataExtensionGenericConfig = Type.Intersect([
   ChainDataExtensionConfigBaseEvm,
   Type.Object({
     type: Type.Literal(ConfigPrimitiveType.Generic),
-    contractAddress: EvmAddress,
+    contractAddress: TypeboxHelpers.EvmAddress,
     abi: AbiType,
     eventSignature: Type.String(),
     scheduledPrefix: Type.String(),
@@ -86,9 +86,9 @@ export const ChainDataExtensionErc6551RegistryConfig = Type.Intersect([
   ChainDataExtensionConfigBaseEvm,
   Type.Object({
     type: Type.Literal(ConfigPrimitiveType.ERC6551Registry),
-    contractAddress: Type.Optional(EvmAddress),
-    implementation: Type.Optional(EvmAddress),
-    tokenContract: Type.Optional(EvmAddress),
+    contractAddress: Type.Optional(TypeboxHelpers.EvmAddress),
+    implementation: Type.Optional(TypeboxHelpers.EvmAddress),
+    tokenContract: Type.Optional(TypeboxHelpers.EvmAddress),
     tokenId: Type.Optional(Type.String()), // uint256
     salt: Type.Optional(Type.String()), // uint256
   }),
@@ -102,7 +102,7 @@ export const ChainDataExtensionDynamicEvmPrimitiveConfig = Type.Intersect([
   ChainDataExtensionConfigBaseEvm,
   Type.Object({
     type: Type.Literal(ConfigPrimitiveType.DynamicEvmPrimitive),
-    contractAddress: EvmAddress,
+    contractAddress: TypeboxHelpers.EvmAddress,
     abi: AbiType,
     eventSignature: Type.String(),
     targetConfig: Type.Union([
