@@ -24,6 +24,7 @@ extensions:
     abiPath: './abis/MyCustomContract.json'
     eventSignature: 'MyEvent(address,uint256)'
     scheduledPrefix: 'cst'
+    abi: ''
 
   - displayName: 'ERC6551 Registration'
     type: 'erc6551-registry'
