@@ -70,7 +70,9 @@ import { keccak_256 } from 'js-sha3';
 import type { AppEvents, EventPathAndDef, ResolvedPath } from '@paima/events';
 import { PaimaEventManager } from '@paima/events';
 import { PaimaEventBroker } from '@paima/broker';
+import { INTERNAL_COMMAND_PREFIX } from '@paima/concise';
 
+export * from './PaimaSTM.js';
 export * from './types.js';
 export type * from './types.js';
 
@@ -227,8 +229,8 @@ const SM: GameStateMachineInitializer = {
           const gameStateTransition = gameStateTransitionRouter(blockHeight);
           const address = await getMainAddress(userAddress, dbTx);
 
-          const data = await gameStateTransition(
-            {
+          const data = await gameStateTransition({
+            rawInput: {
               realAddress: userAddress,
               userAddress: address.address,
               userId: address.id,
@@ -246,7 +248,7 @@ const SM: GameStateMachineInitializer = {
               },
               paimaTxHash: '',
             },
-            {
+            blockHeader: {
               blockHeight,
               msTimestamp: b.ms_timestamp.getTime(),
               version: 1,
@@ -254,9 +256,9 @@ const SM: GameStateMachineInitializer = {
               prevBlockHash:
                 b?.paima_block_hash == null ? null : b.paima_block_hash.toString('hex'),
             },
-            new Prando('1234567890'),
-            dbTx
-          );
+            randomnessGenerator: new Prando('1234567890'),
+            dbConn: dbTx,
+          });
           return data && data.stateTransitions.length > 0;
         };
         if (dbTxOrPool instanceof Pool) {
@@ -600,9 +602,9 @@ async function processScheduledData<Events extends AppEvents>(
       let sqlQueries: SQLUpdate[] = [];
       let eventsToEmit: EventsToEmit<Events[string][number]> = [];
       try {
-        const { stateTransitions, events } = await gameStateTransition(
-          inputData,
-          {
+        const { stateTransitions, events } = await gameStateTransition({
+          rawInput: inputData,
+          blockHeader: {
             version: 1,
             mainChainBlochHash: strip0x(latestChainData.blockHash),
             blockHeight: latestChainData.blockNumber,
@@ -610,8 +612,8 @@ async function processScheduledData<Events extends AppEvents>(
             msTimestamp: latestChainData.timestamp * 1000,
           },
           randomnessGenerator,
-          DBConn
-        );
+          dbConn: DBConn,
+        });
 
         sqlQueries = stateTransitions;
 
@@ -718,12 +720,8 @@ async function processUserInputs<Events extends AppEvents>(
     try {
       // Check if internal Concise Command
       // Internal Concise Commands are prefixed with an ampersand (&)
-      //
-      // delegate       = &wd|from?|to?|from_signature|to_signature
-      // migrate        = &wm|from?|to?|from_signature|to_signature
-      // cancelDelegate = &wc|to?
       const delegateWallet = new DelegateWallet(DBConn);
-      if (inputData.inputData.startsWith(DelegateWallet.INTERNAL_COMMAND_PREFIX)) {
+      if (inputData.inputData.startsWith(INTERNAL_COMMAND_PREFIX)) {
         const status = await delegateWallet.process(
           inputData.realAddress,
           inputData.userAddress,
@@ -741,9 +739,9 @@ async function processUserInputs<Events extends AppEvents>(
       let eventsToEmit: EventsToEmit<Events[string][number]> = [];
 
       try {
-        const { stateTransitions, events } = await gameStateTransition(
-          inputData,
-          {
+        const { stateTransitions, events } = await gameStateTransition({
+          rawInput: inputData,
+          blockHeader: {
             version: 1,
             mainChainBlochHash: strip0x(latestChainData.blockHash),
             prevBlockHash: prevBlockHash == null ? null : prevBlockHash.toString('hex'),
@@ -751,8 +749,8 @@ async function processUserInputs<Events extends AppEvents>(
             msTimestamp: latestChainData.timestamp * 1000,
           },
           randomnessGenerator,
-          DBConn
-        );
+          dbConn: DBConn,
+        });
 
         sqlQueries = stateTransitions;
 

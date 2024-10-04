@@ -1,10 +1,3 @@
-/*
- * delegate            =   &wd|from?|to?|from_signature|to_signature
- * migrate             =   &wm|from?|to?|from_signature|to_signature
- * cancelDelegations   =   &wc|to?
- */
-
-import { builder } from '@paima/concise';
 import { buildEndpointErrorFxn, PaimaMiddlewareErrorCode } from '../errors.js';
 import { awaitBlock } from '../helpers/auxiliary-queries.js';
 import { postConciseData } from '../helpers/posting.js';
@@ -18,10 +11,11 @@ import {
   WalletMode,
   MinaConnector,
 } from '@paima/providers';
-import { AddressType, ENV } from '@paima/utils';
+import { AddressType } from '@paima/utils';
 import type { FailedResult, SuccessfulResult } from '@paima/utils';
 import { paimaEndpoints } from '../index.js';
 import assertNever from 'assert-never';
+import { BuiltinGrammar, BuiltinGrammarPrefix, generateStmInput } from '@paima/concise';
 
 export async function walletConnect(
   from: string | null,
@@ -31,15 +25,14 @@ export async function walletConnect(
 ): Promise<SuccessfulResult<PostDataResponse> | FailedResult> {
   const errorFxn = buildEndpointErrorFxn('delegate-wallet');
 
-  // delegate = &wd|from?|to?|from_signature|to_signature
-  const conciseBuilder = builder.initialize();
-  conciseBuilder.setPrefix('&wd');
-  conciseBuilder.addValue({ value: from || '' });
-  conciseBuilder.addValue({ value: to || '' });
-  conciseBuilder.addValue({ value: from_signature });
-  conciseBuilder.addValue({ value: to_signature });
+  const input = generateStmInput(BuiltinGrammar, BuiltinGrammarPrefix.delegateWallet, {
+    from,
+    to,
+    from_signature,
+    to_signature,
+  });
   try {
-    const result = await postConciseData(conciseBuilder.build(), errorFxn);
+    const result = await postConciseData(JSON.stringify(input), errorFxn);
     if (!result.success) {
       return errorFxn(PaimaMiddlewareErrorCode.ERROR_POSTING_TO_CHAIN);
     }
@@ -59,15 +52,14 @@ export async function walletConnectMigrate(
 ): Promise<SuccessfulResult<PostDataResponse> | FailedResult> {
   const errorFxn = buildEndpointErrorFxn('delegate-wallet-migrate');
 
-  // migrate = &wm|from?|to?|from_signature|to_signature
-  const conciseBuilder = builder.initialize();
-  conciseBuilder.setPrefix('&wm');
-  conciseBuilder.addValue({ value: from || '' });
-  conciseBuilder.addValue({ value: to || '' });
-  conciseBuilder.addValue({ value: from_signature });
-  conciseBuilder.addValue({ value: to_signature });
+  const input = generateStmInput(BuiltinGrammar, BuiltinGrammarPrefix.migrateWallet, {
+    from,
+    to,
+    from_signature,
+    to_signature,
+  });
   try {
-    const result = await postConciseData(conciseBuilder.build(), errorFxn);
+    const result = await postConciseData(JSON.stringify(input), errorFxn);
     if (!result.success) {
       return errorFxn(PaimaMiddlewareErrorCode.ERROR_POSTING_TO_CHAIN);
     }
@@ -84,12 +76,11 @@ export async function walletConnectCancelDelegations(
 ): Promise<SuccessfulResult<PostDataResponse> | FailedResult> {
   const errorFxn = buildEndpointErrorFxn('delegate-wallet-cancel');
 
-  // walletConnect = &wc|to?
-  const conciseBuilder = builder.initialize();
-  conciseBuilder.setPrefix('&wc');
-  conciseBuilder.addValue({ value: to ?? '' });
+  const input = generateStmInput(BuiltinGrammar, BuiltinGrammarPrefix.cancelDelegations, {
+    to,
+  });
   try {
-    const result = await postConciseData(conciseBuilder.build(), errorFxn);
+    const result = await postConciseData(JSON.stringify(input), errorFxn);
     if (!result.success) {
       return errorFxn(PaimaMiddlewareErrorCode.ERROR_POSTING_TO_CHAIN);
     }
@@ -166,8 +157,6 @@ export class WalletConnectHelper {
       case AddressType.MINA:
         loginInfo = { mode: WalletMode.Mina };
         break;
-      case AddressType.UNKNOWN:
-        throw new Error('AddressTypes cannot be Unknown.');
       default:
         assertNever(walletType);
     }

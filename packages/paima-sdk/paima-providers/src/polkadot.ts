@@ -12,7 +12,7 @@ import type {
 import { optionToActive } from './IProvider.js';
 import { ProviderApiError, ProviderNotInitialized, WalletNotFound } from './errors.js';
 import type { InjectedExtension, InjectedWindowProvider } from '@polkadot/extension-inject/types';
-import { utf8ToHex } from 'web3-utils';
+import { stringToHex } from 'viem';
 import { getWindow } from './window.js';
 
 export type PolkadotAddress = string;
@@ -149,7 +149,7 @@ export class PolkadotProvider implements IProvider<PolkadotApi> {
         `[polkadot] extension ${this.conn.metadata.name} does not support signRaw`
       );
     }
-    const hexMessage = utf8ToHex(message);
+    const hexMessage = stringToHex(message);
     const { signature } = await this.conn.api.signer.signRaw({
       address: this.getAddress().address,
       data: hexMessage,

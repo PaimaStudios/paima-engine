@@ -167,7 +167,7 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
         throw new Error("Couldn't get main network timestamp at known block height");
       }
 
-      lastTimestamp = lastTimestamp.timestamp as number;
+      lastTimestamp = lastTimestamp.timestamp;
     }
 
     const caip2 = caip2PrefixFor(this.chainInfo.config);
@@ -460,7 +460,7 @@ export class CarpFunnel extends BaseFunnel implements ChainFunnel {
       newEntry.updateStartingSlot(
         timestampToAbsoluteSlot(
           shelleyEra(chainInfo.config),
-          (await sharedData.mainNetworkApi.getBlock(startingBlockHeight))!.timestamp as number,
+          (await sharedData.mainNetworkApi.getBlock(startingBlockHeight))!.timestamp,
           confirmationDepth
         )
       );

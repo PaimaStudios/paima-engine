@@ -1,10 +1,6 @@
 import type { Static, TComposite, TIntersect, TObject, TPartial, TSchema } from '@sinclair/typebox';
 import { Type } from '@sinclair/typebox';
 
-export const EvmAddress = Type.Transform(Type.RegExp('0x[0-9a-fA-F]{40}'))
-  .Decode(value => value.toLowerCase())
-  .Encode(value => value);
-
 type ObjectLike = TComposite<TObject[]>;
 
 export type ConfigProperties<Required extends ObjectLike, Optional extends ObjectLike> = {

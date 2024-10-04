@@ -1,7 +1,7 @@
 import Web3 from 'web3';
-import type { AbiItem } from 'web3-utils';
+import type { AbiItem } from 'viem';
 import type { Contract, EventData } from 'web3-eth-contract';
-import { isAddress } from 'web3-utils';
+import { isAddress } from 'viem';
 
 import type * as Contracts from './contract-types/index.js';
 
@@ -74,7 +74,8 @@ export function getAbiContract(address: string, abi: AbiItem[], web3?: Web3): Co
   if (web3 === undefined) {
     web3 = new Web3();
   }
-  return new web3.eth.Contract(abi, address);
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+  return new web3.eth.Contract(abi as any, address);
 }
 
 export function getPaimaL2Contract(address: string, web3?: Web3): Contracts.PaimaL2Contract {

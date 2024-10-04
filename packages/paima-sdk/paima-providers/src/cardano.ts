@@ -1,5 +1,5 @@
 import { AddressType, hexStringToUint8Array, type UserSignature } from '@paima/utils';
-import { utf8ToHex } from 'web3-utils';
+import { stringToHex } from 'viem';
 import { optionToActive } from './IProvider.js';
 import type {
   ActiveConnection,
@@ -167,7 +167,7 @@ export class CardanoProvider implements IProvider<CardanoApi> {
     };
   };
   signMessage = async (message: string): Promise<UserSignature> => {
-    const hexMessage = utf8ToHex(message).slice(2);
+    const hexMessage = stringToHex(message).slice(2);
     const address = this.conn.metadata.name === 'nami' ? this.address.hex : this.address.bech32;
     const { signature, key } = await this.conn.api.signData(address, hexMessage);
     return `${signature}+${key}`;

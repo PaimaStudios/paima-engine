@@ -2,6 +2,8 @@ import { ENV } from '@paima/utils';
 import type { CdeMidnightContractStateDatum } from './types.js';
 import { createScheduledData } from '@paima/db';
 import type { SQLUpdate } from '@paima/db';
+import { BuiltinTransitions, generateRawStmInput } from '@paima/concise';
+import { ConfigPrimitiveType } from '@paima/config';
 
 export default async function processMidnightContractStateDatum(
   cdeDatum: CdeMidnightContractStateDatum,
@@ -11,10 +13,16 @@ export default async function processMidnightContractStateDatum(
   const updateList: SQLUpdate[] = [];
 
   const scheduledBlockHeight = inPresync ? ENV.SM_START_BLOCKHEIGHT + 1 : blockNumber;
-  const scheduledInputData = [scheduledPrefix, payload].join('|');
+  const scheduledInputData = generateRawStmInput(
+    BuiltinTransitions[ConfigPrimitiveType.MidnightContractState].scheduledPrefix,
+    scheduledPrefix,
+    {
+      payload,
+    }
+  );
   updateList.push(
     createScheduledData(
-      scheduledInputData,
+      JSON.stringify(scheduledInputData),
       { blockHeight: scheduledBlockHeight },
       {
         cdeName: cdeDatum.cdeName,

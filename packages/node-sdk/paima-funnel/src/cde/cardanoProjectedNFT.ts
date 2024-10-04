@@ -85,11 +85,10 @@ function eventToCdeDatum(
       ownerAddress: event.ownerAddress != null ? event.ownerAddress : '',
 
       actionTxId: event.txId,
-      actionOutputIndex: event.actionOutputIndex != null ? event.actionOutputIndex : undefined,
+      actionOutputIndex: event.actionOutputIndex,
 
-      previousTxHash: event.previousTxHash != null ? event.previousTxHash : undefined,
-      previousTxOutputIndex:
-        event.previousTxOutputIndex != null ? event.previousTxOutputIndex : undefined,
+      previousTxHash: event.previousTxHash,
+      previousTxOutputIndex: event.previousTxOutputIndex,
 
       policyId: event.policyId,
       assetName: event.assetName,

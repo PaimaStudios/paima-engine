@@ -73,8 +73,6 @@ export function addressTypeName(addressType: AddressType): string {
       return 'Algorand';
     case AddressType.MINA:
       return 'Mina';
-    case AddressType.UNKNOWN:
-      return 'Unknown address type';
     default:
       assertNever(addressType, true);
       return 'Unknown address type';

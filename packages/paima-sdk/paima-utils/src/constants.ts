@@ -1,6 +1,4 @@
-export const enum AddressType {
-  // CAREFUL: changing these values is a backward incompatible change
-  UNKNOWN = 0,
+export enum AddressType {
   EVM = 1,
   CARDANO = 2,
   POLKADOT = 3,
@@ -10,7 +8,7 @@ export const enum AddressType {
 
 export const DEFAULT_FUNNEL_TIMEOUT = 5000;
 
-export const enum ChainDataExtensionType {
+export enum ChainDataExtensionType {
   // CAREFUL: changing these values is a backward incompatible change
   UNKNOWN = 0,
   ERC20 = 1,
@@ -31,7 +29,7 @@ export const enum ChainDataExtensionType {
   MidnightContractState = 16,
 }
 
-export const enum ChainDataExtensionDatumType {
+export enum ChainDataExtensionDatumType {
   ERC20Transfer,
   ERC20Deposit,
   ERC721Mint,
@@ -52,7 +50,7 @@ export const enum ChainDataExtensionDatumType {
 
 export const FUNNEL_PRESYNC_FINISHED = 'finished';
 
-export const enum InternalEventType {
+export enum InternalEventType {
   CardanoBestEpoch,
   EvmLastBlock,
   MinaLastTimestamp,

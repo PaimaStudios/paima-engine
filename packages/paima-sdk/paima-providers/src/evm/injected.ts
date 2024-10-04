@@ -9,7 +9,7 @@ import type {
   AddressAndType,
 } from '../IProvider.js';
 import { optionToActive } from '../IProvider.js';
-import { utf8ToHex } from 'web3-utils';
+import { stringToHex } from 'viem';
 import { ProviderApiError, ProviderNotInitialized, WalletNotFound } from '../errors.js';
 import type { EvmAddress } from './types.js';
 import { AddressType } from '@paima/utils';
@@ -270,7 +270,7 @@ export class EvmInjectedProvider implements IProvider<EvmApi> {
     };
   };
   signMessage = async (message: string): Promise<UserSignature> => {
-    const hexMessage = utf8ToHex(message);
+    const hexMessage = stringToHex(message);
     const signature = await this.conn.api.request({
       method: 'personal_sign',
       params: [hexMessage, this.getAddress().address, ''],

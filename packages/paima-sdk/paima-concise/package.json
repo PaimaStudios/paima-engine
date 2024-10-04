@@ -24,8 +24,7 @@
     "build": "tsc --build tsconfig.build.json"
   },
   "dependencies": {
-    "ebnf": "^1.9.0",
-    "web3-utils": "1.10.0"
+    "ebnf": "^1.9.0"
   },
   "devDependencies": {
     "@types/node": "^20.11.0",

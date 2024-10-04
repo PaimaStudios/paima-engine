@@ -9,6 +9,8 @@ import {
   cdeErc20DepositInsertTotalDeposited,
   cdeErc20DepositUpdateTotalDeposited,
 } from '@paima/db';
+import { BuiltinTransitions, generateRawStmInput } from '@paima/concise';
+import { ConfigPrimitiveType } from '@paima/config';
 
 export default async function processErc20Datum(
   readonlyDBConn: PoolClient,
@@ -30,11 +32,18 @@ export default async function processErc20Datum(
 
   const updateList: SQLUpdate[] = [];
   try {
-    const scheduledInputData = `${prefix}|${fromAddr}|${value}`;
+    const scheduledInputData = generateRawStmInput(
+      BuiltinTransitions[ConfigPrimitiveType.ERC20Deposit].scheduledPrefix,
+      prefix,
+      {
+        fromAddr,
+        value,
+      }
+    );
     const scheduledBlockHeight = inPresync ? ENV.SM_START_BLOCKHEIGHT + 1 : cdeDatum.blockNumber;
     updateList.push(
       createScheduledData(
-        scheduledInputData,
+        JSON.stringify(scheduledInputData),
         { blockHeight: scheduledBlockHeight },
         {
           cdeName: cdeDatum.cdeName,

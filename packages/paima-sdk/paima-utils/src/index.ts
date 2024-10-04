@@ -26,7 +26,7 @@ import {
 import type { ErrorCode, ErrorMessageFxn, ErrorMessageMapping } from './types/index.js';
 
 export * from './config.js';
-export type * from './types/index.js';
+export * from './types/index.js';
 export * from './security/parse.js';
 export * from './constants.js';
 export * from './contracts.js';

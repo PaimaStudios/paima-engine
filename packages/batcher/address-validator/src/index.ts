@@ -76,8 +76,6 @@ class PaimaAddressValidator {
         return await CryptoManager.Algorand().verifyAddress(address);
       case AddressType.MINA:
         return await CryptoManager.Mina().verifyAddress(address);
-      case AddressType.UNKNOWN:
-        return false;
       default:
         assertNever(addressType, true);
         return false;
@@ -124,8 +122,6 @@ class PaimaAddressValidator {
             message,
             input.userSignature
           );
-        case AddressType.UNKNOWN:
-          return false;
         default:
           assertNever(addressType, true);
           return false;

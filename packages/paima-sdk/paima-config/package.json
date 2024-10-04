@@ -23,11 +23,10 @@
     "test": "vitest run",
     "build": "tsc --build tsconfig.build.json"
   },
-  "devDependencies": {
-  },
+  "devDependencies": {},
   "dependencies": {
     "@sinclair/typebox": "^0.33.7",
-    "abitype": "1.0.6",
+    "abitype": "^1.0.6",
     "viem": "^2.21.3",
     "zod": "3.23.8"
   }

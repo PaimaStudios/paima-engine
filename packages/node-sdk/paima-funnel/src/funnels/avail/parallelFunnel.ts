@@ -157,7 +157,7 @@ export class AvailParallelFunnel extends BaseFunnel implements ChainFunnel {
 
         const processed = await Promise.all(
           blockData.submittedData.map(unit =>
-            processDataUnit(unit, blockData.blockNumber, blockTimestamp, this.dbTx)
+            processDataUnit(unit, blockData.blockNumber, blockTimestamp)
           )
         );
 

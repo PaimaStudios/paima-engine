@@ -60,8 +60,8 @@ export const mainnetConfig = new ConfigBuilder()
 
 describe('config', () => {
   test('should work', () => {
-    expect(mainnetConfig.toJson()).toEqual({
-      network: {
+    expect(mainnetConfig.exportConfig()).toEqual({
+      networks: {
         Ethereum: {
           displayName: 'Ethereum',
           type: 'evm',

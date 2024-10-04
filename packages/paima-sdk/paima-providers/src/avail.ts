@@ -6,7 +6,7 @@ import type {
   UserSignature,
 } from './IProvider.js';
 import { ProviderNotInitialized } from './errors.js';
-import { utf8ToHex } from 'web3-utils';
+import { stringToHex } from 'viem';
 import { AddressType } from '@paima/utils';
 import type { PolkadotAddress } from '@paima/chain-types';
 import type { ApiPromise, Keyring } from 'avail-js-sdk';
@@ -74,7 +74,7 @@ export class AvailJsProvider implements IProvider<AvailJsApi> {
     };
   };
   signMessage = async (message: string): Promise<UserSignature> => {
-    const hexMessage = utf8ToHex(message);
+    const hexMessage = stringToHex(message);
     const buffer = Buffer.from(hexMessage.slice(2), 'hex');
     const signature = this.conn.api.keyring.getPairs()[0].sign(buffer);
     return u8aToHex(signature);

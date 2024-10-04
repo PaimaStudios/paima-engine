@@ -1,6 +1,5 @@
 import type { PoolClient } from 'pg';
 
-import { PaimaParser } from '@paima/concise';
 import { ENV, doLog } from '@paima/utils';
 import { CryptoManager } from '@paima/crypto';
 import type { IGetAddressFromAddressResult } from '@paima/db';
@@ -17,21 +16,17 @@ import {
   newDelegation,
   updateAddress,
 } from '@paima/db';
+import {
+  BuiltinGrammar,
+  BuiltinGrammarPrefix,
+  INTERNAL_COMMAND_PREFIX,
+  KeyedBuiltinGrammar,
+  parseStmInput,
+} from '@paima/concise';
 
 type AddressExists = { address: IGetAddressFromAddressResult; exists: true };
 type AddressDoesNotExist = { address: string; exists: false };
 type AddressWrapper = AddressExists | AddressDoesNotExist;
-
-type ParsedDelegateWalletCommand =
-  | {
-      command: 'delegate';
-      args: { from: string; to: string; from_signature: string; to_signature: string };
-    }
-  | {
-      command: 'migrate';
-      args: { from: string; to: string; from_signature: string; to_signature: string };
-    }
-  | { command: 'cancelDelegations'; args: { to: string } };
 
 // Delegate Wallet manages cache cleanup.
 enableManualCache();
@@ -39,38 +34,7 @@ enableManualCache();
 export class DelegateWallet {
   private static readonly DELEGATE_WALLET_PREFIX = 'DELEGATE-WALLET';
 
-  public static readonly INTERNAL_COMMAND_PREFIX = '&';
-
   private static readonly SEP = ':';
-
-  private static readonly delegationGrammar = `
-    delegate            =   &wd|from?|to?|from_signature|to_signature
-    migrate             =   &wm|from?|to?|from_signature|to_signature
-    cancelDelegations   =   &wc|to?
-    `;
-
-  private static readonly parserCommands = {
-    delegate: {
-      from: PaimaParser.OptionalParser('', PaimaParser.WalletAddress()),
-      to: PaimaParser.OptionalParser('', PaimaParser.WalletAddress()),
-      from_signature: PaimaParser.NCharsParser(0, 1024),
-      to_signature: PaimaParser.NCharsParser(0, 1024),
-    },
-    migrate: {
-      from: PaimaParser.OptionalParser('', PaimaParser.WalletAddress()),
-      to: PaimaParser.OptionalParser('', PaimaParser.WalletAddress()),
-      from_signature: PaimaParser.NCharsParser(0, 1024),
-      to_signature: PaimaParser.NCharsParser(0, 1024),
-    },
-    cancelDelegations: {
-      to: PaimaParser.OptionalParser('', PaimaParser.WalletAddress()),
-    },
-  };
-
-  private static parser = new PaimaParser(
-    DelegateWallet.delegationGrammar,
-    DelegateWallet.parserCommands
-  );
 
   constructor(private DBConn: PoolClient) {}
 
@@ -254,7 +218,7 @@ export class DelegateWallet {
   // Cancel Delegations.
   // if "to" is provided, delete delegations for "from" -> "to"
   // if "to" is not provided, delete all delegations for "from" -> *
-  private async cmdCancelDelegations(from: string, to: string): Promise<void> {
+  private async cmdCancelDelegations(from: string, to: null | string): Promise<void> {
     const [fromAddress] = await getAddressFromAddress.run({ address: from }, this.DBConn);
     if (!fromAddress) throw new Error('Invalid Address');
 
@@ -288,19 +252,17 @@ export class DelegateWallet {
     command: string
   ): Promise<boolean> {
     try {
-      if (!command.startsWith(DelegateWallet.INTERNAL_COMMAND_PREFIX)) {
+      if (!command.startsWith(INTERNAL_COMMAND_PREFIX)) {
         return true;
       }
-      const parsed: ParsedDelegateWalletCommand = DelegateWallet.parser.start(
-        command
-      ) as ParsedDelegateWalletCommand;
-      switch (parsed.command) {
-        case 'delegate': {
-          const from = parsed.args.from || realAddress;
-          const to = parsed.args.to || realAddress;
+      const parsedInput = parseStmInput(command, BuiltinGrammar, KeyedBuiltinGrammar);
+      switch (parsedInput.prefix) {
+        case BuiltinGrammarPrefix.delegateWallet: {
+          const from = parsedInput.data.from || realAddress;
+          const to = parsedInput.data.to || realAddress;
           this.validateSender(to, from, realAddress);
 
-          const { from_signature, to_signature } = parsed.args;
+          const { from_signature, to_signature } = parsedInput.data;
           await Promise.all([
             this.verifySignature(from, this.generateMessage(to), from_signature),
             this.verifySignature(to, this.generateMessage(from), to_signature),
@@ -309,12 +271,12 @@ export class DelegateWallet {
           doLog(`Delegate Wallet ${from.substring(0, 8)}... -> ${to.substring(0, 8)}...`);
           return true;
         }
-        case 'migrate': {
-          const from = parsed.args.from || realAddress;
-          const to = parsed.args.to || realAddress;
+        case BuiltinGrammarPrefix.migrateWallet: {
+          const from = parsedInput.data.from || realAddress;
+          const to = parsedInput.data.to || realAddress;
           this.validateSender(to, from, realAddress);
 
-          const { from_signature, to_signature } = parsed.args;
+          const { from_signature, to_signature } = parsedInput.data;
           await Promise.all([
             this.verifySignature(from, this.generateMessage(to), from_signature),
             this.verifySignature(to, this.generateMessage(from), to_signature),
@@ -324,9 +286,12 @@ export class DelegateWallet {
           doLog(`Migrate Wallet ${from.substring(0, 8)}... -> ${to.substring(0, 8)}...`);
           return true;
         }
-        case 'cancelDelegations': {
-          const { to } = parsed.args;
-          await this.cmdCancelDelegations(userAddress.toLocaleLowerCase(), to.toLocaleLowerCase());
+        case BuiltinGrammarPrefix.cancelDelegations: {
+          const { to } = parsedInput.data;
+          await this.cmdCancelDelegations(
+            userAddress.toLocaleLowerCase(),
+            to?.toLocaleLowerCase() ?? null
+          );
           doLog(
             `Cancel Delegate ${userAddress.substring(0, 8)}... -> ${to ? to.substring(0, 8) + '...' : '*'}`
           );
@@ -334,7 +299,7 @@ export class DelegateWallet {
         }
         default:
           throw new Error(
-            `Delegate Wallet Internal Error : ${JSON.stringify({ parsed, command })}`
+            `Delegate Wallet Internal Error : ${JSON.stringify({ parsed: parsedInput.data, command })}`
           );
       }
     } catch (e) {

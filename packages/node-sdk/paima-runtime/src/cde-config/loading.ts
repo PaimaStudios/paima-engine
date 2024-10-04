@@ -81,7 +81,7 @@ export async function loadChainDataExtensions(
     }
   }
 
-  let dynamicExtensions: { name: string; type: ConfigPrimitiveType }[];
+  let dynamicExtensions: { displayName: string; type: ConfigPrimitiveType }[];
 
   try {
     // note: this fails the first time, as db tables are not initialized yet. That's okay
@@ -91,10 +91,14 @@ export async function loadChainDataExtensions(
       checkOrError(
         undefined,
         Type.Object({
-          name: Type.String(),
+          displayName: Type.String(),
           type: Type.Enum(ConfigPrimitiveType),
         }),
-        { ...(ext.config as Record<string, unknown>), name: ext.cde_name, includeNameInInput: true }
+        {
+          ...(ext.config as Record<string, unknown>),
+          displayName: ext.cde_name,
+          includeNameInInput: true,
+        }
       )
     );
   } catch (err) {
@@ -119,7 +123,7 @@ const networkTagType = Type.Partial(Type.Object({ network: Type.String() }));
 // Validate the overall structure of the config file and extract the relevant data
 export function parseCdeConfigFile(
   configFileData: string,
-  extraExtensions: { name: string; type: ConfigPrimitiveType }[]
+  extraExtensions: { displayName: string; type: ConfigPrimitiveType }[]
 ): Static<typeof CdeConfig> {
   // Parse the YAML content into an object
   const configObject = YAML.parse(configFileData, { merge: true });
@@ -135,61 +139,61 @@ export function parseCdeConfigFile(
     switch (entry.type) {
       case ConfigPrimitiveType.ERC20:
         return checkOrError(
-          entry.name,
+          entry.displayName,
           Type.Intersect([ChainDataExtensionErc20Config, networkTagType]),
           entry
         );
       case ConfigPrimitiveType.ERC721:
         return checkOrError(
-          entry.name,
+          entry.displayName,
           Type.Intersect([ChainDataExtensionErc721Config, networkTagType]),
           entry
         );
       case ConfigPrimitiveType.ERC20Deposit:
         return checkOrError(
-          entry.name,
+          entry.displayName,
           Type.Intersect([ChainDataExtensionErc20DepositConfig, networkTagType]),
           entry
         );
       case ConfigPrimitiveType.Generic:
         return checkOrError(
-          entry.name,
+          entry.displayName,
           Type.Intersect([ChainDataExtensionGenericConfig, networkTagType]),
           entry
         );
       case ConfigPrimitiveType.ERC6551Registry:
         return checkOrError(
-          entry.name,
+          entry.displayName,
           Type.Intersect([ChainDataExtensionErc6551RegistryConfig, networkTagType]),
           entry
         );
       case ConfigPrimitiveType.DynamicEvmPrimitive:
         return checkOrError(
-          entry.name,
+          entry.displayName,
           Type.Intersect([ChainDataExtensionDynamicEvmPrimitiveConfig, networkTagType]),
           entry
         );
       case ConfigPrimitiveType.CardanoDelegation:
         return checkOrError(
-          entry.name,
+          entry.displayName,
           Type.Intersect([ChainDataExtensionCardanoDelegationConfig, networkTagType]),
           entry
         );
       case ConfigPrimitiveType.CardanoProjectedNFT:
         return checkOrError(
-          entry.name,
+          entry.displayName,
           Type.Intersect([ChainDataExtensionCardanoProjectedNFTConfig, networkTagType]),
           entry
         );
       case ConfigPrimitiveType.CardanoDelayedAsset:
         return checkOrError(
-          entry.name,
+          entry.displayName,
           Type.Intersect([ChainDataExtensionCardanoDelayedAssetConfig, networkTagType]),
           entry
         );
       case ConfigPrimitiveType.CardanoTransfer:
         return checkOrError(
-          entry.name,
+          entry.displayName,
           Type.Intersect([
             ChainDataExtensionCardanoTransferConfig,
             Type.Object({ network: Type.String() }),
@@ -198,7 +202,7 @@ export function parseCdeConfigFile(
         );
       case ConfigPrimitiveType.CardanoMintBurn:
         return checkOrError(
-          entry.name,
+          entry.displayName,
           Type.Intersect([
             ChainDataExtensionCardanoMintBurnConfig,
             Type.Object({ network: Type.String() }),
@@ -207,7 +211,7 @@ export function parseCdeConfigFile(
         );
       case ConfigPrimitiveType.ERC1155:
         return checkOrError(
-          entry.name,
+          entry.displayName,
           Type.Intersect([
             ChainDataExtensionErc1155Config,
             Type.Object({ network: Type.String() }),
@@ -216,19 +220,19 @@ export function parseCdeConfigFile(
         );
       case ConfigPrimitiveType.MinaEventGeneric:
         return checkOrError(
-          entry.name,
+          entry.displayName,
           Type.Intersect([ChainDataExtensionMinaEventGenericConfig, networkTagType]),
           entry
         );
       case ConfigPrimitiveType.MinaActionGeneric:
         return checkOrError(
-          entry.name,
+          entry.displayName,
           Type.Intersect([ChainDataExtensionMinaActionGenericConfig, networkTagType]),
           entry
         );
       case ConfigPrimitiveType.MidnightContractState:
         return checkOrError(
-          entry.name,
+          entry.displayName,
           Type.Intersect([
             ChainDataExtensionMidnightContractStateConfig,
             Type.Object({ network: Type.String() }),

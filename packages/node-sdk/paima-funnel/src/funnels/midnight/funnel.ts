@@ -21,12 +21,12 @@ import {
   InternalEventType,
   logError,
 } from '@paima/utils';
-import { Client, createClient, ExecutionResult } from 'graphql-ws';
-import { PoolClient } from 'pg';
+import { type Client, createClient, type ExecutionResult } from 'graphql-ws';
+import type { PoolClient } from 'pg';
 import { WebSocket } from 'ws';
-import { ChainInfo, composeChainData } from '../../utils.js';
+import { type ChainInfo, composeChainData } from '../../utils.js';
 import { BaseFunnel, type FunnelSharedData } from '../BaseFunnel.js';
-import { FunnelCacheEntry } from '../FunnelCache.js';
+import type { FunnelCacheEntry } from '../FunnelCache.js';
 
 // ----------------------------------------------------------------------------
 

@@ -2,6 +2,8 @@ import { ENV } from '@paima/utils';
 import { createScheduledData, cdeCardanoPoolInsertData, removeOldEntries } from '@paima/db';
 import type { SQLUpdate } from '@paima/db';
 import type { CdeCardanoPoolDatum } from './types.js';
+import { BuiltinTransitions, generateRawStmInput } from '@paima/concise';
+import { ConfigPrimitiveType } from '@paima/config';
 
 export default async function processDatum(
   cdeDatum: CdeCardanoPoolDatum,
@@ -13,11 +15,18 @@ export default async function processDatum(
   const pool = cdeDatum.payload.pool;
 
   const scheduledBlockHeight = inPresync ? ENV.SM_START_BLOCKHEIGHT + 1 : cdeDatum.blockNumber;
-  const scheduledInputData = `${prefix}|${address}|${pool}`;
+  const scheduledInputData = generateRawStmInput(
+    BuiltinTransitions[ConfigPrimitiveType.CardanoDelegation].scheduledPrefix,
+    prefix,
+    {
+      address,
+      pool: pool,
+    }
+  );
 
   const updateList: SQLUpdate[] = [
     createScheduledData(
-      scheduledInputData,
+      JSON.stringify(scheduledInputData),
       { blockHeight: scheduledBlockHeight },
       {
         cdeName: cdeDatum.cdeName,

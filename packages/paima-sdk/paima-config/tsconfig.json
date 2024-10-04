@@ -4,7 +4,13 @@
     "rootDir": ".",
     "noEmit": true,
   },
-  "include": ["test/**/*", "src/**/*"],
+  "include": [
+    "test/**/*",
+    "src/**/*"
+  ],
   "references": [
+    {
+      "path": "../paima-utils/tsconfig.build.json"
+    },
   ]
 }

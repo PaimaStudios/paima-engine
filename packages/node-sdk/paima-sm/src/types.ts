@@ -38,6 +38,7 @@ import {
   type ChainDataExtensionErc721Config,
   type ChainDataExtensionGenericConfig,
 } from '@paima/config';
+import type Prando from '@paima/prando';
 
 export interface ChainData {
   /** in seconds */
@@ -158,7 +159,7 @@ interface CdeDatumErc6551RegistryPayload {
 
 interface CdeDatumCardanoPoolPayload {
   address: string;
-  pool: string | undefined;
+  pool: string | null;
   epoch: number;
 }
 
@@ -166,10 +167,10 @@ interface CdeDatumCardanoProjectedNFTPayload {
   ownerAddress: string;
 
   actionTxId: string;
-  actionOutputIndex: number | undefined;
+  actionOutputIndex: number | null;
 
-  previousTxHash: string | undefined;
-  previousTxOutputIndex: number | undefined;
+  previousTxHash: string | null;
+  previousTxOutputIndex: number | null;
 
   policyId: string;
   assetName: string;
@@ -487,7 +488,7 @@ export const CdeConfig = Type.Object({
 export const CdeBaseConfig = Type.Object({
   extensions: Type.Array(
     Type.Object({
-      name: Type.String(),
+      displayName: Type.String(),
       type: Type.Enum(ConfigPrimitiveType),
     })
   ),
@@ -515,12 +516,13 @@ export type GameStateTransitionFunctionRouter<Events extends AppEvents> = (
   blockHeight: number
 ) => GameStateTransitionFunction<Events>;
 
-export type GameStateTransitionFunction<Events extends AppEvents> = (
-  inputData: STFSubmittedData,
-  blockHeader: PreExecutionBlockHeader,
-  randomnessGenerator: any,
-  DBConn: PoolClient
-) => Promise<{
+export type BaseStfInput = {
+  rawInput: STFSubmittedData;
+  blockHeader: PreExecutionBlockHeader;
+  randomnessGenerator: Prando;
+  dbConn: PoolClient;
+};
+export type BaseStfOutput<Events extends AppEvents> = {
   stateTransitions: SQLUpdate[];
   events: {
     address: `0x${string}`;
@@ -530,7 +532,11 @@ export type GameStateTransitionFunction<Events extends AppEvents> = (
       topic: string;
     };
   }[];
-}>;
+};
+
+export type GameStateTransitionFunction<Events extends AppEvents> = (
+  input: BaseStfInput
+) => Promise<BaseStfOutput<Events>>;
 
 export type Precompiles = { precompiles: { [name: string]: `0x${string}` } };
 

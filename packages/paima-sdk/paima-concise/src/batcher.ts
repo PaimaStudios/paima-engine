@@ -1,10 +1,16 @@
 import type { AddressType, UserSignature } from '@paima/utils';
 import type { WalletAddress, InputDataString } from '@paima/chain-types';
 import { keccak_256 } from 'js-sha3';
-
-export const OUTER_BATCH_DIVIDER: string = '\x02';
-export const INNER_BATCH_DIVIDER: string = '\x03';
-export const BATCH_PREFIX = 'B';
+import {
+  BatcherInnerGrammar,
+  BuiltinGrammar,
+  BuiltinGrammarPrefix,
+  generateStmInput,
+  KeyedBuiltinBatcherInnerGrammar,
+  KeyedBuiltinGrammar,
+  parseRawStmInput,
+  parseStmInput,
+} from './v2/index.js';
 
 export interface BatchedSubunit {
   addressType: AddressType;
@@ -34,16 +40,6 @@ export function hashBatchSubunit(input: BatchedSubunit): string {
   return '0x' + keccak_256(input.userAddress + input.gameInput + input.millisecondTimestamp);
 }
 
-export function packInput(input: BatchedSubunit): string {
-  return [
-    input.addressType.toString(10),
-    input.userAddress,
-    input.userSignature,
-    input.gameInput,
-    input.millisecondTimestamp,
-  ].join(INNER_BATCH_DIVIDER);
-}
-
 /**
  * Adds batches until maxSize is reached, or not batches are left
  * If a batch is empty, empty string is returned (not `B`)
@@ -57,39 +53,52 @@ export function buildBatchData(
   data: string;
 } {
   const selectedInputs: BatchedSubunit[] = [];
-  let batchedTransaction = BATCH_PREFIX;
-  let remainingSpace = maxSize - 1;
+  let batchedTransaction: string[] = [];
+  let remainingSpace = maxSize - `["${BuiltinGrammarPrefix.batcherInput}", []`.length;
 
   for (let input of inputs) {
-    const packed = packInput(input);
+    const packed = generateStmInput(BatcherInnerGrammar, `${input.addressType}`, input);
     if (packed.length + 1 > remainingSpace) {
       break;
     }
 
-    batchedTransaction += OUTER_BATCH_DIVIDER;
-    batchedTransaction += packed;
-    remainingSpace -= packed.length + 1;
+    const packedString = JSON.stringify(packed);
+    batchedTransaction.push(packedString);
+    remainingSpace -= JSON.stringify(packed).length - '[""]'.length - ','.length;
     selectedInputs.push(input);
   }
 
-  // don't want to return just the prefix if there is nothing in the batch
-  if (batchedTransaction === BATCH_PREFIX) {
+  // just skip if there is nothing in the batch
+  if (batchedTransaction.length === 0) {
     return { selectedInputs, data: '' };
   }
 
-  return { selectedInputs, data: batchedTransaction };
+  const batchedData = generateStmInput(BuiltinGrammar, BuiltinGrammarPrefix.batcherInput, {
+    input: batchedTransaction,
+  });
+  return { selectedInputs, data: JSON.stringify(batchedData) };
 }
 
-export function extractBatches(inputData: string): string[] {
-  const hasClosingDivider = inputData[inputData.length - 1] === OUTER_BATCH_DIVIDER;
-  const elems = inputData.split(OUTER_BATCH_DIVIDER);
-  const afterLastIndex = elems.length - (hasClosingDivider ? 1 : 0);
-
-  const prefix = elems[0];
-
-  if (prefix !== BATCH_PREFIX) {
-    return [];
+export type ExtractedBatchSubunit = {
+  parsed: BatchedSubunit;
+  raw: string;
+};
+export function extractBatches(inputData: string): ExtractedBatchSubunit[] {
+  const parsed = parseStmInput<typeof BuiltinGrammar, typeof BuiltinGrammarPrefix.batcherInput>(
+    inputData,
+    BuiltinGrammar,
+    KeyedBuiltinGrammar
+  );
+  const result: ExtractedBatchSubunit[] = [];
+  for (const input of parsed.data.input) {
+    try {
+      const subunit = parseRawStmInput(input, BatcherInnerGrammar, KeyedBuiltinBatcherInnerGrammar);
+      const parsed = {
+        ...subunit.data,
+        addressType: Number.parseInt(subunit.prefix),
+      };
+      result.push({ raw: input, parsed });
+    } catch (_e) {} // ignore malformed inputs
   }
-
-  return elems.slice(1, afterLastIndex);
+  return result;
 }
