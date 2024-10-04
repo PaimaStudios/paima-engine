@@ -2,7 +2,7 @@
 **/*.d.ts
 contract-types/
 packaged/
-packages/engine/paima-rest/src/tsoa/routes.ts
+packages/node-sdk/paima-rest/src/tsoa/routes.ts
 packages/contracts/evm-contracts/test-lib
 packages/contracts/evm-contracts/typechain-types
 **/dist
