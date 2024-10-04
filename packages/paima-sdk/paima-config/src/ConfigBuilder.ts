@@ -147,10 +147,10 @@ export class ConfigBuilder<
   };
 
   exportConfig(): {
-    networks: Networks,
-    deployedAddresses: DeployedAddresses,
-    funnels: Funnels,
-    primitives: Primitives
+    networks: Networks;
+    deployedAddresses: DeployedAddresses;
+    funnels: Funnels;
+    primitives: Primitives;
   } {
     return {
       networks: this.networks,

@@ -94,7 +94,11 @@ export async function loadChainDataExtensions(
           displayName: Type.String(),
           type: Type.Enum(ConfigPrimitiveType),
         }),
-        { ...(ext.config as Record<string, unknown>), displayName: ext.cde_name, includeNameInInput: true }
+        {
+          ...(ext.config as Record<string, unknown>),
+          displayName: ext.cde_name,
+          includeNameInInput: true,
+        }
       )
     );
   } catch (err) {
