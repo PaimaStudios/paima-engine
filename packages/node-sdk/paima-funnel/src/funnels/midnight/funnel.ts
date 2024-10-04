@@ -21,7 +21,7 @@ import {
   InternalEventType,
   logError,
 } from '@paima/utils';
-import { type Client, createClient, ExecutionResult } from 'graphql-ws';
+import { type Client, createClient, type ExecutionResult } from 'graphql-ws';
 import type { PoolClient } from 'pg';
 import { WebSocket } from 'ws';
 import { type ChainInfo, composeChainData } from '../../utils.js';

@@ -1,5 +1,5 @@
 import { Type } from '@sinclair/typebox';
-import { CommandTuples, FullJsonGrammar, GrammarDefinition } from './types.js';
+import type { CommandTuples, FullJsonGrammar, GrammarDefinition } from './types.js';
 
 export function toFullJsonGrammar<Grammar extends GrammarDefinition>(
   grammar: CommandTuples<Grammar>

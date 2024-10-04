@@ -28,7 +28,7 @@ describe('Generate grammar', () => {
   test('parse input', () => {
     const inputData = parseStmInput('["attack",1,2]', grammar, keyedJsonGrammar);
     expect(inputData.prefix).toStrictEqual('attack');
-    expect(inputData.grammar).toStrictEqual(keyedJsonGrammar['attack']);
+    expect(inputData.grammar).toStrictEqual(keyedJsonGrammar.attack);
     expect(inputData.data).toStrictEqual({ playerId: 1, moveId: 2 });
   });
 });

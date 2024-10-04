@@ -1,6 +1,6 @@
 import { Value } from '@sinclair/typebox/value';
 import type { StaticDecode, TSchema } from '@sinclair/typebox';
-import {
+import type {
   CommandTuple,
   CommandTuples,
   GrammarDefinition,
