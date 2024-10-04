@@ -48,7 +48,7 @@ export class ConfigBuilder<
     this.registerDeployedContracts.bind(this);
     this.addFunnel.bind(this);
     this.addPrimitive.bind(this);
-    this.toJson.bind(this);
+    this.exportConfig.bind(this);
   }
 
   addNetwork = <const Network extends NetworkConfig>(
@@ -146,12 +146,17 @@ export class ConfigBuilder<
     return this as any;
   };
 
-  toJson(): string {
-    return JSON.stringify({
-      network: this.networks,
+  exportConfig(): {
+    networks: Networks,
+    deployedAddresses: DeployedAddresses,
+    funnels: Funnels,
+    primitives: Primitives
+  } {
+    return {
+      networks: this.networks,
       deployedAddresses: this.deployedAddresses,
       funnels: this.funnels,
       primitives: this.primitives,
-    });
+    };
   }
 }

@@ -488,7 +488,7 @@ export const CdeConfig = Type.Object({
 export const CdeBaseConfig = Type.Object({
   extensions: Type.Array(
     Type.Object({
-      name: Type.String(),
+      displayName: Type.String(),
       type: Type.Enum(ConfigPrimitiveType),
     })
   ),
