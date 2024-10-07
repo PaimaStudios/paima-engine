@@ -30,23 +30,46 @@ export const mainnetConfig = new ConfigBuilder()
     chainCurrencySymbol: 'TEST',
     chainCurrencyDecimals: 18,
   })
-  .registerDeployedContracts(config => ({
-    network: config.networks.Ethereum,
-    deployments: deployedEvmAddresses,
-  }))
-  .addFunnel(config => ({
-    network: config.networks.Ethereum,
-    funnel: network => ({
+  .addNetwork({
+    displayName: 'Ethereum2',
+    type: ConfigNetworkType.EVM,
+    chainUri: 'http://localhost:8545',
+    chainId: 2,
+    chainCurrencyName: 'Test Hardhat Tokens',
+    chainCurrencySymbol: 'TEST',
+    chainCurrencyDecimals: 18,
+  })
+  .registerDeployedContracts({
+    network: config => config.networks.Ethereum,
+    deployments: (_config, _network) => deployedEvmAddresses,
+  })
+  .registerDeployedContracts({
+    network: config => config.networks.Ethereum2,
+    deployments: (_config, _network) => deployedEvmAddresses,
+  })
+  .addFunnel({
+    network: config => config.networks.Ethereum,
+    funnel: (config, network) => ({
       displayName: 'MainFunnel',
       type: ConfigFunnelType.EVM_MAIN,
       chainUri: network.chainUri,
       blockTime: 2,
       paimaL2ContractAddress: config.deployedAddresses[network.displayName]['PaimaL2Contract'],
     }),
-  }))
-  .addPrimitive(
-    config => config.funnels.MainFunnel,
-    (config, network, _funnel) => ({
+  })
+  .addFunnel({
+    network: config => config.networks.Ethereum2,
+    funnel: (config, network) => ({
+      displayName: 'MainFunnel2',
+      type: ConfigFunnelType.EVM_MAIN,
+      chainUri: network.chainUri,
+      blockTime: 2,
+      paimaL2ContractAddress: config.deployedAddresses[network.displayName]['PaimaL2Contract'],
+    }),
+  })
+  .addPrimitive({
+    funnel: config => config.funnels.MainFunnel,
+    primitive: (config, network, _funnel) => ({
       displayName: 'TransferEvent',
       type: ConfigPrimitiveType.Generic,
 
@@ -55,7 +78,19 @@ export const mainnetConfig = new ConfigBuilder()
       abi: erc20Abi,
       eventSignature: checkEventExists(erc20Abi, 'Transfer(address,address,uint256)'),
       scheduledPrefix: stfInputs.tokenTransfer,
-    })
+    })})
+    .addPrimitive({
+      funnel: config => config.funnels.MainFunnel2,
+      primitive: (config, network, _funnel) => ({
+        displayName: 'TransferEvent2',
+        type: ConfigPrimitiveType.Generic,
+  
+        startBlockHeight: 0,
+        contractAddress: config.deployedAddresses[network.displayName]['SomeFactory'],
+        abi: erc20Abi,
+        eventSignature: checkEventExists(erc20Abi, 'Transfer(address,address,uint256)'),
+        scheduledPrefix: stfInputs.tokenTransfer,
+      })}
   );
 
 describe('config', () => {
@@ -71,13 +106,35 @@ describe('config', () => {
           chainCurrencySymbol: 'TEST',
           chainCurrencyDecimals: 18,
         },
+        Ethereum2: {
+          displayName: 'Ethereum2',
+          type: 'evm',
+          chainUri: 'http://localhost:8545',
+          chainId: 2,
+          chainCurrencyName: 'Test Hardhat Tokens',
+          chainCurrencySymbol: 'TEST',
+          chainCurrencyDecimals: 18,
+        },
       },
-      deployedAddresses: { Ethereum: { PaimaL2Contract: '', SomeFactory: '' } },
+      deployedAddresses: {
+        Ethereum: { PaimaL2Contract: '', SomeFactory: '' },
+        Ethereum2: { PaimaL2Contract: '', SomeFactory: '' },
+      },
       funnels: {
         MainFunnel: {
           network: 'Ethereum',
           config: {
             displayName: 'MainFunnel',
+            type: 'evm-main',
+            chainUri: 'http://localhost:8545',
+            blockTime: 2,
+            paimaL2ContractAddress: '',
+          },
+        },
+        MainFunnel2: {
+          network: 'Ethereum2',
+          config: {
+            displayName: 'MainFunnel2',
             type: 'evm-main',
             chainUri: 'http://localhost:8545',
             blockTime: 2,
@@ -93,102 +150,19 @@ describe('config', () => {
             type: 'generic',
             startBlockHeight: 0,
             contractAddress: '',
-            abi: [
-              {
-                type: 'event',
-                name: 'Approval',
-                inputs: [
-                  { indexed: true, name: 'owner', type: 'address' },
-                  { indexed: true, name: 'spender', type: 'address' },
-                  { indexed: false, name: 'value', type: 'uint256' },
-                ],
-              },
-              {
-                type: 'event',
-                name: 'Transfer',
-                inputs: [
-                  { indexed: true, name: 'from', type: 'address' },
-                  { indexed: true, name: 'to', type: 'address' },
-                  { indexed: false, name: 'value', type: 'uint256' },
-                ],
-              },
-              {
-                type: 'function',
-                name: 'allowance',
-                stateMutability: 'view',
-                inputs: [
-                  { name: 'owner', type: 'address' },
-                  { name: 'spender', type: 'address' },
-                ],
-                outputs: [{ type: 'uint256' }],
-              },
-              {
-                type: 'function',
-                name: 'approve',
-                stateMutability: 'nonpayable',
-                inputs: [
-                  { name: 'spender', type: 'address' },
-                  { name: 'amount', type: 'uint256' },
-                ],
-                outputs: [{ type: 'bool' }],
-              },
-              {
-                type: 'function',
-                name: 'balanceOf',
-                stateMutability: 'view',
-                inputs: [{ name: 'account', type: 'address' }],
-                outputs: [{ type: 'uint256' }],
-              },
-              {
-                type: 'function',
-                name: 'decimals',
-                stateMutability: 'view',
-                inputs: [],
-                outputs: [{ type: 'uint8' }],
-              },
-              {
-                type: 'function',
-                name: 'name',
-                stateMutability: 'view',
-                inputs: [],
-                outputs: [{ type: 'string' }],
-              },
-              {
-                type: 'function',
-                name: 'symbol',
-                stateMutability: 'view',
-                inputs: [],
-                outputs: [{ type: 'string' }],
-              },
-              {
-                type: 'function',
-                name: 'totalSupply',
-                stateMutability: 'view',
-                inputs: [],
-                outputs: [{ type: 'uint256' }],
-              },
-              {
-                type: 'function',
-                name: 'transfer',
-                stateMutability: 'nonpayable',
-                inputs: [
-                  { name: 'recipient', type: 'address' },
-                  { name: 'amount', type: 'uint256' },
-                ],
-                outputs: [{ type: 'bool' }],
-              },
-              {
-                type: 'function',
-                name: 'transferFrom',
-                stateMutability: 'nonpayable',
-                inputs: [
-                  { name: 'sender', type: 'address' },
-                  { name: 'recipient', type: 'address' },
-                  { name: 'amount', type: 'uint256' },
-                ],
-                outputs: [{ type: 'bool' }],
-              },
-            ],
+            abi: erc20Abi,
+            eventSignature: 'Transfer(address,address,uint256)',
+            scheduledPrefix: 'mock',
+          },
+        },
+        TransferEvent2: {
+          funnel: 'MainFunnel2',
+          primitive: {
+            displayName: 'TransferEvent2',
+            type: 'generic',
+            startBlockHeight: 0,
+            contractAddress: '',
+            abi: erc20Abi,
             eventSignature: 'Transfer(address,address,uint256)',
             scheduledPrefix: 'mock',
           },

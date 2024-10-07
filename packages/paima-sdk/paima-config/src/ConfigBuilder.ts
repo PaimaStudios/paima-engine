@@ -9,26 +9,36 @@ import type { ConfigPrimitiveAll } from './schema/index.js';
 export type NetworkConfig = Static<ReturnType<typeof ConfigNetworkAll<false>>>;
 export type DeployedAddressConfig = Record<string, string>;
 export type FunnelConfig = Static<ReturnType<typeof ConfigFunnelAll<false>>>;
-export type FunnelInfo<Networks, Config extends FunnelConfig> = {
-  network: Networks;
+export type FunnelInfo<NetworkName, Config extends FunnelConfig> = {
+  network: NetworkName;
   config: Config;
 };
 export type PrimitiveConfig = StaticDecode<typeof ConfigPrimitiveAll>;
-export type PrimitiveInfo<Funnels, Config extends PrimitiveConfig> = {
-  funnel: Funnels;
+export type PrimitiveInfo<FunnelName, Config extends PrimitiveConfig> = {
+  funnel: FunnelName;
   primitive: Config;
 };
 
-export type DeployedAddressConfigHolder<Network, Deployments extends DeployedAddressConfig> = {
-  network: Network;
-  deployments: Deployments;
-};
-export type FunnelConfigHolder<Network, Funnel extends FunnelConfig> = {
-  network: Network;
-  // TODO: the valid funnels should depend on the network
-  funnel: (network: Network) => Funnel;
+export type DeployedAddressGenerator<ConfigBuilder, Network, Deployments extends DeployedAddressConfig> = {
+  network: (config: ConfigBuilder) => Network;
+  deployments: (config: ConfigBuilder, network: Network) => Deployments;
 };
 
+export type FunnelGenerator<ConfigBuilder, Network, Funnel extends FunnelConfig> = {
+  network: (config: ConfigBuilder) => Network;
+  // TODO: the valid funnels should depend on the network
+  funnel: (config: ConfigBuilder, network: Network) => Funnel;
+}
+
+export type PrimitiveGenerator<ConfigBuilder, Network extends NetworkConfig, Funnel extends FunnelInfo<Network['displayName'], FunnelConfig>, Primitive> = {
+  funnel: (config: ConfigBuilder) => Funnel,
+  // TODO: the valid primitives should depend on the network
+  primitive: (
+    config: ConfigBuilder,
+    network: Network,
+    funnel: Funnel['config']
+  ) => Primitive
+}
 export class ConfigBuilder<
   /* eslint-disable @typescript-eslint/ban-types */
   const Networks extends Record<string, NetworkConfig> = {},
@@ -70,30 +80,28 @@ export class ConfigBuilder<
     const Network extends Networks[keyof Networks],
     const Deployments extends Record<string, string>,
   >(
-    addAddresses: (config: this) => DeployedAddressConfigHolder<Network, Deployments>
+    generators: DeployedAddressGenerator<this, Network, Deployments>
   ): ConfigBuilder<
     Networks,
     DeployedAddresses & {
-      [key in Network['displayName']]: DeployedAddressConfigHolder<
-        Network,
-        Deployments
-      >['deployments'];
+      [key in Network['displayName']]: Deployments;
     },
     Funnels,
     Primitives
   > => {
-    const addresses = addAddresses(this);
-    if (addresses.network.displayName in this.deployedAddresses) {
+    const network = generators.network(this);
+    const deployments = generators.deployments(this, network);
+    if (network.displayName in this.deployedAddresses) {
       throw new Error(
-        `Contracts for network ${addresses.network.displayName} are already registered in your config`
+        `Contracts for network ${network.displayName} are already registered in your config`
       );
     }
-    (this.deployedAddresses as any)[addresses.network.displayName] = addresses.deployments;
+    (this.deployedAddresses as any)[network.displayName] = deployments;
     return this as any;
   };
 
   addFunnel = <const Network extends Networks[keyof Networks], const Funnel extends FunnelConfig>(
-    addFunnel: (config: this) => FunnelConfigHolder<Network, Funnel>
+    generators: FunnelGenerator<this, Network, Funnel>
   ): ConfigBuilder<
     Networks,
     DeployedAddresses,
@@ -102,31 +110,22 @@ export class ConfigBuilder<
     },
     Primitives
   > => {
-    const funnelHolder = addFunnel(this);
-    const funnel = funnelHolder.funnel(funnelHolder.network);
+    const network = generators.network(this);
+    const funnel = generators.funnel(this, network);
     if (funnel.displayName in this.funnels) {
       throw new Error(`Funnel ${funnel.displayName} is already included in your config`);
     }
     (this.funnels[funnel.displayName] as any) = {
-      network: funnelHolder.network.displayName,
+      network: network.displayName,
       config: funnel,
     };
     return this as any;
   };
 
   addPrimitive = <
-    const Network extends Extract<keyof Networks, string>,
-    const Funnel extends FunnelInfo<Network, FunnelConfig>,
+    const Funnel extends FunnelInfo<Extract<keyof Networks, string>, FunnelConfig>,
     const Primitive extends PrimitiveConfig,
-  >(
-    genFunnel: (config: this) => Funnel,
-    // TODO: the valid primitives should depend on the network
-    genPrimitive: (
-      config: this,
-      network: Networks[Extract<keyof Networks, string>],
-      funnel: Funnel['config']
-    ) => Primitive
-  ): ConfigBuilder<
+  >(generators: PrimitiveGenerator<this, Networks[Funnel['network']], Funnel,Primitive>): ConfigBuilder<
     Networks,
     DeployedAddresses,
     Funnels,
@@ -134,8 +133,8 @@ export class ConfigBuilder<
       [key in Primitive['displayName']]: PrimitiveInfo<Funnel, Primitive>;
     }
   > => {
-    const { config: funnel, network } = genFunnel(this);
-    const primitive = genPrimitive(this, this.networks[network], funnel);
+    const { config: funnel, network } = generators.funnel(this);
+    const primitive = generators.primitive(this, this.networks[network], funnel);
     if (primitive.displayName in this.primitives) {
       throw new Error(`Primitive ${primitive.displayName} is already included in your config`);
     }
