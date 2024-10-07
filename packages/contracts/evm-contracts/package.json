@@ -33,7 +33,9 @@
     "directory": "packages/contracts/evm-contracts"
   },
   "dependencies": {
-    "dotenv": "^16.3.1"
+    "dotenv": "^16.3.1",
+    "dts-dom": "3.7.0",
+    "change-case": "5.4.4"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-foundry": "^1.1.2",
@@ -47,5 +49,8 @@
     "hardhat-dependency-compiler": "^1.2.1",
     "hardhat-interact": "github:paimaStudios/hardhat-interact-bin#master",
     "solidity-docgen": "^0.6.0-beta.36"
+  },
+  "peerDependencies": {
+    "typescript": ">=5.0.0"
   }
 }

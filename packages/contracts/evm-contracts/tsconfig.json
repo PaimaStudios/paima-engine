@@ -1,10 +1,13 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
-    "module": "commonjs",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "outDir": "build/plugin",
     "rootDir": "src",
     "noEmit": false,
   },
-  "include": ["./src/**/*"],
+  "include": [
+    "./src/**/*"
+  ],
 }
