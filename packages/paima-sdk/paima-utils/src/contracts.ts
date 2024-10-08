@@ -1,7 +1,8 @@
 import Web3 from 'web3';
 import type { AbiItem } from 'web3-utils';
 import type { Contract, EventData } from 'web3-eth-contract';
-import { isAddress } from 'web3-utils';
+import web3 from 'web3-utils';
+const { isAddress } = web3;
 
 import type * as Contracts from './contract-types/index.js';
 

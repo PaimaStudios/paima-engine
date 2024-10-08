@@ -1,5 +1,7 @@
-import { Pool } from 'pg';
 import type { PoolClient, Client } from 'pg';
+import pg from 'pg';
+const { Pool } = pg;
+type Pool = import('pg').Pool;
 
 import {
   genV1BlockHeader,
@@ -61,7 +63,8 @@ import type {
 } from './types.js';
 import { ConfigNetworkType } from '@paima/utils';
 import assertNever from 'assert-never';
-import { keccak_256 } from 'js-sha3';
+import sha3 from 'js-sha3';
+const { keccak_256 } = sha3;
 import type { AppEvents, EventPathAndDef, ResolvedPath } from '@paima/events';
 import { PaimaEventManager } from '@paima/events';
 import { PaimaEventBroker } from '@paima/broker';

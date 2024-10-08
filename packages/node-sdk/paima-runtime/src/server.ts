@@ -18,7 +18,7 @@ import fs from 'fs';
 const server: Express = express();
 const bodyParser = express.json();
 
-server.use(express.static(path.join(__dirname, 'public')));
+server.use(express.static(path.join(import.meta.dirname, 'public')));
 server.use(cors());
 server.use(bodyParser);
 

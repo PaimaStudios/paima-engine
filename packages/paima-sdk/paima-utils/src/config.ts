@@ -3,7 +3,7 @@ import type { VersionString } from './types/index.js';
 // https://github.com/flexdinesh/browser-or-node/blob/master/src/index.ts
 const isNode: boolean =
   typeof process !== 'undefined' && process.versions != null && process.versions.node != null;
-if (isNode) {
+if (isNode && typeof require !== 'undefined') {
   // dynamic import to avoid requiring a polyfill for this in browsers
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const { config } = require('dotenv');
