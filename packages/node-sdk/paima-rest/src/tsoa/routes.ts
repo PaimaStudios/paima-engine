@@ -3,27 +3,27 @@
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { TsoaRoute, fetchMiddlewares, ExpressTemplateService } from '@tsoa/runtime';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-import { DryRunController } from './../controllers/BasicControllers';
+import { DryRunController } from './../controllers/BasicControllers.js';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-import { VersionController } from './../controllers/BasicControllers';
+import { VersionController } from './../controllers/BasicControllers.js';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-import { LatestProcessedBlockheightController } from './../controllers/BasicControllers';
+import { LatestProcessedBlockheightController } from './../controllers/BasicControllers.js';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-import { EmulatedBlockActiveController } from './../controllers/BasicControllers';
+import { EmulatedBlockActiveController } from './../controllers/BasicControllers.js';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-import { DeploymentBlockheightToEmulatedController } from './../controllers/BasicControllers';
+import { DeploymentBlockheightToEmulatedController } from './../controllers/BasicControllers.js';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-import { ConfirmInputAcceptanceController } from './../controllers/BasicControllers';
+import { ConfirmInputAcceptanceController } from './../controllers/BasicControllers.js';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-import { TransactionCountController } from './../controllers/BasicControllers';
+import { TransactionCountController } from './../controllers/BasicControllers.js';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-import { TransactionContentController } from './../controllers/BasicControllers';
+import { TransactionContentController } from './../controllers/BasicControllers.js';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-import { BlockContentController } from './../controllers/BasicControllers';
+import { BlockContentController } from './../controllers/BasicControllers.js';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-import { GetLogsController } from './../controllers/BasicControllers';
+import { GetLogsController } from './../controllers/BasicControllers.js';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-import { AchievementsController } from './../controllers/AchievementsController';
+import { AchievementsController } from './../controllers/AchievementsController.js';
 import type { Request as ExRequest, Response as ExResponse, RequestHandler, Router } from 'express';
 
 

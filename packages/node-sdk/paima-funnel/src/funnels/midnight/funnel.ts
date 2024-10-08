@@ -22,7 +22,7 @@ import {
   logError,
 } from '@paima/utils';
 import { Client, createClient, ExecutionResult } from 'graphql-ws';
-import { PoolClient } from 'pg';
+import type { PoolClient } from 'pg';
 import { WebSocket } from 'ws';
 import { ChainInfo, composeChainData } from '../../utils.js';
 import { BaseFunnel, type FunnelSharedData } from '../BaseFunnel.js';

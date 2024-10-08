@@ -263,8 +263,7 @@ export const defaultMinaNetworkName = 'mina';
 export async function loadConfig(): Promise<Static<typeof BaseConfigWithDefaults> | undefined> {
   let configFileData: string;
   try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const fs = require('fs/promises');
+    const fs = await import('fs/promises');
     try {
       configFileData = await fs.readFile(`config.${ENV.NETWORK}.yml`, 'utf8');
     } catch (error) {

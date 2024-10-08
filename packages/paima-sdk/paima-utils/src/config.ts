@@ -6,7 +6,7 @@ const isNode: boolean =
 if (isNode) {
   // dynamic import to avoid requiring a polyfill for this in browsers
   // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const { config } = require('dotenv');
+  const { config } = await import('dotenv');
   // for browser builds, we can't actually loads things from disk like this
   // instead, for browsers we rely on bundlers like Vite or Webpack to fill these
   config({ path: `${process.cwd()}/.env.${process.env.NETWORK || 'localhost'}` });

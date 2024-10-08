@@ -9,7 +9,8 @@ import type {
 } from '../IProvider.js';
 import { DEFAULT_GAS_LIMIT, type EvmAddress } from './types.js';
 import { ProviderNotInitialized } from '../errors.js';
-import { utf8ToHex } from 'web3-utils';
+import web3 from 'web3-utils';
+const { utf8ToHex } = web3;
 import { AddressType } from '@paima/utils';
 
 export type EthersApi = Signer;

@@ -26,6 +26,7 @@
     "noFallthroughCasesInSwitch": true,
     "noImplicitOverride": true,
     "skipLibCheck": true,
+    "sourceMap": true,
     "paths": {
       "@paima/aiken-mdx/*": ["./packages/cardano-contracts/aiken-mdx/*"],
       "@paima/batcher-address-validator/*": ["./packages/batcher/address-validator/*"],

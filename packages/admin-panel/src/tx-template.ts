@@ -1,4 +1,5 @@
-import { numberToHex } from 'web3-utils';
+import web3 from 'web3-utils';
+const { numberToHex } = web3;
 
 import {
   DEFAULT_GAS_PRICE,
