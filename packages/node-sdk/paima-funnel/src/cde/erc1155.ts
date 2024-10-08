@@ -1,8 +1,8 @@
 import { ChainDataExtensionDatumType, DEFAULT_FUNNEL_TIMEOUT, timeout } from '@paima/utils';
 import type {
   CdeErc1155TransferDatum,
-  ChainDataExtensionDatum,
   ChainDataExtensionErc1155,
+  EvmChainDataExtensionDatum,
 } from '@paima/sm';
 import type {
   Erc1155TransferSingle as TransferSingle,
@@ -14,7 +14,7 @@ export default async function getCdeErc1155Data(
   fromBlock: number,
   toBlock: number,
   caip2: string
-): Promise<ChainDataExtensionDatum[]> {
+): Promise<EvmChainDataExtensionDatum[]> {
   // TODO: typechain is missing the proper type generation for getPastEvents
   // https://github.com/dethcrypto/TypeChain/issues/767
   const transferSingleEvents = (await timeout(
@@ -60,6 +60,7 @@ function transferSingleToDatum(
     scheduledPrefix: extension.scheduledPrefix,
     burnScheduledPrefix: extension.burnScheduledPrefix,
     caip2,
+    logIndex: event.logIndex,
   };
 }
 
@@ -84,5 +85,6 @@ function transferBatchToDatum(
     scheduledPrefix: extension.scheduledPrefix,
     burnScheduledPrefix: extension.burnScheduledPrefix,
     caip2,
+    logIndex: event.logIndex,
   };
 }

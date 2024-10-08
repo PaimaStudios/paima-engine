@@ -1,7 +1,11 @@
 import type Web3 from 'web3';
 
 import { ChainDataExtensionType } from '@paima/utils';
-import type { ChainDataExtensionDatum, ChainDataExtension } from '@paima/sm';
+import type {
+  ChainDataExtensionDatum,
+  ChainDataExtension,
+  EvmChainDataExtensionDatum,
+} from '@paima/sm';
 
 import getCdeGenericData from './generic.js';
 import getCdeErc20Data from './erc20.js';
@@ -19,7 +23,7 @@ export async function getUngroupedCdeData(
   fromBlock: number,
   toBlock: number,
   caip2: string
-): Promise<ChainDataExtensionDatum[][]> {
+): Promise<EvmChainDataExtensionDatum[][]> {
   if (fromBlock > toBlock) {
     return extensions.map(_ => []);
   }
@@ -38,7 +42,7 @@ async function getSpecificCdeData(
   fromBlock: number,
   toBlock: number,
   caip2: string
-): Promise<ChainDataExtensionDatum[]> {
+): Promise<EvmChainDataExtensionDatum[]> {
   if (fromBlock > toBlock || toBlock < extension.startBlockHeight) {
     return [];
   } else if (fromBlock < extension.startBlockHeight) {

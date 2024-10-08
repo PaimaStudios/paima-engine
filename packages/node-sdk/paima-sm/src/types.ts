@@ -225,34 +225,38 @@ interface CdeDatumBase {
   caip2: string;
 }
 
-export interface CdeErc20TransferDatum extends CdeDatumBase {
+interface CdeEvmDatumBase extends CdeDatumBase {
+  logIndex: number;
+}
+
+export interface CdeErc20TransferDatum extends CdeEvmDatumBase {
   cdeDatumType: ChainDataExtensionDatumType.ERC20Transfer;
   payload: CdeDatumErc20TransferPayload;
   contractAddress: string;
 }
 
-export interface CdeErc721TransferDatum extends CdeDatumBase {
+export interface CdeErc721TransferDatum extends CdeEvmDatumBase {
   cdeDatumType: ChainDataExtensionDatumType.ERC721Transfer;
   payload: CdeDatumErc721TransferPayload;
   contractAddress: string;
   burnScheduledPrefix?: string | undefined;
 }
 
-export interface CdeErc721MintDatum extends CdeDatumBase {
+export interface CdeErc721MintDatum extends CdeEvmDatumBase {
   cdeDatumType: ChainDataExtensionDatumType.ERC721Mint;
   payload: CdeDatumErc721MintPayload;
   contractAddress: string;
   scheduledPrefix: string;
 }
 
-export interface CdeErc20DepositDatum extends CdeDatumBase {
+export interface CdeErc20DepositDatum extends CdeEvmDatumBase {
   cdeDatumType: ChainDataExtensionDatumType.ERC20Deposit;
   payload: CdeDatumErc20DepositPayload;
   contractAddress: string;
   scheduledPrefix: string;
 }
 
-export interface CdeErc1155TransferDatum extends CdeDatumBase {
+export interface CdeErc1155TransferDatum extends CdeEvmDatumBase {
   cdeDatumType: ChainDataExtensionDatumType.Erc1155Transfer;
   payload: CdeDatumErc1155TransferPayload;
   contractAddress: string;
@@ -260,14 +264,14 @@ export interface CdeErc1155TransferDatum extends CdeDatumBase {
   burnScheduledPrefix?: string | undefined;
 }
 
-export interface CdeGenericDatum extends CdeDatumBase {
+export interface CdeGenericDatum extends CdeEvmDatumBase {
   cdeDatumType: ChainDataExtensionDatumType.Generic;
   payload: CdeDatumGenericPayload;
   scheduledPrefix: string;
   contractAddress: string;
 }
 
-export interface CdeErc6551RegistryDatum extends CdeDatumBase {
+export interface CdeErc6551RegistryDatum extends CdeEvmDatumBase {
   cdeDatumType: ChainDataExtensionDatumType.ERC6551Registry;
   payload: CdeDatumErc6551RegistryPayload;
 }
@@ -326,12 +330,12 @@ export interface CdeMidnightContractStateDatum extends CdeDatumBase {
   payload: string;
 }
 
-export interface CdeDynamicEvmPrimitiveDatum extends CdeDatumBase {
+export interface CdeDynamicEvmPrimitiveDatum extends CdeEvmDatumBase {
   cdeDatumType: ChainDataExtensionDatumType.DynamicEvmPrimitive;
   payload: CdeDatumDynamicEvmPrimitivePayload;
 }
 
-export type ChainDataExtensionDatum =
+export type EvmChainDataExtensionDatum =
   | CdeErc20TransferDatum
   | CdeErc721MintDatum
   | CdeErc721TransferDatum
@@ -339,6 +343,10 @@ export type ChainDataExtensionDatum =
   | CdeErc1155TransferDatum
   | CdeGenericDatum
   | CdeErc6551RegistryDatum
+  | CdeDynamicEvmPrimitiveDatum;
+
+export type ChainDataExtensionDatum =
+  | EvmChainDataExtensionDatum
   | CdeCardanoPoolDatum
   | CdeCardanoProjectedNFTDatum
   | CdeCardanoAssetUtxoDatum
@@ -346,8 +354,7 @@ export type ChainDataExtensionDatum =
   | CdeCardanoMintBurnDatum
   | CdeMinaEventGenericDatum
   | CdeMinaActionGenericDatum
-  | CdeMidnightContractStateDatum
-  | CdeDynamicEvmPrimitiveDatum;
+  | CdeMidnightContractStateDatum;
 
 export enum CdeEntryTypeName {
   Generic = 'generic',

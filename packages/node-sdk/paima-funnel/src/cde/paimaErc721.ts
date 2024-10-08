@@ -10,6 +10,7 @@ import type {
   CdeErc721TransferDatum,
   ChainDataExtensionDatum,
   ChainDataExtensionPaimaErc721,
+  EvmChainDataExtensionDatum,
 } from '@paima/sm';
 import type { PaimaMinted as Minted, PaimaERC721Transfer as Transfer } from '@paima/utils';
 
@@ -18,7 +19,7 @@ export default async function getCdeData(
   fromBlock: number,
   toBlock: number,
   caip2: string
-): Promise<ChainDataExtensionDatum[]> {
+): Promise<EvmChainDataExtensionDatum[]> {
   // TOOD: typechain is missing the proper type generation for getPastEvents
   // https://github.com/dethcrypto/TypeChain/issues/767
   const [transferEvents, mintedEvents] = await Promise.all([
@@ -29,7 +30,7 @@ export default async function getCdeData(
     transferToTransferDatum(e, extension, caip2)
   );
   const mintData = mintedEvents.map((e: Minted) => mintedToMintDatum(e, extension, caip2));
-  return mergeSortedArrays<ChainDataExtensionDatum>(
+  return mergeSortedArrays<EvmChainDataExtensionDatum>(
     mintData,
     transferData,
     (d1, d2) => d1.blockNumber - d2.blockNumber
@@ -81,6 +82,7 @@ function transferToTransferDatum(
     },
     contractAddress: event.address.toLowerCase(),
     caip2,
+    logIndex: event.logIndex,
   };
 }
 
@@ -105,5 +107,6 @@ function mintedToMintDatum(
     contractAddress: event.address.toLowerCase(),
     scheduledPrefix: extension.scheduledPrefix,
     caip2,
+    logIndex: event.logIndex,
   };
 }

@@ -8,7 +8,7 @@ import {
   getBaseChainDataSingle,
 } from '../../reading.js';
 import { getUngroupedCdeData } from '../../cde/reading.js';
-import { composeChainData, groupCdeData } from '../../utils.js';
+import { composeChainData, groupCdeData, groupEvmCdeData } from '../../utils.js';
 import type { ChainInfo } from '../../utils.js';
 import { BaseFunnel } from '../BaseFunnel.js';
 import type { FunnelSharedData } from '../BaseFunnel.js';
@@ -168,7 +168,7 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
 
       ungroupedCdeData.push(...dynamicDatums);
 
-      const cdeData = groupCdeData(caip2, fromBlock, toBlock, ungroupedCdeData);
+      const cdeData = groupEvmCdeData(caip2, fromBlock, toBlock, ungroupedCdeData);
       return composeChainData(baseChainData, cdeData);
     } catch (err) {
       doLog(`[funnel] at ${fromBlock}-${toBlock} caught ${err}`);
@@ -224,7 +224,7 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
       ).concat(dynamicDatums);
 
       return {
-        [caip2]: groupCdeData(caip2, fromBlock, toBlock, ungroupedCdeData),
+        [caip2]: groupEvmCdeData(caip2, fromBlock, toBlock, ungroupedCdeData),
       };
     } catch (err) {
       doLog(`[paima-funnel::readPresyncData] Exception occurred while reading blocks: ${err}`);

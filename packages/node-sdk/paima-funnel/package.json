@@ -8,6 +8,12 @@
   "files": [
     "/build"
   ],
+  "nx": {
+    "implicitDependencies": [
+      "@paima/sm",
+      "@paima/runtime"
+    ]
+  },
   "scripts": {
     "lint:eslint": "eslint .",
     "build": "tsc"

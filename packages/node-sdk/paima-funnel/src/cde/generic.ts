@@ -4,6 +4,7 @@ import type {
   CdeGenericDatum,
   ChainDataExtensionDatum,
   ChainDataExtensionGeneric,
+  EvmChainDataExtensionDatum,
 } from '@paima/sm';
 
 export default async function getCdeData(
@@ -11,7 +12,7 @@ export default async function getCdeData(
   fromBlock: number,
   toBlock: number,
   caip2: string
-): Promise<ChainDataExtensionDatum[]> {
+): Promise<EvmChainDataExtensionDatum[]> {
   // TOOD: typechain is missing the proper type generation for getPastEvents
   // https://github.com/dethcrypto/TypeChain/issues/767
   const events = await timeout(
@@ -41,5 +42,6 @@ function eventToCdeDatum(
     payload: event.returnValues,
     contractAddress: event.address.toLowerCase(),
     caip2,
+    logIndex: event.logIndex,
   };
 }

@@ -46,8 +46,13 @@ import {
   insertGameInputResult,
   newGameInput,
   updateMidnightCheckpoint,
+  getFutureGameInputByMaxTimestamp,
 } from '@paima/db';
-import type { SQLUpdate } from '@paima/db';
+import type {
+  IGetFutureGameInputByBlockHeightResult,
+  IGetFutureGameInputByMaxTimestampResult,
+  SQLUpdate,
+} from '@paima/db';
 import Prando from '@paima/prando';
 import { randomnessRouter } from './randomness.js';
 import { cdeTransitionFunction } from './cde-processing.js';
@@ -240,6 +245,7 @@ const SM: GameStateMachineInitializer = {
                 contractAddress: null,
                 primitiveName: null,
                 caip2: '',
+                scheduledAtMs: null,
               },
               paimaTxHash: '',
             },
@@ -512,10 +518,22 @@ async function processScheduledData<Events extends AppEvents>(
   // indexes when we process user inputs.
   emittedLogsCount: number;
 }> {
-  const scheduledData = await getFutureGameInputByBlockHeight.run(
+  const scheduledData: (
+    | IGetFutureGameInputByBlockHeightResult
+    | IGetFutureGameInputByMaxTimestampResult
+  )[] = await getFutureGameInputByMaxTimestamp.run(
+    {
+      max_timestamp: new Date(latestChainData.timestamp * 1000),
+    },
+    DBConn
+  );
+
+  const scheduledDataByBlock = await getFutureGameInputByBlockHeight.run(
     { block_height: latestChainData.blockNumber },
     DBConn
   );
+
+  scheduledData.push(...scheduledDataByBlock);
 
   // just in case there are two timers in the same block with the same exact contents.
   let timerIndexRelativeToBlock = -1;
@@ -577,6 +595,7 @@ async function processScheduledData<Events extends AppEvents>(
           caip2: caip2,
           primitiveName: data.primitive_name ?? null,
           contractAddress: data.contract_address,
+          scheduledAtMs: 'future_ms_timestamp' in data ? data.future_ms_timestamp.getTime() : null,
         },
       };
 
@@ -589,7 +608,7 @@ async function processScheduledData<Events extends AppEvents>(
           {
             version: 1,
             mainChainBlochHash: strip0x(latestChainData.blockHash),
-            blockHeight: data.future_block_height,
+            blockHeight: latestChainData.blockNumber,
             prevBlockHash: prevBlockHash == null ? null : prevBlockHash.toString('hex'),
             msTimestamp: latestChainData.timestamp * 1000,
           },

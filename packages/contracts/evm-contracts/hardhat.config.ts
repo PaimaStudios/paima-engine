@@ -40,10 +40,11 @@ const config: HardhatUserConfig = {
     },
   },
   abiExporter: {
-    path: './publish/abi',
+    path: './build/abi',
     runOnCompile: true,
     clear: true,
     flat: false,
+    tsWrapper: true,
   },
 };
 

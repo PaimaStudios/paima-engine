@@ -1,5 +1,6 @@
 import type { HardhatRuntimeEnvironment } from 'hardhat/types';
-import type { HardhatEthersSigner } from '@nomicfoundation/hardhat-ethers/signers';
+import { isAddress } from 'viem';
+import type { WalletClient } from 'viem';
 import { scope } from 'hardhat/config';
 import { createInterface } from 'node:readline/promises';
 import { stdin, stdout } from 'process';
@@ -17,15 +18,15 @@ export async function getOrAskString(cmdLineValue: unknown, question: string): P
 export async function getContract(
   hre: HardhatRuntimeEnvironment,
   cmdLineAccount: unknown
-): Promise<{ signer: HardhatEthersSigner; account: string }> {
+): Promise<{ signer: WalletClient; account: `0x${string}` }> {
   const account = await getOrAskString(cmdLineAccount, 'Contract address? ');
-  if (!hre.ethers.isAddress(account)) {
+  if (!isAddress(account)) {
     throw new Error(`Invalid contract address passed ${account}`);
   }
 
-  const signers = await hre.ethers.getSigners();
+  const wallets = await hre.viem.getWalletClients();
 
-  return { signer: signers[0], account };
+  return { signer: wallets[0], account };
 }
 export function ownerCheck(expectedOwner: string, caller: string): void {
   if (expectedOwner !== caller) {

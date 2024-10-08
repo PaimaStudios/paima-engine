@@ -12,7 +12,11 @@ import {
 } from '@paima/utils';
 import type { MainEvmConfig, OtherEvmConfig, PaimaL2Contract } from '@paima/utils';
 import { TimeoutError, instantiateCdeGeneric } from '@paima/runtime';
-import type { ChainDataExtension, TChainDataExtensionGenericConfig } from '@paima/sm';
+import type {
+  ChainDataExtension,
+  EvmChainDataExtensionDatum,
+  TChainDataExtensionGenericConfig,
+} from '@paima/sm';
 import {
   CdeEntryTypeName,
   type CdeDynamicEvmPrimitiveDatum,
@@ -174,7 +178,7 @@ export async function fetchDynamicEvmPrimitives(
   web3: Web3,
   sharedData: FunnelSharedData,
   chainInfo: ChainInfo<MainEvmConfig | OtherEvmConfig>
-): Promise<ChainDataExtensionDatum[][]> {
+): Promise<EvmChainDataExtensionDatum[][]> {
   const filteredExtensions = sharedData.extensions.filter(
     extension =>
       extension.network === chainInfo.name &&
