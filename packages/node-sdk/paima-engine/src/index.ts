@@ -3,7 +3,7 @@ import PaimaSM from '@paima/sm';
 import { ConfigNetworkType, doLog, ENV, GlobalConfig } from '@paima/utils';
 import { config } from 'dotenv';
 import type { PoolConfig } from 'pg';
-import type { LogEvent, LogEventFields, RegisteredEvent } from '@paima/events/';
+import type { LogEvent, LogEventFields, RegisteredEvent } from '@paima/events';
 import { groupEvents } from '@paima/events';
 import { FunnelFactory } from '@paima/funnel';
 import type { TsoaFunction } from '@paima/runtime';
