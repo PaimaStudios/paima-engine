@@ -1,7 +1,5 @@
 import * as fs from 'fs/promises';
 import YAML from 'yaml';
-import type Web3 from 'web3';
-import { keccak_256 } from 'js-sha3';
 import { Type, type Static, type TSchema } from '@sinclair/typebox';
 import { Value, ValueErrorType } from '@sinclair/typebox/value';
 
@@ -17,10 +15,7 @@ import {
   getErc6551RegistryContract,
   getOldErc6551RegistryContract,
   ERC6551_REGISTRY_DEFAULT,
-  defaultEvmMainNetworkName,
-  defaultCardanoNetworkName,
   getErc1155Contract,
-  defaultMinaNetworkName,
 } from '@paima/utils';
 
 import type {
@@ -59,28 +54,10 @@ import fnv from 'fnv-plus';
 import stableStringify from 'json-stable-stringify';
 import type { PoolClient } from 'pg';
 import { getDynamicExtensions } from '@paima/db';
+import sha3 from 'js-sha3';
+const { keccak_256 } = sha3;
 
-type ValidationResult = [config: ChainDataExtension[], validated: boolean];
-
-export async function loadChainDataExtensions(
-  web3s: { [network: string]: Web3 },
-  configFilePath: string,
-  db: PoolClient
-): Promise<ValidationResult> {
-  let configFileData: string;
-
-  try {
-    configFileData = await fs.readFile(configFilePath, 'utf8');
-  } catch (err) {
-    try {
-      // try falling back to previous default from Paima Engine v2.4.0
-      configFileData = await fs.readFile(`extensions.yml`, 'utf8');
-    } catch (err) {
-      doLog(`[cde-config] config file not found: ${configFilePath}, assuming no CDEs.`);
-      return [[], true];
-    }
-  }
-
+export async function loadChainDataExtensions(db: PoolClient): Promise<ValidationResult> {
   let dynamicExtensions: { displayName: string; type: ConfigPrimitiveType }[];
 
   try {
@@ -107,7 +84,6 @@ export async function loadChainDataExtensions(
   }
 
   try {
-    const config = parseCdeConfigFile(configFileData, dynamicExtensions);
     const instantiatedExtensions = await Promise.all(
       config.extensions.map(e => instantiateExtension(e, web3s))
     );
@@ -116,135 +92,6 @@ export async function loadChainDataExtensions(
     doLog(`[cde-config] Invalid config file:`, err);
     return [[], false];
   }
-}
-
-const networkTagType = Type.Partial(Type.Object({ network: Type.String() }));
-
-// Validate the overall structure of the config file and extract the relevant data
-export function parseCdeConfigFile(
-  configFileData: string,
-  extraExtensions: { displayName: string; type: ConfigPrimitiveType }[]
-): Static<typeof CdeConfig> {
-  // Parse the YAML content into an object
-  const configObject = YAML.parse(configFileData, { merge: true });
-
-  // Validate the YAML object against the schema
-  const baseConfig = checkOrError(undefined, CdeBaseConfig, configObject);
-
-  for (const extension of extraExtensions) {
-    baseConfig.extensions.push(extension);
-  }
-
-  const checkedConfig = baseConfig.extensions.map(entry => {
-    switch (entry.type) {
-      case ConfigPrimitiveType.ERC20:
-        return checkOrError(
-          entry.displayName,
-          Type.Intersect([ChainDataExtensionErc20Config, networkTagType]),
-          entry
-        );
-      case ConfigPrimitiveType.ERC721:
-        return checkOrError(
-          entry.displayName,
-          Type.Intersect([ChainDataExtensionErc721Config, networkTagType]),
-          entry
-        );
-      case ConfigPrimitiveType.ERC20Deposit:
-        return checkOrError(
-          entry.displayName,
-          Type.Intersect([ChainDataExtensionErc20DepositConfig, networkTagType]),
-          entry
-        );
-      case ConfigPrimitiveType.Generic:
-        return checkOrError(
-          entry.displayName,
-          Type.Intersect([ChainDataExtensionGenericConfig, networkTagType]),
-          entry
-        );
-      case ConfigPrimitiveType.ERC6551Registry:
-        return checkOrError(
-          entry.displayName,
-          Type.Intersect([ChainDataExtensionErc6551RegistryConfig, networkTagType]),
-          entry
-        );
-      case ConfigPrimitiveType.DynamicEvmPrimitive:
-        return checkOrError(
-          entry.displayName,
-          Type.Intersect([ChainDataExtensionDynamicEvmPrimitiveConfig, networkTagType]),
-          entry
-        );
-      case ConfigPrimitiveType.CardanoDelegation:
-        return checkOrError(
-          entry.displayName,
-          Type.Intersect([ChainDataExtensionCardanoDelegationConfig, networkTagType]),
-          entry
-        );
-      case ConfigPrimitiveType.CardanoProjectedNFT:
-        return checkOrError(
-          entry.displayName,
-          Type.Intersect([ChainDataExtensionCardanoProjectedNFTConfig, networkTagType]),
-          entry
-        );
-      case ConfigPrimitiveType.CardanoDelayedAsset:
-        return checkOrError(
-          entry.displayName,
-          Type.Intersect([ChainDataExtensionCardanoDelayedAssetConfig, networkTagType]),
-          entry
-        );
-      case ConfigPrimitiveType.CardanoTransfer:
-        return checkOrError(
-          entry.displayName,
-          Type.Intersect([
-            ChainDataExtensionCardanoTransferConfig,
-            Type.Object({ network: Type.String() }),
-          ]),
-          entry
-        );
-      case ConfigPrimitiveType.CardanoMintBurn:
-        return checkOrError(
-          entry.displayName,
-          Type.Intersect([
-            ChainDataExtensionCardanoMintBurnConfig,
-            Type.Object({ network: Type.String() }),
-          ]),
-          entry
-        );
-      case ConfigPrimitiveType.ERC1155:
-        return checkOrError(
-          entry.displayName,
-          Type.Intersect([
-            ChainDataExtensionErc1155Config,
-            Type.Object({ network: Type.String() }),
-          ]),
-          entry
-        );
-      case ConfigPrimitiveType.MinaEventGeneric:
-        return checkOrError(
-          entry.displayName,
-          Type.Intersect([ChainDataExtensionMinaEventGenericConfig, networkTagType]),
-          entry
-        );
-      case ConfigPrimitiveType.MinaActionGeneric:
-        return checkOrError(
-          entry.displayName,
-          Type.Intersect([ChainDataExtensionMinaActionGenericConfig, networkTagType]),
-          entry
-        );
-      case ConfigPrimitiveType.MidnightContractState:
-        return checkOrError(
-          entry.displayName,
-          Type.Intersect([
-            ChainDataExtensionMidnightContractStateConfig,
-            Type.Object({ network: Type.String() }),
-          ]),
-          entry
-        );
-      default:
-        assertNever(entry.type);
-    }
-  });
-
-  return { extensions: checkedConfig };
 }
 
 function checkOrError<T extends TSchema>(
@@ -288,28 +135,9 @@ export function hashConfig(config: any): number {
   return Math.floor(unsignedInt / 2);
 }
 
-// TODO: probably we should remove extensions.yml and move it entirely into config to avoid this
-function getNetworkName(
-  config: Static<typeof CdeConfig>['extensions'][0],
-  network: string | undefined,
-  defaultName: string,
-  web3s: { [network: string]: Web3 }
-): string {
-  if (network != null) return network;
-  for (const web3 of Object.keys(web3s)) {
-    if (web3 === defaultName) {
-      return defaultName;
-    }
-  }
-  throw new Error(
-    `No "network" key specified for ${config.displayName}, but no network in config.yml matched the default: ${defaultName}`
-  );
-}
-
 // Do type-specific initialization and construct contract objects
 async function instantiateExtension(
-  config: Static<typeof CdeConfig>['extensions'][0],
-  web3s: { [network: string]: Web3 }
+  config: Static<typeof CdeConfig>['extensions'][0]
 ): Promise<ChainDataExtension> {
   const getDefaultEvmNetwork = (): string =>
     getNetworkName(config, config.network, defaultEvmMainNetworkName, web3s);
@@ -487,7 +315,7 @@ async function instantiateExtension(
       };
     }
     default:
-      assertNever(config);
+      assertNever.default(config);
   }
 }
 
@@ -541,8 +369,7 @@ export async function instantiateCdeGeneric(
 }
 
 async function instantiateCdeDynamicEvmPrimitive(
-  config: TChainDataExtensionDynamicEvmPrimitiveConfig,
-  web3: Web3
+  config: TChainDataExtensionDynamicEvmPrimitiveConfig
 ): Promise<ChainDataExtensionDynamicEvmPrimitive> {
   const eventSignature = config.eventSignature;
   const eventMatch = eventSignature.match(/^[A-Za-z0-9_]+/); // ex: MyEvent(address,uint256) → "MyEvent"

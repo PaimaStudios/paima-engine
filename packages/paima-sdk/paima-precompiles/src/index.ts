@@ -1,4 +1,5 @@
-import { keccak_256 } from 'js-sha3';
+import sha3 from 'js-sha3';
+const { keccak_256 } = sha3;
 
 export function generatePrecompile<T extends string>(name: T): `0x${string}` {
   // trim to 20 bytes to have evm-sized addresses

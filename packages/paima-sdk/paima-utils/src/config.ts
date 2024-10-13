@@ -12,34 +12,11 @@ export class ENV {
     return process.env.NETWORK || 'localhost';
   }
 
-  // Target Blockchain:
-  static get CHAIN_URI(): string {
-    return process.env.CHAIN_URI || '';
+  static get POLLING_RATE_MS(): undefined | number {
+    return process.env.POLLING_RATE != null ? parseFloat(process.env.POLLING_RATE) : undefined;
   }
-  static get CHAIN_NAME(): string {
-    return process.env.CHAIN_NAME || 'UNKNOWN_CHAIN_NAME';
-  }
-  static get CHAIN_ID(): number {
-    return parseInt(process.env.CHAIN_ID || '0', 10);
-  }
-  static get CHAIN_EXPLORER_URI(): string {
-    return process.env.CHAIN_EXPLORER_URI || '';
-  }
-  static get CHAIN_CURRENCY_NAME(): string {
-    return process.env.CHAIN_CURRENCY_NAME || 'UNKNOWN_CURRENCY_NAME';
-  }
-  static get CHAIN_CURRENCY_SYMBOL(): string {
-    return process.env.CHAIN_CURRENCY_SYMBOL || 'NONAME';
-  }
-  static get CHAIN_CURRENCY_DECIMALS(): number {
-    return parseInt(process.env.CHAIN_CURRENCY_DECIMALS || '0', 10);
-  }
-  static get BLOCK_TIME(): number {
-    return parseFloat(process.env.BLOCK_TIME || '4');
-  }
-  static get POLLING_RATE(): number {
-    return parseFloat(process.env.POLLING_RATE || `${ENV.BLOCK_TIME - 0.1}`);
-  }
+
+  // TODO: this should be a config feature
   static get EMULATED_BLOCKS(): boolean {
     return ENV.isTrue(process.env.EMULATED_BLOCKS);
   }
@@ -58,17 +35,9 @@ export class ENV {
     return process.env.RECAPTCHA_V3_FRONTEND || '';
   }
 
-  // PaimaL2Contract:
-  static get CONTRACT_ADDRESS(): string {
-    return process.env.CONTRACT_ADDRESS || process.env.STORAGE_ADDRESS || '';
-  }
+  // TODO: remove these
   static get DEFAULT_FEE(): string {
     return process.env.DEFAULT_FEE || '100000000000000';
-  }
-
-  // Game node config:
-  static get GAME_NODE_VERSION(): VersionString {
-    return '1.0.0';
   }
   static get START_BLOCKHEIGHT(): number {
     return parseInt(process.env.START_BLOCKHEIGHT || '0', 10);
@@ -76,26 +45,22 @@ export class ENV {
   static get SM_START_BLOCKHEIGHT(): number {
     return this.EMULATED_BLOCKS ? 0 : ENV.START_BLOCKHEIGHT;
   }
-  static get DEFAULT_FUNNEL_GROUP_SIZE(): number {
-    return parseInt(process.env.DEFAULT_FUNNEL_GROUP_SIZE || '100', 10);
+  static get STOP_BLOCKHEIGHT(): number | null {
+    return process.env.STOP_BLOCKHEIGHT ? parseInt(process.env.STOP_BLOCKHEIGHT) : null;
   }
-  static get DEFAULT_PRESYNC_STEP_SIZE(): number {
-    return parseInt(process.env.DEFAULT_PRESYNC_STEP_SIZE || '1000', 10);
+
+  // Game node config:
+  static get GAME_NODE_VERSION(): VersionString {
+    return '1.0.0';
   }
   static get SERVER_ONLY_MODE(): boolean {
     return ENV.isTrue(process.env.SERVER_ONLY_MODE);
-  }
-  static get STOP_BLOCKHEIGHT(): number | null {
-    return process.env.STOP_BLOCKHEIGHT ? parseInt(process.env.STOP_BLOCKHEIGHT) : null;
   }
   static get FORCE_INVALID_PAIMA_DB_TABLE_DELETION(): boolean {
     return ENV.isTrue(process.env.FORCE_INVALID_PAIMA_DB_TABLE_DELETION);
   }
   static get STORE_HISTORICAL_GAME_INPUTS(): boolean {
     return ENV.isTrue(process.env.STORE_HISTORICAL_GAME_INPUTS, true);
-  }
-  static get CDE_CONFIG_PATH(): string {
-    return process.env.CDE_CONFIG_PATH || `extensions.${ENV.NETWORK}.yml`;
   }
   static get ENABLE_DRY_RUN(): boolean {
     return ENV.isTrue(process.env.ENABLE_DRY_RUN);
@@ -113,16 +78,6 @@ export class ENV {
       return `http://localhost:${process.env.BATCHER_PORT}`;
     }
     return '';
-  }
-
-  static get CARP_URL(): string | undefined {
-    return process.env.CARP_URL;
-  }
-  static get CARDANO_NETWORK(): string | undefined {
-    return process.env.CARDANO_NETWORK;
-  }
-  static get CARDANO_CONFIRMATION_DEPTH(): number | undefined {
-    return Number(process.env.CARDANO_CONFIRMATION_DEPTH);
   }
 
   // MQTT BROKER

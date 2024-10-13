@@ -1,4 +1,3 @@
-import { GlobalConfig } from '@paima/utils';
 import { buildEndpointErrorFxn, PaimaMiddlewareErrorCode } from '../errors.js';
 import { getGameName } from '../state.js';
 import type { LoginInfoMap } from '../types.js';
@@ -6,15 +5,16 @@ import type { ApiForMode, AvailJsApi, IProvider, WalletMode } from '@paima/provi
 import { AvailConnector } from '@paima/providers';
 import { Keyring } from 'avail-js-sdk';
 import type { Result } from '@paima/utils';
+import { ConfigNetworkType, GlobalConfig, networkConfigQuery } from '@paima/config';
 
 async function connectWallet(
   loginInfo: LoginInfoMap[WalletMode.AvailJs]
 ): Promise<Result<IProvider<AvailJsApi>>> {
   const errorFxn = buildEndpointErrorFxn('availJsLoginWrapper');
 
+  const networkQuery = networkConfigQuery(GlobalConfig.networks);
   try {
-    const availConfig =
-      (await GlobalConfig.mainAvailConfig()) ?? (await GlobalConfig.otherAvailConfig());
+    const availConfig = networkQuery.queryType.getOptionalConfig(ConfigNetworkType.AVAIL);
     if (availConfig == null) {
       return errorFxn(
         PaimaMiddlewareErrorCode.POLKADOT_LOGIN,

@@ -1,9 +1,8 @@
 import type { PoolClient } from 'pg';
 import Prando from '@paima/prando';
-import type { ChainFunnel, FunnelJson, ReadPresyncDataFrom } from '@paima/runtime';
+import type { ChainFunnel, ReadPresyncDataFrom } from '@paima/runtime';
 import type { ChainData, EvmPresyncChainData, PresyncChainData } from '@paima/sm';
-import { FUNNEL_PRESYNC_FINISHED, ENV, GlobalConfig, doLog, caip2PrefixFor } from '@paima/utils';
-import type { AvailMainConfig, MainEvmConfig } from '@paima/utils';
+import { FUNNEL_PRESYNC_FINISHED, ENV, GlobalConfig, doLog } from '@paima/utils';
 import {
   emulatedSelectLatestPrior,
   upsertEmulatedBlockheight,
@@ -17,7 +16,7 @@ import { calculateBoundaryTimestamp, emulateCde, timestampToBlockNumber } from '
 import { BaseFunnel } from '../BaseFunnel.js';
 import type { FunnelSharedData } from '../BaseFunnel.js';
 import { QueuedBlockCacheEntry, RpcCacheEntry, RpcRequestState } from '../FunnelCache.js';
-import type { ChainInfo } from '../../utils.js';
+import { caip2PrefixFor, ChainInfo, ConfigFunnelAvailMain, ConfigFunnelEvmMain, ConfigNetworkAvail, ConfigNetworkEvm } from '@paima/config';
 
 /**
  * For hash calculation of empty blocks to work,
@@ -40,6 +39,12 @@ type CtorData = {
   readonly maxWait: number;
   readonly baseFunnel: ChainFunnel;
 };
+
+/**
+ * TODO: have this automatically support all main funnel options?
+ */
+type EmulatedChainInfo = ChainInfo<ConfigNetworkEvm, ConfigFunnelEvmMain> | ChainInfo<ConfigNetworkAvail, ConfigFunnelAvailMain>;
+
 export class EmulatedBlocksFunnel extends BaseFunnel {
   protected constructor(
     sharedData: FunnelSharedData,
@@ -64,7 +69,7 @@ export class EmulatedBlocksFunnel extends BaseFunnel {
      * TODO: This is bad. This should NOT be passed to the emulated funnel
      *       It should work with an arbitrary chain
      */
-    private readonly chainInfo: ChainInfo<MainEvmConfig | AvailMainConfig>
+    private readonly chainInfo: EmulatedChainInfo
   ) {
     super(sharedData, dbTx);
     // TODO: replace once TS5 decorators are better supported
@@ -105,9 +110,9 @@ export class EmulatedBlocksFunnel extends BaseFunnel {
 
         const latestAvailableBlockNumber = this.sharedData.cacheManager.cacheEntries[
           RpcCacheEntry.SYMBOL
-        ]?.getState(caip2PrefixFor(this.chainInfo.config));
+        ]?.getState(caip2PrefixFor(this.chainInfo.network));
         if (latestAvailableBlockNumber?.state !== RpcRequestState.HasResult)
-          throw new Error(`latestAvailableBlockNumber missing from cache for ${ENV.CHAIN_ID}`);
+          throw new Error(`latestAvailableBlockNumber missing from cache for ${this.chainInfo.network.displayName}`);
 
         // check if the chunk we read matches the latest block known by the RPC endpoint
         // or if there are no blocks left to fetch as we're already at the tip
@@ -151,13 +156,13 @@ export class EmulatedBlocksFunnel extends BaseFunnel {
       // this just makes console outputs easier to read
       const paddingLength = blocks[0].timestamp.toString().length + 1;
       doLog(
-        `Emulated funnel ${ENV.CHAIN_ID}: ${blocks[0].timestamp}${' '.repeat(paddingLength)} \t [${
+        `Emulated funnel ${this.chainInfo.funnel.displayName}: ${blocks[0].timestamp}${' '.repeat(paddingLength)} \t [${
           blocks[0].timestamp - ENV.BLOCK_TIME
         }~${blocks[0].timestamp})`
       );
     } else {
       doLog(
-        `Emulated funnel ${ENV.CHAIN_ID}: ${blocks[0].timestamp}-${
+        `Emulated funnel ${this.chainInfo.funnel.displayName}: ${blocks[0].timestamp}-${
           blocks[blocks.length - 1].timestamp
         } \t [${blocks[0].timestamp - ENV.BLOCK_TIME}~${blocks[blocks.length - 1].timestamp})`
       );
@@ -169,14 +174,14 @@ export class EmulatedBlocksFunnel extends BaseFunnel {
   ): Promise<{ [caip2: string]: PresyncChainData[] | typeof FUNNEL_PRESYNC_FINISHED }> {
     // map base funnel data to the right timestamp range
     const baseData = await this.ctorData.baseFunnel.readPresyncData(args);
-
-    const baseDataMainEvm = baseData[this.chainInfo.name];
+    const caip2 = caip2PrefixFor(this.chainInfo.network);
+    const baseDataMainEvm = baseData[caip2];
 
     if (!baseDataMainEvm || baseDataMainEvm === FUNNEL_PRESYNC_FINISHED) {
       return baseData;
     }
 
-    baseData[this.chainInfo.name] = baseDataMainEvm.map(data => {
+    baseData[caip2] = baseDataMainEvm.map(data => {
       const timestamp = calculateBoundaryTimestamp(
         this.ctorData.startTimestamp,
         ENV.BLOCK_TIME,
@@ -475,11 +480,7 @@ export class EmulatedBlocksFunnel extends BaseFunnel {
     return hashTogether([blockNumber.toString(10), ...randomPriorHashes.map(block => block.seed)]);
   };
 
-  public override configPrint(): FunnelJson {
-    return {
-      type: 'EmulatedBlocksFunnel',
-      chainName: this.chainInfo.name,
-      child: this.ctorData.baseFunnel.configPrint(),
-    };
+  public override configPrint(): EmulatedChainInfo {
+    return this.chainInfo
   }
 }

@@ -14,11 +14,11 @@ import { isSameDay, isSameMinute } from './date-utils.js';
 import type { BatchedSubunit } from '@paima/concise';
 import { CryptoManager } from '@paima/crypto';
 import { createMessageForBatcher } from '@paima/concise';
-import { AddressType, getReadNamespaces } from '@paima/utils';
+import { AddressType } from '@paima/utils';
 import assertNever from 'assert-never';
 import { query } from '@dcspark/carp-client';
 import { Routes } from '@dcspark/carp-client';
-import { ethers } from 'ethers';
+import { getReadNamespaces } from '@paima/config';
 
 class PaimaAddressValidator {
   private pool: Pool;
@@ -77,7 +77,7 @@ class PaimaAddressValidator {
       case AddressType.MINA:
         return await CryptoManager.Mina().verifyAddress(address);
       default:
-        assertNever(addressType, true);
+        assertNever.default(addressType, true);
         return false;
     }
   };
@@ -123,7 +123,7 @@ class PaimaAddressValidator {
             input.userSignature
           );
         default:
-          assertNever(addressType, true);
+          assertNever.default(addressType, true);
           return false;
       }
     };

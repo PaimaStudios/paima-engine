@@ -74,7 +74,7 @@ export function addressTypeName(addressType: AddressType): string {
     case AddressType.MINA:
       return 'Mina';
     default:
-      assertNever(addressType, true);
+      assertNever.default(addressType, true);
       return 'Unknown address type';
   }
 }

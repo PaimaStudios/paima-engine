@@ -3,7 +3,7 @@ import type { Static } from '@sinclair/typebox';
 import { ConfigPrimitiveType } from './types.js';
 import { Abi } from 'abitype/zod';
 import { DisplayName, StartStopBlockheight } from './common.js';
-import { TypeboxHelpers } from '@paima/utils';
+import { MergeIntersects, TypeboxHelpers } from '@paima/utils';
 
 export const ChainDataExtensionConfigBaseEvm = Type.Intersect([DisplayName, StartStopBlockheight]);
 
@@ -46,7 +46,9 @@ export const ChainDataExtensionErc721Config = Type.Intersect([
     burnScheduledPrefix: Type.Optional(Type.String()),
   }),
 ]);
-export type TChainDataExtensionErc721Config = Static<typeof ChainDataExtensionErc721Config>;
+export type TChainDataExtensionErc721Config = MergeIntersects<
+  Static<typeof ChainDataExtensionErc721Config>
+>;
 
 // =======
 // ERC1155
@@ -76,7 +78,9 @@ export const ChainDataExtensionGenericConfig = Type.Intersect([
     scheduledPrefix: Type.String(),
   }),
 ]);
-export type TChainDataExtensionGenericConfig = Static<typeof ChainDataExtensionGenericConfig>;
+export type TChainDataExtensionGenericConfig = MergeIntersects<
+  Static<typeof ChainDataExtensionGenericConfig>
+>;
 
 // =======
 // ERC6551
@@ -119,6 +123,6 @@ export const ChainDataExtensionDynamicEvmPrimitiveConfig = Type.Intersect([
     }),
   }),
 ]);
-export type TChainDataExtensionDynamicEvmPrimitiveConfig = Static<
-  typeof ChainDataExtensionDynamicEvmPrimitiveConfig
+export type TChainDataExtensionDynamicEvmPrimitiveConfig = MergeIntersects<
+  Static<typeof ChainDataExtensionDynamicEvmPrimitiveConfig>
 >;

@@ -13,6 +13,7 @@ import type {
   InternalEventType,
   ConfigNetworkType,
   IERC1155Contract,
+  MergeIntersects,
 } from '@paima/utils';
 import type { SubmittedData, STFSubmittedData, PreExecutionBlockHeader } from '@paima/chain-types';
 import { Type } from '@sinclair/typebox';
@@ -381,98 +382,98 @@ interface ChainDataExtensionBase {
   hash: number; // hash of the CDE config that created this type
 }
 
-export type ChainDataExtensionErc20 = ChainDataExtensionBase &
+export type ChainDataExtensionErc20 = MergeIntersects<ChainDataExtensionBase &
   Static<typeof ChainDataExtensionErc20Config> & {
     cdeType: ChainDataExtensionType.ERC20;
     contract: ERC20Contract;
-  };
+  }>;
 
-export type ChainDataExtensionErc721 = ChainDataExtensionBase &
+export type ChainDataExtensionErc721 = MergeIntersects<ChainDataExtensionBase &
   Static<typeof ChainDataExtensionErc721Config> & {
     cdeType: ChainDataExtensionType.ERC721;
     contract: ERC721Contract;
-  };
+  }>;
 
 /** same as ERC721, but with a different type flag (see isPaimaErc721) */
-export type ChainDataExtensionPaimaErc721 = ChainDataExtensionBase &
+export type ChainDataExtensionPaimaErc721 = MergeIntersects<ChainDataExtensionBase &
   Static<typeof ChainDataExtensionErc721Config> & {
     cdeType: ChainDataExtensionType.PaimaERC721;
     contract: PaimaERC721Contract;
-  };
+  }>;
 
-export type ChainDataExtensionErc20Deposit = ChainDataExtensionBase &
+export type ChainDataExtensionErc20Deposit = MergeIntersects<ChainDataExtensionBase &
   Static<typeof ChainDataExtensionErc20DepositConfig> & {
     cdeType: ChainDataExtensionType.ERC20Deposit;
     contract: ERC20Contract;
-  };
+  }>;
 
-export type ChainDataExtensionErc1155 = ChainDataExtensionBase &
+export type ChainDataExtensionErc1155 = MergeIntersects<ChainDataExtensionBase &
   Static<typeof ChainDataExtensionErc1155Config> & {
     cdeType: ChainDataExtensionType.ERC1155;
     contract: IERC1155Contract;
-  };
+  }>;
 
-export type ChainDataExtensionGeneric = ChainDataExtensionBase &
+export type ChainDataExtensionGeneric = MergeIntersects<ChainDataExtensionBase &
   Omit<Static<typeof ChainDataExtensionGenericConfig>, 'abiPath'> & {
     cdeType: ChainDataExtensionType.Generic;
     eventName: string;
     eventSignatureHash: string;
     contract: Contract;
-  };
+  }>;
 
-export type ChainDataExtensionErc6551Registry = ChainDataExtensionBase &
+export type ChainDataExtensionErc6551Registry = MergeIntersects<ChainDataExtensionBase &
   Static<typeof ChainDataExtensionErc6551RegistryConfig> & {
     cdeType: ChainDataExtensionType.ERC6551Registry;
     contract: ERC6551RegistryContract | OldERC6551RegistryContract;
-  };
+  }>;
 
-export type ChainDataExtensionDynamicEvmPrimitive = ChainDataExtensionBase &
+export type ChainDataExtensionDynamicEvmPrimitive = MergeIntersects<ChainDataExtensionBase &
   Omit<Static<typeof ChainDataExtensionDynamicEvmPrimitiveConfig>, 'abiPath'> & {
     cdeType: ChainDataExtensionType.DynamicEvmPrimitive;
     contract: Contract;
     eventSignatureHash: string;
     eventName: string;
-  };
+  }>;
 
-export type ChainDataExtensionCardanoDelegation = ChainDataExtensionBase &
+export type ChainDataExtensionCardanoDelegation = MergeIntersects<ChainDataExtensionBase &
   Static<typeof ChainDataExtensionCardanoDelegationConfig> & {
     cdeType: ChainDataExtensionType.CardanoPool;
-  };
+  }>;
 
-export type ChainDataExtensionCardanoProjectedNFT = ChainDataExtensionBase &
+export type ChainDataExtensionCardanoProjectedNFT = MergeIntersects<ChainDataExtensionBase &
   Static<typeof ChainDataExtensionCardanoProjectedNFTConfig> & {
     cdeType: ChainDataExtensionType.CardanoProjectedNFT;
-  };
+  }>;
 
-export type ChainDataExtensionCardanoDelayedAsset = ChainDataExtensionBase &
+export type ChainDataExtensionCardanoDelayedAsset = MergeIntersects<ChainDataExtensionBase &
   Static<typeof ChainDataExtensionCardanoDelayedAssetConfig> & {
     cdeType: ChainDataExtensionType.CardanoAssetUtxo;
-  };
+  }>;
 
-export type ChainDataExtensionCardanoTransfer = ChainDataExtensionBase &
+export type ChainDataExtensionCardanoTransfer = MergeIntersects<ChainDataExtensionBase &
   Static<typeof ChainDataExtensionCardanoTransferConfig> & {
     cdeType: ChainDataExtensionType.CardanoTransfer;
-  };
+  }>;
 
-export type ChainDataExtensionCardanoMintBurn = ChainDataExtensionBase &
+export type ChainDataExtensionCardanoMintBurn = MergeIntersects<ChainDataExtensionBase &
   Static<typeof ChainDataExtensionCardanoMintBurnConfig> & {
     cdeType: ChainDataExtensionType.CardanoMintBurn;
-  };
+  }>;
 
-export type ChainDataExtensionMinaEventGeneric = ChainDataExtensionBase &
+export type ChainDataExtensionMinaEventGeneric = MergeIntersects<ChainDataExtensionBase &
   Static<typeof ChainDataExtensionMinaEventGenericConfig> & {
     cdeType: ChainDataExtensionType.MinaEventGeneric;
-  };
+  }>;
 
-export type ChainDataExtensionMinaActionGeneric = ChainDataExtensionBase &
+export type ChainDataExtensionMinaActionGeneric = MergeIntersects<ChainDataExtensionBase &
   Static<typeof ChainDataExtensionMinaActionGenericConfig> & {
     cdeType: ChainDataExtensionType.MinaActionGeneric;
-  };
+  }>;
 
-export type ChainDataExtensionMidnightContractState = ChainDataExtensionBase &
+export type ChainDataExtensionMidnightContractState = MergeIntersects<ChainDataExtensionBase &
   Static<typeof ChainDataExtensionMidnightContractStateConfig> & {
     cdeType: ChainDataExtensionType.MidnightContractState;
-  };
+  }>;
 
 export const CdeConfig = Type.Object({
   extensions: Type.Array(

@@ -23,7 +23,7 @@ function isLocalhost(ipAddress: string): boolean {
  */
 export class PaimaEventBroker {
   constructor(private broker: 'Paima-Engine' | 'Batcher') {}
-  private static aedes: Aedes | null = null;
+  private static aedes: Aedes.default | null = null;
   private static server: Server | null = null;
 
   /*
@@ -33,7 +33,7 @@ export class PaimaEventBroker {
     this.checkEnabled();
     if (PaimaEventBroker.server) return PaimaEventBroker.server;
 
-    PaimaEventBroker.aedes = new Aedes();
+    PaimaEventBroker.aedes = new Aedes.default();
     PaimaEventBroker.aedes.authorizePublish = (client, packet, callback): void => {
       if (client?.req?.socket?.remoteAddress == null)
         return callback(

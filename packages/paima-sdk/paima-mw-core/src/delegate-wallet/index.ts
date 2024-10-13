@@ -158,7 +158,7 @@ export class WalletConnectHelper {
         loginInfo = { mode: WalletMode.Mina };
         break;
       default:
-        assertNever(walletType);
+        assertNever.default(walletType);
     }
     if (!loginInfo) throw new Error(`Cannot get loginInfo for ${walletType} ${walletName}`);
     return loginInfo;

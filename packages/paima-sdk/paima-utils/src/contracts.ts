@@ -1,6 +1,4 @@
-import Web3 from 'web3';
 import type { AbiItem } from 'viem';
-import type { Contract, EventData } from 'web3-eth-contract';
 import { isAddress } from 'viem';
 
 import type * as Contracts from './contract-types/index.js';
@@ -42,9 +40,11 @@ export type {
 } from './contract-types/IERC1155Contract.js';
 export type { AccountCreated } from './contract-types/ERC6551RegistryContract.js';
 
-export type { Web3, Contract, AbiItem, EventData };
+export type { AbiItem };
 export { AddressType, ChainDataExtensionType, ChainDataExtensionDatumType };
 
+type Web3 = any; // TODO: delete
+type Contract = any; // TODO: delete
 export async function initWeb3(nodeUrl: string): Promise<Web3> {
   /**
    * enable the lines below if you want to debug RPC requests
@@ -61,21 +61,21 @@ export async function initWeb3(nodeUrl: string): Promise<Web3> {
   // const provider = providerFromEngine(engine);
   // // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
   // const web3 = new Web3(provider as any);
-  const web3 = new Web3(nodeUrl);
-  try {
-    await web3.eth.getNodeInfo();
-  } catch (e) {
-    throw new Error(`Error connecting to node at ${nodeUrl}:\n${e}`);
-  }
-  return web3;
+  // const web3 = new Web3(nodeUrl);
+  // try {
+  //   await web3.eth.getNodeInfo();
+  // } catch (e) {
+  //   throw new Error(`Error connecting to node at ${nodeUrl}:\n${e}`);
+  // }
+  // return web3;
 }
 
 export function getAbiContract(address: string, abi: AbiItem[], web3?: Web3): Contract {
-  if (web3 === undefined) {
-    web3 = new Web3();
-  }
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-  return new web3.eth.Contract(abi as any, address);
+  // if (web3 === undefined) {
+  //   web3 = new Web3();
+  // }
+  // // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+  // return new web3.eth.Contract(abi as any, address);
 }
 
 export function getPaimaL2Contract(address: string, web3?: Web3): Contracts.PaimaL2Contract {

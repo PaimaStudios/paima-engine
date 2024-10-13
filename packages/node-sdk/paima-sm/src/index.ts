@@ -1,4 +1,3 @@
-import { Pool } from 'pg';
 import type { PoolClient, Client } from 'pg';
 
 import {
@@ -66,11 +65,15 @@ import type {
 } from './types.js';
 import { ConfigNetworkType } from '@paima/utils';
 import assertNever from 'assert-never';
-import { keccak_256 } from 'js-sha3';
 import type { AppEvents, EventPathAndDef, ResolvedPath } from '@paima/events';
 import { PaimaEventManager } from '@paima/events';
 import { PaimaEventBroker } from '@paima/broker';
 import { INTERNAL_COMMAND_PREFIX } from '@paima/concise';
+import sha3 from 'js-sha3';
+import pg from 'pg';
+const { Pool } = pg;
+type Pool = import('pg').Pool;
+const { keccak_256 } = sha3;
 
 export * from './PaimaSTM.js';
 export * from './types.js';
@@ -872,7 +875,7 @@ async function processInternalEvents(
         );
         break;
       default:
-        assertNever(event);
+        assertNever.default(event);
     }
   }
 }

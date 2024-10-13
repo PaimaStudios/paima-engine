@@ -29,10 +29,7 @@
   "homepage": "https://docs.paimastudios.com",
   "scripts": {
     "lint:eslint": "eslint .",
-    "prebuild": "npm run generate-types",
-    "build": "tsc --build tsconfig.build.json",
-    "generate-types": "npx typechain --target=web3-v1 'src/artifacts/*.json' --out-dir src/contract-types",
-    "test": "vitest run"
+    "build": "tsc --build tsconfig.build.json"
   },
   "devDependencies": {
     "@typechain/web3-v1": "^6.0.6",
@@ -44,7 +41,6 @@
     "@sinclair/typebox": "^0.33.7",
     "flatted": "^3.2.7",
     "web3": "1.10.0",
-    "yaml": "^2.3.1",
-    "@dcspark/cip34-js": "3.0.0"
+    "yaml": "^2.3.1"
   }
 }

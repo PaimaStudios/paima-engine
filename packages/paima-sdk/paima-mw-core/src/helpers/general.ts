@@ -23,7 +23,7 @@ export async function getBlockNumber(): Promise<number> {
 
       return last;
     default:
-      assertNever(networkType);
+      assertNever.default(networkType);
   }
 }
 

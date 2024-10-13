@@ -1,4 +1,4 @@
-import type { OtherEvmConfig, Web3 } from '@paima/utils';
+import type { OtherEvmConfig } from '@paima/utils';
 import {
   doLog,
   initWeb3,
@@ -7,7 +7,6 @@ import {
   delay,
   InternalEventType,
   ChainDataExtensionType,
-  caip2PrefixFor,
 } from '@paima/utils';
 import type { ChainFunnel, FunnelJson, ReadPresyncDataFrom } from '@paima/runtime';
 import { type ChainData, type EvmPresyncChainData, type PresyncChainData } from '@paima/sm';

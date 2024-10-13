@@ -187,7 +187,7 @@ export class FunnelFactory implements IFunnelFactory {
           // order) and it's already initialized
           break;
         default:
-          assertNever(type);
+          assertNever.default(type);
       }
     }
 

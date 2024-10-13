@@ -1,6 +1,5 @@
 import type { AddressType, UserSignature } from '@paima/utils';
 import type { WalletAddress, InputDataString } from '@paima/chain-types';
-import { keccak_256 } from 'js-sha3';
 import {
   BatcherInnerGrammar,
   BuiltinGrammar,
@@ -11,6 +10,8 @@ import {
   parseRawStmInput,
   parseStmInput,
 } from './v2/index.js';
+import sha3 from 'js-sha3';
+const { keccak_256 } = sha3;
 
 export interface BatchedSubunit {
   addressType: AddressType;

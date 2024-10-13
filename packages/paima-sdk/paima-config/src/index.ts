@@ -1,3 +1,2 @@
-export * from './configCheck.js';
-export * from './ConfigBuilder.js';
+export * from './config/index.js';
 export * from './schema/index.js';

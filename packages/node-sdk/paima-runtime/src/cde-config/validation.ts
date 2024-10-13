@@ -1,6 +1,6 @@
 import type { PoolClient, Pool } from 'pg';
 
-import { caip2PrefixFor, doLog, GlobalConfig } from '@paima/utils';
+import { doLog, GlobalConfig } from '@paima/utils';
 import { tx, getChainDataExtensions, registerChainDataExtension } from '@paima/db';
 
 import type { ChainDataExtension } from '@paima/sm';

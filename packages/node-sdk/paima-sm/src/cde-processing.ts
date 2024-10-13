@@ -59,6 +59,6 @@ export async function cdeTransitionFunction(
     case ChainDataExtensionDatumType.MidnightContractState:
       return await processMidnightContractStateDatum(cdeDatum, inPresync);
     default:
-      assertNever(cdeDatum);
+      assertNever.default(cdeDatum);
   }
 }

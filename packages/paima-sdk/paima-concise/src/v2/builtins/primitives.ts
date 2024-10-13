@@ -124,6 +124,7 @@ export const BuiltinTransitions = {
 type NonNeverKeys<T> = {
   [K in keyof T]: T[K] extends never ? never : K;
 }[keyof T];
+type FilterNever<T> = Pick<T, NonNeverKeys<T>>;
 
 type MapPrimitivesToTuplesReturn<T extends PrimitiveConfig> = {
   [K in keyof T as T[K] & string]: (typeof BuiltinTransitions)[T['type']] extends Record<
@@ -133,8 +134,6 @@ type MapPrimitivesToTuplesReturn<T extends PrimitiveConfig> = {
     ? GrammarEntry
     : never;
 };
-
-type FilterNever<T> = Pick<T, NonNeverKeys<T>>;
 
 export type PrimitivesToGrammar<T extends Record<string, { primitive: PrimitiveConfig }>> =
   FilterNever<MapPrimitivesToTuplesReturn<T[keyof T]['primitive']>>;

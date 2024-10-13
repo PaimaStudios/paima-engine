@@ -43,7 +43,7 @@ export async function specificWalletLogin(
         return await availJsLoginWrapper(loginInfo);
       }
       default:
-        assertNever(loginInfo, true);
+        assertNever.default(loginInfo, true);
         return errorFxn(FE_ERR_SPECIFIC_WALLET_NOT_INSTALLED);
     }
   })();

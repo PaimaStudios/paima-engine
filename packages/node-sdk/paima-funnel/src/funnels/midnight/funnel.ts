@@ -10,7 +10,6 @@ import type {
 } from '@paima/sm';
 import type { MidnightConfig } from '@paima/utils';
 import {
-  caip2PrefixFor,
   ChainDataExtensionDatumType,
   ChainDataExtensionType,
   ConfigNetworkType,

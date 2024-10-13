@@ -204,7 +204,7 @@ export async function postConciselyEncodedData(
       );
       return await submitToBatcher(subunit, captcha, async);
     default:
-      assertNever(postingMode, true);
+      assertNever.default(postingMode, true);
       return errorFxn(
         PaimaMiddlewareErrorCode.INTERNAL_INVALID_POSTING_MODE,
         `Invalid posting mode: ${postingMode}`

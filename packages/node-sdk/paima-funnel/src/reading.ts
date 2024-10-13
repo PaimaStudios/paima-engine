@@ -1,4 +1,3 @@
-import type Web3 from 'web3';
 import type { BlockTransactionString } from 'web3-eth';
 import type { PoolClient } from 'pg';
 import {
@@ -8,7 +7,6 @@ import {
   doLog,
   ChainDataExtensionType,
   getErc721Contract,
-  caip2PrefixFor,
 } from '@paima/utils';
 import type { MainEvmConfig, OtherEvmConfig, PaimaL2Contract } from '@paima/utils';
 import { TimeoutError, instantiateCdeGeneric } from '@paima/runtime';

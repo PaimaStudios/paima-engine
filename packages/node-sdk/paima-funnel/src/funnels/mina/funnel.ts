@@ -5,7 +5,6 @@ import {
   delay,
   ENV,
   InternalEventType,
-  caip2PrefixFor,
 } from '@paima/utils';
 import type { ChainFunnel, FunnelJson, ReadPresyncDataFrom } from '@paima/runtime';
 import type {

@@ -9,8 +9,7 @@ import {
   getDelegationsToWithAddress,
   getMainAddressFromAddress,
 } from './sql/wallet-delegation.queries.js';
-import type { PoolClient, Notification, Client } from 'pg';
-import type { IDatabaseConnection } from '@pgtyped/runtime/lib/tag';
+import type { Pool, PoolClient, Notification, Client } from 'pg';
 
 export type WalletDelegate = { address: string; id: number };
 export const NO_USER_ID = -1;
@@ -27,7 +26,7 @@ export const addressCache = new Map<string, WalletDelegate>();
 // If wallet does not exist, It will NOT be created in address table.
 export async function getMainAddress(
   _address: string,
-  DBConn: IDatabaseConnection
+  DBConn: Pool | PoolClient
 ): Promise<WalletDelegate> {
   const address = _address.toLocaleLowerCase();
   let addressMapping: WalletDelegate | undefined = addressCache.get(address);

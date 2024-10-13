@@ -1,4 +1,4 @@
-import { AddressType, doLog, getReadNamespaces } from '@paima/utils';
+import { AddressType, doLog } from '@paima/utils';
 import type { SubmittedData } from '@paima/runtime';
 import type { PaimaGameInteraction } from '@paima/utils';
 import type { NonTimerSubmittedData } from '@paima/chain-types';
@@ -11,7 +11,8 @@ import {
   usesPrefix,
 } from '@paima/concise';
 import { hexToString } from 'viem';
-import { keccak_256 } from 'js-sha3';
+import sha3 from 'js-sha3';
+const { keccak_256 } = sha3;
 
 interface ValidatedSubmittedData extends SubmittedData {
   validated: boolean;

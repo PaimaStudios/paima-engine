@@ -35,7 +35,7 @@ export function topicToBroker(topic: TopicPrefix): PaimaEventBrokerNames {
     case TopicPrefix.App:
       return PaimaEventBrokerNames.PaimaEngine;
     default:
-      assertNever(topic);
+      assertNever.default(topic);
   }
 }
 

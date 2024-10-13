@@ -11,6 +11,7 @@
     { "path": "../paima-concise/tsconfig.build.json" },
     { "path": "../paima-providers/tsconfig.build.json" },
     { "path": "../paima-chain-types/tsconfig.build.json" },
-    { "path": "../../node-sdk/paima-rest/tsconfig.build.json" }
+    { "path": "../../node-sdk/paima-rest/tsconfig.build.json" },
+    { "path": "../paima-config/tsconfig.build.json" },
   ]
 }

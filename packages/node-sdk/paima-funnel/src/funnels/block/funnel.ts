@@ -1,6 +1,6 @@
-import type { EvmConfig, MainEvmConfig, PaimaL2Contract, Web3 } from '@paima/utils';
-import { ChainDataExtensionType, ENV, caip2PrefixFor, doLog, timeout } from '@paima/utils';
-import type { ChainFunnel, FunnelJson, ReadPresyncDataFrom } from '@paima/runtime';
+import type { PaimaL2Contract } from '@paima/utils';
+import { ChainDataExtensionType, ENV, doLog, timeout } from '@paima/utils';
+import type { ChainFunnel, ReadPresyncDataFrom } from '@paima/runtime';
 import { type ChainData, type PresyncChainData } from '@paima/sm';
 import {
   fetchDynamicEvmPrimitives,
@@ -9,23 +9,22 @@ import {
 } from '../../reading.js';
 import { getUngroupedCdeData } from '../../cde/reading.js';
 import { composeChainData, groupCdeData, groupEvmCdeData } from '../../utils.js';
-import type { ChainInfo } from '../../utils.js';
 import { BaseFunnel } from '../BaseFunnel.js';
 import type { FunnelSharedData } from '../BaseFunnel.js';
 import { RpcCacheEntry, RpcRequestState } from '../FunnelCache.js';
 import type { PoolClient } from 'pg';
 import { FUNNEL_PRESYNC_FINISHED } from '@paima/utils';
+import { caip2PrefixFor, ChainInfo, ConfigFunnelEvmMain, ConfigNetworkEvm } from '@paima/config';
 
 const GET_BLOCK_NUMBER_TIMEOUT = 5000;
 
 export class BlockFunnel extends BaseFunnel implements ChainFunnel {
-  chainInfo: ChainInfo<EvmConfig>;
+  chainInfo: ChainInfo<ConfigNetworkEvm, ConfigFunnelEvmMain>;
 
   protected constructor(
     sharedData: FunnelSharedData,
     dbTx: PoolClient,
-    chainInfo: ChainInfo<EvmConfig>,
-    readonly web3: Web3,
+    chainInfo: ChainInfo<ConfigNetworkEvm, ConfigFunnelEvmMain>,
     readonly paimaL2Contract: PaimaL2Contract
   ) {
     super(sharedData, dbTx);
@@ -40,7 +39,7 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
   public override async readData(blockHeight: number): Promise<ChainData[]> {
     const [fromBlock, toBlock] = await this.adjustBlockHeightRange(
       blockHeight,
-      this.chainInfo.config.funnelBlockGroupSize
+      this.chainInfo.funnel.funnelBlockGroupSize
     );
 
     if (fromBlock < 0 || toBlock < fromBlock) {
@@ -48,10 +47,10 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
     }
 
     if (toBlock === fromBlock) {
-      doLog(`Block funnel ${this.chainInfo.config.chainId}: #${toBlock}`);
+      doLog(`Block funnel ${this.chainInfo.network.chainId}: #${toBlock}`);
       return await this.internalReadDataSingle(fromBlock);
     } else {
-      doLog(`Block funnel ${this.chainInfo.config.chainId}: #${fromBlock}-${toBlock}`);
+      doLog(`Block funnel ${this.chainInfo.network.chainId}: #${fromBlock}-${toBlock}`);
       return await this.internalReadDataMulti(fromBlock, toBlock);
     }
   }
@@ -67,7 +66,7 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
   ): Promise<[number, number]> => {
     const ERR_RESULT: [number, number] = [-1, -2];
 
-    const caip2 = caip2PrefixFor(this.chainInfo.config);
+    const caip2 = caip2PrefixFor(this.chainInfo.network);
     const latestBlockQueryState =
       this.sharedData.cacheManager.cacheEntries[RpcCacheEntry.SYMBOL]?.getState(caip2);
     if (latestBlockQueryState?.state !== RpcRequestState.HasResult) {
@@ -88,7 +87,7 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
     if (blockNumber < 0) {
       return [];
     }
-    const caip2 = caip2PrefixFor(this.chainInfo.config);
+    const caip2 = caip2PrefixFor(this.chainInfo.network);
     try {
       const dynamicDatums = await fetchDynamicEvmPrimitives(
         blockNumber,
@@ -104,7 +103,7 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
           this.web3,
           this.sharedData.extensions.filter(
             extension =>
-              extension.network === this.chainInfo.name &&
+              extension.network === this.chainInfo.network.displayName &&
               // these are fetched above
               extension.cdeType !== ChainDataExtensionType.DynamicEvmPrimitive
           ),
@@ -133,7 +132,7 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
     if (toBlock < fromBlock || fromBlock < 0) {
       return [];
     }
-    const caip2 = caip2PrefixFor(this.chainInfo.config);
+    const caip2 = caip2PrefixFor(this.chainInfo.network);
     try {
       const dynamicDatums = await fetchDynamicEvmPrimitives(
         fromBlock,
@@ -156,7 +155,7 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
           this.web3,
           this.sharedData.extensions.filter(
             extension =>
-              extension.network === this.chainInfo.name &&
+              extension.network === this.chainInfo.network.displayName &&
               // these are fetched above
               extension.cdeType !== ChainDataExtensionType.DynamicEvmPrimitive
           ),
@@ -179,7 +178,7 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
   public override async readPresyncData(
     args: ReadPresyncDataFrom
   ): Promise<{ [caip2: string]: PresyncChainData[] | typeof FUNNEL_PRESYNC_FINISHED }> {
-    const caip2 = caip2PrefixFor(this.chainInfo.config);
+    const caip2 = caip2PrefixFor(this.chainInfo.network);
     let arg = args.find(arg => arg.caip2 == caip2);
 
     if (!arg) {
@@ -213,7 +212,7 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
           this.web3,
           this.sharedData.extensions.filter(
             extension =>
-              extension.network === this.chainInfo.name &&
+              extension.network === this.chainInfo.network.displayName &&
               // these are fetched above
               extension.cdeType !== ChainDataExtensionType.DynamicEvmPrimitive
           ),
@@ -235,7 +234,7 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
   public static async recoverState(
     sharedData: FunnelSharedData,
     dbTx: PoolClient,
-    chainInfo: ChainInfo<MainEvmConfig>,
+    chainInfo: ChainInfo<ConfigNetworkEvm, ConfigFunnelEvmMain>,
     web3: Web3,
     paimaL2Contract: PaimaL2Contract
   ): Promise<BlockFunnel> {
@@ -252,16 +251,13 @@ export class BlockFunnel extends BaseFunnel implements ChainFunnel {
       return newEntry;
     })();
 
-    const caip2 = caip2PrefixFor(chainInfo.config);
+    const caip2 = caip2PrefixFor(chainInfo.network);
     cacheEntry.updateState(caip2, latestBlock);
 
     return new BlockFunnel(sharedData, dbTx, chainInfo, web3, paimaL2Contract);
   }
 
-  public override configPrint(): FunnelJson {
-    return {
-      type: 'BlockFunnel',
-      chainName: this.chainInfo.name,
-    };
+  public override configPrint(): ChainInfo<ConfigNetworkEvm, ConfigFunnelEvmMain> {
+    return this.chainInfo;
   }
 }

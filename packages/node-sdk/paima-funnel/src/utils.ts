@@ -5,14 +5,9 @@ import type {
   EvmPresyncChainData,
   InternalEvent,
 } from '@paima/sm';
-import type { ConfigMapping, InternalEventType } from '@paima/utils';
+import type { InternalEventType } from '@paima/utils';
 import type { SubmittedData } from '@paima/chain-types';
-import { ConfigNetworkType, doLog } from '@paima/utils';
-
-export type ChainInfo<T extends ConfigMapping[ConfigNetworkType]> = {
-  config: T;
-  name: string;
-};
+import { doLog } from '@paima/utils';
 
 export function groupEvmCdeData(
   caip2: string,

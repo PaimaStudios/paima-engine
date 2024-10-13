@@ -2,6 +2,7 @@ import { Type } from '@sinclair/typebox';
 import type { Static } from '@sinclair/typebox';
 import { ConfigFunnelType } from './types.js';
 import { ConfigSchema } from '../utils.js';
+import { MergeIntersects, TypeboxHelpers } from '@paima/utils';
 
 // ===========
 // Base schema
@@ -26,12 +27,13 @@ export const ConfigFunnelSchemaEvmBase = new ConfigSchema({
 export const ConfigFunnelSchemaEvmMain = ConfigFunnelSchemaEvmBase.cloneMerge({
   required: Type.Object({
     type: Type.Literal(ConfigFunnelType.EVM_MAIN),
-    paimaL2ContractAddress: Type.String(), // TODO: remove this and make it a primitive eventually
+    // TODO: remove this and make it a primitive eventually
+    paimaL2ContractAddress: TypeboxHelpers.EvmAddress,
   }),
   optional: Type.Object({}),
 });
-export type ConfigFunnelEvmMain = Static<
-  ReturnType<typeof ConfigFunnelSchemaEvmMain.allProperties<true>>
+export type ConfigFunnelEvmMain = MergeIntersects<
+  Static<ReturnType<typeof ConfigFunnelSchemaEvmMain.allProperties<true>>>
 >;
 
 // ==========================
@@ -41,12 +43,12 @@ export type ConfigFunnelEvmMain = Static<
 export const ConfigFunnelSchemaEvmParallel = ConfigFunnelSchemaEvmBase.cloneMerge({
   required: Type.Object({
     type: Type.Literal(ConfigFunnelType.EVM_PARALLEL),
-  }),
-  optional: Type.Object({
-    delay: Type.Number(),
     confirmationDepth: Type.Number(),
   }),
+  optional: Type.Object({
+    delayMs: Type.Number({ default: 2 * 1000 }),
+  }),
 });
-export type ConfigFunnelEvmParallel = Static<
-  ReturnType<typeof ConfigFunnelSchemaEvmParallel.allProperties<true>>
+export type ConfigFunnelEvmParallel = MergeIntersects<
+  Static<ReturnType<typeof ConfigFunnelSchemaEvmParallel.allProperties<true>>>
 >;

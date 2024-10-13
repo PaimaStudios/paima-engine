@@ -80,7 +80,7 @@ export async function connectInjectedWallet<Api>(
     const provider = await connector.connectExternal(gameInfo, preference.connection);
     return provider;
   }
-  assertNever(preference);
+  assertNever.default(preference);
 }
 
 export function callProvider<

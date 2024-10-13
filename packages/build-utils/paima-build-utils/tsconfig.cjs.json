@@ -3,6 +3,9 @@
   "compilerOptions": {
     "outDir": "build/cjs",
     "module": "commonjs",
+    "moduleResolution": "node"
   },
-  "include": ["src/**/*.cts"]
+  "include": [
+    "src/**/*.cts"
+  ]
 }

@@ -6,11 +6,7 @@ import type {
 } from '@paima/config';
 import { type CdeDynamicEvmPrimitiveDatum } from './types.js';
 import { ConfigPrimitiveType } from '@paima/config';
-import {
-  ChainDataExtensionType,
-  DYNAMIC_PRIMITIVE_NAME_SEPARATOR,
-  GlobalConfig,
-} from '@paima/utils';
+import { ChainDataExtensionType, DYNAMIC_PRIMITIVE_NAME_SEPARATOR } from '@paima/utils';
 
 // We omit storing the name from the config because it's dynamically generated
 // on the db insert as the primary key of the row. We can then recover it from

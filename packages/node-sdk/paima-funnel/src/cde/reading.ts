@@ -76,6 +76,6 @@ async function getSpecificCdeData(
     case ChainDataExtensionType.MidnightContractState:
       return [];
     default:
-      assertNever(extension);
+      assertNever.default(extension);
   }
 }

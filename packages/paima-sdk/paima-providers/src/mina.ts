@@ -18,7 +18,7 @@ import {
 import { getWindow } from './window.js';
 import type AuroMinaApi from '@aurowallet/mina-provider';
 
-export type MinaApi = AuroMinaApi;
+export type MinaApi = AuroMinaApi.default;
 
 type MinaAddress = any;
 

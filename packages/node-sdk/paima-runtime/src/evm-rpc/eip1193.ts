@@ -17,7 +17,6 @@ import type {
 import type { PaimaNodeRestComponents } from '@paima/mw-core';
 import { getPaimaNodeRestClient } from '@paima/mw-core';
 import { add0x, ENV, strip0x } from '@paima/utils';
-import { keccak_256 } from 'js-sha3';
 import { registerCacheMiddleware } from './cache.js';
 import type { EvmRpcReturn, PaimaEvmRpcSchema } from './types.js';
 import {
@@ -56,8 +55,9 @@ import {
   type LogEventFields,
   type RegisteredEvent,
 } from '@paima/events';
-import type { TNumber, TSchema } from '@sinclair/typebox';
-import { Type } from '@sinclair/typebox';
+import type { TSchema } from '@sinclair/typebox';
+import sha3 from 'js-sha3';
+const { keccak_256 } = sha3;
 
 /* eslint-disable @typescript-eslint/no-unsafe-argument -- seems like an eslint bug? */
 

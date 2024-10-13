@@ -1,6 +1,6 @@
 import process from 'process';
 
-import { doLog, logError, ENV, GlobalConfig, caip2PrefixFor } from '@paima/utils';
+import { doLog, logError, ENV, GlobalConfig } from '@paima/utils';
 import { DataMigrations } from '@paima/db';
 import { validatePersistentCdeConfig } from './cde-config/validation.js';
 import type { IFunnelFactory, PaimaRuntimeInitializer } from './types.js';
