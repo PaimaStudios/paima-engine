@@ -1,0 +1,6 @@
+#!/bin/sh
+set -e
+version=${1:-latest}
+docker buildx build . --target paima-sdk --tag ghcr.io/paimastudios/paima-sdk:"$version"
+docker buildx build . --target paima-engine --tag ghcr.io/paimastudios/paima-engine:"$version"
+docker buildx build . --target paima-batcher --tag ghcr.io/paimastudios/paima-batcher:"$version"
