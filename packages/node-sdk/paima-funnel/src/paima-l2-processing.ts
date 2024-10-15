@@ -9,9 +9,11 @@ import {
   createMessageForBatcher,
   extractBatches,
 } from '@paima/concise';
-import { toBN, hexToUtf8 } from 'web3-utils';
+import web3 from 'web3-utils';
+const { toBN, hexToUtf8 } = web3;
 import type { PoolClient } from 'pg';
-import { keccak_256 } from 'js-sha3';
+import sha3 from 'js-sha3';
+const { keccak_256 } = sha3;
 
 interface ValidatedSubmittedData extends SubmittedData {
   validated: boolean;

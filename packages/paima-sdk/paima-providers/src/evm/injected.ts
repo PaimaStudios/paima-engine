@@ -9,7 +9,8 @@ import type {
   AddressAndType,
 } from '../IProvider.js';
 import { optionToActive } from '../IProvider.js';
-import { utf8ToHex } from 'web3-utils';
+import web3 from 'web3-utils';
+const { utf8ToHex } = web3;
 import { ProviderApiError, ProviderNotInitialized, WalletNotFound } from '../errors.js';
 import type { EvmAddress } from './types.js';
 import { AddressType } from '@paima/utils';

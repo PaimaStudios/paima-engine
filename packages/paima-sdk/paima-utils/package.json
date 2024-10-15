@@ -41,10 +41,10 @@
     "typechain": "^8.3.1"
   },
   "dependencies": {
+    "@dcspark/cip34-js": "^3.0.1",
     "@sinclair/typebox": "^0.33.7",
     "flatted": "^3.2.7",
     "web3": "1.10.0",
-    "yaml": "^2.3.1",
-    "@dcspark/cip34-js": "2.0.0"
+    "yaml": "^2.3.1"
   }
 }

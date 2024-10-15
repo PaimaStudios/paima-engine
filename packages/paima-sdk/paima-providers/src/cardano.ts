@@ -1,5 +1,6 @@
 import { AddressType, hexStringToUint8Array, type UserSignature } from '@paima/utils';
-import { utf8ToHex } from 'web3-utils';
+import web3 from 'web3-utils';
+const { utf8ToHex } = web3;
 import { optionToActive } from './IProvider.js';
 import type {
   ActiveConnection,
