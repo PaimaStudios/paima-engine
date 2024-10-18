@@ -1,15 +1,15 @@
 import type { MergeIntersects } from '@paima/utils';
-import { Static, StaticDecode } from '@sinclair/typebox';
-import {
+import type { Static, StaticDecode } from '@sinclair/typebox';
+import type {
   ConfigFunnelAll,
   ConfigFunnelMain,
   ConfigFunnelParallel,
   ConfigNetworkAll,
   ConfigPrimitiveAll,
 } from '../schema/index.js';
-import { SecurityNamespace } from '../schema/namespace.js';
-import { Chain, ChainFormatters } from 'viem';
-import { ConfigFunnelDecorator } from '../schema/funnel/decorators/all.js';
+import type { SecurityNamespace } from '../schema/namespace.js';
+import type { Chain, ChainFormatters } from 'viem';
+import type { ConfigFunnelDecorator } from '../schema/funnel/decorators/all.js';
 
 export type NetworkConfig<RequireDefaults extends boolean = true> = MergeIntersects<
   Static<ReturnType<typeof ConfigNetworkAll<RequireDefaults>>>
@@ -78,9 +78,9 @@ export type PrimitiveInfo<FunnelName, Config extends PrimitiveConfig> = {
   primitive: Config;
 };
 
-/// =================
-/// Config Data Types
-/// =================
+// =================
+// Config Data Types
+// =================
 
 export type NetworkList = Record<string, NetworkConfig>;
 export type NetworkData<Networks extends NetworkList> = {
@@ -147,11 +147,13 @@ export type JsonConfigData<
     SubFunnel<(keyof Networks & string) | undefined>
   >,
   Primitives extends PrimitivesList<Networks, Funnels>,
-> = NetworkData<Networks> &
-  DeployedAddressesData<Networks, DeployedAddresses> &
-  FunnelsData<(keyof Networks & string) | undefined, Funnels> &
-  PrimitivesData<Networks, Funnels, Primitives> &
-  NamespaceData<SecurityNamespace>;
+> = MergeIntersects<
+  NetworkData<Networks> &
+    DeployedAddressesData<Networks, DeployedAddresses> &
+    FunnelsData<(keyof Networks & string) | undefined, Funnels> &
+    PrimitivesData<Networks, Funnels, Primitives> &
+    NamespaceData<SecurityNamespace>
+>;
 
 export type ViemMappingData<Networks extends NetworkList> = {
   viemMapping: Record<keyof Networks & string, Chain<ChainFormatters>>;
@@ -168,4 +170,6 @@ export type ConfigData<
     SubFunnel<(keyof Networks & string) | undefined>
   >,
   Primitives extends PrimitivesList<Networks, Funnels>,
-> = JsonConfigData<Networks, DeployedAddresses, Funnels, Primitives> & NonJsonConfigData<Networks>;
+> = MergeIntersects<
+  JsonConfigData<Networks, DeployedAddresses, Funnels, Primitives> & NonJsonConfigData<Networks>
+>;

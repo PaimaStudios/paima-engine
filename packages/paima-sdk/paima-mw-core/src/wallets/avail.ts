@@ -21,10 +21,9 @@ async function connectWallet(
         new Error(`No Avail network found in configuration`)
       );
     }
-    const [_, config] = availConfig;
     const gameInfo = {
       gameName: getGameName(),
-      gameChainId: '0x' + config.genesisHash.slice(2, 32 + 2),
+      gameChainId: '0x' + availConfig.genesisHash.slice(2, 32 + 2),
     };
     const name = loginInfo.connection.metadata.name;
 

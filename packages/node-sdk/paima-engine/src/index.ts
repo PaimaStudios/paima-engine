@@ -1,6 +1,6 @@
 import type { GameStateMachine, GameStateTransitionFunctionRouter } from '@paima/sm';
 import PaimaSM from '@paima/sm';
-import { ConfigNetworkType, doLog, ENV, GlobalConfig } from '@paima/utils';
+import { doLog, ENV } from '@paima/utils';
 import { config } from 'dotenv';
 import type { PoolConfig } from 'pg';
 import type { LogEvent, LogEventFields, RegisteredEvent } from '@paima/events';
@@ -17,6 +17,13 @@ import RegisterRoutes, { EngineService } from '@paima/rest';
 import type { AchievementMetadata } from '@paima/utils-backend';
 import type { TSchema } from '@sinclair/typebox';
 import type { STFSubmittedData } from '@paima/chain-types';
+import {
+  ConfigFunnelType,
+  funnelConfigQuery,
+  GlobalConfig,
+  networkConfigQuery,
+  NetworkFromFunnel,
+} from '@paima/config';
 
 export type SubmittedChainData = STFSubmittedData;
 export type PreCompiles = { [name: string]: `0x${string}` };
@@ -64,14 +71,18 @@ export const runPaimaEngine = async <
     process.exit(0);
   }
 
-  const mainConfig = await GlobalConfig.mainConfig();
+  const networkQuery = networkConfigQuery(GlobalConfig.networks);
+  const funnelQuery = funnelConfigQuery(GlobalConfig.funnels);
+  const mainFunnel = funnelQuery.mainConfig();
 
   // Check that packed game code is available
   doLog(`Starting Game Node...`);
 
-  if (mainConfig[1].type === ConfigNetworkType.EVM) {
-    doLog(`Using RPC: ${mainConfig[1].chainUri}`);
-    doLog(`Targeting Smart Contact: ${mainConfig[1].paimaL2ContractAddress}`);
+  if (mainFunnel.type === ConfigFunnelType.EVM_MAIN) {
+    const network: NetworkFromFunnel<typeof mainFunnel.type> =
+      networkQuery.queryDisplayName.getSingleConfig(mainFunnel.network);
+    doLog(`Using RPC: ${mainFunnel.chainUri}`);
+    doLog(`Targeting Smart Contact: ${mainFunnel.paimaL2ContractAddress}`);
   }
 
   // Import & initialize state machine

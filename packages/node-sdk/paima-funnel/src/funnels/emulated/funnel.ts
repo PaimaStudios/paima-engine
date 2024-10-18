@@ -2,7 +2,7 @@ import type { PoolClient } from 'pg';
 import Prando from '@paima/prando';
 import type { ChainFunnel, ReadPresyncDataFrom } from '@paima/runtime';
 import type { ChainData, EvmPresyncChainData, PresyncChainData } from '@paima/sm';
-import { FUNNEL_PRESYNC_FINISHED, ENV, GlobalConfig, doLog } from '@paima/utils';
+import { FUNNEL_PRESYNC_FINISHED, ENV, doLog } from '@paima/utils';
 import {
   emulatedSelectLatestPrior,
   upsertEmulatedBlockheight,
@@ -16,7 +16,6 @@ import { calculateBoundaryTimestamp, emulateCde, timestampToBlockNumber } from '
 import { BaseFunnel } from '../BaseFunnel.js';
 import type { FunnelSharedData } from '../BaseFunnel.js';
 import { QueuedBlockCacheEntry, RpcCacheEntry, RpcRequestState } from '../FunnelCache.js';
-import { caip2PrefixFor, ChainInfo, ConfigFunnelAvailMain, ConfigFunnelEvmMain, ConfigNetworkAvail, ConfigNetworkEvm } from '@paima/config';
 
 /**
  * For hash calculation of empty blocks to work,
@@ -43,7 +42,9 @@ type CtorData = {
 /**
  * TODO: have this automatically support all main funnel options?
  */
-type EmulatedChainInfo = ChainInfo<ConfigNetworkEvm, ConfigFunnelEvmMain> | ChainInfo<ConfigNetworkAvail, ConfigFunnelAvailMain>;
+type EmulatedChainInfo =
+  | ChainInfo<ConfigNetworkEvm, ConfigFunnelEvmMain>
+  | ChainInfo<ConfigNetworkAvail, ConfigFunnelAvailMain>;
 
 export class EmulatedBlocksFunnel extends BaseFunnel {
   protected constructor(
@@ -112,7 +113,9 @@ export class EmulatedBlocksFunnel extends BaseFunnel {
           RpcCacheEntry.SYMBOL
         ]?.getState(caip2PrefixFor(this.chainInfo.network));
         if (latestAvailableBlockNumber?.state !== RpcRequestState.HasResult)
-          throw new Error(`latestAvailableBlockNumber missing from cache for ${this.chainInfo.network.displayName}`);
+          throw new Error(
+            `latestAvailableBlockNumber missing from cache for ${this.chainInfo.network.displayName}`
+          );
 
         // check if the chunk we read matches the latest block known by the RPC endpoint
         // or if there are no blocks left to fetch as we're already at the tip
@@ -481,6 +484,6 @@ export class EmulatedBlocksFunnel extends BaseFunnel {
   };
 
   public override configPrint(): EmulatedChainInfo {
-    return this.chainInfo
+    return this.chainInfo;
   }
 }

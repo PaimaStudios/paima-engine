@@ -1,12 +1,5 @@
 import type { PoolClient } from 'pg';
-import { ENV, GlobalConfig, getPaimaL2Contract, initWeb3 } from '@paima/utils';
-import type {
-  CardanoConfig,
-  MinaConfig,
-  OtherEvmConfig,
-  AvailConfig,
-  AvailMainConfig,
-} from '@paima/utils';
+import { ENV, getPaimaL2Contract, initWeb3 } from '@paima/utils';
 import { loadChainDataExtensions } from '@paima/runtime';
 import type { ChainFunnel, IFunnelFactory } from '@paima/runtime';
 import type { ChainDataExtension } from '@paima/sm';
@@ -17,13 +10,13 @@ import { FunnelCacheManager } from './funnels/FunnelCache.js';
 import { wrapToCarpFunnel } from './funnels/carp/funnel.js';
 import { wrapToParallelEvmFunnel } from './funnels/parallelEvm/funnel.js';
 import { wrapToAvailParallelFunnel } from './funnels/avail/parallelFunnel.js';
-import { ConfigNetworkType } from '@paima/utils';
 import type Web3 from 'web3';
 import { wrapToMinaFunnel } from './funnels/mina/funnel.js';
 import { AvailBlockFunnel } from './funnels/avail/baseFunnel.js';
 import { AvailSharedApi } from './funnels/avail/utils.js';
 import assertNever from 'assert-never';
 import { wrapToMidnightFunnel } from './funnels/midnight/funnel.js';
+import { funnelConfigQuery, GlobalConfig } from '@paima/config';
 
 export class Web3SharedApi extends BaseFunnelSharedApi {
   public constructor(protected web3: Web3) {
@@ -43,9 +36,8 @@ export class FunnelFactory implements IFunnelFactory {
   private constructor(public sharedData: FunnelSharedData) {}
 
   public static async initialize(db: PoolClient): Promise<FunnelFactory> {
-    const configs = await GlobalConfig.getInstance();
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [_, mainConfig] = await GlobalConfig.mainConfig();
+    const funnelQuery = funnelConfigQuery(GlobalConfig.funnels);
+    const mainFunnel = funnelQuery.mainConfig();
 
     let mainNetworkApi;
 

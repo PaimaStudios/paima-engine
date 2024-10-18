@@ -2,12 +2,12 @@ import { assertType, expectTypeOf } from 'vitest';
 import { ConfigNetworkType } from '../src/schema/network/types.js';
 import { mainnetConfig } from './data.js';
 import { ConfigFunnelType, FunnelConfigQuery, NetworkConfigQuery } from '../src/index.js';
-import { MergeIntersects } from '@paima/utils';
+import type { MergeIntersects, ShallowMergeIntersects } from '@paima/utils';
 
 test('my types work properly', () => {
-  /// ====================
-  /// Network config tests
-  /// ====================
+  // ====================
+  // Network config tests
+  // ====================
 
   const mainnetConfigData = mainnetConfig.registerGlobal();
   expectTypeOf(
@@ -27,9 +27,9 @@ test('my types work properly', () => {
   // @ts-expect-error this isn't a valid network type that exists
   assertType(mainnetConfigData.networkConfig().getSingleConfig('asdfasdf'));
 
-  /// ===================
-  /// Funnel config tests
-  /// ===================
+  // ===================
+  // Funnel config tests
+  // ===================
 
   expectTypeOf(
     new FunnelConfigQuery(mainnetConfigData.funnels).queryNetworkName.getSingleConfig(
@@ -78,9 +78,8 @@ test('my types work properly', () => {
     >
   >();
 
-  const foo = new FunnelConfigQuery(mainnetConfigData.funnels).mainConfig();
   expectTypeOf(new FunnelConfigQuery(mainnetConfigData.funnels).mainConfig()).toEqualTypeOf<
-    MergeIntersects<
+    ShallowMergeIntersects<
       (typeof mainnetConfigData.funnels.EvmDecoratorFunnel2.children.EvmDecoratorFunnel.children)['EvmMainFunnel']['config'] & {
         network: (typeof mainnetConfigData.networks)['Ethereum']['displayName'];
       }

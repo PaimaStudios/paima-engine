@@ -7,7 +7,7 @@ import { connectInjected } from '../wallet-modes.js';
 import { WalletMode } from '@paima/providers';
 import type { ApiForMode, IProvider } from '@paima/providers';
 import { EvmInjectedConnector } from '@paima/providers';
-import { ConfigNetworkType, GlobalConfig } from '@paima/utils';
+import { funnelConfigQuery, GlobalConfig } from '@paima/config';
 
 interface SwitchError {
   code: number;
@@ -15,12 +15,10 @@ interface SwitchError {
 
 async function switchChain(chainName: string | undefined): Promise<boolean> {
   let config = undefined;
+  const funnelQuery = funnelConfigQuery(GlobalConfig.funnels);
   if (chainName) {
-    const allConfigs = await GlobalConfig.getInstance();
-
-    config = allConfigs[chainName];
-
-    if (!config) {
+    const funnel = funnelQuery.queryDisplayName.getOptionalConfig(chainName);
+    if (!funnel) {
       throw new Error('Configuration for network not found.');
     }
     if (config.type !== ConfigNetworkType.EVM && config.type !== ConfigNetworkType.EVM_OTHER) {
