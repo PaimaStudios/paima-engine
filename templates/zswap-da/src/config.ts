@@ -1,4 +1,6 @@
 // Frontend runtime config.
+
+import { DEFAULT_FAUCET_URL, DEFAULT_MIDNIGHT_NETWORK_ID } from './faucetUrl';
 //
 // Resolution order for the backend API base URL:
 //   1. `window.API_BASE` — set by the hosting page before the bundle loads
@@ -20,3 +22,11 @@ export const BATCHER_URL =
 
 export const BATCHER_TARGET =
   (import.meta.env.VITE_BATCHER_TARGET as string | undefined) ?? 'midnight-balancer';
+
+export const MIDNIGHT_NETWORK_ID =
+  (import.meta.env.VITE_MIDNIGHT_NETWORK_ID as string | undefined)?.trim() ||
+  DEFAULT_MIDNIGHT_NETWORK_ID;
+
+export const FAUCET_BASE_URL =
+  (import.meta.env.VITE_FAUCET_URL as string | undefined)?.trim() ||
+  DEFAULT_FAUCET_URL;

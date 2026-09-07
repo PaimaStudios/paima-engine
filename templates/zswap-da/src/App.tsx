@@ -14,17 +14,18 @@ import { NetworkMenu } from './ui/NetworkMenu';
 import { SyncBanner } from './ui/SyncBanner';
 import { useZSwapApp } from './state/useZSwapApp';
 import { Market } from './screens/Market';
-import { Faucet } from './screens/Faucet';
 import { HowItWorks } from './screens/HowItWorks';
 import { ConfirmModal } from './ui/ConfirmModal';
 import { DecisionModal } from './ui/DecisionModal';
+import { FAUCET_BASE_URL } from './config';
+import { buildFaucetUrl } from './faucetUrl';
+import { FaucetLink } from './ui/FaucetLink';
 // Place Order + My trades live in the bottom console dock, not in the top nav.
-type PageId = 'market' | 'how' | 'faucet';
+type PageId = 'market' | 'how';
 
 const TABS: [PageId, string][] = [
   ['market', 'Order book'],
   ['how', 'How it works'],
-  ['faucet', 'Faucet'],
 ];
 
 export default function App() {
@@ -34,6 +35,7 @@ export default function App() {
   const [payPickerOpen, setPayPickerOpen] = useState(false);
   const dockRef = useRef<HTMLElement>(null);
   const st = useZSwapApp();
+  const faucetUrl = buildFaucetUrl(FAUCET_BASE_URL, st.network);
 
   // Links that used to navigate to the Place Order screen now reveal the console.
   const openConsole = () => {
@@ -56,6 +58,7 @@ export default function App() {
               {TABS.map(([id, lbl]) => (
                 <button key={id} className="zs-nav-tab" aria-selected={page === id} onClick={() => setPage(id)}>{lbl}</button>
               ))}
+              <FaucetLink href={faucetUrl} />
             </div>
             <div style={{ flex: 1 }} />
             <NetworkMenu value={st.network} />
@@ -78,6 +81,7 @@ export default function App() {
                 <button key={id} onClick={() => { setPage(id); setMenuOpen(false); }}
                   style={{ textAlign: 'left', padding: '12px 14px', borderRadius: 12, border: 'none', cursor: 'pointer', fontFamily: 'var(--font-ui)', fontSize: 15, fontWeight: 600, background: page === id ? 'var(--accent-soft)' : 'transparent', color: page === id ? 'var(--accent)' : 'var(--ink)' }}>{lbl}</button>
               ))}
+              <FaucetLink href={faucetUrl} mobile onNavigate={() => setMenuOpen(false)} />
               <hr className="zs-hr" style={{ margin: '6px 0' }} />
               {st.wallet
                 ? <button className="zs-btn zs-btn--block" style={{ padding: 13 }} onClick={() => { setMenuOpen(false); st.disconnect(); }}>Disconnect</button>
@@ -91,7 +95,6 @@ export default function App() {
       <main style={{ flex: 1, width: '100%', maxWidth: 1180, margin: '0 auto', padding: '32px 24px 40px', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
         {page === 'market' && <Market st={st} onStartOrder={startOrder} />}
         {page === 'how' && <HowItWorks st={st} onGo={startOrder} />}
-        {page === 'faucet' && <Faucet st={st} />}
       </main>
 
       <ConsoleDock st={st} open={consoleOpen} onToggle={() => setConsoleOpen((o) => !o)} dockRef={dockRef}
