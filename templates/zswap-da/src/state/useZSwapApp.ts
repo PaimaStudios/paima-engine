@@ -59,8 +59,9 @@ import {
   type TakeSummary,
 } from '../services/takeSelection';
 import type { KnownToken, OfferStatus, ZSwapOffer } from '../types';
+import { MIDNIGHT_NETWORK_ID } from '../config';
 
-const NETWORK_ID = (import.meta.env.VITE_MIDNIGHT_NETWORK_ID as string) || 'undeployed';
+const NETWORK_ID = MIDNIGHT_NETWORK_ID;
 
 /** A single live swap offer, in the shape the order-book screen consumes. */
 export interface Order {
@@ -154,7 +155,7 @@ function toOrder(offer: ZSwapOffer, knownTokens: KnownToken[]): Order | null {
 const LOCAL_WALLET_NETWORK = 'Undeployed';
 
 // Derive the display network name from the env var (e.g. 'preview' → 'Preview').
-// Falls back to 'Undeployed' when no network is configured.
+// Falls back to canonical Preprod when no network is configured.
 const DISPLAY_NETWORK =
   NETWORK_ID === 'undeployed'
     ? LOCAL_WALLET_NETWORK

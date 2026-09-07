@@ -4,8 +4,9 @@
 locally** — `managed/` is gitignored build output, not committed.
 
 Despite the name, this contract has nothing to do with MIP-0005 offer files. It
-is the demo's **test-token minting authority**: the Faucet screen's
-`mint_shielded` / `mint_unshielded`. Offer-file encoding lives in
+contains the legacy `mint_shielded` / `mint_unshielded` test-token circuits;
+the app now sends Faucet navigation to the dedicated external service instead
+of presenting a local mint screen. Offer-file encoding lives in
 `@effectstream/mip-zswap-offer`, a separate and unrelated package.
 
 ## Building

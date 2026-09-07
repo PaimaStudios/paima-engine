@@ -1,9 +1,10 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import type { ConnectedAPI, InitialAPI } from '@midnight-ntwrk/dapp-connector-api';
+import { MIDNIGHT_NETWORK_ID } from '../config';
 
 type WalletStatus = 'disconnected' | 'connecting' | 'connected' | 'unavailable';
 
-const NETWORK_ID = 'undeployed';
+const NETWORK_ID = MIDNIGHT_NETWORK_ID;
 const POLL_INTERVAL_MS = 10_000; // detect silent Lace disconnects
 
 function isChannelShutdownError(e: unknown): boolean {
@@ -82,7 +83,7 @@ export function useWallet() {
     setError(null);
 
     try {
-      console.log('[wallet] connect: calling initialApi.connect("undeployed")…');
+      console.log(`[wallet] connect: calling initialApi.connect("${NETWORK_ID}")…`);
       const api = await initialApi.connect(NETWORK_ID);
       console.log('[wallet] connect: got ConnectedAPI');
 
