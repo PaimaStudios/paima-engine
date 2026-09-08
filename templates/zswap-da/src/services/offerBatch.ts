@@ -30,7 +30,7 @@
 // BOTH wallets fold their ladder through this module. The JS wallet facade
 // takes the merged ledger object (services/localTradeOffers.ts); Lace takes its
 // serialized bytes and picks a balancing strategy from its shape
-// (services/browserContract.ts), which is why `pickSwapSegment` and
+// (services/browserOffers.ts), which is why `pickSwapSegment` and
 // `chooseLaceBalancing` live here too — a merged transaction has to satisfy the
 // same dispatch a single offer did, and that is something a unit test can check
 // without a wallet in the room.
@@ -215,7 +215,7 @@ export function pickSwapSegment(makerTx: any): { segId: number; imbalances: Map<
   return swaps[0]!;
 }
 
-/** Which side Lace is asked to build — see services/browserContract.ts. */
+/** Which side Lace is asked to build — see services/browserOffers.ts. */
 export interface LaceBalancing {
   segId: number;
   imbalances: Map<any, bigint>;
