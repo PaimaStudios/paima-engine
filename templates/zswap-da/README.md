@@ -33,7 +33,7 @@ Because the offer never touches Midnight while it is open, a maker can post ten 
 them all by doing nothing. The cost of listing is a Celestia blob, not a contract call. What the
 chain sees is only the settlement.
 
-**Taking is mirror-then-merge, not "accept".** `src/services/browserContract.ts` decodes the maker's
+**Taking is mirror-then-merge, not "accept".** `src/services/browserOffers.ts` decodes the maker's
 blob back into a `Transaction`, works out which segment carries the asset imbalance
 (`pickSwapSegment`), and then has the taker's wallet construct the exact inverse — the maker's
 `wants` become the taker's inputs, the maker's `gives` become the taker's outputs — before merging
@@ -113,16 +113,13 @@ token color.
 
 Prerequisites:
 
-- **Bun** and the [Compact toolchain](https://docs.midnight.network/develop/tutorial/building/).
-  The app compiles its own contract from `src/contract/offer-files.compact` — `predev`/`prebuild`
-  run `bun run build:contract`, which compiles and then verifies all 16 outputs against a committed
-  sha256 manifest, so a wrong compiler version can't silently produce bindings that mismatch the
-  deployed contract. See `src/contract/README.md`.
+- **Bun.** The app has no local Faucet contract or generated Compact assets; test-token minting is
+  handled by the external Faucet service.
 - **A wallet.** Either works, for everything: the injected browser wallet (Lace) via the
   dapp-connector, or the **built-in JS wallet** via the Midnight wallet facade — no extension
-  needed. `src/services/contractWallet.ts` and `src/services/localTradeOffers.ts` are the two
-  adapters that make minting and offers wallet-agnostic.
-- **The backend, running.** It is needed at *runtime* — Midnight config, ZK artifacts, the batcher —
+  needed. `src/services/browserOffers.ts` and `src/services/localTradeOffers.ts` implement the two
+  offer-settlement paths.
+- **The backend, running.** It is needed at *runtime* — Midnight config, offers and the batcher —
   but no longer to install or build, and it can live anywhere:
 
 ```sh
@@ -145,7 +142,7 @@ bun run dev
 | ZSwap frontend (Vite) | http://localhost:10600 |
 | Backend API (default in `src/config.ts`) | `http://<hostname>:9999` |
 | Batcher (default in `src/config.ts`) | `http://<hostname>:3334` |
-| Midnight contract, indexer and proof server | Fetched at runtime from `GET /v1/midnight/config` |
+| Midnight network, indexer and proof server | Fetched at runtime from `GET /v1/midnight/config` |
 
 `src/state/wallet.ts` carries fallback URLs used only by the local JS wallet when that config call
 fails — indexer `http://<hostname>:8088/api/v3/graphql`, node `http://<hostname>:9944`, proof server
@@ -162,7 +159,7 @@ There is no `packages/` directory. The template is a flat Vite app:
 
 ```
 index.html              Vite entry point
-vite.config.ts          React + wasm + node-stdlib polyfills, crypto shim, ZK-artifact 404 guard
+vite.config.ts          React + wasm + node-stdlib polyfills and crypto shim
 public/                 Static assets served at the site root
 src/
   App.tsx               Shell: Order book / How it works / external Faucet link, plus the bottom console dock
@@ -172,10 +169,10 @@ src/
   decodeOffer.ts        MIP-0005 decode + MIP-0006 leg derivation, for display
   debug.ts              dlog / timed instrumentation used throughout the services
   utils.ts              Token-name lookup and formatting helpers
-  hooks/                Wallet, contract, order book, SSE events, tokens, mint reconciliation
+  hooks/                Wallet, order book, SSE events and token registry
   screens/              Market, Swap, MyTrades, HowItWorks
-  services/             api, browserContract, makerOffer, offerParse, offerSender,
-                        takerBalance (+ its test), mintQueue
+  services/             api, browserOffers, localTradeOffers, makerOffer, offerParse,
+                        offerSender and takerBalance (+ tests)
   shims/                crypto polyfill and loose .d.ts files for @effectstream/wallets
   state/                useZSwapApp orchestration, wallet + tradeWallet adapters,
                         local myOffers / myTrades stores, amount (coins ⇄ base
@@ -194,10 +191,9 @@ page, then the `VITE_API_BASE` build-time variable, then `http://<hostname>:9999
 tiers apply to the batcher. That ordering is what lets one built bundle be dropped behind a proxy
 without a rebuild.
 
-Everything Midnight-specific — contract address, indexer URI, indexer WS URI, proof server URI and
-network id — is fetched at runtime from `GET /v1/midnight/config`, so the frontend hardcodes no
-deployment. `src/hooks/useContract.ts` additionally refuses to proceed when the connected wallet's
-`networkId` differs from the one the backend reports.
+The Midnight network id, indexer URI, indexer WS URI and proof server URI are fetched at runtime
+from `GET /v1/midnight/config`. Offer creation and settlement do not discover or call a local
+Faucet contract.
 
 ### Making an offer
 
@@ -290,11 +286,6 @@ a real breakage and is annotated in place:
   missing `timingSafeEqual`, which the midnight-js private-state provider's storage encryption needs.
   The alias is repeated as an esbuild plugin under `optimizeDeps`, because Vite's pre-bundling does
   **not** honour `resolve.alias`.
-- A `zk-artifact-404` plugin forces a real 404 on `/keys/*` and `/zkir/*` when the file is not present
-  in `public/`. Vite's SPA fallback would otherwise return `index.html`, which the proof server
-  cannot parse and rejects with a 400. In normal operation the ZK artifacts are served by the backend
-  (`GET /keys/*`, `GET /zkir/*`) rather than staged into `public/` — this guard exists so a missing
-  artifact fails loudly instead of silently.
 - `Deno` and `Bun` are defined as `undefined` for transitive dependencies that probe for Node globals,
   and `@midnight-ntwrk/onchain-runtime` is excluded from dependency optimization.
 
@@ -344,8 +335,8 @@ wallet and a chain so it can be tested without any of them:
 > [!NOTE]
 > This template is **excluded from the repository's template test runner**. The reason is recorded
 > in `templates/run-template-tests.ts`, where its entry in the `ENABLED` list is commented out. It
-> installs and builds standalone now, but a meaningful test still needs the backend live on :9999
-> for Midnight config, ZK artifacts and the batcher — which CI can't stand up. A typecheck-only
+> installs and builds standalone now, but a meaningful integration test still needs the backend live
+> on :9999 for Midnight config, offers and the batcher — which CI can't stand up. A typecheck-only
 > smoke test is the realistic way back in.
 
 ## Where to go next
