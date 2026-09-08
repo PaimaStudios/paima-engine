@@ -70,6 +70,23 @@ const QUOTE_FIXTURE = {
   prices_updated_at: '2026-09-03T00:00:04.000Z',
 };
 
+describe('getMidnightConfig', () => {
+  test('accepts the network-only kernel response with no contract address', async () => {
+    const fixture = {
+      networkId: 'preprod',
+      indexerUri: 'https://indexer.example/api/v3/graphql',
+      indexerWsUri: 'wss://indexer.example/api/v3/graphql/ws',
+      proofServerUri: 'https://proof.example',
+    };
+    const calls = serve(200, fixture);
+    const config = await api.getMidnightConfig();
+
+    expect(new URL(calls[0]).pathname.endsWith('/v1/midnight/config')).toBe(true);
+    expect(config).toEqual(fixture);
+    expect('contractAddress' in config).toBe(false);
+  });
+});
+
 describe('getPrices', () => {
   const WBTC = 'e7'.repeat(32);
   const WETH = 'fd'.repeat(32);

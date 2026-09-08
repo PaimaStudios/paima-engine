@@ -1,6 +1,6 @@
 // Balance-awareness for taking (completing) an offer. A taker must SUPPLY the
 // offer's `pays` legs; if the wallet doesn't hold them, Lace's `makeIntent`
-// hangs forever instead of erroring (see browserContract.ts). These helpers let
+// hangs forever instead of erroring (see browserOffers.ts). These helpers let
 // the UI check up front and refuse to start an unfundable settle.
 //
 // Units line up exactly: `pays[].amount` is a raw bigint and wallet balances are

@@ -1,6 +1,6 @@
 // Parse an offer blob's asset imbalances from the TAKER's perspective, so the
 // UI can preview "you pay / you receive" before importing+taking a shared offer.
-// Mirrors the dispatch in browserContract.proveAndSubmitOffer: a maker's
+// Mirrors the dispatch in browserOffers.proveAndSubmitOffer: a maker's
 // imbalance of +N for token T means the maker spent N (the taker RECEIVES N);
 // −N means the maker output N (the taker PAYS N). Dust is the batcher's concern.
 

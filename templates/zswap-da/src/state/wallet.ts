@@ -1,7 +1,7 @@
 // Wallet connection abstraction.
 //   - injected (Lace etc.): discovered + connected via the browser's
 //     `window.midnight` provider map (dapp-connector ConnectedAPI →
-//     browserContract path).
+//     browserOffers path).
 //   - local JS wallet (undeployed only): @effectstream/wallets' MidnightLocal
 //     connector in facade mode — exposes a WalletFacade + WalletResult (facade
 //     path). We import only the `/midnight-local` subpath: the package barrel

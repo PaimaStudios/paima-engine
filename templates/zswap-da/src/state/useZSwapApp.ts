@@ -16,11 +16,8 @@ import {
 } from './wallet';
 import { useZSwapAPI } from '../hooks/useZSwapAPI';
 import { useTokens } from '../hooks/useTokens';
-import { useContract, type BrowserMintResult } from '../hooks/useContract';
-import { useMintReconciler } from '../hooks/useMintReconciler';
 import { type OfferLeg } from '../services/makerOffer';
 import { makeInjectedTradeWallet, makeLocalTradeWallet, type TradeWallet } from './tradeWallet';
-import { injectedContractWallet, localContractWallet, type ContractWallet } from '../services/contractWallet';
 import { api } from '../services/api';
 import { addMyOffer, isMyOfferIn, setActiveScope as setMyOffersScope } from './myOffers';
 import type { ConfirmPayload } from '../ui/ConfirmModal';
@@ -211,14 +208,6 @@ export interface ZSwapApp {
   refetchOffers: () => void;
   refetchTokens: () => void;
   selfUnshieldedHex: string | null;
-  // faucet / mint — browser-wallet (ConnectedAPI) path only
-  canMint: boolean;
-  contractBusy: boolean;
-  /** `amount` is BASE UNITS; `decimals` is what the colour is REGISTERED with,
-   *  so the rest of the app knows how to read the balance it creates. */
-  mintShielded: (domainSepBytes: Uint8Array, amount: bigint, nonce: bigint, name: string, decimals?: number) => Promise<BrowserMintResult>;
-  mintUnshielded: (domainSepBytes: Uint8Array, amount: bigint, name: string, decimals?: number) => Promise<BrowserMintResult>;
-  onMinted: () => void;
   // swap — create / take offers (browser-wallet ConnectedAPI path)
   canTrade: boolean;
   createOffer: (gives: OfferLeg[], wants: OfferLeg[], opts?: { onStatus?: (s: string) => void }) => Promise<void>;
@@ -261,19 +250,6 @@ export function useZSwapApp(): ZSwapApp {
   const [network, setNetwork] = useState(DISPLAY_NETWORK);
   const zapi = useZSwapAPI();
   const { knownTokens, refetchTokens } = useTokens();
-  // Contract (mint) wallet adapter — BOTH wallets can drive the contract: Lace
-  // through the dapp-connector, the built-in JS wallet through the facade.
-  const contractWallet = useMemo<ContractWallet | null>(() => {
-    if (connected?.kind === 'injected' && connected.connectedApi) {
-      return injectedContractWallet(connected.connectedApi);
-    }
-    if (connected?.kind === 'local' && connected.localApi) {
-      return localContractWallet(connected.localApi);
-    }
-    return null;
-  }, [connected]);
-  const contract = useContract(contractWallet);
-  const [mintTick, setMintTick] = useState(0);
   const [myTrades, setMyTrades] = useState<MyTrade[]>(() => listTrades());
   useEffect(() => subscribeTrades(() => setMyTrades([...listTrades()])), []);
 
@@ -291,39 +267,24 @@ export function useZSwapApp(): ZSwapApp {
     setMyTradesScope(walletScope);
   }, [walletScope]);
 
-  // The active wallet's transaction capability (mint/create/take). Injected
+  // The active wallet's offer transaction capability. Injected
   // (Lace) goes through the dapp-connector; local (JS facade) through the
   // wallet facade's own APIs. Every transaction below routes through this seam.
   const tradeWallet = useMemo<TradeWallet | null>(() => {
     if (connected?.kind === 'injected' && connected.connectedApi) {
-      return makeInjectedTradeWallet(connected.connectedApi, {
-        mintShielded: contract.mintShielded,
-        mintUnshielded: contract.mintUnshielded,
-      });
+      return makeInjectedTradeWallet(connected.connectedApi);
     }
     if (connected?.kind === 'local' && connected.localApi) {
-      return makeLocalTradeWallet(connected.localApi, {
-        mintShielded: contract.mintShielded,
-        mintUnshielded: contract.mintUnshielded,
-      });
+      return makeLocalTradeWallet(connected.localApi);
     }
     return null;
-  }, [connected, contract.mintShielded, contract.mintUnshielded]);
+  }, [connected]);
 
   const requireWallet = useCallback((): TradeWallet => {
     if (!tradeWallet) throw new Error('Connect a wallet first.');
     if (!tradeWallet.canTrade) throw new Error(tradeWallet.unsupportedReason ?? 'This wallet cannot trade yet.');
     return tradeWallet;
   }, [tradeWallet]);
-
-  const mintShielded = useCallback(
-    (d: Uint8Array, a: bigint, n: bigint, name: string) => requireWallet().mintShielded(d, a, n, name),
-    [requireWallet],
-  );
-  const mintUnshielded = useCallback(
-    (d: Uint8Array, a: bigint, name: string) => requireWallet().mintUnshielded(d, a, name),
-    [requireWallet],
-  );
 
   // Poll the order book + token registry.
   const { fetchOffers } = zapi;
@@ -335,9 +296,6 @@ export function useZSwapApp(): ZSwapApp {
     }, 60_000);
     return () => clearInterval(id);
   }, [fetchOffers, refetchTokens]);
-
-  // Register freshly-minted token colors against queued names (backup path).
-  useMintReconciler(connected?.connectedApi ?? null, knownTokens, mintTick, refetchTokens);
 
   const selfUnshieldedHex = useMemo(
     () => (wstate?.unshieldedAddress ? unshieldedAddressToHex(wstate.unshieldedAddress, NETWORK_ID as any) ?? null : null),
@@ -486,14 +444,6 @@ export function useZSwapApp(): ZSwapApp {
     }
   }, [connected, refreshState]);
 
-  // Called after a successful mint: refresh balances + token names, and bump
-  // the reconciler trigger so any queued name registers against its new color.
-  const onMinted = useCallback(() => {
-    setMintTick((n) => n + 1);
-    refetchTokens();
-    refreshBalances();
-  }, [refetchTokens, refreshBalances]);
-
   // Create a maker offer: build the imbalanced tx via the browser wallet,
   // encode + submit the blob, record it locally (so it's excluded from the
   // order book as "mine"), then refresh.
@@ -521,7 +471,7 @@ export function useZSwapApp(): ZSwapApp {
         }
       }
 
-      const cfg = contract.config ?? (await api.getMidnightConfig());
+      const cfg = await api.getMidnightConfig();
       opts?.onStatus?.('Building offer in wallet…');
       const blob = await w.buildOfferBlob(cfg.networkId, gives, wants);
       opts?.onStatus?.('Posting to Celestia…');
@@ -576,7 +526,7 @@ export function useZSwapApp(): ZSwapApp {
       zapi.fetchOffers();
       refreshBalances();
     },
-    [requireWallet, connected, contract.config, knownTokens, toast, zapi, refreshBalances],
+    [requireWallet, connected, knownTokens, toast, zapi, refreshBalances],
   );
 
   // Take one or more existing offers: reconstruct the maker txs from their
@@ -622,12 +572,10 @@ export function useZSwapApp(): ZSwapApp {
         dlog('takeOffers: balance check passed');
       }
 
-      const cfg = contract.config
-        ? (dlog('takeOffers: using cached midnight config', contract.config), contract.config)
-        : await timed('takeOffers: GET /v1/midnight/config', () => api.getMidnightConfig());
+      const cfg = await timed('takeOffers: GET /v1/midnight/config', () => api.getMidnightConfig());
       dlog('takeOffers: config resolved', {
-        contractAddress: cfg.contractAddress,
         indexerUri: cfg.indexerUri,
+        indexerWsUri: cfg.indexerWsUri,
         proofServerUri: cfg.proofServerUri,
         networkId: cfg.networkId,
       });
@@ -644,7 +592,7 @@ export function useZSwapApp(): ZSwapApp {
       refreshBalances();
       dlog('takeOffers: exit');
     },
-    [requireWallet, connected, knownTokens, contract.config, toast, zapi, refreshBalances],
+    [requireWallet, connected, knownTokens, toast, zapi, refreshBalances],
   );
 
   /** Single take — the N=1 case of {@link takeOffers}, same code, same result. */
@@ -1105,11 +1053,6 @@ export function useZSwapApp(): ZSwapApp {
     refetchOffers: zapi.fetchOffers,
     refetchTokens,
     selfUnshieldedHex,
-    canMint: !!tradeWallet?.canMint && !!contractWallet,
-    contractBusy: contract.loading,
-    mintShielded,
-    mintUnshielded,
-    onMinted,
     canTrade: !!tradeWallet?.canTrade,
     createOffer,
     takeOffer,
