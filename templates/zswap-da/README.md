@@ -165,7 +165,7 @@ index.html              Vite entry point
 vite.config.ts          React + wasm + node-stdlib polyfills, crypto shim, ZK-artifact 404 guard
 public/                 Static assets served at the site root
 src/
-  App.tsx               Shell: Order book / How it works / Faucet, plus the bottom console dock
+  App.tsx               Shell: Order book / How it works / external Faucet link, plus the bottom console dock
   main.tsx              React root
   config.ts             API base, batcher URL and batcher target resolution
   constants.ts          Filter directions, token kinds, page size, validation limits
@@ -173,7 +173,7 @@ src/
   debug.ts              dlog / timed instrumentation used throughout the services
   utils.ts              Token-name lookup and formatting helpers
   hooks/                Wallet, contract, order book, SSE events, tokens, mint reconciliation
-  screens/              Market, Swap, MyTrades, Faucet, HowItWorks
+  screens/              Market, Swap, MyTrades, HowItWorks
   services/             api, browserContract, makerOffer, offerParse, offerSender,
                         takerBalance (+ its test), mintQueue
   shims/                crypto polyfill and loose .d.ts files for @effectstream/wallets
@@ -274,17 +274,12 @@ conversion lives in one place, `src/state/amount.ts`, and nothing below the scre
 auto-price suggestion, the affordability gate, the displayed rate), extracted so it is unit-tested
 without a DOM.
 
-### Minting test tokens
+### Getting test tokens
 
-The Faucet screen (`src/screens/Faucet.tsx`) calls the `mint_shielded` and `mint_unshielded` circuits
-on the deployed OfferFiles contract through `src/services/browserContract.ts`, which assembles the
-standard midnight-js provider stack — `indexerPublicDataProvider`, `httpClientProofProvider`,
-`FetchZkConfigProvider`, `levelPrivateStateProvider` — and resolves the contract with
-`findDeployedContract`. The allotment is **1,000 whole coins**, so the circuit is called with
-`1_000_000_000` base units. Newly minted token names are held in `src/services/mintQueue.ts` and
-registered against their derived color once the mint lands, via `POST /v1/known-tokens` — carrying
-`decimals: 6` explicitly, so a node whose column still defaults to 0 does not record the token at a
-precision that would render every balance a million times too large.
+The Faucet navigation opens the dedicated test-token service. It does not require a connected wallet
+inside this app and does not probe the external service during startup. The destination defaults to
+`https://mint-test-tokens.pages.dev/?network=preprod`; `VITE_FAUCET_URL` can supply another base URL,
+and the configured Midnight network replaces only its `network` query parameter.
 
 ### Browser build workarounds
 
@@ -312,7 +307,8 @@ All build-time variables are optional; each has a working default.
 | `VITE_API_BASE` | `http://<hostname>:9999` | Backend API base URL |
 | `VITE_BATCHER_URL` | `http://<hostname>:3334` | Batcher base URL |
 | `VITE_BATCHER_TARGET` | `midnight-balancer` | Batcher adapter the settled transaction is routed to |
-| `VITE_MIDNIGHT_NETWORK_ID` | `undeployed` | Midnight network id used for address formatting and offer parsing |
+| `VITE_MIDNIGHT_NETWORK_ID` | `preprod` | Midnight network id used for address formatting, offer parsing and the Faucet link |
+| `VITE_FAUCET_URL` | `https://mint-test-tokens.pages.dev/` | External test-token service base URL |
 
 At runtime a hosting page may set `window.API_BASE` and `window.BATCHER_URL` before the bundle loads;
 both take precedence over the build-time values. The network is not user-selectable — the

@@ -276,6 +276,7 @@ body { background: var(--bg); color: var(--ink); font-family: var(--font-ui); -w
 
 /* nav tab (header segmented control) */
 .zs-nav-tab { font-weight: 600; font-size: 14.5px; color: var(--ink-2); padding: 8px 14px; border-radius: var(--r-pill); border: none; background: transparent; cursor: pointer; transition: color .15s, background .15s; }
+.zs-seg a.zs-nav-tab { display: inline-flex; align-items: center; font-family: var(--font-ui); font-size: 13.5px; text-decoration: none; }
 .zs-nav-tab:hover { color: var(--ink); }
 .zs-nav-tab[aria-selected="true"] { color: var(--ink); background: var(--surface); box-shadow: 0 1px 3px rgba(10,12,20,.08); }
 .zs-nav-desktop { display: flex; align-items: center; gap: 20px; flex: 1; min-width: 0; }

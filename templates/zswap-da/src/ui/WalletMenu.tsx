@@ -8,8 +8,9 @@ import { formatAmount } from '../state/amount';
 import { formatShieldedAddress } from '../state/shieldedAddress';
 import { TokenChip } from './TokenChip';
 import type { KnownToken } from '../types';
+import { MIDNIGHT_NETWORK_ID } from '../config';
 
-const NETWORK_ID = (import.meta.env.VITE_MIDNIGHT_NETWORK_ID as string) || 'undeployed';
+const NETWORK_ID = MIDNIGHT_NETWORK_ID;
 
 /** How long the "Copied" confirmation stays up. */
 const COPIED_MS = 1500;
