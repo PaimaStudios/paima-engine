@@ -38,8 +38,9 @@ export interface MyTrade {
   shielded: boolean;
   blob?: string;
   /** Content hash from `POST /v1/offers` — the cross-node offer identity and
-   *  the key for all subsequent status polling. Absent on records created before
-   *  content addressing, which fall back to blob-based status lookup. */
+   *  the key for all subsequent status polling. Records created before content
+   *  addressing stored only the blob; reconciliation derives the id from it
+   *  (offerId.ts) and persists it here via `setTradeOfferId`. */
   offerId?: string;
 }
 
@@ -116,6 +117,19 @@ export function updateTradeStatus(id: string, status: MyTrade['status']): void {
   let changed = false;
   const next = list.map((t) => {
     if (t.id === id && t.status !== status) { changed = true; return { ...t, status }; }
+    return t;
+  });
+  if (changed) persist({ ...buckets, [activeScope]: next });
+}
+
+/** Attach the content hash to a legacy blob-only record (active bucket only). */
+export function setTradeOfferId(id: string, offerId: string): void {
+  if (!activeScope) return;
+  const buckets = all();
+  const list = bucketOf(buckets, activeScope);
+  let changed = false;
+  const next = list.map((t) => {
+    if (t.id === id && t.offerId !== offerId) { changed = true; return { ...t, offerId }; }
     return t;
   });
   if (changed) persist({ ...buckets, [activeScope]: next });
