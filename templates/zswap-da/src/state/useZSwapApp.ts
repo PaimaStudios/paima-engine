@@ -941,15 +941,18 @@ export function useZSwapApp(): ZSwapApp {
   // rule. Runs on every order-book refresh and whenever the wallet scope
   // changes, i.e. also right after connect on a freshly loaded page: that is
   // the moment a record for an offer filled while the tab was closed gets its
-  // terminal status. No wallet, no bucket, nothing to reconcile.
+  // terminal status. No wallet, no bucket, nothing to reconcile. No known
+  // book (before the first load, or after a failed poll — both leave
+  // `offers` as `[]`), nothing to compare against: absence from an unknown
+  // book is not absence, so wait rather than probe every record.
   //
   // Ordering note: the effect that installs `walletScope` into the trade log
   // is declared earlier in this hook, so within one commit it runs first and
   // `listTrades()` below already reads the new wallet's bucket.
   const probing = useRef<Set<string>>(new Set());
   useEffect(() => {
-    if (!walletScope) return;
-    const bookIds = new Set((zapi.offers ?? []).map((o) => o.offerId).filter(Boolean) as string[]);
+    if (!walletScope || !zapi.bookKnown) return;
+    const bookIds = new Set(zapi.offers.map((o) => o.offerId).filter(Boolean) as string[]);
     void reconcileTrades({
       trades: listTrades(),
       bookIds,
@@ -959,7 +962,7 @@ export function useZSwapApp(): ZSwapApp {
       setOfferId: setTradeOfferId,
       deriveId: deriveOfferId,
     });
-  }, [zapi.offers, walletScope]);
+  }, [zapi.offers, zapi.bookKnown, walletScope]);
 
   const wallet = useMemo<WalletInfo | null>(() => {
     if (!connected) return null;
