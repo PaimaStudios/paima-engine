@@ -4,6 +4,7 @@
 // The rule, applied to every non-terminal `create` record of the active wallet
 // on every order-book refresh and every wallet connect:
 //
+//   no offerId             → skipped (nothing to ask the node about)
 //   in the book            → live   (and never probed: presence is proof)
 //   not in the book        → ask GET /v1/offers/:id/status and apply a
 //                            terminal answer (consumed / cancelled / expired)
@@ -16,6 +17,11 @@
 // book before asking: that memory (`seenIds`) is empty after every reload, so
 // an offer filled while the tab was closed stayed "Live" forever (issue behind
 // project 00040). The kernel is the authority; page-session memory is not.
+//
+// A record's `offerId` comes from the `POST /v1/offers` response and is the
+// only handle the node answers on. Records without one are simply skipped: this
+// is a clean start, no records predate content addressing, so the SPA never
+// derives an id from a stored blob.
 //
 // Pure: no React, no storage. The hook wires inputs and outputs.
 
@@ -34,10 +40,6 @@ export interface ReconcileInput {
    *  re-issues a request the previous poll is still waiting on. */
   inflight: Set<string>;
   update: (tradeId: string, status: MyTradeStatus) => void;
-  /** Persist an offerId derived for a legacy blob-only record. */
-  setOfferId: (tradeId: string, offerId: string) => void;
-  /** Content hash of a blob, or null when the blob does not decode. */
-  deriveId: (blob: string) => string | null;
 }
 
 const isTerminal = (s: ProbeResult): s is 'consumed' | 'cancelled' | 'expired' =>
@@ -48,24 +50,16 @@ const isTerminal = (s: ProbeResult): s is 'consumed' | 'cancelled' | 'expired' =
  * fire-and-forget; tests await it.
  */
 export function reconcileTrades(input: ReconcileInput): Promise<void> {
-  const { trades, bookIds, probe, inflight, update, setOfferId, deriveId } = input;
+  const { trades, bookIds, probe, inflight, update } = input;
   const pending: Promise<void>[] = [];
 
   for (const t of trades) {
     if (t.kind !== 'create') continue;
     if (t.status !== 'not_public' && t.status !== 'live') continue;
 
-    // Records written before content addressing carry only the blob. The id is
-    // a pure function of the blob (sha256 of the raw offer bytes), so derive it
-    // once, persist it, and treat the record like any other from then on.
-    let id = t.offerId;
-    if (!id) {
-      if (!t.blob) continue;
-      const derived = deriveId(t.blob);
-      if (!derived) continue;
-      setOfferId(t.id, derived);
-      id = derived;
-    }
+    // No id, no question to ask: the submit response carried none.
+    const id = t.offerId;
+    if (!id) continue;
 
     if (bookIds.has(id)) {
       if (t.status === 'not_public') update(t.id, 'live');

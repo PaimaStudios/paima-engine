@@ -37,12 +37,10 @@ import {
   listTrades,
   removeTrade,
   setActiveScope as setMyTradesScope,
-  setTradeOfferId,
   subscribeTrades,
   updateTradeStatus,
   type MyTrade,
 } from './myTrades';
-import { deriveOfferId } from './offerId';
 import { reconcileTrades } from './reconcileTrades';
 import { buildScope } from './scope';
 import { parseTakerLegs } from '../services/offerParse';
@@ -959,8 +957,6 @@ export function useZSwapApp(): ZSwapApp {
       probe: api.getOfferStatusById,
       inflight: probing.current,
       update: updateTradeStatus,
-      setOfferId: setTradeOfferId,
-      deriveId: deriveOfferId,
     });
   }, [zapi.offers, zapi.bookKnown, walletScope]);
 
