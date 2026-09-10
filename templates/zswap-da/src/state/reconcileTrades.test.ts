@@ -107,6 +107,17 @@ describe('reconcileTrades — kernel lag', () => {
     expect(h.inflight.size).toBe(0);
   });
 
+  test('a probe that throws synchronously still releases the id', async () => {
+    let n = 0;
+    const h = harness({ [A]: () => { if (n++ === 0) throw new Error('sync'); return Promise.resolve('consumed'); } });
+    const trades = [rec()];
+    await h.run(trades);
+    expect(h.updates).toEqual([]);
+    expect(h.inflight.size).toBe(0);
+    await h.run(trades);
+    expect(h.updates).toEqual([['t1', 'consumed']]);
+  });
+
   test('a rejected probe is swallowed and retried', async () => {
     let n = 0;
     const h = harness({ [A]: () => (n++ === 0 ? Promise.reject(new Error('net')) : Promise.resolve('consumed')) });

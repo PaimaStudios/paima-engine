@@ -10,6 +10,11 @@ export function useZSwapAPI() {
   const [offers, setOffers] = useState<ZSwapOffer[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  /** True once a book load has succeeded and the latest poll did not fail.
+   *  `offers` is `[]` both before the first load and after a failed one, and
+   *  consumers that treat an empty array as "the book is empty" (trade-log
+   *  reconciliation) must be able to tell those apart. */
+  const [bookKnown, setBookKnown] = useState(false);
 
   const [limit, setLimit] = useState(PAGE_LIMIT);
   const [filterToken, setFilterToken] = useState('');
@@ -58,6 +63,7 @@ export function useZSwapAPI() {
           cursor = last;
         }
         setOffers(acc);
+        setBookKnown(true);
         setNextCursor(last);
         pageCount.current = Math.max(1, pages);
       } catch (err: any) {
@@ -71,6 +77,7 @@ export function useZSwapAPI() {
         }
         setError(err?.message || 'Failed to load offers');
         setOffers([]);
+        setBookKnown(false);
         setNextCursor(null);
         pageCount.current = 1;
       } finally {
@@ -99,6 +106,7 @@ export function useZSwapAPI() {
 
   return {
     offers,
+    bookKnown,
     loading,
     error,
     limit, setLimit,

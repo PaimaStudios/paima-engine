@@ -77,7 +77,10 @@ export function reconcileTrades(input: ReconcileInput): Promise<void> {
     const tradeId = t.id;
     const probeId = id;
     pending.push(
-      probe(probeId)
+      // Deferred so a probe that throws synchronously still runs the
+      // `finally` below and releases the id.
+      Promise.resolve()
+        .then(() => probe(probeId))
         .then((srv) => {
           if (isTerminal(srv)) update(tradeId, srv);
           // 'live' here means the book page we hold is stale or filtered;
