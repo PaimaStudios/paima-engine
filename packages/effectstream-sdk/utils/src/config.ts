@@ -207,6 +207,13 @@ const definitions: Record<string, ConfigDefinition> = {
     description:
       "Main Paima API Port. Used by developers custom endpoints and RPC endpoints. Example: '9999'",
   },
+  EFFECTSTREAM_TRUST_PROXY: {
+    key: "EFFECTSTREAM_TRUST_PROXY",
+    type: "string",
+    defaultValue: "true",
+    description:
+      "Whether the HTTP server trusts X-Forwarded-For / X-Forwarded-Proto from a reverse proxy in front of it, so request.ip is the client and not the proxy. 'true' (default, trust every hop), 'false' (never), or a comma-separated list of proxy IPs/CIDRs such as '127.0.0.1,10.0.0.0/8'. Mirrors Fastify's trustProxy option.",
+  },
   EFFECTSTREAM_EXPLORER_PORT: {
     key: "EFFECTSTREAM_EXPLORER_PORT",
     type: "number",
@@ -411,6 +418,9 @@ export class ENV {
   }
   static get EFFECTSTREAM_API_PORT(): number {
     return ENV.getConfig(definitions.EFFECTSTREAM_API_PORT);
+  }
+  static get EFFECTSTREAM_TRUST_PROXY(): string {
+    return ENV.getConfig(definitions.EFFECTSTREAM_TRUST_PROXY);
   }
   static get RECAPTCHA_V3_FRONTEND(): string {
     return ENV.getConfig(definitions.RECAPTCHA_V3_FRONTEND);
