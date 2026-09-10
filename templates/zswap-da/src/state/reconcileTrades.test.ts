@@ -21,7 +21,6 @@ const rec = (over: Partial<MyTrade> = {}): MyTrade => ({
 type Harness = {
   probes: string[];
   updates: Array<[string, MyTradeStatus]>;
-  ids: Array<[string, string]>;
   inflight: Set<string>;
   run: (trades: MyTrade[], bookIds?: string[]) => Promise<void>;
 };
@@ -29,12 +28,10 @@ type Harness = {
 /** Fake kernel: `answers` maps offerId → status; anything else is not_found. */
 function harness(
   answers: Record<string, ProbeResult | (() => Promise<ProbeResult>)> = {},
-  deriveId: (blob: string) => string | null = () => null,
 ): Harness {
   const h: Harness = {
     probes: [],
     updates: [],
-    ids: [],
     inflight: new Set<string>(),
     run: (trades, bookIds = []) =>
       reconcileTrades({
@@ -48,8 +45,6 @@ function harness(
         },
         inflight: h.inflight,
         update: (tid, s) => { h.updates.push([tid, s]); },
-        setOfferId: (tid, id) => { h.ids.push([tid, id]); },
-        deriveId,
       }),
   };
   return h;
@@ -164,27 +159,21 @@ describe('reconcileTrades — dedup', () => {
   });
 });
 
-describe('reconcileTrades — legacy blob-only records', () => {
-  test('derives, persists and then applies the same rule', async () => {
-    const h = harness({ [B]: 'expired' }, (blob) => (blob === 'swapoffer1legacy' ? B : null));
-    await h.run([rec({ offerId: undefined, blob: 'swapoffer1legacy' })]);
-    expect(h.ids).toEqual([['t1', B]]);
-    expect(h.probes).toEqual([B]);
-    expect(h.updates).toEqual([['t1', 'expired']]);
-  });
-
-  test('a blob that does not decode is left untouched', async () => {
-    const h = harness({}, () => null);
-    await h.run([rec({ offerId: undefined, blob: 'garbage' })]);
-    expect(h.ids).toEqual([]);
+describe('reconcileTrades — no offerId', () => {
+  test('a create record without offerId is skipped: no probe, no update, no persistence', async () => {
+    // Clean start: the id comes from the `POST /v1/offers` response and the SPA
+    // never derives one from a stored blob, so a record that has none is left
+    // exactly as it is — including one that still carries a blob.
+    const h = harness({ [A]: 'consumed', [B]: 'consumed' });
+    const before = [
+      rec({ id: 't1', offerId: undefined, blob: 'swapoffer1blobonly' }),
+      rec({ id: 't2', offerId: undefined, blob: undefined }),
+    ];
+    const snapshot = JSON.stringify(before);
+    await h.run(before);
     expect(h.probes).toEqual([]);
     expect(h.updates).toEqual([]);
-  });
-
-  test('no blob and no id: nothing to do', async () => {
-    const h = harness();
-    await h.run([rec({ offerId: undefined, blob: undefined })]);
-    expect(h.probes).toEqual([]);
+    expect(JSON.stringify(before)).toBe(snapshot);
   });
 });
 
