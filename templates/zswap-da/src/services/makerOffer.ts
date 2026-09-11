@@ -49,7 +49,7 @@ export async function buildMakerOfferBlob(
   wants: OfferLeg[],
 ): Promise<string> {
   if (typeof (connectedApi as any).makeIntent !== 'function') {
-    throw new Error('This wallet does not support makeIntent — update Lace to a version with the Midnight swap-intent API.');
+    throw new Error('This wallet does not support makeIntent — update your Midnight Wallet to a version with the swap-intent API.');
   }
   const { shieldedAddress } = await connectedApi.getShieldedAddresses();
   const { unshieldedAddress } = await connectedApi.getUnshieldedAddress();
