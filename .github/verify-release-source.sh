@@ -12,8 +12,7 @@ release_target="${RELEASE_TARGET_COMMITISH:-}"
 github_prerelease="${RELEASE_PRERELEASE:-}"
 
 test -n "$release_tag" || fail "RELEASE_TAG is required"
-[[ "$release_target" =~ ^[0-9a-f]{40}$ ]] \
-  || fail "release.target_commitish must be an exact lowercase 40-character commit SHA"
+test -n "$release_target" || fail "RELEASE_TARGET_COMMITISH is required"
 [[ "$github_prerelease" == "true" || "$github_prerelease" == "false" ]] \
   || fail "RELEASE_PRERELEASE must be exactly true or false"
 git check-ref-format "refs/tags/$release_tag" >/dev/null 2>&1 \
@@ -61,6 +60,22 @@ fi
 test "$github_prerelease" = "$expected_prerelease" \
   || fail "GitHub prerelease metadata disagrees with $release_tag"
 
+# release.target_commitish is normally an exact commit SHA, and stays required for
+# every v-next family. The GitHub release UI can only offer SHAs from its "Recent
+# commits" tab, which lists the default branch (v-next) alone, so a maintenance
+# release cut from the UI always arrives carrying the literal branch name instead.
+# Accept exactly the mapped maintenance branch name and resolve it to the freshly
+# fetched branch tip below; every other non-SHA value still fails closed here,
+# before any fetch, and the resolved SHA is then held to the same HEAD == tag ==
+# origin/<branch> == target equality as an operator-supplied SHA.
+resolve_target_from_branch=false
+if [[ ! "$release_target" =~ ^[0-9a-f]{40}$ ]]; then
+  [[ "$mapped_kind" == "maintenance-stable" && "$mapped_branch" == "midnight-1" \
+     && "$release_target" == "$mapped_branch" ]] \
+    || fail "release.target_commitish must be an exact lowercase 40-character commit SHA"
+  resolve_target_from_branch=true
+fi
+
 if git symbolic-ref -q HEAD >/dev/null 2>&1; then
   fail "HEAD must be detached at the immutable release commit"
 fi
@@ -81,6 +96,11 @@ for resolved_commit in "$head_commit" "$tag_commit" "$branch_commit"; do
   [[ "$resolved_commit" =~ ^[0-9a-f]{40}$ ]] \
     || fail "Git resolved a non-full commit identity: $resolved_commit"
 done
+if [[ "$resolve_target_from_branch" == "true" ]]; then
+  release_target="$branch_commit"
+fi
+[[ "$release_target" =~ ^[0-9a-f]{40}$ ]] \
+  || fail "release target did not resolve to an exact lowercase 40-character commit SHA"
 test "$head_commit" = "$release_target" \
   || fail "checked-out HEAD $head_commit does not equal release target $release_target"
 test "$tag_commit" = "$release_target" \

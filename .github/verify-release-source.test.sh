@@ -44,6 +44,7 @@ new_runner() {
 
 expect_pass() {
   local name="$1" tag="$2" target="$3" head="$4" prerelease="$5" branch="$6" dist_tag="$7"
+  local expected_sha="${8:-$target}"
   local runner output
   runner="$(new_runner "$name" "$head")"
   output="$temp_root/$name.outputs"
@@ -54,7 +55,7 @@ expect_pass() {
   ) > "$temp_root/$name.log" 2>&1
   grep -qx "branch=$branch" "$output"
   grep -qx "dist-tag=$dist_tag" "$output"
-  grep -qx "source-sha=$target" "$output"
+  grep -qx "source-sha=$expected_sha" "$output"
 }
 
 expect_fail() {
@@ -94,6 +95,22 @@ expect_fail short-target v0.200.3 "${node2:0:12}" "$node2" false
 expect_fail uppercase-target v0.200.3 "$(tr '[:lower:]' '[:upper:]' <<< "$node2")" "$node2" false
 expect_fail head-mismatch v0.200.3 "$node2" "$maintenance" false
 
+# A maintenance release cut from the GitHub release UI carries the branch name,
+# because the UI's "Recent commits" tab only lists the default branch (v-next).
+# The maintenance family resolves exactly its own branch name to the fetched tip;
+# every other branch name, and every non-SHA on a v-next family, still fails.
+expect_pass maintenance-branch-target v0.104.2 midnight-1 "$maintenance" false \
+  midnight-1 midnight-1 "$maintenance"
+expect_pass maintenance-branch-target-annotated v0.104.3 midnight-1 "$maintenance" false \
+  midnight-1 midnight-1 "$maintenance"
+expect_fail maintenance-foreign-branch-target v0.104.2 v-next "$maintenance" false
+expect_fail maintenance-unknown-branch-target v0.104.2 main "$maintenance" false
+expect_fail node2-branch-target v0.200.3 v-next "$node2" false
+expect_fail node2-prerelease-branch-target v0.200.5-rc.1 v-next "$node2" true
+# The branch-name form is still held to the tag/HEAD equality: a tag that does not
+# sit on the fetched midnight-1 tip fails exactly as a SHA target would.
+expect_fail maintenance-branch-target-head-mismatch v0.104.2 midnight-1 "$node2" false
+
 # Missing mapped branch and fresh branch advance both fail with empty outputs.
 git --git-dir="$origin" update-ref -d refs/heads/midnight-1
 expect_fail missing-branch v0.104.2 "$maintenance" "$maintenance" false
@@ -130,4 +147,4 @@ race_branch v-next v0.200.3 "$node2" false node2-race
 git --git-dir="$origin" update-ref refs/heads/midnight-1 "$maintenance"
 race_branch midnight-1 v0.104.2 "$maintenance" false maintenance-race
 
-printf 'release source guard matrix passed: 5 positives, 16 fail-closed negatives, 2 non-fast-forward races\n'
+printf 'release source guard matrix passed: 7 positives, 21 fail-closed negatives, 2 non-fast-forward races\n'
