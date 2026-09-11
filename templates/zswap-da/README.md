@@ -115,7 +115,7 @@ Prerequisites:
 
 - **Bun.** The app has no local Faucet contract or generated Compact assets; test-token minting is
   handled by the external Faucet service.
-- **A wallet.** Either works, for everything: the injected browser wallet (Lace) via the
+- **A wallet.** Either works, for everything: any Midnight wallet extension (Lace, for example) via the
   dapp-connector, or the **built-in JS wallet** via the Midnight wallet facade — no extension
   needed. `src/services/browserOffers.ts` and `src/services/localTradeOffers.ts` implement the two
   offer-settlement paths.

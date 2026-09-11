@@ -4,6 +4,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { WalletInfo } from '../ui/WalletPill';
+import { createOfferToast } from './createOfferFeedback';
 import type { ToastItem } from '../ui/Toasts';
 import {
   connectInjected,
@@ -487,12 +488,14 @@ export function useZSwapApp(): ZSwapApp {
       // it as a wallet/indexer misconfiguration and returns a `hint` naming the
       // exact fix, which we surface verbatim rather than burying under retries.
       let offerId: string | null = null;
+      let duplicate = false;
       let duplicateStatus: OfferStatus | null = null;
       try {
         const submitted = await api.submitSwapOffer(blob);
         offerId = submitted?.offerId ?? null;
       } catch (e: any) {
         if (e?.code === 'DUPLICATE_OFFER' || e?.code === 'DUPLICATE_MARKERS') {
+          duplicate = true;
           offerId = e.data?.activeOfferId ?? e.data?.offerId ?? null;
           duplicateStatus = (e.data?.status as OfferStatus) ?? null;
           dlog('createOffer: duplicate offer', { code: e.code, offerId, status: duplicateStatus });
@@ -518,12 +521,8 @@ export function useZSwapApp(): ZSwapApp {
         blob,
         offerId: offerId ?? undefined,
       });
-      toast(
-        duplicateStatus
-          ? `This offer was already posted (${duplicateStatus})`
-          : `This intent was already active (${offerId ?? 'existing offer'})`,
-        duplicateStatus ? undefined : 'ok',
-      );
+      const fb = createOfferToast({ offerId, duplicate, duplicateStatus });
+      toast(fb.msg, fb.kind);
       zapi.fetchOffers();
       refreshBalances();
     },
@@ -834,7 +833,7 @@ export function useZSwapApp(): ZSwapApp {
   const requestTakeMany = useCallback(
     async (orders: Order[]) => {
       if (!tradeWallet?.canTrade) {
-        toast('Use the browser wallet (Lace) to take offers.');
+        toast('Use a Midnight Wallet extension to take offers.');
         return;
       }
       // Own offers deliberately stay IN the candidate set: they are a question
