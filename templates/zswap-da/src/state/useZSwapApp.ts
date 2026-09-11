@@ -41,6 +41,7 @@ import {
   updateTradeStatus,
   type MyTrade,
 } from './myTrades';
+import { reconcileTrades } from './reconcileTrades';
 import { buildScope } from './scope';
 import { parseTakerLegs } from '../services/offerParse';
 import { isOwnOffer, parseOfferSender, unshieldedAddressToHex } from '../services/offerSender';
@@ -934,84 +935,30 @@ export function useZSwapApp(): ZSwapApp {
   const clearTrade = useCallback((id: string) => removeTrade(id), []);
   const clearAllTrades = useCallback(() => clearTrades(), []);
 
-  // Live order-book reconciliation, keyed on offerId.
+  // Reconcile the trade log against the node — see reconcileTrades.ts for the
+  // rule. Runs on every order-book refresh and whenever the wallet scope
+  // changes, i.e. also right after connect on a freshly loaded page: that is
+  // the moment a record for an offer filled while the tab was closed gets its
+  // terminal status. No wallet, no bucket, nothing to reconcile. No known
+  // book (before the first load, or after a failed poll — both leave
+  // `offers` as `[]`), nothing to compare against: absence from an unknown
+  // book is not absence, so wait rather than probe every record.
   //
-  //   not_public → live   as soon as the id shows up in the book
-  //   live       → ?      when a previously-seen id drops out
-  //
-  // Disappearing is NOT evidence of a fill. It could be a fill (consumed), the
-  // maker spending the inputs elsewhere (cancelled), a TTL lapse (expired), or
-  // simply the offer being pushed past the first page as the book grows. The
-  // old code assumed "gone == completed" and so mislabelled cancels as fills;
-  // now that archived offers resolve by id, ask instead of guessing.
-  const seenIds = useRef<Set<string>>(new Set());
+  // Ordering note: the effect that installs `walletScope` into the trade log
+  // is declared earlier in this hook, so within one commit it runs first and
+  // `listTrades()` below already reads the new wallet's bucket.
   const probing = useRef<Set<string>>(new Set());
   useEffect(() => {
-    const offers = zapi.offers ?? [];
-    const live = new Set(offers.map((o) => o.offerId).filter(Boolean) as string[]);
-    for (const t of listTrades()) {
-      if (t.kind !== 'create' || !t.offerId) continue;
-      const id = t.offerId;
-      if (live.has(id)) {
-        seenIds.current.add(id);
-        if (t.status === 'not_public') updateTradeStatus(t.id, 'live');
-        continue;
-      }
-      if (t.status !== 'live' || !seenIds.current.has(id) || probing.current.has(id)) continue;
-      probing.current.add(id);
-      api
-        .getOfferStatusById(id)
-        .then((srv) => {
-          // not_found here would mean the node forgot an offer it had indexed;
-          // leave the local record alone rather than inventing a terminal state.
-          if (srv === 'consumed' || srv === 'cancelled' || srv === 'expired') {
-            updateTradeStatus(t.id, srv);
-            seenIds.current.delete(id);
-          }
-        })
-        .catch(() => { /* transient; retried on the next poll */ })
-        .finally(() => probing.current.delete(id));
-    }
-  }, [zapi.offers]);
-
-  // Startup-only reconciliation: on first mount, ask the server for the
-  // definitive status of every non-terminal created trade.
-  //
-  // Trades carrying an offerId use the cheap per-id probe. Older records only
-  // stored the blob, so those go through the batched POST — a blob is 16-25 KB,
-  // far past any query-string limit.
-  useEffect(() => {
-    const pending = listTrades().filter(
-      (t) => t.kind === 'create' && t.status !== 'cancelled' && (t.offerId || t.blob),
-    );
-    if (pending.length === 0) return;
-
-    const apply = (t: MyTrade, srv: string | undefined) => {
-      if (!srv || srv === 'unknown' || srv === 'not_found') return;
-      // Terminal states are authoritative; 'live' only ever promotes a record
-      // that was still waiting on the Celestia round-trip.
-      if (srv === 'consumed' || srv === 'cancelled' || srv === 'expired') {
-        if (t.status !== srv) updateTradeStatus(t.id, srv);
-      } else if (srv === 'live' && t.status === 'not_public') {
-        updateTradeStatus(t.id, 'live');
-      }
-    };
-
-    const byId = pending.filter((t) => t.offerId);
-    const byBlob = pending.filter((t) => !t.offerId && t.blob);
-
-    Promise.all([
-      Promise.all(
-        byId.map(async (t) => apply(t, await api.getOfferStatusById(t.offerId!))),
-      ),
-      byBlob.length > 0
-        ? api.fetchTradeStatuses(byBlob.map((t) => t.blob!)).then((statusMap) => {
-            for (const t of byBlob) apply(t, statusMap[t.blob!]);
-          })
-        : Promise.resolve(),
-    ]).catch(() => { /* startup reconcile is best-effort */ });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    if (!walletScope || !zapi.bookKnown) return;
+    const bookIds = new Set(zapi.offers.map((o) => o.offerId).filter(Boolean) as string[]);
+    void reconcileTrades({
+      trades: listTrades(),
+      bookIds,
+      probe: api.getOfferStatusById,
+      inflight: probing.current,
+      update: updateTradeStatus,
+    });
+  }, [zapi.offers, zapi.bookKnown, walletScope]);
 
   const wallet = useMemo<WalletInfo | null>(() => {
     if (!connected) return null;

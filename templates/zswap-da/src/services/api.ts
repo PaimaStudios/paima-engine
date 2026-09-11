@@ -81,9 +81,6 @@ async function parse<T>(res: Response, fallback: string): Promise<T> {
 const isOfferId = (h: unknown): h is string =>
   typeof h === 'string' && /^[0-9a-f]{64}$/i.test(h);
 
-/** POST /v1/offers/status accepts at most 50 offers per batched request. */
-const STATUS_BATCH_MAX = 50;
-
 export interface Quote {
   from_token: string;
   to_token: string;
@@ -420,40 +417,4 @@ export const api = {
     }
   },
 
-  /**
-   * Server-side status for a list of offer blobs, as blob → status.
-   *
-   * POST because a real blob is 16-25 KB, far past any query-string limit.
-   * Batched at 50 to match the endpoint's schema. Prefer getOfferStatusById
-   * whenever the offerId is known — this exists for pasted blobs and for
-   * My-Trades records that predate id storage.
-   */
-  fetchTradeStatuses: async (blobs: string[]): Promise<Record<string, OfferStatusLookup | 'unknown'>> => {
-    if (blobs.length === 0) return {};
-    const out: Record<string, OfferStatusLookup | 'unknown'> = {};
-    for (let i = 0; i < blobs.length; i += STATUS_BATCH_MAX) {
-      const chunk = blobs.slice(i, i + STATUS_BATCH_MAX);
-      try {
-        const res = await fetch(`${V1}/offers/status`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ offers: chunk }),
-        });
-        const data = await parse<{ statuses: { offerId?: string; status: OfferStatusLookup }[] }>(
-          res,
-          'Failed to fetch statuses',
-        );
-        // Responses come back in input order and carry no echo of the blob, so
-        // indexing is necessarily positional.
-        chunk.forEach((blob, idx) => {
-          out[blob] = data.statuses?.[idx]?.status ?? 'unknown';
-        });
-      } catch {
-        // Best-effort: an unreachable node leaves these 'unknown' and the
-        // caller keeps whatever local status it already had.
-        for (const blob of chunk) out[blob] = 'unknown';
-      }
-    }
-    return out;
-  },
 };

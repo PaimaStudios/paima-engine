@@ -38,8 +38,8 @@ export interface MyTrade {
   shielded: boolean;
   blob?: string;
   /** Content hash from `POST /v1/offers` — the cross-node offer identity and
-   *  the key for all subsequent status polling. Absent on records created before
-   *  content addressing, which fall back to blob-based status lookup. */
+   *  the key for all subsequent status polling. Absent only when the submit
+   *  response carried none; such records are not reconciled. */
   offerId?: string;
 }
 
