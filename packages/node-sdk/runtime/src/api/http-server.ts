@@ -1,4 +1,9 @@
-import fastify, { type FastifyInstance, type FastifyReply, type FastifyRequest } from "fastify";
+import fastify, {
+  type FastifyInstance,
+  type FastifyReply,
+  type FastifyRequest,
+  type FastifyServerOptions,
+} from "fastify";
 import { evmRpcEngine } from "./rpc-evm/eip1193.ts";
 import { appliedBlockStatus } from "./apply-status.ts";
 import { finalizedStreamStatus } from "./stream-status.ts";
@@ -52,6 +57,23 @@ import {
 } from "./pagination.ts";
 import { PrimitiveRegistry } from "@effectstream/sm";
 import { ConfigNetworkType, getWriteNamespace, usePaimaStaticConfig } from "@effectstream/config";
+
+/**
+ * Parse `EFFECTSTREAM_TRUST_PROXY` into Fastify's `trustProxy` option.
+ *
+ * - `true` / `1` / empty → `true` (trust every hop; the default)
+ * - `false` / `0`        → `false`
+ * - anything else        → comma-separated proxy IPs / CIDRs
+ */
+export function parseTrustProxy(raw: string | undefined): boolean | string[] {
+  const value = (raw ?? "").trim();
+  if (value === "" || value.toLowerCase() === "true" || value === "1") return true;
+  if (value.toLowerCase() === "false" || value === "0") return false;
+  return value
+    .split(",")
+    .map((entry) => entry.trim())
+    .filter((entry) => entry.length > 0);
+}
 
 function tableListContains(
   list: Array<{ table_name: string | null }>,
@@ -172,7 +194,15 @@ export const startHttpServer = function* (
   // Use dbConn directly; queries are executed via pgtyped PreparedQuery.run
   // Allow any webpage to access the server.
   // This node is not specific for a specific website.
-  const server = fastify({ routerOptions: { maxParamLength: 300 } });
+  // trustProxy decides what `request.ip` means. Deployments front this server
+  // with nginx/Caddy, and without it Fastify reports the proxy's address for
+  // every client — so anything keyed per IP (the rate limiter above all)
+  // shares ONE bucket across every user behind the proxy.
+  const serverOptions: FastifyServerOptions = {
+    routerOptions: { maxParamLength: 300 },
+    trustProxy: parseTrustProxy(ENV.EFFECTSTREAM_TRUST_PROXY),
+  };
+  const server = fastify(serverOptions);
   // OpenAPI Docs
   yield* registerOpenApiDocumentation(server, ENV.EFFECTSTREAM_API_PORT);
 
