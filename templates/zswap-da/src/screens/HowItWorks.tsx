@@ -75,7 +75,7 @@ function AnimatedLifecycle() {
       <div {...hover(0)} style={phaseBg(0)}>
         <PhaseShell active={active === 0} icon={<Icon.wallet />}>
           {head(1, active === 0, 'Connect a wallet')}
-          <p style={body(active === 0)}>Connect <a href="https://www.lace.io/" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)', fontWeight: 700, textDecoration: 'none' }}>Lace</a> or any Midnight-compatible wallet (on Undeployed, a built-in JS wallet is offered). Your address is never shared on-chain.</p>
+          <p style={body(active === 0)}>Connect your Midnight Wallet (on Undeployed, a built-in JS wallet is offered). Your address is never shared on-chain.</p>
         </PhaseShell>
       </div>
 

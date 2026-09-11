@@ -217,7 +217,7 @@ export function PlaceOrderForm({ st, compact, requestPayPicker, onPayPickerHandl
   let action: () => void = () => st.connect();
   let disabled = false;
   if (st.wallet) {
-    if (!st.canTrade) { label = 'Use the browser wallet (Lace) to create offers'; disabled = true; action = () => {}; }
+    if (!st.canTrade) { label = 'Use a Midnight Wallet extension to create offers'; disabled = true; action = () => {}; }
     else if (!bothSel) { label = 'Select tokens'; disabled = true; action = () => {}; }
     else if (!sameKind) { label = 'Tokens must share privacy kind'; disabled = true; action = () => {}; }
     else if (payAmt.trim() !== '' && payParsed.error) { label = payParsed.error === 'precision' ? `Max ${from!.decimals} decimals for ${from!.name}` : 'Check the amount you pay'; disabled = true; action = () => {}; }
